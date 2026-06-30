@@ -1,25 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn(),
-    writeFile: vi.fn()
-  }
-}));
-
 vi.mock("@hmcts/pdf-generation", () => ({
   generatePdfFromHtml: vi.fn()
 }));
 
-import fs from "node:fs/promises";
+vi.mock("@hmcts/list-types-common", () => ({
+  extractPressCases: vi.fn().mockReturnValue([]),
+  loadTranslations: vi.fn().mockResolvedValue({
+    common: { at: "at" },
+    SJP_PRESS_LIST: { title: "SJP Press List" },
+    SJP_DELTA_PRESS_LIST: { title: "SJP Delta Press List" }
+  }),
+  configureNunjucks: vi.fn().mockReturnValue({
+    render: vi.fn().mockReturnValue("<html>test</html>")
+  }),
+  formatLastUpdatedDateTime: vi.fn().mockReturnValue({ date: "01 January 2025", time: "12:00am" }),
+  createPdfErrorResult: vi.fn((error) => ({
+    success: false,
+    error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+  })),
+  savePdfToStorage: vi.fn(),
+  PDF_BASE_STYLES: ""
+}));
+
+import { savePdfToStorage } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { generateSjpPressListPdf } from "./pdf-generator.js";
 
 describe("generateSjpPressListPdf", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue(undefined);
+    vi.mocked(savePdfToStorage).mockResolvedValue({
+      success: true,
+      pdfPath: "test-press-artefact-123.pdf",
+      sizeBytes: 2048,
+      exceedsMaxSize: false
+    });
   });
 
   it("should generate PDF successfully", async () => {
@@ -42,6 +58,7 @@ describe("generateSjpPressListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-press-artefact-123.pdf");
     expect(generatePdfFromHtml).toHaveBeenCalled();
+    expect(savePdfToStorage).toHaveBeenCalledWith("test-press-artefact-123", pdfBuffer, 2048);
   });
 
   it("should handle PDF generation failure", async () => {
