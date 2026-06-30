@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { validateUtiacJrLeedsDailyHearingList } from "./json-validator.js";
+import { validateUtiacJrDailyHearingList } from "./json-validator.js";
 
-describe("validateUtiacJrLeedsDailyHearingList", () => {
+describe("validateUtiacJrDailyHearingList", () => {
   it("should return isValid true for valid data", () => {
     // Arrange
     const validData = [
@@ -16,7 +16,7 @@ describe("validateUtiacJrLeedsDailyHearingList", () => {
     ];
 
     // Act
-    const result = validateUtiacJrLeedsDailyHearingList(validData);
+    const result = validateUtiacJrDailyHearingList(validData);
 
     // Assert
     expect(result.isValid).toBe(true);
@@ -32,7 +32,7 @@ describe("validateUtiacJrLeedsDailyHearingList", () => {
     ];
 
     // Act
-    const result = validateUtiacJrLeedsDailyHearingList(invalidData);
+    const result = validateUtiacJrDailyHearingList(invalidData);
 
     // Assert
     expect(result.isValid).toBe(false);

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "UTIAC JR Leeds Daily Hearing List",
-  "description": "Schema for Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+  "title": "UTIAC JR Daily Hearing List",
+  "description": "Schema for Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review Daily Hearing List",
   "type": "array",
   "minItems": 1,
   "items": {

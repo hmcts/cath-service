@@ -26,15 +26,17 @@ vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
   return {
     ...actual,
-    renderUtiacJrManchesterDailyHearingListData: vi.fn()
+    renderUtiacJrDailyHearingListData: vi.fn(),
+    renderUtiacJrLondonDailyHearingListData: vi.fn(),
+    validateUtiacJrAnyDailyHearingList: mockValidate
   };
 });
 
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
-import { renderUtiacJrManchesterDailyHearingListData } from "@hmcts/utiac-jr-daily-hearing-list";
+import { renderUtiacJrDailyHearingListData, renderUtiacJrLondonDailyHearingListData } from "@hmcts/utiac-jr-daily-hearing-list";
 import { GET } from "./index.js";
 
-describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
+describe("UTIAC JR Daily Hearing List unified page controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 
@@ -53,12 +55,12 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
   });
 
   describe("GET handler", () => {
-    it("should render the list successfully with valid data", async () => {
+    it("should render Leeds list (listTypeId 32) with regional template and correct title", async () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 33,
+        listTypeId: 32,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -68,7 +70,7 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
 
       const mockJsonData = [
         {
-          venue: "Manchester Civil Justice Centre",
+          venue: "Leeds Combined Court Centre",
           judges: "Judge Smith",
           hearingTime: "10:00am",
           caseReferenceNumber: "JR/2026/001",
@@ -80,42 +82,31 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
 
       const mockRenderedData = {
         header: {
-          listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
+          listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
           listForDate: "15 January 2026",
           lastUpdatedDate: "14 January 2026",
           lastUpdatedTime: "12pm"
         },
-        hearings: [
-          {
-            venue: "Manchester Civil Justice Centre",
-            judges: "Judge Smith",
-            hearingTime: "10:00am",
-            caseReferenceNumber: "JR/2026/001",
-            caseTitle: "Smith v Secretary of State",
-            hearingType: "Permission",
-            additionalInformation: ""
-          }
-        ]
+        hearings: [mockJsonData[0]]
       };
 
       req.query = { artefactId: "test-artefact-123" };
-
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderUtiacJrManchesterDailyHearingListData).mockReturnValue(mockRenderedData);
+      vi.mocked(renderUtiacJrDailyHearingListData).mockReturnValue(mockRenderedData);
 
       // Act
       await GET(req as Request, res as Response);
 
       // Assert
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(renderUtiacJrManchesterDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
+      expect(renderUtiacJrDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
         displayFrom: mockArtefact.displayFrom,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
-        listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List"
+        listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
       });
       expect(vi.mocked(res.render)).toHaveBeenCalledWith(
         "utiac-jr-daily-hearing-list",
@@ -123,6 +114,75 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
           header: mockRenderedData.header,
           hearings: mockRenderedData.hearings,
           dataSource: "Manual Upload"
+        })
+      );
+    });
+
+    it("should render London list (listTypeId 31) with London template and London table headers", async () => {
+      // Arrange
+      const mockArtefact = {
+        artefactId: "test-artefact-456",
+        locationId: "9001",
+        listTypeId: 31,
+        contentDate: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-15"),
+        displayTo: new Date("2026-01-15"),
+        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
+        provenance: "MANUAL_UPLOAD"
+      };
+
+      const mockJsonData = [
+        {
+          hearingTime: "10:00am",
+          caseTitle: "Smith v Secretary of State",
+          representative: "",
+          caseReferenceNumber: "JR/2026/001",
+          judges: "Judge Smith",
+          hearingType: "Permission",
+          location: "Field House",
+          additionalInformation: ""
+        }
+      ];
+
+      const mockRenderedData = {
+        header: {
+          listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List",
+          listForDate: "15 January 2026",
+          lastUpdatedDate: "14 January 2026",
+          lastUpdatedTime: "12pm"
+        },
+        hearings: [mockJsonData[0]]
+      };
+
+      req.query = { artefactId: "test-artefact-456" };
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderUtiacJrLondonDailyHearingListData).mockReturnValue(mockRenderedData);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      expect(renderUtiacJrLondonDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
+        locale: "en",
+        courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+        displayFrom: mockArtefact.displayFrom,
+        lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
+        listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
+      });
+      expect(vi.mocked(res.render)).toHaveBeenCalledWith(
+        "utiac-jr-london-daily-hearing-list",
+        expect.objectContaining({
+          header: mockRenderedData.header,
+          hearings: mockRenderedData.hearings,
+          dataSource: "Manual Upload",
+          t: expect.objectContaining({
+            tableHeaders: expect.objectContaining({
+              location: "Location",
+              representative: "Representative"
+            })
+          })
         })
       );
     });
@@ -164,29 +224,11 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
       );
     });
 
-    it("should return 500 on server error", async () => {
-      // Arrange
-      req.query = { artefactId: "test-artefact-123" };
-      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database connection failed"));
-
-      // Act
-      await GET(req as Request, res as Response);
-
-      // Assert
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.render).toHaveBeenCalledWith(
-        "errors/common",
-        expect.objectContaining({
-          errorTitle: "Server Error",
-          errorMessage: "An error occurred while loading the list"
-        })
-      );
-    });
-
     it("should return 404 when JSON is not found in blob storage", async () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
+        listTypeId: 32,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -215,6 +257,7 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
+        listTypeId: 32,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -240,39 +283,30 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
       );
     });
 
-    it("should pass displayFrom to renderer", async () => {
+    it("should return 500 on server error", async () => {
       // Arrange
-      const displayFrom = new Date("2026-01-15");
-      const mockArtefact = {
-        artefactId: "test-artefact-123",
-        contentDate: new Date("2026-01-01"),
-        displayFrom,
-        lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
-        provenance: "MANUAL_UPLOAD"
-      };
-
-      const mockRenderedData = {
-        header: { listTitle: "UTIAC JR Manchester", listForDate: "15 January 2026", lastUpdatedDate: "14 January 2026", lastUpdatedTime: "12pm" },
-        hearings: []
-      };
-
       req.query = { artefactId: "test-artefact-123" };
-      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(getPublicationJson).mockResolvedValue([]);
-      mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderUtiacJrManchesterDailyHearingListData).mockReturnValue(mockRenderedData);
+      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database connection failed"));
 
       // Act
       await GET(req as Request, res as Response);
 
       // Assert
-      expect(renderUtiacJrManchesterDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ displayFrom }));
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.render).toHaveBeenCalledWith(
+        "errors/common",
+        expect.objectContaining({
+          errorTitle: "Server Error",
+          errorMessage: "An error occurred while loading the list"
+        })
+      );
     });
 
-    it("should use Welsh locale when specified", async () => {
+    it("should use Welsh locale and pageTitleByListTypeCy when locale is cy", async () => {
       // Arrange
       const mockArtefact = {
         artefactId: "test-artefact-123",
+        listTypeId: 32,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -290,13 +324,19 @@ describe("UTIAC JR Manchester Daily Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
       vi.mocked(getPublicationJson).mockResolvedValue([]);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderUtiacJrManchesterDailyHearingListData).mockReturnValue(mockRenderedData);
+      vi.mocked(renderUtiacJrDailyHearingListData).mockReturnValue(mockRenderedData);
 
       // Act
       await GET(req as Request, res as Response);
 
       // Assert
-      expect(renderUtiacJrManchesterDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ locale: "cy" }));
+      expect(renderUtiacJrDailyHearingListData).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          locale: "cy",
+          listTitle: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']"
+        })
+      );
     });
   });
 });

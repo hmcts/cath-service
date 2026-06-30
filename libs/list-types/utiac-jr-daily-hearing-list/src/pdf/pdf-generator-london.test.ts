@@ -16,6 +16,10 @@ vi.mock("@hmcts/list-types-common", () => ({
   provenanceLabelsEn: {
     MANUAL_UPLOAD: "Manual Upload",
     SNL: "SNL"
+  },
+  provenanceLabelsCy: {
+    MANUAL_UPLOAD: "Lanlwytho â Llaw",
+    SNL: "SNL"
   }
 }));
 

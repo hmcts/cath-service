@@ -1,6 +1,25 @@
 import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common";
 
-export const baseEn = {
+export const pageTitleByListType: Record<string, string> = {
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
+  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
+  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
+};
+
+export const londonTableHeaders = {
+  hearingTime: "Hearing time",
+  caseTitle: "Case title",
+  representative: "Representative",
+  caseReferenceNumber: "Case reference number",
+  judges: "Judge(s)",
+  hearingType: "Hearing type",
+  location: "Location",
+  additionalInformation: "Additional information"
+};
+
+export const en = {
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",
@@ -30,9 +49,4 @@ export const baseEn = {
   cautionReporting:
     "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
   provenanceLabels
-};
-
-export const en = {
-  ...baseEn,
-  pageTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
 };

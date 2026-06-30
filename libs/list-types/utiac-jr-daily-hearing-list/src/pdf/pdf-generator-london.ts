@@ -10,6 +10,8 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { pdfTemplateDir } from "../config.js";
+import { londonTableHeadersCy } from "../locales/cy.js";
+import { londonTableHeaders } from "../locales/en.js";
 import type { UtiacJrLondonHearingList } from "../models/types.js";
 import { renderUtiacJrLondonDailyHearingListData } from "../rendering/renderer-london.js";
 
@@ -27,11 +29,15 @@ export async function generateUtiacJrLondonDailyHearingListPdf(options: PdfGener
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     });
 
-    const translations = await loadTranslations(
+    const baseTranslations = await loadTranslations(
       options.locale,
-      () => import("../locales/london-en.js"),
-      () => import("../locales/london-cy.js")
+      () => import("../locales/en.js"),
+      () => import("../locales/cy.js")
     );
+    const translations = {
+      ...baseTranslations,
+      tableHeaders: options.locale === "cy" ? londonTableHeadersCy : londonTableHeaders
+    };
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
