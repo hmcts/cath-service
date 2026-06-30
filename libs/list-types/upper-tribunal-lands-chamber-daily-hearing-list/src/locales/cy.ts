@@ -18,14 +18,14 @@ export const cy = {
   searchCasesLabel: "Chwilio yn ôl cyfeirnod achos, enw'r achos, barnwr, lleoliad, neu fanylion eraill",
   tableHeaders: {
     time: "Amser",
-    caseReferenceNumber: "Rhif Cyfeirnod Achos",
-    caseName: "Enw'r Achos",
+    caseReferenceNumber: "Rhif cyfeirnod achos",
+    caseName: "Enw'r achos",
     judges: "Barnwr/Barnwyr",
     members: "Aelod/Aelodau",
-    hearingType: "Math o Wrandawiad",
+    hearingType: "Math o wrandawiad",
     venue: "Lleoliad",
-    modeOfHearing: "Dull Gwrandawiad",
-    additionalInformation: "Gwybodaeth Ychwanegol"
+    modeOfHearing: "Dull gwrandawiad",
+    additionalInformation: "Gwybodaeth ychwanegol"
   },
   dataSource: "Ffynhonnell data",
   backToTop: "Yn ôl i frig y dudalen",

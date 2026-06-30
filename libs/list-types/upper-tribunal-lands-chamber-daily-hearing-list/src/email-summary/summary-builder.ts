@@ -6,7 +6,7 @@ export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 export function extractCaseSummary(jsonData: UtlcHearingList): CaseSummary[] {
   return jsonData.map((hearing) => [
     { label: "Time", value: hearing.time || "" },
-    { label: "Case Reference Number", value: hearing.caseReferenceNumber || "" },
-    { label: "Case Name", value: hearing.caseName || "" }
+    { label: "Case reference number", value: hearing.caseReferenceNumber || "" },
+    { label: "Case name", value: hearing.caseName || "" }
   ]);
 }

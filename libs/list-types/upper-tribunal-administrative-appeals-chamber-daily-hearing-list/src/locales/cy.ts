@@ -12,15 +12,16 @@ export const cy = {
     listChangeNotice:
       "Mae'r rhestrau yn destun newid hyd at 4:30pm. Bydd unrhyw newidiadau ar ôl yr amser hwn yn cael eu ffonio neu eu hanfon trwy e-bost yn uniongyrchol at y partïon neu eu cynrychiolwyr cyfreithiol.",
     englandAndWalesTitle: "Cymru a Lloegr",
-    englandAndWalesRemoteText: "Gwrandawiadau o bell drwy CVP a BT Meet Me",
+    englandAndWalesRemoteText: "Gwrandawiadau o bell drwy CVP",
     englandAndWalesCvpText:
-      "Mae'n ofynnol i aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi gwrandawiad gysylltu â adminappeals@justice.gov.uk cyn y gwrandawiad. Byddant yn cael manylion y ddolen fideo i arsylwi'r gwrandawiad.",
-    englandAndWalesBtMeetMeText:
-      "Os yw'r gwrandawiad drwy BT Meet Me, dylai aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi'r gwrandawiad gysylltu â adminappeals@justice.gov.uk. Byddant yn cael rhif cynhadledd ffôn y gwrandawiad.",
+      "Bydd gwrandawiadau ar gael i gynrychiolwyr y cyfryngau neu unrhyw aelod arall o'r cyhoedd, ar eu cais, a fydd felly yn wrandawiad a gynhelir yn gyhoeddus yn unol â Rheol 37 o Reolau Gweithdrefn Tribiwnlysoedd (Tribiwnlys Uwch) 2008.",
+    englandAndWalesAccessText:
+      "Bydd angen i unrhyw gynrychiolydd cyfryngau neu unrhyw aelod arall o'r cyhoedd sy'n dymuno tystio i'r gwrandawiad wneud hynny dros y rhyngrwyd a darparu cyfeiriad e-bost i anfon dolen fynediad briodol ato.",
+    englandAndWalesContactText: "Cysylltwch â adminappeals@justice.gov.uk.",
     scotlandTitle: "Yr Alban",
-    scotlandRemoteText: "Gwrandawiadau o bell (CVP)",
+    scotlandRemoteText: "Gwrandawiadau o bell",
     scotlandCvpText:
-      "Mae'n ofynnol i aelodau o'r cyhoedd neu'r cyfryngau sydd am arsylwi gwrandawiad a gynhelir o'r Alban gysylltu â UTAACMailbox@justice.gov.uk cyn y gwrandawiad. Byddant yn cael manylion y ddolen fideo i arsylwi'r gwrandawiad.",
+      "Pan restrir gwrandawiadau ar gyfer yr Alban, bydd y gwrandawiad ar gael i gynrychiolwyr y cyfryngau neu unrhyw aelod arall o'r cyhoedd, ar eu cais, a fydd felly yn wrandawiad a gynhelir yn gyhoeddus yn unol â Rheol 37 o Reolau Gweithdrefn Tribiwnlysoedd (Tribiwnlys Uwch) 2008. Bydd yn cael ei drefnu a'i gynnal gan ddefnyddio Platfform Fideo Cwmwl (CVP). Bydd angen i unrhyw gynrychiolydd cyfryngau neu unrhyw aelod arall o'r cyhoedd sy'n dymuno tystio i'r gwrandawiad wneud hynny dros y rhyngrwyd a darparu cyfeiriad e-bost i anfon dolen fynediad briodol ato. Cysylltwch â UTAACMailbox@justice.gov.uk.",
     observeLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
     observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
@@ -30,12 +31,12 @@ export const cy = {
   tableHeaders: {
     time: "Amser",
     appellant: "Apelydd",
-    caseReferenceNumber: "Rhif Cyfeirnod Achos",
+    caseReferenceNumber: "Rhif cyfeirnod achos",
     judges: "Barnwr/Barnwyr",
     members: "Aelod/Aelodau",
-    modeOfHearing: "Dull Gwrandawiad",
+    modeOfHearing: "Dull gwrandawiad",
     venue: "Lleoliad",
-    additionalInformation: "Gwybodaeth Ychwanegol"
+    additionalInformation: "Gwybodaeth ychwanegol"
   },
   dataSource: "Ffynhonnell data",
   backToTop: "Yn ôl i frig y dudalen",

@@ -12,7 +12,7 @@ const STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const GET = async (req: Request, res: Response) => {
-  const artefactId = req.params["artefactId"];
+  const artefactId = req.params.artefactId;
   const id = Array.isArray(artefactId) ? artefactId[0] : artefactId;
 
   if (!id || !UUID_REGEX.test(id)) {

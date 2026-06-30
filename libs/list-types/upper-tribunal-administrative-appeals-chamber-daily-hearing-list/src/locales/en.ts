@@ -12,15 +12,16 @@ export const en = {
     listChangeNotice:
       "Lists are subject to change until 4:30pm. Any alterations after this time will be telephoned or emailed direct to the parties or their legal representatives.",
     englandAndWalesTitle: "England and Wales",
-    englandAndWalesRemoteText: "Remote hearings via CVP and BT Meet Me",
+    englandAndWalesRemoteText: "Remote hearings via CVP",
     englandAndWalesCvpText:
-      "Members of the public or the media who wish to observe a hearing are required to contact adminappeals@justice.gov.uk in advance of the hearing. They will be provided with the video link details to observe the hearing.",
-    englandAndWalesBtMeetMeText:
-      "If the hearing is via BT Meet Me, members of the public or the media who wish to observe the hearing should contact adminappeals@justice.gov.uk. They will be provided with the telephone conference number for the hearing.",
+      "Hearings will be available to representatives of the media or any other member of the public, on their request, and therefore will be a hearing conducted in public in accordance with Rule 37 of the Tribunal Procedure (Upper Tribunal) Rules 2008.",
+    englandAndWalesAccessText:
+      "Any media representative or any other member of the public wishing to witness the hearing will need to do so over the internet and provide an email address at which to be sent an appropriate link for access.",
+    englandAndWalesContactText: "Please contact adminappeals@justice.gov.uk.",
     scotlandTitle: "Scotland",
-    scotlandRemoteText: "Remote hearings (CVP)",
+    scotlandRemoteText: "Remote hearings",
     scotlandCvpText:
-      "Members of the public or the media who wish to observe a hearing conducted from Scotland are required to contact UTAACMailbox@justice.gov.uk in advance of the hearing. They will be provided with the video link details to observe the hearing.",
+      "When hearings are listed for Scotland the hearing will be available to representatives of the media or any other member of the public, on their request, and therefore will be a hearing conducted in public in accordance with Rule 37 of the Tribunal Procedure (Upper Tribunal) Rules 2008. It will be organised and conducted using Cloud Video Platform (CVP). Any media representative or any other member of the public wishing to witness the hearing will need to do so over the internet and provide an email address at which to be sent an appropriate link for access. Please contact UTAACMailbox@justice.gov.uk.",
     observeLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
     observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
@@ -30,12 +31,12 @@ export const en = {
   tableHeaders: {
     time: "Time",
     appellant: "Appellant",
-    caseReferenceNumber: "Case Reference Number",
+    caseReferenceNumber: "Case reference number",
     judges: "Judge(s)",
     members: "Member(s)",
-    modeOfHearing: "Mode of Hearing",
+    modeOfHearing: "Mode of hearing",
     venue: "Venue",
-    additionalInformation: "Additional Information"
+    additionalInformation: "Additional information"
   },
   dataSource: "Data source",
   backToTop: "Back to top",

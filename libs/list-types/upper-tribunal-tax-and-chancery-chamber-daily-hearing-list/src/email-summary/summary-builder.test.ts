@@ -37,13 +37,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual([
       { label: "Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "UTTC/2025/0001" },
-      { label: "Case Name", value: "Smith v HMRC" }
+      { label: "Case reference number", value: "UTTC/2025/0001" },
+      { label: "Case name", value: "Smith v HMRC" }
     ]);
     expect(result[1]).toEqual([
       { label: "Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "UTTC/2025/0002" },
-      { label: "Case Name", value: "Brown v HMRC" }
+      { label: "Case reference number", value: "UTTC/2025/0002" },
+      { label: "Case name", value: "Brown v HMRC" }
     ]);
   });
 
@@ -73,8 +73,8 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Time", value: "" },
-      { label: "Case Reference Number", value: "" },
-      { label: "Case Name", value: "" }
+      { label: "Case reference number", value: "" },
+      { label: "Case name", value: "" }
     ]);
   });
 });
@@ -84,8 +84,8 @@ describe("formatCaseSummaryForEmail", () => {
     const items = [
       [
         { label: "Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "UTTC/2025/0001" },
-        { label: "Case Name", value: "Smith v HMRC" }
+        { label: "Case reference number", value: "UTTC/2025/0001" },
+        { label: "Case name", value: "Smith v HMRC" }
       ]
     ];
 
@@ -93,8 +93,8 @@ describe("formatCaseSummaryForEmail", () => {
 
     expect(result).toContain("---");
     expect(result).toContain("Time - 10:00am");
-    expect(result).toContain("Case Reference Number - UTTC/2025/0001");
-    expect(result).toContain("Case Name - Smith v HMRC");
+    expect(result).toContain("Case reference number - UTTC/2025/0001");
+    expect(result).toContain("Case name - Smith v HMRC");
   });
 
   it("should handle empty case list", () => {

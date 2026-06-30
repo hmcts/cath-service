@@ -18,14 +18,14 @@ export const en = {
   searchCasesLabel: "Search by case reference, case name, judge, venue, or other details",
   tableHeaders: {
     time: "Time",
-    caseReferenceNumber: "Case Reference Number",
-    caseName: "Case Name",
+    caseReferenceNumber: "Case reference number",
+    caseName: "Case name",
     judges: "Judge(s)",
     members: "Member(s)",
-    hearingType: "Hearing Type",
+    hearingType: "Hearing type",
     venue: "Venue",
-    modeOfHearing: "Mode of Hearing",
-    additionalInformation: "Additional Information"
+    modeOfHearing: "Mode of hearing",
+    additionalInformation: "Additional information"
   },
   dataSource: "Data source",
   backToTop: "Back to top",

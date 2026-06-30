@@ -5,8 +5,7 @@ import {
   createPdfErrorResult,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
-  savePdfToStorage,
-  TEMP_STORAGE_BASE
+  savePdfToStorage
 } from "./pdf-utilities.js";
 
 vi.mock("nunjucks", () => ({
@@ -183,6 +182,7 @@ describe("createDailyHearingListPdfGenerator", () => {
     mockRenderFn.mockReturnValue(mockRenderedData);
     mockImportEn.mockResolvedValue({ en: { pageTitle: "English" } });
     mockImportCy.mockResolvedValue({ cy: { pageTitle: "Welsh" } });
+    mockUploadBlob.mockResolvedValue(undefined);
   });
 
   const makeGenerator = () =>
