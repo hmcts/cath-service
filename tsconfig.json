@@ -55,7 +55,8 @@
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
       "@hmcts/third-party-user": ["libs/third-party-user/src"],
-      "@hmcts/third-party-user/config": ["libs/third-party-user/src/config"]
+      "@hmcts/third-party-user/config": ["libs/third-party-user/src/config"],
+      "@hmcts/azure-blob": ["libs/azure-blob/src"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -34,7 +34,7 @@
     "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "@launchdarkly/node-server-sdk": "^9.7.0",
-    "papaparse": "5.5.3"
+    "papaparse": "5.5.4"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
