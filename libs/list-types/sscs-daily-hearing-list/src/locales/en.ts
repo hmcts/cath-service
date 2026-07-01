@@ -26,7 +26,6 @@ export const en = {
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
-  importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",
   searchCasesLabel: "Search by appeal reference, hearing type, appellant, or other details",

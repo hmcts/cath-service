@@ -8,7 +8,6 @@ export const cy = {
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
-  importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio Achosion",
   searchCasesLabel: "Chwilio yn ôl cyfeirnod apêl, math o wrandawiad, apellydd, neu wybodaeth arall",

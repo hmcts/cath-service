@@ -20,8 +20,7 @@
 
   <div class="info-box">
     <h3>{{ t.importantInformationTitle }}</h3>
-    <p>{{ importantInformationText }}</p>
-    <p><a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
+    <p>{{ importantInformationText | replace(t.importantInformationLinkUrl, '<a href="' + t.importantInformationLinkUrl + '">' + t.importantInformationLinkUrl + '</a>') | safe }}</p>
   </div>
 
   {% if hearings.length > 0 %}

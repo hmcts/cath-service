@@ -34,14 +34,9 @@
       <div class="govuk-details__text">
         {% for line in importantInformationText.split('\n') %}
           {% if line %}
-            <p class="govuk-body">{{ line }}</p>
+            <p class="govuk-body">{{ line | replace(t.importantInformationLinkUrl, '<a href="' + t.importantInformationLinkUrl + '" class="govuk-link" target="_blank" rel="noopener noreferrer">' + t.importantInformationLinkUrl + '</a>') | safe }}</p>
           {% endif %}
         {% endfor %}
-        <p class="govuk-body">
-          <a href="{{ t.importantInformationLinkUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">
-            {{ t.importantInformationLinkText }}
-          </a>
-        </p>
       </div>
     </details>
 
