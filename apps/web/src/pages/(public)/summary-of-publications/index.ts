@@ -67,8 +67,7 @@ export const GET = async (req: Request, res: Response) => {
     const languageLabel = artefact.language === "ENGLISH" ? t.languageEnglish : t.languageWelsh;
 
     const formattedDate = formatDateAndLocale(artefact.contentDate.toISOString(), locale);
-    const WEEKLY_LIST_TYPES = new Set(["CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", "GRC_WEEKLY_HEARING_LIST", "WPAFCC_WEEKLY_HEARING_LIST"]);
-    const weekCommencingText = WEEKLY_LIST_TYPES.has(listType?.name ?? "") ? ` ${t.forWeekCommencing}` : "";
+    const weekCommencingText = listType?.name?.includes("WEEKLY_HEARING_LIST") ? ` ${t.forWeekCommencing}` : "";
     const displayName = `${listTypeName}${weekCommencingText} ${formattedDate}`;
 
     return {
