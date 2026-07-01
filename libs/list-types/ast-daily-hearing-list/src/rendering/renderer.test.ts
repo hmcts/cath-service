@@ -26,7 +26,7 @@ describe("renderAstDailyHearingListData", () => {
 
     expect(result.header.listTitle).toBe("Asylum Support Tribunal Daily Hearing List");
     expect(result.header.listForDate).toBe("20 June 2025");
-    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
     expect(result.hearings).toHaveLength(1);
     expect(result.hearings[0].appellant).toBe("A Smith");

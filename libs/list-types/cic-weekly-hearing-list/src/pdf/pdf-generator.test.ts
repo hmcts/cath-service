@@ -6,8 +6,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    loadTranslations: vi.fn(),
-    buildPdfFromRenderedList: vi.fn()
+    generateListPdf: vi.fn()
   };
 });
 
@@ -18,7 +17,7 @@ vi.mock("@hmcts/publication", () => ({
   }
 }));
 
-import { buildPdfFromRenderedList, loadTranslations } from "@hmcts/list-types-common";
+import { generateListPdf } from "@hmcts/list-types-common";
 
 const mockHearingList: CicWeeklyHearingList = [
   {
@@ -44,37 +43,36 @@ const baseOptions = {
 describe("generateCicWeeklyHearingListPdf", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(loadTranslations).mockResolvedValue({ lastUpdated: "Last updated" });
-    vi.mocked(buildPdfFromRenderedList).mockResolvedValue({ success: true, pdfPath: "/tmp/test.pdf", sizeBytes: 1024 });
+    vi.mocked(generateListPdf).mockResolvedValue({ success: true, pdfPath: "/tmp/test.pdf", sizeBytes: 1024 });
   });
 
   it("should generate PDF successfully", async () => {
     const result = await generateCicWeeklyHearingListPdf(baseOptions);
 
     expect(result.success).toBe(true);
-    expect(buildPdfFromRenderedList).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-artefact-id", provenanceLabel: "" }));
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-artefact-id", provenanceLabel: "" }));
   });
 
   it("should resolve known provenance to label", async () => {
     await generateCicWeeklyHearingListPdf({ ...baseOptions, provenance: "MANUAL_UPLOAD" });
 
-    expect(buildPdfFromRenderedList).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: "Manual Upload" }));
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: "Manual Upload" }));
   });
 
   it("should fall back to raw provenance string for unknown provenance", async () => {
     await generateCicWeeklyHearingListPdf({ ...baseOptions, provenance: "UNKNOWN_SOURCE" });
 
-    expect(buildPdfFromRenderedList).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: "UNKNOWN_SOURCE" }));
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: "UNKNOWN_SOURCE" }));
   });
 
-  it("should pass Welsh locale to loadTranslations", async () => {
+  it("should pass Welsh locale to generateListPdf", async () => {
     await generateCicWeeklyHearingListPdf({ ...baseOptions, locale: "cy" });
 
-    expect(loadTranslations).toHaveBeenCalledWith("cy", expect.any(Function), expect.any(Function));
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ locale: "cy" }));
   });
 
-  it("should return failure when buildPdfFromRenderedList returns failure", async () => {
-    vi.mocked(buildPdfFromRenderedList).mockResolvedValue({ success: false, error: "PDF generation failed" });
+  it("should return failure when generateListPdf returns failure", async () => {
+    vi.mocked(generateListPdf).mockResolvedValue({ success: false, error: "PDF generation failed" });
 
     const result = await generateCicWeeklyHearingListPdf(baseOptions);
 
@@ -82,12 +80,13 @@ describe("generateCicWeeklyHearingListPdf", () => {
     expect(result.error).toBe("PDF generation failed");
   });
 
-  it("should handle unexpected errors", async () => {
-    vi.mocked(buildPdfFromRenderedList).mockRejectedValue(new Error("Unexpected failure"));
+  it("should use the correct list title", async () => {
+    await generateCicWeeklyHearingListPdf(baseOptions);
 
-    const result = await generateCicWeeklyHearingListPdf(baseOptions);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("Unexpected failure");
+    expect(generateListPdf).toHaveBeenCalledWith(
+      expect.objectContaining({
+        listTitle: "Criminal Injuries Compensation Weekly Hearing List"
+      })
+    );
   });
 });

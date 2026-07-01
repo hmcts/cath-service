@@ -15,6 +15,12 @@ describe("date-formatting", () => {
       expect(result).toBe("15 Ionawr 2026");
     });
 
+    it("should format single-digit day with zero padding", () => {
+      const date = new Date(2026, 6, 1); // July 1, 2026
+      const result = formatDisplayDate(date, "en");
+      expect(result).toBe("01 July 2026");
+    });
+
     it("should handle different months", () => {
       const date = new Date(2026, 11, 25); // December 25, 2026
       const result = formatDisplayDate(date, "en");
@@ -35,6 +41,12 @@ describe("date-formatting", () => {
       const result = formatLastUpdatedDateTime(isoDateTime, "en");
       expect(result.date).toBe("15 January 2026");
       expect(result.time).toBe("2pm");
+    });
+
+    it("should zero-pad single-digit day", () => {
+      const isoDateTime = "2026-07-01T14:30:00Z";
+      const result = formatLastUpdatedDateTime(isoDateTime, "en");
+      expect(result.date).toBe("01 July 2026");
     });
 
     it("should handle morning times", () => {
@@ -96,7 +108,7 @@ describe("date-formatting", () => {
 
     it("should handle single digit day and month", () => {
       const result = formatDdMmYyyyDate("05/03/2026", "en");
-      expect(result).toBe("5 March 2026");
+      expect(result).toBe("05 March 2026");
     });
   });
 });
