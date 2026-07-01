@@ -33,6 +33,7 @@ export const PDF_BASE_STYLES = `
     .header-date { margin-bottom: 5px; }
     .address { margin-bottom: 15px; }
     .address p { margin-bottom: 0; }
+    .phone-number { margin-top: 10px; }
     .location { margin-bottom: 15px; }
     .location p { margin-bottom: 0; }
     .court-house-info { margin-bottom: 15px; }

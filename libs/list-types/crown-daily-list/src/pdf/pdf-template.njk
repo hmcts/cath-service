@@ -13,10 +13,10 @@
     <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
 
     <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
-    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p>{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
     {% if header.version | length %}
-      <p class="header-date">{{ t.version }} {{ header.version }}</p>
+      <p>{{ t.version }} {{ header.version }}</p>
     {% endif %}
 
     <div class="address">
@@ -49,7 +49,7 @@
             <p><strong>{{ line }}</strong></p>
           {% endfor %}
           {% if courtHouse.courtHousePhone | length %}
-            <p><strong>{{ courtHouse.courtHousePhone }}</strong></p>
+            <p class="phone-number"><strong>{{ courtHouse.courtHousePhone }}</strong></p>
           {% endif %}
         </div>
       {% endif %}

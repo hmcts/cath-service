@@ -136,8 +136,8 @@ describe("extractPddaSittingsSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Defendant Name(s)", value: "Alice Williams" },
-      { label: "Case Reference", value: "T20250001" },
       { label: "Prosecuting Authority", value: "CPS" },
+      { label: "Case Reference", value: "T20250001" },
       { label: "Hearing Type", value: "Trial" }
     ]);
   });
@@ -197,7 +197,7 @@ describe("extractPddaSittingsSummary", () => {
     expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Bob Jones" });
   });
 
-  it("should not include defendant field when no defendants", () => {
+  it("should include defendant field with empty value when no defendants", () => {
     const result = extractPddaSittingsSummary([
       {
         Sittings: [
@@ -215,11 +215,11 @@ describe("extractPddaSittingsSummary", () => {
     ]);
 
     const summary = result[0];
-    expect(summary.find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+    expect(summary.find((f) => f.label === "Defendant Name(s)")?.value).toBe("");
     expect(summary.find((f) => f.label === "Case Reference")?.value).toBe("T20250004");
   });
 
-  it("should not include defendant field when defendants is undefined", () => {
+  it("should include defendant field with empty value when defendants is undefined", () => {
     const result = extractPddaSittingsSummary([
       {
         Sittings: [
@@ -236,7 +236,7 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("");
   });
 
   it("should fall back to HearingType when HearingDescription is absent", () => {
@@ -377,7 +377,7 @@ describe("extractPddaSittingsSummary", () => {
     expect(result[2].find((f) => f.label === "Case Reference")?.value).toBe("C1");
   });
 
-  it("should filter out empty defendant names", () => {
+  it("should include defendant field with empty value when all defendant names are empty", () => {
     const result = extractPddaSittingsSummary([
       {
         Sittings: [
@@ -401,6 +401,6 @@ describe("extractPddaSittingsSummary", () => {
       }
     ]);
 
-    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("");
   });
 });
