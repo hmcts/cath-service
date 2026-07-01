@@ -27,6 +27,7 @@
     "@hmcts/civil-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
+    "@hmcts/grc-weekly-hearing-list": "workspace:*",
     "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
@@ -35,7 +36,10 @@
     "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*",
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
+    "@hmcts/wpafcc-weekly-hearing-list": "workspace:*",
     "ajv": "8.20.0"
   },
   "devDependencies": {

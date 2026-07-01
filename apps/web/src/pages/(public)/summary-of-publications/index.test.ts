@@ -470,6 +470,49 @@ describe("Summary of Publications - GET handler", () => {
     });
   });
 
+  describe("Weekly list types", () => {
+    it("should include forWeekCommencing text in displayName for weekly list types", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        {
+          artefactId: "grc-id-1",
+          locationId: "9",
+          listTypeId: 25,
+          contentDate: new Date("2025-06-02"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-06-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date(),
+          isFlatFile: false
+        }
+      ] as any);
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce([
+        {
+          id: 25,
+          name: "GRC_WEEKLY_HEARING_LIST",
+          friendlyName: "GRC Weekly Hearing List",
+          welshFriendlyName: "GRC Weekly Hearing List CY",
+          url: "grc-weekly-hearing-list"
+        }
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publication = renderCall.publications[0];
+      expect(publication.displayName).toContain("for week commencing");
+    });
+  });
+
   describe("Select list message", () => {
     it("should include selectListMessage in English", async () => {
       mockRequest.query = { locationId: "9" };

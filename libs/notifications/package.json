@@ -23,10 +23,14 @@
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
+    "@hmcts/grc-weekly-hearing-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*",
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*",
+    "@hmcts/wpafcc-weekly-hearing-list": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "peerDependencies": {

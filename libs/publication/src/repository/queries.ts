@@ -89,13 +89,14 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
 }
 
 export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
-  return prisma.artefact.findUnique({
+  const result = await prisma.artefact.findUnique({
     where: { artefactId },
     select: {
       artefactId: true,
       type: true,
       locationId: true,
       listTypeId: true,
+      listType: { select: { name: true } },
       contentDate: true,
       sensitivity: true,
       language: true,
@@ -108,6 +109,11 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       noMatch: true
     }
   });
+
+  if (!result) return null;
+
+  const { listType, ...rest } = result;
+  return { ...rest, listTypeName: listType.name };
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
