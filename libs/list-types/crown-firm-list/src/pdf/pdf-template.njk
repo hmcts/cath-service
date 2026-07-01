@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p>{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    {% if header.version | length %}
+      <p>{{ t.version }} {{ header.version }}</p>
+    {% endif %}
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        <p>{{ line }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.reportingRestrictionsTitle }}</h3>
+    <p>{{ t.reportingRestrictionsBodyIntro }}</p>
+    <p><strong>{{ t.reportingRestrictionsWarning }}</strong></p>
+    <p>{{ t.reportingRestrictionsBodySpecific }}</p>
+    <p>{{ t.reportingRestrictionsBodyHowever }}</p>
+    <p>{{ t.reportingRestrictionsBodyContact }}</p>
+    <ul>
+      <li>{{ t.reportingRestrictionsContactCourt }}</li>
+      <li>{{ t.reportingRestrictionsContactHmcts }}</li>
+    </ul>
+  </div>
+
+  {% for dayGroup in groupedListData %}
+    <div class="court-section">
+      <div class="section-heading">{{ dayGroup.day }}</div>
+
+      <div class="court-house-info">
+        <p><strong>{{ dayGroup.courtHouseInfo.name }}</strong></p>
+        {% for line in dayGroup.courtHouseInfo.addressLines %}
+          <p><strong>{{ line }}</strong></p>
+        {% endfor %}
+        {% if dayGroup.courtHouseInfo.phone | length %}
+          <p class="phone-number"><strong>{{ dayGroup.courtHouseInfo.phone }}</strong></p>
+        {% endif %}
+      </div>
+
+      {% for sitting in dayGroup.sittings %}
+        <div class="court-room-section">
+          <div class="section-heading">
+            {% if sitting.formattedJudiciaries | length %}
+              {{ t.courtroom }} {{ sitting.courtRoomName }}: {{ sitting.formattedJudiciaries }}
+            {% else %}
+              {{ t.courtroom }} {{ sitting.courtRoomName }}
+            {% endif %}
+          </div>
+
+          <p><strong>{{ t.sittingAt }} {{ sitting.time }}</strong></p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>{{ t.hearingTime }}</th>
+                <th class="no-wrap">{{ t.caseNumber }}</th>
+                <th>{{ t.defendant }}</th>
+                <th>{{ t.hearingType }}</th>
+                <th>{{ t.representative }}</th>
+                <th>{{ t.prosecutingAuthority }}</th>
+                <th>{{ t.listingNotes }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for hearing in sitting.hearing %}
+                {% for case in hearing.case %}
+                  <tr>
+                    <td>{{ case.timeMarkingNote }}</td>
+                    <td class="no-wrap">{{ case.caseNumber }}</td>
+                    <td>{{ case.defendants }}</td>
+                    <td>{{ hearing.displayHearingType }}</td>
+                    <td>{{ case.representative }}</td>
+                    <td>{{ case.prosecutingAuthority }}</td>
+                    <td>{{ case.listingNotes }}</td>
+                  </tr>
+                  {% if case.formattedReportingRestriction | length %}
+                    <tr class="restriction-row">
+                      <td colspan="7">
+                        <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -64,7 +64,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [4]
   },
   {
@@ -86,7 +86,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [4]
   },
   {

@@ -1,0 +1,147 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .govuk-accordion__controls {
+      text-align: right;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .govuk-accordion__section-content {
+      overflow: auto hidden;
+    }
+    .govuk-table {
+      overflow: auto hidden;
+    }
+    .restriction-list-section {
+      background-color: #f3f2f1;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .align-warning-icon {
+      top: 0;
+    }
+    .overflow-table {
+      overflow: auto hidden;
+      display: block;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <div class="parent-box">
+      <h1 id="page-heading" class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h1>
+    </div>
+
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ header.dateRange }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    {% if header.version | length %}
+      <p class="govuk-body">{{ t.version }} {{ header.version }}</p>
+    {% endif %}
+
+    {% for line in header.addressLines %}
+      <p class="govuk-body govuk-!-margin-bottom-1">{{ line }}</p>
+    {% endfor %}
+
+    {% if header.weekCommencing | length %}
+      <p class="govuk-body govuk-!-margin-top-4">{{ t.preStatementPrefix }} {{ header.weekCommencing }}</p>
+      <p class="govuk-body">{{ t.preStatementSuffix2 }}</p>
+      <p class="govuk-body">{{ t.preStatementSuffix3 }}</p>
+      <p class="govuk-body">{{ t.preStatementSuffix4 }}</p>
+    {% endif %}
+
+    <div class="govuk-grid restriction-list-section govuk-!-margin-bottom-5">
+      <div class="govuk-body">
+        <h3 class="govuk-heading-m">{{ t.reportingRestrictionsTitle }}</h3>
+        <p class="govuk-body">{{ t.reportingRestrictionsBodyIntro }}</p>
+        <div class="govuk-warning-text">
+          <span class="govuk-warning-text__icon align-warning-icon" aria-hidden="true">!</span>
+          <strong class="govuk-warning-text__text">
+            <span class="govuk-warning-text__assistive">Warning</span>
+            {{ t.reportingRestrictionsWarning }}
+          </strong>
+        </div>
+        <p class="govuk-body">{{ t.reportingRestrictionsBodySpecific }}</p>
+        <p class="govuk-body">{{ t.reportingRestrictionsBodyHowever }}</p>
+        <p class="govuk-body">{{ t.reportingRestrictionsBodyContact }}</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>{{ t.reportingRestrictionsContactCourt }}</li>
+          <li>{{ t.reportingRestrictionsContactHmcts }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
+
+    <div id="court-lists-container">
+      <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-warned-list">
+        {% for group in groupedCategories %}
+          <div class="govuk-accordion__section govuk-accordion__section--expanded">
+            <div class="govuk-accordion__section-header">
+              <h2 class="govuk-accordion__section-heading">
+                <span class="govuk-accordion__section-button">
+                  {% if group.category == "TO_BE_ALLOCATED" %}
+                    {{ t.toBeAllocated }}
+                  {% else %}
+                    {{ group.category }}
+                  {% endif %}
+                </span>
+              </h2>
+            </div>
+            <div class="govuk-accordion__section-content">
+              <table class="govuk-table overflow-table" data-module="moj-sortable-table">
+                <thead class="govuk-table__head">
+                  <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.fixedFor }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseRef }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.defendant }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.prosecutingAuthority }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.linkedCases }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.listingNotes }}</th>
+                  </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                  {% for case in group.cases %}
+                    <tr class="govuk-table__row">
+                      <td class="govuk-table__cell no-wrap">{{ case.fixedFor }}</td>
+                      <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
+                      <td class="govuk-table__cell">
+                        {% if case.isInCustody %}<span aria-hidden="true">*</span>{% endif %}{{ case.defendants }}
+                      </td>
+                      <td class="govuk-table__cell">{{ case.prosecutingAuthority }}</td>
+                      <td class="govuk-table__cell">{{ case.linkedCases }}</td>
+                      <td class="govuk-table__cell">{{ case.listingNotes }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <p class="govuk-body-s govuk-!-margin-top-6">
+      {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

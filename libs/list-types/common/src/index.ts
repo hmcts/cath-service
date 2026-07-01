@@ -38,6 +38,19 @@ export {
   type PdfGenerationResult,
   savePdfToStorage
 } from "./pdf/pdf-utilities.js";
+export {
+  createPartyDetails,
+  extractPddaSittingsSummary,
+  formatContentDate,
+  formatCrownLastUpdated,
+  formatPddaCitizenName,
+  formatPddaDefendantName,
+  formatPddaSittingTime,
+  formatPublicationDateTime,
+  formatTime,
+  type Party,
+  type PddaCitizenName
+} from "./rendering/crown-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { normaliseHearings } from "./rendering/hearing-normalisation.js";
 export * from "./sjp/json-parser.js";

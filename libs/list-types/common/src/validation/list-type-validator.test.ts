@@ -7,7 +7,8 @@ const testListTypes: ListTypeInfo[] = [
   { id: 1, name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" },
   { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
   { id: 26, name: "SJP_DELTA_PRESS_LIST", friendlyName: "Single Justice Procedure Press List (New cases)" },
-  { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" }
+  { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" },
+  { id: 99, name: "UNKNOWN_LIST_TYPE_XYZ", friendlyName: "Unknown List Type" }
 ];
 
 // Mock @hmcts/civil-daily-cause-list with no validation function to simulate a list type without a JSON schema
@@ -19,7 +20,9 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
     isValid: true,
     errors: [],
     schemaVersion: "1.0.0"
-  })
+  }),
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
 }));
 
 // Mock the dynamic import for @hmcts/sjp-press-list (used by both SJP_PRESS_LIST and SJP_DELTA_PRESS_LIST)
@@ -73,8 +76,8 @@ describe("list-type-validator", () => {
     });
 
     it("should return error for list type without JSON schema", async () => {
-      // Using list type ID 1 (CROWN_DAILY_LIST) which doesn't have a schema package
-      const result = await validateListTypeJson("1", { test: "data" }, testListTypes);
+      // Using list type ID 99 (UNKNOWN_LIST_TYPE_XYZ) which has no corresponding package
+      const result = await validateListTypeJson("99", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toHaveLength(1);
