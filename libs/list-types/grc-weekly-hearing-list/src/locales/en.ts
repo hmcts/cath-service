@@ -10,7 +10,9 @@ export const en = {
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
   importantInformationText:
-    "Parties and representatives will be informed about arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should email GRC@justice.gov.uk so that arrangements can be made. If the case is to be heard in private or is subject to a reporting restriction, this will be notified. If you join a hearing you must not make any personal or private recording or publish any part of this hearing, including court communications. It is a criminal offence to do so.",
+    "Parties and representatives will be informed about arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should email GRC@justice.gov.uk so that arrangements can be made. If the case is to be heard in private or is subject to a reporting restriction, this will be notified.",
+  importantInformationRecordingText:
+    "If you join a hearing you must not make any personal or private recording or publish any part of this hearing, including court communications. It is a criminal offence to do so.",
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   importantInformationLink2Text: "What to expect when joining a telephone or video hearing",

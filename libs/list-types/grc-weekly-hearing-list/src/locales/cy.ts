@@ -10,7 +10,9 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'Parties and representatives will be informed about arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should email GRC@justice.gov.uk so that arrangements can be made. If the case is to be heard in private or is subject to a reporting restriction, this will be notified. If you join a hearing you must not make any personal or private recording or publish any part of this hearing, including court communications. It is a criminal offence to do so.']",
+    "[WELSH TRANSLATION REQUIRED: 'Parties and representatives will be informed about arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should email GRC@justice.gov.uk so that arrangements can be made. If the case is to be heard in private or is subject to a reporting restriction, this will be notified.']",
+  importantInformationRecordingText:
+    "[WELSH TRANSLATION REQUIRED: 'If you join a hearing you must not make any personal or private recording or publish any part of this hearing, including court communications. It is a criminal offence to do so.']",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   importantInformationLink2Text: "[WELSH TRANSLATION REQUIRED: 'What to expect when joining a telephone or video hearing']",

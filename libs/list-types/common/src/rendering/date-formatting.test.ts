@@ -9,6 +9,12 @@ describe("date-formatting", () => {
       expect(result).toBe("15 January 2026");
     });
 
+    it("should format single digit day with zero padding", () => {
+      const date = new Date(2026, 0, 1); // January 1, 2026
+      const result = formatDisplayDate(date, "en");
+      expect(result).toBe("01 January 2026");
+    });
+
     it("should format date in Welsh locale", () => {
       const date = new Date(2026, 0, 15); // January 15, 2026
       const result = formatDisplayDate(date, "cy");
@@ -35,6 +41,12 @@ describe("date-formatting", () => {
       const result = formatLastUpdatedDateTime(isoDateTime, "en");
       expect(result.date).toBe("15 January 2026");
       expect(result.time).toBe("2pm");
+    });
+
+    it("should format single digit day with zero padding", () => {
+      const isoDateTime = "2026-01-01T14:30:00Z";
+      const result = formatLastUpdatedDateTime(isoDateTime, "en");
+      expect(result.date).toBe("01 January 2026");
     });
 
     it("should handle morning times", () => {
@@ -94,9 +106,9 @@ describe("date-formatting", () => {
       expect(result).toBe("25 December 2026");
     });
 
-    it("should handle single digit day and month", () => {
+    it("should handle single digit day and month with zero padding", () => {
       const result = formatDdMmYyyyDate("05/03/2026", "en");
-      expect(result).toBe("5 March 2026");
+      expect(result).toBe("05 March 2026");
     });
   });
 });

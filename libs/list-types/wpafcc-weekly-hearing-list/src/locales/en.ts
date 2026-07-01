@@ -10,7 +10,7 @@ export const en = {
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   importantInformationTitle: "Important information",
   importantInformationText:
-    'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at armedforces.listing@justice.gov.uk with the following details in the subject line "[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]" and appropriate arrangements will be made to allow access where reasonably practicable.',
+    'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at armedforces.listing@justice.gov.uk with the following details in the subject line "[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date] (need to include any other information required by the tribunal)" and appropriate arrangements will be made to allow access where reasonably practicable.',
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Search Cases",

@@ -10,7 +10,7 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at armedforces.listing@justice.gov.uk with the following details in the subject line \"[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date]\" and appropriate arrangements will be made to allow access where reasonably practicable.']",
+    "[WELSH TRANSLATION REQUIRED: 'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at armedforces.listing@justice.gov.uk with the following details in the subject line \"[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date] (need to include any other information required by the tribunal)\" and appropriate arrangements will be made to allow access where reasonably practicable.']",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio Achosion",

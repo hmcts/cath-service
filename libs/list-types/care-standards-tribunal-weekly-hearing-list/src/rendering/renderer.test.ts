@@ -26,12 +26,12 @@ describe("renderCareStandardsTribunalData", () => {
     const result = renderCareStandardsTribunalData(hearingList, options);
 
     expect(result.header.listTitle).toBe("Care Standards Tribunal Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("2 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
+    expect(result.header.weekCommencingDate).toBe("02 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
-    expect(result.hearings[0].date).toBe("2 January 2025");
+    expect(result.hearings[0].date).toBe("02 January 2025");
     expect(result.hearings[0].caseName).toBe("A Vs B");
     expect(result.hearings[0].hearingLength).toBe("1 hour");
     expect(result.hearings[0].hearingType).toBe("Substantive hearing");
@@ -70,11 +70,11 @@ describe("renderCareStandardsTribunalData", () => {
     const result = renderCareStandardsTribunalData(hearingList, options);
 
     expect(result.hearings).toHaveLength(2);
-    expect(result.hearings[0].date).toBe("2 January 2025");
-    expect(result.hearings[1].date).toBe("3 January 2025");
+    expect(result.hearings[0].date).toBe("02 January 2025");
+    expect(result.hearings[1].date).toBe("03 January 2025");
   });
 
-  it("should format date without leading zeros correctly (e.g., 01/01/2025 -> 1 January 2025)", () => {
+  it("should format date with leading zeros (e.g., 01/01/2025 -> 01 January 2025)", () => {
     const hearingList: CareStandardsTribunalHearingList = [
       {
         date: "01/01/2025",
@@ -96,7 +96,7 @@ describe("renderCareStandardsTribunalData", () => {
 
     const result = renderCareStandardsTribunalData(hearingList, options);
 
-    expect(result.hearings[0].date).toBe("1 January 2025");
+    expect(result.hearings[0].date).toBe("01 January 2025");
   });
 
   it("should format lastUpdated with time", () => {
