@@ -88,7 +88,7 @@ export function formatPddaCitizenName(name: PddaCitizenName): string {
 }
 
 export function formatPddaDefendantName(personalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "yes" | "no" }): string {
-  if (personalDetails.IsMasked === "yes" && !personalDetails.Name.CitizenNameRequestedName && personalDetails.MaskedName) {
+  if (personalDetails.IsMasked === "yes" && personalDetails.MaskedName) {
     return personalDetails.MaskedName;
   }
   return formatPddaCitizenName(personalDetails.Name);

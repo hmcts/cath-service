@@ -56,7 +56,7 @@ describe("renderCrownWarnedListData", () => {
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
   });
 
-  it("should set weekCommencing from contentDate option", async () => {
+  it("should set weekCommencing from contentDate option when date is a Monday", async () => {
     const result = await renderCrownWarnedListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
@@ -64,6 +64,26 @@ describe("renderCrownWarnedListData", () => {
     });
 
     expect(result.header.weekCommencing).toBe("10 November 2025");
+  });
+
+  it("should move weekCommencing back to the previous Monday when contentDate is a Wednesday", async () => {
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-12"),
+      locale: "en"
+    });
+
+    expect(result.header.weekCommencing).toBe("10 November 2025");
+  });
+
+  it("should move weekCommencing back to the previous Monday when contentDate is a Sunday", async () => {
+    const result = await renderCrownWarnedListData(baseInput, {
+      locationId: "102",
+      contentDate: new Date("2025-11-09"),
+      locale: "en"
+    });
+
+    expect(result.header.weekCommencing).toBe("03 November 2025");
   });
 
   it("should return empty groupedCategories when no court lists", async () => {
@@ -645,7 +665,7 @@ describe("renderCrownWarnedListData", () => {
     expect(group?.cases[0].defendants).toBe("Restricted");
   });
 
-  it("should use CitizenNameRequestedName over MaskedName when IsMasked is yes and RequestedName is present", async () => {
+  it("should use MaskedName over CitizenNameRequestedName when IsMasked is yes", async () => {
     const input = {
       ...baseInput,
       WarnedList: {
@@ -690,7 +710,7 @@ describe("renderCrownWarnedListData", () => {
     });
 
     const group = result.groupedCategories.find((g) => g.category === TO_BE_ALLOCATED_KEY);
-    expect(group?.cases[0].defendants).toBe("TestDefendantRequestedName");
+    expect(group?.cases[0].defendants).toBe("TestMaskedName2");
   });
 
   it("should use CitizenNameRequestedName for defendant when present", async () => {

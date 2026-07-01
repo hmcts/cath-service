@@ -54,7 +54,7 @@
     {% endfor %}
 
     {% if header.weekCommencing | length %}
-      <p class="govuk-body">{{ t.preStatementPrefix }} {{ header.weekCommencing }}</p>
+      <p class="govuk-body govuk-!-margin-top-4">{{ t.preStatementPrefix }} {{ header.weekCommencing }}</p>
       <p class="govuk-body">{{ t.preStatementSuffix2 }}</p>
       <p class="govuk-body">{{ t.preStatementSuffix3 }}</p>
       <p class="govuk-body">{{ t.preStatementSuffix4 }}</p>
@@ -107,10 +107,10 @@
                   <tr class="govuk-table__row">
                     <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.fixedFor }}</th>
                     <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseRef }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.defendant }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.prosecutingAuthority }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.linkedCases }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.listingNotes }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.defendant }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.prosecutingAuthority }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.linkedCases }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.listingNotes }}</th>
                   </tr>
                 </thead>
                 <tbody class="govuk-table__body">
@@ -121,7 +121,7 @@
                       <td class="govuk-table__cell">
                         {% if case.isInCustody %}<span aria-hidden="true">*</span>{% endif %}{{ case.defendants }}
                       </td>
-                      <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
+                      <td class="govuk-table__cell">{{ case.prosecutingAuthority }}</td>
                       <td class="govuk-table__cell">{{ case.linkedCases }}</td>
                       <td class="govuk-table__cell">{{ case.listingNotes }}</td>
                     </tr>

@@ -170,7 +170,7 @@ describe("extractPddaSittingsSummary", () => {
     expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Reporting Restriction Applied" });
   });
 
-  it("should use unmasked name when IsMasked is yes but no MaskedName", () => {
+  it("should use MaskedName over requested name when IsMasked is yes", () => {
     const result = extractPddaSittingsSummary([
       {
         Sittings: [
@@ -178,6 +178,88 @@ describe("extractPddaSittingsSummary", () => {
             Hearings: [
               {
                 CaseNumber: "T20250003",
+                HearingDetails: { HearingDescription: "Plea" },
+                Defendants: [
+                  {
+                    PersonalDetails: {
+                      IsMasked: "yes",
+                      MaskedName: "Reporting Restriction Applied",
+                      Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Reporting Restriction Applied" });
+  });
+
+  it("should use requested name when IsMasked is yes but no MaskedName", () => {
+    const result = extractPddaSittingsSummary([
+      {
+        Sittings: [
+          {
+            Hearings: [
+              {
+                CaseNumber: "T20250004",
+                HearingDetails: { HearingDescription: "Plea" },
+                Defendants: [
+                  {
+                    PersonalDetails: {
+                      IsMasked: "yes",
+                      Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Requested Name" });
+  });
+
+  it("should use requested name when IsMasked is no and requested name is present", () => {
+    const result = extractPddaSittingsSummary([
+      {
+        Sittings: [
+          {
+            Hearings: [
+              {
+                CaseNumber: "T20250005",
+                HearingDetails: { HearingDescription: "Plea" },
+                Defendants: [
+                  {
+                    PersonalDetails: {
+                      IsMasked: "no",
+                      Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    expect(result[0][0]).toEqual({ label: "Defendant Name(s)", value: "Requested Name" });
+  });
+
+  it("should use full name when IsMasked is yes but no MaskedName or requested name", () => {
+    const result = extractPddaSittingsSummary([
+      {
+        Sittings: [
+          {
+            Hearings: [
+              {
+                CaseNumber: "T20250006",
                 HearingDetails: { HearingDescription: "Plea" },
                 Defendants: [
                   {

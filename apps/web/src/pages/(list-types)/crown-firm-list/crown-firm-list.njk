@@ -94,7 +94,7 @@
             <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ line }}</p>
           {% endfor %}
           {% if dayGroup.courtHouseInfo.phone | length %}
-            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.phone }}</p>
+            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-top-3 govuk-!-margin-bottom-1">{{ dayGroup.courtHouseInfo.phone }}</p>
           {% endif %}
         </div>
 
@@ -117,25 +117,25 @@
                 <table class="govuk-table overflow-table" data-module="moj-sortable-table">
                   <thead class="govuk-table__head">
                     <tr class="govuk-table__row">
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingTime }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.hearingTime }}</th>
                       <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseNumber }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.defendant }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingType }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.representative }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.prosecutingAuthority }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.listingNotes }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.defendant }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.hearingType }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.representative }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.prosecutingAuthority }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.listingNotes }}</th>
                     </tr>
                   </thead>
                   <tbody class="govuk-table__body">
                     {% for hearing in sitting.hearing %}
                       {% for case in hearing.case %}
                         <tr class="govuk-table__row">
-                          <td class="govuk-table__cell no-wrap">{{ case.timeMarkingNote }}</td>
+                          <td class="govuk-table__cell">{{ case.timeMarkingNote }}</td>
                           <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
                           <td class="govuk-table__cell">{{ case.defendants }}</td>
-                          <td class="govuk-table__cell no-wrap">{{ hearing.displayHearingType }}</td>
+                          <td class="govuk-table__cell">{{ hearing.displayHearingType }}</td>
                           <td class="govuk-table__cell">{{ case.representative }}</td>
-                          <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
+                          <td class="govuk-table__cell">{{ case.prosecutingAuthority }}</td>
                           <td class="govuk-table__cell">{{ case.listingNotes }}</td>
                         </tr>
                         {% if case.formattedReportingRestriction | length %}

@@ -11,7 +11,7 @@
     <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
     <p class="bold header-date">{{ header.dateRange }}</p>
-    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p>{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
     {% if header.version | length %}
       <p>{{ t.version }} {{ header.version }}</p>
@@ -58,10 +58,10 @@
           <tr>
             <th class="no-wrap">{{ t.fixedFor }}</th>
             <th class="no-wrap">{{ t.caseRef }}</th>
-            <th class="no-wrap">{{ t.defendant }}</th>
-            <th class="no-wrap">{{ t.prosecutingAuthority }}</th>
-            <th class="no-wrap">{{ t.linkedCases }}</th>
-            <th class="no-wrap">{{ t.listingNotes }}</th>
+            <th>{{ t.defendant }}</th>
+            <th>{{ t.prosecutingAuthority }}</th>
+            <th>{{ t.linkedCases }}</th>
+            <th>{{ t.listingNotes }}</th>
           </tr>
         </thead>
         <tbody>
@@ -70,7 +70,7 @@
               <td class="no-wrap">{{ case.fixedFor }}</td>
               <td class="no-wrap">{{ case.caseNumber }}</td>
               <td>{% if case.isInCustody %}*{% endif %}{{ case.defendants }}</td>
-              <td class="no-wrap">{{ case.prosecutingAuthority }}</td>
+              <td>{{ case.prosecutingAuthority }}</td>
               <td>{{ case.linkedCases }}</td>
               <td>{{ case.listingNotes }}</td>
             </tr>

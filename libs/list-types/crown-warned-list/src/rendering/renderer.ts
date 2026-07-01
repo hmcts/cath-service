@@ -22,7 +22,7 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     addressLines: formatAddress(address),
     dateRange,
     lastUpdated: WarnedList.ListHeader.PublishedTime ? formatCrownLastUpdated(WarnedList.ListHeader.PublishedTime, options.locale) : "",
-    weekCommencing: formatContentDate(options.contentDate, options.locale),
+    weekCommencing: formatContentDate(toStartOfWeek(options.contentDate), options.locale),
     version: WarnedList.ListHeader.Version || ""
   };
 
@@ -89,6 +89,12 @@ function formatShortDate(dateStr: string | undefined): string {
   const dt = DateTime.fromISO(dateStr);
   if (!dt.isValid) return dateStr;
   return dt.toFormat("dd/MM/yyyy");
+}
+
+function toStartOfWeek(date: Date): Date {
+  const dt = DateTime.fromJSDate(date);
+  if (dt.weekday === 1) return date;
+  return dt.startOf("week").toJSDate();
 }
 
 function formatDefendantName(defendant: PddaDefendant): string {

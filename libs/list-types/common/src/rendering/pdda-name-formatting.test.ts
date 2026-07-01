@@ -34,11 +34,20 @@ describe("formatPddaDefendantName", () => {
     ).toBe("Reporting Restriction Applied");
   });
 
-  it("should use RequestedName when IsMasked is yes but RequestedName is present", () => {
+  it("should use MaskedName over RequestedName when IsMasked is yes", () => {
     expect(
       formatPddaDefendantName({
         IsMasked: "yes",
         MaskedName: "Masked",
+        Name: { CitizenNameRequestedName: "RequestedOverride", CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
+      })
+    ).toBe("Masked");
+  });
+
+  it("should use RequestedName when IsMasked is yes but no MaskedName", () => {
+    expect(
+      formatPddaDefendantName({
+        IsMasked: "yes",
         Name: { CitizenNameRequestedName: "RequestedOverride", CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
       })
     ).toBe("RequestedOverride");

@@ -133,11 +133,11 @@
                       {% for hearing in sitting.hearing %}
                         {% for case in hearing.case %}
                           <tr class="govuk-table__row">
-                            <td class="govuk-table__cell no-wrap">{{ case.timeMarkingNote }}</td>
+                            <td class="govuk-table__cell">{{ case.timeMarkingNote }}</td>
                             <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
                             <td class="govuk-table__cell">{{ case.defendants }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ hearing.displayHearingType }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.prosecutingAuthority }}</td>
+                            <td class="govuk-table__cell">{{ hearing.displayHearingType }}</td>
+                            <td class="govuk-table__cell">{{ case.prosecutingAuthority }}</td>
                             {% if session.hasListingNotes %}
                               <td class="govuk-table__cell">{{ case.listingNotes }}</td>
                             {% endif %}

@@ -13,10 +13,10 @@
     <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
 
     <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
-    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+    <p>{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
     {% if header.version | length %}
-      <p class="header-date">{{ t.version }} {{ header.version }}</p>
+      <p>{{ t.version }} {{ header.version }}</p>
     {% endif %}
 
     <div class="address">
@@ -49,7 +49,7 @@
           <p><strong>{{ line }}</strong></p>
         {% endfor %}
         {% if dayGroup.courtHouseInfo.phone | length %}
-          <p><strong>{{ dayGroup.courtHouseInfo.phone }}</strong></p>
+          <p class="phone-number"><strong>{{ dayGroup.courtHouseInfo.phone }}</strong></p>
         {% endif %}
       </div>
 
@@ -68,25 +68,25 @@
           <table>
             <thead>
               <tr>
-                <th class="no-wrap">{{ t.hearingTime }}</th>
+                <th>{{ t.hearingTime }}</th>
                 <th class="no-wrap">{{ t.caseNumber }}</th>
-                <th class="no-wrap">{{ t.defendant }}</th>
-                <th class="no-wrap">{{ t.hearingType }}</th>
-                <th class="no-wrap">{{ t.representative }}</th>
-                <th class="no-wrap">{{ t.prosecutingAuthority }}</th>
-                <th class="no-wrap">{{ t.listingNotes }}</th>
+                <th>{{ t.defendant }}</th>
+                <th>{{ t.hearingType }}</th>
+                <th>{{ t.representative }}</th>
+                <th>{{ t.prosecutingAuthority }}</th>
+                <th>{{ t.listingNotes }}</th>
               </tr>
             </thead>
             <tbody>
               {% for hearing in sitting.hearing %}
                 {% for case in hearing.case %}
                   <tr>
-                    <td class="no-wrap">{{ case.timeMarkingNote }}</td>
+                    <td>{{ case.timeMarkingNote }}</td>
                     <td class="no-wrap">{{ case.caseNumber }}</td>
                     <td>{{ case.defendants }}</td>
-                    <td class="no-wrap">{{ hearing.displayHearingType }}</td>
+                    <td>{{ hearing.displayHearingType }}</td>
                     <td>{{ case.representative }}</td>
-                    <td class="no-wrap">{{ case.prosecutingAuthority }}</td>
+                    <td>{{ case.prosecutingAuthority }}</td>
                     <td>{{ case.listingNotes }}</td>
                   </tr>
                   {% if case.formattedReportingRestriction | length %}

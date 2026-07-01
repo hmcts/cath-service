@@ -1,17 +1,8 @@
-import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
+import { type CaseSummary, formatCaseSummaryForEmail, formatPddaDefendantName, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
 import { DateTime } from "luxon";
-import type { CrownWarnedListData, PddaCase, PddaDefendant } from "../models/types.js";
+import type { CrownWarnedListData, PddaCase } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
-
-function formatDefendantName(defendant: PddaDefendant): string {
-  if (defendant.PersonalDetails.IsMasked === "yes" && defendant.PersonalDetails.MaskedName) {
-    return defendant.PersonalDetails.MaskedName;
-  }
-  const name = defendant.PersonalDetails.Name;
-  const forenames = (name.CitizenNameForename ?? []).join(" ");
-  return [forenames, name.CitizenNameSurname].filter(Boolean).join(" ");
-}
 
 function formatShortDate(dateStr: string | undefined): string {
   if (!dateStr) return "";
@@ -21,7 +12,7 @@ function formatShortDate(dateStr: string | undefined): string {
 }
 
 function buildCaseSummary(caseItem: PddaCase, fixedDate: string | undefined): CaseSummary {
-  const defendants = (caseItem.Defendants ?? []).map(formatDefendantName).filter((n) => n.length > 0);
+  const defendants = (caseItem.Defendants ?? []).map((d) => formatPddaDefendantName(d.PersonalDetails)).filter((n) => n.length > 0);
   const fields: CaseSummary = [];
 
   fields.push({ label: "Fixed for", value: formatShortDate(fixedDate) });
