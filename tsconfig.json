@@ -54,7 +54,9 @@
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
-      "@hmcts/azure-blob": ["libs/azure-blob/src"]
+      "@hmcts/azure-blob": ["libs/azure-blob/src"],
+      "@hmcts/magistrates-standard-list": ["libs/list-types/magistrates-standard-list/src"],
+      "@hmcts/magistrates-standard-list/config": ["libs/list-types/magistrates-standard-list/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

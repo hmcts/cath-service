@@ -316,5 +316,16 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SJP Public List (New cases)",
     subJurisdictionIds: [7]
+  },
+  {
+    id: 28,
+    name: "MAGISTRATES_STANDARD_LIST",
+    englishFriendlyName: "Magistrates Standard List",
+    welshFriendlyName: "Rhestr Safonol y Llys Ynadon",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-standard-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
   }
 ];
