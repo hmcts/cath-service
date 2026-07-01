@@ -10,7 +10,7 @@ vi.mock("@hmcts/third-party-user", () => ({
 
 import { deleteSecrets, deleteThirdPartyUser, findThirdPartyUserById } from "@hmcts/third-party-user";
 
-const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
+const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
 
 describe("third-party-subscribers delete page", () => {
   let req: Partial<Request>;
@@ -18,7 +18,7 @@ describe("third-party-subscribers delete page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
+    req = { query: {}, body: {}, session: {} as never, params: { id: "00000000-0000-0000-0000-000000000001" } };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
@@ -80,7 +80,7 @@ describe("third-party-subscribers delete page", () => {
 
       // Assert
       expect(deleteThirdPartyUser).not.toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/manage");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/manage");
     });
 
     it("should delete secrets and user then redirect to success page when Yes is selected", async () => {
@@ -94,9 +94,9 @@ describe("third-party-subscribers delete page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(deleteSecrets).toHaveBeenCalledWith("user-1");
-      expect(deleteThirdPartyUser).toHaveBeenCalledWith("user-1");
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/delete/success");
+      expect(deleteSecrets).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
+      expect(deleteThirdPartyUser).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/delete/success");
     });
 
     it("should set audit metadata on delete", async () => {
@@ -112,7 +112,7 @@ describe("third-party-subscribers delete page", () => {
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
         action: "Delete third party user",
-        entityInfo: "Name: Test Corp, ID: user-1"
+        entityInfo: "Name: Test Corp, ID: 00000000-0000-0000-0000-000000000001"
       });
     });
 
@@ -127,7 +127,7 @@ describe("third-party-subscribers delete page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/delete/success?lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/delete/success?lng=cy");
     });
   });
 });

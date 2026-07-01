@@ -1,5 +1,5 @@
 model ThirdPartyUser {
-  id            String                   @id @default(cuid())
+  id            String                   @id @default(uuid()) @db.Uuid
   name          String                   @db.VarChar(255)
   createdAt     DateTime                 @default(now()) @map("created_at")
   subscriptions ThirdPartySubscription[]
@@ -8,8 +8,8 @@ model ThirdPartyUser {
 }
 
 model ThirdPartySubscription {
-  id               String         @id @default(cuid())
-  thirdPartyUserId String         @map("third_party_user_id")
+  id               String         @id @default(uuid()) @db.Uuid
+  thirdPartyUserId String         @map("third_party_user_id") @db.Uuid
   listTypeId       Int            @map("list_type_id")
   sensitivity      String         @db.VarChar(20)
 

@@ -33,7 +33,7 @@ describe("third-party-user-service", () => {
 
   describe("findAllThirdPartyUsers", () => {
     it("should return all third party users with subscription counts", async () => {
-      const mockUsers = [{ id: "1", name: "Test User", createdAt: new Date(), _count: { subscriptions: 2 } }];
+      const mockUsers = [{ id: "00000000-0000-0000-0000-000000000001", name: "Test User", createdAt: new Date(), _count: { subscriptions: 2 } }];
       vi.mocked(prisma.thirdPartyUser.findMany).mockResolvedValue(mockUsers as never);
 
       const result = await findAllThirdPartyUsers();
@@ -48,14 +48,14 @@ describe("third-party-user-service", () => {
 
   describe("findThirdPartyUserById", () => {
     it("should return user with subscriptions when found", async () => {
-      const mockUser = { id: "1", name: "Test User", createdAt: new Date(), subscriptions: [] };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test User", createdAt: new Date(), subscriptions: [] };
       vi.mocked(prisma.thirdPartyUser.findUnique).mockResolvedValue(mockUser as never);
 
-      const result = await findThirdPartyUserById("1");
+      const result = await findThirdPartyUserById("00000000-0000-0000-0000-000000000001");
 
       expect(result).toEqual(mockUser);
       expect(prisma.thirdPartyUser.findUnique).toHaveBeenCalledWith({
-        where: { id: "1" },
+        where: { id: "00000000-0000-0000-0000-000000000001" },
         include: { subscriptions: true }
       });
     });
@@ -63,7 +63,7 @@ describe("third-party-user-service", () => {
     it("should return null when user not found", async () => {
       vi.mocked(prisma.thirdPartyUser.findUnique).mockResolvedValue(null);
 
-      const result = await findThirdPartyUserById("nonexistent");
+      const result = await findThirdPartyUserById("00000000-0000-0000-0000-000000000099");
 
       expect(result).toBeNull();
     });
@@ -71,7 +71,7 @@ describe("third-party-user-service", () => {
 
   describe("createThirdPartyUser", () => {
     it("should create and return a new user when name does not exist", async () => {
-      const mockUser = { id: "1", name: "New User", createdAt: new Date() };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "New User", createdAt: new Date() };
       vi.mocked(prisma.thirdPartyUser.findFirst).mockResolvedValue(null);
       vi.mocked(prisma.thirdPartyUser.create).mockResolvedValue(mockUser as never);
 
@@ -82,7 +82,7 @@ describe("third-party-user-service", () => {
     });
 
     it("should return existing user when name already exists (idempotency)", async () => {
-      const existingUser = { id: "1", name: "Existing User", createdAt: new Date() };
+      const existingUser = { id: "00000000-0000-0000-0000-000000000001", name: "Existing User", createdAt: new Date() };
       vi.mocked(prisma.thirdPartyUser.findFirst).mockResolvedValue(existingUser as never);
 
       const result = await createThirdPartyUser("Existing User");
@@ -108,13 +108,15 @@ describe("third-party-user-service", () => {
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));
 
-      await updateThirdPartySubscriptions("user-1", { CIVIL_DAILY_CAUSE_LIST: "PUBLIC", FAMILY_DAILY_CAUSE_LIST: "PRIVATE" });
+      await updateThirdPartySubscriptions("00000000-0000-0000-0000-000000000001", { CIVIL_DAILY_CAUSE_LIST: "PUBLIC", FAMILY_DAILY_CAUSE_LIST: "PRIVATE" });
 
-      expect(mockTx.thirdPartySubscription.deleteMany).toHaveBeenCalledWith({ where: { thirdPartyUserId: "user-1" } });
+      expect(mockTx.thirdPartySubscription.deleteMany).toHaveBeenCalledWith({
+        where: { thirdPartyUserId: "00000000-0000-0000-0000-000000000001" }
+      });
       expect(mockTx.thirdPartySubscription.createMany).toHaveBeenCalledWith({
         data: [
-          { thirdPartyUserId: "user-1", listTypeId: 1, sensitivity: "PUBLIC" },
-          { thirdPartyUserId: "user-1", listTypeId: 2, sensitivity: "PRIVATE" }
+          { thirdPartyUserId: "00000000-0000-0000-0000-000000000001", listTypeId: 1, sensitivity: "PUBLIC" },
+          { thirdPartyUserId: "00000000-0000-0000-0000-000000000001", listTypeId: 2, sensitivity: "PRIVATE" }
         ]
       });
     });
@@ -131,10 +133,10 @@ describe("third-party-user-service", () => {
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));
 
-      await updateThirdPartySubscriptions("user-1", { CIVIL_DAILY_CAUSE_LIST: "UNSELECTED", FAMILY_DAILY_CAUSE_LIST: "PUBLIC" });
+      await updateThirdPartySubscriptions("00000000-0000-0000-0000-000000000001", { CIVIL_DAILY_CAUSE_LIST: "UNSELECTED", FAMILY_DAILY_CAUSE_LIST: "PUBLIC" });
 
       expect(mockTx.thirdPartySubscription.createMany).toHaveBeenCalledWith({
-        data: [{ thirdPartyUserId: "user-1", listTypeId: 2, sensitivity: "PUBLIC" }]
+        data: [{ thirdPartyUserId: "00000000-0000-0000-0000-000000000001", listTypeId: 2, sensitivity: "PUBLIC" }]
       });
     });
 
@@ -150,7 +152,7 @@ describe("third-party-user-service", () => {
       };
       vi.mocked(prisma.$transaction).mockImplementation(async (fn) => fn(mockTx as never));
 
-      await updateThirdPartySubscriptions("user-1", { CIVIL_DAILY_CAUSE_LIST: "UNSELECTED" });
+      await updateThirdPartySubscriptions("00000000-0000-0000-0000-000000000001", { CIVIL_DAILY_CAUSE_LIST: "UNSELECTED" });
 
       expect(mockTx.thirdPartySubscription.createMany).not.toHaveBeenCalled();
     });
@@ -158,11 +160,15 @@ describe("third-party-user-service", () => {
 
   describe("deleteThirdPartyUser", () => {
     it("should delete the user by id", async () => {
-      vi.mocked(prisma.thirdPartyUser.delete).mockResolvedValue({ id: "1", name: "User", createdAt: new Date() } as never);
+      vi.mocked(prisma.thirdPartyUser.delete).mockResolvedValue({
+        id: "00000000-0000-0000-0000-000000000001",
+        name: "User",
+        createdAt: new Date()
+      } as never);
 
-      await deleteThirdPartyUser("1");
+      await deleteThirdPartyUser("00000000-0000-0000-0000-000000000001");
 
-      expect(prisma.thirdPartyUser.delete).toHaveBeenCalledWith({ where: { id: "1" } });
+      expect(prisma.thirdPartyUser.delete).toHaveBeenCalledWith({ where: { id: "00000000-0000-0000-0000-000000000001" } });
     });
   });
 });

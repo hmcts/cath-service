@@ -21,7 +21,7 @@ describe("third-party-users/[id] routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequest = {
-      params: { id: "user1" },
+      params: { id: "00000000-0000-0000-0000-000000000001" },
       body: {}
     };
     mockResponse = {
@@ -36,7 +36,7 @@ describe("third-party-users/[id] routes", () => {
     it("should return a third party user with subscriptions", async () => {
       // Arrange
       const mockUser = {
-        id: "user1",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
         createdAt: new Date(),
         subscriptions: [{ id: "sub1", listType: "LIST_A", sensitivity: "PUBLIC" }]
@@ -48,7 +48,7 @@ describe("third-party-users/[id] routes", () => {
 
       // Assert
       expect(prisma.thirdPartyUser.findUnique).toHaveBeenCalledWith({
-        where: { id: "user1" },
+        where: { id: "00000000-0000-0000-0000-000000000001" },
         include: { subscriptions: true }
       });
       expect(mockResponse.json).toHaveBeenCalledWith(mockUser);
@@ -83,13 +83,13 @@ describe("third-party-users/[id] routes", () => {
   describe("DELETE", () => {
     it("should delete a third party user", async () => {
       // Arrange
-      vi.mocked(prisma.thirdPartyUser.delete).mockResolvedValue({ id: "user1" } as any);
+      vi.mocked(prisma.thirdPartyUser.delete).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000001" } as any);
 
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.thirdPartyUser.delete).toHaveBeenCalledWith({ where: { id: "user1" } });
+      expect(prisma.thirdPartyUser.delete).toHaveBeenCalledWith({ where: { id: "00000000-0000-0000-0000-000000000001" } });
       expect(mockResponse.status).toHaveBeenCalledWith(204);
       expect(mockResponse.send).toHaveBeenCalled();
     });

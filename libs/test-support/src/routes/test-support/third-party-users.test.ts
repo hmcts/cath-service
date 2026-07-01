@@ -35,8 +35,8 @@ describe("third-party-users routes", () => {
     it("should return all third party users", async () => {
       // Arrange
       const mockUsers = [
-        { id: "user1", name: "Test Corp", createdAt: new Date(), _count: { subscriptions: 2 } },
-        { id: "user2", name: "Another Corp", createdAt: new Date(), _count: { subscriptions: 0 } }
+        { id: "00000000-0000-0000-0000-000000000001", name: "Test Corp", createdAt: new Date(), _count: { subscriptions: 2 } },
+        { id: "00000000-0000-0000-0000-000000000002", name: "Another Corp", createdAt: new Date(), _count: { subscriptions: 0 } }
       ];
       vi.mocked(prisma.thirdPartyUser.findMany).mockResolvedValue(mockUsers as any);
 
@@ -69,7 +69,7 @@ describe("third-party-users routes", () => {
     it("should create a third party user", async () => {
       // Arrange
       mockRequest.body = { name: "New Corp" };
-      const mockUser = { id: "user1", name: "New Corp", createdAt: new Date() };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "New Corp", createdAt: new Date() };
       vi.mocked(prisma.thirdPartyUser.create).mockResolvedValue(mockUser as any);
 
       // Act
@@ -79,7 +79,7 @@ describe("third-party-users routes", () => {
       expect(prisma.thirdPartyUser.create).toHaveBeenCalledWith({ data: { name: "New Corp" } });
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
-        id: "user1",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "New Corp",
         createdAt: mockUser.createdAt
       });
@@ -127,7 +127,7 @@ describe("third-party-users routes", () => {
   describe("DELETE", () => {
     it("should delete third party users by ids", async () => {
       // Arrange
-      mockRequest.body = { ids: ["user1", "user2"] };
+      mockRequest.body = { ids: ["00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"] };
       vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 2 } as any);
 
       // Act
@@ -135,7 +135,7 @@ describe("third-party-users routes", () => {
 
       // Assert
       expect(prisma.thirdPartyUser.deleteMany).toHaveBeenCalledWith({
-        where: { id: { in: ["user1", "user2"] } }
+        where: { id: { in: ["00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"] } }
       });
       expect(mockResponse.json).toHaveBeenCalledWith({ deleted: 2 });
     });
@@ -176,7 +176,7 @@ describe("third-party-users routes", () => {
 
     it("should return 500 on database error", async () => {
       // Arrange
-      mockRequest.body = { ids: ["user1"] };
+      mockRequest.body = { ids: ["00000000-0000-0000-0000-000000000001"] };
       vi.mocked(prisma.thirdPartyUser.deleteMany).mockRejectedValue(new Error("DB error"));
 
       // Act

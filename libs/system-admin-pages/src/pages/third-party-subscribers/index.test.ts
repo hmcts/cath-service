@@ -21,7 +21,7 @@ describe("third-party-subscribers list page", () => {
   describe("getHandler", () => {
     it("should render the page with a list of users", async () => {
       // Arrange
-      const mockUsers = [{ id: "1", name: "Test User", createdAt: new Date("2026-01-01"), _count: { subscriptions: 2 } }];
+      const mockUsers = [{ id: "00000000-0000-0000-0000-000000000001", name: "Test User", createdAt: new Date("2026-01-01"), _count: { subscriptions: 2 } }];
       vi.mocked(findAllThirdPartyUsers).mockResolvedValue(mockUsers as never);
 
       // Act
@@ -32,7 +32,7 @@ describe("third-party-subscribers list page", () => {
         "third-party-subscribers/index",
         expect.objectContaining({
           pageTitle: "Manage third-party subscribers",
-          users: [{ id: "1", name: "Test User", createdAt: "01/01/2026" }],
+          users: [{ id: "00000000-0000-0000-0000-000000000001", name: "Test User", createdAt: "01/01/2026" }],
           lngParam: ""
         })
       );

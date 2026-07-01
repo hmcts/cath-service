@@ -167,7 +167,7 @@ describe("create-third-party-user page", () => {
     it("should show duplicate name error when user with same name already exists", async () => {
       req.body = { name: "Existing User" };
       (validateThirdPartyUserName as any).mockReturnValue(null);
-      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "existing-id", name: "Existing User" });
+      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000099", name: "Existing User" });
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -185,7 +185,7 @@ describe("create-third-party-user page", () => {
     it("should be case-insensitive for duplicate name check", async () => {
       req.body = { name: "existing user" };
       (validateThirdPartyUserName as any).mockReturnValue(null);
-      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "existing-id", name: "Existing User" });
+      vi.mocked(findThirdPartyUserByName).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000099", name: "Existing User" });
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());

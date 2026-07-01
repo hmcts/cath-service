@@ -8,7 +8,7 @@ describe("third-party-subscribers delete success page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
+    req = { query: {}, body: {}, session: {} as never, params: { id: "00000000-0000-0000-0000-000000000001" } };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 

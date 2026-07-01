@@ -8,7 +8,7 @@ describe("third-party-subscribers oauth-config success page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, params: { id: "user-1" } };
+    req = { query: {}, params: { id: "00000000-0000-0000-0000-000000000001" } };
     res = { render: vi.fn(), locals: { locale: "en" } };
   });
 

@@ -14,7 +14,7 @@ describe("third-party-subscribers manage user page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
+    req = { query: {}, body: {}, session: {} as never, params: { id: "00000000-0000-0000-0000-000000000001" } };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
@@ -33,7 +33,7 @@ describe("third-party-subscribers manage user page", () => {
     it("should render manage user page with user details", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
-        id: "user-1",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
         createdAt: new Date("2026-01-15"),
         subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listType: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }]
@@ -56,7 +56,7 @@ describe("third-party-subscribers manage user page", () => {
     it("should render with zero subscription count when no subscriptions", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
-        id: "user-1",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
         createdAt: new Date(),
         subscriptions: []

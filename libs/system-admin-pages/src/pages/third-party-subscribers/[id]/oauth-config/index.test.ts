@@ -18,7 +18,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 
 import { findThirdPartyUserById, getSecret } from "@hmcts/third-party-user";
 
-const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
+const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
 
 describe("third-party-subscribers oauth-config form page", () => {
   let req: Partial<Request>;
@@ -26,7 +26,7 @@ describe("third-party-subscribers oauth-config form page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" } };
+    req = { query: {}, body: {}, session: {} as never, params: { id: "00000000-0000-0000-0000-000000000001" } };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
@@ -96,7 +96,7 @@ describe("third-party-subscribers oauth-config form page", () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
       (req.session as any).thirdPartyOauthConfig = {
-        userId: "user-1",
+        userId: "00000000-0000-0000-0000-000000000001",
         destinationUrl: "https://session.example.com/destination",
         tokenUrl: "https://session.example.com/token",
         scope: "session-scope",
@@ -190,7 +190,7 @@ describe("third-party-subscribers oauth-config form page", () => {
 
       // Assert
       expect((req.session as any).thirdPartyOauthConfig).toEqual({
-        userId: "user-1",
+        userId: "00000000-0000-0000-0000-000000000001",
         destinationUrl: "https://dest.example.com",
         tokenUrl: "https://token.example.com",
         scope: "openid",
@@ -198,7 +198,7 @@ describe("third-party-subscribers oauth-config form page", () => {
         clientSecret: "my-secret",
         isExisting: false
       });
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config/summary");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config/summary");
     });
 
     it("should redirect with Welsh param when language is cy", async () => {
@@ -217,7 +217,7 @@ describe("third-party-subscribers oauth-config form page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config/summary?lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config/summary?lng=cy");
     });
   });
 });

@@ -18,10 +18,10 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 
 import { findThirdPartyUserById, setSecret } from "@hmcts/third-party-user";
 
-const mockUser = { id: "user-1", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
+const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test Corp", createdAt: new Date(), subscriptions: [] };
 
 const mockOauthConfig = {
-  userId: "user-1",
+  userId: "00000000-0000-0000-0000-000000000001",
   destinationUrl: "https://dest.example.com",
   tokenUrl: "https://token.example.com",
   scope: "openid",
@@ -39,7 +39,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       query: {},
       body: {},
       session: { thirdPartyOauthConfig: mockOauthConfig } as never,
-      params: { id: "user-1" }
+      params: { id: "00000000-0000-0000-0000-000000000001" }
     };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
@@ -53,7 +53,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await getHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config");
     });
 
     it("should redirect to form when session userId does not match", async () => {
@@ -64,7 +64,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await getHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config");
     });
 
     it("should render summary page with config from session", async () => {
@@ -91,7 +91,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config");
     });
 
     it("should redirect to users list when user not found", async () => {
@@ -114,12 +114,12 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-destination-url", "https://dest.example.com");
-      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-token-url", "https://token.example.com");
-      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-scope", "openid");
-      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-client-id", "my-client-id");
-      expect(setSecret).toHaveBeenCalledWith("third-party-user-1-client-secret", "my-secret");
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config/success");
+      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-destination-url", "https://dest.example.com");
+      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-token-url", "https://token.example.com");
+      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-scope", "openid");
+      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-client-id", "my-client-id");
+      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-client-secret", "my-secret");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config/success");
     });
 
     it("should clear session data after saving", async () => {
@@ -146,7 +146,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       expect(req.auditMetadata).toMatchObject({
         shouldLog: true,
         action: "Update third party OAuth config",
-        entityInfo: "Name: Test Corp, ID: user-1"
+        entityInfo: "Name: Test Corp, ID: 00000000-0000-0000-0000-000000000001"
       });
     });
 
@@ -160,7 +160,7 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/oauth-config/success?lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config/success?lng=cy");
     });
   });
 });

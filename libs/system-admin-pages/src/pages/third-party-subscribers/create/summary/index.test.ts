@@ -57,7 +57,11 @@ describe("third-party-subscribers create summary page", () => {
     it("should create user and redirect to confirmation", async () => {
       // Arrange
       req.session = { thirdPartyCreate: { name: "New User" } } as never;
-      vi.mocked(createThirdPartyUser).mockResolvedValue({ id: "abc", name: "New User", createdAt: new Date() } as never);
+      vi.mocked(createThirdPartyUser).mockResolvedValue({
+        id: "00000000-0000-0000-0000-000000000001",
+        name: "New User",
+        createdAt: new Date()
+      } as never);
 
       // Act
       await postHandler(req as Request, res as Response);
@@ -65,12 +69,14 @@ describe("third-party-subscribers create summary page", () => {
       // Assert
       expect(createThirdPartyUser).toHaveBeenCalledWith("New User");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/create/confirmation");
-      expect((req.session as never as Record<string, unknown>).thirdPartyCreate).toMatchObject({ createdId: "abc" });
+      expect((req.session as never as Record<string, unknown>).thirdPartyCreate).toMatchObject({
+        createdId: "00000000-0000-0000-0000-000000000001"
+      });
     });
 
     it("should skip creation and redirect if createdId already in session (idempotency)", async () => {
       // Arrange
-      req.session = { thirdPartyCreate: { name: "Existing User", createdId: "existing-id" } } as never;
+      req.session = { thirdPartyCreate: { name: "Existing User", createdId: "00000000-0000-0000-0000-000000000002" } } as never;
 
       // Act
       await postHandler(req as Request, res as Response);
@@ -83,7 +89,7 @@ describe("third-party-subscribers create summary page", () => {
     it("should set audit metadata on creation", async () => {
       // Arrange
       req.session = { thirdPartyCreate: { name: "Audit User" } } as never;
-      vi.mocked(createThirdPartyUser).mockResolvedValue({ id: "xyz", name: "Audit User", createdAt: new Date() } as never);
+      vi.mocked(createThirdPartyUser).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000003", name: "Audit User", createdAt: new Date() } as never);
 
       // Act
       await postHandler(req as Request, res as Response);

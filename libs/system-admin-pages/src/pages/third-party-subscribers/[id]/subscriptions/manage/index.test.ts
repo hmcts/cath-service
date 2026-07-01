@@ -26,10 +26,12 @@ import { findThirdPartyUserById, updateThirdPartySubscriptions } from "@hmcts/th
 import { isFeatureEnabled } from "../../../../../feature-flags/launch-darkly.js";
 
 const mockUser = {
-  id: "user-1",
+  id: "00000000-0000-0000-0000-000000000001",
   name: "Test Corp",
   createdAt: new Date(),
-  subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listTypeId: 1, sensitivity: "PUBLIC" }]
+  subscriptions: [
+    { id: "00000000-0000-0000-0000-000000000010", thirdPartyUserId: "00000000-0000-0000-0000-000000000001", listTypeId: 1, sensitivity: "PUBLIC" }
+  ]
 };
 
 describe("third-party-subscribers subscriptions page", () => {
@@ -38,7 +40,7 @@ describe("third-party-subscribers subscriptions page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    req = { query: {}, body: {}, session: {} as never, params: { id: "user-1" }, user: { id: "admin-1" } as never };
+    req = { query: {}, body: {}, session: {} as never, params: { id: "00000000-0000-0000-0000-000000000001" }, user: { id: "admin-1" } as never };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
   });
 
@@ -144,7 +146,7 @@ describe("third-party-subscribers subscriptions page", () => {
     it("should save subscriptions and redirect to confirmation on last page", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
-      req.session = { thirdPartySubscriptions: { userId: "user-1", pending: {} } } as never;
+      req.session = { thirdPartySubscriptions: { userId: "00000000-0000-0000-0000-000000000001", pending: {} } } as never;
       req.body = { CIVIL_DAILY_CAUSE_LIST: "PUBLIC", FAMILY_DAILY_CAUSE_LIST: "PRIVATE" };
       vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined);
 
@@ -152,14 +154,17 @@ describe("third-party-subscribers subscriptions page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-1", { CIVIL_DAILY_CAUSE_LIST: "PUBLIC", FAMILY_DAILY_CAUSE_LIST: "PRIVATE" });
-      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/user-1/subscriptions/success");
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001", {
+        CIVIL_DAILY_CAUSE_LIST: "PUBLIC",
+        FAMILY_DAILY_CAUSE_LIST: "PRIVATE"
+      });
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/subscriptions/success");
     });
 
     it("should set audit metadata on save", async () => {
       // Arrange
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as never);
-      req.session = { thirdPartySubscriptions: { userId: "user-1", pending: {} } } as never;
+      req.session = { thirdPartySubscriptions: { userId: "00000000-0000-0000-0000-000000000001", pending: {} } } as never;
       req.body = { CIVIL_DAILY_CAUSE_LIST: "PUBLIC" };
       vi.mocked(updateThirdPartySubscriptions).mockResolvedValue(undefined);
 

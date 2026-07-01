@@ -73,9 +73,9 @@ describe("manage-third-party-subscriptions page", () => {
     });
 
     it("should render page with current list type IDs from user subscriptions", async () => {
-      req.query = { id: "user-123" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
       const mockUser = {
-        id: "user-123",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test User",
         subscriptions: [{ listTypeId: 1 }]
       };
@@ -94,9 +94,9 @@ describe("manage-third-party-subscriptions page", () => {
     });
 
     it("should store original subscription list type IDs in session", async () => {
-      req.query = { id: "user-123" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
       const mockUser = {
-        id: "user-123",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test User",
         subscriptions: [{ listTypeId: 1 }, { listTypeId: 2 }]
       };
@@ -106,15 +106,15 @@ describe("manage-third-party-subscriptions page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       expect((req.session as any).manageThirdPartyUser).toEqual({
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: [1, 2]
       });
     });
 
     it("should handle user with no subscriptions", async () => {
-      req.query = { id: "user-123" };
-      const mockUser = { id: "user-123", name: "Test User", subscriptions: [] };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test User", subscriptions: [] };
       vi.mocked(findThirdPartyUserById).mockResolvedValue(mockUser as any);
 
       const handler = GET[GET.length - 1];
@@ -147,7 +147,7 @@ describe("manage-third-party-subscriptions page", () => {
 
     it("should update subscriptions and redirect to success page", async () => {
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: [1]
       };
@@ -157,14 +157,14 @@ describe("manage-third-party-subscriptions page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1 }, { listTypeId: 2 }]);
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001", [{ listTypeId: 1 }, { listTypeId: 2 }]);
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscriptions-updated");
     });
 
     it("should redirect with Welsh locale on success", async () => {
       (res as any).locals = { locale: "cy" };
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: []
       };
@@ -179,7 +179,7 @@ describe("manage-third-party-subscriptions page", () => {
 
     it("should handle single listType as string", async () => {
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: []
       };
@@ -189,12 +189,12 @@ describe("manage-third-party-subscriptions page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", [{ listTypeId: 1 }]);
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001", [{ listTypeId: 1 }]);
     });
 
     it("should handle no listTypes selected", async () => {
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: [1]
       };
@@ -204,12 +204,12 @@ describe("manage-third-party-subscriptions page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("user-123", []);
+      expect(updateThirdPartySubscriptions).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001", []);
     });
 
     it("should set audit metadata with before and after list types", async () => {
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: [1]
       };
@@ -222,13 +222,13 @@ describe("manage-third-party-subscriptions page", () => {
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
         action: "Update third party subscriptions",
-        entityInfo: expect.stringMatching(/ID: user-123, Name: Test User, Previous List Types: \[.*\], Current List Types: \[.*\]/)
+        entityInfo: expect.stringMatching(/ID: 00000000-0000-0000-0000-000000000001, Name: Test User, Previous List Types: \[.*\], Current List Types: \[.*\]/)
       });
     });
 
     it("should clear session data after successful update", async () => {
       (req.session as any).manageThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User",
         originalSubscriptions: []
       };
