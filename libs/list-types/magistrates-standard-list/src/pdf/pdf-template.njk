@@ -64,7 +64,7 @@
   </div>
 
   <div class="restriction-box">
-    <h3>{{ t.restrictionInformationHeading }}</h3>
+    <h2 class="court-heading">{{ t.restrictionInformationHeading }}</h2>
     <p>{{ t.restrictionInformationP1 }}</p>
     <div class="warning-box">{{ t.restrictionInformationBoldText }}</div>
     <p>{{ t.restrictionInformationP2 }}</p>
@@ -109,15 +109,9 @@
                       {% if hearing.partyInfo.age %} {{ t.age }} {{ hearing.partyInfo.age }}{% endif %}
                     </p>
                   {% endif %}
-                  {% if hearing.partyInfo.address %}
-                    <p><span class="label">{{ t.address }}</span>{{ hearing.partyInfo.address }}</p>
-                  {% endif %}
-                  {% if hearing.prosecutingAuthority %}
-                    <p><span class="label">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
-                  {% endif %}
-                  {% if hearing.attendanceMethod %}
-                    <p><span class="label">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
-                  {% endif %}
+                  <p><span class="label">{{ t.address }}</span>{{ hearing.partyInfo.address }}</p>
+                  <p><span class="label">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
+                  <p><span class="label">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
                   {% if hearing.reportingRestriction %}
                     <p><span class="label">{{ t.reportingRestrictions }}</span>{{ hearing.reportingRestrictionDetails }}</p>
                   {% endif %}
@@ -131,12 +125,8 @@
                   {% endif %}
                   <p><span class="label">{{ t.asn }}</span>{{ hearing.partyInfo.asn }}</p>
                   <p><span class="label">{{ t.pncId }}</span>{{ hearing.partyInfo.pncId }}</p>
-                  {% if hearing.hearingType %}
-                    <p><span class="label">{{ t.hearingType }}</span>{{ hearing.hearingType }}</p>
-                  {% endif %}
-                  {% if hearing.panel %}
-                    <p><span class="label">{{ t.panel }}</span>{{ hearing.panel }}</p>
-                  {% endif %}
+                  <p><span class="label">{{ t.hearingType }}</span>{{ hearing.hearingType }}</p>
+                  <p><span class="label">{{ t.panel }}</span>{{ hearing.panel }}</p>
                 </div>
               </div>
 

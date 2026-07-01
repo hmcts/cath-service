@@ -478,4 +478,192 @@ describe("renderMagistratesStandardListData", () => {
     const hearing = result.listData[0].sittings[0].hearings[0];
     expect(hearing.attendanceMethod).toBe("VIDEO HEARING");
   });
+
+  it("should merge sittings when two hearings share the same sitting time", async () => {
+    const jsonWithTwoHearingsSameSitting: MagistratesStandardList = {
+      document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+      venue: {},
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Court 1",
+                session: [
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-01-13T10:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseUrn: "A001",
+                                party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Alice", individualSurname: "One" } }]
+                              }
+                            ]
+                          },
+                          {
+                            case: [
+                              {
+                                caseUrn: "A002",
+                                party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Bob", individualSurname: "Two" } }]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderMagistratesStandardListData(jsonWithTwoHearingsSameSitting, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-13T00:00:00.000Z")
+    });
+
+    expect(result.listData[0].sittings).toHaveLength(1);
+    expect(result.listData[0].sittings[0].hearings).toHaveLength(2);
+    expect(result.listData[0].sittings[0].hearings[0].partyInfo.name).toBe("One, Alice");
+    expect(result.listData[0].sittings[0].hearings[1].partyInfo.name).toBe("Two, Bob");
+  });
+
+  it("should merge court rooms when same courtHouseName and courtRoomName appear in multiple sessions", async () => {
+    const jsonWithTwoSessions: MagistratesStandardList = {
+      document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+      venue: {},
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Court 1",
+                session: [
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-01-13T10:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseUrn: "S001",
+                                party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "First", individualSurname: "Session" } }]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-01-13T14:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseUrn: "S002",
+                                party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Second", individualSurname: "Session" } }]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderMagistratesStandardListData(jsonWithTwoSessions, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-13T00:00:00.000Z")
+    });
+
+    expect(result.listData).toHaveLength(1);
+    expect(result.listData[0].sittings).toHaveLength(2);
+  });
+
+  it("should return empty name for party with neither individual nor organisation details", async () => {
+    const jsonWithEmptyParty: MagistratesStandardList = {
+      document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+      venue: {},
+      courtLists: [
+        {
+          courtHouse: {
+            courtHouseName: "Test Court",
+            courtRoom: [
+              {
+                courtRoomName: "Court 1",
+                session: [
+                  {
+                    sittings: [
+                      {
+                        sittingStart: "2025-01-13T10:00:00.000Z",
+                        hearing: [
+                          {
+                            case: [
+                              {
+                                caseUrn: "E001",
+                                party: [{ partyRole: "DEFENDANT" }]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    const result = await renderMagistratesStandardListData(jsonWithEmptyParty, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-13T00:00:00.000Z")
+    });
+
+    expect(result.listData[0].sittings[0].hearings[0].partyInfo.name).toBe("");
+  });
+
+  it("should format time without minutes when on the hour", async () => {
+    const result = await renderMagistratesStandardListData(FULL_JSON, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-13T00:00:00.000Z")
+    });
+
+    expect(result.listData[0].sittings[0].sittingHeading).toMatch(/^10am$/);
+  });
+
+  it("should use 2-digit day for content and published dates", async () => {
+    const result = await renderMagistratesStandardListData(MINIMAL_JSON, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-03T00:00:00.000Z")
+    });
+
+    expect(result.header.contentDate).toMatch(/^03 /);
+    expect(result.header.publishedDate).toMatch(/^13 /);
+  });
 });

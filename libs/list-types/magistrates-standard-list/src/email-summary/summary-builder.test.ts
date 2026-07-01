@@ -181,4 +181,57 @@ describe("extractCaseSummary", () => {
 
     expect(result[0].find((f) => f.label === "Offence")).toBeUndefined();
   });
+
+  it("should return empty name when party has neither individual nor organisation details", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          case: [
+            {
+              caseUrn: "URN005",
+              party: [{ partyRole: "DEFENDANT" }]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Name")).toBeUndefined();
+  });
+
+  it("should include hearing type for case hearings when present", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          hearingType: "First hearing",
+          case: [
+            {
+              caseUrn: "URN006",
+              party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Sam", individualSurname: "Green" } }]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Hearing type")?.value).toBe("First hearing");
+  });
+
+  it("should include hearing type for application hearings when present", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          hearingType: "Restraining order",
+          application: [
+            {
+              applicationReference: "APP004",
+              party: [{ subject: true, organisationDetails: { organisationName: "Applicant Org" } }]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Hearing type")?.value).toBe("Restraining order");
+  });
 });

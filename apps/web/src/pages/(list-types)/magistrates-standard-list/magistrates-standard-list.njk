@@ -16,7 +16,7 @@
 
     <div class="govuk-grid restriction-list-section govuk-!-margin-bottom-5">
       <div class="govuk-body">
-        <h3>{{ t.restrictionInformationHeading }}</h3>
+        <h2 class="govuk-heading-m">{{ t.restrictionInformationHeading }}</h2>
         <p class="govuk-body">{{ t.restrictionInformationP1 }}</p>
         <div class="govuk-warning-text">
           <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
@@ -26,23 +26,14 @@
           </strong>
         </div>
         <p class="govuk-body">{{ t.restrictionInformationP2 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
         <ul class="govuk-list govuk-list--bullet">
           <li>{{ t.restrictionBulletPoint1 }}</li>
           <li>{{ t.restrictionBulletPoint2 }}</li>
         </ul>
-        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
-        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
       </div>
     </div>
-
-    <details class="govuk-details govuk-!-margin-bottom-5" data-module="govuk-details">
-      <summary class="govuk-details__summary">
-        <span class="govuk-details__summary-text">{{ t.openJusticeTitle }}</span>
-      </summary>
-      <div class="govuk-details__text">
-        <p class="govuk-body">{{ t.openJusticeBody }}</p>
-      </div>
-    </details>
 
     <div class="govuk-form-group govuk-!-margin-top-4">
       <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
@@ -59,12 +50,12 @@
         {% set courtRoomCount = courtRoomCount + 1 %}
         <div class="site-header">
           {% if room.courtHouseName %}
-            <h2 class="govuk-heading-l site-address">{{ room.courtHouseName }}</h2>
+            <h1 class="govuk-heading-l site-address">{{ room.courtHouseName }}</h1>
           {% endif %}
           {% if room.lja %}
-            <h3 class="govuk-heading-m site-address">{{ t.lja }}: {{ room.lja }}</h3>
+            <h1 class="govuk-heading-l site-address">{{ t.lja }}: {{ room.lja }}</h1>
           {% endif %}
-          <h3 class="govuk-heading-m site-address">{{ room.courtRoomName }}</h3>
+          <h1 class="govuk-heading-l site-address">{{ room.courtRoomName }}</h1>
         </div>
 
         <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-{{ courtRoomCount }}">
@@ -102,12 +93,8 @@
                           </p>
                         {% endif %}
                         <p class="govuk-body"><span class="linked-cases-heading">{{ t.address }}</span>{{ hearing.partyInfo.address }}</p>
-                        {% if hearing.prosecutingAuthority %}
-                          <p class="govuk-body"><span class="linked-cases-heading">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
-                        {% endif %}
-                        {% if hearing.attendanceMethod %}
-                          <p class="govuk-body"><span class="linked-cases-heading">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
-                        {% endif %}
+                        <p class="govuk-body"><span class="linked-cases-heading">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
+                        <p class="govuk-body"><span class="linked-cases-heading">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
                         {% if hearing.reportingRestriction %}
                           <p class="govuk-body"><span class="linked-cases-heading">{{ t.reportingRestrictions }}</span>{{ hearing.reportingRestrictionDetails }}</p>
                         {% endif %}
@@ -119,12 +106,8 @@
                         {% endif %}
                         <p class="govuk-body"><span class="linked-cases-heading">{{ t.asn }}</span>{{ hearing.partyInfo.asn }}</p>
                         <p class="govuk-body"><span class="linked-cases-heading">{{ t.pncId }}</span>{{ hearing.partyInfo.pncId }}</p>
-                        {% if hearing.hearingType %}
-                          <p class="govuk-body"><span class="linked-cases-heading">{{ t.hearingType }}</span>{{ hearing.hearingType }}</p>
-                        {% endif %}
-                        {% if hearing.panel %}
-                          <p class="govuk-body"><span class="linked-cases-heading">{{ t.panel }}</span>{{ hearing.panel }}</p>
-                        {% endif %}
+                        <p class="govuk-body"><span class="linked-cases-heading">{{ t.hearingType }}</span>{{ hearing.hearingType }}</p>
+                        <p class="govuk-body"><span class="linked-cases-heading">{{ t.panel }}</span>{{ hearing.panel }}</p>
                       </div>
                     </div>
 
@@ -147,7 +130,7 @@
                                 <tbody class="govuk-table__body">
                                   {% if offence.offenceWording %}
                                     <tr class="govuk-table__row">
-                                      <td class="govuk-table__cell" colspan="2">{{ offence.offenceWording }}</td>
+                                      <td class="govuk-table__cell">{{ offence.offenceWording }}</td>
                                     </tr>
                                   {% endif %}
                                   {% if offence.offenceLegislation %}

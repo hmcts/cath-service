@@ -3,7 +3,6 @@ import type {
   Application,
   Case,
   CourtList,
-  Hearing,
   IndividualDetails,
   Judiciary,
   MagistratesStandardList,
@@ -15,7 +14,6 @@ import type {
   RenderedOffence,
   RenderedPartyInfo,
   RenderedSitting,
-  Session,
   Sitting
 } from "../models/types.js";
 
@@ -62,7 +60,7 @@ function processCourtLists(courtLists: CourtList[], locale: string): RenderedCou
       for (const session of courtRoom.session) {
         const sittings: RenderedSitting[] = [];
         for (const sitting of session.sittings) {
-          processSitting(sitting, courtHouse, session, sittings, locale);
+          processSitting(sitting, sittings, locale);
         }
 
         if (sittings.length === 0) continue;
@@ -88,7 +86,7 @@ function processCourtLists(courtLists: CourtList[], locale: string): RenderedCou
   return result;
 }
 
-function processSitting(sitting: Sitting, courtHouse: CourtList["courtHouse"], session: Session, sittings: RenderedSitting[], locale: string): void {
+function processSitting(sitting: Sitting, sittings: RenderedSitting[], locale: string): void {
   const sittingStartTime = formatSittingTime(sitting.sittingStart);
 
   for (const hearing of sitting.hearing) {
@@ -169,11 +167,11 @@ function buildSittingHeading(sittingStartTime: string, caseSequenceIndicator: st
 }
 
 function buildPartyInfo(party: Party, locale: string): RenderedPartyInfo {
-  if (party.individualDetails) {
-    return buildIndividualPartyInfo(party.individualDetails, locale);
-  }
   if (party.organisationDetails) {
     return buildOrganisationPartyInfo(party.organisationDetails);
+  }
+  if (party.individualDetails) {
+    return buildIndividualPartyInfo(party.individualDetails, locale);
   }
   return { name: "", dob: "", age: "", address: "", asn: "", pncId: "" };
 }
@@ -255,7 +253,7 @@ function formatAddress(address?: { line?: string[]; town?: string; county?: stri
 
 function formatDate(date: Date, locale: string): string {
   return date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", {
-    day: "numeric",
+    day: "2-digit",
     month: "long",
     year: "numeric",
     timeZone: "Europe/London"
@@ -266,7 +264,7 @@ function formatDateAndTime(isoDateTime: string, locale: string): { date: string;
   const date = new Date(isoDateTime);
   return {
     date: date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", {
-      day: "numeric",
+      day: "2-digit",
       month: "long",
       year: "numeric",
       timeZone: "Europe/London"
@@ -288,11 +286,13 @@ function formatSittingTime(isoDateTime: string): string {
 }
 
 function formatAmPmTime(date: Date): string {
-  const raw = date.toLocaleTimeString("en-GB", {
+  const minutes = date.toLocaleString("en-GB", { minute: "numeric", timeZone: "Europe/London" });
+  const options: Intl.DateTimeFormatOptions = {
     hour: "numeric",
-    minute: "2-digit",
     hour12: true,
-    timeZone: "Europe/London"
-  });
+    timeZone: "Europe/London",
+    ...(minutes !== "0" && { minute: "2-digit" })
+  };
+  const raw = date.toLocaleTimeString("en-GB", options);
   return raw.replace(/\s+(am|pm)$/i, (_, s) => s.toLowerCase());
 }
