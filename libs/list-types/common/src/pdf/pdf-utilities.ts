@@ -1,5 +1,7 @@
 import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
+import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import nunjucks from "nunjucks";
+import { PDF_BASE_STYLES } from "./pdf-styles.js";
 
 export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
@@ -15,6 +17,7 @@ export interface BasePdfGenerationOptions<T = unknown> {
   artefactId: string;
   locale: string;
   locationId: string;
+  contentDate: Date;
   jsonData: T;
   provenance?: string;
 }
@@ -59,4 +62,68 @@ export async function loadTranslations(
   }
   const { en } = await importEn();
   return en;
+}
+
+export interface RenderedListData {
+  header: unknown;
+  hearings: unknown;
+}
+
+export interface ListPdfOptions<T> extends BasePdfGenerationOptions<T> {
+  listTitle: string;
+  provenanceLabel: string;
+  templateDir: string;
+  renderData: (jsonData: T, options: { locale: string; contentDate: Date; lastReceivedDate: string; listTitle: string }) => RenderedListData;
+  importEn: () => Promise<{ en: Record<string, unknown> }>;
+  importCy: () => Promise<{ cy: Record<string, unknown> }>;
+}
+
+export async function generateListPdf<T>(options: ListPdfOptions<T>): Promise<PdfGenerationResult> {
+  try {
+    const renderedData = options.renderData(options.jsonData, {
+      locale: options.locale,
+      contentDate: options.contentDate,
+      lastReceivedDate: new Date().toISOString(),
+      listTitle: options.listTitle
+    });
+
+    const translations = await loadTranslations(options.locale, options.importEn, options.importCy);
+
+    return await buildPdfFromRenderedList({
+      artefactId: options.artefactId,
+      templateDir: options.templateDir,
+      header: renderedData.header,
+      hearings: renderedData.hearings,
+      provenanceLabel: options.provenanceLabel,
+      translations
+    });
+  } catch (error) {
+    return createPdfErrorResult(error);
+  }
+}
+
+export async function buildPdfFromRenderedList(params: {
+  artefactId: string;
+  templateDir: string;
+  header: unknown;
+  hearings: unknown;
+  provenanceLabel: string;
+  translations: Record<string, unknown>;
+}): Promise<PdfGenerationResult> {
+  const env = configureNunjucks(params.templateDir);
+  const html = env.render("pdf-template.njk", {
+    header: params.header,
+    hearings: params.hearings,
+    dataSource: params.provenanceLabel,
+    t: params.translations,
+    pdfStyles: PDF_BASE_STYLES
+  });
+
+  const pdfResult = await generatePdfFromHtml(html);
+
+  if (!pdfResult.success || !pdfResult.pdfBuffer) {
+    return { success: false, error: pdfResult.error || "PDF generation failed" };
+  }
+
+  return savePdfToStorage(params.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
 }
