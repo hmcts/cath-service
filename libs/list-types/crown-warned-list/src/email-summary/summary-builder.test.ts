@@ -276,6 +276,40 @@ describe("extractCaseSummary", () => {
     expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
   });
 
+  it("should handle entry with no Fixture in WithFixedDate", () => {
+    const testData = buildTestData({
+      CourtLists: [{ WithFixedDate: [{}] } as any]
+    });
+    expect(extractCaseSummary(testData)).toHaveLength(0);
+  });
+
+  it("should handle fixture with no Cases in WithoutFixedDate", () => {
+    const testData = buildTestData({
+      CourtLists: [{ WithoutFixedDate: [{ Fixture: [{}] }] } as any]
+    });
+    expect(extractCaseSummary(testData)).toHaveLength(0);
+  });
+
+  it("should use empty string for Case Reference when CaseNumber is absent", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [{ Defendants: [] } as any]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Case Reference")?.value).toBe("");
+  });
+
   it("should join multiple defendants with comma", () => {
     const testData = buildTestData({
       CourtLists: [

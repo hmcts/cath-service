@@ -1,6 +1,7 @@
 import { formatContentDate, formatCrownLastUpdated, formatPddaDefendantName } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
+import { formatShortDate } from "../date-formatting.js";
 import type { CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
 
 export const TO_BE_ALLOCATED_KEY = "TO_BE_ALLOCATED";
@@ -82,13 +83,6 @@ function formatLongDate(dateStr: string | undefined, locale: string): string {
   const dt = DateTime.fromISO(dateStr);
   if (!dt.isValid) return dateStr;
   return dt.toJSDate().toLocaleDateString(localeCode, { day: "2-digit", month: "long", year: "numeric" });
-}
-
-function formatShortDate(dateStr: string | undefined): string {
-  if (!dateStr) return "";
-  const dt = DateTime.fromISO(dateStr);
-  if (!dt.isValid) return dateStr;
-  return dt.toFormat("dd/MM/yyyy");
 }
 
 function toStartOfWeek(date: Date): Date {

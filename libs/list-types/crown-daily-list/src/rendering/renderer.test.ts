@@ -281,7 +281,7 @@ describe("renderCrownDailyListData", () => {
     expect(caseItem.defendants).toBe("Defendant A");
   });
 
-  it("should use CitizenNameRequestedName over MaskedName when IsMasked is yes and RequestedName is present", async () => {
+  it("should use MaskedName over CitizenNameRequestedName when IsMasked is yes", async () => {
     const input = {
       ...baseInput,
       DailyList: {
@@ -325,7 +325,7 @@ describe("renderCrownDailyListData", () => {
     });
 
     const caseItem = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
-    expect(caseItem.defendants).toBe("RequestedName");
+    expect(caseItem.defendants).toBe("Defendant A");
   });
 
   it("should format judiciary names from Judge and Justice[]", async () => {

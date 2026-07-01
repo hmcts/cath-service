@@ -800,4 +800,106 @@ describe("renderCrownWarnedListData", () => {
     expect(result.groupedCategories.find((g) => g.category === "For Trial")?.cases[0].caseNumber).toBe("T20250100");
     expect(result.groupedCategories.find((g) => g.category === "For Appeal")?.cases[0].caseNumber).toBe("T20250100");
   });
+
+  it("should return original FixedDate string when it is not a valid ISO date", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "not-a-date",
+                    Cases: [{ CaseNumber: "T20250200", Defendants: [] }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === "");
+    expect(group?.cases[0].fixedFor).toBe("not-a-date");
+  });
+
+  it("should use empty string for caseNumber when CaseNumber is absent", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [{ Defendants: [] } as any]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === "");
+    expect(group?.cases[0].caseNumber).toBe("");
+  });
+
+  it("should use empty string for linkedCase entry when CaseNumber is absent", async () => {
+    const input = {
+      ...baseInput,
+      WarnedList: {
+        ...baseInput.WarnedList,
+        CourtLists: [
+          {
+            WithFixedDate: [
+              {
+                Fixture: [
+                  {
+                    FixedDate: "2025-11-22",
+                    Cases: [
+                      {
+                        CaseNumber: "T20250300",
+                        Defendants: [],
+                        LinkedCases: [{}] as any
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    const result = await renderCrownWarnedListData(input, {
+      locationId: "102",
+      contentDate: new Date("2025-11-10"),
+      locale: "en"
+    });
+
+    const group = result.groupedCategories.find((g) => g.category === "");
+    expect(group?.cases[0].linkedCases).toBe("");
+  });
 });

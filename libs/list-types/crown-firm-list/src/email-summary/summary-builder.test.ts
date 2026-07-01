@@ -51,13 +51,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Defendant Name(s)", value: "Jane Doe" },
-      { label: "Case Reference", value: "M20250001" },
       { label: "Prosecuting Authority", value: "CPS" },
+      { label: "Case Reference", value: "M20250001" },
       { label: "Hearing Type", value: "Plea" }
     ]);
   });
 
-  it("should not include defendant field when no defendants present", () => {
+  it("should include defendant field with empty value when no defendants present", () => {
     const testData = buildTestData({
       CourtLists: [
         {
@@ -82,7 +82,7 @@ describe("extractCaseSummary", () => {
 
     const result = extractCaseSummary(testData);
 
-    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("");
   });
 
   it("should return empty array when no court lists", () => {

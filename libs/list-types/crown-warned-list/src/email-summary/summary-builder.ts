@@ -1,15 +1,8 @@
 import { type CaseSummary, formatCaseSummaryForEmail, formatPddaDefendantName, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
-import { DateTime } from "luxon";
+import { formatShortDate } from "../date-formatting.js";
 import type { CrownWarnedListData, PddaCase } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
-
-function formatShortDate(dateStr: string | undefined): string {
-  if (!dateStr) return "";
-  const dt = DateTime.fromISO(dateStr);
-  if (!dt.isValid) return dateStr;
-  return dt.toFormat("dd/MM/yyyy");
-}
 
 function buildCaseSummary(caseItem: PddaCase, fixedDate: string | undefined): CaseSummary {
   const defendants = (caseItem.Defendants ?? []).map((d) => formatPddaDefendantName(d.PersonalDetails)).filter((n) => n.length > 0);
