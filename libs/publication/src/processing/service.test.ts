@@ -7,6 +7,18 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/send-daily-hearing-list", () => ({
+  generateSendDailyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/cic-weekly-hearing-list", () => ({
+  generateCicWeeklyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/ast-daily-hearing-list", () => ({
+  generateAstDailyHearingListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
 }));
@@ -49,6 +61,9 @@ describe("publication-processor", async () => {
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
+  const { generateSendDailyHearingListPdf } = await import("@hmcts/send-daily-hearing-list");
+  const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
+  const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
@@ -250,6 +265,60 @@ describe("publication-processor", async () => {
         sizeBytes: 2048,
         exceedsMaxSize: false
       });
+    });
+
+    it("should generate PDF for SEND Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SEND_DAILY_HEARING_LIST",
+        friendlyName: "SEND Daily Hearing List"
+      } as any);
+      vi.mocked(generateSendDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/send-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 13 });
+
+      expect(generateSendDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/send-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for CIC Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CIC_WEEKLY_HEARING_LIST",
+        friendlyName: "CIC Weekly Hearing List"
+      } as any);
+      vi.mocked(generateCicWeeklyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/cic-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 14 });
+
+      expect(generateCicWeeklyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/cic-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for AST Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "AST_DAILY_HEARING_LIST",
+        friendlyName: "AST Daily Hearing List"
+      } as any);
+      vi.mocked(generateAstDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/ast-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 15 });
+
+      expect(generateAstDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/ast-pdf", sizeBytes: 1024, exceedsMaxSize: false });
     });
   });
 

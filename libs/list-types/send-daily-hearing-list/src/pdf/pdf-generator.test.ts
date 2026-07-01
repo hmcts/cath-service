@@ -87,4 +87,15 @@ describe("generateSendDailyHearingListPdf", () => {
       })
     );
   });
+
+  it("should provide working importEn and importCy callbacks", async () => {
+    await generateSendDailyHearingListPdf(baseOptions);
+
+    const callArgs = vi.mocked(generateListPdf).mock.calls[0][0];
+    const enModule = await callArgs.importEn();
+    const cyModule = await callArgs.importCy();
+
+    expect(enModule.en).toBeDefined();
+    expect(cyModule.cy).toBeDefined();
+  });
 });
