@@ -1,0 +1,27 @@
+model ThirdPartyUser {
+  id            String                   @id @default(uuid()) @db.Uuid
+  name          String                   @db.VarChar(255)
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  subscriptions ThirdPartySubscription[]
+
+  @@map("third_party_user")
+}
+
+model ThirdPartySubscription {
+  id               String         @id @default(uuid()) @db.Uuid
+  thirdPartyUserId String         @map("third_party_user_id") @db.Uuid
+  listTypeId       Int            @map("list_type_id")
+  sensitivity      String         @db.VarChar(20)
+
+  thirdPartyUser ThirdPartyUser @relation(fields: [thirdPartyUserId], references: [id], onDelete: Cascade)
+
+  @@unique([thirdPartyUserId, listTypeId])
+  @@map("third_party_subscription")
+}
+
+model ThirdPartySecret {
+  name  String @id @db.VarChar(255)
+  value String @db.VarChar(1000)
+
+  @@map("third_party_secret")
+}

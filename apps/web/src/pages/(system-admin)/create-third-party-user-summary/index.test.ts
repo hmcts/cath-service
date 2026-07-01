@@ -107,7 +107,7 @@ describe("create-third-party-user-summary page", () => {
       (req.session as any).createThirdPartyUser = {
         name: "Test User",
         idempotencyToken: "abc123",
-        createdUserId: "user-123"
+        createdUserId: "00000000-0000-0000-0000-000000000001"
       };
 
       const handler = POST[POST.length - 1];
@@ -122,7 +122,7 @@ describe("create-third-party-user-summary page", () => {
       (req.session as any).createThirdPartyUser = {
         name: "Test User",
         idempotencyToken: "abc123",
-        createdUserId: "user-123"
+        createdUserId: "00000000-0000-0000-0000-000000000001"
       };
 
       const handler = POST[POST.length - 1];
@@ -136,13 +136,13 @@ describe("create-third-party-user-summary page", () => {
         name: "Test User",
         idempotencyToken: "abc123"
       };
-      (createThirdPartyUser as any).mockResolvedValue({ id: "new-user-id", name: "Test User" });
+      (createThirdPartyUser as any).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000002", name: "Test User" });
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       expect(createThirdPartyUser).toHaveBeenCalledWith("Test User");
-      expect((req.session as any).createThirdPartyUser.createdUserId).toBe("new-user-id");
+      expect((req.session as any).createThirdPartyUser.createdUserId).toBe("00000000-0000-0000-0000-000000000002");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-user-created");
     });
 
@@ -152,7 +152,7 @@ describe("create-third-party-user-summary page", () => {
         name: "Test User",
         idempotencyToken: "abc123"
       };
-      (createThirdPartyUser as any).mockResolvedValue({ id: "new-user-id", name: "Test User" });
+      (createThirdPartyUser as any).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000002", name: "Test User" });
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -165,7 +165,7 @@ describe("create-third-party-user-summary page", () => {
         name: "Test User",
         idempotencyToken: "abc123"
       };
-      (createThirdPartyUser as any).mockResolvedValue({ id: "new-user-id", name: "Test User" });
+      (createThirdPartyUser as any).mockResolvedValue({ id: "00000000-0000-0000-0000-000000000002", name: "Test User" });
 
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
@@ -173,7 +173,7 @@ describe("create-third-party-user-summary page", () => {
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
         action: "Create third party user",
-        entityInfo: "ID: new-user-id, Name: Test User"
+        entityInfo: "ID: 00000000-0000-0000-0000-000000000002, Name: Test User"
       });
     });
   });
