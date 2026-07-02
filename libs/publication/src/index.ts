@@ -9,7 +9,7 @@ export {
   type ListType
 } from "./authorisation/service.js";
 export { getContentTypeFromExtension } from "./file-storage/content-type.js";
-export { findFileByArtefactId, getContentType, getFileBuffer, getFileExtension, getFileName } from "./file-storage/file-retrieval.js";
+export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./processing/service.js";
@@ -31,7 +31,8 @@ export {
   getArtefactType,
   getLatestSjpArtefacts,
   getLocationsWithPublicationCount,
-  type LocationWithPublicationCount
+  type LocationWithPublicationCount,
+  updateArtefactFileExtension
 } from "./repository/queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";

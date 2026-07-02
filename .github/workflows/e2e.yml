@@ -49,6 +49,11 @@ jobs:
           --health-retries 5
           --health-start-period 10s
 
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+
     env:
       # Application configuration
       BASE_URL: https://localhost:8080
@@ -57,6 +62,9 @@ jobs:
       # Database Configuration (using service containers)
       DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
       REDIS_URL: redis://localhost:6379
+
+      # Azure Blob Storage (Azurite emulator for CI)
+      AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true"
 
       # SSO Configuration
       SSO_ALLOW_HTTP_REDIRECT: false
@@ -75,10 +83,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Azure login (OIDC)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -214,7 +222,7 @@ jobs:
       # Publish test results to PR checks
       - name: Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: E2E Test Results
