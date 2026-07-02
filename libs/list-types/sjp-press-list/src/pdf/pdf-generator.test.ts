@@ -23,7 +23,7 @@ vi.mock("@hmcts/list-types-common", () => ({
   PDF_BASE_STYLES: ""
 }));
 
-import { savePdfToStorage } from "@hmcts/list-types-common";
+import { configureNunjucks, extractPressCases, savePdfToStorage } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { generateSjpPressListPdf } from "./pdf-generator.js";
 
@@ -96,5 +96,67 @@ describe("generateSjpPressListPdf", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain("Unexpected failure");
+  });
+
+  it("should include age in formattedDob when age is present", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 512 });
+    vi.mocked(extractPressCases).mockReturnValue([
+      {
+        name: "A Defendant",
+        dateOfBirth: new Date("1990-01-01"),
+        age: 35,
+        reference: null,
+        address: null,
+        postcode: null,
+        prosecutor: "CPS",
+        offences: []
+      }
+    ]);
+    const mockRender = vi.fn().mockReturnValue("<html>test</html>");
+    vi.mocked(configureNunjucks).mockReturnValue({ render: mockRender } as any);
+
+    await generateSjpPressListPdf({
+      artefactId: "test-dob-age",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
+      listTypeName: "SJP_PRESS_LIST"
+    });
+
+    const renderCall = mockRender.mock.calls[0][1];
+    expect(renderCall.cases[0].formattedDob).toMatch(/\(35\)$/);
+  });
+
+  it("should omit age from formattedDob when age is null", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 512 });
+    vi.mocked(extractPressCases).mockReturnValue([
+      {
+        name: "A Defendant",
+        dateOfBirth: new Date("1990-01-01"),
+        age: null,
+        reference: null,
+        address: null,
+        postcode: null,
+        prosecutor: "CPS",
+        offences: []
+      }
+    ]);
+    const mockRender = vi.fn().mockReturnValue("<html>test</html>");
+    vi.mocked(configureNunjucks).mockReturnValue({ render: mockRender } as any);
+
+    await generateSjpPressListPdf({
+      artefactId: "test-dob-no-age",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: { document: { publicationDate: "2025-01-01" }, courtLists: [] },
+      listTypeName: "SJP_PRESS_LIST"
+    });
+
+    const renderCall = mockRender.mock.calls[0][1];
+    expect(renderCall.cases[0].formattedDob).not.toContain("(");
   });
 });

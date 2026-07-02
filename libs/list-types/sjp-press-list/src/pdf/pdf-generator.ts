@@ -30,9 +30,10 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<SjpJson> {
   listTypeName: string;
 }
 
-function formatDateOfBirth(dob: Date | null): string {
+function formatDateOfBirth(dob: Date | null, age: number | null): string {
   if (!dob) return "";
-  return dob.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+  const formatted = dob.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+  return age !== null ? `${formatted} (${age})` : formatted;
 }
 
 export async function generateSjpPressListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
@@ -52,7 +53,7 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
 
     const formattedCases = cases.map((c) => ({
       ...c,
-      formattedDob: formatDateOfBirth(c.dateOfBirth)
+      formattedDob: formatDateOfBirth(c.dateOfBirth, c.age)
     }));
 
     const env = configureNunjucks(__dirname);
