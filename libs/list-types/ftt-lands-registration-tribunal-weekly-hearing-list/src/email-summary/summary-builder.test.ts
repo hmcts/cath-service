@@ -38,13 +38,13 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual([
       { label: "Date", value: "01/01/2025" },
-      { label: "Hearing Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "LRT/00001/2025" }
+      { label: "Hearing time", value: "10:00am" },
+      { label: "Case reference number", value: "LRT/00001/2025" }
     ]);
     expect(result[1]).toEqual([
       { label: "Date", value: "02/01/2025" },
-      { label: "Hearing Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "LRT/00002/2025" }
+      { label: "Hearing time", value: "2:00pm" },
+      { label: "Case reference number", value: "LRT/00002/2025" }
     ]);
   });
 
@@ -79,8 +79,8 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
       { label: "Date", value: "" },
-      { label: "Hearing Time", value: "" },
-      { label: "Case Reference Number", value: "" }
+      { label: "Hearing time", value: "" },
+      { label: "Case reference number", value: "" }
     ]);
   });
 });
@@ -91,8 +91,8 @@ describe("formatCaseSummaryForEmail", () => {
     const items = [
       [
         { label: "Date", value: "01/01/2025" },
-        { label: "Hearing Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "LRT/00001/2025" }
+        { label: "Hearing time", value: "10:00am" },
+        { label: "Case reference number", value: "LRT/00001/2025" }
       ]
     ];
 
@@ -102,8 +102,8 @@ describe("formatCaseSummaryForEmail", () => {
     // Assert
     expect(result).toContain("---");
     expect(result).toContain("Date - 01/01/2025");
-    expect(result).toContain("Hearing Time - 10:00am");
-    expect(result).toContain("Case Reference Number - LRT/00001/2025");
+    expect(result).toContain("Hearing time - 10:00am");
+    expect(result).toContain("Case reference number - LRT/00001/2025");
   });
 
   it("should handle empty case list", () => {

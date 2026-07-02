@@ -7,28 +7,28 @@ import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-han
 
 const validate = createJsonValidator(schemaPath);
 
-const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyTitle: string }> = {
-  33: {
+const LIST_TYPE_CONFIG: Record<string, { courtName: string; enTitle: string; cyTitle: string }> = {
+  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
     courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
     enTitle: en.rptEasternPageTitle,
     cyTitle: cy.rptEasternPageTitle
   },
-  34: {
+  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
     courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
     enTitle: en.rptLondonPageTitle,
     cyTitle: cy.rptLondonPageTitle
   },
-  35: {
+  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
     courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
     enTitle: en.rptMidlandsPageTitle,
     cyTitle: cy.rptMidlandsPageTitle
   },
-  36: {
+  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
     courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
     enTitle: en.rptNorthernPageTitle,
     cyTitle: cy.rptNorthernPageTitle
   },
-  37: {
+  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     enTitle: en.rptSouthernPageTitle,
     cyTitle: cy.rptSouthernPageTitle
@@ -36,7 +36,7 @@ const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyT
 };
 
 function guardArtefact(artefact: Artefact, res: Response): boolean {
-  if (!LIST_TYPE_CONFIG[artefact.listTypeId]) {
+  if (!artefact.listTypeName || !LIST_TYPE_CONFIG[artefact.listTypeName]) {
     res.status(400).render("errors/common", {
       en,
       cy,
@@ -57,7 +57,7 @@ export const GET = createSimpleListTypeHandler<FttRptHearingList>({
   guardArtefact,
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeId];
+    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName!];
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
     const { header, hearings } = renderFttRptData(jsonData, {

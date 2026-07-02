@@ -14,8 +14,8 @@ export const cy = {
     date: "Date",
     time: "Time",
     appellant: "Appellant",
-    caseReferenceNumber: "Case Reference Number",
-    hearingType: "Hearing Type",
+    caseReferenceNumber: "Case reference number",
+    hearingType: "Hearing type",
     courtroom: "Courtroom",
     additionalInformation: "Additional information"
   },

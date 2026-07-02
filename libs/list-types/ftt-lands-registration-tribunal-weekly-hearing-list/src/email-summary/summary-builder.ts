@@ -6,7 +6,7 @@ export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 export function extractCaseSummary(jsonData: FttLrtHearingList): CaseSummary[] {
   return jsonData.map((hearing) => [
     { label: "Date", value: hearing.date || "" },
-    { label: "Hearing Time", value: hearing.hearingTime || "" },
-    { label: "Case Reference Number", value: hearing.caseReferenceNumber || "" }
+    { label: "Hearing time", value: hearing.hearingTime || "" },
+    { label: "Case reference number", value: hearing.caseReferenceNumber || "" }
   ]);
 }

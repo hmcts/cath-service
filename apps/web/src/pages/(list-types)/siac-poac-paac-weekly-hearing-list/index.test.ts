@@ -38,16 +38,19 @@ import { GET } from "./index.js";
 const LIST_TYPE_CASES = [
   {
     listTypeId: 28,
+    listTypeName: "SIAC_WEEKLY_HEARING_LIST",
     courtName: "Special Immigration Appeals Commission",
     listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
   },
   {
     listTypeId: 29,
+    listTypeName: "POAC_WEEKLY_HEARING_LIST",
     courtName: "Proscribed Organisations Appeal Commission",
     listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List"
   },
   {
     listTypeId: 30,
+    listTypeName: "PAAC_WEEKLY_HEARING_LIST",
     courtName: "Pathogens Access Appeal Commission",
     listTitle: "Pathogens Access Appeal Commission Weekly Hearing List"
   }
@@ -90,11 +93,12 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
-    it("should return 400 for an unknown listTypeId", async () => {
+    it("should return 400 for an unknown listTypeName", async () => {
       req.query = { artefactId: "test-id" };
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 99,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -109,6 +113,7 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 28,
+        listTypeName: "SIAC_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -123,6 +128,7 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 28,
+        listTypeName: "SIAC_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -147,6 +153,7 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 28,
+        listTypeName: "SIAC_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -167,12 +174,13 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       expect(res.render).toHaveBeenCalledWith("siac-poac-paac-weekly-hearing-list", expect.objectContaining({ dataSource: "Lanlwytho â Llaw" }));
     });
 
-    for (const { listTypeId, courtName, listTitle } of LIST_TYPE_CASES) {
-      it(`should render correctly for listTypeId ${listTypeId} (${courtName})`, async () => {
+    for (const { listTypeId, listTypeName, courtName, listTitle } of LIST_TYPE_CASES) {
+      it(`should render correctly for ${listTypeName} (${courtName})`, async () => {
         // Arrange
         const mockArtefact = {
           artefactId: `test-artefact-${listTypeId}`,
           listTypeId,
+          listTypeName,
           contentDate: new Date("2026-01-01"),
           lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
           provenance: "MANUAL_UPLOAD"

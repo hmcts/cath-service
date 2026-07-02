@@ -12,18 +12,18 @@ import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-han
 
 const validate = createJsonValidator(schemaPath);
 
-const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyTitle: string }> = {
-  28: {
+const LIST_TYPE_CONFIG: Record<string, { courtName: string; enTitle: string; cyTitle: string }> = {
+  SIAC_WEEKLY_HEARING_LIST: {
     courtName: "Special Immigration Appeals Commission",
     enTitle: en.siacPageTitle,
     cyTitle: cy.siacPageTitle
   },
-  29: {
+  POAC_WEEKLY_HEARING_LIST: {
     courtName: "Proscribed Organisations Appeal Commission",
     enTitle: en.poacPageTitle,
     cyTitle: cy.poacPageTitle
   },
-  30: {
+  PAAC_WEEKLY_HEARING_LIST: {
     courtName: "Pathogens Access Appeal Commission",
     enTitle: en.paacPageTitle,
     cyTitle: cy.paacPageTitle
@@ -31,7 +31,7 @@ const LIST_TYPE_CONFIG: Record<number, { courtName: string; enTitle: string; cyT
 };
 
 function guardArtefact(artefact: Artefact, res: Response): boolean {
-  if (!LIST_TYPE_CONFIG[artefact.listTypeId]) {
+  if (!artefact.listTypeName || !LIST_TYPE_CONFIG[artefact.listTypeName]) {
     res.status(400).render("errors/common", {
       en,
       cy,
@@ -52,7 +52,7 @@ export const GET = createSimpleListTypeHandler<SiacPoacPaacHearingList>({
   guardArtefact,
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeId];
+    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName!];
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
     const { header, hearings } = renderSiacPoacPaacData(jsonData, {

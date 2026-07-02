@@ -45,12 +45,12 @@ describe("extractCaseSummary", () => {
     expect(result[0]).toEqual([
       { label: "Date", value: "01/01/2025" },
       { label: "Time", value: "10:00am" },
-      { label: "Case Reference Number", value: "RPT/00001/2025" }
+      { label: "Case reference number", value: "RPT/00001/2025" }
     ]);
     expect(result[1]).toEqual([
       { label: "Date", value: "02/01/2025" },
       { label: "Time", value: "2:00pm" },
-      { label: "Case Reference Number", value: "RPT/00002/2025" }
+      { label: "Case reference number", value: "RPT/00002/2025" }
     ]);
   });
 
@@ -89,7 +89,7 @@ describe("extractCaseSummary", () => {
     expect(result[0]).toEqual([
       { label: "Date", value: "" },
       { label: "Time", value: "" },
-      { label: "Case Reference Number", value: "" }
+      { label: "Case reference number", value: "" }
     ]);
   });
 });
@@ -101,7 +101,7 @@ describe("formatCaseSummaryForEmail", () => {
       [
         { label: "Date", value: "01/01/2025" },
         { label: "Time", value: "10:00am" },
-        { label: "Case Reference Number", value: "RPT/00001/2025" }
+        { label: "Case reference number", value: "RPT/00001/2025" }
       ]
     ];
 
@@ -112,7 +112,7 @@ describe("formatCaseSummaryForEmail", () => {
     expect(result).toContain("---");
     expect(result).toContain("Date - 01/01/2025");
     expect(result).toContain("Time - 10:00am");
-    expect(result).toContain("Case Reference Number - RPT/00001/2025");
+    expect(result).toContain("Case reference number - RPT/00001/2025");
   });
 
   it("should handle empty case list", () => {

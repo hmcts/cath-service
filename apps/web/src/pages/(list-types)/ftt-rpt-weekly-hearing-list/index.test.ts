@@ -42,26 +42,31 @@ import { GET } from "./index.js";
 const REGION_CASES = [
   {
     listTypeId: 33,
+    listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"
   },
   {
     listTypeId: 34,
+    listTypeName: "FTT_RPT_LONDON_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"
   },
   {
     listTypeId: 35,
+    listTypeName: "FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List"
   },
   {
     listTypeId: 36,
+    listTypeName: "FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
   },
   {
     listTypeId: 37,
+    listTypeName: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
   }
@@ -106,11 +111,12 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
-    it("should return 400 for an unknown listTypeId", async () => {
+    it("should return 400 for an unknown listTypeName", async () => {
       req.query = { artefactId: "test-id" };
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 99,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -125,6 +131,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 33,
+        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -139,6 +146,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 33,
+        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -163,6 +171,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       const mockArtefact = {
         artefactId: "test-id",
         listTypeId: 33,
+        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -184,12 +193,13 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       expect(res.render).toHaveBeenCalledWith("ftt-rpt-weekly-hearing-list", expect.objectContaining({ dataSource: "Lanlwytho â Llaw" }));
     });
 
-    for (const { listTypeId, courtName, listTitle } of REGION_CASES) {
-      it(`should render correctly for listTypeId ${listTypeId} (${courtName.split(": ")[1]})`, async () => {
+    for (const { listTypeId, listTypeName, courtName, listTitle } of REGION_CASES) {
+      it(`should render correctly for ${listTypeName} (${courtName.split(": ")[1]})`, async () => {
         // Arrange
         const mockArtefact = {
           artefactId: `test-artefact-${listTypeId}`,
           listTypeId,
+          listTypeName,
           contentDate: new Date("2026-01-01"),
           lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
           provenance: "MANUAL_UPLOAD"

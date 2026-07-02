@@ -7,6 +7,6 @@ export function extractCaseSummary(jsonData: SiacPoacPaacHearingList): CaseSumma
   return jsonData.map((hearing) => [
     { label: "Date", value: hearing.date || "" },
     { label: "Time", value: hearing.time || "" },
-    { label: "Case Reference Number", value: hearing.caseReferenceNumber || "" }
+    { label: "Case reference number", value: hearing.caseReferenceNumber || "" }
   ]);
 }

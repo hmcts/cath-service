@@ -18,12 +18,12 @@ export const cy = {
     date: "Date",
     time: "Time",
     venue: "Venue",
-    caseType: "Case Type",
-    caseReferenceNumber: "Case Reference Number",
+    caseType: "Case type",
+    caseReferenceNumber: "Case reference number",
     judges: "Judge(s)",
     members: "Member(s)",
-    hearingMethod: "Hearing Method",
-    additionalInformation: "Additional Information"
+    hearingMethod: "Hearing method",
+    additionalInformation: "Additional information"
   },
   dataSource: "Data source",
   backToTop: "Back to top",

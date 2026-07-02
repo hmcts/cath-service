@@ -21,9 +21,9 @@ export const cy = {
   searchCasesLabel: "Search by case name, date, judge, or other details",
   tableHeaders: {
     date: "Date",
-    hearingTime: "Hearing Time",
-    caseName: "Case Name",
-    caseReferenceNumber: "Case Reference Number",
+    hearingTime: "Hearing time",
+    caseName: "Case name",
+    caseReferenceNumber: "Case reference number",
     judges: "Judge(s)",
     members: "Member(s)",
     venuePlatform: "Venue/Platform"
