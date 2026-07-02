@@ -1,0 +1,184 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block head %}
+  {{ super() }}
+  <style>
+    .govuk-accordion__controls {
+      text-align: right;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .govuk-accordion__section-content {
+      overflow: auto hidden;
+    }
+    .govuk-table {
+      overflow: auto hidden;
+    }
+    .restriction-list-section {
+      background-color: #f3f2f1;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .no-border-bottom {
+      border-bottom: none !important;
+    }
+  </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h2 class="govuk-heading-l">{{ t.header }} {{ header.locationName }}</h2>
+
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.listUpdated | replace("DATE", header.publishedDate) }} {{ header.publishedTime }}</p>
+
+    {% if header.venueAddress | length %}
+      <p class="govuk-body">
+        {% for line in header.venueAddress %}
+          {{ line }}{% if not loop.last %}<br>{% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+
+    <div class="govuk-grid restriction-list-section govuk-!-margin-bottom-5">
+      <div class="govuk-body">
+        <h3>{{ t.restrictionInformationHeading }}</h3>
+        <p class="govuk-body">{{ t.restrictionInformationP1 }}</p>
+        <div class="govuk-warning-text">
+          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+          <strong class="govuk-warning-text__text">
+            <span class="govuk-warning-text__assistive">Warning</span>
+            {{ t.restrictionInformationBoldText }}
+          </strong>
+        </div>
+        <p class="govuk-body">{{ t.restrictionInformationP2 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>{{ t.restrictionBulletPoint1 }}</li>
+          <li>{{ t.restrictionBulletPoint2 }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-heading-m">{{ t.searchCases }}</h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
+
+    <div id="court-lists-container">
+      {% for courtList in listData.courtLists %}
+        {% set courtHouse = courtList.courtHouse %}
+        <h2 class="govuk-heading-l">{{ t.sittingAt }} {{ header.locationName }}</h2>
+        <div class="govuk-accordion" data-module="govuk-accordion">
+          {% for courtRoom in courtHouse.courtRoom %}
+            {% for session in courtRoom.session %}
+              <div class="govuk-accordion__section govuk-accordion__section--expanded">
+                <div class="govuk-accordion__section-header">
+                  <h2 class="govuk-accordion__section-heading">
+                    <span class="govuk-accordion__section-button">
+                      {% if session.formattedJudiciaries | length %}
+                        {{ courtRoom.courtRoomName }}: {{ session.formattedJudiciaries }}
+                      {% else %}
+                        {{ courtRoom.courtRoomName }}
+                      {% endif %}
+                    </span>
+                  </h2>
+                </div>
+                <div class="govuk-accordion__section-content">
+                  <div class="govuk-!-margin-bottom-4 overflow-table">
+                    <table class="govuk-table overflow-table" data-module="moj-sortable-table">
+                      <thead class="govuk-table__head">
+                        <tr class="govuk-table__row">
+                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.sittingAt }}</th>
+                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.urn }}</th>
+                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.name }}</th>
+                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.hearingType }}</th>
+                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.prosecutingAuthority }}</th>
+                        </tr>
+                      </thead>
+                      <tbody class="govuk-table__body">
+                        {% for sitting in session.sittings %}
+                          {% for hearing in sitting.hearing %}
+                            {% for case in hearing.case %}
+                              {% set hasOffences = case.offences | length %}
+                              {% set hasReporting = case.reportingRestriction %}
+                              {% set noBorder = "no-border-bottom" if (hasOffences or hasReporting) else "" %}
+                              <tr class="govuk-table__row">
+                                <td class="govuk-table__cell {{ noBorder }} no-wrap">{{ sitting.time }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ case.caseUrn }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ case.defendant }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ hearing.hearingType }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ case.prosecutingAuthority }}</td>
+                              </tr>
+                              {% if hasOffences %}
+                                <tr class="govuk-table__row">
+                                  <td class="govuk-table__cell {% if hasReporting %}no-border-bottom{% endif %}" colspan="2">
+                                    <span class="govuk-!-font-weight-bold">{{ t.offenceDetails }}:</span>
+                                  </td>
+                                  <td class="govuk-table__cell {% if hasReporting %}no-border-bottom{% endif %}" colspan="3">
+                                    {% for offence in case.offences %}
+                                      {{ offence }}<br>
+                                    {% endfor %}
+                                  </td>
+                                </tr>
+                              {% endif %}
+                              {% if hasReporting %}
+                                <tr class="govuk-table__row">
+                                  <td class="govuk-table__cell" colspan="2">
+                                    <span class="govuk-!-font-weight-bold">{{ t.reportingRestrictions }}:</span>
+                                  </td>
+                                  <td class="govuk-table__cell" colspan="3">{{ t.reportingRestrictionText }}</td>
+                                </tr>
+                              {% endif %}
+                            {% endfor %}
+                            {% for application in hearing.application %}
+                              {% set hasOffences = application.offences | length %}
+                              {% set noBorder = "no-border-bottom" if hasOffences else "" %}
+                              <tr class="govuk-table__row">
+                                <td class="govuk-table__cell {{ noBorder }} no-wrap">{{ sitting.time }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ application.applicationReference }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ application.defendant }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ hearing.hearingType }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}">{{ application.prosecutingAuthority }}</td>
+                              </tr>
+                              {% if hasOffences %}
+                                <tr class="govuk-table__row">
+                                  <td class="govuk-table__cell" colspan="2">
+                                    <span class="govuk-!-font-weight-bold">{{ t.offenceDetails }}:</span>
+                                  </td>
+                                  <td class="govuk-table__cell" colspan="3">
+                                    {% for offence in application.offences %}
+                                      {{ offence }}<br>
+                                    {% endfor %}
+                                  </td>
+                                </tr>
+                              {% endif %}
+                            {% endfor %}
+                          {% endfor %}
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">
+      {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+  </div>
+</div>
+{% endblock %}

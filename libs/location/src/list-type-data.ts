@@ -6,7 +6,7 @@ export interface ListTypeData {
   provenance: string;
   urlPath?: string;
   isNonStrategic: boolean;
-  defaultSensitivity: string;
+  defaultSensitivity: string | null;
   shortenedFriendlyName?: string;
   subJurisdictionIds: number[];
 }
@@ -53,7 +53,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: null,
     subJurisdictionIds: [7]
   },
   {

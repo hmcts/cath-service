@@ -36,6 +36,8 @@
       "@hmcts/london-administrative-court-daily-cause-list": ["libs/list-types/london-administrative-court-daily-cause-list/src"],
       "@hmcts/court-of-appeal-civil-daily-cause-list": ["libs/list-types/court-of-appeal-civil-daily-cause-list/src"],
       "@hmcts/administrative-court-daily-cause-list": ["libs/list-types/administrative-court-daily-cause-list/src"],
+      "@hmcts/magistrates-public-list": ["libs/list-types/magistrates-public-list/src"],
+      "@hmcts/magistrates-public-list/config": ["libs/list-types/magistrates-public-list/src/config"],
       "@hmcts/blob-ingestion": ["libs/api/src"],
       "@hmcts/blob-ingestion/middleware/oauth-middleware": ["libs/api/src/middleware/oauth-middleware.ts"],
       "@hmcts/blob-ingestion/repository/model": ["libs/api/src/blob-ingestion/repository/model.ts"],

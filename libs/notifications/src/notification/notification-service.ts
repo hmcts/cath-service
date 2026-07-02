@@ -22,6 +22,10 @@ import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import {
+  extractMagistratesPublicListCaseSummary as extractMagistratesPublicSummary,
+  formatMagistratesPublicListCaseSummaryForEmail as formatMagistratesPublicSummaryForEmail
+} from "@hmcts/magistrates-public-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
@@ -93,7 +97,11 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  MAGISTRATES_PUBLIC_LIST: {
+    extract: extractMagistratesPublicSummary as SummaryExtractor,
+    format: formatMagistratesPublicSummaryForEmail
+  }
 };
 
 export interface NotificationResult {

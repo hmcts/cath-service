@@ -32,9 +32,6 @@ export function initListTypeSensitivity() {
       return;
     }
 
-    const defaultSensitivity = listTypeSensitivityMap[selectedListTypeId];
-    if (defaultSensitivity) {
-      sensitivitySelect.value = defaultSensitivity;
-    }
+    sensitivitySelect.value = listTypeSensitivityMap[selectedListTypeId] || "";
   });
 }
