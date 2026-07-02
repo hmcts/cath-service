@@ -16,7 +16,7 @@ import type { UtiacJrLondonHearingList } from "../models/types.js";
 import { renderUtiacJrLondonDailyHearingListData } from "../rendering/renderer-london.js";
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacJrLondonHearingList> {
-  displayFrom: Date;
+  contentDate: Date;
 }
 
 export async function generateUtiacJrLondonDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
@@ -24,7 +24,7 @@ export async function generateUtiacJrLondonDailyHearingListPdf(options: PdfGener
     const renderedData = renderUtiacJrLondonDailyHearingListData(options.jsonData, {
       locale: options.locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: options.displayFrom,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     });

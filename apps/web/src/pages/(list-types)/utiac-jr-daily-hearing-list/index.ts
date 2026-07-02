@@ -31,7 +31,7 @@ function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact
     const { header, hearings } = renderUtiacJrLondonDailyHearingListData(jsonData as UtiacJrLondonHearingList, {
       locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: artefact.displayFrom,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: pageTitle
     });
@@ -41,7 +41,7 @@ function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact
     const { header, hearings } = renderUtiacJrDailyHearingListData(jsonData as UtiacJrHearingList, {
       locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: artefact.displayFrom,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: pageTitle
     });

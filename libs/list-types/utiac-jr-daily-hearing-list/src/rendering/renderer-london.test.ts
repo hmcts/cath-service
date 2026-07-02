@@ -21,7 +21,7 @@ describe("renderUtiacJrLondonDailyHearingListData", () => {
     const options = {
       locale: "en",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-14T09:55:00Z",
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     };
@@ -73,7 +73,7 @@ describe("renderUtiacJrLondonDailyHearingListData", () => {
     const options = {
       locale: "en",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-14T09:55:00Z",
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     };
@@ -94,7 +94,7 @@ describe("renderUtiacJrLondonDailyHearingListData", () => {
     const options = {
       locale: "en",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-14T09:55:00Z",
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     };
@@ -125,7 +125,7 @@ describe("renderUtiacJrLondonDailyHearingListData", () => {
     const options = {
       locale: "en",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: new Date(2025, 0, 15),
+      contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-14T14:30:00Z",
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     };

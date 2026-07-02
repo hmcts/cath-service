@@ -14,7 +14,7 @@ import type { UtiacJrLeedsHearingList } from "../models/types.js";
 import { renderUtiacJrLeedsDailyHearingListData } from "../rendering/renderer.js";
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacJrLeedsHearingList> {
-  displayFrom: Date;
+  contentDate: Date;
 }
 
 async function generatePdf(options: PdfGenerationOptions, listTitle: string): Promise<PdfGenerationResult> {
@@ -22,7 +22,7 @@ async function generatePdf(options: PdfGenerationOptions, listTitle: string): Pr
     const renderedData = renderUtiacJrLeedsDailyHearingListData(options.jsonData, {
       locale: options.locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: options.displayFrom,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
       listTitle
     });

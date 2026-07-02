@@ -234,7 +234,7 @@ export const LIST_LOAD_SERVER_ERROR = {
 
 type UtiacDailyRenderFn<T> = (
   data: T,
-  params: { locale: string; courtName: string; displayFrom: Date; lastReceivedDate: string; listTitle: string }
+  params: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }
 ) => { header: { listTitle: string }; hearings: unknown };
 
 export function createUtiacDailyRender<T>(
@@ -248,7 +248,7 @@ export function createUtiacDailyRender<T>(
     const { header, hearings } = renderFn(jsonData, {
       locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: artefact.displayFrom,
+      contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: t.pageTitle as string
     });

@@ -42,8 +42,8 @@ const makeArtefact = (overrides: Record<string, unknown> = {}) => ({
   listTypeId: 194,
   listTypeName: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
   contentDate: new Date("2026-01-15"),
-  displayFrom: new Date("2026-01-15"),
-  displayTo: new Date("2026-01-15"),
+  displayFrom: new Date("2026-01-10"),
+  displayTo: new Date("2026-01-20"),
   lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
   provenance: "MANUAL_UPLOAD",
   ...overrides
@@ -108,7 +108,7 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
       expect(renderUtiacJrDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-        displayFrom: mockArtefact.displayFrom,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
       });
@@ -166,7 +166,7 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
       expect(renderUtiacJrLondonDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-        displayFrom: mockArtefact.displayFrom,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
       });

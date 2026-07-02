@@ -3,7 +3,7 @@ import type { UtiacJrLondonHearing, UtiacJrLondonHearingList } from "../models/t
 import type { RenderedLondonData, RenderOptions } from "./renderer.js";
 
 export function renderUtiacJrLondonDailyHearingListData(hearingList: UtiacJrLondonHearingList, options: RenderOptions): RenderedLondonData {
-  const listForDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listForDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings: UtiacJrLondonHearing[] = hearingList.map((hearing) => ({

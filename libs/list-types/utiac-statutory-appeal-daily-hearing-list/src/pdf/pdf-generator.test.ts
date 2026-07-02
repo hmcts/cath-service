@@ -89,7 +89,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "test-artefact-123",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -120,7 +120,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "large-pdf-123",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -141,7 +141,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "failed-pdf",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -166,12 +166,12 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
       exceedsMaxSize: false
     });
 
-    const displayFrom = new Date("2025-06-15");
+    const contentDate = new Date("2025-06-15");
 
     // Act
     await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "test-render-options",
-      displayFrom,
+      contentDate,
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList
@@ -181,7 +181,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom,
+      contentDate,
       lastReceivedDate: expect.any(String),
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List"
     });
@@ -194,7 +194,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "no-buffer",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -214,7 +214,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
       artefactId: "renderer-error",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList

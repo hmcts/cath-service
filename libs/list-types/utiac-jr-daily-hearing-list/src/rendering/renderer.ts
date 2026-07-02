@@ -4,7 +4,7 @@ import type { UtiacJrLeedsHearing, UtiacJrLeedsHearingList, UtiacJrLondonHearing
 export interface RenderOptions {
   locale: string;
   courtName: string;
-  displayFrom: Date;
+  contentDate: Date;
   lastReceivedDate: string;
   listTitle: string;
 }
@@ -30,7 +30,7 @@ export interface RenderedLondonData {
 }
 
 export function renderUtiacJrLeedsDailyHearingListData(hearingList: UtiacJrLeedsHearingList, options: RenderOptions): RenderedData {
-  const listForDate = formatDisplayDate(options.displayFrom, options.locale);
+  const listForDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
 
   const renderedHearings = hearingList.map((hearing) => ({

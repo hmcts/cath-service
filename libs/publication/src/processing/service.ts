@@ -93,37 +93,37 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
     generateUtiacStatutoryAppealDailyHearingListPdf({
       ...p,
       jsonData: p.jsonData as UtiacStatutoryAppealHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     }),
   UTIAC_JR_LONDON_DAILY_HEARING_LIST: (p) =>
     generateUtiacJrLondonDailyHearingListPdf({
       ...p,
       jsonData: p.jsonData as UtiacJrLondonHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     }),
   UTIAC_JR_LEEDS_DAILY_HEARING_LIST: (p) =>
     generateUtiacJrLeedsDailyHearingListPdf({
       ...p,
       jsonData: p.jsonData as UtiacJrLeedsHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     }),
   UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: (p) =>
     createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List")({
       ...p,
       jsonData: p.jsonData as UtiacJrHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     }),
   UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: (p) =>
     createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List")({
       ...p,
       jsonData: p.jsonData as UtiacJrHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     }),
   UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: (p) =>
     createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List")({
       ...p,
       jsonData: p.jsonData as UtiacJrHearingList,
-      displayFrom: p.displayFrom ?? p.contentDate
+      contentDate: p.contentDate
     })
 };
 

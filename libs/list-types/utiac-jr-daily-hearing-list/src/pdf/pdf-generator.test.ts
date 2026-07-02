@@ -94,7 +94,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "test-artefact-123",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -117,7 +117,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "failed-pdf",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -136,12 +136,12 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
       sizeBytes: 100
     });
 
-    const displayFrom = new Date("2025-06-15");
+    const contentDate = new Date("2025-06-15");
 
     // Act
     await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "test-render-options",
-      displayFrom,
+      contentDate,
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList
@@ -151,7 +151,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     expect(renderUtiacJrLeedsDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom,
+      contentDate,
       lastReceivedDate: expect.any(String),
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List"
     });
@@ -168,7 +168,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "provenance-test",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
@@ -186,7 +186,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "no-buffer",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -206,7 +206,7 @@ describe("generateUtiacJrLeedsDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLeedsDailyHearingListPdf({
       artefactId: "renderer-error",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -261,7 +261,7 @@ describe("createUtiacJrDailyHearingListPdfGenerator", () => {
     // Act
     const result = await generator({
       artefactId: "custom-title-test",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList

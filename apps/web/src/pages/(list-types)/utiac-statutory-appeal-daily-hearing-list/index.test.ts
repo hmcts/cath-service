@@ -60,8 +60,8 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
         locationId: "9001",
         listTypeId: 30,
         contentDate: new Date("2026-01-15"),
-        displayFrom: new Date("2026-01-15"),
-        displayTo: new Date("2026-01-15"),
+        displayFrom: new Date("2026-01-10"),
+        displayTo: new Date("2026-01-20"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
       };
@@ -115,7 +115,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
       expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
         courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-        displayFrom: mockArtefact.displayFrom,
+        contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List"
       });
@@ -242,13 +242,13 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
       );
     });
 
-    it("should pass displayFrom (not contentDate) to renderer", async () => {
+    it("should pass contentDate (not displayFrom) to renderer", async () => {
       // Arrange
-      const displayFrom = new Date("2026-01-15");
+      const contentDate = new Date("2026-01-15");
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        contentDate: new Date("2026-01-01"),
-        displayFrom,
+        contentDate,
+        displayFrom: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
       };
@@ -268,7 +268,7 @@ describe("UTIAC Statutory Appeal Daily Hearing List page controller", () => {
       await GET(req as Request, res as Response);
 
       // Assert
-      expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ displayFrom }));
+      expect(renderUtiacStatutoryAppealDailyHearingListData).toHaveBeenCalledWith([], expect.objectContaining({ contentDate }));
     });
 
     it("should use Welsh locale when specified", async () => {

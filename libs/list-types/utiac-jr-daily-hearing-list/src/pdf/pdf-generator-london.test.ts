@@ -99,7 +99,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "test-artefact-123",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -122,7 +122,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "failed-pdf",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -141,12 +141,12 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
       sizeBytes: 100
     });
 
-    const displayFrom = new Date("2025-06-15");
+    const contentDate = new Date("2025-06-15");
 
     // Act
     await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "test-render-options",
-      displayFrom,
+      contentDate,
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList
@@ -156,7 +156,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     expect(renderUtiacJrLondonDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom,
+      contentDate,
       lastReceivedDate: expect.any(String),
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List"
     });
@@ -169,7 +169,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "no-buffer",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -189,7 +189,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "renderer-error",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList
@@ -217,7 +217,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     // Act
     const result = await generateUtiacJrLondonDailyHearingListPdf({
       artefactId: "provenance-test",
-      displayFrom: new Date("2025-01-15"),
+      contentDate: new Date("2025-01-15"),
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,

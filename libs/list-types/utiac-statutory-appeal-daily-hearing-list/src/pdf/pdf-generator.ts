@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<UtiacStatutoryAppealHearingList> {
-  displayFrom: Date;
+  contentDate: Date;
 }
 
 export async function generateUtiacStatutoryAppealDailyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
@@ -26,7 +26,7 @@ export async function generateUtiacStatutoryAppealDailyHearingListPdf(options: P
     const renderedData = renderUtiacStatutoryAppealDailyHearingListData(options.jsonData, {
       locale: options.locale,
       courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      displayFrom: options.displayFrom,
+      contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
       listTitle: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List"
     });
