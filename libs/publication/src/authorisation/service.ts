@@ -11,6 +11,13 @@ export interface ListType {
 const METADATA_ONLY_ROLES = ["INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"] as const;
 const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as const;
 
+// Media-verified users (provenance PI_AAD) may access Classified lists owned by these provenances
+// in addition to users whose provenance exactly matches the list type's provenance.
+// PI_AAD is intentionally NOT in VERIFIED_USER_PROVENANCES so that media-verified access stays
+// scoped to the media-accessible Classified lists and does not widen access to PRIVATE publications.
+const MEDIA_VERIFIED_PROVENANCE = "PI_AAD";
+const MEDIA_ACCESSIBLE_CLASSIFIED_PROVENANCES = ["CRIME_IDAM"] as const;
+
 /**
  * Checks if a user has a verified provenance
  * @param user - User profile (may be undefined for unauthenticated users)
@@ -18,6 +25,21 @@ const VERIFIED_USER_PROVENANCES = ["B2C_IDAM", "CFT_IDAM", "CRIME_IDAM"] as cons
  */
 function isVerifiedUser(user: UserProfile | undefined): boolean {
   return !!user?.provenance && VERIFIED_USER_PROVENANCES.includes(user.provenance as (typeof VERIFIED_USER_PROVENANCES)[number]);
+}
+
+/**
+ * Determines whether a verified user's provenance grants access to a Classified list type.
+ * Access is granted when the user's provenance exactly matches the list type's provenance,
+ * or when the user is media-verified (PI_AAD) and the list type is media-accessible.
+ */
+function canAccessClassifiedListType(userProvenance: string, listTypeProvenance: string): boolean {
+  if (userProvenance === listTypeProvenance) {
+    return true;
+  }
+  return (
+    userProvenance === MEDIA_VERIFIED_PROVENANCE &&
+    MEDIA_ACCESSIBLE_CLASSIFIED_PROVENANCES.includes(listTypeProvenance as (typeof MEDIA_ACCESSIBLE_CLASSIFIED_PROVENANCES)[number])
+  );
 }
 
 /**
@@ -50,11 +72,13 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
     return isVerifiedUser(user);
   }
 
-  // CLASSIFIED publications require provenance matching
+  // CLASSIFIED publications require provenance matching (or media-verified access)
   if (sensitivity === Sensitivity.CLASSIFIED) {
-    if (!isVerifiedUser(user)) return false;
+    if (!user.provenance) return false; // Fail closed if provenance missing
+    // Verified users and media-verified (PI_AAD) users may proceed to the provenance match
+    if (!isVerifiedUser(user) && user.provenance !== MEDIA_VERIFIED_PROVENANCE) return false;
     if (!listType) return false; // Fail closed if list type not found
-    return user!.provenance === listType.provenance;
+    return canAccessClassifiedListType(user.provenance, listType.provenance);
   }
 
   // Default: deny access

@@ -1,0 +1,44 @@
+{
+  "name": "@hmcts/magistrates-public-adult-court-list-future",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./config": {
+      "production": "./dist/config.js",
+      "default": "./src/config.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc && yarn build:pdf-templates",
+    "build:pdf-templates": "mkdir -p dist/pdf && cp src/pdf/*.njk dist/pdf/",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write --unsafe ."
+  },
+  "dependencies": {
+    "@hmcts/daily-cause-list-common": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/magistrates-public-common": "workspace:*",
+    "@hmcts/pdf-generation": "workspace:*",
+    "luxon": "3.7.2",
+    "nunjucks": "3.2.4"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.1",
+    "@types/node": "24.10.4",
+    "@types/nunjucks": "3.2.6",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  },
+  "peerDependencies": {
+    "express": "^5.2.0"
+  }
+}
