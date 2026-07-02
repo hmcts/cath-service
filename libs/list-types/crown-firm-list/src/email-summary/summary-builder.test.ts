@@ -34,7 +34,7 @@ describe("extractCaseSummary", () => {
                     {
                       PersonalDetails: {
                         Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
-                        IsMasked: "no"
+                        IsMasked: "NO"
                       }
                     }
                   ]

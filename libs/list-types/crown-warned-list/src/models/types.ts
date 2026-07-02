@@ -8,7 +8,7 @@ export interface CitizenName {
 export interface PddaPersonalDetails {
   Name: CitizenName;
   MaskedName?: string;
-  IsMasked: "yes" | "no";
+  IsMasked: "YES" | "NO";
   CustodyStatus?: string;
   DateOfBirth?: string;
   Age?: number;

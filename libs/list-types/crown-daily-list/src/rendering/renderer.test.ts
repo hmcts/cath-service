@@ -140,7 +140,7 @@ describe("renderCrownDailyListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
-                          IsMasked: "no" as const
+                          IsMasked: "NO" as const
                         }
                       }
                     ]
@@ -213,7 +213,7 @@ describe("renderCrownDailyListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
-                          IsMasked: "no" as const
+                          IsMasked: "NO" as const
                         }
                       }
                     ]
@@ -258,7 +258,7 @@ describe("renderCrownDailyListData", () => {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
                           MaskedName: "Defendant A",
-                          IsMasked: "yes" as const
+                          IsMasked: "YES" as const
                         }
                       }
                     ]
@@ -305,7 +305,7 @@ describe("renderCrownDailyListData", () => {
                             CitizenNameRequestedName: "RequestedName"
                           },
                           MaskedName: "Defendant A",
-                          IsMasked: "yes" as const
+                          IsMasked: "YES" as const
                         }
                       }
                     ]

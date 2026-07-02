@@ -9,7 +9,7 @@ export interface CitizenName {
 export interface PersonalDetails {
   Name: CitizenName;
   MaskedName?: string;
-  IsMasked: "yes" | "no";
+  IsMasked: "YES" | "NO";
   DateOfBirth?: string;
   Age?: number;
   Sex?: string;

@@ -30,7 +30,7 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
-                            IsMasked: "no"
+                            IsMasked: "NO"
                           }
                         }
                       ]
@@ -71,7 +71,7 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Tom"], CitizenNameSurname: "Hardy" },
-                            IsMasked: "no",
+                            IsMasked: "NO",
                             CustodyStatus: "On remand"
                           }
                         }
@@ -138,7 +138,7 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
-                            IsMasked: "yes",
+                            IsMasked: "YES",
                             MaskedName: "Restricted"
                           }
                         }
@@ -172,7 +172,7 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Smith" },
-                            IsMasked: "yes"
+                            IsMasked: "YES"
                           }
                         }
                       ]
@@ -205,7 +205,7 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameSurname: "OnlyLastName" },
-                            IsMasked: "no"
+                            IsMasked: "NO"
                           }
                         }
                       ]
@@ -327,13 +327,13 @@ describe("extractCaseSummary", () => {
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "One" },
-                            IsMasked: "no"
+                            IsMasked: "NO"
                           }
                         },
                         {
                           PersonalDetails: {
                             Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Two" },
-                            IsMasked: "no"
+                            IsMasked: "NO"
                           }
                         }
                       ]

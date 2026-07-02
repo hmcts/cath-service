@@ -121,7 +121,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "no",
+                      IsMasked: "NO",
                       Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" }
                     }
                   }
@@ -154,7 +154,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "yes",
+                      IsMasked: "YES",
                       MaskedName: "Reporting Restriction Applied",
                       Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
                     }
@@ -182,7 +182,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "yes",
+                      IsMasked: "YES",
                       MaskedName: "Reporting Restriction Applied",
                       Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
                     }
@@ -210,7 +210,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "yes",
+                      IsMasked: "YES",
                       Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
                     }
                   }
@@ -237,7 +237,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "no",
+                      IsMasked: "NO",
                       Name: { CitizenNameRequestedName: "Requested Name", CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
                     }
                   }
@@ -264,7 +264,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "yes",
+                      IsMasked: "YES",
                       Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
                     }
                   }
@@ -393,13 +393,13 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "no",
+                      IsMasked: "NO",
                       Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Smith" }
                     }
                   },
                   {
                     PersonalDetails: {
-                      IsMasked: "no",
+                      IsMasked: "NO",
                       Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Jones" }
                     }
                   }
@@ -471,7 +471,7 @@ describe("extractPddaSittingsSummary", () => {
                 Defendants: [
                   {
                     PersonalDetails: {
-                      IsMasked: "no",
+                      IsMasked: "NO",
                       Name: { CitizenNameForename: [], CitizenNameSurname: undefined }
                     }
                   }
