@@ -1,11 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import {
-  locationJurisdictionDeleteCy as cy,
-  deleteLocationJurisdictionData,
-  locationJurisdictionDeleteEn as en,
-  type JurisdictionDataSession
-} from "@hmcts/system-admin-pages";
+import { deleteLocationJurisdictionData, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -52,9 +49,14 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const { locationId } = session.locationJurisdiction;
-  const performedBy = (req as any).user?.email || "unknown";
+  const user = {
+    userId: req.user?.id || "unknown",
+    userEmail: req.user?.email || "unknown",
+    userRole: req.user?.role || "SYSTEM_ADMIN",
+    userProvenance: req.user?.provenance || "azure-ad"
+  };
 
-  await deleteLocationJurisdictionData(locationId, performedBy);
+  await deleteLocationJurisdictionData(locationId, user);
 
   res.redirect("/location-jurisdiction-delete-success");
 };

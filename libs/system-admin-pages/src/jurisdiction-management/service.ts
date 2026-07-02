@@ -1,17 +1,24 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { AuditLogAction, logAction } from "../audit-log/logger.js";
 import {
   createJurisdictionRecord,
   deleteLocationJurisdictions,
   findJurisdictionDataById,
+  hardDeleteJurisdictionRecord,
   hasDependencies,
   type JurisdictionDataRow,
   type JurisdictionDataType,
   listAllJurisdictionData,
-  softDeleteJurisdictionRecord,
   updateJurisdictionRecord,
-  updateLocationJurisdictions,
-  writeAuditLog
-} from "./jurisdiction-management-queries.js";
+  updateLocationJurisdictions
+} from "./queries.js";
+
+export interface UserContext {
+  userId: string;
+  userEmail: string;
+  userRole: string;
+  userProvenance: string;
+}
 
 export interface CreateJurisdictionInput {
   name: string;
@@ -69,7 +76,7 @@ export async function updateJurisdictionData(id: number, type: JurisdictionDataT
   return [];
 }
 
-export async function deleteJurisdictionData(id: number, type: JurisdictionDataType, performedBy: string): Promise<ValidationError[]> {
+export async function deleteJurisdictionData(id: number, type: JurisdictionDataType, user: UserContext): Promise<ValidationError[]> {
   const record = await findJurisdictionDataById(id, type);
   if (!record) {
     return [{ text: "Record not found", href: "#" }];
@@ -80,51 +87,58 @@ export async function deleteJurisdictionData(id: number, type: JurisdictionDataT
     return [{ text: "This record cannot be deleted because it is linked to one or more locations", href: "#" }];
   }
 
-  await softDeleteJurisdictionRecord(id, type);
+  await hardDeleteJurisdictionRecord(id, type);
 
-  const entityName = "name" in record ? record.name : "";
-  await writeAuditLog({
-    action: `DELETE_${type.replace("-", "_").toUpperCase()}`,
-    entityType: type,
-    entityId: String(id),
-    entityName,
-    performedBy
+  const actionMap: Record<JurisdictionDataType, AuditLogAction> = {
+    Jurisdiction: AuditLogAction.DELETE_JURISDICTION,
+    "Sub-Jurisdiction": AuditLogAction.DELETE_SUB_JURISDICTION,
+    Region: AuditLogAction.DELETE_REGION
+  };
+
+  await logAction({
+    userId: user.userId,
+    userEmail: user.userEmail,
+    userRole: user.userRole,
+    userProvenance: user.userProvenance,
+    action: actionMap[type],
+    details: `${type} deleted: ${record.name} (ID: ${id})`
   });
 
   return [];
 }
 
 export async function getLocationJurisdictionDetails(locationId: number) {
-  const { getLocationJurisdictionData } = await import("./jurisdiction-management-queries.js");
+  const { getLocationJurisdictionData } = await import("./queries.js");
   return getLocationJurisdictionData(locationId);
 }
 
 export async function updateLocationJurisdictionData(
   locationId: number,
   data: { subJurisdictionIds: number[]; regionIds: number[] },
-  performedBy: string
+  user: UserContext
 ): Promise<void> {
   await updateLocationJurisdictions(locationId, data.subJurisdictionIds, data.regionIds);
 
-  await writeAuditLog({
-    action: "UPDATE_LOCATION_JURISDICTION",
-    entityType: "Location",
-    entityId: String(locationId),
-    entityName: String(locationId),
-    performedBy,
-    details: `Sub-jurisdictions: [${data.subJurisdictionIds.join(", ")}], Regions: [${data.regionIds.join(", ")}]`
+  await logAction({
+    userId: user.userId,
+    userEmail: user.userEmail,
+    userRole: user.userRole,
+    userProvenance: user.userProvenance,
+    action: AuditLogAction.UPDATE_LOCATION_JURISDICTION,
+    details: `Location ID: ${locationId}; Sub-jurisdictions: [${data.subJurisdictionIds.join(", ")}], Regions: [${data.regionIds.join(", ")}]`
   });
 }
 
-export async function deleteLocationJurisdictionData(locationId: number, performedBy: string): Promise<void> {
+export async function deleteLocationJurisdictionData(locationId: number, user: UserContext): Promise<void> {
   await deleteLocationJurisdictions(locationId);
 
-  await writeAuditLog({
-    action: "DELETE_LOCATION_JURISDICTION",
-    entityType: "Location",
-    entityId: String(locationId),
-    entityName: String(locationId),
-    performedBy
+  await logAction({
+    userId: user.userId,
+    userEmail: user.userEmail,
+    userRole: user.userRole,
+    userProvenance: user.userProvenance,
+    action: AuditLogAction.DELETE_LOCATION_JURISDICTION,
+    details: `Location ID: ${locationId}`
   });
 }
 
@@ -174,10 +188,10 @@ async function checkUniqueness(name: string, welshName: string, type: Jurisdicti
         (n, w) =>
           Promise.all([
             prisma.jurisdiction.findFirst({
-              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
+              where: { name: { equals: n, mode: "insensitive" }, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
             }),
             prisma.jurisdiction.findFirst({
-              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
+              where: { welshName: { equals: w, mode: "insensitive" }, ...(excludeId ? { NOT: { jurisdictionId: excludeId } } : {}) }
             })
           ]),
         trimmedName,
@@ -188,10 +202,10 @@ async function checkUniqueness(name: string, welshName: string, type: Jurisdicti
         (n, w) =>
           Promise.all([
             prisma.subJurisdiction.findFirst({
-              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
+              where: { name: { equals: n, mode: "insensitive" }, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
             }),
             prisma.subJurisdiction.findFirst({
-              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
+              where: { welshName: { equals: w, mode: "insensitive" }, ...(excludeId ? { NOT: { subJurisdictionId: excludeId } } : {}) }
             })
           ]),
         trimmedName,
@@ -202,10 +216,10 @@ async function checkUniqueness(name: string, welshName: string, type: Jurisdicti
         (n, w) =>
           Promise.all([
             prisma.region.findFirst({
-              where: { name: { equals: n, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
+              where: { name: { equals: n, mode: "insensitive" }, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
             }),
             prisma.region.findFirst({
-              where: { welshName: { equals: w, mode: "insensitive" }, deletedAt: null, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
+              where: { welshName: { equals: w, mode: "insensitive" }, ...(excludeId ? { NOT: { regionId: excludeId } } : {}) }
             })
           ]),
         trimmedName,

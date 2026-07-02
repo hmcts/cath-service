@@ -1,7 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import {
-  locationJurisdictionUpdateCy as cy,
-  locationJurisdictionUpdateEn as en,
   getLocationJurisdictionDetails,
   type JurisdictionDataSession,
   listJurisdictionsWithSubJurisdictions,
@@ -9,6 +7,8 @@ import {
   updateLocationJurisdictionData
 } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const LOCATION_JURISDICTION_UPDATE_VARIANT: "dropdowns" | "accordions" = "dropdowns";
 
@@ -77,7 +77,12 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const { locationId } = session.locationJurisdiction;
-  const performedBy = (req as any).user?.email || "unknown";
+  const user = {
+    userId: req.user?.id || "unknown",
+    userEmail: req.user?.email || "unknown",
+    userRole: req.user?.role || "SYSTEM_ADMIN",
+    userProvenance: req.user?.provenance || "azure-ad"
+  };
 
   const subJurisdictionIds = Array.isArray(req.body.subJurisdictionIds)
     ? req.body.subJurisdictionIds.map(Number).filter((n: number) => !Number.isNaN(n))
@@ -91,7 +96,7 @@ const postHandler = async (req: Request, res: Response) => {
       ? [Number(req.body.regionIds)].filter((n) => !Number.isNaN(n))
       : [];
 
-  await updateLocationJurisdictionData(locationId, { subJurisdictionIds, regionIds }, performedBy);
+  await updateLocationJurisdictionData(locationId, { subJurisdictionIds, regionIds }, user);
 
   res.redirect("/location-jurisdiction-update-success");
 };

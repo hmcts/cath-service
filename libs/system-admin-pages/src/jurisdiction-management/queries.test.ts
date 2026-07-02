@@ -3,13 +3,12 @@ import {
   createJurisdictionRecord,
   deleteLocationJurisdictions,
   findJurisdictionDataById,
+  hardDeleteJurisdictionRecord,
   hasDependencies,
   listAllJurisdictionData,
-  softDeleteJurisdictionRecord,
   updateJurisdictionRecord,
-  updateLocationJurisdictions,
-  writeAuditLog
-} from "./jurisdiction-management-queries.js";
+  updateLocationJurisdictions
+} from "./queries.js";
 
 const { mockTransaction } = vi.hoisted(() => ({ mockTransaction: vi.fn() }));
 
@@ -18,21 +17,27 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     jurisdiction: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      delete: vi.fn()
     },
     subJurisdiction: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
       count: vi.fn()
     },
     region: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      delete: vi.fn()
     },
     location: {
       findUnique: vi.fn()
@@ -47,8 +52,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       createMany: vi.fn(),
       count: vi.fn()
     },
-    adminAuditLog: {
-      create: vi.fn()
+    listTypeSubJurisdiction: {
+      count: vi.fn()
     },
     $transaction: mockTransaction
   }
@@ -64,11 +69,11 @@ describe("jurisdiction-management-queries", () => {
   describe("listAllJurisdictionData", () => {
     it("should combine results from all three tables sorted by name", async () => {
       // Arrange
-      vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue([{ jurisdictionId: 1, name: "Civil", welshName: "Sifil", deletedAt: null }]);
+      vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue([{ jurisdictionId: 1, name: "Civil", welshName: "Sifil" }]);
       vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([
-        { subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1, deletedAt: null }
+        { subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1 }
       ]);
-      vi.mocked(prisma.region.findMany).mockResolvedValue([{ regionId: 100, name: "North West", welshName: "Gogledd Orllewin", deletedAt: null }]);
+      vi.mocked(prisma.region.findMany).mockResolvedValue([{ regionId: 100, name: "North West", welshName: "Gogledd Orllewin" }]);
 
       // Act
       const result = await listAllJurisdictionData();
@@ -82,7 +87,7 @@ describe("jurisdiction-management-queries", () => {
 
     it("should filter jurisdictions when jurisdiction filter is provided", async () => {
       // Arrange
-      vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue([{ jurisdictionId: 1, name: "Civil", welshName: "Sifil", deletedAt: null }]);
+      vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue([{ jurisdictionId: 1, name: "Civil", welshName: "Sifil" }]);
       vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
       vi.mocked(prisma.region.findMany).mockResolvedValue([]);
 
@@ -101,7 +106,7 @@ describe("jurisdiction-management-queries", () => {
       );
     });
 
-    it("should exclude soft-deleted records", async () => {
+    it("should return all records without deleted_at filtering", async () => {
       // Arrange
       vi.mocked(prisma.jurisdiction.findMany).mockResolvedValue([]);
       vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
@@ -111,56 +116,56 @@ describe("jurisdiction-management-queries", () => {
       await listAllJurisdictionData();
 
       // Assert
-      expect(prisma.jurisdiction.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }));
-      expect(prisma.subJurisdiction.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }));
-      expect(prisma.region.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }));
+      expect(prisma.jurisdiction.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+      expect(prisma.subJurisdiction.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+      expect(prisma.region.findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: { name: "asc" } }));
     });
   });
 
   describe("findJurisdictionDataById", () => {
     it("should find jurisdiction by id", async () => {
       // Arrange
-      const mockJurisdiction = { jurisdictionId: 1, name: "Civil", welshName: "Sifil", deletedAt: null };
-      vi.mocked(prisma.jurisdiction.findFirst).mockResolvedValue(mockJurisdiction);
+      const mockJurisdiction = { jurisdictionId: 1, name: "Civil", welshName: "Sifil" };
+      vi.mocked(prisma.jurisdiction.findUnique).mockResolvedValue(mockJurisdiction);
 
       // Act
       const result = await findJurisdictionDataById(1, "Jurisdiction");
 
       // Assert
       expect(result).toEqual(mockJurisdiction);
-      expect(prisma.jurisdiction.findFirst).toHaveBeenCalledWith({ where: { jurisdictionId: 1, deletedAt: null } });
+      expect(prisma.jurisdiction.findUnique).toHaveBeenCalledWith({ where: { jurisdictionId: 1 } });
     });
 
     it("should find sub-jurisdiction by id", async () => {
       // Arrange
-      vi.mocked(prisma.subJurisdiction.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.subJurisdiction.findUnique).mockResolvedValue(null);
 
       // Act
       const result = await findJurisdictionDataById(99, "Sub-Jurisdiction");
 
       // Assert
       expect(result).toBeNull();
-      expect(prisma.subJurisdiction.findFirst).toHaveBeenCalledWith({ where: { subJurisdictionId: 99, deletedAt: null } });
+      expect(prisma.subJurisdiction.findUnique).toHaveBeenCalledWith({ where: { subJurisdictionId: 99 } });
     });
 
     it("should find region by id", async () => {
       // Arrange
-      const mockRegion = { regionId: 5, name: "London", welshName: "Llundain", deletedAt: null };
-      vi.mocked(prisma.region.findFirst).mockResolvedValue(mockRegion);
+      const mockRegion = { regionId: 5, name: "London", welshName: "Llundain" };
+      vi.mocked(prisma.region.findUnique).mockResolvedValue(mockRegion);
 
       // Act
       const result = await findJurisdictionDataById(5, "Region");
 
       // Assert
       expect(result).toEqual(mockRegion);
-      expect(prisma.region.findFirst).toHaveBeenCalledWith({ where: { regionId: 5, deletedAt: null } });
+      expect(prisma.region.findUnique).toHaveBeenCalledWith({ where: { regionId: 5 } });
     });
   });
 
   describe("createJurisdictionRecord", () => {
     it("should create a jurisdiction with next available id", async () => {
       // Arrange
-      vi.mocked(prisma.jurisdiction.findFirst).mockResolvedValue({ jurisdictionId: 5, name: "X", welshName: "X", deletedAt: null });
+      vi.mocked(prisma.jurisdiction.findFirst).mockResolvedValue({ jurisdictionId: 5, name: "X", welshName: "X" });
       vi.mocked(prisma.jurisdiction.create).mockResolvedValue({} as never);
 
       // Act
@@ -174,7 +179,7 @@ describe("jurisdiction-management-queries", () => {
 
     it("should create a region with next available id", async () => {
       // Arrange
-      vi.mocked(prisma.region.findFirst).mockResolvedValue({ regionId: 10, name: "X", welshName: "X", deletedAt: null });
+      vi.mocked(prisma.region.findFirst).mockResolvedValue({ regionId: 10, name: "X", welshName: "X" });
       vi.mocked(prisma.region.create).mockResolvedValue({} as never);
 
       // Act
@@ -235,38 +240,43 @@ describe("jurisdiction-management-queries", () => {
     });
   });
 
-  describe("softDeleteJurisdictionRecord", () => {
-    it("should set deletedAt on jurisdiction", async () => {
+  describe("hardDeleteJurisdictionRecord", () => {
+    it("should hard delete a jurisdiction", async () => {
       // Arrange
-      vi.mocked(prisma.jurisdiction.update).mockResolvedValue({} as never);
+      vi.mocked(prisma.jurisdiction.delete).mockResolvedValue({} as never);
 
       // Act
-      await softDeleteJurisdictionRecord(1, "Jurisdiction");
+      await hardDeleteJurisdictionRecord(1, "Jurisdiction");
 
       // Assert
-      expect(prisma.jurisdiction.update).toHaveBeenCalledWith({
-        where: { jurisdictionId: 1 },
-        data: { deletedAt: expect.any(Date) }
-      });
+      expect(prisma.jurisdiction.delete).toHaveBeenCalledWith({ where: { jurisdictionId: 1 } });
     });
 
-    it("should set deletedAt on sub-jurisdiction", async () => {
+    it("should hard delete a sub-jurisdiction", async () => {
       // Arrange
-      vi.mocked(prisma.subJurisdiction.update).mockResolvedValue({} as never);
+      vi.mocked(prisma.subJurisdiction.delete).mockResolvedValue({} as never);
 
       // Act
-      await softDeleteJurisdictionRecord(10, "Sub-Jurisdiction");
+      await hardDeleteJurisdictionRecord(10, "Sub-Jurisdiction");
 
       // Assert
-      expect(prisma.subJurisdiction.update).toHaveBeenCalledWith({
-        where: { subJurisdictionId: 10 },
-        data: { deletedAt: expect.any(Date) }
-      });
+      expect(prisma.subJurisdiction.delete).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
+    });
+
+    it("should hard delete a region", async () => {
+      // Arrange
+      vi.mocked(prisma.region.delete).mockResolvedValue({} as never);
+
+      // Act
+      await hardDeleteJurisdictionRecord(5, "Region");
+
+      // Assert
+      expect(prisma.region.delete).toHaveBeenCalledWith({ where: { regionId: 5 } });
     });
   });
 
   describe("hasDependencies", () => {
-    it("should return true when jurisdiction has active sub-jurisdictions", async () => {
+    it("should return true when jurisdiction has sub-jurisdictions", async () => {
       // Arrange
       vi.mocked(prisma.subJurisdiction.count).mockResolvedValue(3);
 
@@ -275,10 +285,10 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(result).toBe(true);
-      expect(prisma.subJurisdiction.count).toHaveBeenCalledWith({ where: { jurisdictionId: 1, deletedAt: null } });
+      expect(prisma.subJurisdiction.count).toHaveBeenCalledWith({ where: { jurisdictionId: 1 } });
     });
 
-    it("should return false when jurisdiction has no active sub-jurisdictions", async () => {
+    it("should return false when jurisdiction has no sub-jurisdictions", async () => {
       // Arrange
       vi.mocked(prisma.subJurisdiction.count).mockResolvedValue(0);
 
@@ -292,6 +302,7 @@ describe("jurisdiction-management-queries", () => {
     it("should return true when sub-jurisdiction is linked to locations", async () => {
       // Arrange
       vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(2);
+      vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(0);
 
       // Act
       const result = await hasDependencies(10, "Sub-Jurisdiction");
@@ -299,6 +310,31 @@ describe("jurisdiction-management-queries", () => {
       // Assert
       expect(result).toBe(true);
       expect(prisma.locationSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
+    });
+
+    it("should return true when sub-jurisdiction is linked to list types", async () => {
+      // Arrange
+      vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(0);
+      vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(1);
+
+      // Act
+      const result = await hasDependencies(10, "Sub-Jurisdiction");
+
+      // Assert
+      expect(result).toBe(true);
+      expect(prisma.listTypeSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
+    });
+
+    it("should return false when sub-jurisdiction has no dependencies", async () => {
+      // Arrange
+      vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(0);
+      vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(0);
+
+      // Act
+      const result = await hasDependencies(10, "Sub-Jurisdiction");
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it("should return true when region is linked to locations", async () => {
@@ -351,26 +387,6 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(mockTransaction).toHaveBeenCalled();
-    });
-  });
-
-  describe("writeAuditLog", () => {
-    it("should create an audit log entry", async () => {
-      // Arrange
-      const entry = {
-        action: "DELETE_JURISDICTION",
-        entityType: "Jurisdiction",
-        entityId: "1",
-        entityName: "Civil",
-        performedBy: "admin@example.com"
-      };
-      vi.mocked(prisma.adminAuditLog.create).mockResolvedValue({} as never);
-
-      // Act
-      await writeAuditLog(entry);
-
-      // Assert
-      expect(prisma.adminAuditLog.create).toHaveBeenCalledWith({ data: entry });
     });
   });
 });

@@ -1,11 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import {
-  locationJurisdictionManageCy as cy,
-  locationJurisdictionManageEn as en,
-  getLocationJurisdictionDetails,
-  type JurisdictionDataSession
-} from "@hmcts/system-admin-pages";
+import { getLocationJurisdictionDetails, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";

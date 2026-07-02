@@ -68,7 +68,7 @@ describe("region-data-delete page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(deleteJurisdictionData).toHaveBeenCalledWith(5, "Region", expect.any(String));
+      expect(deleteJurisdictionData).toHaveBeenCalledWith(5, "Region", expect.objectContaining({ userEmail: expect.any(String) }));
       expect(res.redirect).toHaveBeenCalledWith("/region-data-delete-success");
     });
 

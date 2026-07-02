@@ -103,7 +103,11 @@ describe("location-jurisdiction-update page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(updateLocationJurisdictionData).toHaveBeenCalledWith(100, { subJurisdictionIds: [10, 11], regionIds: [5] }, "admin@example.com");
+      expect(updateLocationJurisdictionData).toHaveBeenCalledWith(
+        100,
+        { subJurisdictionIds: [10, 11], regionIds: [5] },
+        expect.objectContaining({ userEmail: "admin@example.com" })
+      );
       expect(res.redirect).toHaveBeenCalledWith("/location-jurisdiction-update-success");
     });
 

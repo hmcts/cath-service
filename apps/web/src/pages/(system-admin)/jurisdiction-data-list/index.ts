@@ -1,6 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { jurisdictionDataListCy as cy, jurisdictionDataListEn as en, listJurisdictionData } from "@hmcts/system-admin-pages";
+import { listJurisdictionData } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const ALL_TYPES = ["Jurisdiction", "Sub-Jurisdiction"] as const;
 type RecordType = (typeof ALL_TYPES)[number];
