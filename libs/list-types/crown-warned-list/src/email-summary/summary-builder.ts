@@ -9,7 +9,7 @@ function buildCaseSummary(caseItem: PddaCase, fixedDate: string | undefined): Ca
   const fields: CaseSummary = [];
 
   fields.push({ label: "Fixed for", value: formatShortDate(fixedDate) });
-  fields.push({ label: "Case Reference", value: caseItem.CaseNumber ?? "" });
+  fields.push({ label: "Case Reference", value: caseItem.CaseNumberCaTH ?? caseItem.CaseNumber ?? "" });
 
   if (defendants.length > 0) {
     fields.push({ label: "Defendant Name(s)", value: defendants.join(", ") });
