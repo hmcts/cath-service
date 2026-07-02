@@ -5,20 +5,7 @@
   <title>{{ t.title }}</title>
   <style>{{ pdfStyles | safe }}</style>
   <style>
-    .restriction-box {
-      background-color: #f3f2f1;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-left: 4px solid #d4351c;
-    }
-    .warning-box {
-      background-color: #fff7e6;
-      border-left: 4px solid #f47738;
-      padding: 10px 15px;
-      margin: 10px 0;
-      font-weight: 700;
-    }
-    .court-section { margin-bottom: 30px; }
+.court-section { margin-bottom: 30px; }
     .court-heading {
       background-color: #f3f2f1;
       padding: 8px 12px;
@@ -63,10 +50,10 @@
     {% endif %}
   </div>
 
-  <div class="restriction-box">
-    <h2 class="court-heading">{{ t.restrictionInformationHeading }}</h2>
+  <div class="info-box">
+    <h3>{{ t.restrictionInformationHeading }}</h3>
     <p>{{ t.restrictionInformationP1 }}</p>
-    <div class="warning-box">{{ t.restrictionInformationBoldText }}</div>
+    <p><strong>{{ t.restrictionInformationBoldText }}</strong></p>
     <p>{{ t.restrictionInformationP2 }}</p>
     <p>{{ t.restrictionInformationP3 }}</p>
     <p>{{ t.restrictionInformationP4 }}</p>
