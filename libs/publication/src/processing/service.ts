@@ -5,6 +5,9 @@ import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmc
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
+import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
+import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/crown-warned-list";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
@@ -157,6 +160,9 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  CROWN_DAILY_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
+  CROWN_FIRM_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
+  CROWN_WARNED_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),

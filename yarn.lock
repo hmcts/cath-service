@@ -2419,6 +2419,63 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/crown-daily-list@workspace:*, @hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/crown-firm-list@workspace:*, @hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/crown-warned-list@workspace:*, @hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.8"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/daily-cause-list-common@workspace:*, @hmcts/daily-cause-list-common@workspace:libs/list-types/daily-cause-list-common":
   version: 0.0.0-use.local
   resolution: "@hmcts/daily-cause-list-common@workspace:libs/list-types/daily-cause-list-common"
@@ -2615,6 +2672,9 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
@@ -2718,6 +2778,9 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"

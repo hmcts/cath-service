@@ -26,7 +26,9 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
     isValid: true,
     errors: [],
     schemaVersion: "1.0.0"
-  })
+  }),
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
 }));
 
 // Mock the dynamic import for @hmcts/sjp-press-list (used by both SJP_PRESS_LIST and SJP_DELTA_PRESS_LIST)
