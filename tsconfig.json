@@ -76,6 +76,8 @@
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
+      "@hmcts/sscs-daily-hearing-list": ["libs/list-types/sscs-daily-hearing-list/src"],
+      "@hmcts/sscs-daily-hearing-list/config": ["libs/list-types/sscs-daily-hearing-list/src/config"],
       "@hmcts/azure-blob": ["libs/azure-blob/src"]
     },
     "esModuleInterop": true,

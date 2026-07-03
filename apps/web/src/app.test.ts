@@ -122,6 +122,10 @@ vi.mock("@hmcts/sjp-public-list/config", () => ({
   moduleRoot: "/mock/sjp-public-list"
 }));
 
+vi.mock("@hmcts/sscs-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/sscs-daily-hearing-list"
+}));
+
 vi.mock("@hmcts/public-pages/config", () => ({
   fileUploadRoutes: ["/create-media-account"],
   moduleRoot: "/mock/public-pages",

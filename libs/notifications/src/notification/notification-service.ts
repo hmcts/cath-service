@@ -41,6 +41,7 @@ import {
   extractCaseSummary as extractSiacPoacPaacSummary,
   formatCaseSummaryForEmail as formatSiacPoacPaacSummaryForEmail
 } from "@hmcts/siac-poac-paac-weekly-hearing-list";
+import { extractCaseSummary as extractSscsSummary, formatCaseSummaryForEmail as formatSscsSummaryForEmail } from "@hmcts/sscs-daily-hearing-list";
 import {
   extractCaseSummary as extractUtiacJrLeedsSummary,
   extractLondonCaseSummary as extractUtiacJrLondonSummary,
@@ -83,6 +84,7 @@ interface EmailBuilderConfig {
 
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
+const sscsConfig: EmailBuilderConfig = { extract: extractSscsSummary as SummaryExtractor, format: formatSscsSummaryForEmail };
 
 const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
@@ -133,6 +135,13 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  SSCS_LONDON_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsConfig,
   SIAC_WEEKLY_HEARING_LIST: {
     extract: extractSiacPoacPaacSummary as SummaryExtractor,
     format: formatSiacPoacPaacSummaryForEmail

@@ -43,6 +43,7 @@
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",
     "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
+    "@hmcts/sscs-daily-hearing-list": "workspace:*",
     "@hmcts/utiac-jr-daily-hearing-list": "workspace:*",
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",

@@ -26,6 +26,7 @@ import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-c
 import { moduleRoot as siacPoacPaacModuleRoot } from "@hmcts/siac-poac-paac-weekly-hearing-list/config";
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
+import { moduleRoot as sscsDailyHearingListModuleRoot } from "@hmcts/sscs-daily-hearing-list/config";
 import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
 import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
@@ -100,6 +101,7 @@ export async function createApp(): Promise<Express> {
     authModuleRoot,
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
+    sscsDailyHearingListModuleRoot,
     siacPoacPaacModuleRoot,
     fttTaxChamberModuleRoot,
     fttLrtModuleRoot,

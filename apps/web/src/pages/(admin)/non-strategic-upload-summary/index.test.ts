@@ -430,7 +430,7 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(session.nonStrategicUploadForm).toBeUndefined();
       expect(session.nonStrategicUploadSubmitted).toBeUndefined();
-      expect(session.nonStrategicUploadConfirmed).toBe(true);
+      expect((session as any).nonStrategicUploadConfirmed).toBe(true);
     });
 
     it("should return 400 if uploadId is missing", async () => {

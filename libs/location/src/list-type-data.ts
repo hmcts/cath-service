@@ -568,5 +568,90 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [27]
+  },
+  // SSCS Daily Hearing Lists
+  {
+    id: 49,
+    name: "SSCS_MIDLANDS_DAILY_HEARING_LIST",
+    englishFriendlyName: "Midlands Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Midlands Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 50,
+    name: "SSCS_SOUTH_EAST_DAILY_HEARING_LIST",
+    englishFriendlyName: "South East Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS South East Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 51,
+    name: "SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST",
+    englishFriendlyName: "Wales and South West Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Wales and South West Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 52,
+    name: "SSCS_SCOTLAND_DAILY_HEARING_LIST",
+    englishFriendlyName: "Scotland Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Scotland Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 53,
+    name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+    englishFriendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS North East Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 54,
+    name: "SSCS_NORTH_WEST_DAILY_HEARING_LIST",
+    englishFriendlyName: "North West Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS North West Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 55,
+    name: "SSCS_LONDON_DAILY_HEARING_LIST",
+    englishFriendlyName: "London Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS London Daily Hearing List",
+    subJurisdictionIds: [8]
   }
 ];
