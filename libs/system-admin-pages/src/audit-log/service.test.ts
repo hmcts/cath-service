@@ -280,6 +280,12 @@ describe("audit-log service", () => {
       expect(parseDate("21", "01", "abcd")).toBeNull();
     });
 
+    it("should return null when numeric values have trailing non-numeric characters", () => {
+      expect(parseDate("27er", "3", "2007")).toBeNull();
+      expect(parseDate("27", "3er", "2007")).toBeNull();
+      expect(parseDate("27", "3", "2007er")).toBeNull();
+    });
+
     it("should return null for empty strings", () => {
       expect(parseDate("", "01", "2026")).toBeNull();
       expect(parseDate("21", "", "2026")).toBeNull();

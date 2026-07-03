@@ -72,7 +72,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
         isValid: false,
         errors: [
           {
-            message: `No validation function found for ${listType.friendlyName}. JSON schemas are not available for this list type.`
+            message: `No JSON schema available for ${listType.friendlyName}. This list type does not support JSON uploads.`
           }
         ],
         schemaVersion: "unknown"
