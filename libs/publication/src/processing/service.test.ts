@@ -72,7 +72,6 @@ vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
     generateUtiacJrLondonDailyHearingListPdf: vi.fn()
   };
 });
-
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
