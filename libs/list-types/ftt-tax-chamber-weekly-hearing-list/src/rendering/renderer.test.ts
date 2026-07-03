@@ -30,12 +30,12 @@ describe("renderFttTaxChamberData", () => {
 
     // Assert
     expect(result.header.listTitle).toBe("First-tier Tribunal (Tax Chamber) Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("2 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
+    expect(result.header.weekCommencingDate).toBe("02 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
-    expect(result.hearings[0].date).toBe("2 January 2025");
+    expect(result.hearings[0].date).toBe("02 January 2025");
     expect(result.hearings[0].hearingTime).toBe("10:00am");
     expect(result.hearings[0].caseName).toBe("A Vs HMRC");
     expect(result.hearings[0].caseReferenceNumber).toBe("TC/00001/2025");
@@ -80,8 +80,8 @@ describe("renderFttTaxChamberData", () => {
 
     // Assert
     expect(result.hearings).toHaveLength(2);
-    expect(result.hearings[0].date).toBe("2 January 2025");
-    expect(result.hearings[1].date).toBe("3 January 2025");
+    expect(result.hearings[0].date).toBe("02 January 2025");
+    expect(result.hearings[1].date).toBe("03 January 2025");
   });
 
   it("should handle empty hearing list", () => {
