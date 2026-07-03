@@ -10,33 +10,21 @@ export interface JurisdictionDataRow {
   type: JurisdictionDataType;
 }
 
-export interface AuditLogEntry {
-  action: string;
-  entityType: string;
-  entityId: string;
-  entityName: string;
-  performedBy: string;
-  details?: string;
-}
-
 export async function listAllJurisdictionData(filter?: { jurisdiction?: string; subJurisdiction?: string }): Promise<JurisdictionDataRow[]> {
   const [jurisdictions, subJurisdictions, regions] = await Promise.all([
     prisma.jurisdiction.findMany({
       where: {
-        deletedAt: null,
         ...(filter?.jurisdiction ? { name: { equals: filter.jurisdiction, mode: "insensitive" as const } } : {})
       },
       orderBy: { name: "asc" }
     }),
     prisma.subJurisdiction.findMany({
       where: {
-        deletedAt: null,
         ...(filter?.subJurisdiction ? { name: { equals: filter.subJurisdiction, mode: "insensitive" as const } } : {})
       },
       orderBy: { name: "asc" }
     }),
     prisma.region.findMany({
-      where: { deletedAt: null },
       orderBy: { name: "asc" }
     })
   ]);
@@ -59,10 +47,8 @@ export async function listAllJurisdictionData(filter?: { jurisdiction?: string; 
 
 export async function listJurisdictionsWithSubJurisdictions() {
   return prisma.jurisdiction.findMany({
-    where: { deletedAt: null },
     include: {
       subJurisdictions: {
-        where: { deletedAt: null },
         orderBy: { name: "asc" }
       }
     },
@@ -72,7 +58,6 @@ export async function listJurisdictionsWithSubJurisdictions() {
 
 export async function listRegions() {
   return prisma.region.findMany({
-    where: { deletedAt: null },
     orderBy: { name: "asc" }
   });
 }
@@ -80,11 +65,11 @@ export async function listRegions() {
 export async function findJurisdictionDataById(id: number, type: JurisdictionDataType) {
   switch (type) {
     case "Jurisdiction":
-      return prisma.jurisdiction.findFirst({ where: { jurisdictionId: id, deletedAt: null } });
+      return prisma.jurisdiction.findUnique({ where: { jurisdictionId: id } });
     case "Sub-Jurisdiction":
-      return prisma.subJurisdiction.findFirst({ where: { subJurisdictionId: id, deletedAt: null } });
+      return prisma.subJurisdiction.findUnique({ where: { subJurisdictionId: id } });
     case "Region":
-      return prisma.region.findFirst({ where: { regionId: id, deletedAt: null } });
+      return prisma.region.findUnique({ where: { regionId: id } });
   }
 }
 
@@ -156,18 +141,16 @@ export async function updateJurisdictionRecord(
   }
 }
 
-export async function softDeleteJurisdictionRecord(id: number, type: JurisdictionDataType): Promise<void> {
-  const data = { deletedAt: new Date() };
-
+export async function hardDeleteJurisdictionRecord(id: number, type: JurisdictionDataType): Promise<void> {
   switch (type) {
     case "Jurisdiction":
-      await prisma.jurisdiction.update({ where: { jurisdictionId: id }, data });
+      await prisma.jurisdiction.delete({ where: { jurisdictionId: id } });
       break;
     case "Sub-Jurisdiction":
-      await prisma.subJurisdiction.update({ where: { subJurisdictionId: id }, data });
+      await prisma.subJurisdiction.delete({ where: { subJurisdictionId: id } });
       break;
     case "Region":
-      await prisma.region.update({ where: { regionId: id }, data });
+      await prisma.region.delete({ where: { regionId: id } });
       break;
   }
 }
@@ -219,20 +202,19 @@ export async function deleteLocationJurisdictions(locationId: number): Promise<v
 export async function hasDependencies(id: number, type: JurisdictionDataType): Promise<boolean> {
   switch (type) {
     case "Jurisdiction": {
-      const count = await prisma.subJurisdiction.count({ where: { jurisdictionId: id, deletedAt: null } });
+      const count = await prisma.subJurisdiction.count({ where: { jurisdictionId: id } });
       return count > 0;
     }
     case "Sub-Jurisdiction": {
-      const count = await prisma.locationSubJurisdiction.count({ where: { subJurisdictionId: id } });
-      return count > 0;
+      const [locationCount, listTypeCount] = await Promise.all([
+        prisma.locationSubJurisdiction.count({ where: { subJurisdictionId: id } }),
+        prisma.listTypeSubJurisdiction.count({ where: { subJurisdictionId: id } })
+      ]);
+      return locationCount > 0 || listTypeCount > 0;
     }
     case "Region": {
       const count = await prisma.locationRegion.count({ where: { regionId: id } });
       return count > 0;
     }
   }
-}
-
-export async function writeAuditLog(entry: AuditLogEntry): Promise<void> {
-  await prisma.adminAuditLog.create({ data: entry });
 }

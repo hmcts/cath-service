@@ -1,7 +1,9 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getLocationWithDetails } from "@hmcts/location";
-import { locationJurisdictionSearchCy as cy, locationJurisdictionSearchEn as en, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
+import type { JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const isEmpty = (value: string | undefined) => !value || value.trim() === "";
 

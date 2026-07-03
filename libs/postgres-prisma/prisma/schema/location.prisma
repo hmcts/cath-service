@@ -1,8 +1,7 @@
 model Region {
-  regionId  Int       @id @map("region_id")
-  name      String    @unique
-  welshName String    @unique @map("welsh_name")
-  deletedAt DateTime? @map("deleted_at")
+  regionId  Int    @id @map("region_id")
+  name      String @unique
+  welshName String @unique @map("welsh_name")
 
   locationRegions LocationRegion[]
 
@@ -10,10 +9,9 @@ model Region {
 }
 
 model Jurisdiction {
-  jurisdictionId Int       @id @map("jurisdiction_id")
-  name           String    @unique
-  welshName      String    @unique @map("welsh_name")
-  deletedAt      DateTime? @map("deleted_at")
+  jurisdictionId Int    @id @map("jurisdiction_id")
+  name           String @unique
+  welshName      String @unique @map("welsh_name")
 
   subJurisdictions SubJurisdiction[]
 
@@ -21,11 +19,10 @@ model Jurisdiction {
 }
 
 model SubJurisdiction {
-  subJurisdictionId Int       @id @map("sub_jurisdiction_id")
-  name              String    @unique
-  welshName         String    @unique @map("welsh_name")
-  jurisdictionId    Int       @map("jurisdiction_id")
-  deletedAt         DateTime? @map("deleted_at")
+  subJurisdictionId Int    @id @map("sub_jurisdiction_id")
+  name              String @unique
+  welshName         String @unique @map("welsh_name")
+  jurisdictionId    Int    @map("jurisdiction_id")
 
   jurisdiction             Jurisdiction              @relation(fields: [jurisdictionId], references: [jurisdictionId])
   locationSubJurisdictions LocationSubJurisdiction[]
@@ -133,17 +130,3 @@ model LocationMetadata {
   @@map("location_metadata")
 }
 
-model AdminAuditLog {
-  id          String   @id @default(uuid())
-  action      String
-  entityType  String   @map("entity_type")
-  entityId    String   @map("entity_id")
-  entityName  String   @map("entity_name")
-  performedBy String   @map("performed_by")
-  performedAt DateTime @default(now()) @map("performed_at")
-  details     String?  @db.Text
-
-  @@map("admin_audit_log")
-  @@index([performedAt])
-  @@index([entityType])
-}

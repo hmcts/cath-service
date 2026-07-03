@@ -67,7 +67,7 @@ describe("location-jurisdiction-delete page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(deleteLocationJurisdictionData).toHaveBeenCalledWith(100, "admin@example.com");
+      expect(deleteLocationJurisdictionData).toHaveBeenCalledWith(100, expect.objectContaining({ userEmail: "admin@example.com" }));
       expect(res.redirect).toHaveBeenCalledWith("/location-jurisdiction-delete-success");
     });
 

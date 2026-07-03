@@ -1,12 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import {
-  jurisdictionDataModifyCy as cy,
-  jurisdictionDataModifyEn as en,
-  findJurisdictionDataById,
-  type JurisdictionDataSession,
-  type JurisdictionDataType
-} from "@hmcts/system-admin-pages";
+import { findJurisdictionDataById, type JurisdictionDataSession, type JurisdictionDataType } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const VALID_TYPES: JurisdictionDataType[] = ["Jurisdiction", "Sub-Jurisdiction", "Region"];
 

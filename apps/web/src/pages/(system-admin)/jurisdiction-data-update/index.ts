@@ -1,12 +1,8 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import {
-  jurisdictionDataUpdateCy as cy,
-  jurisdictionDataUpdateEn as en,
-  getAllJurisdictions,
-  type JurisdictionDataSession,
-  updateJurisdictionData
-} from "@hmcts/system-admin-pages";
+import { getAllJurisdictions, type JurisdictionDataSession, updateJurisdictionData } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const buildJurisdictionItems = async (t: typeof en, selectedId?: number) => {
   const jurisdictions = await getAllJurisdictions();
