@@ -31,11 +31,15 @@ export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
   type BasePdfGenerationOptions,
+  buildPdfFromRenderedList,
   configureNunjucks,
   createPdfErrorResult,
+  generateListPdf,
+  type ListPdfOptions,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
   type PdfGenerationResult,
+  type RenderedListData,
   savePdfToStorage
 } from "./pdf/pdf-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";

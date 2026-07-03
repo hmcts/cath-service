@@ -1,12 +1,36 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { configureNunjucks, createPdfErrorResult, loadTranslations, MAX_PDF_SIZE_BYTES, savePdfToStorage } from "./pdf-utilities.js";
+import {
+  buildPdfFromRenderedList,
+  configureNunjucks,
+  createPdfErrorResult,
+  generateListPdf,
+  loadTranslations,
+  MAX_PDF_SIZE_BYTES,
+  savePdfToStorage
+} from "./pdf-utilities.js";
 
-const { mockUploadBlob } = vi.hoisted(() => ({
-  mockUploadBlob: vi.fn()
+const { mockUploadBlob, mockGeneratePdfFromHtml, mockNunjucksEnv } = vi.hoisted(() => ({
+  mockUploadBlob: vi.fn(),
+  mockGeneratePdfFromHtml: vi.fn(),
+  mockNunjucksEnv: {
+    render: vi.fn(() => "<html>test</html>"),
+    renderString: vi.fn()
+  }
 }));
+
 vi.mock("@hmcts/azure-blob", () => ({
   uploadBlob: mockUploadBlob,
   CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
+}));
+
+vi.mock("@hmcts/pdf-generation", () => ({
+  generatePdfFromHtml: mockGeneratePdfFromHtml
+}));
+
+vi.mock("nunjucks", () => ({
+  default: {
+    configure: vi.fn(() => mockNunjucksEnv)
+  }
 }));
 
 describe("configureNunjucks", () => {
@@ -144,5 +168,119 @@ describe("loadTranslations", () => {
 describe("constants", () => {
   it("should have MAX_PDF_SIZE_BYTES set to 2MB", () => {
     expect(MAX_PDF_SIZE_BYTES).toBe(2 * 1024 * 1024);
+  });
+});
+
+describe("buildPdfFromRenderedList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
+  });
+
+  it("should return success result when PDF generation succeeds", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: Buffer.from("pdf"), sizeBytes: 512 });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-1",
+      templateDir: "/templates",
+      header: { court: "Test Court" },
+      hearings: [{ case: "Test" }],
+      provenanceLabel: "Manual Upload",
+      translations: { title: "Test" }
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toBe("artefact-1.pdf");
+    expect(result.sizeBytes).toBe(512);
+    expect(mockUploadBlob).toHaveBeenCalled();
+  });
+
+  it("should return failure when pdfResult.success is false", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: false, error: "Render error" });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-2",
+      templateDir: "/templates",
+      header: {},
+      hearings: [],
+      provenanceLabel: "",
+      translations: {}
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Render error");
+    expect(mockUploadBlob).not.toHaveBeenCalled();
+  });
+
+  it("should return failure with default message when success is true but pdfBuffer is undefined", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: undefined });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-3",
+      templateDir: "/templates",
+      header: {},
+      hearings: [],
+      provenanceLabel: "",
+      translations: {}
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+    expect(mockUploadBlob).not.toHaveBeenCalled();
+  });
+});
+
+describe("generateListPdf", () => {
+  const mockEnTranslations = { title: "English" };
+  const importEn = vi.fn().mockResolvedValue({ en: mockEnTranslations });
+  const importCy = vi.fn().mockResolvedValue({ cy: {} });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
+    importEn.mockResolvedValue({ en: mockEnTranslations });
+    importCy.mockResolvedValue({ cy: {} });
+  });
+
+  it("should return success result when renderData and PDF generation succeed", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: Buffer.from("pdf"), sizeBytes: 1024 });
+
+    const result = await generateListPdf({
+      artefactId: "list-artefact",
+      locale: "en",
+      locationId: "1",
+      contentDate: new Date("2025-01-01"),
+      jsonData: { data: "test" },
+      listTitle: "Test List",
+      provenanceLabel: "Manual Upload",
+      templateDir: "/templates",
+      renderData: () => ({ header: { court: "Test" }, hearings: [] }),
+      importEn,
+      importCy
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toBe("list-artefact.pdf");
+  });
+
+  it("should return error result when renderData throws", async () => {
+    const result = await generateListPdf({
+      artefactId: "list-artefact-error",
+      locale: "en",
+      locationId: "1",
+      contentDate: new Date("2025-01-01"),
+      jsonData: {},
+      listTitle: "Test List",
+      provenanceLabel: "",
+      templateDir: "/templates",
+      renderData: () => {
+        throw new Error("Render failed");
+      },
+      importEn,
+      importCy
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Render failed");
   });
 });

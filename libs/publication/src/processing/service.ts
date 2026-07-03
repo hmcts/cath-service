@@ -1,5 +1,7 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
+import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
@@ -10,6 +12,7 @@ import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCou
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -60,6 +63,23 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
     generateCareStandardsTribunalWeeklyHearingListPdf({
       ...p,
       jsonData: p.jsonData as CareStandardsTribunalHearingList
+    }),
+  SEND_DAILY_HEARING_LIST: (p) =>
+    generateSendDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SendDailyHearingList
+    }),
+  CIC_WEEKLY_HEARING_LIST: (p) =>
+    generateCicWeeklyHearingListPdf({
+      ...p,
+      contentDate: p.contentDate,
+      jsonData: p.jsonData as CicWeeklyHearingList
+    }),
+  AST_DAILY_HEARING_LIST: (p) =>
+    generateAstDailyHearingListPdf({
+      ...p,
+      contentDate: p.contentDate,
+      jsonData: p.jsonData as AstDailyHearingList
     }),
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardGenerator,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardGenerator,
