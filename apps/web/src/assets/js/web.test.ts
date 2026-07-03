@@ -176,4 +176,42 @@ describe("web.ts", () => {
       }).not.toThrow();
     });
   });
+
+  describe("initialization (DOMContentLoaded path)", () => {
+    beforeEach(async () => {
+      vi.resetModules();
+      vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
+      await import("./web.js");
+    });
+
+    it("should initialize components after DOMContentLoaded fires", async () => {
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+      await Promise.resolve();
+      await Promise.resolve();
+      const { initBackToTop } = await import("./back-to-top.js");
+      expect(initBackToTop).toHaveBeenCalled();
+    });
+
+    it("should log error when search autocomplete fails during DOMContentLoaded", async () => {
+      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
+      vi.mocked(initSearchAutocomplete).mockRejectedValueOnce(new Error("autocomplete error"));
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      document.dispatchEvent(new Event("DOMContentLoaded"));
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith("Error initializing search autocomplete:", expect.any(Error));
+    });
+  });
+
+  describe("search autocomplete error handling (immediate load)", () => {
+    it("should log error when search autocomplete fails on page load", async () => {
+      vi.resetModules();
+      const { initSearchAutocomplete } = await import("./search-autocomplete.js");
+      vi.mocked(initSearchAutocomplete).mockRejectedValueOnce(new Error("autocomplete error"));
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      await import("./web.js");
+      await Promise.resolve();
+      expect(consoleSpy).toHaveBeenCalledWith("Error initializing search autocomplete:", expect.any(Error));
+    });
+  });
 });
