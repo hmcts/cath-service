@@ -90,6 +90,35 @@ export const locationData: {
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
       subJurisdictions: [7]
+    },
+    {
+      locationId: 13,
+      name: "First-tier Tribunal (Special Educational Needs and Disability)",
+      welshName: "Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+      regions: [8],
+      subJurisdictions: [18]
+    },
+    {
+      locationId: 14,
+      name: "Criminal Injuries Compensation Tribunal",
+      welshName: "Tribiwnlys Iawndal am Anafiadau Troseddol",
+      regions: [8],
+      subJurisdictions: [14]
+    },
+    {
+      locationId: 15,
+      name: "East London Tribunal Service",
+      welshName: "Gwasanaeth Tribiwnlys Dwyrain Llundain",
+      regions: [1],
+      subJurisdictions: [13]
+    },
+    {
+      locationId: 16,
+      name: "Asylum Support Tribunal",
+      welshName: "Tribiwnlys Cefnogi Ceiswyr Lloches",
+      regions: [1],
+      subJurisdictions: [13],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [
@@ -268,7 +297,7 @@ export const locationData: {
     },
     {
       subJurisdictionId: 15,
-      name: "First-Tier Tribunal (Lands Registration Tribunal)",
+      name: "First-Tier Tribunal (Land Registration Tribunal)",
       welshName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
       jurisdictionId: 4
     },

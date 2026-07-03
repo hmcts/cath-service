@@ -98,3 +98,14 @@ cookieManager.on("CookieBannerAction", (eventData: any) => {
 });
 
 cookieManager.init(config);
+
+// Hide the cookie banner when navigating back to a page from bfcache if the user
+// has already set their cookie preferences
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && document.cookie.includes("cookie_policy")) {
+    const banner = document.querySelector<HTMLElement>(".govuk-cookie-banner");
+    if (banner) {
+      banner.hidden = true;
+    }
+  }
+});

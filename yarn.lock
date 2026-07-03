@@ -2217,7 +2217,7 @@ __metadata:
     "@types/express": "npm:5.0.6"
     "@types/supertest": "npm:^7.0.0"
     compression: "npm:1.8.1"
-    config: "npm:4.4.1"
+    config: "npm:4.4.2"
     connect-redis: "npm:9.0.0"
     cors: "npm:2.8.6"
     express: "npm:5.2.1"
@@ -2234,6 +2234,24 @@ __metadata:
     redis: "npm:5.12.1"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/ast-daily-hearing-list@workspace:*, @hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2297,6 +2315,24 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/cic-weekly-hearing-list@workspace:*, @hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2378,7 +2414,7 @@ __metadata:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
     "@types/config": "npm:4.4.0"
     "@types/node": "npm:24.10.4"
-    config: "npm:4.4.1"
+    config: "npm:4.4.2"
   languageName: unknown
   linkType: soft
 
@@ -2416,6 +2452,57 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:*, @hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/ftt-rpt-weekly-hearing-list@workspace:*, @hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-rpt-weekly-hearing-list@workspace:libs/list-types/ftt-rpt-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:*, @hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ftt-tax-chamber-weekly-hearing-list@workspace:libs/list-types/ftt-tax-chamber-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/legacy-third-party-fulfilment@workspace:*, @hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment":
   version: 0.0.0-use.local
   resolution: "@hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment"
@@ -2445,6 +2532,7 @@ __metadata:
   dependencies:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
     ajv: "npm:8.20.0"
@@ -2518,15 +2606,22 @@ __metadata:
   resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2607,13 +2702,18 @@ __metadata:
   resolution: "@hmcts/publication@workspace:libs/publication"
   dependencies:
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
+    "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
     "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
@@ -2623,6 +2723,8 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
@@ -2655,6 +2757,41 @@ __metadata:
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/send-daily-hearing-list@workspace:*, @hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:*, @hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2782,8 +2919,10 @@ __metadata:
     "@hmcts-cft/simple-router": "workspace:*"
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
@@ -2795,6 +2934,7 @@ __metadata:
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/sjp-press-list": "workspace:*"
     "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
@@ -2810,7 +2950,7 @@ __metadata:
     "@types/supertest": "npm:7.2.0"
     compression: "npm:1.8.1"
     concurrently: "npm:10.0.3"
-    config: "npm:4.4.1"
+    config: "npm:4.4.2"
     connect-redis: "npm:9.0.0"
     cookie-parser: "npm:1.4.7"
     express: "npm:5.2.1"
@@ -5111,6 +5251,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/luxon@npm:3.7.1":
+  version: 3.7.1
+  resolution: "@types/luxon@npm:3.7.1"
+  checksum: 10c0/2db30c13b58adcd86daa447faa3ba59515fe907ead8ee3e6bb716d662812af0619d712f6c1eb190cdd7f9d2c00444c3ecd80af0f36e8143eb0c5e7339d6b2aca
+  languageName: node
+  linkType: hard
+
 "@types/luxon@npm:3.7.2":
   version: 3.7.2
   resolution: "@types/luxon@npm:3.7.2"
@@ -6432,12 +6579,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"config@npm:*, config@npm:4.4.1":
+"config@npm:*":
   version: 4.4.1
   resolution: "config@npm:4.4.1"
   dependencies:
     json5: "npm:^2.2.3"
   checksum: 10c0/f92c7b61d2456f933a53da1fea06abe116584df99dd1254a93e7b10c9487ddf17a1f865bd7ab8e4cf0cca23777dd89b6b1ba81e1c71e06111d36fbb00b49c28f
+  languageName: node
+  linkType: hard
+
+"config@npm:4.4.2":
+  version: 4.4.2
+  resolution: "config@npm:4.4.2"
+  dependencies:
+    json5: "npm:^2.2.3"
+  checksum: 10c0/2ef94db31c8f573d2beefa6682ec16f142f9f56710c43e4fc8a8d5bb48cc056b1f8174ae8fa4554af23c041e366dc8c940e7e6d9664904c6ef0ed2e60fe51216
   languageName: node
   linkType: hard
 
