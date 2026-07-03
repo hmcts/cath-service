@@ -2602,8 +2602,8 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
-    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2704,8 +2704,8 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
-    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
@@ -2741,12 +2741,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:*, @hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
+"@hmcts/send-daily-hearing-list@workspace:*, @hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list":
   version: 0.0.0-use.local
-  resolution: "@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list"
+  resolution: "@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
@@ -2758,13 +2759,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/send-daily-hearing-list@workspace:*, @hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list":
+"@hmcts/siac-poac-paac-weekly-hearing-list@workspace:*, @hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list":
   version: 0.0.0-use.local
-  resolution: "@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list"
+  resolution: "@hmcts/siac-poac-paac-weekly-hearing-list@workspace:libs/list-types/siac-poac-paac-weekly-hearing-list"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"

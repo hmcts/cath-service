@@ -32,8 +32,8 @@
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
-    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",
+    "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "peerDependencies": {
