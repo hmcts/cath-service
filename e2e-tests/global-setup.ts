@@ -15,7 +15,8 @@ async function globalSetup(_config: FullConfig) {
 
     // Step 2: Wait for API and database to be ready
     console.log("Waiting for API and database to be ready...");
-    const maxRetries = 30;
+    const maxRetries = 60;
+    const retryIntervalMs = 5000;
     let ready = false;
 
     for (let i = 0; i < maxRetries; i++) {
@@ -37,7 +38,7 @@ async function globalSetup(_config: FullConfig) {
       if (i === maxRetries - 1) {
         throw new Error("API or database did not become ready. Please ensure the API server is running and migrations have been applied.");
       }
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, retryIntervalMs));
     }
 
     if (!ready) {
