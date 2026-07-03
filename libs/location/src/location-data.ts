@@ -297,7 +297,7 @@ export const locationData: {
     },
     {
       subJurisdictionId: 15,
-      name: "First-Tier Tribunal (Lands Registration Tribunal)",
+      name: "First-Tier Tribunal (Land Registration Tribunal)",
       welshName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
       jurisdictionId: 4
     },

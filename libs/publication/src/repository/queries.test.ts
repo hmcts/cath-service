@@ -661,7 +661,7 @@ describe("getArtefactById", () => {
       noMatch: false
     } as any;
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "CIVIL_DAILY_CAUSE_LIST" } } as any);
 
     const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440000");
 
@@ -681,13 +681,15 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true
+        noMatch: true,
+        listType: { select: { name: true } }
       }
     });
     expect(result).toEqual({
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
       locationId: "123",
       listTypeId: 1,
+      listTypeName: "CIVIL_DAILY_CAUSE_LIST",
       contentDate: mockArtefact.contentDate,
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -722,7 +724,8 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true
+        noMatch: true,
+        listType: { select: { name: true } }
       }
     });
     expect(result).toBeNull();
@@ -745,7 +748,7 @@ describe("getArtefactById", () => {
       noMatch: true
     } as any;
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact);
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "FAMILY_DAILY_CAUSE_LIST" } } as any);
 
     const result = await getArtefactById("550e8400-e29b-41d4-a716-446655440001");
 
@@ -753,6 +756,7 @@ describe("getArtefactById", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440001",
       locationId: "456",
       listTypeId: 2,
+      listTypeName: "FAMILY_DAILY_CAUSE_LIST",
       contentDate: mockArtefact.contentDate,
       sensitivity: "PRIVATE",
       language: "WELSH",

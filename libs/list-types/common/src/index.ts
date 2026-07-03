@@ -34,12 +34,15 @@ export {
   buildPdfFromRenderedList,
   configureNunjucks,
   createPdfErrorResult,
+  type FttSiacWeeklyHearingListPdfOptions,
+  generateFttSiacWeeklyHearingListPdf,
   generateListPdf,
   type ListPdfOptions,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
   type PdfGenerationResult,
   type RenderedListData,
+  type RenderedPdfData,
   savePdfToStorage
 } from "./pdf/pdf-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
