@@ -46,13 +46,8 @@ do
 done
 echo "Database is available."
 
-echo "Resolving any failed migrations..."
-printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
-  ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
-
-echo "Fixing non-idempotent migrations that may be stuck due to schema already being applied..."
-printf "UPDATE _prisma_migrations SET rolled_back_at = NULL, finished_at = COALESCE(finished_at, NOW()) WHERE migration_name = '20260623000000_add_file_extension_to_artefact' AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'artefact' AND column_name = 'file_extension');" | \
-  ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
+echo "Resolving any failed or stuck migrations..."
+../../node_modules/.bin/prisma db execute --file=./scripts/fix-stuck-migrations.sql --config=./prisma.config.ts 2>/dev/null || true
 
 echo "Running database migrations..."
 ../../node_modules/.bin/prisma migrate deploy --config=./prisma.config.ts
