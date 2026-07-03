@@ -19,8 +19,10 @@
   },
   "dependencies": {
     "@hmcts/administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/ast-daily-hearing-list": "workspace:*",
     "@hmcts/azure-blob": "workspace:*",
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
+    "@hmcts/cic-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*",
@@ -31,6 +33,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
+    "@hmcts/send-daily-hearing-list": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "peerDependencies": {

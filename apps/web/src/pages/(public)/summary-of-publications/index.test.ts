@@ -2,7 +2,10 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-// Mock the location module
+vi.mock("@hmcts/publication", () => ({
+  filterPublicationsForSummary: vi.fn((_user: unknown, artefacts: unknown[]) => artefacts)
+}));
+
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn((id: number) => {
     if (id === 9) {
@@ -489,6 +492,51 @@ describe("Summary of Publications - GET handler", () => {
 
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.selectListMessage).toBe("Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:");
+    });
+  });
+
+  describe("Weekly Hearing List display name", () => {
+    it("should include 'for week commencing' text in display name for weekly hearing lists", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce([
+        {
+          id: 7,
+          name: "CIC_WEEKLY_HEARING_LIST",
+          friendlyName: "Criminal Injuries Compensation Weekly Hearing List",
+          welshFriendlyName: "Rhestr Wythnosol",
+          url: "cic-weekly-hearing-list",
+          allowedProvenance: "MANUAL_UPLOAD",
+          isNonStrategic: false
+        } as any
+      ]);
+
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        {
+          artefactId: "weekly-id-1",
+          locationId: "9",
+          listTypeId: 7,
+          contentDate: new Date("2025-04-15"),
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          displayFrom: new Date("2025-04-01"),
+          displayTo: new Date("2025-12-31"),
+          lastReceivedDate: new Date(),
+          isFlatFile: false
+        }
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      const publications = renderCall.publications;
+
+      expect(publications.length).toBe(1);
+      expect(publications[0].displayName).toContain("for week commencing");
     });
   });
 

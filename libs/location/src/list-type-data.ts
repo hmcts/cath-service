@@ -436,5 +436,41 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "FTT (RPT) Southern Weekly Hearing List",
     subJurisdictionIds: [24]
+  },
+  {
+    id: 38,
+    name: "SEND_DAILY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "send-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Private",
+    shortenedFriendlyName: "SEND Daily Hearing List",
+    subJurisdictionIds: [18]
+  },
+  {
+    id: 39,
+    name: "CIC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Criminal Injuries Compensation Weekly Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol yr Iawndal am Anafiadau Troseddol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "cic-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "CIC Weekly Hearing List",
+    subJurisdictionIds: [14]
+  },
+  {
+    id: 40,
+    name: "AST_DAILY_HEARING_LIST",
+    englishFriendlyName: "Asylum Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Cymorth Lloches",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ast-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "AST Daily Hearing List",
+    subJurisdictionIds: [13]
   }
 ];
