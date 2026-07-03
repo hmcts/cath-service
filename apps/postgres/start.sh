@@ -46,12 +46,30 @@ do
 done
 echo "Database is available."
 
-echo "Resolving any failed or stuck migrations..."
+echo "Applying migrations directly to avoid DDL lock contention..."
 ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null <<'SQL' || true
--- Remove this migration record so prisma deploy always re-runs it cleanly.
--- The migration SQL uses IF NOT EXISTS so re-running is safe.
+-- Apply the file_extension migration idempotently
+ALTER TABLE "artefact" ADD COLUMN IF NOT EXISTS "file_extension" VARCHAR(10);
+
+-- Apply the remove-soft-delete migration idempotently
+ALTER TABLE "jurisdiction" DROP COLUMN IF EXISTS "deleted_at";
+ALTER TABLE "region" DROP COLUMN IF EXISTS "deleted_at";
+ALTER TABLE "sub_jurisdiction" DROP COLUMN IF EXISTS "deleted_at";
+DROP INDEX IF EXISTS "admin_audit_log_performed_at_idx";
+DROP INDEX IF EXISTS "admin_audit_log_entity_type_idx";
+DROP TABLE IF EXISTS "admin_audit_log";
+
+-- Mark both migrations as applied so prisma migrate deploy skips them.
+-- Delete any existing record (whatever state) then re-insert as complete.
 DELETE FROM _prisma_migrations
-WHERE migration_name = '20260623000000_add_file_extension_to_artefact';
+WHERE migration_name IN (
+  '20260623000000_add_file_extension_to_artefact',
+  '20260702000000_remove_soft_delete_and_admin_audit_log'
+);
+INSERT INTO _prisma_migrations (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
+VALUES
+  (gen_random_uuid()::text, 'c91eb02ac37e3f570592c4cef2911420c0504f2eeaa9f15e1684405c742d58b0', NOW(), '20260623000000_add_file_extension_to_artefact', NULL, NULL, NOW(), 1),
+  (gen_random_uuid()::text, '5624e9b7d7f75e5aecfdbd59b7e2d0323df5c67ab925ccbbf2f3a1fa374352b9', NOW(), '20260702000000_remove_soft_delete_and_admin_audit_log', NULL, NULL, NOW(), 1);
 
 -- Mark any other stuck migrations as rolled back so they get retried
 UPDATE _prisma_migrations
