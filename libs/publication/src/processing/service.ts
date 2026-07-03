@@ -1,9 +1,14 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
+import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
+import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
+import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
@@ -11,6 +16,8 @@ import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCou
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
+import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import {
   createUtiacJrDailyHearingListPdfGenerator,
   generateUtiacJrLeedsDailyHearingListPdf,
@@ -72,6 +79,23 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
       ...p,
       jsonData: p.jsonData as CareStandardsTribunalHearingList
     }),
+  SEND_DAILY_HEARING_LIST: (p) =>
+    generateSendDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SendDailyHearingList
+    }),
+  CIC_WEEKLY_HEARING_LIST: (p) =>
+    generateCicWeeklyHearingListPdf({
+      ...p,
+      contentDate: p.contentDate,
+      jsonData: p.jsonData as CicWeeklyHearingList
+    }),
+  AST_DAILY_HEARING_LIST: (p) =>
+    generateAstDailyHearingListPdf({
+      ...p,
+      contentDate: p.contentDate,
+      jsonData: p.jsonData as AstDailyHearingList
+    }),
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardGenerator,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardGenerator,
   COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardGenerator,
@@ -87,6 +111,64 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  SIAC_WEEKLY_HEARING_LIST: (p) =>
+    generateSiacPoacPaacWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SiacPoacPaacHearingList,
+      courtName: "Special Immigration Appeals Commission",
+      listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+    }),
+  POAC_WEEKLY_HEARING_LIST: (p) =>
+    generateSiacPoacPaacWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SiacPoacPaacHearingList,
+      courtName: "Proscribed Organisations Appeal Commission",
+      listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List"
+    }),
+  PAAC_WEEKLY_HEARING_LIST: (p) =>
+    generateSiacPoacPaacWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as SiacPoacPaacHearingList,
+      courtName: "Pathogens Access Appeal Commission",
+      listTitle: "Pathogens Access Appeal Commission Weekly Hearing List"
+    }),
+  FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: (p) => generateFttTaxChamberWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as FttTaxChamberHearingList }),
+  FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: (p) => generateFttLrtWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as FttLrtHearingList }),
+  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"
+    }),
+  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"
+    }),
+  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List"
+    }),
+  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
+    }),
+  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
+    }),
   GRC_WEEKLY_HEARING_LIST: (p) => generateGrcWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as GrcWeeklyHearingList }),
   WPAFCC_WEEKLY_HEARING_LIST: (p) => generateWpafccWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as WpafccWeeklyHearingList }),
   UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: (p) =>

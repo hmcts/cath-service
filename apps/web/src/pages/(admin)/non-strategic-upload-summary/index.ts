@@ -21,7 +21,7 @@ async function resolveUploadDisplayNames(uploadData: { locationId: string; listT
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
   const listTypeName = listType
-    ? listType.shortenedFriendlyName || (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType
+    ? (locale === "cy" ? listType.welshFriendlyName : listType.shortenedFriendlyName || listType.friendlyName) || listType.name || uploadData.listType
     : uploadData.listType;
 
   return { courtName, listTypeName };

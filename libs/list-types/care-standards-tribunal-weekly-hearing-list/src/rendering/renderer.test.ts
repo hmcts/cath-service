@@ -74,7 +74,7 @@ describe("renderCareStandardsTribunalData", () => {
     expect(result.hearings[1].date).toBe("03 January 2025");
   });
 
-  it("should format date with leading zeros (e.g., 01/01/2025 -> 01 January 2025)", () => {
+  it("should format date with leading zeros correctly (e.g., 01/01/2025 -> 01 January 2025)", () => {
     const hearingList: CareStandardsTribunalHearingList = [
       {
         date: "01/01/2025",

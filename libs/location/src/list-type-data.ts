@@ -319,6 +319,162 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     id: 28,
+    name: "SIAC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Special Immigration Appeals Commission Weekly Hearing List",
+    welshFriendlyName: "Special Immigration Appeals Commission Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "siac-poac-paac-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SIAC Weekly Hearing List",
+    subJurisdictionIds: [25]
+  },
+  {
+    id: 29,
+    name: "POAC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Proscribed Organisations Appeal Commission Weekly Hearing List",
+    welshFriendlyName: "Proscribed Organisations Appeal Commission Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "siac-poac-paac-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "POAC Weekly Hearing List",
+    subJurisdictionIds: [23]
+  },
+  {
+    id: 30,
+    name: "PAAC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Pathogens Access Appeal Commission Weekly Hearing List",
+    welshFriendlyName: "Pathogens Access Appeal Commission Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "siac-poac-paac-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "PACC Weekly Hearing List",
+    subJurisdictionIds: [21]
+  },
+  {
+    id: 31,
+    name: "FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-tax-chamber-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FFT Tax Weekly Hearing List",
+    subJurisdictionIds: [16]
+  },
+  {
+    id: 32,
+    name: "FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-lands-registration-tribunal-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FFT (LR) Weekly Hearing List",
+    subJurisdictionIds: [15]
+  },
+  {
+    id: 33,
+    name: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Eastern Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    id: 34,
+    name: "FTT_RPT_LONDON_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) London Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    id: 35,
+    name: "FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Midlands Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    id: 36,
+    name: "FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Northern Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    id: 37,
+    name: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
+    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Southern Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    id: 38,
+    name: "SEND_DAILY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "send-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Private",
+    shortenedFriendlyName: "SEND Daily Hearing List",
+    subJurisdictionIds: [18]
+  },
+  {
+    id: 39,
+    name: "CIC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Criminal Injuries Compensation Weekly Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol yr Iawndal am Anafiadau Troseddol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "cic-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "CIC Weekly Hearing List",
+    subJurisdictionIds: [14]
+  },
+  {
+    id: 40,
+    name: "AST_DAILY_HEARING_LIST",
+    englishFriendlyName: "Asylum Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Cymorth Lloches",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "ast-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "AST Daily Hearing List",
+    subJurisdictionIds: [13]
+  },
+  {
+    id: 41,
     name: "GRC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "General Regulatory Chamber Weekly Hearing List",
     welshFriendlyName: "Rhestr Wrandawiadau Wythnosol y Siambr Reoleiddio Gyffredinol",
@@ -330,7 +486,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [19]
   },
   {
-    id: 29,
+    id: 42,
     name: "WPAFCC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List",
     welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Siambr Pensiynau Rhyfel a Digollediad Lluoedd Arfog",
@@ -342,7 +498,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [17]
   },
   {
-    id: 30,
+    id: 43,
     name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List",
     welshFriendlyName: "Uwch Dribiwnlys (Siambr Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol - Apeliadau Statudol",
@@ -354,7 +510,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [28]
   },
   {
-    id: 31,
+    id: 44,
     name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List",
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']",
@@ -366,7 +522,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    id: 32,
+    id: 45,
     name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
@@ -378,7 +534,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    id: 33,
+    id: 46,
     name: "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
@@ -390,7 +546,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    id: 34,
+    id: 47,
     name: "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
@@ -402,7 +558,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    id: 35,
+    id: 48,
     name: "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
     welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",

@@ -47,12 +47,31 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 1) return Promise.resolve({ id: 1, friendlyName: "Test List Type", welshFriendlyName: "Test List Type CY" });
     if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });
     if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
+    if (id === 7)
+      return Promise.resolve({
+        id: 7,
+        name: "CIC_WEEKLY_HEARING_LIST",
+        friendlyName: "CIC Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wythnosol CIC",
+        isNonStrategic: true
+      });
     return Promise.resolve(null);
   }),
   AuditLogAction: {
     NON_STRATEGIC_UPLOAD: "Non strategic upload"
   }
 }));
+
+vi.mock("@hmcts/list-types-common", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
+  return {
+    ...actual,
+    hasConverterForListType: vi.fn(() => true),
+    convertExcelForListType: vi.fn(() => Promise.resolve({ cases: [] })),
+    hasConverterForListTypeName: vi.fn(() => false),
+    convertExcelForListTypeName: vi.fn()
+  };
+});
 
 vi.mock("@hmcts/web-core", async () => {
   const actual = await vi.importActual("@hmcts/web-core");
@@ -73,18 +92,18 @@ vi.mock("@hmcts/admin-pages", async () => {
   };
 });
 
-vi.mock("@hmcts/publication", async () => {
-  const actual = await vi.importActual("@hmcts/publication");
-  return {
-    ...actual,
-    createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
-    processPublication: vi.fn(() => Promise.resolve({})),
-    updateArtefactFileExtension: vi.fn(() => Promise.resolve())
-  };
-});
+vi.mock("@hmcts/publication", () => ({
+  createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
+  processPublication: vi.fn(() => Promise.resolve({})),
+  updateArtefactFileExtension: vi.fn(() => Promise.resolve()),
+  extractAndStoreArtefactSearch: vi.fn(() => Promise.resolve()),
+  Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
+  Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },
+  Language: { ENGLISH: "ENGLISH", WELSH: "WELSH", BILINGUAL: "BILINGUAL" }
+}));
 
 import { getNonStrategicUpload, saveUploadedFile } from "@hmcts/admin-pages";
-import { createArtefact, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, processPublication } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
 describe("non-strategic-upload-summary page", () => {
@@ -479,6 +498,69 @@ describe("non-strategic-upload-summary page", () => {
           errors: expect.arrayContaining([expect.objectContaining({ text: "Database error" })])
         })
       );
+    });
+
+    it("should convert Excel file and call extractAndStoreArtefactSearch for non-strategic list type", async () => {
+      const { hasConverterForListType, convertExcelForListType } = await import("@hmcts/list-types-common");
+
+      const mockUploadData = {
+        file: Buffer.from("excel content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      vi.mocked(hasConverterForListType).mockReturnValue(true);
+      vi.mocked(convertExcelForListType).mockResolvedValue({ cases: [] });
+      vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
+
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("artefact-id-123", 7, { cases: [] });
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+    });
+
+    it("should continue upload when extractAndStoreArtefactSearch throws after Excel conversion", async () => {
+      const { hasConverterForListType, convertExcelForListType } = await import("@hmcts/list-types-common");
+
+      const mockUploadData = {
+        file: Buffer.from("excel content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      vi.mocked(hasConverterForListType).mockReturnValue(true);
+      vi.mocked(convertExcelForListType).mockResolvedValue({ cases: [] });
+      vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Search extraction failed"));
+
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
     });
 
     it("should redirect with language parameter when lng=cy", async () => {
