@@ -28,6 +28,7 @@ import {
   extractCaseSummary as extractFttTaxSummary,
   formatCaseSummaryForEmail as formatFttTaxSummaryForEmail
 } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -40,6 +41,16 @@ import {
   extractCaseSummary as extractSiacPoacPaacSummary,
   formatCaseSummaryForEmail as formatSiacPoacPaacSummaryForEmail
 } from "@hmcts/siac-poac-paac-weekly-hearing-list";
+import {
+  extractCaseSummary as extractUtiacJrLeedsSummary,
+  extractLondonCaseSummary as extractUtiacJrLondonSummary,
+  formatCaseSummaryForEmail as formatUtiacJrLeedsSummaryForEmail
+} from "@hmcts/utiac-jr-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtiacSaSummary,
+  formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
+} from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
@@ -161,6 +172,38 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
+  },
+  GRC_WEEKLY_HEARING_LIST: {
+    extract: extractGrcSummary as SummaryExtractor,
+    format: formatGrcSummaryForEmail
+  },
+  WPAFCC_WEEKLY_HEARING_LIST: {
+    extract: extractWpafccSummary as SummaryExtractor,
+    format: formatWpafccSummaryForEmail
+  },
+  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+    extract: extractUtiacSaSummary as SummaryExtractor,
+    format: formatUtiacSaSummaryForEmail
+  },
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLondonSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
   }
 };
 

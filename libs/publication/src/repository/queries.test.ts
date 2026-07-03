@@ -649,6 +649,7 @@ describe("getArtefactById", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440000",
       locationId: "123",
       listTypeId: 1,
+      listType: { name: "CIVIL_DAILY_CAUSE_LIST" },
       contentDate: new Date("2025-10-25"),
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -672,6 +673,7 @@ describe("getArtefactById", () => {
         type: true,
         locationId: true,
         listTypeId: true,
+        listType: { select: { name: true } },
         contentDate: true,
         sensitivity: true,
         language: true,
@@ -681,8 +683,7 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true,
-        listType: { select: { name: true } }
+        noMatch: true
       }
     });
     expect(result).toEqual({
@@ -715,6 +716,7 @@ describe("getArtefactById", () => {
         type: true,
         locationId: true,
         listTypeId: true,
+        listType: { select: { name: true } },
         contentDate: true,
         sensitivity: true,
         language: true,
@@ -724,8 +726,7 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true,
-        listType: { select: { name: true } }
+        noMatch: true
       }
     });
     expect(result).toBeNull();
@@ -736,6 +737,7 @@ describe("getArtefactById", () => {
       artefactId: "550e8400-e29b-41d4-a716-446655440001",
       locationId: "456",
       listTypeId: 2,
+      listType: { name: "FAMILY_DAILY_CAUSE_LIST" },
       contentDate: new Date("2025-11-15"),
       sensitivity: "PRIVATE",
       language: "WELSH",

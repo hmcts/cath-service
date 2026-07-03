@@ -9,6 +9,7 @@ import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseList
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
@@ -17,6 +18,16 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
+import {
+  createUtiacJrDailyHearingListPdfGenerator,
+  generateUtiacJrLeedsDailyHearingListPdf,
+  generateUtiacJrLondonDailyHearingListPdf,
+  type UtiacJrHearingList,
+  type UtiacJrLeedsHearingList,
+  type UtiacJrLondonHearingList
+} from "@hmcts/utiac-jr-daily-hearing-list";
+import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -157,6 +168,44 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
       jsonData: p.jsonData as FttRptHearingList,
       courtName: "First-tier Tribunal (Residential Property Tribunal)",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
+    }),
+  GRC_WEEKLY_HEARING_LIST: (p) => generateGrcWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as GrcWeeklyHearingList }),
+  WPAFCC_WEEKLY_HEARING_LIST: (p) => generateWpafccWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as WpafccWeeklyHearingList }),
+  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: (p) =>
+    generateUtiacStatutoryAppealDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as UtiacStatutoryAppealHearingList,
+      contentDate: p.contentDate
+    }),
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: (p) =>
+    generateUtiacJrLondonDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as UtiacJrLondonHearingList,
+      contentDate: p.contentDate
+    }),
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: (p) =>
+    generateUtiacJrLeedsDailyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as UtiacJrLeedsHearingList,
+      contentDate: p.contentDate
+    }),
+  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: (p) =>
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List")({
+      ...p,
+      jsonData: p.jsonData as UtiacJrHearingList,
+      contentDate: p.contentDate
+    }),
+  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: (p) =>
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List")({
+      ...p,
+      jsonData: p.jsonData as UtiacJrHearingList,
+      contentDate: p.contentDate
+    }),
+  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: (p) =>
+    createUtiacJrDailyHearingListPdfGenerator("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List")({
+      ...p,
+      jsonData: p.jsonData as UtiacJrHearingList,
+      contentDate: p.contentDate
     })
 };
 

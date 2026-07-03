@@ -104,6 +104,7 @@ vi.mock("@hmcts/publication", () => ({
 
 import { getNonStrategicUpload, saveUploadedFile } from "@hmcts/admin-pages";
 import { createArtefact, extractAndStoreArtefactSearch, processPublication } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 
 describe("non-strategic-upload-summary page", () => {
   beforeEach(() => {
@@ -208,6 +209,87 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.send).toHaveBeenCalledWith("Upload not found");
+    });
+
+    it("should use shortenedFriendlyName when list type has it set", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "1",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(findListTypeById).mockResolvedValueOnce({
+        id: 1,
+        friendlyName: "Test List Type",
+        welshFriendlyName: "Test List Type CY",
+        shortenedFriendlyName: "Short Name"
+      } as any);
+
+      const req = { query: { uploadId: "test-upload-id" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        locals: { locale: "en" }
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            listType: "Short Name"
+          })
+        })
+      );
+    });
+
+    it("should fall back to uploadData.listType when list type is not found", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "99",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(findListTypeById).mockResolvedValueOnce(null);
+
+      const req = { query: { uploadId: "test-upload-id" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        locals: { locale: "en" }
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            listType: "99"
+          })
+        })
+      );
     });
   });
 
