@@ -34,10 +34,4 @@ fi
 
 # Source the env file and run claude
 source "$ENV_FILE"
-
-# Export a GitHub token for the GitHub MCP server (see .mcp.json) by reusing the
-# already-authenticated gh CLI. Kept ephemeral — re-read each session, never stored.
-# If gh is not logged in, the var is left empty and the MCP server simply won't connect.
-export GITHUB_MCP_TOKEN="$(gh auth token 2>/dev/null || true)"
-
 claude --dangerously-skip-permissions
