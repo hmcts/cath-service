@@ -35,6 +35,26 @@
       background-color: #f8f8f8;
       border: 1px solid #ddd;
     }
+    .warning-row {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px 0;
+    }
+    .warning-icon {
+      display: inline-block;
+      background-color: #0b0c0c;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 10px;
+      text-align: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .warning-text { font-weight: 700; }
   </style>
 </head>
 <body>
@@ -53,7 +73,10 @@
   <div class="info-box">
     <h3>{{ t.restrictionInformationHeading }}</h3>
     <p>{{ t.restrictionInformationP1 }}</p>
-    <p><strong>{{ t.restrictionInformationBoldText }}</strong></p>
+    <div class="warning-row">
+      <span class="warning-icon" aria-hidden="true">!</span>
+      <span class="warning-text">{{ t.restrictionInformationBoldText }}</span>
+    </div>
     <p>{{ t.restrictionInformationP2 }}</p>
     <p>{{ t.restrictionInformationP3 }}</p>
     <p>{{ t.restrictionInformationP4 }}</p>
