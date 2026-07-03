@@ -5,6 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ t.pageTitle }} {{ header.locationName }}</title>
   <style>{{ pdfStyles | safe }}</style>
+  <style>
+    .warning-row {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px 0;
+    }
+    .warning-icon {
+      display: inline-block;
+      background-color: #0b0c0c;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 10px;
+      text-align: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .warning-text { font-weight: 700; }
+  </style>
 </head>
 <body>
   <div class="header-section">
@@ -29,7 +51,10 @@
   <div class="info-box">
     <h3>{{ t.reportingRestrictionsTitle }}</h3>
     <p>{{ t.reportingRestrictionsBodyIntro }}</p>
-    <p><strong>{{ t.reportingRestrictionsWarning }}</strong></p>
+    <div class="warning-row">
+      <span class="warning-icon" aria-hidden="true">!</span>
+      <span class="warning-text">{{ t.reportingRestrictionsWarning }}</span>
+    </div>
     <p>{{ t.reportingRestrictionsBodySpecific }}</p>
     <p>{{ t.reportingRestrictionsBodyHowever }}</p>
     <p>{{ t.reportingRestrictionsBodyContact }}</p>
