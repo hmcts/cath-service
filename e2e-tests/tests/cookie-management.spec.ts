@@ -29,10 +29,9 @@ test.describe("Cookie Management", () => {
 
     // STEP 2: Test "View cookies" link navigation
     await viewCookiesLink.click();
-    await expect(page).toHaveURL("/cookie-preferences");
-    await expect(page.locator("h1")).toHaveText("Cookie preferences");
+    await expect(page).toHaveURL("/cookie-policy");
 
-    // Cookie banner should not be visible on the cookies page itself
+    // Cookie banner should not be visible on the cookie policy page itself
     await expect(cookieBanner).not.toBeVisible();
 
     // STEP 3: Go back and test accepting cookies

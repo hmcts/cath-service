@@ -125,6 +125,7 @@ export async function createApp(): Promise<Express> {
 
   await configureCookieManager(app, {
     preferencesPath: "/cookie-preferences",
+    policyPath: "/cookie-policy",
     categories: {
       essential: ["connect.sid"],
       analytics: ["_ga", "_gid"],
