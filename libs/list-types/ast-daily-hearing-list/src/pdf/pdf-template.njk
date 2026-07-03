@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p>{% for line in t.venueAddressLines %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</p>
+
+    <p style="margin-bottom: 2px"><strong>{{ t.listForDate }} {{ header.listForDate }}</strong></p>
+
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformationTitle }}</h3>
+    {% for paragraph in t.importantInformationParagraphs %}
+      <p>{{ paragraph }}</p>
+    {% endfor %}
+    <p>{{ t.importantInformationLinkPrefix }} <a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th>{{ t.tableHeaders.appellant }}</th>
+          <th>{{ t.tableHeaders.appealReferenceNumber }}</th>
+          <th>{{ t.tableHeaders.caseType }}</th>
+          <th>{{ t.tableHeaders.hearingType }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingTime }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td>{{ hearing.appellant }}</td>
+            <td>{{ hearing.appealReferenceNumber }}</td>
+            <td>{{ hearing.caseType }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td class="no-wrap">{{ hearing.hearingTime }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -41,7 +41,7 @@ export const cy = {
     details: "Manylion",
     timestamp: "Amserlin"
   },
-  backToList: "Yn ôl i restr log archwilio",
+  backToList: "Yn ôl",
   entryNotFound: "Ni ellid dod o hyd i gofnod log archwilio",
 
   // Access Control
