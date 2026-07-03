@@ -127,13 +127,9 @@ describe("web.ts", () => {
   });
 
   describe("pageshow handler (bfcache restore)", () => {
-    let pageshowHandler: (event: { persisted: boolean }) => void;
-
     beforeEach(async () => {
-      const addEventListenerSpy = vi.spyOn(window, "addEventListener");
       vi.resetModules();
       await import("./web.js");
-      pageshowHandler = addEventListenerSpy.mock.calls.find(([event]) => event === "pageshow")?.[1] as (event: { persisted: boolean }) => void;
     });
 
     it("hides the banner when restored from bfcache with cookie_policy set", () => {
@@ -143,7 +139,7 @@ describe("web.ts", () => {
       banner.className = "govuk-cookie-banner";
       document.body.appendChild(banner);
 
-      pageshowHandler({ persisted: true });
+      window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: true }));
 
       expect(banner.hidden).toBe(true);
     });
@@ -155,7 +151,7 @@ describe("web.ts", () => {
       banner.className = "govuk-cookie-banner";
       document.body.appendChild(banner);
 
-      pageshowHandler({ persisted: false });
+      window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: false }));
 
       expect(banner.hidden).toBe(false);
     });
@@ -167,7 +163,7 @@ describe("web.ts", () => {
       banner.className = "govuk-cookie-banner";
       document.body.appendChild(banner);
 
-      pageshowHandler({ persisted: true });
+      window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: true }));
 
       expect(banner.hidden).toBe(false);
     });
@@ -175,7 +171,9 @@ describe("web.ts", () => {
     it("does not throw when no banner element exists during bfcache restore", () => {
       vi.spyOn(document, "cookie", "get").mockReturnValue("cookie_policy=%7B%22analytics%22%3Atrue%7D");
 
-      expect(() => pageshowHandler({ persisted: true })).not.toThrow();
+      expect(() => {
+        window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: true }));
+      }).not.toThrow();
     });
   });
 });
