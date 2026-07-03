@@ -6,21 +6,18 @@ export const GET = async (_req: Request, res: Response) => {
     // Check database connection
     await prisma.$connect();
 
-    // Check _prisma_migrations for any in-progress migrations (started but not finished/rolled_back).
-    // This is reliable regardless of which tables exist, and correctly returns "pending" while
-    // the postgres pod is still running DDL migrations in the background (health-first startup).
-    const rows = await prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*) AS count FROM _prisma_migrations
-      WHERE finished_at IS NULL AND rolled_back_at IS NULL
-    `;
-    const pending = Number(rows[0].count);
+    // Check if migrations are complete by querying a core table
+    const migrationsComplete = await (prisma as any).jurisdiction
+      .findMany({ take: 1 })
+      .then(() => true)
+      .catch(() => false);
 
-    if (pending > 0) {
+    if (!migrationsComplete) {
       return res.status(503).json({
         status: "unhealthy",
         database: "connected",
         migrations: "pending",
-        error: `${pending} migration(s) still in progress`
+        error: "Database migrations not yet applied"
       });
     }
 
