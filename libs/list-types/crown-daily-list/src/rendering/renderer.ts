@@ -120,7 +120,7 @@ function renderHearing(hearing: PddaHearing): CrownDailyHearingRendered {
 function renderCase(hearing: PddaHearing): CrownDailyCaseRendered {
   const defendants = (hearing.Defendants ?? []).map(formatDefendantName).filter(Boolean).join(", ");
   return {
-    caseNumber: hearing.CaseNumber,
+    caseNumber: hearing.CaseNumberCaTH || hearing.CaseNumber,
     prosecutingAuthority: hearing.Prosecution?.ProsecutingAuthority || "",
     listingNotes: hearing.ListNote || "",
     timeMarkingNote: hearing.TimeMarkingNote || "",

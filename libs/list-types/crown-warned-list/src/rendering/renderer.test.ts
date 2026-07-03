@@ -116,7 +116,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
-                              IsMasked: "no" as const
+                              IsMasked: "NO" as const
                             }
                           }
                         ],
@@ -246,7 +246,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["Tom"], CitizenNameSurname: "Hardy" },
-                              IsMasked: "no" as const,
+                              IsMasked: "NO" as const,
                               CustodyStatus: "On remand"
                             }
                           }
@@ -291,7 +291,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Doe" },
-                              IsMasked: "no" as const,
+                              IsMasked: "NO" as const,
                               CustodyStatus: "In custody"
                             }
                           }
@@ -335,7 +335,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["John"], CitizenNameSurname: "Smith" },
-                              IsMasked: "no" as const,
+                              IsMasked: "NO" as const,
                               CustodyStatus: "On bail"
                             }
                           }
@@ -532,7 +532,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["Sam"], CitizenNameSurname: "Jones" },
-                              IsMasked: "no" as const,
+                              IsMasked: "NO" as const,
                               CustodyStatus: "In care"
                             }
                           }
@@ -576,7 +576,7 @@ describe("renderCrownWarnedListData", () => {
                           {
                             PersonalDetails: {
                               Name: { CitizenNameTitle: "Dr", CitizenNameForename: ["Emma"], CitizenNameSurname: "Watson" },
-                              IsMasked: "no" as const
+                              IsMasked: "NO" as const
                             }
                           }
                         ]
@@ -640,7 +640,7 @@ describe("renderCrownWarnedListData", () => {
                             PersonalDetails: {
                               Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
                               MaskedName: "Restricted",
-                              IsMasked: "yes" as const
+                              IsMasked: "YES" as const
                             }
                           }
                         ]
@@ -688,7 +688,7 @@ describe("renderCrownWarnedListData", () => {
                                 CitizenNameRequestedName: "TestDefendantRequestedName"
                               },
                               MaskedName: "TestMaskedName2",
-                              IsMasked: "yes" as const
+                              IsMasked: "YES" as const
                             }
                           }
                         ]
@@ -737,7 +737,7 @@ describe("renderCrownWarnedListData", () => {
                                 CitizenNameSurname: "RealSurname",
                                 CitizenNameRequestedName: "RequestedName"
                               },
-                              IsMasked: "no" as const
+                              IsMasked: "NO" as const
                             }
                           }
                         ],

@@ -27,7 +27,7 @@ describe("formatPddaDefendantName", () => {
   it("should use MaskedName when IsMasked is yes and no RequestedName", () => {
     expect(
       formatPddaDefendantName({
-        IsMasked: "yes",
+        IsMasked: "YES",
         MaskedName: "Reporting Restriction Applied",
         Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
       })
@@ -37,7 +37,7 @@ describe("formatPddaDefendantName", () => {
   it("should use MaskedName over RequestedName when IsMasked is yes", () => {
     expect(
       formatPddaDefendantName({
-        IsMasked: "yes",
+        IsMasked: "YES",
         MaskedName: "Masked",
         Name: { CitizenNameRequestedName: "RequestedOverride", CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
       })
@@ -47,7 +47,7 @@ describe("formatPddaDefendantName", () => {
   it("should use RequestedName when IsMasked is yes but no MaskedName", () => {
     expect(
       formatPddaDefendantName({
-        IsMasked: "yes",
+        IsMasked: "YES",
         Name: { CitizenNameRequestedName: "RequestedOverride", CitizenNameForename: ["Real"], CitizenNameSurname: "Name" }
       })
     ).toBe("RequestedOverride");
@@ -56,7 +56,7 @@ describe("formatPddaDefendantName", () => {
   it("should format citizen name when IsMasked is no", () => {
     expect(
       formatPddaDefendantName({
-        IsMasked: "no",
+        IsMasked: "NO",
         Name: { CitizenNameTitle: "Mr", CitizenNameForename: ["John"], CitizenNameSurname: "Doe" }
       })
     ).toBe("Mr John Doe");
@@ -65,7 +65,7 @@ describe("formatPddaDefendantName", () => {
   it("should return citizen name when IsMasked is yes but no MaskedName", () => {
     expect(
       formatPddaDefendantName({
-        IsMasked: "yes",
+        IsMasked: "YES",
         Name: { CitizenNameForename: ["Jane"], CitizenNameSurname: "Smith" }
       })
     ).toBe("Jane Smith");

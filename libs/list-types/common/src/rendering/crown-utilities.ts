@@ -87,8 +87,8 @@ export function formatPddaCitizenName(name: PddaCitizenName): string {
   return [name.CitizenNameTitle, forenames, name.CitizenNameSurname, name.CitizenNameSuffix].filter(Boolean).join(" ");
 }
 
-export function formatPddaDefendantName(personalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "yes" | "no" }): string {
-  if (personalDetails.IsMasked === "yes" && personalDetails.MaskedName) {
+export function formatPddaDefendantName(personalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "YES" | "NO" }): string {
+  if (personalDetails.IsMasked === "YES" && personalDetails.MaskedName) {
     return personalDetails.MaskedName;
   }
   return formatPddaCitizenName(personalDetails.Name);
@@ -109,9 +109,10 @@ export function formatPddaSittingTime(timeStr: string | undefined): string {
 
 interface PddaSittingLike {
   Hearings?: Array<{
-    Defendants?: Array<{ PersonalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "yes" | "no" } }>;
+    Defendants?: Array<{ PersonalDetails: { Name: PddaCitizenName; MaskedName?: string; IsMasked: "YES" | "NO" } }>;
     HearingDetails: { HearingDescription?: string; HearingType?: string };
     CaseNumber: string;
+    CaseNumberCaTH?: string;
     Prosecution?: { ProsecutingAuthority?: string };
   }>;
 }
@@ -128,7 +129,7 @@ export function extractPddaSittingsSummary(courtLists: Array<{ Sittings: PddaSit
 
         fields.push({ label: "Defendant Name(s)", value: defendants.join(", ") });
         fields.push({ label: "Prosecuting Authority", value: hearing.Prosecution?.ProsecutingAuthority || "" });
-        fields.push({ label: "Case Reference", value: hearing.CaseNumber });
+        fields.push({ label: "Case Reference", value: hearing.CaseNumberCaTH || hearing.CaseNumber });
         fields.push({ label: "Hearing Type", value: hearingType });
 
         summaries.push(fields);

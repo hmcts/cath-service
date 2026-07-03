@@ -39,11 +39,11 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
           const hearings = caseItem.Hearing ?? [];
-          const labels = [...new Set(hearings.map((h) => h.HearingDescription || "").filter(Boolean))];
-          const effectiveLabels = labels.length > 0 ? labels : [""];
-          for (const label of effectiveLabels) {
-            if (!categoryMap.has(label)) categoryMap.set(label, []);
-            categoryMap.get(label)!.push(processCase(caseItem, fixture.FixedDate));
+          const iterations = hearings.length > 0 ? hearings : [undefined];
+          for (const hearing of iterations) {
+            const category = hearing?.HearingDescription || "";
+            if (!categoryMap.has(category)) categoryMap.set(category, []);
+            categoryMap.get(category)!.push(processCase(caseItem, fixture.FixedDate, hearing));
           }
         }
       }
@@ -53,10 +53,22 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
       if (!categoryMap.has(TO_BE_ALLOCATED_KEY)) categoryMap.set(TO_BE_ALLOCATED_KEY, []);
       for (const fixture of entry.Fixture ?? []) {
         for (const caseItem of fixture.Cases ?? []) {
-          categoryMap.get(TO_BE_ALLOCATED_KEY)!.push(processCase(caseItem, fixture.FixedDate));
+          const hearings = caseItem.Hearing ?? [];
+          const iterations = hearings.length > 0 ? hearings : [undefined];
+          for (const hearing of iterations) {
+            categoryMap.get(TO_BE_ALLOCATED_KEY)!.push(processCase(caseItem, fixture.FixedDate, hearing));
+          }
         }
       }
     }
+  }
+
+  for (const cases of categoryMap.values()) {
+    cases.sort((a, b) => {
+      const aDate = a.fixedFor ? new Date(a.fixedFor.split("/").reverse().join("-")).getTime() : 0;
+      const bDate = b.fixedFor ? new Date(b.fixedFor.split("/").reverse().join("-")).getTime() : 0;
+      return aDate - bDate;
+    });
   }
 
   const groupedCategories: GroupedHearingCategory[] = [];
@@ -99,20 +111,21 @@ function isDefendantInCustody(defendant: PddaDefendant): boolean {
   return CUSTODY_STATUSES.includes(defendant.PersonalDetails.CustodyStatus ?? "");
 }
 
-function processCase(caseItem: PddaCase, fixedDate: string | undefined): CrownWarnedCaseRow {
+type Hearing = NonNullable<PddaCase["Hearing"]>[0];
+
+function processCase(caseItem: PddaCase, fixedDate: string | undefined, hearing: Hearing | undefined): CrownWarnedCaseRow {
   const defendants = caseItem.Defendants ?? [];
   const names = defendants.map(formatDefendantName).filter((n) => n.length > 0);
   const inCustody = defendants.some(isDefendantInCustody);
   const linkedCases = (caseItem.LinkedCases ?? []).map((lc) => lc.CaseNumber ?? "").filter((n) => n.length > 0);
-  const listNote = caseItem.Hearing?.[0]?.ListNote ?? "";
 
   return {
     fixedFor: formatShortDate(fixedDate),
-    caseNumber: caseItem.CaseNumber ?? "",
+    caseNumber: caseItem.CaseNumberCaTH ?? caseItem.CaseNumber ?? "",
     defendants: names.join(", "),
     prosecutingAuthority: caseItem.Prosecution?.ProsecutingAuthority ?? "",
     linkedCases: linkedCases.join(", "),
-    listingNotes: listNote,
+    listingNotes: hearing?.ListNote ?? "",
     isInCustody: inCustody
   };
 }

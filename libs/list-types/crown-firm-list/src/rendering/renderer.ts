@@ -118,7 +118,7 @@ function extractRepresentative(defendants: PddaDefendant[]): string {
 function renderHearing(hearing: NonNullable<CrownFirmListData["FirmList"]["CourtLists"][0]["Sittings"][0]["Hearings"]>[0]): CrownFirmHearingRendered {
   const defendants = hearing.Defendants ?? [];
   const caseRendered: CrownFirmCaseRendered = {
-    caseNumber: hearing.CaseNumber,
+    caseNumber: hearing.CaseNumberCaTH || hearing.CaseNumber,
     timeMarkingNote: hearing.TimeMarkingNote || "",
     prosecutingAuthority: hearing.Prosecution?.ProsecutingAuthority || "",
     listingNotes: hearing.ListNote || "",

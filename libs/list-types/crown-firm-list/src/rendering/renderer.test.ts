@@ -206,7 +206,7 @@ describe("renderCrownFirmListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Green" },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         }
                       }
                     ]
@@ -250,7 +250,7 @@ describe("renderCrownFirmListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Smith" },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         },
                         Counsel: [
                           {
@@ -428,7 +428,7 @@ describe("renderCrownFirmListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Smith" },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         },
                         Counsel: [
                           {
@@ -441,7 +441,7 @@ describe("renderCrownFirmListData", () => {
                                         CitizenNameForename: ["Jane"],
                                         CitizenNameSurname: "Counsel"
                                       },
-                                      IsMasked: "no"
+                                      IsMasked: "NO"
                                     }
                                   }
                                 }
@@ -602,7 +602,7 @@ describe("renderCrownFirmListData", () => {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
                           MaskedName: "Reporting Restriction Applied",
-                          IsMasked: "yes"
+                          IsMasked: "YES"
                         }
                       }
                     ]
@@ -682,7 +682,7 @@ describe("renderCrownFirmListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["A"], CitizenNameSurname: "B" },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         },
                         Counsel: [
                           {
@@ -735,7 +735,7 @@ describe("renderCrownFirmListData", () => {
                       {
                         PersonalDetails: {
                           Name: { CitizenNameForename: ["A"], CitizenNameSurname: "B" },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         },
                         Counsel: [
                           {
@@ -745,7 +745,7 @@ describe("renderCrownFirmListData", () => {
                                   Person: {
                                     PersonalDetails: {
                                       Name: {},
-                                      IsMasked: "no"
+                                      IsMasked: "NO"
                                     }
                                   }
                                 }
@@ -843,7 +843,7 @@ describe("renderCrownFirmListData", () => {
                             CitizenNameSurname: "RealSurname",
                             CitizenNameRequestedName: "RequestedName"
                           },
-                          IsMasked: "no"
+                          IsMasked: "NO"
                         }
                       }
                     ]
