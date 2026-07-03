@@ -3,6 +3,7 @@ export interface Artefact {
   type: string;
   locationId: string;
   listTypeId: number;
+  listTypeName?: string;
   contentDate: Date;
   sensitivity: string;
   language: string;

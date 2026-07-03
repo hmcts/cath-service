@@ -41,7 +41,7 @@ export const en = {
     details: "Details",
     timestamp: "Timestamp"
   },
-  backToList: "Back to audit log list",
+  backToList: "Back",
   entryNotFound: "Audit log entry could not be found",
 
   // Access Control

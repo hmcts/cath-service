@@ -64,6 +64,59 @@ export async function loadTranslations(
   return en;
 }
 
+export interface RenderedPdfData {
+  header: Record<string, unknown>;
+  hearings: unknown[];
+}
+
+export interface FttSiacWeeklyHearingListPdfOptions<T> extends BasePdfGenerationOptions<T> {
+  contentDate: Date;
+  courtName: string;
+  listTitle: string;
+  moduleDir: string;
+  provenanceLabel: string;
+  importEn: () => Promise<{ en: Record<string, unknown> }>;
+  importCy: () => Promise<{ cy: Record<string, unknown> }>;
+  generatePdf: (html: string) => Promise<{ success: boolean; pdfBuffer?: Buffer; sizeBytes?: number; error?: string }>;
+  renderData: (jsonData: T, opts: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }) => RenderedPdfData;
+}
+
+export async function generateFttSiacWeeklyHearingListPdf<T>(options: FttSiacWeeklyHearingListPdfOptions<T>): Promise<PdfGenerationResult> {
+  try {
+    const renderedData = options.renderData(options.jsonData, {
+      locale: options.locale,
+      courtName: options.courtName,
+      contentDate: options.contentDate,
+      lastReceivedDate: new Date().toISOString(),
+      listTitle: options.listTitle
+    });
+
+    const translations = await loadTranslations(options.locale, options.importEn, options.importCy);
+
+    const env = configureNunjucks(options.moduleDir);
+    const html = env.render("pdf-template.njk", {
+      header: renderedData.header,
+      hearings: renderedData.hearings,
+      dataSource: options.provenanceLabel,
+      t: translations,
+      pdfStyles: PDF_BASE_STYLES
+    });
+
+    const pdfResult = await options.generatePdf(html);
+
+    if (!pdfResult.success || !pdfResult.pdfBuffer) {
+      return {
+        success: false,
+        error: pdfResult.error || "PDF generation failed"
+      };
+    }
+
+    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
+  } catch (error) {
+    return createPdfErrorResult(error);
+  }
+}
+
 export interface RenderedListData {
   header: unknown;
   hearings: unknown;
