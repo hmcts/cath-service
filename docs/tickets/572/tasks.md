@@ -1,0 +1,27 @@
+# Tasks: #572 — Store publication JSON and flat file uploads in Azure Blob Storage
+
+- [x] Add `@azure/storage-blob` and `@azure/identity` to the root `package.json` dependencies and run `yarn install`
+- [x] Create `libs/azure-blob/package.json`
+- [x] Create `libs/azure-blob/tsconfig.json`
+- [x] Create `libs/azure-blob/src/blob-client.ts` with `createBlobServiceClient()` (connection string branch for dev, `DefaultAzureCredential` branch for prod) and `uploadBlob()`, `downloadBlob()`, `deleteBlob()` functions operating on the `artefact` container
+- [x] Create `libs/azure-blob/src/index.ts` exporting `uploadBlob`, `downloadBlob`, `deleteBlob`
+- [x] Add `@hmcts/azure-blob` path to root `tsconfig.json`
+- [x] Write unit tests in `libs/azure-blob/src/blob-client.test.ts` covering: upload (JSON), upload (flat file), download (found), download (not found returns null), delete (found), delete (not found swallowed), client creation error when env vars missing
+- [x] Add `fileExtension String? @map("file_extension") @db.VarChar(10)` to the `Artefact` model in `libs/postgres-prisma/prisma/schema/base.prisma`
+- [x] Run `yarn db:migrate:dev` to generate and apply the migration
+- [x] Run `yarn db:generate` to regenerate the Prisma client
+- [x] Add `@hmcts/azure-blob: workspace:*` to `libs/api/package.json` dependencies
+- [x] Replace the body of `saveUploadedFile()` in `libs/api/src/blob-ingestion/file-storage.ts` to call `uploadBlob()` and return the blob name; remove all `node:fs/promises` and `node:path` usage
+- [x] Update the `createArtefact()` / artefact-update path in `libs/api/src/blob-ingestion/` to persist `fileExtension` on the artefact DB record
+- [x] Rewrite `libs/api/src/blob-ingestion/file-storage.test.ts` as a unit test mocking `@hmcts/azure-blob` (replacing the current `node:fs/promises` mock)
+- [x] Add `@hmcts/azure-blob: workspace:*` to `libs/admin-pages/package.json` dependencies
+- [x] Replace the body of `saveUploadedFile()` in `libs/admin-pages/src/manual-upload/file-storage.ts` to call `uploadBlob()` and return the blob name; remove all `node:fs/promises` and `node:path` usage
+- [x] Update the artefact-record creation/update path in `libs/admin-pages/src/manual-upload/` to persist `fileExtension`
+- [x] Rewrite `libs/admin-pages/src/manual-upload/file-storage.test.ts` as a unit test mocking `@hmcts/azure-blob`
+- [x] Add `@hmcts/azure-blob: workspace:*` to `libs/publication/package.json` dependencies
+- [x] Rewrite `libs/publication/src/file-storage/file-retrieval.ts`: remove `findFileByArtefactId()` and all `node:fs/promises` / `node:path` imports; implement `getFileExtension()` as a DB lookup on `artefact.fileExtension` with `.pdf` fallback; implement `getFileBuffer()` to call `getFileExtension()` then `downloadBlob()`
+- [x] Rewrite `libs/publication/src/file-storage/file-retrieval.test.ts` mocking `@hmcts/azure-blob` and `@hmcts/postgres-prisma` instead of `node:fs/promises`
+- [x] Add `updateArtefactFileExtension(artefactId, fileExtension)` helper to `libs/publication/src/repository/queries.ts` (used by both save-file callers if extension cannot be set at create time)
+- [x] Update `deleteArtefacts()` in `libs/publication/src/repository/queries.ts` to query `fileExtension` for each artefact before deleting rows, then delete the corresponding blobs (best-effort, log errors, do not fail the DB delete)
+- [x] Add `AZURE_STORAGE_CONNECTION_STRING` with the Azurite value to the root `.env` (to match the entry already in `apps/web/.env.example`)
+- [x] Run `yarn test` from the root and confirm all tests pass

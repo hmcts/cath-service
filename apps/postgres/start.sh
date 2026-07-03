@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Starting CaTH Postgres migration runner..."
+echo "Starting CaTH Postgres migration runner"
 echo "Loading /mnt/secrets..."
 
 if [ -d "/mnt/secrets" ]; then

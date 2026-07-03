@@ -1,6 +1,6 @@
 {
   "name": "@hmcts/api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@hmcts-cft/cloud-native-platform": "2.3.0",
-    "@hmcts-cft/simple-router": "2.1.0",
+    "@hmcts-cft/simple-router": "2.2.0",
     "@hmcts/blob-ingestion": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/location": "workspace:*",
@@ -29,7 +29,7 @@
     "express": "5.2.1",
     "express-session": "1.19.0",
     "govuk-frontend": "6.2.0",
-    "helmet": "8.0.0",
+    "helmet": "8.2.0",
     "jwks-rsa": "4.0.1",
     "multer": "2.1.1",
     "nunjucks": "3.2.4",

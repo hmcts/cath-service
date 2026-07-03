@@ -1,0 +1,63 @@
+import { readdirSync } from "node:fs";
+import { join, relative } from "node:path";
+export function discoverRoutes(pagesDir) {
+    return Object.values(scanDirectory(pagesDir, pagesDir));
+}
+function scanDirectory(dir, rootDir) {
+    let routes = {};
+    const entries = readdirSync(dir, { withFileTypes: true }).filter((e) => !e.name.startsWith("."));
+    for (const entry of entries) {
+        if (isRouteFile(entry)) {
+            const fullPath = join(dir, entry.name);
+            const relativePath = relative(rootDir, fullPath);
+            const urlPath = filePathToUrlPath(relativePath);
+            routes[urlPath] = {
+                relativePath,
+                urlPath,
+                absolutePath: fullPath
+            };
+        }
+        else if (entry.isDirectory()) {
+            const fullPath = join(dir, entry.name);
+            routes = { ...routes, ...scanDirectory(fullPath, rootDir) };
+        }
+    }
+    return routes;
+}
+function isRouteFile(entry) {
+    return (entry.isFile() &&
+        (entry.name.endsWith(".ts") || entry.name.endsWith(".js")) &&
+        !entry.name.includes(".test.") &&
+        !entry.name.includes(".spec.") &&
+        !entry.name.endsWith(".d.ts"));
+}
+function filePathToUrlPath(filePath) {
+    const normalizedPath = `/${filePath}`
+        .replace(/\/index\.(ts|js)$/, "/") // remove the /index from paths
+        .replace(/\.(ts|js)$/, "") // remove the .ts from the paths
+        .replace(/\/\([^)]+\)/g, "") // strip route group segments like /(list-types), /(admin)
+        .replace(/\[([a-zA-Z0-9_]+)\]/g, ":$1"); // convert [param] to :param
+    return normalizedPath !== "/" && normalizedPath.endsWith("/") ? normalizedPath.slice(0, -1) : normalizedPath;
+}
+export function sortRoutes(routes) {
+    return routes.toSorted((a, b) => {
+        const aSegments = a.urlPath.split("/").filter(Boolean);
+        const bSegments = b.urlPath.split("/").filter(Boolean);
+        const aParams = aSegments.filter((s) => s.startsWith(":")).length;
+        const bParams = bSegments.filter((s) => s.startsWith(":")).length;
+        if (aParams !== bParams) {
+            return aParams - bParams;
+        }
+        if (aSegments.length !== bSegments.length) {
+            return aSegments.length - bSegments.length;
+        }
+        for (let i = 0; i < aSegments.length; i++) {
+            const aIsParam = aSegments[i].startsWith(":");
+            const bIsParam = bSegments[i].startsWith(":");
+            if (aIsParam !== bIsParam) {
+                return aIsParam ? 1 : -1;
+            }
+        }
+        return a.urlPath.localeCompare(b.urlPath);
+    });
+}
