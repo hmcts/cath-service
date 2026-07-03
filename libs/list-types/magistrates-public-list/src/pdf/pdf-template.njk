@@ -17,7 +17,7 @@
     }
     .warning-row {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       margin: 10px 0;
     }
     .warning-icon {
@@ -134,7 +134,7 @@
                       <td class="{{ noBorder }}">{{ sitting.time }}</td>
                       <td class="{{ noBorder }}">{{ application.applicationReference }}</td>
                       <td class="{{ noBorder }}">{{ application.defendant }}</td>
-                      <td class="{{ noBorder }}">{{ hearing.hearingType }}</td>
+                      <td class="{{ noBorder }}"></td>
                       <td class="{{ noBorder }}">{{ application.prosecutingAuthority }}</td>
                     </tr>
                     {% if hasOffences %}

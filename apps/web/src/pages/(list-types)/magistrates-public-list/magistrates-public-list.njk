@@ -20,6 +20,19 @@
       padding: 20px;
       margin-bottom: 20px;
     }
+    .restriction-list-section .govuk-warning-text {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .restriction-list-section .govuk-warning-text__icon {
+      position: static;
+      flex-shrink: 0;
+      margin-top: 0;
+    }
+    .restriction-list-section .govuk-warning-text__text {
+      padding-left: 0;
+    }
     .no-border-bottom {
       border-bottom: none !important;
     }
@@ -54,7 +67,6 @@
         <div class="govuk-warning-text">
           <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
           <strong class="govuk-warning-text__text">
-            <span class="govuk-warning-text__assistive">Warning</span>
             {{ t.restrictionInformationBoldText }}
           </strong>
         </div>
@@ -146,7 +158,7 @@
                                 <td class="govuk-table__cell {{ noBorder }} no-wrap">{{ sitting.time }}</td>
                                 <td class="govuk-table__cell {{ noBorder }}">{{ application.applicationReference }}</td>
                                 <td class="govuk-table__cell {{ noBorder }}">{{ application.defendant }}</td>
-                                <td class="govuk-table__cell {{ noBorder }}">{{ hearing.hearingType }}</td>
+                                <td class="govuk-table__cell {{ noBorder }}"></td>
                                 <td class="govuk-table__cell {{ noBorder }}">{{ application.prosecutingAuthority }}</td>
                               </tr>
                               {% if hasOffences %}

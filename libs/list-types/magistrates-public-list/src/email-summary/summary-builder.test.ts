@@ -150,8 +150,7 @@ describe("extractCaseSummary", () => {
     expect(result[0]).toEqual([
       { label: "Name", value: "Doe, Jane" },
       { label: "Prosecuting authority", value: "Brown, Mark" },
-      { label: "URN", value: "APP123" },
-      { label: "Hearing type", value: "Application" }
+      { label: "URN", value: "APP123" }
     ]);
   });
 

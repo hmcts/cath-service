@@ -33,8 +33,7 @@ export function extractCaseSummary(jsonData: MagistratesPublicListData): CaseSum
               summaries.push([
                 { label: "Name", value: buildPartyName(parties.find((p) => p.subject === true)) },
                 { label: "Prosecuting authority", value: buildPartyName(parties.find((p) => p.partyRole === "PROSECUTING_AUTHORITY")) },
-                { label: "URN", value: application.applicationReference ?? "" },
-                { label: "Hearing type", value: hearing.hearingType ?? "" }
+                { label: "URN", value: application.applicationReference ?? "" }
               ]);
             }
           }
