@@ -2649,6 +2649,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-standard-list@workspace:*, @hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
+  dependencies:
+    "@hmcts/location": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/notification@workspace:*, @hmcts/notification@workspace:libs/notification":
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
@@ -2791,6 +2799,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
@@ -3059,6 +3068,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"

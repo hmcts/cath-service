@@ -653,5 +653,16 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "SSCS London Daily Hearing List",
     subJurisdictionIds: [8]
+  },
+  {
+    id: 56,
+    name: "MAGISTRATES_STANDARD_LIST",
+    englishFriendlyName: "Magistrates Standard List",
+    welshFriendlyName: "Rhestr Safonol y Llys Ynadon",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-standard-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
   }
 ];

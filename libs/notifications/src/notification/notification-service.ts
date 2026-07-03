@@ -37,6 +37,10 @@ import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import {
+  extractCaseSummary as extractMagistratesStandardSummary,
+  formatCaseSummaryForEmail as formatMagistratesStandardSummaryForEmail
+} from "@hmcts/magistrates-standard-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
 import { extractCaseSummary as extractSendSummary, formatCaseSummaryForEmail as formatSendSummaryForEmail } from "@hmcts/send-daily-hearing-list";
@@ -228,6 +232,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
+  },
+  MAGISTRATES_STANDARD_LIST: {
+    extract: extractMagistratesStandardSummary as SummaryExtractor,
+    format: formatMagistratesStandardSummaryForEmail
   }
 };
 
