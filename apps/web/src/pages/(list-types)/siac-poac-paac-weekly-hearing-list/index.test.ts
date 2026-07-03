@@ -20,13 +20,17 @@ vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
-    provenanceLabels: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" }
+    provenanceLabels: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" },
+    importantInformationText: "The tribunal sometimes uses reference numbers or initials to protect the anonymity of those involved in the appeal.",
+    importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
   },
   siacPoacPaacWeeklyHearingListCy: {
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
-    provenanceLabels: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist" }
+    provenanceLabels: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist" },
+    importantInformationText: "The tribunal sometimes uses reference numbers or initials to protect the anonymity of those involved in the appeal.",
+    importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
   },
   renderSiacPoacPaacData: vi.fn()
 }));
@@ -172,6 +176,39 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       // Assert
       expect(renderSiacPoacPaacData).toHaveBeenCalledWith(MOCK_JSON_DATA, expect.objectContaining({ locale: "cy" }));
       expect(res.render).toHaveBeenCalledWith("siac-poac-paac-weekly-hearing-list", expect.objectContaining({ dataSource: "Lanlwytho â Llaw" }));
+    });
+
+    it("should pass importantInformationText and importantInformationVenue as separate fields to the template", async () => {
+      // Arrange
+      req.query = { artefactId: "test-id" };
+      vi.mocked(getArtefactById).mockResolvedValue({
+        artefactId: "test-id",
+        listTypeId: 28,
+        listTypeName: "SIAC_WEEKLY_HEARING_LIST",
+        contentDate: new Date("2026-01-01"),
+        lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
+        provenance: "MANUAL_UPLOAD"
+      } as any);
+      vi.mocked(getPublicationJson).mockResolvedValue(MOCK_JSON_DATA);
+      mockValidate.mockReturnValue({ isValid: true, errors: [] });
+      vi.mocked(renderSiacPoacPaacData).mockReturnValue({
+        header: { listTitle: "title", weekCommencingDate: "", lastUpdatedDate: "", lastUpdatedTime: "" },
+        hearings: []
+      } as any);
+
+      // Act
+      await GET(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "siac-poac-paac-weekly-hearing-list",
+        expect.objectContaining({
+          en: expect.objectContaining({
+            importantInformationText: expect.not.stringContaining("Field House"),
+            importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
+          })
+        })
+      );
     });
 
     for (const { listTypeId, listTypeName, courtName, listTitle } of LIST_TYPE_CASES) {

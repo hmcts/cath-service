@@ -29,8 +29,8 @@ export const en = {
   siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
   poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
   paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
-  importantInformationText:
-    "The tribunal sometimes uses reference numbers or initials to protect the anonymity of those involved in the appeal.\n\nAll hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ.",
+  importantInformationText: "The tribunal sometimes uses reference numbers or initials to protect the anonymity of those involved in the appeal.",
+  importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ.",
   importantInformationLinkText: "Find out what to expect coming to a court or tribunal",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/what-to-expect-coming-to-a-court-or-tribunal"
 };
