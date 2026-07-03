@@ -2225,7 +2225,7 @@ __metadata:
     express-session: "npm:1.19.0"
     govuk-frontend: "npm:6.2.0"
     helmet: "npm:8.2.0"
-    jwks-rsa: "npm:4.0.1"
+    jwks-rsa: "npm:4.1.0"
     multer: "npm:2.1.1"
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
@@ -6565,7 +6565,7 @@ __metadata:
     concurrently: "npm:10.0.3"
     happy-dom: "npm:^20.0.5"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:4.0.1"
+    jwks-rsa: "npm:4.1.0"
     lefthook: "npm:2.1.9"
     notifications-node-client: "npm:^8.2.1"
     openid-client: "npm:6.8.4"
@@ -8623,16 +8623,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwks-rsa@npm:4.0.1":
-  version: 4.0.1
-  resolution: "jwks-rsa@npm:4.0.1"
+"jwks-rsa@npm:4.1.0":
+  version: 4.1.0
+  resolution: "jwks-rsa@npm:4.1.0"
   dependencies:
     "@types/jsonwebtoken": "npm:^9.0.4"
     debug: "npm:^4.3.4"
     jose: "npm:^6.1.3"
     limiter: "npm:^1.1.5"
+    lru-cache: "npm:^11.0.0"
     lru-memoizer: "npm:^3.0.0"
-  checksum: 10c0/aeca4b1de959707002150556f4f08ed3677fe9dd12bd0be0aa01220a86b88867357c7d2241f4975de9f53125d41cc3f5e4c5e929a8922f257b61634b208d7e3c
+  checksum: 10c0/09d03901705fdaaec4ef4dbfdabdcdd91c669b667e1bf10ac765bde3ef4c90f91d53e60ce4e7bfbec715f2490d25f6e0c58c6f75dff800399a2e1b9140e317b2
   languageName: node
   linkType: hard
 
