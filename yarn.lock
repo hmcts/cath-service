@@ -2237,6 +2237,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ast-daily-hearing-list@workspace:*, @hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ast-daily-hearing-list@workspace:libs/list-types/ast-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/auth@workspace:*, @hmcts/auth@workspace:libs/auth":
   version: 0.0.0-use.local
   resolution: "@hmcts/auth@workspace:libs/auth"
@@ -2297,6 +2315,24 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/cic-weekly-hearing-list@workspace:*, @hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2445,6 +2481,7 @@ __metadata:
   dependencies:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
     ajv: "npm:8.20.0"
@@ -2501,14 +2538,17 @@ __metadata:
   resolution: "@hmcts/notifications@workspace:libs/notifications"
   dependencies:
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2589,9 +2629,11 @@ __metadata:
   resolution: "@hmcts/publication@workspace:libs/publication"
   dependencies:
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
@@ -2604,6 +2646,7 @@ __metadata:
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
@@ -2636,6 +2679,24 @@ __metadata:
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/send-daily-hearing-list@workspace:*, @hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/send-daily-hearing-list@workspace:libs/list-types/send-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2763,8 +2824,10 @@ __metadata:
     "@hmcts-cft/simple-router": "workspace:*"
     "@hmcts/admin-pages": "workspace:*"
     "@hmcts/administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/auth": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
@@ -2775,6 +2838,7 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
+    "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/sjp-press-list": "workspace:*"
     "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
@@ -5088,6 +5152,13 @@ __metadata:
     "@types/ms": "npm:*"
     "@types/node": "npm:*"
   checksum: 10c0/0688ac8fb75f809201cb7e18a12b9d80ce539cb9dd27e1b01e11807cb1a337059e899b8ee3abc3f2c9417f02e363a3069d9eab9ef9724b1da1f0e10713514f94
+  languageName: node
+  linkType: hard
+
+"@types/luxon@npm:3.7.1":
+  version: 3.7.1
+  resolution: "@types/luxon@npm:3.7.1"
+  checksum: 10c0/2db30c13b58adcd86daa447faa3ba59515fe907ead8ee3e6bb716d662812af0619d712f6c1eb190cdd7f9d2c00444c3ecd80af0f36e8143eb0c5e7339d6b2aca
   languageName: node
   linkType: hard
 
