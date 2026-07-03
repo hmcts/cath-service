@@ -1,3 +1,4 @@
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
@@ -36,7 +37,7 @@ export interface LocationWithPublicationCount {
   publicationCount: number;
 }
 
-export async function createArtefact(data: Artefact): Promise<string> {
+export async function createArtefact(data: Artefact): Promise<{ artefactId: string; isUpdate: boolean }> {
   // Check if artefact already exists with same location, list type, content date, and language
   const existing = await prisma.artefact.findFirst({
     where: {
@@ -64,13 +65,14 @@ export async function createArtefact(data: Artefact): Promise<string> {
         }
       }
     });
-    return existing.artefactId;
+    return { artefactId: existing.artefactId, isUpdate: true };
   }
 
   // Create new artefact
   const artefact = await prisma.artefact.create({
     data: {
       artefactId: data.artefactId,
+      type: data.type,
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
@@ -80,19 +82,21 @@ export async function createArtefact(data: Artefact): Promise<string> {
       displayTo: data.displayTo,
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
-      noMatch: data.noMatch
+      noMatch: data.noMatch ?? false
     }
   });
-  return artefact.artefactId;
+  return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
 export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
-  return prisma.artefact.findUnique({
+  const artefact = await prisma.artefact.findUnique({
     where: { artefactId },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
+      listType: { select: { name: true } },
       contentDate: true,
       sensitivity: true,
       language: true,
@@ -101,9 +105,13 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
+      supersededCount: true,
       noMatch: true
     }
   });
+  if (!artefact) return null;
+  const { listType, ...rest } = artefact;
+  return { ...rest, listTypeName: listType?.name };
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
@@ -116,6 +124,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
     },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
       contentDate: true,
@@ -140,6 +149,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
     },
     select: {
       artefactId: true,
+      type: true,
       locationId: true,
       listTypeId: true,
       contentDate: true,
@@ -156,12 +166,37 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
 }
 
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
+  const artefacts = await prisma.artefact.findMany({
+    where: { artefactId: { in: artefactIds } },
+    select: { artefactId: true, fileExtension: true }
+  });
+
   await prisma.artefact.deleteMany({
     where: {
       artefactId: {
         in: artefactIds
       }
     }
+  });
+
+  for (const artefact of artefacts) {
+    const extension = artefact.fileExtension ?? ".pdf";
+    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
+      console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    });
+    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
+      // 404 is expected if no PDF was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
+  }
+}
+
+export async function updateArtefactFileExtension(artefactId: string, fileExtension: string): Promise<void> {
+  await prisma.artefact.update({
+    where: { artefactId },
+    data: { fileExtension }
   });
 }
 
@@ -302,6 +337,7 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   return artefacts.map(
     (artefact: (typeof artefacts)[number]): Artefact => ({
       artefactId: artefact.artefactId,
+      type: artefact.type,
       locationId: artefact.locationId,
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,

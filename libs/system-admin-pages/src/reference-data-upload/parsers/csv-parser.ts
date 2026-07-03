@@ -1,7 +1,18 @@
 import Papa from "papaparse";
 import type { CsvRow, ParsedLocationData } from "../model.js";
 
-const REQUIRED_HEADERS = ["LOCATION_ID", "LOCATION_NAME", "WELSH_LOCATION_NAME", "EMAIL", "CONTACT_NO", "SUB_JURISDICTION_NAME", "REGION_NAME"];
+const REQUIRED_HEADERS = [
+  "LOCATION_ID",
+  "LOCATION_NAME",
+  "WELSH_LOCATION_NAME",
+  "EMAIL",
+  "CONTACT_NO",
+  "SUB_JURISDICTION_NAME",
+  "REGION_NAME",
+  "PROVENANCE",
+  "PROVENANCE_LOCATION_ID",
+  "PROVENANCE_LOCATION_TYPE"
+];
 
 export interface ParseResult {
   success: boolean;
@@ -80,6 +91,20 @@ export function parseCsv(fileBuffer: Buffer): ParseResult {
           .filter((name: string) => name.length > 0)
       : [];
 
+    const splitTrimmed = (value: string) => (value ? value.split(";").map((s: string) => s.trim()) : []);
+
+    const provenances = splitTrimmed(row.PROVENANCE);
+    const provenanceLocationIds = splitTrimmed(row.PROVENANCE_LOCATION_ID);
+    const provenanceLocationTypes = splitTrimmed(row.PROVENANCE_LOCATION_TYPE);
+
+    const refCount = Math.max(provenances.length, provenanceLocationIds.length, provenanceLocationTypes.length);
+
+    const locationReferences = Array.from({ length: refCount }, (_, i) => ({
+      provenance: provenances[i] ?? "",
+      provenanceLocationId: provenanceLocationIds[i] ?? "",
+      provenanceLocationType: provenanceLocationTypes[i] ?? ""
+    })).filter((ref) => ref.provenance || ref.provenanceLocationId || ref.provenanceLocationType);
+
     parsedData.push({
       locationId,
       locationName: row.LOCATION_NAME ? row.LOCATION_NAME.trim() : "",
@@ -87,7 +112,8 @@ export function parseCsv(fileBuffer: Buffer): ParseResult {
       email: row.EMAIL ? row.EMAIL.trim() : "",
       contactNo: row.CONTACT_NO ? row.CONTACT_NO.trim() : "",
       subJurisdictionNames,
-      regionNames
+      regionNames,
+      locationReferences
     });
   }
 

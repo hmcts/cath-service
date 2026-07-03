@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../../generated/prisma"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -9,6 +10,7 @@ datasource db {
 
 model Artefact {
   artefactId        String            @id @default(uuid()) @map("artefact_id") @db.Uuid
+  type              String            @db.VarChar(50)
   locationId        String            @map("location_id")
   listTypeId        Int               @map("list_type_id")
   contentDate       DateTime          @map("content_date") @db.Date
@@ -21,10 +23,12 @@ model Artefact {
   provenance        String
   supersededCount   Int               @default(0) @map("superseded_count")
   noMatch           Boolean           @default(false) @map("no_match")
+  fileExtension     String?           @map("file_extension") @db.VarChar(10)
   ingestionLogs     IngestionLog[]
   artefactSearches  ArtefactSearch[]
   listType          ListType          @relation(fields: [listTypeId], references: [id])
 
+  @@index([type])
   @@map("artefact")
 }
 
@@ -55,6 +59,9 @@ model User {
   subscriptions         Subscription[]
   subscriptionListTypes SubscriptionListType[]
 
+  @@index([email])
+  @@index([role])
+  @@index([userProvenance])
   @@map("user")
 }
 
@@ -101,8 +108,6 @@ model LegacyThirdPartySubscription {
   id          String   @id @default(uuid()) @map("id") @db.Uuid
   userId      String   @map("user_id") @db.Uuid
   listTypeId  Int      @map("list_type_id")
-  channel     String   @default("API") @db.VarChar(20)
-  sensitivity String   @db.VarChar(20)
   createdDate DateTime @default(now()) @map("created_date")
 
   user LegacyThirdPartyUser @relation(fields: [userId], references: [id], onDelete: Cascade)

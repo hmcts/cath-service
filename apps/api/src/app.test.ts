@@ -2,12 +2,12 @@ import type { Express } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
-vi.mock("@hmcts/cloud-native-platform", () => ({
+vi.mock("@hmcts-cft/cloud-native-platform", () => ({
   healthcheck: vi.fn(() => vi.fn()),
   getPropertiesVolumeSecrets: vi.fn(() => Promise.resolve({}))
 }));
 
-vi.mock("@hmcts/simple-router", () => ({
+vi.mock("@hmcts-cft/simple-router", () => ({
   createSimpleRouter: vi.fn(() => Promise.resolve(vi.fn()))
 }));
 
@@ -32,12 +32,12 @@ describe("API Application", () => {
     });
 
     it("should configure healthcheck middleware", async () => {
-      const { healthcheck } = await import("@hmcts/cloud-native-platform");
+      const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
     });
 
     it("should configure routes using simple router", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
       expect(createSimpleRouter).toHaveBeenCalled();
     });
 

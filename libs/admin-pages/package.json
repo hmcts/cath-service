@@ -10,19 +10,10 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
-    },
-    "./src/assets/css/index.scss": {
-      "default": "./src/assets/css/index.scss"
-    },
-    "./src/assets/js/list-type-sensitivity.js": {
-      "production": "./dist/assets/js/list-type-sensitivity.js",
-      "default": "./src/assets/js/list-type-sensitivity.ts"
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -35,20 +26,24 @@
   },
   "dependencies": {
     "@hmcts/auth": "workspace:*",
+    "@hmcts/azure-blob": "workspace:*",
+    "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
+    "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/notification": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/redis": "workspace:*",
+    "@hmcts/sscs-daily-hearing-list": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/web-core": "workspace:*"
   },
   "devDependencies": {
-    "@types/luxon": "3.7.1",
+    "@types/luxon": "3.7.2",
     "@types/multer": "2.1.0",
     "@types/node": "24.10.4",
-    "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   }
 }

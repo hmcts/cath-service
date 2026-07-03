@@ -23,10 +23,14 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*"
   },
   "peerDependencies": {
     "@prisma/client": "*",
     "express": "^5.2.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
   }
 }

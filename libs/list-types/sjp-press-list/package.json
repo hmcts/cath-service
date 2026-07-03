@@ -10,13 +10,10 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
-    },
-    "./src/assets/css/sjp-filters.scss": "./src/assets/css/sjp-filters.scss"
+    }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets && yarn build:schemas",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
+    "build": "tsc && yarn build:schemas",
     "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
     "test": "vitest run",
@@ -31,8 +28,8 @@
   },
   "devDependencies": {
     "@types/node": "24.10.4",
-    "typescript": "5.9.3",
-    "vitest": "4.0.16"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   },
   "peerDependencies": {
     "express": "^5.1.0"

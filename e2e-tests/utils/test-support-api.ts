@@ -442,17 +442,11 @@ export async function checkFlatFileExists(artefactId: string): Promise<FlatFileI
 
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
-  const url = `${WEB_BASE_URL}/test-support/flat-files`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ artefactId: input.artefactId, content: base64Content, extension: input.extension || ".pdf" })
+  return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
+    artefactId: input.artefactId,
+    content: base64Content,
+    extension: input.extension || ".pdf"
   });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Web flat file upload failed: ${response.status} ${error}`);
-  }
-  return response.json();
 }
 
 export async function getLatestArtefactByLocationAndListType(locationId: number, listTypeId: number) {
@@ -470,17 +464,7 @@ export async function getLatestArtefactByLocationAndListType(locationId: number,
 }
 
 export async function deleteTestFlatFileFromWeb(artefactId: string): Promise<{ deleted: boolean }> {
-  const url = `${WEB_BASE_URL}/test-support/flat-files`;
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ artefactId })
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Web flat file delete failed: ${response.status} ${error}`);
-  }
-  return response.json();
+  return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
 }
 
 export async function createOrGetListType(input: CreateListTypeInput): Promise<ListTypeRecord> {

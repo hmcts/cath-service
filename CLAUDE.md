@@ -15,6 +15,10 @@ yarn test:coverage              # Generate coverage report
 yarn lint:fix                    # Run Biome linter
 yarn format                     # Format code with Biome
 
+# Git Hooks (installed automatically via postinstall)
+# Pre-commit hook runs Biome --write on all staged files and re-stages fixes.
+# To skip the hook for a single commit: LEFTHOOK=0 git commit ...
+
 # Database Operations
 yarn db:migrate                 # Apply migrations  
 yarn db:migrate:dev             # Auto apply migrations, add new migrations if necessary
@@ -94,12 +98,14 @@ The web and API applications use explicit imports to register modules, enabling 
 
 1. **Create module structure**:
 ```bash
-mkdir -p libs/my-feature/src/pages      # Page controllers and templates
-mkdir -p libs/my-feature/src/routes     # API routes (optional)
-mkdir -p libs/my-feature/src/locales    # Shared translation files (optional)
-mkdir -p libs/my-feature/src/views      # Shared templates (optional)
-mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
-mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
+mkdir -p libs/my-feature/src/routes           # API routes (optional)
+mkdir -p libs/my-feature/src/locales          # Shared translation files (optional)
+mkdir -p libs/my-feature/src/views            # Shared templates (optional)
+mkdir -p libs/my-feature/src/assets/css       # Module styles (optional)
+mkdir -p libs/my-feature/src/assets/js        # Module scripts (optional)
+
+# Pages live in apps, not libs
+mkdir -p apps/web/src/pages/my-feature-page   # Page controllers, templates, and content
 ```
 
 2. **Create src/config.ts for module configuration**:
@@ -110,19 +116,30 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Module configuration for app registration
-export const pageRoutes = { path: path.join(__dirname, "pages") };
-export const apiRoutes = { path: path.join(__dirname, "routes") };
+// Module configuration for asset bundling and template discovery
+export const moduleRoot = __dirname;
 export const assets = path.join(__dirname, "assets/");
+export const apiRoutes = { path: path.join(__dirname, "routes") }; // Only if you have API routes
 ```
 
 **Create src/index.ts for business logic exports**:
 ```typescript
-// Business logic exports
+// Business logic exports only
 export * from "./my-feature/service.js";
+
+// Only export page content if it's truly shared/reusable across multiple pages
+// Most page content should be co-located with controllers in apps/web/src/pages/
+// Example of shared content export (like accessibility-statement, cookie-policy):
+// export { cy as sharedPageCy } from "./locales/shared-page/cy.js";
+// export { en as sharedPageEn } from "./locales/shared-page/en.js";
 ```
 
-**IMPORTANT**: Config exports (pageRoutes, apiRoutes, assets) must be in a separate `config.ts` file to avoid circular dependencies during Prisma client generation. Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`).
+**IMPORTANT - Content Location Strategy**: 
+- **Pages (controllers, templates, content)** live in `apps/web/src/pages/`
+- **Co-locate cy.ts/en.ts with controllers** - this is the default pattern for page-specific content
+- **Export from libs only for shared content** - when the same content is reused by multiple pages (e.g., accessibility-statement, cookie-policy)
+- **Config exports** (moduleRoot, assets, apiRoutes) are in `config.ts` for asset bundling and template discovery
+- **Apps import config** using the `/config` path (e.g., `@hmcts/my-feature/config`)
 
 3. **Package.json requirements**:
 ```json
@@ -141,22 +158,18 @@ export * from "./my-feature/service.js";
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
-  },
-  "peerDependencies": {
-    "express": "^5.2.0"
   }
 }
 ```
 
-**Note**: The `build:nunjucks` script is required if your module contains Nunjucks templates in the `pages/` directory.
+**Note**: Page templates (.njk files) are now in `apps/web/src/pages/` and are handled by the web app's build process, not the lib's build.
 
 3. **Create tsconfig.json**:
 ```json
@@ -188,19 +201,29 @@ export * from "./my-feature/service.js";
 
 ```typescript
 // apps/web/src/app.ts
-import { pageRoutes as myFeaturePages } from "@hmcts/my-feature/config";
+import { moduleRoot as myFeatureModuleRoot } from "@hmcts/my-feature/config";
 
-app.use(await createGovukFrontend(app, [myFeaturePages.path], { /* options */ }));
-app.use(await createSimpleRouter(myFeaturePages));
+// Add module to modulePaths for Nunjucks template discovery
+const modulePaths = [
+  __dirname,
+  webCoreModuleRoot,
+  myFeatureModuleRoot,
+  // ... other modules
+];
+
+await configureGovuk(app, modulePaths, { /* options */ });
+
+// Pages are auto-discovered from apps/web/src/pages/ - no manual registration needed
+// Just create your page at apps/web/src/pages/my-feature-page/index.ts
 
 // apps/web/vite.config.ts
 import { assets as myFeatureAssets } from "@hmcts/my-feature/config";
 const baseConfig = createBaseViteConfig([
   path.join(__dirname, "src"),
-  myFeatureAssets
+  myFeatureAssets  // Only if your lib has assets
 ]);
 
-// apps/api/src/app.ts
+// apps/api/src/app.ts (only if you have API routes)
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
 ```
@@ -212,18 +235,16 @@ libs/my-feature/
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── routes/                 # API routes (auto-discovered)
-    │   └── my-api.ts           # API route file (if needed)
-    ├── pages/                  # Page routes (auto-discovered)
-    │   └── my-page/            # /my-page/ page
-    │       ├── cy.ts           # Page Welsh content
-    │       ├── en.ts           # Page English content
-    │       ├── index.ts        # Controller with GET/POST exports
-    │       ├── index.test.ts   # Unit tests for controller
-    │       └── index.njk       # Nunjucks template
+    ├── config.ts               # Module configuration (moduleRoot, assets)
+    ├── index.ts                # Business logic exports only
+    ├── routes/                 # API routes (optional, auto-discovered)
+    │   └── my-api.ts           # API route file
     ├── locales/                # Shared i18n translations (optional)
-    │   ├── en.ts               # English translations
-    │   └── cy.ts               # Welsh translations
+    │   ├── shared-page/        # Only if content is reused across pages
+    │   │   ├── en.ts           # Shared English content
+    │   │   └── cy.ts           # Shared Welsh content
+    │   ├── en.ts               # Common English translations
+    │   └── cy.ts               # Common Welsh translations
     ├── views/                  # Shared templates (optional)
     │   └── partials/
     └── assets/                 # Module assets (optional)
@@ -231,9 +252,41 @@ libs/my-feature/
         │   └── module.scss
         └── js/
             └── module.ts
+
+apps/web/src/pages/
+├── (auth)/                     # Route group (no URL prefix)
+│   └── login/
+│       ├── index.ts            # Controller
+│       ├── index.njk           # Template
+│       ├── cy.ts               # Welsh content (co-located)
+│       ├── en.ts               # English content (co-located)
+│       └── index.test.ts       # Tests
+├── (core)/                     # Route group (no URL prefix)
+│   └── accessibility-statement/
+│       ├── index.ts            # Controller (imports from lib if shared)
+│       └── index.njk           # Template
+├── my-feature-page/            # Regular route (/my-feature-page)
+│   ├── index.ts                # Controller
+│   ├── index.njk               # Nunjucks template
+│   ├── cy.ts                   # Welsh content (co-located - default pattern)
+│   ├── en.ts                   # English content (co-located - default pattern)
+│   └── index.test.ts           # Unit tests
+└── admin/                      # Regular directory (/admin/*)
+    └── dashboard/              # /admin/dashboard
+        ├── index.ts
+        ├── index.njk
+        ├── cy.ts               # Co-located content
+        └── en.ts               # Co-located content
 ```
 
-**NOTE**: Pages are registered through explicit imports in `apps/web/src/app.ts`. Routes are created based on file names within the `pages/` directory. For example, `my-page.ts` becomes `/my-page`. To create nested routes, use subdirectories (e.g., `pages/admin/my-page.ts` becomes `/admin/my-page`).
+**Architecture Notes**:
+- **Route Groups**: Directories with parentheses like `(auth)` organize code without affecting URLs
+- **Regular Directories**: Directories like `admin/` create URL prefixes (`/admin/*`)
+- **Content Co-location (Default)**: cy.ts/en.ts live alongside controllers in `apps/web/src/pages/` for page-specific content
+- **Shared Content (Exception)**: Only export cy.ts/en.ts from libs when content is reused across multiple pages
+- **Auto-Discovery**: All pages in `apps/web/src/pages/` are automatically registered
+- **Example**: `apps/web/src/pages/my-feature-page/index.ts` becomes `/my-feature-page`
+- **Nested Routes**: Use subdirectories (e.g., `admin/dashboard/` becomes `/admin/dashboard`)
 
 ## Database Schema Management
 
@@ -302,14 +355,18 @@ const location = await prisma.location.findMany();
 
 ### Page Controller Pattern
 
+**Default Pattern: Co-located Content** (use this for most pages)
 ```typescript
-// libs/[module]/src/pages/[page-name].ts
+// apps/web/src/pages/my-page/index.ts
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 export const GET = async (_req: Request, res: Response) => {
-  res.render("my-page", { en, cy });
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  
+  res.render("my-page/index", { en, cy, t });
 };
 
 export const POST = async (req: Request, res: Response) => {
@@ -317,10 +374,52 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
+**Content files co-located with controller**:
+```typescript
+// apps/web/src/pages/my-page/cy.ts
+export const cy = {
+  title: "Teitl y Dudalen",
+  heading: "Pennawd"
+};
+
+// apps/web/src/pages/my-page/en.ts
+export const en = {
+  title: "Page Title",
+  heading: "Heading"
+};
+```
+
+**Alternative Pattern: Shared Content from Libs** (only for reusable pages)
+```typescript
+// apps/web/src/pages/(core)/accessibility-statement/index.ts
+import type { Request, Response } from "express";
+import { accessibilityStatementCy, accessibilityStatementEn } from "@hmcts/web-core";
+
+export const GET = async (_req: Request, res: Response) => {
+  res.render("accessibility-statement/index", {
+    en: accessibilityStatementEn,
+    cy: accessibilityStatementCy
+  });
+};
+```
+
+**When content is shared across pages, export from lib**:
+```typescript
+// libs/web-core/src/locales/accessibility-statement/cy.ts
+export const cy = { title: "Datganiad Hygyrchedd", /* ... */ };
+
+// libs/web-core/src/locales/accessibility-statement/en.ts
+export const en = { title: "Accessibility Statement", /* ... */ };
+
+// libs/web-core/src/index.ts
+export { cy as accessibilityStatementCy } from "./locales/accessibility-statement/cy.js";
+export { en as accessibilityStatementEn } from "./locales/accessibility-statement/en.js";
+```
+
 ### Nunjucks Template Pattern
 
 ```html
-<!-- libs/[my-module]/src/pages/[page-name].njk -->
+<!-- apps/web/src/pages/my-page/index.njk -->
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}

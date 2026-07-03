@@ -1,16 +1,17 @@
 import { randomUUID } from "node:crypto";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateArtefactFileExtension } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse } from "./model.js";
 import { createIngestionLog } from "./queries.js";
 
 const PROVENANCE_MAP: Record<string, string> = {
-  XHIBIT: Provenance.XHIBIT,
   MANUAL_UPLOAD: Provenance.MANUAL_UPLOAD,
   SNL: Provenance.SNL,
-  COMMON_PLATFORM: Provenance.COMMON_PLATFORM
+  COMMON_PLATFORM: Provenance.COMMON_PLATFORM,
+  CP_CATH: Provenance.CP_CATH,
+  PDDA: Provenance.PDDA
 };
 
 export async function processBlobIngestion(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobIngestionResponse> {
@@ -61,11 +62,14 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     };
   }
 
+  const locationId = validation.resolvedLocationId ?? request.court_id;
+
   try {
     // Create artefact in database (returns actual artefact ID - either new or existing)
-    const artefactId = await createArtefact({
+    const { artefactId, isUpdate } = await createArtefact({
       artefactId: newArtefactId,
-      locationId: request.court_id,
+      type: "LIST",
+      locationId,
       listTypeId: validation.listTypeId,
       contentDate: new Date(request.content_date),
       sensitivity: request.sensitivity,
@@ -78,9 +82,10 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
       noMatch
     });
 
-    // Save JSON to temp storage for list display pages
+    // Save JSON to blob storage for list display pages
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
-    await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+    const fileExtension = await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
+    await updateArtefactFileExtension(artefactId, fileExtension);
 
     // Extract and store artefact search data for case number/name search
     await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
@@ -99,12 +104,17 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     if (!noMatch) {
       processPublication({
         artefactId,
-        locationId: request.court_id,
+        locationId,
         listTypeId: validation.listTypeId,
         contentDate: new Date(request.content_date),
         locale: request.language === "WELSH" ? "cy" : "en",
         jsonData: request.hearing_list as CauseListData,
         provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        sensitivity: request.sensitivity,
+        language: request.language,
+        displayFrom: new Date(request.display_from),
+        displayTo: new Date(request.display_to),
+        isUpdate,
         logPrefix: "[blob-ingestion]"
       }).catch((error) => {
         console.error("[blob-ingestion] Failed to process publication:", {

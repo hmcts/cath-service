@@ -1,0 +1,167 @@
+.admin-tile {
+  display: block;
+  padding: 20px;
+  margin-bottom: 30px;
+  min-height: 150px;
+  background-color: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  text-decoration: none;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &:hover {
+    background-color: #e8e8e7;
+    border-color: #1d70b8;
+  }
+
+  &:focus {
+    outline: 3px solid #ffdd00;
+    outline-offset: 0;
+    background-color: #ffdd00;
+    border-color: #0b0c0c;
+  }
+
+  @media (min-width: 40.0625em) {
+    padding: 25px;
+  }
+}
+
+.admin-tile__heading {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #1d70b8;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+
+  @media (min-width: 40.0625em) {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+}
+
+.admin-tile__description {
+  margin-bottom: 0;
+  color: #0b0c0c;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+
+  @media (min-width: 40.0625em) {
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+}
+
+// Ensure autocomplete input matches dropdown widths on manual-upload page
+#court-autocomplete-wrapper {
+  max-width: 66.66% !important;
+}
+
+#court-autocomplete-wrapper .autocomplete__input,
+#court-autocomplete-wrapper .autocomplete__wrapper,
+#court {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+// Manual upload warning box
+.manual-upload-warning {
+  background-color: #f3f2f1;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.manual-upload-warning__content {
+  display: flex;
+  align-items: flex-start;
+}
+
+.manual-upload-warning__icon {
+  position: static;
+  margin-top: 0;
+  margin-right: 10px;
+}
+
+.manual-upload-warning__text {
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+// Error styling - red border on input when error class is present (GOV.UK standard 2px border)
+.autocomplete__input.govuk-input--error {
+  border-color: #d4351c;
+}
+
+// Ensure file upload error styling is applied
+.govuk-file-upload--error {
+  border: 2px solid #d4351c;
+}
+
+.govuk-file-upload--error:focus {
+  border-color: #0b0c0c;
+  box-shadow: 0 0 0 3px #fd0;
+}
+
+// Error message styling - ensure red color and proper formatting
+.govuk-error-message {
+  font-weight: 700;
+  color: #d4351c;
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+// Form group with error - add red left border to form group
+.govuk-form-group--error {
+  padding-left: 15px;
+  border-left: 5px solid #d4351c;
+}
+
+// Error inset text - keep the grey border but add red border inside
+.govuk-inset-text--error {
+  padding-left: 0;
+  border-left: 10px solid #b1b4b6;
+
+  > .govuk-form-group {
+    padding-left: 15px;
+    border-left: 5px solid #d4351c;
+  }
+}
+
+.govuk-inset-text {
+  clear: both;
+  border-left: 10px solid #b1b4b6;
+}
+
+// Prevent wrapping in table cells
+.govuk-table__cell--nowrap {
+  white-space: nowrap;
+}
+
+// Sortable table headers
+.govuk-table__header--sortable {
+  a {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover {
+      text-decoration: underline;
+      color: #1d70b8;
+    }
+
+    &:focus {
+      outline: 3px solid #ffdd00;
+      outline-offset: 0;
+      background-color: #ffdd00;
+      color: #0b0c0c;
+    }
+
+    svg {
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+  }
+}

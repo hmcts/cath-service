@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SEND Daily Hearing List",
+  "description": "Schema for First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["time", "caseReferenceNumber", "respondent", "hearingType", "venue", "timeEstimate"],
+    "properties": {
+      "time": {
+        "title": "Time of hearing",
+        "type": "string",
+        "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$",
+        "examples": ["10am", "2:30pm"]
+      },
+      "caseReferenceNumber": {
+        "title": "Case reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "respondent": {
+        "title": "Respondent",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "hearingType": {
+        "title": "Type of hearing",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "timeEstimate": {
+        "title": "Time estimate",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      }
+    }
+  }
+}

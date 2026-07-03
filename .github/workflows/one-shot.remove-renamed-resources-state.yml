@@ -1,0 +1,425 @@
+name: One-Shot - Remove Renamed Resources From State
+
+# This workflow removes old resource state bindings so Terraform can create
+# new resources under the new naming convention without attempting to delete
+# the old ones. The old Azure resources are left in place for manual cleanup.
+#
+# Run this ONCE before the next infrastructure deployment.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remove-state-demo:
+    name: Remove State - Demo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Demo)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Remove Demo Renamed Resources From State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatedemo \
+            --resource-group jenkins-state-demo \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-demo" \
+            -backend-config="storage_account_name=sdsstatedemo" \
+            -backend-config="container_name=tfstate-demo" \
+            -backend-config="key=cath-service/demo/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old KV secrets
+          for r in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Key Vault and its sub-resources
+          for r in \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old KV resource group
+          terraform state rm azurerm_resource_group.ss_kv_rg \
+            && echo "Removed azurerm_resource_group.ss_kv_rg" \
+            || echo "WARNING: azurerm_resource_group.ss_kv_rg not in state, skipping"
+
+          # Remove old App Insights
+          for r in \
+            "module.application_insights.azurerm_application_insights.this" \
+            "module.application_insights.azurerm_monitor_activity_log_alert.main[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old PostgreSQL server and sub-resources (module also owns its own RG)
+          for r in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_configuration.pgsql_server_config[\"backslash_quote\"]" \
+            "module.postgresql.null_resource.set-user-permissions-additionaldbs[\"cath\"]" \
+            "module.postgresql.azurerm_resource_group.rg[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Redis and its sub-resources (module also owns its own RG)
+          for r in \
+            "module.redis.azurerm_redis_cache.redis" \
+            "module.redis.azurerm_private_endpoint.this[0]" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+  remove-state-test:
+    name: Remove State - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Remove Test Renamed Resources From State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old KV secrets
+          for r in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Key Vault and its sub-resources
+          for r in \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old KV resource group
+          terraform state rm azurerm_resource_group.ss_kv_rg \
+            && echo "Removed azurerm_resource_group.ss_kv_rg" \
+            || echo "WARNING: azurerm_resource_group.ss_kv_rg not in state, skipping"
+
+          # Remove old App Insights
+          for r in \
+            "module.application_insights.azurerm_application_insights.this" \
+            "module.application_insights.azurerm_monitor_activity_log_alert.main[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old PostgreSQL server and sub-resources
+          for r in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_configuration.pgsql_server_config[\"backslash_quote\"]" \
+            "module.postgresql.null_resource.set-user-permissions-additionaldbs[\"cath\"]" \
+            "module.postgresql.azurerm_resource_group.rg[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Redis and its sub-resources
+          for r in \
+            "module.redis.azurerm_redis_cache.redis" \
+            "module.redis.azurerm_private_endpoint.this[0]" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Test/ITHC also have legacy KV access policy
+          terraform state rm "azurerm_key_vault_access_policy.legacy_kv_app_mi[0]" \
+            && echo "Removed legacy_kv_app_mi" \
+            || echo "WARNING: legacy_kv_app_mi not in state, skipping"
+
+  remove-state-ithc:
+    name: Remove State - ITHC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Remove ITHC Renamed Resources From State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-ithc" \
+            -backend-config="storage_account_name=sdsstateithc" \
+            -backend-config="container_name=tfstate-ithc" \
+            -backend-config="key=cath-service/ithc/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old KV secrets
+          for r in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Key Vault and its sub-resources
+          for r in \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old KV resource group
+          terraform state rm azurerm_resource_group.ss_kv_rg \
+            && echo "Removed azurerm_resource_group.ss_kv_rg" \
+            || echo "WARNING: azurerm_resource_group.ss_kv_rg not in state, skipping"
+
+          # Remove old App Insights
+          for r in \
+            "module.application_insights.azurerm_application_insights.this" \
+            "module.application_insights.azurerm_monitor_activity_log_alert.main[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old PostgreSQL server and sub-resources
+          for r in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_configuration.pgsql_server_config[\"backslash_quote\"]" \
+            "module.postgresql.null_resource.set-user-permissions-additionaldbs[\"cath\"]" \
+            "module.postgresql.azurerm_resource_group.rg[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Redis and its sub-resources
+          for r in \
+            "module.redis.azurerm_redis_cache.redis" \
+            "module.redis.azurerm_private_endpoint.this[0]" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # ITHC also has legacy KV access policy
+          terraform state rm "azurerm_key_vault_access_policy.legacy_kv_app_mi[0]" \
+            && echo "Removed legacy_kv_app_mi" \
+            || echo "WARNING: legacy_kv_app_mi not in state, skipping"
+
+  remove-state-stg:
+    name: Remove State - STG
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Remove STG Renamed Resources From State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-stg" \
+            -backend-config="storage_account_name=sdsstatestg" \
+            -backend-config="container_name=tfstate-stg" \
+            -backend-config="key=cath-service/stg/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # Remove old KV secrets
+          for r in \
+            azurerm_key_vault_secret.postgres_host \
+            azurerm_key_vault_secret.postgres_user \
+            azurerm_key_vault_secret.postgres_password \
+            azurerm_key_vault_secret.postgres_port \
+            azurerm_key_vault_secret.postgres_url \
+            azurerm_key_vault_secret.redis_host \
+            azurerm_key_vault_secret.redis_port \
+            azurerm_key_vault_secret.redis_access_key \
+            azurerm_key_vault_secret.redis_url \
+            azurerm_key_vault_secret.app_insights_connection_string; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Key Vault and its sub-resources
+          for r in \
+            "module.application_key_vault.azurerm_key_vault.kv" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.creator_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.developer[0]" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.product_team_access_policy" \
+            "module.application_key_vault.azurerm_key_vault_access_policy.implicit_managed_identity_access_policy[0]" \
+            "module.application_key_vault.azurerm_monitor_diagnostic_setting.kv-ds"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old KV resource group
+          terraform state rm azurerm_resource_group.ss_kv_rg \
+            && echo "Removed azurerm_resource_group.ss_kv_rg" \
+            || echo "WARNING: azurerm_resource_group.ss_kv_rg not in state, skipping"
+
+          # Remove old App Insights
+          for r in \
+            "module.application_insights.azurerm_application_insights.this" \
+            "module.application_insights.azurerm_monitor_activity_log_alert.main[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old PostgreSQL server and sub-resources
+          for r in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_configuration.pgsql_server_config[\"backslash_quote\"]" \
+            "module.postgresql.null_resource.set-user-permissions-additionaldbs[\"cath\"]" \
+            "module.postgresql.azurerm_resource_group.rg[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done
+
+          # Remove old Redis and its sub-resources
+          for r in \
+            "module.redis.azurerm_redis_cache.redis" \
+            "module.redis.azurerm_private_endpoint.this[0]" \
+            "module.redis.azurerm_resource_group.cache-resourcegroup[0]"; do
+            terraform state rm "$r" && echo "Removed $r" || echo "WARNING: $r not in state, skipping"
+          done

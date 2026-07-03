@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 import { createTestArtefact, deleteTestFlatFileFromWeb, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
 
@@ -11,9 +12,10 @@ import { createTestArtefact, deleteTestFlatFileFromWeb, getListTypeByName, uploa
 // These issues affect ALL pages and should be addressed in a separate ticket
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
-// When running against a deployed environment, files must be uploaded via the test-support API.
-// When running locally, files can be written directly to the shared storage directory.
+// Use the test-support API when deployed OR when blob storage is configured (e.g. Azurite in CI).
+// Only write directly to the local filesystem when running fully locally without blob storage.
 const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+const USE_BLOB_STORAGE = IS_DEPLOYED || !!process.env.AZURE_STORAGE_CONNECTION_STRING;
 const STORAGE_PATH = path.join(process.cwd(), "..", "storage", "temp", "uploads");
 
 // Helper function to create a test PDF file
@@ -112,13 +114,12 @@ async function createFlatFileArtefact(
   if (createFile) {
     const pdfBuffer = createTestPDFBuffer(fileContent);
 
-    if (IS_DEPLOYED) {
-      // In deployed environments, upload file via the web app's test-support endpoint so it
-      // lands on the web pod's filesystem where the flat-file viewer reads from
-      console.log(`[flat-file] Uploading file via web app for artefact ${artefactId}`);
+    if (USE_BLOB_STORAGE) {
+      // Upload via the web app's test-support endpoint which writes to blob storage (Azurite in CI, Azure in prod)
+      console.log(`[flat-file] Uploading file to blob storage for artefact ${artefactId}`);
       await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf" });
     } else {
-      // Locally, write directly to shared storage directory
+      // Locally without blob storage: write directly to shared storage directory
       if (!fs.existsSync(STORAGE_PATH)) {
         fs.mkdirSync(STORAGE_PATH, { recursive: true });
       }
@@ -138,7 +139,7 @@ async function createFlatFileArtefact(
 // Helper to clean up PDF files from storage
 async function cleanupPDFFiles(artefactIds: string[]) {
   for (const artefactId of artefactIds) {
-    if (IS_DEPLOYED) {
+    if (USE_BLOB_STORAGE) {
       try {
         await deleteTestFlatFileFromWeb(artefactId);
       } catch {
@@ -178,6 +179,13 @@ test.describe("Flat File Viewing", () => {
 
     await page.goto(`/hearing-lists/${testLocation.locationId}/${artefactId}`);
     await page.waitForLoadState("domcontentloaded");
+
+    // Dismiss cookie banner if present
+    const cookieBanner = page.locator(".govuk-cookie-banner");
+    if (await cookieBanner.isVisible()) {
+      await cookieBanner.locator('button:has-text("Accept analytics cookies")').click();
+      await page.waitForTimeout(500); // Wait for banner to be dismissed
+    }
 
     // Verify page loaded successfully (not an error page)
     const errorSummary = page.locator(".govuk-error-summary");
@@ -282,10 +290,7 @@ test.describe("Flat File Viewing", () => {
     await expect(page.locator('object[type="application/pdf"]')).toBeVisible();
 
     // Final accessibility check
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -430,10 +435,7 @@ test.describe("Flat File Viewing", () => {
     await expect(notFlatFileErrorList).toContainText(/not available as a file/i);
 
     // STEP 7: Run accessibility checks on error page
-    let accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
 
@@ -471,10 +473,7 @@ test.describe("Flat File Viewing", () => {
     await expect(page).toHaveURL(/\/summary-of-publications\?locationId=/);
 
     // STEP 10: Final accessibility check
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
     expect(accessibilityScanResults.violations).toEqual([]);
   });
