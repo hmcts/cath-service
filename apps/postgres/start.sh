@@ -37,7 +37,7 @@ node health-server.mjs &
 HEALTH_PID=$!
 
 echo "Waiting for database to become available..."
-until node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts <<'SQL' 2>/dev/null
+until ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts <<'SQL' 2>/dev/null
 SELECT 1;
 SQL
 do
@@ -48,14 +48,14 @@ echo "Database is available."
 
 echo "Resolving any failed migrations..."
 printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
-  node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
+  ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
 
 echo "Running database migrations..."
-node_modules/.bin/prisma migrate deploy --config=./prisma.config.ts
+../../node_modules/.bin/prisma migrate deploy --config=./prisma.config.ts
 
 echo "Migrations completed successfully"
 echo "Starting Prisma Studio on port 5556..."
-node_modules/.bin/prisma studio --config=./prisma.config.ts --port 5556 --browser none &
+../../node_modules/.bin/prisma studio --config=./prisma.config.ts --port 5556 --browser none &
 STUDIO_PID=$!
 
 wait $HEALTH_PID $STUDIO_PID
