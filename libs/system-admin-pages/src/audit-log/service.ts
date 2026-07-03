@@ -97,13 +97,13 @@ export function validateUserId(userId: string): boolean {
 }
 
 export function parseDate(day: string, month: string, year: string): Date | null {
-  const dayNum = Number.parseInt(day, 10);
-  const monthNum = Number.parseInt(month, 10);
-  const yearNum = Number.parseInt(year, 10);
-
-  if (Number.isNaN(dayNum) || Number.isNaN(monthNum) || Number.isNaN(yearNum)) {
+  if (!/^\d+$/.test(day) || !/^\d+$/.test(month) || !/^\d+$/.test(year)) {
     return null;
   }
+
+  const dayNum = Number(day);
+  const monthNum = Number(month);
+  const yearNum = Number(year);
 
   const date = new Date(yearNum, monthNum - 1, dayNum);
 
