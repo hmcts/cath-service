@@ -1,21 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { configureNunjucks, createPdfErrorResult, loadTranslations, MAX_PDF_SIZE_BYTES, savePdfToStorage } from "./pdf-utilities.js";
+import {
+  buildPdfFromRenderedList,
+  configureNunjucks,
+  createPdfErrorResult,
+  generateFttSiacWeeklyHearingListPdf,
+  generateListPdf,
+  loadTranslations,
+  MAX_PDF_SIZE_BYTES,
+  savePdfToStorage
+} from "./pdf-utilities.js";
 
-vi.mock("nunjucks", () => ({
-  default: {
-    configure: vi.fn().mockReturnValue({
-      render: vi.fn().mockReturnValue("<html>mock</html>"),
-      renderString: vi.fn().mockReturnValue("<html>mock</html>")
-    })
+const { mockUploadBlob, mockGeneratePdfFromHtml, mockNunjucksEnv } = vi.hoisted(() => ({
+  mockUploadBlob: vi.fn(),
+  mockGeneratePdfFromHtml: vi.fn(),
+  mockNunjucksEnv: {
+    render: vi.fn(() => "<html>test</html>"),
+    renderString: vi.fn()
   }
 }));
 
-const { mockUploadBlob } = vi.hoisted(() => ({
-  mockUploadBlob: vi.fn()
-}));
 vi.mock("@hmcts/azure-blob", () => ({
   uploadBlob: mockUploadBlob,
   CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
+}));
+
+vi.mock("@hmcts/pdf-generation", () => ({
+  generatePdfFromHtml: mockGeneratePdfFromHtml
+}));
+
+vi.mock("nunjucks", () => ({
+  default: {
+    configure: vi.fn(() => mockNunjucksEnv)
+  }
 }));
 
 describe("configureNunjucks", () => {
@@ -153,5 +169,204 @@ describe("loadTranslations", () => {
 describe("constants", () => {
   it("should have MAX_PDF_SIZE_BYTES set to 2MB", () => {
     expect(MAX_PDF_SIZE_BYTES).toBe(2 * 1024 * 1024);
+  });
+});
+
+describe("buildPdfFromRenderedList", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
+  });
+
+  it("should return success result when PDF generation succeeds", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: Buffer.from("pdf"), sizeBytes: 512 });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-1",
+      templateDir: "/templates",
+      header: { court: "Test Court" },
+      hearings: [{ case: "Test" }],
+      provenanceLabel: "Manual Upload",
+      translations: { title: "Test" }
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toBe("artefact-1.pdf");
+    expect(result.sizeBytes).toBe(512);
+    expect(mockUploadBlob).toHaveBeenCalled();
+  });
+
+  it("should return failure when pdfResult.success is false", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: false, error: "Render error" });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-2",
+      templateDir: "/templates",
+      header: {},
+      hearings: [],
+      provenanceLabel: "",
+      translations: {}
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Render error");
+    expect(mockUploadBlob).not.toHaveBeenCalled();
+  });
+
+  it("should return failure with default message when success is true but pdfBuffer is undefined", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: undefined });
+
+    const result = await buildPdfFromRenderedList({
+      artefactId: "artefact-3",
+      templateDir: "/templates",
+      header: {},
+      hearings: [],
+      provenanceLabel: "",
+      translations: {}
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+    expect(mockUploadBlob).not.toHaveBeenCalled();
+  });
+});
+
+describe("generateListPdf", () => {
+  const mockEnTranslations = { title: "English" };
+  const importEn = vi.fn().mockResolvedValue({ en: mockEnTranslations });
+  const importCy = vi.fn().mockResolvedValue({ cy: {} });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
+    importEn.mockResolvedValue({ en: mockEnTranslations });
+    importCy.mockResolvedValue({ cy: {} });
+  });
+
+  it("should return success result when renderData and PDF generation succeed", async () => {
+    mockGeneratePdfFromHtml.mockResolvedValue({ success: true, pdfBuffer: Buffer.from("pdf"), sizeBytes: 1024 });
+
+    const result = await generateListPdf({
+      artefactId: "list-artefact",
+      locale: "en",
+      locationId: "1",
+      contentDate: new Date("2025-01-01"),
+      jsonData: { data: "test" },
+      listTitle: "Test List",
+      provenanceLabel: "Manual Upload",
+      templateDir: "/templates",
+      renderData: () => ({ header: { court: "Test" }, hearings: [] }),
+      importEn,
+      importCy
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toBe("list-artefact.pdf");
+  });
+
+  it("should return error result when renderData throws", async () => {
+    const result = await generateListPdf({
+      artefactId: "list-artefact-error",
+      locale: "en",
+      locationId: "1",
+      contentDate: new Date("2025-01-01"),
+      jsonData: {},
+      listTitle: "Test List",
+      provenanceLabel: "",
+      templateDir: "/templates",
+      renderData: () => {
+        throw new Error("Render failed");
+      },
+      importEn,
+      importCy
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Render failed");
+  });
+});
+
+describe("generateFttSiacWeeklyHearingListPdf", () => {
+  const mockGeneratePdf = vi.fn();
+  const mockRenderData = vi.fn();
+  const mockImportEn = vi.fn().mockResolvedValue({ en: { title: "English" } });
+  const mockImportCy = vi.fn().mockResolvedValue({ cy: { title: "Welsh" } });
+
+  const baseOptions = {
+    artefactId: "test-artefact",
+    locale: "en",
+    locationId: "123",
+    jsonData: [],
+    courtName: "Test Court",
+    listTitle: "Test List",
+    moduleDir: "/fake/dir",
+    provenanceLabel: "Test Source",
+    importEn: mockImportEn,
+    importCy: mockImportCy,
+    generatePdf: mockGeneratePdf,
+    renderData: mockRenderData
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUploadBlob.mockResolvedValue(undefined);
+    mockRenderData.mockReturnValue({ header: { listTitle: "Test List" }, hearings: [] });
+  });
+
+  it("should generate PDF successfully and return success result", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    mockGeneratePdf.mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
+    const result = await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate: new Date("2025-01-01") });
+
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toContain("test-artefact.pdf");
+    expect(result.sizeBytes).toBe(1024);
+    expect(result.exceedsMaxSize).toBe(false);
+  });
+
+  it("should return exceedsMaxSize true when PDF exceeds 2MB", async () => {
+    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
+    mockGeneratePdf.mockResolvedValue({ success: true, pdfBuffer: largePdfBuffer, sizeBytes: 3 * 1024 * 1024 });
+
+    const result = await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate: new Date("2025-01-01") });
+
+    expect(result.success).toBe(true);
+    expect(result.exceedsMaxSize).toBe(true);
+  });
+
+  it("should return error when PDF generation fails", async () => {
+    mockGeneratePdf.mockResolvedValue({ success: false, error: "Puppeteer crashed" });
+
+    const result = await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate: new Date("2025-01-01") });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Puppeteer crashed");
+  });
+
+  it("should pass correct render options including contentDate and lastReceivedDate", async () => {
+    const contentDate = new Date("2025-06-15");
+    mockGeneratePdf.mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate });
+
+    expect(mockRenderData).toHaveBeenCalledWith([], {
+      locale: "en",
+      courtName: "Test Court",
+      contentDate,
+      lastReceivedDate: expect.any(String),
+      listTitle: "Test List"
+    });
+  });
+
+  it("should return error result when an exception is thrown", async () => {
+    mockRenderData.mockImplementation(() => {
+      throw new Error("Render failed");
+    });
+
+    const result = await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate: new Date("2025-01-01") });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Render failed");
   });
 });

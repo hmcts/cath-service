@@ -1,4 +1,8 @@
+import "@hmcts/ast-daily-hearing-list"; // Register AST converter
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
+import "@hmcts/cic-weekly-hearing-list"; // Register CIC converter
+import "@hmcts/send-daily-hearing-list"; // Register SEND converter
 import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"; // Register UTCC converter
 import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTLC converter
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter

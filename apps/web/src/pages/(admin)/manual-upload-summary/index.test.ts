@@ -77,15 +77,15 @@ vi.mock("@hmcts/admin-pages", async () => {
   };
 });
 
-vi.mock("@hmcts/publication", async () => {
-  const actual = await vi.importActual("@hmcts/publication");
-  return {
-    ...actual,
-    createArtefact: vi.fn(),
-    processPublication: vi.fn(),
-    updateArtefactFileExtension: vi.fn()
-  };
-});
+vi.mock("@hmcts/publication", () => ({
+  createArtefact: vi.fn(),
+  processPublication: vi.fn(),
+  updateArtefactFileExtension: vi.fn(),
+  extractAndStoreArtefactSearch: vi.fn(),
+  Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
+  Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },
+  Language: { ENGLISH: "ENGLISH", WELSH: "WELSH", BILINGUAL: "BILINGUAL" }
+}));
 
 vi.mock("@hmcts/notifications", () => ({
   sendLocationAndCaseSubscriptionNotifications: vi.fn(),
@@ -106,7 +106,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 import { getManualUpload, saveUploadedFile } from "@hmcts/admin-pages";
 import { getLocationById } from "@hmcts/location";
 import { sendListTypePublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, processPublication } from "@hmcts/publication";
 
 describe("manual-upload-summary page", () => {
   beforeEach(() => {
@@ -891,6 +891,53 @@ describe("manual-upload-summary page", () => {
           isFlatFile: true
         })
       );
+    });
+
+    it("should call extractAndStoreArtefactSearch when a JSON file is uploaded", async () => {
+      const jsonContent = JSON.stringify({ data: "test" });
+      const jsonUploadData = {
+        ...mockUploadData,
+        fileName: "test-hearing-list.json",
+        file: Buffer.from(jsonContent)
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".json");
+      vi.mocked(processPublication).mockResolvedValue({});
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
+
+      const session = { save: vi.fn((callback) => callback()) };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("test-artefact-id-123", 6, { data: "test" });
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+    });
+
+    it("should continue upload when extractAndStoreArtefactSearch throws", async () => {
+      const jsonContent = JSON.stringify({ data: "test" });
+      const jsonUploadData = {
+        ...mockUploadData,
+        fileName: "test-hearing-list.json",
+        file: Buffer.from(jsonContent)
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".json");
+      vi.mocked(processPublication).mockResolvedValue({});
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Search extraction failed"));
+
+      const session = { save: vi.fn((callback) => callback()) };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
     });
 
     it("should handle missing fileName gracefully when determining isFlatFile", async () => {
