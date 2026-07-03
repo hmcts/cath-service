@@ -683,8 +683,7 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true,
-        listType: { select: { name: true } }
+        noMatch: true
       }
     });
     expect(result).toEqual({
@@ -727,8 +726,7 @@ describe("getArtefactById", () => {
         isFlatFile: true,
         provenance: true,
         supersededCount: true,
-        noMatch: true,
-        listType: { select: { name: true } }
+        noMatch: true
       }
     });
     expect(result).toBeNull();

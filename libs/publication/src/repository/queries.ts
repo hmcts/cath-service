@@ -106,8 +106,7 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       isFlatFile: true,
       provenance: true,
       supersededCount: true,
-      noMatch: true,
-      listType: { select: { name: true } }
+      noMatch: true
     }
   });
   if (!artefact) return null;
