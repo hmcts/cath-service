@@ -119,6 +119,62 @@ export const locationData: {
       regions: [1],
       subJurisdictions: [13],
       provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 17,
+      name: "Midlands Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+      regions: [2],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 18,
+      name: "South East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+      regions: [3],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 19,
+      name: "Wales and South West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+      regions: [5, 13],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 20,
+      name: "Scotland Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+      regions: [12],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 21,
+      name: "North East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+      regions: [9],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 22,
+      name: "North West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+      regions: [4],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 23,
+      name: "London Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+      regions: [1],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 24,
+      name: "Liverpool Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl",
+      regions: [4],
+      subJurisdictions: [8]
     }
   ],
   regions: [

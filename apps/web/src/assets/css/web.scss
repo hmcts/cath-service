@@ -9,6 +9,7 @@
 @use "./verified-pages.scss" as verified;
 @use "./session-timeout.scss";
 @use "./list-types/magistrates-public-list.scss";
+@use "./list-types/magistrates-standard-list.scss";
 @use "./list-types/sjp-filters.scss";
 @use "./list-types/sjp-public-list.scss";
 
@@ -26,6 +27,30 @@
 
 .govuk-phase-banner {
   border-bottom-color: #8eb8dc;
+}
+
+// Match OG CaTH footer size: govuk-frontend v6 bumped the footer from
+// size 16 to 19 as part of the GDS rebrand. Restore size 16 (16px at all
+// breakpoints) so the footer matches the legacy service.
+//
+// The GDS rebrand also lightens the footer text/link colour. Restore the
+// legacy near-black text colour (#0b0c0c) for the footer and its links.
+.govuk-footer {
+  @include index.govuk-font-size($size: 16);
+  color: index.$govuk-text-colour;
+}
+
+// The rebrand styles footer links via :link/:visited/:hover pseudo-class
+// selectors (blue), which out-specify a plain `.govuk-footer__link` rule.
+// Match those pseudo-classes to force the legacy black link colour, while
+// leaving the :focus state (black on yellow) untouched for accessibility.
+.govuk-footer__link {
+  &:link,
+  &:visited,
+  &:hover,
+  &:active {
+    color: index.$govuk-text-colour;
+  }
 }
 
 .govuk-footer__copyright-logo {
@@ -47,4 +72,23 @@
 
 .govuk-footer__licence-description {
   display: inline !important;
+}
+
+// GOV.UK Frontend v6 positions the warning icon with `position: absolute` and
+// `margin-top: -7px`, which only aligns to the first line when text wraps.
+// Override to flexbox so the icon is centred on the full text block.
+.govuk-warning-text {
+  display: flex;
+  align-items: center;
+}
+
+.govuk-warning-text__icon {
+  position: static;
+  margin-top: 0;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.govuk-warning-text__text {
+  padding-left: 0;
 }
