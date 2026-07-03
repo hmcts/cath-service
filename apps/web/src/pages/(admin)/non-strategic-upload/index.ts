@@ -1,4 +1,8 @@
+import "@hmcts/ast-daily-hearing-list"; // Register AST converter
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
+import "@hmcts/cic-weekly-hearing-list"; // Register CIC converter
+import "@hmcts/send-daily-hearing-list"; // Register SEND converter
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";

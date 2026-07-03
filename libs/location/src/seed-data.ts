@@ -159,7 +159,7 @@ export async function seedLocationData() {
         locationId: location.locationId,
         provenance: "SNL",
         provenanceLocationId: String(location.locationId + 100),
-        provenanceLocationType: "VENUE"
+        provenanceLocationType: location.provenanceLocationType ?? "VENUE"
       }
     });
   }
