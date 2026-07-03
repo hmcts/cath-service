@@ -48,10 +48,7 @@ echo "Database is available."
 
 echo "Resolving any failed or stuck migrations..."
 ../../node_modules/.bin/prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null <<'SQL' || true
-UPDATE _prisma_migrations
-SET rolled_back_at = NOW()
-WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;
-
+-- If file_extension column exists: mark migration complete so prisma deploy skips it
 UPDATE _prisma_migrations
 SET rolled_back_at = NULL,
     finished_at    = COALESCE(finished_at, NOW())
@@ -60,6 +57,19 @@ WHERE migration_name = '20260623000000_add_file_extension_to_artefact'
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'artefact' AND column_name = 'file_extension'
   );
+
+-- If file_extension column does NOT exist: delete the record so prisma deploy re-runs the migration
+DELETE FROM _prisma_migrations
+WHERE migration_name = '20260623000000_add_file_extension_to_artefact'
+  AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'artefact' AND column_name = 'file_extension'
+  );
+
+-- Mark any remaining stuck migrations as rolled back
+UPDATE _prisma_migrations
+SET rolled_back_at = NOW()
+WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;
 SQL
 
 echo "Running database migrations..."
