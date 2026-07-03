@@ -1,44 +1,5 @@
 {% extends "layouts/base-template.njk" %}
 
-{% block head %}
-  {{ super() }}
-  <style>
-    .govuk-accordion__controls {
-      text-align: right;
-    }
-    .no-wrap {
-      white-space: nowrap;
-    }
-    .govuk-accordion__section-content {
-      overflow: auto hidden;
-    }
-    .govuk-table {
-      overflow: auto hidden;
-    }
-    .restriction-list-section {
-      background-color: #f3f2f1;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .restriction-list-section .govuk-warning-text {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .restriction-list-section .govuk-warning-text__icon {
-      position: static;
-      flex-shrink: 0;
-      margin-top: 0;
-    }
-    .restriction-list-section .govuk-warning-text__text {
-      padding-left: 0;
-    }
-    .no-border-bottom {
-      border-bottom: none !important;
-    }
-  </style>
-{% endblock %}
-
 {% block page_content %}
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
