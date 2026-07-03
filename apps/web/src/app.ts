@@ -13,6 +13,10 @@ import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/
 import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
 import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-list/config";
 import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
+import { moduleRoot as fttLrtModuleRoot } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list/config";
+import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
+import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
+import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-hearing-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -22,9 +26,13 @@ import {
   moduleRoot as publicPagesModuleRoot
 } from "@hmcts/public-pages/config";
 import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-cause-list/config";
+import { moduleRoot as siacPoacPaacModuleRoot } from "@hmcts/siac-poac-paac-weekly-hearing-list/config";
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
+import { moduleRoot as sscsDailyHearingListModuleRoot } from "@hmcts/sscs-daily-hearing-list/config";
 import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
+import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
   configureCookieManager,
   configureGovuk,
@@ -36,6 +44,7 @@ import {
   notFoundHandler
 } from "@hmcts/web-core";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
+import { moduleRoot as wpafccWeeklyHearingListModuleRoot } from "@hmcts/wpafcc-weekly-hearing-list/config";
 import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts-cft/cloud-native-platform";
 import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import cookieParser from "cookie-parser";
@@ -95,6 +104,11 @@ export async function createApp(): Promise<Express> {
     authModuleRoot,
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
+    sscsDailyHearingListModuleRoot,
+    siacPoacPaacModuleRoot,
+    fttTaxChamberModuleRoot,
+    fttLrtModuleRoot,
+    fttRptModuleRoot,
     civilFamilyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
@@ -108,7 +122,11 @@ export async function createApp(): Promise<Express> {
     crownFirmListModuleRoot,
     crownWarnedListModuleRoot,
     systemAdminModuleRoot,
-    publicPagesModuleRoot
+    publicPagesModuleRoot,
+    grcWeeklyHearingListModuleRoot,
+    wpafccWeeklyHearingListModuleRoot,
+    utiacStatutoryAppealModuleRoot,
+    utiacJrModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {

@@ -18,7 +18,8 @@
       "!**/.turbo",
       "!**/storage",
       "!**/generated",
-      "!e2e-tests/playwright-report"
+      "!e2e-tests/playwright-report",
+      "!**/.claude"
     ]
   },
   "formatter": {

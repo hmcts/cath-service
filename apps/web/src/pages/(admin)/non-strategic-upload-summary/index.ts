@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
 import { getNonStrategicUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { cy } from "./cy.js";
@@ -20,7 +21,9 @@ async function resolveUploadDisplayNames(uploadData: { locationId: string; listT
 
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
-  const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType : uploadData.listType;
+  const listTypeName = listType
+    ? (locale === "cy" ? listType.welshFriendlyName : listType.shortenedFriendlyName || listType.friendlyName) || listType.name || uploadData.listType
+    : uploadData.listType;
 
   return { courtName, listTypeName };
 }
