@@ -8,6 +8,7 @@
 @use "./user-management.scss";
 @use "./verified-pages.scss" as verified;
 @use "./session-timeout.scss";
+@use "./list-types/magistrates-standard-list.scss";
 @use "./list-types/sjp-filters.scss";
 @use "./list-types/sjp-public-list.scss";
 
@@ -46,4 +47,23 @@
 
 .govuk-footer__licence-description {
   display: inline !important;
+}
+
+// GOV.UK Frontend v6 positions the warning icon with `position: absolute` and
+// `margin-top: -7px`, which only aligns to the first line when text wraps.
+// Override to flexbox so the icon is centred on the full text block.
+.govuk-warning-text {
+  display: flex;
+  align-items: center;
+}
+
+.govuk-warning-text__icon {
+  position: static;
+  margin-top: 0;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.govuk-warning-text__text {
+  padding-left: 0;
 }

@@ -24,7 +24,12 @@ export function convertListTypeNameToKebabCase(name: string): string {
  */
 const PACKAGE_ALIASES: Record<string, string> = {
   "sjp-delta-press-list": "sjp-press-list",
-  "sjp-delta-public-list": "sjp-public-list"
+  "sjp-delta-public-list": "sjp-public-list",
+  "utiac-jr-london-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-leeds-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-manchester-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-birmingham-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-cardiff-daily-hearing-list": "utiac-jr-daily-hearing-list"
 };
 
 /**

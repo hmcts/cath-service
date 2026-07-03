@@ -1,6 +1,6 @@
 {
   "name": "@hmcts/api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -23,7 +23,7 @@
     "@hmcts/test-support": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "compression": "1.8.1",
-    "config": "4.4.1",
+    "config": "4.4.2",
     "connect-redis": "9.0.0",
     "cors": "2.8.6",
     "express": "5.2.1",

@@ -4,7 +4,7 @@ import { createClient, type RedisClientType } from "redis";
 let redisClient: RedisClientType | null = null;
 
 export async function getRedisClient(): Promise<RedisClientType> {
-  if (redisClient) {
+  if (redisClient?.isOpen) {
     return redisClient;
   }
 

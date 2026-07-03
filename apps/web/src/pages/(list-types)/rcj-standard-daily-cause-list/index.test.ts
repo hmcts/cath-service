@@ -1,12 +1,7 @@
-import { readFile } from "node:fs/promises";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
-
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn()
-}));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
@@ -20,6 +15,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
+  getPublicationJson: vi.fn(),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -34,7 +30,7 @@ vi.mock("@hmcts/rcj-standard-daily-cause-list", async (importOriginal) => {
   };
 });
 
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { renderStandardDailyCauseList } from "@hmcts/rcj-standard-daily-cause-list";
 import { GET } from "./index.js";
 
@@ -103,14 +99,14 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
       expect(getArtefactById).toHaveBeenCalledWith("test-artefact-123");
-      expect(readFile).toHaveBeenCalled();
+      expect(getPublicationJson).toHaveBeenCalled();
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
@@ -119,7 +115,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
       });
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("civil-courts-rcj-daily-cause-list");
       expect(renderCall[1]).toMatchObject({
         header: mockRenderedData.header,
@@ -143,7 +139,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
           provenance: "MANUAL_UPLOAD"
         };
 
-        const mockJsonData = [];
+        const mockJsonData: object[] = [];
         const mockRenderedData = {
           header: {
             listTitle: "Test List",
@@ -156,9 +152,9 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         req.query = { artefactId: `test-artefact-${listTypeId}` };
 
         vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-        vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+        vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
         mockValidate.mockReturnValue({ isValid: true, errors: [] });
-        vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+        vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
         await GET(req as Request, res as Response);
 
@@ -243,7 +239,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockRejectedValue(new Error("ENOENT: no such file or directory"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       await GET(req as Request, res as Response);
 
@@ -272,7 +268,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({
         isValid: false,
         errors: ["Missing required field: venue"]
@@ -317,7 +313,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         provenance: "MANUAL_UPLOAD"
       };
 
-      const mockJsonData = [];
+      const mockJsonData: object[] = [];
 
       const mockRenderedData = {
         header: {
@@ -332,9 +328,9 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       res.locals = { locale: "cy" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -356,7 +352,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         provenance: "MANUAL_UPLOAD"
       };
 
-      const mockJsonData = [];
+      const mockJsonData: object[] = [];
 
       const mockRenderedData = {
         header: {
@@ -371,9 +367,9 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       res.locals = {};
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
@@ -395,7 +391,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         provenance: "LIST_ASSIST"
       };
 
-      const mockJsonData = [];
+      const mockJsonData: object[] = [];
 
       const mockRenderedData = {
         header: {
@@ -409,13 +405,13 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[1]).toMatchObject({
         dataSource: "List Assist"
       });
@@ -431,7 +427,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         provenance: "UNKNOWN_SOURCE"
       };
 
-      const mockJsonData = [];
+      const mockJsonData: object[] = [];
 
       const mockRenderedData = {
         header: {
@@ -445,13 +441,13 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       req.query = { artefactId: "test-artefact-123" };
 
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-      vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockJsonData));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
       mockValidate.mockReturnValue({ isValid: true, errors: [] });
-      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData);
+      vi.mocked(renderStandardDailyCauseList).mockReturnValue(mockRenderedData as any);
 
       await GET(req as Request, res as Response);
 
-      const renderCall = vi.mocked(res.render).mock.calls[0];
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[1]).toMatchObject({
         dataSource: "UNKNOWN_SOURCE"
       });

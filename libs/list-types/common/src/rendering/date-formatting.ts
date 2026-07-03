@@ -6,7 +6,7 @@ import { DateTime } from "luxon";
 export function formatDisplayDate(date: Date, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   return date.toLocaleDateString(localeCode, {
-    day: "numeric",
+    day: "2-digit",
     month: "long",
     year: "numeric"
   });
@@ -20,7 +20,7 @@ export function formatDisplayDate(date: Date, locale: string): string {
 export function formatLastUpdatedDateTime(isoDateTime: string, locale: string): { date: string; time: string } {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
 
-  const date = dt.toFormat("d MMMM yyyy");
+  const date = dt.toFormat("dd MMMM yyyy");
 
   const hours = dt.hour;
   const minutes = dt.minute;
@@ -51,7 +51,7 @@ export function formatDdMmYyyyDate(ddMMyyyyDate: string, locale: string): string
 
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   return date.toLocaleDateString(localeCode, {
-    day: "numeric",
+    day: "2-digit",
     month: "long",
     year: "numeric"
   });

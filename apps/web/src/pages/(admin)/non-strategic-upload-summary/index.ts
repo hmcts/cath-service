@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
 import { getNonStrategicUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { cy } from "./cy.js";
@@ -8,7 +9,7 @@ import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST con
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import { getLocationById } from "@hmcts/location";
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateArtefactFileExtension } from "@hmcts/publication";
 import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
 import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
@@ -20,7 +21,9 @@ async function resolveUploadDisplayNames(uploadData: { locationId: string; listT
 
   const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
   const listType = listTypeId ? await findListTypeById(listTypeId) : null;
-  const listTypeName = listType ? (locale === "cy" ? listType.welshFriendlyName : listType.friendlyName) || uploadData.listType : uploadData.listType;
+  const listTypeName = listType
+    ? (locale === "cy" ? listType.welshFriendlyName : listType.shortenedFriendlyName || listType.friendlyName) || listType.name || uploadData.listType
+    : uploadData.listType;
 
   return { courtName, listTypeName };
 }
@@ -116,8 +119,9 @@ const postHandler = async (req: Request, res: Response) => {
       noMatch: false
     });
 
-    // Save file to temporary storage with artefactId as filename (will overwrite if exists)
-    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+    // Save file to blob storage with artefactId as blob name (will overwrite if exists)
+    const fileExtension = await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+    await updateArtefactFileExtension(artefactId, fileExtension);
 
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
@@ -137,7 +141,8 @@ const postHandler = async (req: Request, res: Response) => {
         jsonData = canConvertById
           ? await convertExcelForListType(listTypeId, uploadData.file)
           : await convertExcelForListTypeName(listTypeName!, uploadData.file);
-        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
+        const convertedExtension = await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
+        await updateArtefactFileExtension(artefactId, convertedExtension);
 
         // Extract and store artefact search data from converted JSON
         try {

@@ -77,14 +77,15 @@ vi.mock("@hmcts/admin-pages", async () => {
   };
 });
 
-vi.mock("@hmcts/publication", async () => {
-  const actual = await vi.importActual("@hmcts/publication");
-  return {
-    ...actual,
-    createArtefact: vi.fn(),
-    processPublication: vi.fn()
-  };
-});
+vi.mock("@hmcts/publication", () => ({
+  createArtefact: vi.fn(),
+  processPublication: vi.fn(),
+  updateArtefactFileExtension: vi.fn(),
+  extractAndStoreArtefactSearch: vi.fn(),
+  Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
+  Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },
+  Language: { ENGLISH: "ENGLISH", WELSH: "WELSH", BILINGUAL: "BILINGUAL" }
+}));
 
 vi.mock("@hmcts/notifications", () => ({
   sendLocationAndCaseSubscriptionNotifications: vi.fn(),
@@ -105,7 +106,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 import { getManualUpload, saveUploadedFile } from "@hmcts/admin-pages";
 import { getLocationById } from "@hmcts/location";
 import { sendListTypePublicationNotifications } from "@hmcts/notifications";
-import { createArtefact, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, processPublication } from "@hmcts/publication";
 
 describe("manual-upload-summary page", () => {
   beforeEach(() => {
@@ -456,7 +457,7 @@ describe("manual-upload-summary page", () => {
 
     it("should save file, create database record, and redirect to success page", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
 
@@ -630,7 +631,7 @@ describe("manual-upload-summary page", () => {
 
     it("should complete upload successfully (notification errors handled internally by processPublication)", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
 
@@ -662,7 +663,7 @@ describe("manual-upload-summary page", () => {
 
     it("should complete upload and call processPublication with correct parameters", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
 
@@ -696,7 +697,7 @@ describe("manual-upload-summary page", () => {
 
     it("should continue upload even if location not found for audit log", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(getLocationById).mockResolvedValue(undefined);
       vi.mocked(processPublication).mockResolvedValue({});
@@ -722,7 +723,7 @@ describe("manual-upload-summary page", () => {
 
     it("should render error page when processPublication fails", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(processPublication).mockRejectedValueOnce(new Error("Publication service down"));
 
@@ -751,7 +752,7 @@ describe("manual-upload-summary page", () => {
 
     it("should redirect to Welsh success page when lng=cy", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
@@ -789,7 +790,7 @@ describe("manual-upload-summary page", () => {
       };
 
       vi.mocked(getManualUpload).mockResolvedValueOnce(invalidDateUploadData).mockResolvedValueOnce(invalidDateUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
 
       const session = {};
 
@@ -820,7 +821,7 @@ describe("manual-upload-summary page", () => {
       };
 
       vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
@@ -857,7 +858,7 @@ describe("manual-upload-summary page", () => {
 
     it("should determine isFlatFile correctly for non-JSON files", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
@@ -892,6 +893,53 @@ describe("manual-upload-summary page", () => {
       );
     });
 
+    it("should call extractAndStoreArtefactSearch when a JSON file is uploaded", async () => {
+      const jsonContent = JSON.stringify({ data: "test" });
+      const jsonUploadData = {
+        ...mockUploadData,
+        fileName: "test-hearing-list.json",
+        file: Buffer.from(jsonContent)
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".json");
+      vi.mocked(processPublication).mockResolvedValue({});
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
+
+      const session = { save: vi.fn((callback) => callback()) };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("test-artefact-id-123", 6, { data: "test" });
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+    });
+
+    it("should continue upload when extractAndStoreArtefactSearch throws", async () => {
+      const jsonContent = JSON.stringify({ data: "test" });
+      const jsonUploadData = {
+        ...mockUploadData,
+        fileName: "test-hearing-list.json",
+        file: Buffer.from(jsonContent)
+      };
+
+      vi.mocked(getManualUpload).mockResolvedValue(jsonUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".json");
+      vi.mocked(processPublication).mockResolvedValue({});
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Search extraction failed"));
+
+      const session = { save: vi.fn((callback) => callback()) };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+    });
+
     it("should handle missing fileName gracefully when determining isFlatFile", async () => {
       const noFileNameUploadData = {
         ...mockUploadData,
@@ -899,7 +947,7 @@ describe("manual-upload-summary page", () => {
       };
 
       vi.mocked(getManualUpload).mockResolvedValue(noFileNameUploadData);
-      vi.mocked(saveUploadedFile).mockResolvedValue("/path/to/file.json");
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(processPublication).mockResolvedValue({});
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(sendListTypePublicationNotifications).mockResolvedValue({
