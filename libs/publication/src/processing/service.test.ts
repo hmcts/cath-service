@@ -7,6 +7,25 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
+  generateSscsDailyHearingListPdf: vi.fn(),
+  importantInformationByListType: {
+    SSCS_NORTH_EAST_DAILY_HEARING_LIST: "Important information for North East"
+  }
+}));
+
+vi.mock("@hmcts/send-daily-hearing-list", () => ({
+  generateSendDailyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/cic-weekly-hearing-list", () => ({
+  generateCicWeeklyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/ast-daily-hearing-list", () => ({
+  generateAstDailyHearingListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   generateCauseListPdf: vi.fn()
 }));
@@ -33,6 +52,27 @@ vi.mock("@hmcts/sjp-press-list", () => ({
   generateSjpPressListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/grc-weekly-hearing-list", () => ({
+  generateGrcWeeklyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/wpafcc-weekly-hearing-list", () => ({
+  generateWpafccWeeklyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
+  generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
+  return {
+    ...actual,
+    generateUtiacJrLeedsDailyHearingListPdf: vi.fn(),
+    generateUtiacJrLondonDailyHearingListPdf: vi.fn()
+  };
+});
+
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
@@ -40,6 +80,18 @@ vi.mock("@hmcts/location", () => ({
 vi.mock("@hmcts/notifications", () => ({
   sendLocationAndCaseSubscriptionNotifications: vi.fn(),
   sendListTypePublicationNotifications: vi.fn()
+}));
+
+vi.mock("@hmcts/crown-daily-list", () => ({
+  generateCrownDailyListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/crown-firm-list", () => ({
+  generateCrownFirmListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/crown-warned-list", () => ({
+  generateCrownWarnedListPdf: vi.fn()
 }));
 
 vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
@@ -60,12 +112,23 @@ vi.mock("../artefact-search-extractor.js", () => ({
 
 describe("publication-processor", async () => {
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+  const { generateSscsDailyHearingListPdf } = await import("@hmcts/sscs-daily-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
   const { generateSjpPublicListExcel, generateSjpPressListExcel, saveExcelFile } = await import("@hmcts/excel-generation");
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
   const { generateSjpPublicListPdf } = await import("@hmcts/sjp-public-list");
   const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
+  const { generateCrownDailyListPdf } = await import("@hmcts/crown-daily-list");
+  const { generateCrownFirmListPdf } = await import("@hmcts/crown-firm-list");
+  const { generateCrownWarnedListPdf } = await import("@hmcts/crown-warned-list");
+  const { generateSendDailyHearingListPdf } = await import("@hmcts/send-daily-hearing-list");
+  const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
+  const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
+  const { generateGrcWeeklyHearingListPdf } = await import("@hmcts/grc-weekly-hearing-list");
+  const { generateWpafccWeeklyHearingListPdf } = await import("@hmcts/wpafcc-weekly-hearing-list");
+  const { generateUtiacStatutoryAppealDailyHearingListPdf } = await import("@hmcts/utiac-statutory-appeal-daily-hearing-list");
+  const { generateUtiacJrLondonDailyHearingListPdf, generateUtiacJrLeedsDailyHearingListPdf } = await import("@hmcts/utiac-jr-daily-hearing-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
@@ -339,6 +402,251 @@ describe("publication-processor", async () => {
 
       expect(generateSjpPressListPdf).toHaveBeenCalled();
       expect(result).toEqual({ pdfPath: "/path/to/sjp-delta-press-pdf", sizeBytes: 1536, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for Crown Daily List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CROWN_DAILY_LIST",
+        friendlyName: "Crown Daily List"
+      } as any);
+      vi.mocked(generateCrownDailyListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/crown-daily.pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 20 });
+
+      expect(generateCrownDailyListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/crown-daily.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for Crown Firm List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CROWN_FIRM_LIST",
+        friendlyName: "Crown Firm List"
+      } as any);
+      vi.mocked(generateCrownFirmListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/crown-firm.pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 21 });
+
+      expect(generateCrownFirmListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/crown-firm.pdf", sizeBytes: 2048, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for Crown Warned List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CROWN_WARNED_LIST",
+        friendlyName: "Crown Warned List"
+      } as any);
+      vi.mocked(generateCrownWarnedListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/crown-warned.pdf",
+        sizeBytes: 3072,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 22 });
+
+      expect(generateCrownWarnedListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/crown-warned.pdf", sizeBytes: 3072, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SSCS North East Daily Hearing List with English friendly name", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+        friendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List"
+      } as any);
+      vi.mocked(generateSscsDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sscs-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 53, locale: "en" });
+
+      expect(generateSscsDailyHearingListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          listTitle: "North East Social Security and Child Support Tribunal Daily Hearing List",
+          courtName: "North East Social Security and Child Support Tribunal Daily Hearing List",
+          importantInformationText: "Important information for North East"
+        })
+      );
+      expect(result).toEqual({ pdfPath: "/path/to/sscs-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SSCS Daily Hearing List with Welsh friendly name", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+        friendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List"
+      } as any);
+      vi.mocked(generateSscsDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/sscs-pdf-cy",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 53, locale: "cy" });
+
+      expect(generateSscsDailyHearingListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({
+          listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+          courtName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr"
+        })
+      );
+      expect(result).toEqual({ pdfPath: "/path/to/sscs-pdf-cy", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for SEND Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "SEND_DAILY_HEARING_LIST",
+        friendlyName: "SEND Daily Hearing List"
+      } as any);
+      vi.mocked(generateSendDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/send-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 13 });
+
+      expect(generateSendDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/send-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for CIC Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CIC_WEEKLY_HEARING_LIST",
+        friendlyName: "CIC Weekly Hearing List"
+      } as any);
+      vi.mocked(generateCicWeeklyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/cic-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 14 });
+
+      expect(generateCicWeeklyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/cic-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for AST Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "AST_DAILY_HEARING_LIST",
+        friendlyName: "AST Daily Hearing List"
+      } as any);
+      vi.mocked(generateAstDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/ast-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 15 });
+
+      expect(generateAstDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/ast-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for GRC Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "GRC_WEEKLY_HEARING_LIST",
+        friendlyName: "GRC Weekly Hearing List"
+      } as any);
+      vi.mocked(generateGrcWeeklyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/grc-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 41 });
+
+      expect(generateGrcWeeklyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/grc-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for WPAFCC Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "WPAFCC_WEEKLY_HEARING_LIST",
+        friendlyName: "WPAFCC Weekly Hearing List"
+      } as any);
+      vi.mocked(generateWpafccWeeklyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/wpafcc-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 42 });
+
+      expect(generateWpafccWeeklyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/wpafcc-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for UTIAC Statutory Appeal Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+        friendlyName: "UTIAC Statutory Appeal Daily Hearing List"
+      } as any);
+      vi.mocked(generateUtiacStatutoryAppealDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/utiac-statutory-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 43 });
+
+      expect(generateUtiacStatutoryAppealDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/utiac-statutory-pdf", sizeBytes: 2048, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for UTIAC JR London Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+        friendlyName: "UTIAC JR London Daily Hearing List"
+      } as any);
+      vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/utiac-london-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 44 });
+
+      expect(generateUtiacJrLondonDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/utiac-london-pdf", sizeBytes: 2048, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for UTIAC JR Leeds Daily Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+        friendlyName: "UTIAC JR Leeds Daily Hearing List"
+      } as any);
+      vi.mocked(generateUtiacJrLeedsDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/utiac-leeds-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 45 });
+
+      expect(generateUtiacJrLeedsDailyHearingListPdf).toHaveBeenCalled();
+      expect(result).toEqual({ pdfPath: "/path/to/utiac-leeds-pdf", sizeBytes: 2048, exceedsMaxSize: false });
     });
   });
 
