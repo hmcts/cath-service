@@ -1,0 +1,382 @@
+import { describe, expect, it } from "vitest";
+import type { CrownWarnedListData } from "../models/types.js";
+import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
+
+const buildTestData = (overrides?: Partial<CrownWarnedListData["WarnedList"]>): CrownWarnedListData => ({
+  WarnedList: {
+    DocumentID: { UniqueID: "CWL-2025-001", DocumentType: "crown_warned_pdda_list" },
+    ListHeader: { StartDate: "2025-01-27" },
+    CrownCourt: { CourtHouseName: "Crown Court at Birmingham" },
+    CourtLists: [],
+    ...overrides
+  }
+});
+
+describe("extractCaseSummary", () => {
+  it("should extract case summaries from WithFixedDate cases", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "2025-02-10",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250001",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "Williams" },
+                            IsMasked: "NO"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual([
+      { label: "Fixed for", value: "10/02/2025" },
+      { label: "Case Reference", value: "B20250001" },
+      { label: "Defendant Name(s)", value: "Alice Williams" },
+      { label: "Prosecuting Authority", value: "CPS" }
+    ]);
+  });
+
+  it("should extract case summaries from WithoutFixedDate cases", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithoutFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250002",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Tom"], CitizenNameSurname: "Hardy" },
+                            IsMasked: "NO",
+                            CustodyStatus: "On remand"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Tom Hardy");
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
+  });
+
+  it("should not include defendant field when no defendants", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250003",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")).toBeUndefined();
+  });
+
+  it("should return empty array when no court lists", () => {
+    expect(extractCaseSummary(buildTestData())).toHaveLength(0);
+  });
+
+  it("should return MaskedName when IsMasked is yes and MaskedName is present", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250009",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Real"], CitizenNameSurname: "Name" },
+                            IsMasked: "YES",
+                            MaskedName: "Restricted"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Restricted");
+  });
+
+  it("should use unmasked name when IsMasked is yes but MaskedName is absent", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250010",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Smith" },
+                            IsMasked: "YES"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Bob Smith");
+  });
+
+  it("should handle undefined CitizenNameForename when building defendant name", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithoutFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250011",
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameSurname: "OnlyLastName" },
+                            IsMasked: "NO"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("OnlyLastName");
+  });
+
+  it("should handle fixedDate that is invalid ISO string", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "not-a-date",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250012",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("not-a-date");
+  });
+
+  it("should use empty string for Fixed for when fixedDate is undefined", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [
+                    {
+                      CaseNumber: "B20250013",
+                      Defendants: []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Fixed for")?.value).toBe("");
+  });
+
+  it("should handle entry with no Fixture in WithFixedDate", () => {
+    const testData = buildTestData({
+      CourtLists: [{ WithFixedDate: [{}] } as any]
+    });
+    expect(extractCaseSummary(testData)).toHaveLength(0);
+  });
+
+  it("should handle fixture with no Cases in WithoutFixedDate", () => {
+    const testData = buildTestData({
+      CourtLists: [{ WithoutFixedDate: [{ Fixture: [{}] }] } as any]
+    });
+    expect(extractCaseSummary(testData)).toHaveLength(0);
+  });
+
+  it("should use empty string for Case Reference when CaseNumber is absent", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  Cases: [{ Defendants: [] } as any]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Case Reference")?.value).toBe("");
+  });
+
+  it("should join multiple defendants with comma", () => {
+    const testData = buildTestData({
+      CourtLists: [
+        {
+          WithFixedDate: [
+            {
+              Fixture: [
+                {
+                  FixedDate: "2025-02-10",
+                  Cases: [
+                    {
+                      CaseNumber: "B20250014",
+                      Prosecution: { ProsecutingAuthority: "CPS" },
+                      Defendants: [
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Alice"], CitizenNameSurname: "One" },
+                            IsMasked: "NO"
+                          }
+                        },
+                        {
+                          PersonalDetails: {
+                            Name: { CitizenNameForename: ["Bob"], CitizenNameSurname: "Two" },
+                            IsMasked: "NO"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
+    const result = extractCaseSummary(testData);
+    expect(result[0].find((f) => f.label === "Defendant Name(s)")?.value).toBe("Alice One, Bob Two");
+  });
+});
+
+describe("formatCaseSummaryForEmail", () => {
+  it("should format summaries for email", () => {
+    const result = formatCaseSummaryForEmail([
+      [
+        { label: "Fixed for", value: "10/02/2025" },
+        { label: "Case Reference", value: "B20250001" },
+        { label: "Defendant Name(s)", value: "Alice Williams" },
+        { label: "Prosecuting Authority", value: "CPS" }
+      ]
+    ]);
+
+    expect(result).toContain("Fixed for - 10/02/2025");
+    expect(result).toContain("Case Reference - B20250001");
+    expect(result).toContain("Defendant Name(s) - Alice Williams");
+    expect(result).toContain("Prosecuting Authority - CPS");
+  });
+
+  it("should handle empty list", () => {
+    expect(formatCaseSummaryForEmail([])).toBe("No cases scheduled.");
+  });
+});
+
+describe("SPECIAL_CATEGORY_DATA_WARNING", () => {
+  it("should contain required warning text", () => {
+    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Special Category Data");
+    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Data Protection Act 2018");
+  });
+});
