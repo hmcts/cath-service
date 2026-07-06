@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags
@@ -57,15 +56,8 @@ export const SIAC_POAC_PAAC_EXCEL_CONFIG: ExcelConverterConfig = {
   minRows: 1
 };
 
-// Register the converter for all three list type IDs and names
-// Name-based registration handles environments where the DB ID differs from the canonical seeded ID
 const siacPoacPaacConverter = createConverter(SIAC_POAC_PAAC_EXCEL_CONFIG);
 
-registerConverter(28, siacPoacPaacConverter);
 registerConverterByName("SIAC_WEEKLY_HEARING_LIST", siacPoacPaacConverter);
-
-registerConverter(29, siacPoacPaacConverter);
 registerConverterByName("POAC_WEEKLY_HEARING_LIST", siacPoacPaacConverter);
-
-registerConverter(30, siacPoacPaacConverter);
 registerConverterByName("PAAC_WEEKLY_HEARING_LIST", siacPoacPaacConverter);

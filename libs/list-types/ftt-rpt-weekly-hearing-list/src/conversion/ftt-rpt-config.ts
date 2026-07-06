@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags
@@ -69,21 +68,10 @@ export const FTT_RPT_EXCEL_CONFIG: ExcelConverterConfig = {
   minRows: 1
 };
 
-// Register the same converter for all 5 RPT regional variants
-// Name-based registration handles environments where the DB ID differs from the canonical seeded ID
 const fttRptConverter = createConverter(FTT_RPT_EXCEL_CONFIG);
 
-registerConverter(33, fttRptConverter);
 registerConverterByName("FTT_RPT_EASTERN_WEEKLY_HEARING_LIST", fttRptConverter);
-
-registerConverter(34, fttRptConverter);
 registerConverterByName("FTT_RPT_LONDON_WEEKLY_HEARING_LIST", fttRptConverter);
-
-registerConverter(35, fttRptConverter);
 registerConverterByName("FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", fttRptConverter);
-
-registerConverter(36, fttRptConverter);
 registerConverterByName("FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
-
-registerConverter(37, fttRptConverter);
 registerConverterByName("FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", fttRptConverter);

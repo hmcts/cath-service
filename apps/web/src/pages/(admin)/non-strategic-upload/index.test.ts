@@ -476,8 +476,8 @@ describe("non-strategic-upload page", () => {
 
       // Mock the dynamic import
       vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListType: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
-        hasConverterForListType: vi.fn().mockReturnValue(true)
+        convertExcelForListTypeName: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
+        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {
@@ -528,7 +528,7 @@ describe("non-strategic-upload page", () => {
 
       // Mock successful Excel validation
       vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListType: vi.fn().mockResolvedValue([
+        convertExcelForListTypeName: vi.fn().mockResolvedValue([
           {
             date: "01/01/2025",
             caseName: "Test Case",
@@ -538,7 +538,7 @@ describe("non-strategic-upload page", () => {
             additionalInformation: "Test Info"
           }
         ]),
-        hasConverterForListType: vi.fn().mockReturnValue(true)
+        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {

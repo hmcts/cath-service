@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags
@@ -57,8 +56,5 @@ export const FTT_TAX_EXCEL_CONFIG: ExcelConverterConfig = {
   minRows: 1
 };
 
-// Register the FTT Tax converter with listTypeId 31 and by name
-// Name-based registration handles environments where the DB ID differs from the canonical seeded ID
 const fttTaxConverter = createConverter(FTT_TAX_EXCEL_CONFIG);
-registerConverter(31, fttTaxConverter);
 registerConverterByName("FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST", fttTaxConverter);
