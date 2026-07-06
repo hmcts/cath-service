@@ -505,6 +505,101 @@ export function authenticate() {
 }
 ```
 
+## List Type Implementation
+
+The `list_type` table uses an autoincrement `id` column. These IDs are assigned at insert time and **differ between environments** (local, STG, production). Any code that compares against a numeric `listTypeId` will break on environments where the seed order differs.
+
+### Rule: Always use `listTypeName`, never `listTypeId`
+
+The `name` column is `@unique` and stable across all environments. Use it for all list type guards and routing logic.
+
+**Wrong — breaks on STG/production:**
+```typescript
+const MY_LIST_TYPE_ID = 42;
+
+if (artefact.listTypeId !== MY_LIST_TYPE_ID) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+**Correct — works everywhere:**
+```typescript
+const SUPPORTED_LIST_TYPE = "MY_LIST_TYPE_NAME";
+
+if (artefact.listTypeName !== SUPPORTED_LIST_TYPE) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+### `listTypeName` is only populated by `getArtefactById`
+
+`getArtefactsByLocation` and `getArtefactsByIds` do NOT perform the `listType` join. Only `getArtefactById` returns `ArtefactWithListType` (with `listTypeName` guaranteed non-null). When you need `listTypeName`, ensure the artefact comes from `getArtefactById`.
+
+```typescript
+// ArtefactWithListType guarantees listTypeName is a string
+import type { ArtefactWithListType } from "@hmcts/publication";
+```
+
+### Court names and other list-type-specific strings must come from locale files
+
+Do not hardcode display strings (court names, page titles, etc.) in controllers. Hardcoded English strings will not change when the locale switches to Welsh.
+
+**Wrong:**
+```typescript
+courtName: "Upper Tribunal (Immigration and Asylum) Chamber"
+```
+
+**Correct — add to both `en.ts` and `cy.ts` in the lib's locale files:**
+```typescript
+// libs/my-list-type/src/locales/en.ts
+export const en = {
+  courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+  ...
+};
+
+// libs/my-list-type/src/locales/cy.ts
+export const cy = {
+  courtName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber']",
+  ...
+};
+
+// controller
+const t = locale === "cy" ? cy : en;
+courtName: t.courtName as string
+```
+
+### Multi-list-type handlers
+
+When a single controller handles several list types (e.g. RCJ, administrative court), use `createMultiListGuardAndRender` with a string-keyed `LIST_TYPE_CONFIG`. Do not include an `id`→`name` mapping — the guard reads `artefact.listTypeName` directly.
+
+```typescript
+const LIST_TYPE_CONFIG: ListTypeConfig = {
+  MY_LIST_TYPE_A: { en: en.pageTitleA, cy: cy.pageTitleA, template: "template-a" },
+  MY_LIST_TYPE_B: { en: en.pageTitleB, cy: cy.pageTitleB, template: "template-b" }
+};
+
+const { guardArtefact, render } = createMultiListGuardAndRender({
+  en, cy,
+  listTypeConfig: LIST_TYPE_CONFIG,
+  renderFn,
+  resolveTemplate: (c) => c.template
+});
+```
+
+### Test fixtures must not rely on specific numeric IDs
+
+Use `listTypeId: 999` (or any arbitrary value) in test artefact fixtures to prove the logic is ID-independent. The `listTypeName` field drives all routing.
+
+```typescript
+const mockArtefact = {
+  listTypeId: 999,               // arbitrary — must not affect behaviour
+  listTypeName: "MY_LIST_TYPE",  // this is what matters
+  ...
+};
+```
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
@@ -688,6 +783,7 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 12. **Don't create generic files like utils.ts** - Be specific (e.g., object-properties.ts, date-formatting.ts)
 13. **Don't export functions in order to test them** - Only export functions that are intended to be used outside the module
 14. **Don't add comments unless they are meaningful** - If necessary, explain why something is done, not what is done
+15. **Don't hardcode `listTypeId` numeric values** - `ListType.id` is autoincrement and differs per environment. Always use `artefact.listTypeName` (the stable `@unique` string column). See [List Type Implementation](#list-type-implementation) below.
 
 ## Debugging Tips
 

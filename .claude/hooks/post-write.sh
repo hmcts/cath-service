@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-# Get the project directory (hooks run in project context)
-PROJECT_DIR="$(pwd)"
+# Get the repo root (hooks may run from a workspace subdirectory)
+PROJECT_DIR="$(git rev-parse --show-toplevel)"
 
 # Logging function
 log_hook() {
@@ -19,13 +19,13 @@ echo "🔧 Running post-write checks..."
 # Run formatter and linter directly via root biome (not turbo per-workspace)
 echo "Checking code formatting and linting..."
 log_hook "Starting biome format and lint"
-if ! yarn biome format --write .; then
+if ! "$PROJECT_DIR/node_modules/.bin/biome" format --write .; then
     echo "❌ Code formatting check failed. Run 'yarn format' to fix."
     log_hook "Formatter check failed"
     exit 2
 fi
 
-if ! yarn biome check --write .; then
+if ! "$PROJECT_DIR/node_modules/.bin/biome" check --write .; then
     echo "❌ Linting failed"
     log_hook "Linter failed"
     exit 2
