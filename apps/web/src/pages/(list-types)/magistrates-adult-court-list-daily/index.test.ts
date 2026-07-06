@@ -1,0 +1,222 @@
+import { renderMagistratesAdultCourtList, validateMagistratesAdultCourtList } from "@hmcts/magistrates-adult-court-list";
+import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
+import type { Request, Response } from "express";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { GET } from "./index.js";
+
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    artefact: {
+      findUnique: vi.fn()
+    },
+    listType: {
+      findUnique: vi.fn()
+    }
+  }
+}));
+vi.mock("@hmcts/publication", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/publication")>();
+  return {
+    ...actual,
+    getArtefactById: vi.fn(),
+    getPublicationJson: vi.fn(),
+    canAccessPublicationData: vi.fn()
+  };
+});
+vi.mock("@hmcts/magistrates-adult-court-list");
+
+describe("magistrates-adult-court-list-daily controller", () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
+  const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  const mockListType = {
+    id: 57,
+    allowedProvenance: ["CRIME_IDAM"],
+    isNonStrategic: false
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    req = {
+      query: {}
+    };
+    res = {
+      locals: { locale: "en" },
+      status: vi.fn().mockReturnThis(),
+      render: vi.fn()
+    };
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
+  });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  describe("GET", () => {
+    it("should return 400 when artefactId is missing", async () => {
+      req.query = {};
+
+      await GET(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.render).toHaveBeenCalledWith(
+        "errors/common",
+        expect.objectContaining({
+          errorTitle: expect.any(String),
+          errorMessage: expect.any(String)
+        })
+      );
+    });
+
+    it("should return 404 when artefact is not found", async () => {
+      req.query = { artefactId: "nonexistent-id" };
+      vi.mocked(getArtefactById).mockResolvedValue(null);
+
+      await GET(req as Request, res as Response);
+
+      expect(getArtefactById).toHaveBeenCalledWith("nonexistent-id");
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
+    });
+
+    it("should return 403 when access is denied", async () => {
+      req.query = { artefactId: "test-id" };
+      const mockArtefact = buildMockArtefact("test-id");
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      await GET(req as Request, res as Response);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.render).toHaveBeenCalledWith("errors/403", expect.any(Object));
+    });
+
+    it("should return 404 when JSON blob is not found", async () => {
+      req.query = { artefactId: "test-id" };
+      vi.mocked(getArtefactById).mockResolvedValue(buildMockArtefact("test-id"));
+      vi.mocked(getPublicationJson).mockResolvedValue(null);
+
+      await GET(req as Request, res as Response);
+
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
+    });
+
+    it("should return 400 when JSON validation fails", async () => {
+      req.query = { artefactId: "test-id" };
+      vi.mocked(getArtefactById).mockResolvedValue(buildMockArtefact("test-id"));
+      vi.mocked(getPublicationJson).mockResolvedValue({ invalid: "data" });
+      vi.mocked(validateMagistratesAdultCourtList).mockReturnValue({
+        isValid: false,
+        errors: ["Validation error"],
+        schemaVersion: "1.0"
+      } as any);
+
+      await GET(req as Request, res as Response);
+
+      expect(validateMagistratesAdultCourtList).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[magistrates-adult-court-list-daily] Validation errors:", ["Validation error"]);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
+    });
+
+    it("should successfully render with valid data in English", async () => {
+      req.query = { artefactId: "test-id" };
+      res.locals = { locale: "en" };
+      const mockJsonData = buildMockJsonData();
+      const mockRenderedData = buildMockRenderedData();
+      vi.mocked(getArtefactById).mockResolvedValue(buildMockArtefact("test-id"));
+      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
+      vi.mocked(validateMagistratesAdultCourtList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" } as any);
+      vi.mocked(renderMagistratesAdultCourtList).mockResolvedValue(mockRenderedData as any);
+
+      await GET(req as Request, res as Response);
+
+      expect(renderMagistratesAdultCourtList).toHaveBeenCalledWith(mockJsonData, {
+        locale: "en",
+        locationId: "1",
+        contentDate: expect.any(Date)
+      });
+      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
+      expect(renderCall[0]).toBe("magistrates-adult-court-list-daily/index");
+      expect(renderCall[1]).toHaveProperty("en");
+      expect(renderCall[1]).toHaveProperty("cy");
+      expect(renderCall[1]).toHaveProperty("header");
+      expect(renderCall[1]).toHaveProperty("listData");
+      expect(renderCall[1]).toHaveProperty("t");
+    });
+
+    it("should successfully render with Welsh locale", async () => {
+      req.query = { artefactId: "test-id" };
+      res.locals = { locale: "cy" };
+      vi.mocked(getArtefactById).mockResolvedValue(buildMockArtefact("test-id"));
+      vi.mocked(getPublicationJson).mockResolvedValue(buildMockJsonData());
+      vi.mocked(validateMagistratesAdultCourtList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" } as any);
+      vi.mocked(renderMagistratesAdultCourtList).mockResolvedValue(buildMockRenderedData() as any);
+
+      await GET(req as Request, res as Response);
+
+      expect(renderMagistratesAdultCourtList).toHaveBeenCalledWith(expect.any(Object), {
+        locale: "cy",
+        locationId: "1",
+        contentDate: expect.any(Date)
+      });
+      expect(res.render).toHaveBeenCalledWith("magistrates-adult-court-list-daily/index", expect.any(Object));
+    });
+
+    it("should return 500 on unexpected error", async () => {
+      req.query = { artefactId: "test-id" };
+      vi.mocked(getArtefactById).mockRejectedValue(new Error("Database error"));
+
+      await GET(req as Request, res as Response);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[magistrates-adult-court-list-daily] Unexpected error:", expect.any(Error));
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
+    });
+  });
+});
+
+function buildMockArtefact(artefactId: string) {
+  return {
+    artefactId,
+    locationId: "1",
+    listTypeId: 57,
+    contentDate: new Date("2025-01-13"),
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    displayFrom: new Date("2025-01-13"),
+    displayTo: new Date("2025-01-20"),
+    lastReceivedDate: new Date("2025-01-13"),
+    isFlatFile: false,
+    provenance: "CRIME_IDAM",
+    supersededCount: 0,
+    noMatch: false
+  } as any;
+}
+
+function buildMockJsonData() {
+  return {
+    document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+    venue: { venueAddress: { line: ["Court Address"], postCode: "AB1 2CD" } },
+    courtLists: []
+  };
+}
+
+function buildMockRenderedData() {
+  return {
+    header: {
+      locationName: "Test Court",
+      contentDate: "13 January 2025",
+      publishedDate: "13 January 2025",
+      publishedTime: "9:30am",
+      venueAddress: ["Court Address"]
+    },
+    openJustice: null,
+    listData: { courtLists: [] }
+  };
+}

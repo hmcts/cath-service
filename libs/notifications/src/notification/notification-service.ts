@@ -38,6 +38,10 @@ import {
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import {
+  extractCaseSummary as extractMagistratesAdultCourtListSummary,
+  formatCaseSummaryForEmail as formatMagistratesAdultCourtListSummaryForEmail
+} from "@hmcts/magistrates-adult-court-list";
+import {
   extractCaseSummary as extractMagistratesStandardSummary,
   formatCaseSummaryForEmail as formatMagistratesStandardSummaryForEmail
 } from "@hmcts/magistrates-standard-list";
@@ -236,6 +240,14 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   MAGISTRATES_STANDARD_LIST: {
     extract: extractMagistratesStandardSummary as SummaryExtractor,
     format: formatMagistratesStandardSummaryForEmail
+  },
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: {
+    extract: extractMagistratesAdultCourtListSummary as SummaryExtractor,
+    format: formatMagistratesAdultCourtListSummaryForEmail
+  },
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: {
+    extract: extractMagistratesAdultCourtListSummary as SummaryExtractor,
+    format: formatMagistratesAdultCourtListSummaryForEmail
   }
 };
 

@@ -664,5 +664,27 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Classified",
     subJurisdictionIds: [7]
+  },
+  {
+    id: 57,
+    name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+    englishFriendlyName: "Magistrates Adult Court List - Daily",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list-daily",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [7]
+  },
+  {
+    id: 58,
+    name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
+    englishFriendlyName: "Magistrates Adult Court List - Future",
+    welshFriendlyName: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list-future",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [7]
   }
 ];
