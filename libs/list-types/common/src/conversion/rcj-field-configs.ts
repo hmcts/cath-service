@@ -57,8 +57,8 @@ export const RCJ_EXCEL_CONFIG: ExcelConverterConfig = {
 /**
  * RCJ 7-field configuration with simple time validation (no hour range check)
  * Used by multi-sheet converters where minRows can be 0 (optional sheets)
- * Used by: London Administrative Court (listTypeId 18)
- *          Court of Appeal Civil Division (listTypeId 19)
+ * Used by: London Administrative Court Daily Cause List
+ *          Court of Appeal (Civil Division) Daily Cause List
  */
 export const RCJ_EXCEL_CONFIG_SIMPLE_TIME: ExcelConverterConfig = {
   fields: [
