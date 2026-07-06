@@ -10,8 +10,7 @@ export {
   validateLocationSelected,
   validateRadioSelection as validateDeleteCourtRadioSelection
 } from "./delete-court/validation.js";
-export { cy as jurisdictionDataCy } from "./jurisdiction-data/cy.js";
-export { en as jurisdictionDataEn } from "./jurisdiction-data/en.js";
+
 export * from "./jurisdiction-management/queries.js";
 export * from "./jurisdiction-management/service.js";
 export * from "./list-type/queries.js";
@@ -23,8 +22,7 @@ export {
   validateListTypeDetails,
   validateSubJurisdictions
 } from "./list-type/validation.js";
-export { cy as referenceDataCy } from "./reference-data/cy.js";
-export { en as referenceDataEn } from "./reference-data/en.js";
+
 export type {
   CsvRow,
   EnrichedLocationData,
@@ -44,8 +42,7 @@ export * from "./reference-data-upload/validation/jurisdiction-validation.js";
 export * from "./reference-data-upload/validation/region-validation.js";
 export * from "./reference-data-upload/validation/sub-jurisdiction-validation.js";
 export { validateLocationData } from "./reference-data-upload/validation/validation.js";
-export { cy as regionDataCy } from "./region-data/cy.js";
-export { en as regionDataEn } from "./region-data/en.js";
+
 export * from "./services/formatting.js";
 export * from "./services/service.js";
 export type { JurisdictionDataSession, LocationMetadataSession } from "./session-types.js";

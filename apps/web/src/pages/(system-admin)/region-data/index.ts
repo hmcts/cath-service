@@ -1,6 +1,7 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { regionDataCy as cy, regionDataEn as en } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
 
 const REDIRECT_MAP: Record<string, string> = {
   create: "/region-data-create",
