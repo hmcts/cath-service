@@ -2,14 +2,13 @@ import { describe, expect, it } from "vitest";
 import { validateMagistratesAdultCourtList } from "./json-validator.js";
 
 const validMinimalData = {
-  document: { publicationDate: "2020-09-13T23:30:00Z" },
-  venue: {
-    venueAddress: {
-      line: ["THE LAW COURTS"],
-      postCode: "PR1 2LL"
+  document: {
+    data: {
+      job: {
+        printdate: "01/01/2020"
+      }
     }
-  },
-  courtLists: []
+  }
 };
 
 describe("validateMagistratesAdultCourtList", () => {
@@ -20,224 +19,234 @@ describe("validateMagistratesAdultCourtList", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it("should accept valid data with full court list structure", () => {
+    it("should accept valid data with full structure", () => {
       const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [
-                {
-                  courtRoomName: "Room 1",
-                  session: [
-                    {
-                      sittings: [
+        document: {
+          info: { start_time: "09:00:00" },
+          data: {
+            job: {
+              printdate: "01/01/2020",
+              sessions: {
+                session: [
+                  {
+                    lja: "Local Justice Area",
+                    court: "Courthouse Name",
+                    room: 1,
+                    sstart: "09:00",
+                    blocks: {
+                      block: [
                         {
-                          sittingStart: "2020-09-13T09:00:00Z",
-                          hearing: [
-                            {
-                              hearingType: "Trial",
-                              case: [
-                                {
-                                  blockStart: "2020-09-13T09:00:00Z",
-                                  defendantName: "Smith, John",
-                                  dateOfBirth: "1990-01-01",
-                                  address: "1 Example Street",
-                                  age: "30",
-                                  informant: "Crown Prosecution Service",
-                                  caseNumber: "AB12345678",
-                                  offenceCode: "RT88191",
-                                  offenceTitle: "Drink driving",
-                                  offenceSummary: "On 01/01/2020 drove a motor vehicle"
+                          bstart: "09:00",
+                          cases: {
+                            case: [
+                              {
+                                caseno: "AB12345678",
+                                def_name: "Smith, John",
+                                def_dob: "01/01/1990",
+                                def_age: 30,
+                                def_addr: { line1: "1 Example Street" },
+                                inf: "Crown Prosecution Service",
+                                offences: {
+                                  offence: [
+                                    {
+                                      code: "RT88191",
+                                      title: "Drink driving",
+                                      sum: "On 01/01/2020 drove a motor vehicle",
+                                      cy_title: "Gyrru dan ddylanwad alcohol",
+                                      cy_sum: "Ar 01/01/2020 gyrrwyd cerbyd modur"
+                                    }
+                                  ]
                                 }
-                              ]
-                            }
-                          ]
+                              }
+                            ]
+                          }
                         }
                       ]
                     }
-                  ]
-                }
-              ]
+                  }
+                ]
+              }
             }
           }
-        ]
+        }
       });
       expect(result.isValid).toBe(true);
     });
 
     it("should accept case with only required fields", () => {
-      const result = validateMagistratesAdultCourtList(
-        buildDataWithCase({
-          defendantName: "Jones, Mary",
-          caseNumber: "CD98765432",
-          offenceCode: "TH68001",
-          offenceTitle: "Theft"
-        })
-      );
-      expect(result.isValid).toBe(true);
-    });
-
-    it("should accept datetime with fractional seconds", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13T23:30:52.123Z" }
-      });
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB12345678", def_name: "Jones, Mary" }));
       expect(result.isValid).toBe(true);
     });
   });
 
   describe("required fields", () => {
     it("should reject missing document", () => {
-      const result = validateMagistratesAdultCourtList({ venue: validMinimalData.venue, courtLists: [] });
+      const result = validateMagistratesAdultCourtList({});
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing venue", () => {
-      const result = validateMagistratesAdultCourtList({ document: validMinimalData.document, courtLists: [] });
+    it("should reject missing job in data", () => {
+      const result = validateMagistratesAdultCourtList({ document: { data: {} } });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing courtLists", () => {
-      const result = validateMagistratesAdultCourtList({ document: validMinimalData.document, venue: validMinimalData.venue });
+    it("should reject missing printdate in job", () => {
+      const result = validateMagistratesAdultCourtList({ document: { data: { job: {} } } });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing publicationDate in document", () => {
-      const result = validateMagistratesAdultCourtList({ ...validMinimalData, document: {} });
+    it("should reject session missing lja", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ court: "Court", room: 1, sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing line in venueAddress", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        venue: { venueAddress: { postCode: "PR1 2LL" } }
-      });
+    it("should reject session missing court", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", room: 1, sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing postCode in venueAddress", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        venue: { venueAddress: { line: ["THE LAW COURTS"] } }
-      });
+    it("should reject session missing room", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", court: "Court", sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing courtRoomName in courtRoom", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        courtLists: [{ courtHouse: { courtRoom: [{ session: [] }] } }]
-      });
+    it("should reject session missing sstart", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", court: "Court", room: 1 }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject missing sittingStart in sitting", () => {
-      const result = validateMagistratesAdultCourtList(buildDataWithSitting({ hearing: [] }));
+    it("should reject block missing bstart", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithBlock({}));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject case missing defendantName", () => {
-      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseNumber: "AB123", offenceCode: "RT001", offenceTitle: "Speeding" }));
+    it("should reject case missing caseno", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ def_name: "Smith, John" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject case missing caseNumber", () => {
-      const result = validateMagistratesAdultCourtList(buildDataWithCase({ defendantName: "Smith, John", offenceCode: "RT001", offenceTitle: "Speeding" }));
+    it("should reject case missing def_name", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB12345678" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject case missing offenceCode", () => {
-      const result = validateMagistratesAdultCourtList(buildDataWithCase({ defendantName: "Smith, John", caseNumber: "AB123", offenceTitle: "Speeding" }));
+    it("should reject offence missing code", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithOffence({ title: "Drink driving", sum: "On 01/01/2020..." }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject case missing offenceTitle", () => {
-      const result = validateMagistratesAdultCourtList(buildDataWithCase({ defendantName: "Smith, John", caseNumber: "AB123", offenceCode: "RT001" }));
+    it("should reject offence missing title", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithOffence({ code: "RT88191", sum: "On 01/01/2020..." }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject offence missing sum", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithOffence({ code: "RT88191", title: "Drink driving" }));
       expect(result.isValid).toBe(false);
     });
   });
 
-  describe("publicationDate format", () => {
-    it("should reject date-only publicationDate", () => {
+  describe("field format validation", () => {
+    it("should reject printdate not in DD/MM/YYYY format", () => {
+      const result = validateMagistratesAdultCourtList({ document: { data: { job: { printdate: "2020-01-01" } } } });
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject start_time not in hh:mm:ss format", () => {
       const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13" }
+        document: { info: { start_time: "09:00" }, data: { job: { printdate: "01/01/2020" } } }
       });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject datetime without Z suffix", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13T23:30:00" }
-      });
+    it("should reject sstart not in hh:mm format", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", court: "Court", room: 1, sstart: "09:00:00" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject bstart not in hh:mm format", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithBlock({ bstart: "09:00:00" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject def_dob not in dd/mm/yyyy format", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB12345678", def_name: "Smith, John", def_dob: "1990-01-01" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject caseno shorter than 10 characters", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB123", def_name: "Smith, John" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject caseno longer than 10 characters", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB1234567890", def_name: "Smith, John" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject room as non-integer", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", court: "Court", room: "1", sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
   });
 
   describe("HTML injection protection", () => {
-    it("should reject HTML tags in courtRoomName", () => {
-      const result = validateMagistratesAdultCourtList({
-        ...validMinimalData,
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [{ courtRoomName: "<script>alert(1)</script>", session: [] }]
-            }
-          }
-        ]
-      });
+    it("should reject HTML tags in lja", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "<script>alert(1)</script>", court: "Court", room: 1, sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject HTML tags in defendantName", () => {
-      const result = validateMagistratesAdultCourtList(
-        buildDataWithCase({
-          defendantName: "<b>Smith</b>",
-          caseNumber: "AB123",
-          offenceCode: "RT001",
-          offenceTitle: "Speeding"
-        })
-      );
+    it("should reject HTML tags in court", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithSession({ lja: "LJA", court: "<b>Court</b>", room: 1, sstart: "09:00" }));
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject HTML tags in offenceTitle", () => {
-      const result = validateMagistratesAdultCourtList(
-        buildDataWithCase({
-          defendantName: "Smith, John",
-          caseNumber: "AB123",
-          offenceCode: "RT001",
-          offenceTitle: "<script>xss</script>"
-        })
-      );
+    it("should reject HTML tags in def_name", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithCase({ caseno: "AB12345678", def_name: "<b>Smith</b>" }));
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject HTML tags in offence title", () => {
+      const result = validateMagistratesAdultCourtList(buildDataWithOffence({ code: "RT88191", title: "<script>xss</script>", sum: "Summary" }));
       expect(result.isValid).toBe(false);
     });
   });
 });
 
-function buildDataWithCase(caseData: object) {
-  return buildDataWithSitting({
-    sittingStart: "2020-09-13T09:00:00Z",
-    hearing: [{ case: [caseData] }]
+function buildDataWithOffence(offenceData: object) {
+  return buildDataWithCase({
+    caseno: "AB12345678",
+    def_name: "Smith, John",
+    offences: { offence: [offenceData] }
   });
 }
 
-function buildDataWithSitting(sittingData: object) {
+function buildDataWithCase(caseData: object) {
+  return buildDataWithBlock({
+    bstart: "09:00",
+    cases: { case: [caseData] }
+  });
+}
+
+function buildDataWithBlock(blockData: object) {
+  return buildDataWithSession({
+    lja: "Local Justice Area",
+    court: "Courthouse Name",
+    room: 1,
+    sstart: "09:00",
+    blocks: { block: [blockData] }
+  });
+}
+
+function buildDataWithSession(sessionData: object) {
   return {
-    ...validMinimalData,
-    courtLists: [
-      {
-        courtHouse: {
-          courtRoom: [
-            {
-              courtRoomName: "Room 1",
-              session: [{ sittings: [sittingData] }]
-            }
-          ]
+    document: {
+      data: {
+        job: {
+          printdate: "01/01/2020",
+          sessions: { session: [sessionData] }
         }
       }
-    ]
+    }
   };
 }

@@ -673,7 +673,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "magistrates-adult-court-list-daily",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [7]
   },
   {
@@ -684,7 +684,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "magistrates-adult-court-list-future",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [7]
   }
 ];

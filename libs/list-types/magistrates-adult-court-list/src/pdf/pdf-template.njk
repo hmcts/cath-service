@@ -37,11 +37,17 @@
     .warning-text {
       font-weight: 700;
     }
+    .no-border-bottom {
+      border-bottom: none;
+    }
+    .linked-cases-heading {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ t.header }} {{ header.locationName }}</h1>
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
     <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
 
@@ -75,7 +81,6 @@
 
   {% for courtList in listData.courtLists %}
     {% set courtHouse = courtList.courtHouse %}
-    <h2>{{ t.sittingAt }} {{ header.locationName }}</h2>
     {% for courtRoom in courtHouse.courtRoom %}
       {% for session in courtRoom.session %}
         <div class="court-section">
@@ -97,8 +102,6 @@
                 <th>{{ t.informant }}</th>
                 <th>{{ t.caseNumber }}</th>
                 <th>{{ t.offenceCode }}</th>
-                <th>{{ t.offenceTitle }}</th>
-                <th>{{ t.offenceSummary }}</th>
               </tr>
             </thead>
             <tbody>
@@ -106,16 +109,22 @@
                 {% for hearing in sitting.hearing %}
                   {% for case in hearing.case %}
                     <tr>
-                      <td>{{ case.blockStart }}</td>
-                      <td>{{ case.defendantName }}</td>
-                      <td>{{ case.dateOfBirth }}</td>
-                      <td>{{ case.address }}</td>
-                      <td>{{ case.age }}</td>
-                      <td>{{ case.informant }}</td>
-                      <td>{{ case.caseNumber }}</td>
-                      <td>{{ case.offenceCode }}</td>
-                      <td>{{ case.offenceTitle }}</td>
-                      <td>{{ case.offenceSummary }}</td>
+                      <td class="no-border-bottom">{{ case.blockStart }}</td>
+                      <td class="no-border-bottom">{{ case.defendantName }}</td>
+                      <td class="no-border-bottom">{{ case.dateOfBirth }}</td>
+                      <td class="no-border-bottom">{{ case.address }}</td>
+                      <td class="no-border-bottom">{{ case.age }}</td>
+                      <td class="no-border-bottom">{{ case.informant }}</td>
+                      <td class="no-border-bottom">{{ case.caseNumber }}</td>
+                      <td class="no-border-bottom">{{ case.offenceCode }}</td>
+                    </tr>
+                    <tr>
+                      <td class="linked-cases-heading no-border-bottom" colspan="2">{{ t.offenceTitle }}:</td>
+                      <td class="no-border-bottom" colspan="6">{{ case.offenceTitle }}</td>
+                    </tr>
+                    <tr>
+                      <td class="linked-cases-heading" colspan="2">{{ t.offenceSummary }}:</td>
+                      <td colspan="6">{{ case.offenceSummary }}</td>
                     </tr>
                   {% endfor %}
                 {% endfor %}

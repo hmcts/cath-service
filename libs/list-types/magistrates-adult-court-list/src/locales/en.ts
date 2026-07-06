@@ -2,6 +2,7 @@ export const en = {
   titleDaily: "Magistrates Adult Court List - Daily",
   titleFuture: "Magistrates Adult Court List - Future",
   title: "Magistrates Adult Court List",
+  pageTitle: "Magistrates Standard List for",
   headerDaily: "Magistrates Adult Court List - Daily for",
   headerFuture: "Magistrates Adult Court List - Future for",
   header: "Magistrates Adult Court List for",

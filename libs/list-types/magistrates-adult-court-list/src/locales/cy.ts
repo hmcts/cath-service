@@ -2,6 +2,7 @@ export const cy = {
   titleDaily: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion",
   titleFuture: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol",
   title: "Rhestr Llys Ynadon Oedolion",
+  pageTitle: "Rhestr Safonol yr Ynadon ar gyfer",
   headerDaily: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion ar gyfer",
   headerFuture: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol ar gyfer",
   header: "Rhestr Llys Ynadon Oedolion ar gyfer",

@@ -4,54 +4,40 @@
       "title": "Address Details",
       "type": "object",
       "properties": {
-        "line": {
-          "title": "Address Line",
-          "type": "array",
-          "items": {
-            "title": "Items",
-            "type": "string",
-            "examples": ["THE LAW COURTS"],
-            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-          }
-        },
-        "town": {
-          "title": "Town",
-          "description": "The town for the address",
+        "line1": {
+          "title": "Address line 1",
           "type": "string",
-          "examples": ["Cambridge"],
+          "maxLength": 35,
           "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
         },
-        "county": {
-          "title": "County",
-          "description": "The county for the address",
+        "line2": {
+          "title": "Address line 2",
           "type": "string",
-          "examples": ["Cambridgeshire"],
+          "maxLength": 35,
           "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
         },
-        "postCode": {
-          "title": "Address Postcode",
+        "line3": {
+          "title": "Address line 3",
           "type": "string",
-          "examples": ["PR1 2LL"],
+          "maxLength": 35,
           "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        }
-      }
-    },
-    "judiciary": {
-      "title": "Judiciary",
-      "description": "An array of judiciary",
-      "type": "object",
-      "properties": {
-        "isPresiding": {
-          "description": "A flag to indicate whether a judiciary is presiding",
-          "title": "Is Presiding",
-          "type": "boolean",
-          "examples": [true]
         },
-        "johKnownAs": {
-          "description": "Name and salutations, titles to be presented on publications",
-          "title": "JOH Known As",
+        "line4": {
+          "title": "Address line 4",
           "type": "string",
-          "examples": ["judge"],
+          "maxLength": 35,
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "line5": {
+          "title": "Address line 5",
+          "type": "string",
+          "maxLength": 35,
+          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+        },
+        "pcode": {
+          "title": "Address postcode",
+          "type": "string",
+          "maxLength": 8,
           "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
         }
       }
@@ -60,186 +46,174 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Root",
   "type": "object",
-  "required": ["document", "venue", "courtLists"],
+  "required": ["document"],
   "properties": {
     "document": {
-      "title": "document",
+      "title": "Document details",
       "type": "object",
-      "required": ["publicationDate"],
       "properties": {
-        "publicationDate": {
-          "title": "Publication date",
-          "description": "The date + time the list was published",
-          "type": "string",
-          "examples": ["2016-09-13T23:30:52.123Z"],
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
-        }
-      }
-    },
-    "venue": {
-      "title": "venue",
-      "type": "object",
-      "required": ["venueAddress"],
-      "properties": {
-        "venueAddress": {
-          "description": "Full venue address",
-          "$ref": "#/$defs/address",
-          "required": ["line", "postCode"]
-        }
-      }
-    },
-    "courtLists": {
-      "title": "Court Lists",
-      "type": "array",
-      "items": {
-        "title": "Court list",
-        "type": "object",
-        "required": ["courtHouse"],
-        "properties": {
-          "courtHouse": {
-            "title": "Court House",
-            "description": "The court house that owns the court rooms",
-            "type": "object",
-            "required": ["courtRoom"],
-            "properties": {
-              "courtRoom": {
-                "type": "array",
-                "items": {
-                  "title": "Court Room",
-                  "description": "The court room that owns the sessions",
+        "info": {
+          "title": "Document information",
+          "type": "object",
+          "properties": {
+            "start_time": {
+              "title": "Run start time in the format hh:mm:ss",
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}:\\d{2}$"
+            }
+          }
+        },
+        "data": {
+          "title": "Document data",
+          "type": "object",
+          "required": ["job"],
+          "properties": {
+            "job": {
+              "title": "Job details",
+              "type": "object",
+              "required": ["printdate"],
+              "properties": {
+                "printdate": {
+                  "title": "Date in the format DD/MM/YYYY",
+                  "type": "string",
+                  "pattern": "^\\d{2}/\\d{2}/\\d{4}$"
+                },
+                "sessions": {
+                  "title": "Job session parent",
                   "type": "object",
-                  "required": ["courtRoomName", "session"],
                   "properties": {
-                    "courtRoomName": {
-                      "description": "Name for the court room",
-                      "title": "Court Room Name",
-                      "type": "string",
-                      "examples": ["Room 1"],
-                      "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                    },
                     "session": {
                       "type": "array",
                       "items": {
-                        "title": "Session",
-                        "description": "Session associated with the court in the publication",
+                        "title": "Job session",
                         "type": "object",
-                        "required": ["sittings"],
+                        "required": ["lja", "court", "room", "sstart"],
                         "properties": {
-                          "judiciary": {
-                            "type": "array",
-                            "description": "Judiciary for the session",
-                            "title": "Judiciary",
-                            "items": {
-                              "type": "object",
-                              "$ref": "#/$defs/judiciary"
-                            }
+                          "lja": {
+                            "title": "Local justice area name",
+                            "type": "string",
+                            "maxLength": 100,
+                            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
                           },
-                          "sittings": {
-                            "title": "Sittings",
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "required": ["sittingStart", "hearing"],
-                              "properties": {
-                                "sittingStart": {
-                                  "description": "Sitting Start Time",
-                                  "title": "Sitting Start",
-                                  "type": "string",
-                                  "examples": [],
-                                  "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}([.]\\d{1,9})?Z$"
-                                },
-                                "hearing": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "object",
-                                    "description": "Hearing details of the case for the sitting",
-                                    "title": "Hearing",
-                                    "properties": {
-                                      "hearingType": {
-                                        "description": "Type of hearing being presented",
-                                        "title": "Hearing Type",
-                                        "type": "string",
-                                        "examples": ["mda"],
-                                        "default": "",
-                                        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                      },
-                                      "case": {
-                                        "type": "array",
-                                        "items": {
-                                          "type": "object",
-                                          "title": "Case",
-                                          "description": "Case Details",
-                                          "required": ["caseNumber", "defendantName", "offenceCode", "offenceTitle"],
-                                          "properties": {
-                                            "blockStart": {
-                                              "title": "Block Start",
-                                              "description": "The block start time for grouping cases",
-                                              "type": "string",
-                                              "examples": ["2020-09-13T09:00:00Z"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "defendantName": {
-                                              "title": "Defendant Name",
-                                              "description": "The name of the defendant",
-                                              "type": "string",
-                                              "examples": ["Smith, John"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "dateOfBirth": {
-                                              "title": "Date of Birth",
-                                              "description": "The date of birth of the defendant",
-                                              "type": "string",
-                                              "examples": ["1990-01-01"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "address": {
-                                              "title": "Address",
-                                              "description": "The address of the defendant",
-                                              "type": "string",
-                                              "examples": ["1 Example Street, London"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "age": {
-                                              "title": "Age",
-                                              "description": "The age of the defendant",
-                                              "type": "string",
-                                              "examples": ["34"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "informant": {
-                                              "title": "Informant",
-                                              "description": "The informant or prosecuting authority",
-                                              "type": "string",
-                                              "examples": ["Crown Prosecution Service"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "caseNumber": {
-                                              "title": "Case Number",
-                                              "description": "A unique identifier for the case",
-                                              "type": "string",
-                                              "examples": ["AB12345678"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "offenceCode": {
-                                              "title": "Offence Code",
-                                              "description": "The code for the offence",
-                                              "type": "string",
-                                              "examples": ["RT88191"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "offenceTitle": {
-                                              "title": "Offence Title",
-                                              "description": "Short description of the offence",
-                                              "type": "string",
-                                              "examples": ["Drink driving"],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-                                            },
-                                            "offenceSummary": {
-                                              "title": "Offence Summary",
-                                              "description": "Detailed description of the offence",
-                                              "type": "string",
-                                              "examples": ["On 01/01/2020 drove a motor vehicle..."],
-                                              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                          "court": {
+                            "title": "Courthouse name",
+                            "type": "string",
+                            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                          },
+                          "room": {
+                            "title": "Courtroom name",
+                            "type": "integer"
+                          },
+                          "sstart": {
+                            "title": "Session start time in the format hh:mm",
+                            "type": "string",
+                            "pattern": "^\\d{2}:\\d{2}$"
+                          },
+                          "blocks": {
+                            "title": "Session block parent",
+                            "type": "object",
+                            "properties": {
+                              "block": {
+                                "type": "array",
+                                "items": {
+                                  "title": "Session block",
+                                  "type": "object",
+                                  "required": ["bstart"],
+                                  "properties": {
+                                    "bstart": {
+                                      "title": "Block start time in the format hh:mm",
+                                      "type": "string",
+                                      "pattern": "^\\d{2}:\\d{2}$"
+                                    },
+                                    "cases": {
+                                      "title": "Hearing case parent",
+                                      "type": "object",
+                                      "properties": {
+                                        "case": {
+                                          "type": "array",
+                                          "items": {
+                                            "title": "Hearing case",
+                                            "type": "object",
+                                            "required": ["caseno", "def_name"],
+                                            "properties": {
+                                              "caseno": {
+                                                "title": "Case number",
+                                                "type": "string",
+                                                "minLength": 10,
+                                                "maxLength": 10,
+                                                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                              },
+                                              "def_name": {
+                                                "title": "Defendant name",
+                                                "type": "string",
+                                                "maxLength": 200,
+                                                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                              },
+                                              "def_dob": {
+                                                "title": "Defendant date of birth in the format dd/mm/yyyy",
+                                                "type": "string",
+                                                "pattern": "^\\d{2}/\\d{2}/\\d{4}$"
+                                              },
+                                              "def_age": {
+                                                "title": "Defendant age",
+                                                "type": "integer"
+                                              },
+                                              "def_addr": {
+                                                "title": "Defendant address",
+                                                "$ref": "#/$defs/address",
+                                                "required": ["line1"]
+                                              },
+                                              "inf": {
+                                                "title": "Internal code for the cases' informant",
+                                                "type": "string",
+                                                "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                              },
+                                              "offences": {
+                                                "title": "Criminal offence parent",
+                                                "type": "object",
+                                                "properties": {
+                                                  "offence": {
+                                                    "type": "array",
+                                                    "items": {
+                                                      "title": "Criminal offence",
+                                                      "type": "object",
+                                                      "required": ["code", "title", "sum"],
+                                                      "properties": {
+                                                        "code": {
+                                                          "title": "CJS offence code",
+                                                          "type": "string",
+                                                          "maxLength": 10,
+                                                          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                        },
+                                                        "title": {
+                                                          "title": "Offence title",
+                                                          "type": "string",
+                                                          "maxLength": 120,
+                                                          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                        },
+                                                        "cy_title": {
+                                                          "title": "Welsh offence title",
+                                                          "type": "string",
+                                                          "maxLength": 120,
+                                                          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                        },
+                                                        "sum": {
+                                                          "title": "Offence wording",
+                                                          "type": "string",
+                                                          "maxLength": 4000,
+                                                          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                        },
+                                                        "cy_sum": {
+                                                          "title": "Welsh offence wording",
+                                                          "type": "string",
+                                                          "maxLength": 4000,
+                                                          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
                                             }
                                           }
                                         }
