@@ -80,6 +80,33 @@ describe("media-application service", () => {
       expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
     });
 
+    it("should normalise legacy absolute path before deleting blob on approval", async () => {
+      // Arrange
+      const mockApplication = {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        employer: "Test Employer",
+        proofOfIdPath: "/Users/app/storage/temp/files/1.pdf",
+        proofOfIdOriginalName: "id.pdf",
+        status: APPLICATION_STATUS.PENDING,
+        appliedDate: new Date()
+      };
+
+      vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(queries.updateApplicationStatus).mockResolvedValue({
+        ...mockApplication,
+        status: APPLICATION_STATUS.APPROVED
+      });
+      mockFindUserByEmail.mockResolvedValue("existing-azure-id");
+
+      // Act
+      await approveApplication("1", MOCK_ACCESS_TOKEN);
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
+    });
+
     it("should update existing Azure AD user and not create new user when user already exists", async () => {
       // Arrange
       const mockApplication = {
@@ -110,7 +137,7 @@ describe("media-application service", () => {
         givenName: "Jane",
         surname: "Smith"
       });
-      expect(mockUpdateLocalMediaUser).toHaveBeenCalledWith("existing-azure-id", "Jane", "Smith");
+      expect(mockUpdateLocalMediaUser).toHaveBeenCalledWith("test@example.com", "existing-azure-id", "Jane", "Smith");
       expect(mockCreateMediaUser).not.toHaveBeenCalled();
       expect(mockCreateLocalMediaUser).not.toHaveBeenCalled();
     });
@@ -318,6 +345,31 @@ describe("media-application service", () => {
       // Assert
       expect(queries.getApplicationById).toHaveBeenCalledWith("1");
       expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.REJECTED);
+      expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
+    });
+
+    it("should normalise legacy absolute path before deleting blob", async () => {
+      // Arrange
+      const mockApplication = {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        employer: "Test Employer",
+        proofOfIdPath: "/Users/app/storage/temp/files/1.pdf",
+        status: APPLICATION_STATUS.PENDING,
+        appliedDate: new Date()
+      };
+
+      vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(queries.updateApplicationStatus).mockResolvedValue({
+        ...mockApplication,
+        status: APPLICATION_STATUS.REJECTED
+      });
+
+      // Act
+      await rejectApplication("1");
+
+      // Assert
       expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
     });
 

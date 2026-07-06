@@ -10,7 +10,11 @@ const mockDownloadBlob = vi.fn();
 
 vi.mock("@hmcts/azure-blob", () => ({
   downloadBlob: (...args: unknown[]) => mockDownloadBlob(...args),
-  CONTAINER: { FILES: "files" }
+  CONTAINER: { FILES: "files" },
+  getContentType: vi.fn((ext: string) => {
+    const map: Record<string, string> = { ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png" };
+    return map[ext] ?? "application/octet-stream";
+  })
 }));
 
 vi.mock("@hmcts/admin-pages", () => ({
@@ -207,6 +211,32 @@ describe("proof-of-id file download", () => {
       expect(statusSpy).toHaveBeenCalledWith(404);
       expect(sendSpy).toHaveBeenCalledWith("File not found");
       expect(mockDownloadBlob).not.toHaveBeenCalled();
+    });
+
+    it("should handle legacy absolute path stored before blob storage migration", async () => {
+      // Arrange
+      const mockApplication = {
+        id: "15694279-dea8-491d-9f5a-d60186292e0e",
+        name: "John Smith",
+        employer: "BBC",
+        email: "john@bbc.co.uk",
+        proofOfIdPath: "/Users/app/storage/temp/files/15694279-dea8-491d-9f5a-d60186292e0e.pdf",
+        status: "PENDING" as const,
+        createdAt: new Date("2024-01-01")
+      };
+      const mockFileBuffer = Buffer.from("PDF content");
+
+      vi.mocked(getApplicationById).mockResolvedValue(mockApplication);
+      mockDownloadBlob.mockResolvedValue(mockFileBuffer);
+
+      // Act
+      const handler = GET[1];
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockDownloadBlob).toHaveBeenCalledWith("15694279-dea8-491d-9f5a-d60186292e0e.pdf", "files");
+      expect(setHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/pdf");
+      expect(sendSpy).toHaveBeenCalledWith(mockFileBuffer);
     });
 
     it("should return 404 when blob does not exist in storage", async () => {

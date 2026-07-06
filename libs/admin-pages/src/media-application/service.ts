@@ -1,3 +1,4 @@
+import path from "node:path";
 import { createLocalMediaUser, splitName, updateLocalMediaUser } from "@hmcts/account/repository/service";
 import { createMediaUser, findUserByEmail, updateMediaUser } from "@hmcts/auth";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
@@ -24,7 +25,7 @@ export async function approveApplication(id: string, accessToken: string): Promi
       givenName,
       surname
     });
-    await updateLocalMediaUser(existingUserId, givenName, surname);
+    await updateLocalMediaUser(application.email, existingUserId, givenName, surname);
   } else {
     const { azureAdUserId } = await createMediaUser(accessToken, {
       email: application.email,
@@ -38,7 +39,7 @@ export async function approveApplication(id: string, accessToken: string): Promi
 
   await Promise.all([
     updateApplicationStatus(id, APPLICATION_STATUS.APPROVED),
-    application.proofOfIdPath ? deleteBlob(application.proofOfIdPath, CONTAINER.FILES) : Promise.resolve()
+    application.proofOfIdPath ? deleteBlob(path.basename(application.proofOfIdPath), CONTAINER.FILES) : Promise.resolve()
   ]);
 
   return { isNewUser: !existingUserId };
@@ -57,6 +58,6 @@ export async function rejectApplication(id: string): Promise<void> {
 
   await Promise.all([
     updateApplicationStatus(id, APPLICATION_STATUS.REJECTED),
-    application.proofOfIdPath ? deleteBlob(application.proofOfIdPath, CONTAINER.FILES) : Promise.resolve()
+    application.proofOfIdPath ? deleteBlob(path.basename(application.proofOfIdPath), CONTAINER.FILES) : Promise.resolve()
   ]);
 }

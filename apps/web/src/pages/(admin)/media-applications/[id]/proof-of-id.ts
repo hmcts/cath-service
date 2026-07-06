@@ -1,16 +1,9 @@
 import path from "node:path";
 import { getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob, getContentType } from "@hmcts/azure-blob";
 import { getParam } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
-
-const CONTENT_TYPE_MAP: Record<string, string> = {
-  ".pdf": "application/pdf",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png"
-};
 
 const getHandler = async (req: Request, res: Response) => {
   const id = getParam(req.params, "id");
@@ -30,17 +23,18 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).send("File not found");
     }
 
-    const fileBuffer = await downloadBlob(application.proofOfIdPath, CONTAINER.FILES);
+    const blobKey = path.basename(application.proofOfIdPath);
+    const fileBuffer = await downloadBlob(blobKey, CONTAINER.FILES);
 
     if (fileBuffer === null) {
       return res.status(404).send("File not found");
     }
 
-    const extension = path.extname(application.proofOfIdPath).toLowerCase();
-    const contentType = CONTENT_TYPE_MAP[extension] ?? "application/octet-stream";
+    const extension = path.extname(blobKey).toLowerCase();
+    const contentType = getContentType(extension);
 
     res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `inline; filename="${application.id}${extension}"`);
+    res.setHeader("Content-Disposition", `inline; filename="${blobKey}"`);
     res.setHeader("Content-Length", fileBuffer.length);
     res.send(fileBuffer);
   } catch (_error) {

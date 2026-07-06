@@ -4,7 +4,11 @@ import { saveIdProofFile } from "./storage.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
   uploadBlob: vi.fn().mockResolvedValue(undefined),
-  CONTAINER: { FILES: "files", ARTEFACT: "artefact", PUBLICATIONS: "publications" }
+  CONTAINER: { FILES: "files", ARTEFACT: "artefact", PUBLICATIONS: "publications" },
+  getContentType: vi.fn((ext: string) => {
+    const map: Record<string, string> = { ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png" };
+    return map[ext] ?? "application/octet-stream";
+  })
 }));
 
 describe("saveIdProofFile", () => {
