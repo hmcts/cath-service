@@ -38,8 +38,8 @@ import {
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import {
-  extractCaseSummary as extractMagistratesAdultCourtListSummary,
-  formatCaseSummaryForEmail as formatMagistratesAdultCourtListSummaryForEmail
+  extractMagistratesAdultCourtListCaseSummary as extractMagistratesAdultCourtListSummary,
+  formatMagistratesAdultCourtListCaseSummaryForEmail as formatMagistratesAdultCourtListSummaryForEmail
 } from "@hmcts/magistrates-adult-court-list";
 import {
   extractCaseSummary as extractMagistratesStandardSummary,

@@ -42,3 +42,6 @@ export const en = {
   error403Title: "Access Denied",
   error403Message: "You do not have permission to view this publication."
 };
+
+export const enDaily = { ...en, title: en.titleDaily, header: en.headerDaily };
+export const enFuture = { ...en, title: en.titleFuture, header: en.headerFuture };

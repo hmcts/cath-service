@@ -42,3 +42,6 @@ export const cy = {
   error403Title: "Mynediad wedi'i Wrthod",
   error403Message: "Nid oes gennych ganiat\u00e2d i weld y cyhoeddiad hwn."
 };
+
+export const cyDaily = { ...cy, title: cy.titleDaily, header: cy.headerDaily };
+export const cyFuture = { ...cy, title: cy.titleFuture, header: cy.headerFuture };
