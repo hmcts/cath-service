@@ -1,16 +1,7 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Navigate to monorepo root (from libs/list-types/common/src/sjp/)
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
-const TEMP_UPLOAD_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 const CASES_PER_PAGE = 1000;
 
@@ -51,43 +42,12 @@ export interface SjpSearchFilters {
   prosecutors?: string[];
 }
 
-/**
- * Validates that an artefactId is safe to use in file paths
- * Prevents path traversal attacks by ensuring only safe characters are used
- */
-function validateArtefactId(artefactId: string): void {
-  // Only allow alphanumerics, hyphens, and underscores
-  const SAFE_ARTEFACT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-  if (!artefactId || !SAFE_ARTEFACT_ID_PATTERN.test(artefactId)) {
-    throw new Error("Invalid artefactId: must contain only alphanumerics, hyphens, and underscores");
-  }
-
-  // Additional check: reject common path traversal sequences
-  if (artefactId.includes("..") || artefactId.includes("/") || artefactId.includes("\\")) {
-    throw new Error("Invalid artefactId: path traversal sequences are not allowed");
-  }
-}
-
-/**
- * Reads and parses SJP JSON file from storage
- * Validates artefactId to prevent path traversal attacks
- */
 async function readSjpJson(artefactId: string): Promise<SjpJson> {
-  // Validate artefactId to prevent path traversal
-  validateArtefactId(artefactId);
-
-  // Resolve the full path
-  const jsonPath = path.resolve(TEMP_UPLOAD_DIR, `${artefactId}.json`);
-
-  // Ensure the resolved path is within TEMP_UPLOAD_DIR
-  const resolvedUploadDir = path.resolve(TEMP_UPLOAD_DIR);
-  if (!jsonPath.startsWith(resolvedUploadDir + path.sep)) {
-    throw new Error("Invalid artefactId: attempted path traversal");
+  const buffer = await downloadBlob(`${artefactId}.json`, CONTAINER.ARTEFACT);
+  if (!buffer) {
+    throw new Error(`SJP JSON not found in blob storage for artefact ${artefactId}`);
   }
-
-  const jsonContent = await readFile(jsonPath, "utf-8");
-  return JSON.parse(jsonContent);
+  return JSON.parse(buffer.toString("utf-8"));
 }
 
 const SJP_LIST_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"];
@@ -140,9 +100,6 @@ export async function getLatestSjpLists(): Promise<SjpListMetadata[]> {
  * Gets SJP list metadata by artefact ID
  */
 export async function getSjpListById(artefactId: string): Promise<SjpListMetadata | null> {
-  // Validate artefactId first (throws on invalid input)
-  validateArtefactId(artefactId);
-
   const artefact = await prisma.artefact.findUnique({
     where: { artefactId }
   });
