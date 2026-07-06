@@ -38,7 +38,8 @@
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres-prisma run generate",
     "db:studio": "yarn workspace @hmcts/postgres run studio",
-    "db:drop": "yarn workspace @hmcts/postgres run migrate:reset"
+    "db:drop": "yarn workspace @hmcts/postgres run migrate:reset",
+    "requirements:build": "requirements/scripts/init_db.sh"
   },
   "keywords": [],
   "author": "HMCTS",
@@ -85,7 +86,7 @@
     "@types/passport": "1.0.17",
     "accessible-autocomplete": "^3.0.1",
     "jsonwebtoken": "9.0.3",
-    "jwks-rsa": "4.0.1",
+    "jwks-rsa": "4.1.0",
     "notifications-node-client": "^8.2.1",
     "openid-client": "6.8.4",
     "passport": "0.7.0",
