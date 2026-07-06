@@ -2,7 +2,7 @@ import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
-import type { Artefact } from "./model.js";
+import type { Artefact, ArtefactWithListType } from "./model.js";
 
 const SJP_PRESS_LIST_ID = 24;
 const SJP_PUBLIC_LIST_ID = 25;
@@ -88,7 +88,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
   return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
-export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
+export async function getArtefactById(artefactId: string): Promise<ArtefactWithListType | null> {
   const artefact = await prisma.artefact.findUnique({
     where: { artefactId },
     select: {

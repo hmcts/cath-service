@@ -7,29 +7,34 @@ import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-han
 
 const validate = createJsonValidator(schemaPath);
 
-const LIST_TYPE_CONFIG: Record<string, { courtName: string; enTitle: string; cyTitle: string }> = {
+const LIST_TYPE_CONFIG: Record<string, { enCourtName: string; cyCourtName: string; enTitle: string; cyTitle: string }> = {
   FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
-    courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    enCourtName: en.rptEasternCourtName,
+    cyCourtName: cy.rptEasternCourtName,
     enTitle: en.rptEasternPageTitle,
     cyTitle: cy.rptEasternPageTitle
   },
   FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
-    courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    enCourtName: en.rptLondonCourtName,
+    cyCourtName: cy.rptLondonCourtName,
     enTitle: en.rptLondonPageTitle,
     cyTitle: cy.rptLondonPageTitle
   },
   FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
-    courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    enCourtName: en.rptMidlandsCourtName,
+    cyCourtName: cy.rptMidlandsCourtName,
     enTitle: en.rptMidlandsPageTitle,
     cyTitle: cy.rptMidlandsPageTitle
   },
   FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
-    courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    enCourtName: en.rptNorthernCourtName,
+    cyCourtName: cy.rptNorthernCourtName,
     enTitle: en.rptNorthernPageTitle,
     cyTitle: cy.rptNorthernPageTitle
   },
   FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
-    courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
+    enCourtName: en.rptSouthernCourtName,
+    cyCourtName: cy.rptSouthernCourtName,
     enTitle: en.rptSouthernPageTitle,
     cyTitle: cy.rptSouthernPageTitle
   }
@@ -57,12 +62,17 @@ export const GET = createSimpleListTypeHandler<FttRptHearingList>({
   guardArtefact,
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName!];
+    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName ?? ""];
+    if (!listTypeConfig) {
+      res.status(500).render("errors/common", { en, cy, errorTitle: "Server Error", errorMessage: "An error occurred while loading the list" });
+      return;
+    }
+    const courtName = locale === "cy" ? listTypeConfig.cyCourtName : listTypeConfig.enCourtName;
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
     const { header, hearings } = renderFttRptData(jsonData, {
       locale,
-      courtName: listTypeConfig.courtName,
+      courtName,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle

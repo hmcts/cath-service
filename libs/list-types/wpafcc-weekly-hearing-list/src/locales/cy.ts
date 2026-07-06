@@ -1,6 +1,7 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const cy = {
+  courtName: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (War Pensions and Armed Forces Compensation)']",
   pageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List']",
   listForWeekCommencing: "Rhestr ar gyfer yr wythnos yn dechrau ar",
   lastUpdated: "Diweddarwyd ddiwethaf",

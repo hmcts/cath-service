@@ -53,11 +53,12 @@ describe("Administrative Court page controller", () => {
   });
 
   describe("GET handler", () => {
-    it("should render the list successfully for Birmingham (listTypeId 20)", async () => {
+    it("should render the list successfully for Birmingham", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -110,7 +111,7 @@ describe("Administrative Court page controller", () => {
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderAdminCourt).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        listTypeId: 20,
+        listTypeId: 999,
         listTitle: expect.any(String),
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
@@ -124,10 +125,11 @@ describe("Administrative Court page controller", () => {
       });
     });
 
-    it("should render the list successfully for Leeds (listTypeId 21)", async () => {
+    it("should render the list successfully for Leeds", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-456",
-        listTypeId: 21,
+        listTypeId: 999,
+        listTypeName: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -156,17 +158,18 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 21
+          listTypeId: 999
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("administrative-court-daily-cause-list");
     });
 
-    it("should render the list successfully for Bristol/Cardiff (listTypeId 22)", async () => {
+    it("should render the list successfully for Bristol/Cardiff", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-789",
-        listTypeId: 22,
+        listTypeId: 999,
+        listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -195,17 +198,18 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 22
+          listTypeId: 999
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("administrative-court-daily-cause-list");
     });
 
-    it("should render the list successfully for Manchester (listTypeId 23)", async () => {
+    it("should render the list successfully for Manchester", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-012",
-        listTypeId: 23,
+        listTypeId: 999,
+        listTypeName: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -234,7 +238,7 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 23
+          listTypeId: 999
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
@@ -273,10 +277,11 @@ describe("Administrative Court page controller", () => {
       );
     });
 
-    it("should return 400 when list type is not supported (not 20-23)", async () => {
+    it("should return 400 when list type name is not supported", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         listTypeId: 1,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -302,7 +307,8 @@ describe("Administrative Court page controller", () => {
     it("should return 404 when JSON file is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -329,7 +335,8 @@ describe("Administrative Court page controller", () => {
     it("should return 400 when JSON validation fails", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -379,7 +386,8 @@ describe("Administrative Court page controller", () => {
     it("should use Welsh locale when specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -418,7 +426,8 @@ describe("Administrative Court page controller", () => {
     it("should default to English locale when locale is not specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -457,7 +466,8 @@ describe("Administrative Court page controller", () => {
     it("should use provenance label from PROVENANCE_LABELS", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -493,7 +503,8 @@ describe("Administrative Court page controller", () => {
     it("should fall back to raw provenance if label not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 20,
+        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
