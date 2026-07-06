@@ -1,10 +1,13 @@
-import fs from "node:fs/promises";
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { APPLICATION_STATUS } from "./model.js";
 import * as queries from "./queries.js";
-import { approveApplication, deleteProofOfIdFile, rejectApplication } from "./service.js";
+import { approveApplication, rejectApplication } from "./service.js";
 
-vi.mock("node:fs/promises");
+vi.mock("@hmcts/azure-blob", () => ({
+  deleteBlob: vi.fn().mockResolvedValue(undefined),
+  CONTAINER: { FILES: "files" }
+}));
 vi.mock("./queries.js");
 
 const mockFindUserByEmail = vi.fn();
@@ -47,7 +50,7 @@ describe("media-application service", () => {
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         proofOfIdOriginalName: "test-file.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
@@ -60,7 +63,6 @@ describe("media-application service", () => {
       });
       mockFindUserByEmail.mockResolvedValue(null);
       mockCreateMediaUser.mockResolvedValue({ azureAdUserId: "azure-user-123" });
-      vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
       // Act
       const result = await approveApplication("1", MOCK_ACCESS_TOKEN);
@@ -75,7 +77,7 @@ describe("media-application service", () => {
         surname: "Doe"
       });
       expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.APPROVED);
-      expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
+      expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
     });
 
     it("should update existing Azure AD user and not create new user when user already exists", async () => {
@@ -85,7 +87,7 @@ describe("media-application service", () => {
         name: "Jane Smith",
         email: "test@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         proofOfIdOriginalName: "id.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
@@ -97,7 +99,6 @@ describe("media-application service", () => {
         status: APPLICATION_STATUS.APPROVED
       });
       mockFindUserByEmail.mockResolvedValue("existing-azure-id");
-      vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
       // Act
       const result = await approveApplication("1", MOCK_ACCESS_TOKEN);
@@ -204,7 +205,7 @@ describe("media-application service", () => {
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         proofOfIdOriginalName: "id.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
@@ -226,7 +227,7 @@ describe("media-application service", () => {
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         proofOfIdOriginalName: "id.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
@@ -238,7 +239,7 @@ describe("media-application service", () => {
 
       // Act & Assert
       await expect(approveApplication("1", MOCK_ACCESS_TOKEN)).rejects.toThrow();
-      expect(fs.unlink).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
     });
 
     it("should approve application without deleting file when path is null", async () => {
@@ -266,7 +267,7 @@ describe("media-application service", () => {
 
       // Assert
       expect(queries.updateApplicationStatus).toHaveBeenCalled();
-      expect(fs.unlink).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
     });
 
     it("should throw error when application not found", async () => {
@@ -281,7 +282,7 @@ describe("media-application service", () => {
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         status: APPLICATION_STATUS.APPROVED,
         appliedDate: new Date()
       };
@@ -293,13 +294,14 @@ describe("media-application service", () => {
   });
 
   describe("rejectApplication", () => {
-    it("should reject application and delete proof of ID file", async () => {
+    it("should reject application and delete proof of ID blob", async () => {
+      // Arrange
       const mockApplication = {
         id: "1",
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         status: APPLICATION_STATUS.PENDING,
         appliedDate: new Date()
       };
@@ -309,16 +311,18 @@ describe("media-application service", () => {
         ...mockApplication,
         status: APPLICATION_STATUS.REJECTED
       });
-      vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
+      // Act
       await rejectApplication("1");
 
+      // Assert
       expect(queries.getApplicationById).toHaveBeenCalledWith("1");
       expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.REJECTED);
-      expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
+      expect(deleteBlob).toHaveBeenCalledWith("1.pdf", CONTAINER.FILES);
     });
 
     it("should reject application without deleting file when proofOfIdPath is null", async () => {
+      // Arrange
       const mockApplication = {
         id: "1",
         name: "John Doe",
@@ -335,10 +339,12 @@ describe("media-application service", () => {
         status: APPLICATION_STATUS.REJECTED
       });
 
+      // Act
       await rejectApplication("1");
 
+      // Assert
       expect(queries.updateApplicationStatus).toHaveBeenCalledWith("1", APPLICATION_STATUS.REJECTED);
-      expect(fs.unlink).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
     });
 
     it("should throw error when application not found", async () => {
@@ -353,7 +359,7 @@ describe("media-application service", () => {
         name: "John Doe",
         email: "john@example.com",
         employer: "Test Employer",
-        proofOfIdPath: "/tmp/file.pdf",
+        proofOfIdPath: "1.pdf",
         status: APPLICATION_STATUS.APPROVED,
         appliedDate: new Date()
       };
@@ -362,35 +368,49 @@ describe("media-application service", () => {
 
       await expect(rejectApplication("1")).rejects.toThrow("Application has already been reviewed");
     });
+
+    it("should propagate error when deleteBlob rejects during rejection", async () => {
+      // Arrange
+      const mockApplication = {
+        id: "1",
+        name: "John Doe",
+        email: "john@example.com",
+        employer: "Test Employer",
+        proofOfIdPath: "1.pdf",
+        status: APPLICATION_STATUS.PENDING,
+        appliedDate: new Date()
+      };
+
+      vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(queries.updateApplicationStatus).mockResolvedValue({ ...mockApplication, status: APPLICATION_STATUS.REJECTED });
+      vi.mocked(deleteBlob).mockRejectedValue(new Error("Storage unavailable"));
+
+      // Act & Assert
+      await expect(rejectApplication("1")).rejects.toThrow("Storage unavailable");
+    });
   });
 
-  describe("deleteProofOfIdFile", () => {
-    it("should delete file at valid path", async () => {
-      vi.mocked(fs.unlink).mockResolvedValue(undefined);
+  describe("approveApplication - Promise.all propagation", () => {
+    it("should propagate error when deleteBlob rejects during approval", async () => {
+      // Arrange
+      const mockApplication = {
+        id: "1",
+        name: "Jane Doe",
+        email: "jane@example.com",
+        employer: "Test Employer",
+        proofOfIdPath: "1.pdf",
+        proofOfIdOriginalName: "id.pdf",
+        status: APPLICATION_STATUS.PENDING,
+        appliedDate: new Date()
+      };
 
-      await deleteProofOfIdFile("/tmp/file.pdf");
+      vi.mocked(queries.getApplicationById).mockResolvedValue(mockApplication);
+      vi.mocked(queries.updateApplicationStatus).mockResolvedValue({ ...mockApplication, status: APPLICATION_STATUS.APPROVED });
+      mockFindUserByEmail.mockResolvedValue("existing-azure-id");
+      vi.mocked(deleteBlob).mockRejectedValue(new Error("Blob storage error"));
 
-      expect(fs.unlink).toHaveBeenCalledWith("/tmp/file.pdf");
-    });
-
-    it("should throw error for path traversal attempt", async () => {
-      await expect(deleteProofOfIdFile("/tmp/../etc/passwd")).rejects.toThrow("Invalid file path");
-    });
-
-    it("should not throw error when file does not exist", async () => {
-      const error = new Error("File not found") as NodeJS.ErrnoException;
-      error.code = "ENOENT";
-      vi.mocked(fs.unlink).mockRejectedValue(error);
-
-      await expect(deleteProofOfIdFile("/tmp/non-existent.pdf")).resolves.not.toThrow();
-    });
-
-    it("should throw error for other file system errors", async () => {
-      const error = new Error("Permission denied") as NodeJS.ErrnoException;
-      error.code = "EACCES";
-      vi.mocked(fs.unlink).mockRejectedValue(error);
-
-      await expect(deleteProofOfIdFile("/tmp/file.pdf")).rejects.toThrow("Permission denied");
+      // Act & Assert
+      await expect(approveApplication("1", MOCK_ACCESS_TOKEN)).rejects.toThrow("Blob storage error");
     });
   });
 });

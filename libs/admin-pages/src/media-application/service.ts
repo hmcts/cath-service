@@ -1,7 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { createLocalMediaUser, splitName, updateLocalMediaUser } from "@hmcts/account/repository/service";
 import { createMediaUser, findUserByEmail, updateMediaUser } from "@hmcts/auth";
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { APPLICATION_STATUS } from "./model.js";
 import { getApplicationById, updateApplicationStatus } from "./queries.js";
 
@@ -37,11 +36,10 @@ export async function approveApplication(id: string, accessToken: string): Promi
     await createLocalMediaUser(application.email, application.name, azureAdUserId);
   }
 
-  await updateApplicationStatus(id, APPLICATION_STATUS.APPROVED);
-
-  if (application.proofOfIdPath) {
-    await deleteProofOfIdFile(application.proofOfIdPath);
-  }
+  await Promise.all([
+    updateApplicationStatus(id, APPLICATION_STATUS.APPROVED),
+    application.proofOfIdPath ? deleteBlob(application.proofOfIdPath, CONTAINER.FILES) : Promise.resolve()
+  ]);
 
   return { isNewUser: !existingUserId };
 }
@@ -57,24 +55,8 @@ export async function rejectApplication(id: string): Promise<void> {
     throw new Error("Application has already been reviewed");
   }
 
-  await updateApplicationStatus(id, APPLICATION_STATUS.REJECTED);
-
-  if (application.proofOfIdPath) {
-    await deleteProofOfIdFile(application.proofOfIdPath);
-  }
-}
-
-export async function deleteProofOfIdFile(filePath: string): Promise<void> {
-  if (filePath.includes("..")) {
-    throw new Error("Invalid file path");
-  }
-
-  try {
-    const sanitizedPath = path.normalize(filePath);
-    await fs.unlink(sanitizedPath);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-      throw error;
-    }
-  }
+  await Promise.all([
+    updateApplicationStatus(id, APPLICATION_STATUS.REJECTED),
+    application.proofOfIdPath ? deleteBlob(application.proofOfIdPath, CONTAINER.FILES) : Promise.resolve()
+  ]);
 }

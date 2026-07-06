@@ -2760,6 +2760,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/public-pages@workspace:libs/public-pages"
   dependencies:
+    "@hmcts/azure-blob": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
