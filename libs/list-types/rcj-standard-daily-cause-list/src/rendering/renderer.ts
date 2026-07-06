@@ -3,7 +3,7 @@ import type { StandardHearing, StandardHearingList } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
-  listTypeId: number;
+  listTypeName: string;
   listTitle: string;
   contentDate: Date;
   lastReceivedDate: string;

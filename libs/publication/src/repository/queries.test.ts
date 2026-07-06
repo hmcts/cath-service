@@ -1297,7 +1297,7 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [24, 25, 26, 27] }
+        listType: { name: { in: ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"] } }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10
@@ -1340,7 +1340,7 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [24, 25, 26, 27] }
+        listType: { name: { in: ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"] } }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10

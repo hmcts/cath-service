@@ -43,6 +43,7 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
+  listTypeName?: string;
   contentDate: Date;
   locale: string;
   locationId: string;
@@ -70,10 +71,10 @@ interface PdfResult {
 type PdfGenerator = (params: GeneratePdfParams) => Promise<PdfResult>;
 
 const rcjStandardGenerator: PdfGenerator = (p) =>
-  generateRcjStandardDailyCauseListPdf({ ...p, jsonData: p.jsonData as StandardHearingList, listTypeId: p.listTypeId });
+  generateRcjStandardDailyCauseListPdf({ ...p, jsonData: p.jsonData as StandardHearingList, listTypeName: p.listTypeName ?? "" });
 
 const adminCourtGenerator: PdfGenerator = (p) =>
-  generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeId: p.listTypeId });
+  generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeName: p.listTypeName ?? "" });
 
 const SSCS_FRIENDLY_NAMES: Record<string, { en: string; cy: string }> = {
   SSCS_MIDLANDS_DAILY_HEARING_LIST: {
@@ -280,7 +281,7 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
       return {};
     }
 
-    const pdfResult = await generator(params);
+    const pdfResult = await generator({ ...params, listTypeName: listType.name });
 
     if (pdfResult.success && pdfResult.pdfPath) {
       return {
