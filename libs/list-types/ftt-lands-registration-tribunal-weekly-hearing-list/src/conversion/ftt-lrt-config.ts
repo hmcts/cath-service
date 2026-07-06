@@ -7,7 +7,6 @@ import {
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List (listTypeId: 32)
 export const FTT_LRT_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {

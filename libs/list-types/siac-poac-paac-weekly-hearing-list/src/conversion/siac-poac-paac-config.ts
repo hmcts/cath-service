@@ -7,7 +7,6 @@ import {
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// SIAC / POAC / PAAC Weekly Hearing List (listTypeIds: 28, 29, 30)
 export const SIAC_POAC_PAAC_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {

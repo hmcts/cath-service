@@ -7,7 +7,6 @@ import {
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// FTT RPT Weekly Hearing List — shared config for all 5 regional variants (listTypeIds: 33–37)
 export const FTT_RPT_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {

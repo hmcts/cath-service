@@ -4,8 +4,7 @@ import { validateTimeFormat, validateTimeFormatSimple } from "./validators.js";
 
 /**
  * Standard RCJ 7-field configuration with strict time validation (hour range 1-12)
- * Used by: RCJ Standard Daily Cause Lists (listTypeIds 10-17)
- *          Administrative Court Daily Cause Lists (listTypeIds 20-23)
+ * Used by: RCJ Standard Daily Cause Lists and Administrative Court Daily Cause Lists
  */
 export const RCJ_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { generateTestEmail, prefixName } from "../../utils/test-prefix.js";
-import { createTestArtefact, createTestLocation, createTestSubscription, createTestUser } from "../../utils/test-support-api.js";
+import { createTestArtefact, createTestLocation, createTestSubscription, createTestUser, getListTypeByName } from "../../utils/test-support-api.js";
 
 // Helper to validate required environment variables
 function validateEnvVars() {
@@ -216,9 +216,10 @@ test.describe
       });
 
       // Create an active artefact for this court
+      const civilAndFamilyListType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
       await createTestArtefact({
         locationId: courtLocationId.toString(),
-        listTypeId: 1,
+        listTypeId: civilAndFamilyListType.id,
         contentDate: new Date().toISOString(),
         sensitivity: "PUBLIC",
         language: "ENGLISH",

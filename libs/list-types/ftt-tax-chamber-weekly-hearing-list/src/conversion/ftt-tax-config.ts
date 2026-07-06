@@ -7,7 +7,6 @@ import {
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// First-tier Tribunal (Tax Chamber) Weekly Hearing List (listTypeId: 31)
 export const FTT_TAX_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {
