@@ -30,6 +30,6 @@ export const GET = createListTypeHandler<MagistratesAdultCourtListData>({
       locale
     });
     const dataSource = resolveDataSource(artefact.provenance);
-    res.render("magistrates-adult-court-list/index", { en, cy, title: t.title, header, openJustice, listData, dataSource, t });
+    res.render("magistrates-adult-court-list", { en, cy, title: t.title, header, openJustice, listData, dataSource, t });
   }
 });

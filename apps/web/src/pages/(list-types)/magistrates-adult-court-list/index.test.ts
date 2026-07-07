@@ -134,7 +134,7 @@ describe("magistrates-adult-court-list controller", () => {
           contentDate: expect.any(Date)
         });
         const renderCall = vi.mocked(res.render!).mock.calls[0]!;
-        expect(renderCall[0]).toBe("magistrates-adult-court-list/index");
+        expect(renderCall[0]).toBe("magistrates-adult-court-list");
         expect(renderCall[1]).toHaveProperty("en");
         expect(renderCall[1]).toHaveProperty("cy");
         expect(renderCall[1]).toHaveProperty("header");
@@ -154,7 +154,7 @@ describe("magistrates-adult-court-list controller", () => {
       await GET(req as Request, res as Response);
 
       expect(renderMagistratesAdultCourtList).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ locale: "cy" }));
-      expect(res.render).toHaveBeenCalledWith("magistrates-adult-court-list/index", expect.any(Object));
+      expect(res.render).toHaveBeenCalledWith("magistrates-adult-court-list", expect.any(Object));
     });
   });
 });
