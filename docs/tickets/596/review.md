@@ -151,7 +151,6 @@ The function mutates the passed-in `jsonData` directly (adds `formattedJudiciari
 - **Unit tests (renderer):** Good — 20+ scenarios covering all renderer logic paths
 - **Unit tests (PDF generator):** Missing — no `pdf-generator.test.ts`
 - **Unit tests (page controller):** Missing — no `index.test.ts`
-- **Unit tests (locales):** Present (`locales.test.ts`)
 - **Unit tests (validator):** Present (`json-validator.test.ts`)
 - **E2E tests:** Not assessed (not in scope for this ticket per tasks.md)
 
