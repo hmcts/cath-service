@@ -671,7 +671,7 @@ export const listTypeData: ListTypeData[] = [
     englishFriendlyName: "Magistrates Adult Court List - Daily",
     welshFriendlyName: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion",
     provenance: "CRIME_IDAM",
-    urlPath: "magistrates-adult-court-list-daily",
+    urlPath: "magistrates-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Classified",
     subJurisdictionIds: [7]
@@ -682,7 +682,7 @@ export const listTypeData: ListTypeData[] = [
     englishFriendlyName: "Magistrates Adult Court List - Future",
     welshFriendlyName: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol",
     provenance: "CRIME_IDAM",
-    urlPath: "magistrates-adult-court-list-future",
+    urlPath: "magistrates-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Classified",
     subJurisdictionIds: [7]
