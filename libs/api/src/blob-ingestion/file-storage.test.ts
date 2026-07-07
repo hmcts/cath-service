@@ -11,32 +11,30 @@ describe("file-storage", () => {
   });
 
   describe("saveUploadedFile", () => {
-    it("should upload blob and return file extension for JSON", async () => {
+    it("should upload blob with correct name for JSON", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("test-artefact-123", "upload.json", Buffer.from("{}"));
+      await saveUploadedFile("test-artefact-123", "upload.json", Buffer.from("{}"));
 
       // Assert
       expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123.json", Buffer.from("{}"));
-      expect(result).toBe(".json");
     });
 
-    it("should upload blob and return file extension for PDF", async () => {
+    it("should upload blob with correct name for PDF", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
+      await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
       // Assert
       expect(uploadBlob).toHaveBeenCalledWith("artefact-456.pdf", Buffer.from("pdf-content"));
-      expect(result).toBe(".pdf");
     });
 
     it("should extract last extension from filename with multiple dots", async () => {
@@ -46,25 +44,23 @@ describe("file-storage", () => {
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("multi-ext", "archive.tar.gz", Buffer.from("data"));
+      await saveUploadedFile("multi-ext", "archive.tar.gz", Buffer.from("data"));
 
       // Assert
       expect(uploadBlob).toHaveBeenCalledWith("multi-ext.gz", Buffer.from("data"));
-      expect(result).toBe(".gz");
     });
 
-    it("should return empty string for filename without extension", async () => {
+    it("should upload blob with no extension for filename without extension", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("artefact-789", "document", Buffer.from("content"));
+      await saveUploadedFile("artefact-789", "document", Buffer.from("content"));
 
       // Assert
       expect(uploadBlob).toHaveBeenCalledWith("artefact-789", Buffer.from("content"));
-      expect(result).toBe("");
     });
 
     it("should propagate uploadBlob errors", async () => {

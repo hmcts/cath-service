@@ -80,7 +80,7 @@ vi.mock("@hmcts/admin-pages", async () => {
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(),
   processPublication: vi.fn(),
-  updateArtefactFileExtension: vi.fn(),
+  updateSourceArtefactId: vi.fn(),
   extractAndStoreArtefactSearch: vi.fn(),
   Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
   Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },

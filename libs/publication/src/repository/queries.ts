@@ -1,3 +1,4 @@
+import path from "node:path";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
@@ -168,19 +169,11 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   const artefacts = await prisma.artefact.findMany({
     where: { artefactId: { in: artefactIds } },
-    select: { artefactId: true, fileExtension: true }
-  });
-
-  await prisma.artefact.deleteMany({
-    where: {
-      artefactId: {
-        in: artefactIds
-      }
-    }
+    select: { artefactId: true, sourceArtefactId: true }
   });
 
   for (const artefact of artefacts) {
-    const extension = artefact.fileExtension ?? ".pdf";
+    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
     deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
       console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
     });
@@ -191,12 +184,20 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
       }
     });
   }
+
+  await prisma.artefact.deleteMany({
+    where: {
+      artefactId: {
+        in: artefactIds
+      }
+    }
+  });
 }
 
-export async function updateArtefactFileExtension(artefactId: string, fileExtension: string): Promise<void> {
+export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string): Promise<void> {
   await prisma.artefact.update({
     where: { artefactId },
-    data: { fileExtension }
+    data: { sourceArtefactId }
   });
 }
 

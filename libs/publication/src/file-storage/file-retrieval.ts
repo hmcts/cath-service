@@ -1,17 +1,24 @@
+import path from "node:path";
 import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 import { getContentTypeFromExtension } from "./content-type.js";
 
-export async function getFileExtension(artefactId: string): Promise<string> {
+export async function getSourceArtefactId(artefactId: string): Promise<string> {
   const artefact = await prisma.artefact.findUnique({
     where: { artefactId },
-    select: { fileExtension: true }
+    select: { sourceArtefactId: true }
   });
-  return artefact?.fileExtension ?? ".pdf";
+  return artefact?.sourceArtefactId ?? `${artefactId}.pdf`;
+}
+
+export async function getFileExtension(artefactId: string): Promise<string> {
+  const sourceArtefactId = await getSourceArtefactId(artefactId);
+  return path.extname(sourceArtefactId) || ".pdf";
 }
 
 export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
-  const extension = await getFileExtension(artefactId);
+  const sourceArtefactId = await getSourceArtefactId(artefactId);
+  const extension = path.extname(sourceArtefactId) || ".pdf";
   return downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
 }
 
@@ -25,7 +32,6 @@ export function getContentType(fileExtension: string | null | undefined): string
   return getContentTypeFromExtension(fileExtension);
 }
 
-export function getFileName(artefactId: string, fileExtension: string | null | undefined): string {
-  const extension = fileExtension || ".pdf";
-  return `${artefactId}${extension}`;
+export function getFileName(sourceArtefactId: string): string {
+  return sourceArtefactId;
 }

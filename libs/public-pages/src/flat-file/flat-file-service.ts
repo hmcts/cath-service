@@ -1,5 +1,6 @@
+import path from "node:path";
 import { getLocationById } from "@hmcts/location";
-import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
+import { getArtefactById, getContentType, getFileBuffer, getFileName, getSourceArtefactId } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
 export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
@@ -34,8 +35,7 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
   const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
   const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.friendlyName || "Unknown";
 
-  // Get file extension from filesystem
-  const fileExtension = await getFileExtension(artefact.artefactId);
+  const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 
   return {
     success: true,
@@ -44,7 +44,7 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
     listTypeName,
     contentDate: artefact.contentDate,
     language: artefact.language,
-    fileExtension
+    sourceArtefactId
   };
 }
 
@@ -70,14 +70,13 @@ export async function getFileForDownload(artefactId: string) {
     return { error: "FILE_NOT_FOUND" as const };
   }
 
-  // Get file extension from filesystem
-  const fileExtension = await getFileExtension(artefact.artefactId);
+  const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 
   return {
     success: true,
     fileBuffer,
-    contentType: getContentType(fileExtension),
-    fileName: getFileName(artefact.artefactId, fileExtension)
+    contentType: getContentType(path.extname(sourceArtefactId) || null),
+    fileName: getFileName(sourceArtefactId)
   };
 }
 

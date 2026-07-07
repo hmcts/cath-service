@@ -95,7 +95,7 @@ vi.mock("@hmcts/admin-pages", async () => {
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
   processPublication: vi.fn(() => Promise.resolve({})),
-  updateArtefactFileExtension: vi.fn(() => Promise.resolve()),
+  updateSourceArtefactId: vi.fn(() => Promise.resolve()),
   extractAndStoreArtefactSearch: vi.fn(() => Promise.resolve()),
   Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
   Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },

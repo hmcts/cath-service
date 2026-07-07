@@ -236,7 +236,7 @@ describe("Hearing Lists Page Controller", () => {
       listTypeName: "Crown Daily List",
       contentDate: new Date("2025-01-15"),
       language: "ENGLISH",
-      fileExtension: ".pdf"
+      sourceArtefactId: "civil-daily-cause-list.pdf"
     };
 
     beforeEach(() => {
@@ -338,8 +338,8 @@ describe("Hearing Lists Page Controller", () => {
     it("should redirect to download for non-PDF files", async () => {
       const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
 
-      for (const ext of [".docx", ".html", ".csv", ".DOCX"]) {
-        vi.mocked(getFlatFileForDisplay).mockResolvedValue({ ...mockSuccessResult, fileExtension: ext });
+      for (const fileName of ["document.docx", "list.html", "data.csv", "DOCUMENT.DOCX"]) {
+        vi.mocked(getFlatFileForDisplay).mockResolvedValue({ ...mockSuccessResult, sourceArtefactId: fileName });
 
         await GET(mockRequest as Request, mockResponse as Response);
 

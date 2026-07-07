@@ -13,7 +13,8 @@ import {
   getArtefactsByLocation,
   getArtefactType,
   getLatestSjpArtefacts,
-  getLocationsWithPublicationCount
+  getLocationsWithPublicationCount,
+  updateSourceArtefactId
 } from "./queries.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
@@ -585,11 +586,11 @@ describe("deleteArtefacts", () => {
     vi.clearAllMocks();
   });
 
-  it("should delete artefacts by their IDs and trigger blob deletion", async () => {
+  it("should delete artefacts by their IDs and trigger blob deletion using sourceArtefactId", async () => {
     const { deleteBlob } = await import("@hmcts/azure-blob");
     vi.mocked(prisma.artefact.findMany).mockResolvedValue([
-      { artefactId: "550e8400-e29b-41d4-a716-446655440000", fileExtension: ".json" },
-      { artefactId: "550e8400-e29b-41d4-a716-446655440001", fileExtension: null }
+      { artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: "upload.json" },
+      { artefactId: "550e8400-e29b-41d4-a716-446655440001", sourceArtefactId: null }
     ] as any);
     vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 });
 
@@ -608,8 +609,20 @@ describe("deleteArtefacts", () => {
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "publications");
   });
 
+  it("should derive blob extension from sourceArtefactId for flat file names", async () => {
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([
+      { artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: "civil-daily-cause-list.pdf" }
+    ] as any);
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 1 });
+
+    await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
+
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "artefact");
+  });
+
   it("should delete single artefact", async () => {
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue([{ artefactId: "550e8400-e29b-41d4-a716-446655440000", fileExtension: ".json" }] as any);
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([{ artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: "upload.json" }] as any);
     vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 1 });
 
     await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
@@ -635,6 +648,43 @@ describe("deleteArtefacts", () => {
           in: []
         }
       }
+    });
+  });
+});
+
+describe("updateSourceArtefactId", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should update sourceArtefactId for an artefact", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.update).mockResolvedValue({} as any);
+    const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+    const sourceArtefactId = "civil-daily-cause-list.pdf";
+
+    // Act
+    await updateSourceArtefactId(artefactId, sourceArtefactId);
+
+    // Assert
+    expect(prisma.artefact.update).toHaveBeenCalledWith({
+      where: { artefactId },
+      data: { sourceArtefactId }
+    });
+  });
+
+  it("should store upload.json for API ingested publications", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.update).mockResolvedValue({} as any);
+    const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+
+    // Act
+    await updateSourceArtefactId(artefactId, "upload.json");
+
+    // Assert
+    expect(prisma.artefact.update).toHaveBeenCalledWith({
+      where: { artefactId },
+      data: { sourceArtefactId: "upload.json" }
     });
   });
 });
