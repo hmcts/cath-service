@@ -600,6 +600,79 @@ const mockArtefact = {
 };
 ```
 
+### Implementing a new list type — checklist
+
+Every new list type MUST follow these rules. Never use `ListType.id` (numeric) anywhere.
+
+**1. PDF generator — use `listTypeName`, not `listTypeId`**
+
+The PDF generator interface must accept `listTypeName: string`, not a numeric ID:
+
+```typescript
+// libs/my-list-type/src/pdf/pdf-generator.ts
+interface PdfGenerationOptions extends BasePdfGenerationOptions<MyHearingList> {
+  contentDate: Date;
+  listTypeName: string;   // ✅ string name, never a numeric ID
+}
+
+const LIST_TITLE_MAP: Record<string, string> = {
+  MY_LIST_TYPE_NAME: "My List Type Display Title"
+};
+
+export async function generateMyListTypePdf(options: PdfGenerationOptions) {
+  const listTitle = LIST_TITLE_MAP[options.listTypeName] || "Default Title";
+  // ...
+}
+```
+
+**2. Register the PDF generator by name in `service.ts`**
+
+Add to `PDF_GENERATOR_REGISTRY` in `libs/publication/src/processing/service.ts` using the string `listTypeName` as key:
+
+```typescript
+const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
+  // ...existing entries...
+  MY_LIST_TYPE_NAME: (p) => generateMyListTypePdf({ ...p, jsonData: p.jsonData as MyHearingList }),
+};
+```
+
+**3. Register the Excel converter by name**
+
+Use `registerConverterByName` — never reference a numeric ID:
+
+```typescript
+// libs/my-list-type/src/conversion/my-config.ts
+registerConverterByName("MY_LIST_TYPE_NAME", createConverter(MY_EXCEL_CONFIG));
+```
+
+**4. Prisma queries — filter by name, never by id**
+
+When querying artefacts for a specific list type, use the `listType` relation filter:
+
+```typescript
+// ✅ Correct — stable across environments
+await prisma.artefact.findMany({
+  where: { listType: { name: { in: ["MY_LIST_TYPE_NAME"] } } }
+});
+
+// ❌ Wrong — numeric ID differs per environment
+await prisma.artefact.findMany({
+  where: { listTypeId: { in: [42] } }
+});
+```
+
+**5. Never reference `ListType.id` in code comments or JSDoc**
+
+Comments that mention numeric IDs (e.g. `// listTypeId: 42`) will rot as environments diverge. Use the stable name instead:
+
+```typescript
+// ✅ Correct
+/** Used by: MY_LIST_TYPE_NAME */
+
+// ❌ Wrong
+/** Used by list type ID 42 */
+```
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
