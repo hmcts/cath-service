@@ -252,6 +252,44 @@ describe("non-strategic-upload-summary page", () => {
       );
     });
 
+    it("should use Welsh display names when locale is cy", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-upload-id", lng: "cy" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            courtName: "Test Crown Court CY",
+            listType: "Rhestr Ddyddiol y Goron"
+          })
+        })
+      );
+    });
+
     it("should fall back to uploadData.listType when list type is not found", async () => {
       // Arrange
       const mockUploadData = {

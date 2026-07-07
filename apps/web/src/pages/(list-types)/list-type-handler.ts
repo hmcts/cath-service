@@ -287,7 +287,7 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
 
 type MultiListRenderFn<T> = (
   jsonData: T,
-  params: { locale: string; listTypeId: number; listTitle: string; contentDate: Date; lastReceivedDate: string }
+  params: { locale: string; listTypeName: string; listTitle: string; contentDate: Date; lastReceivedDate: string }
 ) => { header: { listTitle: string }; hearings: unknown };
 
 type MultiListHandlerOptions<T> = {
@@ -316,18 +316,13 @@ export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T
 
   const render = ({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: T; locale: string; res: Response }): void => {
     const t = locale === "cy" ? cy : en;
-    const listTypeId = artefact.listTypeId;
     const listTypeName = artefact.listTypeName ?? "";
     const listConfig = listTypeConfig[listTypeName];
-    if (!listConfig) {
-      res.status(500).render("errors/common", { en, cy, ...DEFAULT_SERVER_ERROR });
-      return;
-    }
     const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderFn(jsonData, {
       locale,
-      listTypeId,
+      listTypeName,
       listTitle,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()

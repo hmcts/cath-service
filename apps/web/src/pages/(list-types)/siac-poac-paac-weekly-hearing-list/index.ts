@@ -56,10 +56,6 @@ export const GET = createSimpleListTypeHandler<SiacPoacPaacHearingList>({
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
     const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName ?? ""];
-    if (!listTypeConfig) {
-      res.status(500).render("errors/common", { en, cy, errorTitle: "Server Error", errorMessage: "An error occurred while loading the list" });
-      return;
-    }
     const courtName = locale === "cy" ? listTypeConfig.cyCourtName : listTypeConfig.enCourtName;
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 

@@ -111,7 +111,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         listTitle: expect.any(String),
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
@@ -172,7 +172,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         expect(renderStandardDailyCauseList).toHaveBeenCalledWith(
           mockJsonData,
           expect.objectContaining({
-            listTypeId: 999
+            listTypeName: listTypeName
           })
         );
         expect(res.render).toHaveBeenCalled();

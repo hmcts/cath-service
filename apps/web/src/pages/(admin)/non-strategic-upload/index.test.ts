@@ -255,6 +255,27 @@ describe("non-strategic-upload page", () => {
       expect(listTypeOptions).toEqual(sortedListTypes);
     });
 
+    it("should pre-fill locationId from query parameter when not in session form data", async () => {
+      const req = {
+        session: {},
+        query: { locationId: "2" }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(GET, req, res);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            locationId: "2"
+          })
+        })
+      );
+    });
+
     it("should resolve location name from ID", async () => {
       const session = {
         nonStrategicUploadForm: { locationId: "1" },

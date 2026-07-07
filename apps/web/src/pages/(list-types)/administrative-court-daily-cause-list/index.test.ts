@@ -111,7 +111,7 @@ describe("Administrative Court page controller", () => {
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderAdminCourt).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        listTypeId: 999,
+        listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         listTitle: expect.any(String),
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
@@ -158,7 +158,7 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 999
+          listTypeName: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
@@ -198,7 +198,7 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 999
+          listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
@@ -238,7 +238,7 @@ describe("Administrative Court page controller", () => {
       expect(renderAdminCourt).toHaveBeenCalledWith(
         mockJsonData,
         expect.objectContaining({
-          listTypeId: 999
+          listTypeName: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
         })
       );
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
