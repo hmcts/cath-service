@@ -13,56 +13,53 @@ import { getLocationById } from "@hmcts/location";
 
 const baseInput = {
   document: {
-    publicationDate: "2020-09-13T23:30:00Z"
-  },
-  venue: {
-    venueAddress: {
-      line: ["THE LAW COURTS", "Main Road"],
-      postCode: "PR1 2LL"
-    }
-  },
-  courtLists: [
-    {
-      courtHouse: {
-        courtRoom: [
-          {
-            courtRoomName: "CourtRoom 1",
-            session: [
-              {
-                judiciary: [{ johKnownAs: "Judge Smith" }, { johKnownAs: "Judge Jones" }],
-                sittings: [
+    info: { start_time: "23:30:00" },
+    data: {
+      job: {
+        printdate: "13/09/2020",
+        sessions: {
+          session: [
+            {
+              lja: "North Northumbria Magistrates' Court",
+              court: "North Shields Magistrates' Court",
+              room: 1,
+              sstart: "09:00",
+              blocks: {
+                block: [
                   {
-                    sittingStart: "2022-07-27T09:40:00Z",
-                    hearing: [
-                      {
-                        hearingType: "Directions",
-                        case: [
-                          {
-                            caseUrn: "12341234",
-                            party: [
+                    bstart: "09:00",
+                    cases: {
+                      case: [
+                        {
+                          caseno: "AB12345678",
+                          def_name: "Smith, John",
+                          def_dob: "01/01/1990",
+                          def_age: 35,
+                          def_addr: { line1: "1 Example Street", line5: "London", pcode: "SW1A 1AA" },
+                          inf: "Crown Prosecution Service",
+                          offences: {
+                            offence: [
                               {
-                                partyRole: "PROSECUTING_AUTHORITY",
-                                organisationDetails: { organisationName: "Crown Prosecution Service" }
-                              },
-                              {
-                                partyRole: "DEFENDANT",
-                                individualDetails: { individualForenames: "John", individualSurname: "Smith" },
-                                offence: [{ offenceTitle: "Drink driving" }]
+                                code: "RT88191",
+                                title: "Drink driving",
+                                sum: "On 01/01/2020 drove a motor vehicle on a road after consuming so much alcohol that the proportion of it in your breath, namely 51 micrograms of alcohol in 100 millilitres of breath, exceeded the prescribed limit.",
+                                cy_title: "Gyrru dan ddylanwad alcohol",
+                                cy_sum: "Ar 01/01/2020 gyrrodd gerbyd modur ar ffordd ar ôl yfed cymaint o alcohol..."
                               }
                             ]
                           }
-                        ]
-                      }
-                    ]
+                        }
+                      ]
+                    }
                   }
                 ]
               }
-            ]
-          }
-        ]
+            }
+          ]
+        }
       }
     }
-  ]
+  }
 };
 
 const baseOptions = {
@@ -95,31 +92,31 @@ describe("renderMagistratesAdultCourtList", () => {
       expect(result.header.locationName).toBe("Llys y Goron Rhydychen");
     });
 
-    it("should format publishedDate from document.publicationDate ISO string", async () => {
+    it("should format publishedDate from document.data.job.printdate", async () => {
       const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
       expect(result.header.publishedDate).toContain("2020");
       expect(result.header.publishedDate).toContain("September");
     });
 
-    it("should format publishedTime from document.publicationDate ISO string", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(result.header.publishedTime).toBe("23:30");
+    it("should format publishedDate in Welsh when locale is cy", async () => {
+      const result = await renderMagistratesAdultCourtList(baseInput, { ...baseOptions, locale: "cy" });
+      expect(result.header.publishedDate).toContain("2020");
+      expect(result.header.publishedDate).toContain("Medi");
     });
 
-    it("should return empty publishedDate and publishedTime when publicationDate is absent", async () => {
+    it("should format publishedTime from document.info.start_time", async () => {
+      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
+      expect(result.header.publishedTime).toBe("11:30pm");
+    });
+
+    it("should return empty publishedDate and publishedTime when absent", async () => {
       const result = await renderMagistratesAdultCourtList({ document: {} }, baseOptions);
       expect(result.header.publishedDate).toBe("");
       expect(result.header.publishedTime).toBe("");
     });
 
-    it("should extract venue address lines", async () => {
+    it("should always return empty venueAddress", async () => {
       const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(result.header.venueAddress).toEqual(["THE LAW COURTS", "Main Road", "PR1 2LL"]);
-    });
-
-    it("should return empty venueAddress when venue is absent", async () => {
-      const input = { ...baseInput, venue: undefined };
-      const result = await renderMagistratesAdultCourtList(input, baseOptions);
       expect(result.header.venueAddress).toEqual([]);
     });
 
@@ -129,123 +126,133 @@ describe("renderMagistratesAdultCourtList", () => {
     });
   });
 
-  describe("courtLists transformation", () => {
-    it("should return empty courtLists when courtLists is absent", async () => {
+  describe("sessions transformation", () => {
+    it("should return empty sessions when document has no sessions", async () => {
       const result = await renderMagistratesAdultCourtList({ document: {} }, baseOptions);
-      expect(result.listData.courtLists).toHaveLength(0);
+      expect(result.listData.sessions).toHaveLength(0);
     });
 
-    it("should preserve courtList structure from input", async () => {
+    it("should map session fields from proprietary format", async () => {
       const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(result.listData.courtLists).toHaveLength(1);
-      expect(result.listData.courtLists[0].courtHouse.courtRoom).toHaveLength(1);
+      const session = result.listData.sessions[0];
+      expect(session.court).toBe("North Shields Magistrates' Court");
+      expect(session.lja).toBe("North Northumbria Magistrates' Court");
+      expect(session.room).toBe(1);
     });
 
-    it("should set courtRoomName from input", async () => {
+    it("should format sessionStart from sstart", async () => {
       const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      const courtRoom = result.listData.courtLists[0].courtHouse.courtRoom[0];
-      expect(courtRoom.courtRoomName).toBe("CourtRoom 1");
+      expect(result.listData.sessions[0].sessionStart).toBe("9am");
     });
 
-    it("should format judiciaries from judiciary array", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
-      expect(session.formattedJudiciaries).toBe("Judge Smith, Judge Jones");
-    });
-
-    it("should return empty formattedJudiciaries when session has no judiciary", async () => {
-      const input = buildInputWithSession({ sittings: [] });
+    it("should format sessionStart without :00 when minutes are zero", async () => {
+      const input = buildInputWithSession({ court: "Test Court", lja: "Test LJA", room: 1, sstart: "14:00", blocks: { block: [] } });
       const result = await renderMagistratesAdultCourtList(input, baseOptions);
-      const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
-      expect(session.formattedJudiciaries).toBe("");
+      expect(result.listData.sessions[0].sessionStart).toBe("2pm");
     });
 
-    it("should return empty sittings when session has no sittings", async () => {
-      const input = buildInputWithSession({ sittings: [] });
+    it("should format sessionStart with minutes when non-zero", async () => {
+      const input = buildInputWithSession({ court: "Test Court", lja: "Test LJA", room: 1, sstart: "09:05", blocks: { block: [] } });
       const result = await renderMagistratesAdultCourtList(input, baseOptions);
-      const session = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0];
-      expect(session.sittings).toHaveLength(0);
+      expect(result.listData.sessions[0].sessionStart).toBe("9:05am");
+    });
+
+    it("should return empty sessionStart when sstart is absent", async () => {
+      const input = buildInputWithSession({ court: "Test Court", lja: "Test LJA", room: 1, blocks: { block: [] } });
+      const result = await renderMagistratesAdultCourtList(input, baseOptions);
+      expect(result.listData.sessions[0].sessionStart).toBe("");
+    });
+
+    it("should return empty cases when session has no blocks", async () => {
+      const input = buildInputWithSession({ court: "Test Court", lja: "Test LJA", room: 1, blocks: { block: [] } });
+      const result = await renderMagistratesAdultCourtList(input, baseOptions);
+      expect(result.listData.sessions[0].cases).toHaveLength(0);
     });
   });
 
   describe("case transformation", () => {
-    it("should map caseUrn to caseNumber", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).caseNumber).toBe("12341234");
+    it("should map caseno to caseNumber", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).caseNumber).toBe("AB12345678");
     });
 
-    it("should build defendantName from DEFENDANT party individualDetails", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).defendantName).toBe("John Smith");
+    it("should map def_name to defendantName", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).defendantName).toBe("Smith, John");
     });
 
-    it("should extract informant from PROSECUTING_AUTHORITY organisationName", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).informant).toBe("Crown Prosecution Service");
+    it("should map def_dob to dateOfBirth", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).dateOfBirth).toBe("01/01/1990");
     });
 
-    it("should fall back to individual name for PROSECUTING_AUTHORITY when no org", async () => {
+    it("should map def_age to age as string", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).age).toBe("35");
+    });
+
+    it("should format address from def_addr", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).address).toBe("1 Example Street, London, SW1A 1AA");
+    });
+
+    it("should map inf to informant", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).informant).toBe("Crown Prosecution Service");
+    });
+
+    it("should map offence.code to offenceCode", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).offenceCode).toBe("RT88191");
+    });
+
+    it("should map offence.title to offenceTitle in English", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).offenceTitle).toBe("Drink driving");
+    });
+
+    it("should use cy_title for offenceTitle in Welsh locale", async () => {
+      const result = await renderMagistratesAdultCourtList(baseInput, { ...baseOptions, locale: "cy" });
+      expect(extractFirstCase(result).offenceTitle).toBe("Gyrru dan ddylanwad alcohol");
+    });
+
+    it("should use cy_sum for offenceSummary in Welsh locale", async () => {
+      const result = await renderMagistratesAdultCourtList(baseInput, { ...baseOptions, locale: "cy" });
+      expect(extractFirstCase(result).offenceSummary).toContain("01/01/2020");
+    });
+
+    it("should format blockStart from bstart", async () => {
+      expect(extractFirstCase(await renderMagistratesAdultCourtList(baseInput, baseOptions)).blockStart).toBe("9am");
+    });
+
+    it("should join multiple offences with comma", async () => {
       const input = buildInputWithCase({
-        caseUrn: "12345678",
-        party: [
-          { partyRole: "PROSECUTING_AUTHORITY", individualDetails: { individualForenames: "Test", individualSurname: "Prosecutor" } },
-          { partyRole: "DEFENDANT", individualDetails: { individualForenames: "Jane", individualSurname: "Doe" } }
-        ]
+        caseno: "XY999",
+        offences: {
+          offence: [
+            { code: "TH68003", title: "Theft 1", sum: "Summary 1" },
+            { code: "TH68004", title: "Theft 2", sum: "Summary 2" }
+          ]
+        }
       });
-      const result = await renderMagistratesAdultCourtList(input, baseOptions);
-      expect(extractFirstCase(result).informant).toBe("Test Prosecutor");
+      const firstCase = extractFirstCase(await renderMagistratesAdultCourtList(input, baseOptions));
+      expect(firstCase.offenceCode).toBe("TH68003, TH68004");
+      expect(firstCase.offenceTitle).toBe("Theft 1, Theft 2");
+      expect(firstCase.offenceSummary).toBe("Summary 1, Summary 2");
     });
 
-    it("should extract offenceTitle from DEFENDANT party offences", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).offenceTitle).toBe("Drink driving");
+    it("should return empty strings for absent case fields", async () => {
+      const input = buildInputWithCase({});
+      const firstCase = extractFirstCase(await renderMagistratesAdultCourtList(input, baseOptions));
+      expect(firstCase.caseNumber).toBe("");
+      expect(firstCase.defendantName).toBe("");
+      expect(firstCase.dateOfBirth).toBe("");
+      expect(firstCase.age).toBe("");
+      expect(firstCase.address).toBe("");
+      expect(firstCase.informant).toBe("");
+      expect(firstCase.offenceCode).toBe("");
+      expect(firstCase.offenceTitle).toBe("");
+      expect(firstCase.offenceSummary).toBe("");
     });
 
-    it("should join multiple offence titles with comma", async () => {
-      const input = buildInputWithCase({
-        caseUrn: "12345678",
-        party: [
-          {
-            partyRole: "DEFENDANT",
-            individualDetails: { individualForenames: "Jane", individualSurname: "Doe" },
-            offence: [{ offenceTitle: "Offence 1" }, { offenceTitle: "Offence 2" }]
-          }
-        ]
-      });
-      const result = await renderMagistratesAdultCourtList(input, baseOptions);
-      expect(extractFirstCase(result).offenceTitle).toBe("Offence 1, Offence 2");
-    });
-
-    it("should format blockStart from sittingStart ISO datetime", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).blockStart).toBe("9:40am");
-    });
-
-    it("should return empty string for offenceCode and offenceSummary", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).offenceCode).toBe("");
-      expect(extractFirstCase(result).offenceSummary).toBe("");
-    });
-
-    it("should return empty strings for dateOfBirth, age, address when not in data", async () => {
-      const result = await renderMagistratesAdultCourtList(baseInput, baseOptions);
-      expect(extractFirstCase(result).dateOfBirth).toBe("");
-      expect(extractFirstCase(result).age).toBe("");
-      expect(extractFirstCase(result).address).toBe("");
-    });
-
-    it("should return empty defendantName when no DEFENDANT party", async () => {
-      const input = buildInputWithCase({
-        caseUrn: "12345678",
-        party: [{ partyRole: "PROSECUTING_AUTHORITY", organisationDetails: { organisationName: "CPS" } }]
-      });
-      const result = await renderMagistratesAdultCourtList(input, baseOptions);
-      expect(extractFirstCase(result).defendantName).toBe("");
-    });
-
-    it("should return empty cases array when hearing has no cases", async () => {
+    it("should return empty cases array when block has no cases", async () => {
       const input = buildInputWithSession({
-        sittings: [{ sittingStart: "2022-07-27T09:40:00Z", hearing: [{ hearingType: "Directions", case: [] }] }]
+        court: "Test Court",
+        lja: "Test LJA",
+        room: 1,
+        blocks: { block: [{ bstart: "09:00", cases: { case: [] } }] }
       });
       const result = await renderMagistratesAdultCourtList(input, baseOptions);
       expect(extractCases(result)).toHaveLength(0);
@@ -253,27 +260,21 @@ describe("renderMagistratesAdultCourtList", () => {
   });
 });
 
-function buildInputWithSession(session: object) {
+function buildInputWithSession(sessionData: object) {
   return {
-    document: { publicationDate: "2020-09-13T23:30:00Z" },
-    courtLists: [
-      {
-        courtHouse: {
-          courtRoom: [{ courtRoomName: "Room 1", session: [session] }]
-        }
-      }
-    ]
+    document: {
+      data: { job: { sessions: { session: [sessionData] } } }
+    }
   };
 }
 
 function buildInputWithCase(caseData: object) {
   return buildInputWithSession({
-    sittings: [
-      {
-        sittingStart: "2022-07-27T09:40:00Z",
-        hearing: [{ hearingType: "Directions", case: [caseData] }]
-      }
-    ]
+    court: "Test Court",
+    lja: "Test LJA",
+    room: 1,
+    sstart: "09:00",
+    blocks: { block: [{ bstart: "09:00", cases: { case: [caseData] } }] }
   });
 }
 
@@ -282,5 +283,5 @@ function extractFirstCase(result: { listData: any }): any {
 }
 
 function extractCases(result: { listData: any }): any[] {
-  return result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case;
+  return result.listData.sessions[0].cases;
 }

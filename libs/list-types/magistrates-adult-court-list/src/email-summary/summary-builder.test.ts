@@ -34,7 +34,7 @@ describe("extractCaseSummary", () => {
     expect(result).toHaveLength(0);
   });
 
-  it("should extract Defendant Name, Informant, Case Number and Offence Title per case", () => {
+  it("should extract Defendant name, Informant, Case number and Offence title per case", () => {
     const data = buildMinimalData([
       buildSession([
         {
@@ -52,10 +52,10 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Defendant Name", value: "Smith, John" },
+      { label: "Defendant name", value: "Smith, John" },
       { label: "Informant", value: "Crown Prosecution Service" },
-      { label: "Case Number", value: "AB12345678" },
-      { label: "Offence Title", value: "Drink driving" }
+      { label: "Case number", value: "AB12345678" },
+      { label: "Offence title", value: "Drink driving" }
     ]);
   });
 
@@ -66,7 +66,7 @@ describe("extractCaseSummary", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0][1]).toEqual({ label: "Informant", value: "" });
-    expect(result[0][3]).toEqual({ label: "Offence Title", value: "" });
+    expect(result[0][3]).toEqual({ label: "Offence title", value: "" });
   });
 
   it("should handle multiple cases across multiple sessions", () => {
@@ -78,8 +78,8 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(2);
-    expect(result[0][0]).toEqual({ label: "Defendant Name", value: "Adams, Alice" });
-    expect(result[1][0]).toEqual({ label: "Defendant Name", value: "Baker, Bob" });
+    expect(result[0][0]).toEqual({ label: "Defendant name", value: "Adams, Alice" });
+    expect(result[1][0]).toEqual({ label: "Defendant name", value: "Baker, Bob" });
   });
 
   it("should use empty string for missing def_name", () => {
@@ -88,7 +88,7 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
-    expect(result[0][0]).toEqual({ label: "Defendant Name", value: "" });
+    expect(result[0][0]).toEqual({ label: "Defendant name", value: "" });
   });
 
   it("should use empty string for missing caseno", () => {
@@ -97,7 +97,7 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
-    expect(result[0][2]).toEqual({ label: "Case Number", value: "" });
+    expect(result[0][2]).toEqual({ label: "Case number", value: "" });
   });
 
   it("should use empty string for missing offence title", () => {
@@ -106,7 +106,7 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
-    expect(result[0][3]).toEqual({ label: "Offence Title", value: "" });
+    expect(result[0][3]).toEqual({ label: "Offence title", value: "" });
   });
 
   it("should handle multiple cases in the same block", () => {
@@ -120,8 +120,8 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(2);
-    expect(result[0][2]).toEqual({ label: "Case Number", value: "CASE001" });
-    expect(result[1][2]).toEqual({ label: "Case Number", value: "CASE002" });
+    expect(result[0][2]).toEqual({ label: "Case number", value: "CASE001" });
+    expect(result[1][2]).toEqual({ label: "Case number", value: "CASE002" });
   });
 
   it("should use the first offence title when multiple offences exist", () => {
@@ -143,7 +143,7 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
-    expect(result[0][3]).toEqual({ label: "Offence Title", value: "First Offence" });
+    expect(result[0][3]).toEqual({ label: "Offence title", value: "First Offence" });
   });
 });
 
@@ -155,20 +155,20 @@ describe("formatCaseSummaryForEmail", () => {
   it("should format a single case summary", () => {
     const summaries = [
       [
-        { label: "Defendant Name", value: "Smith, John" },
-        { label: "Case Number", value: "AB123" }
+        { label: "Defendant name", value: "Smith, John" },
+        { label: "Case number", value: "AB123" }
       ]
     ];
 
     const result = formatCaseSummaryForEmail(summaries);
 
-    expect(result).toContain("Defendant Name - Smith, John");
-    expect(result).toContain("Case Number - AB123");
+    expect(result).toContain("Defendant name - Smith, John");
+    expect(result).toContain("Case number - AB123");
     expect(result).toContain("---");
   });
 
   it("should format multiple case summaries with separators", () => {
-    const summaries = [[{ label: "Defendant Name", value: "Smith, John" }], [{ label: "Defendant Name", value: "Doe, Jane" }]];
+    const summaries = [[{ label: "Defendant name", value: "Smith, John" }], [{ label: "Defendant name", value: "Doe, Jane" }]];
 
     const result = formatCaseSummaryForEmail(summaries);
 

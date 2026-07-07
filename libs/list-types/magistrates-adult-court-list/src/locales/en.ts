@@ -33,6 +33,8 @@ export const en = {
   offenceTitle: "Offence Title",
   offenceSummary: "Offence Summary",
   sittingAt: "Sitting at",
+  courtroom: "Courtroom",
+  ljaLabel: "LJA",
   sessionStart: "Session start",
   listingTime: "Listing time",
   searchCases: "Search Cases",

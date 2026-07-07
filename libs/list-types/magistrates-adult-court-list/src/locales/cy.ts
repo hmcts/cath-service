@@ -33,6 +33,8 @@ export const cy = {
   offenceTitle: "Teitl y Drosedd",
   offenceSummary: "Crynodeb o'r Drosedd",
   sittingAt: "Yn eistedd yn",
+  courtroom: "Ystafell Lys",
+  ljaLabel: "ADLl",
   sessionStart: "Amser Cychwyn y Sesiwn",
   listingTime: "Amser rhestru",
   searchCases: "Chwilio Achosion",

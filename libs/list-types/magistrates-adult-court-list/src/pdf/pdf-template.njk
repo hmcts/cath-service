@@ -43,6 +43,12 @@
     .linked-cases-heading {
       font-weight: bold;
     }
+    .no-right-border {
+      border-right: none;
+    }
+    .no-left-border {
+      border-left: none;
+    }
   </style>
 </head>
 <body>
@@ -79,61 +85,49 @@
     </ul>
   </div>
 
-  {% for courtList in listData.courtLists %}
-    {% set courtHouse = courtList.courtHouse %}
-    {% for courtRoom in courtHouse.courtRoom %}
-      {% for session in courtRoom.session %}
-        <div class="court-section">
-          <h3>
-            {% if session.formattedJudiciaries | length %}
-              {{ courtRoom.courtRoomName }}: {{ session.formattedJudiciaries }}
-            {% else %}
-              {{ courtRoom.courtRoomName }}
-            {% endif %}
-          </h3>
-          <table>
-            <thead>
-              <tr>
-                <th>{{ t.blockStart }}</th>
-                <th>{{ t.defendantName }}</th>
-                <th>{{ t.dateOfBirth }}</th>
-                <th>{{ t.address }}</th>
-                <th>{{ t.age }}</th>
-                <th>{{ t.informant }}</th>
-                <th>{{ t.caseNumber }}</th>
-                <th>{{ t.offenceCode }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for sitting in session.sittings %}
-                {% for hearing in sitting.hearing %}
-                  {% for case in hearing.case %}
-                    <tr>
-                      <td class="no-border-bottom">{{ case.blockStart }}</td>
-                      <td class="no-border-bottom">{{ case.defendantName }}</td>
-                      <td class="no-border-bottom">{{ case.dateOfBirth }}</td>
-                      <td class="no-border-bottom">{{ case.address }}</td>
-                      <td class="no-border-bottom">{{ case.age }}</td>
-                      <td class="no-border-bottom">{{ case.informant }}</td>
-                      <td class="no-border-bottom">{{ case.caseNumber }}</td>
-                      <td class="no-border-bottom">{{ case.offenceCode }}</td>
-                    </tr>
-                    <tr>
-                      <td class="linked-cases-heading no-border-bottom" colspan="2">{{ t.offenceTitle }}:</td>
-                      <td class="no-border-bottom" colspan="6">{{ case.offenceTitle }}</td>
-                    </tr>
-                    <tr>
-                      <td class="linked-cases-heading" colspan="2">{{ t.offenceSummary }}:</td>
-                      <td colspan="6">{{ case.offenceSummary }}</td>
-                    </tr>
-                  {% endfor %}
-                {% endfor %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% endfor %}
-    {% endfor %}
+  {% for session in listData.sessions %}
+    <div class="court-section">
+      <h3>{{ session.court }}</h3>
+      <p style="margin-bottom: 2px;"><strong>{{ t.sittingAt }} {{ t.courtroom }} {{ session.room }}</strong></p>
+      <p style="margin-bottom: 2px;">{{ t.ljaLabel }}: {{ session.lja }}</p>
+      <p style="margin-bottom: 10px;">{{ t.sessionStart }} {{ session.sessionStart }}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t.blockStart }}</th>
+            <th>{{ t.defendantName }}</th>
+            <th>{{ t.dateOfBirth }}</th>
+            <th>{{ t.address }}</th>
+            <th>{{ t.age }}</th>
+            <th>{{ t.informant }}</th>
+            <th>{{ t.caseNumber }}</th>
+            <th>{{ t.offenceCode }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for case in session.cases %}
+            <tr>
+              <td class="no-border-bottom">{{ case.blockStart }}</td>
+              <td class="no-border-bottom">{{ case.defendantName }}</td>
+              <td class="no-border-bottom">{{ case.dateOfBirth }}</td>
+              <td class="no-border-bottom">{{ case.address }}</td>
+              <td class="no-border-bottom">{{ case.age }}</td>
+              <td class="no-border-bottom">{{ case.informant }}</td>
+              <td class="no-border-bottom">{{ case.caseNumber }}</td>
+              <td class="no-border-bottom">{{ case.offenceCode }}</td>
+            </tr>
+            <tr>
+              <td class="linked-cases-heading no-border-bottom no-right-border" colspan="2">{{ t.offenceTitle }}:</td>
+              <td class="no-border-bottom no-left-border" colspan="6">{{ case.offenceTitle }}</td>
+            </tr>
+            <tr>
+              <td class="linked-cases-heading no-right-border" colspan="2">{{ t.offenceSummary }}:</td>
+              <td class="no-left-border" colspan="6">{{ case.offenceSummary }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% endfor %}
 
   <div class="footer">

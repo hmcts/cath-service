@@ -26,6 +26,12 @@
     .linked-cases-heading {
       font-weight: bold;
     }
+    .no-right-border {
+      border-right: none;
+    }
+    .no-left-border {
+      border-left: none;
+    }
   </style>
 {% endblock %}
 
@@ -33,7 +39,7 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
+    <h1 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h1>
 
     <p class="govuk-body">
       <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
@@ -76,72 +82,62 @@
     </div>
 
     <div id="court-lists-container">
-      {% for courtList in listData.courtLists %}
-        {% set courtHouse = courtList.courtHouse %}
-        <div class="govuk-accordion" data-module="govuk-accordion">
-          {% for courtRoom in courtHouse.courtRoom %}
-            {% for session in courtRoom.session %}
-              <div class="govuk-accordion__section govuk-accordion__section--expanded">
-                <div class="govuk-accordion__section-header">
-                  <h2 class="govuk-accordion__section-heading">
-                    <span class="govuk-accordion__section-button">
-                      {% if session.formattedJudiciaries | length %}
-                        {{ courtRoom.courtRoomName }}: {{ session.formattedJudiciaries }}
-                      {% else %}
-                        {{ courtRoom.courtRoomName }}
-                      {% endif %}
-                    </span>
-                  </h2>
-                </div>
-                <div class="govuk-accordion__section-content">
-                  <div class="govuk-!-margin-bottom-4 overflow-table">
-                    <table class="govuk-table overflow-table" data-module="moj-sortable-table">
-                      <thead class="govuk-table__head">
-                        <tr class="govuk-table__row">
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.blockStart }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.defendantName }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.dateOfBirth }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.address }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.age }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.informant }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.caseNumber }}</th>
-                          <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.offenceCode }}</th>
-                        </tr>
-                      </thead>
-                      <tbody class="govuk-table__body">
-                        {% for sitting in session.sittings %}
-                          {% for hearing in sitting.hearing %}
-                            {% for case in hearing.case %}
-                              <tr class="govuk-table__row">
-                                <td class="govuk-table__cell no-wrap no-border-bottom">{{ case.blockStart }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.defendantName }}</td>
-                                <td class="govuk-table__cell no-wrap no-border-bottom">{{ case.dateOfBirth }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.address }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.age }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.informant }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.caseNumber }}</td>
-                                <td class="govuk-table__cell no-border-bottom">{{ case.offenceCode }}</td>
-                              </tr>
-                              <tr class="govuk-table__row">
-                                <td class="govuk-table__cell linked-cases-heading no-border-bottom" colspan="2">{{ t.offenceTitle }}:</td>
-                                <td class="govuk-table__cell no-border-bottom" colspan="6">{{ case.offenceTitle }}</td>
-                              </tr>
-                              <tr class="govuk-table__row">
-                                <td class="govuk-table__cell linked-cases-heading" colspan="2">{{ t.offenceSummary }}:</td>
-                                <td class="govuk-table__cell" colspan="6">{{ case.offenceSummary }}</td>
-                              </tr>
-                            {% endfor %}
-                          {% endfor %}
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+      <div class="govuk-accordion" data-module="govuk-accordion">
+        {% for session in listData.sessions %}
+          <div class="govuk-accordion__section govuk-accordion__section--expanded">
+            <div class="govuk-accordion__section-header">
+              <h2 class="govuk-accordion__section-heading">
+                <span class="govuk-accordion__section-button">
+                  {{ session.court }}
+                </span>
+              </h2>
+            </div>
+            <div class="govuk-accordion__section-content">
+              <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.sittingAt }} {{ t.courtroom }} {{ session.room }}</p>
+              <p class="govuk-body govuk-!-margin-bottom-1">{{ t.ljaLabel }}: {{ session.lja }}</p>
+              <p class="govuk-body govuk-!-margin-bottom-4">{{ t.sessionStart }} {{ session.sessionStart }}</p>
+              <div class="govuk-!-margin-bottom-4 overflow-table">
+                <table class="govuk-table overflow-table" data-module="moj-sortable-table">
+                  <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.blockStart }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.defendantName }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.dateOfBirth }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.address }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.age }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.informant }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.caseNumber }}</th>
+                      <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.offenceCode }}</th>
+                    </tr>
+                  </thead>
+                  <tbody class="govuk-table__body">
+                    {% for case in session.cases %}
+                      <tr class="govuk-table__row">
+                        <td class="govuk-table__cell no-wrap no-border-bottom">{{ case.blockStart }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.defendantName }}</td>
+                        <td class="govuk-table__cell no-wrap no-border-bottom">{{ case.dateOfBirth }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.address }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.age }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.informant }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.caseNumber }}</td>
+                        <td class="govuk-table__cell no-border-bottom">{{ case.offenceCode }}</td>
+                      </tr>
+                      <tr class="govuk-table__row">
+                        <td class="govuk-table__cell linked-cases-heading no-border-bottom no-right-border" colspan="2">{{ t.offenceTitle }}:</td>
+                        <td class="govuk-table__cell no-border-bottom no-left-border" colspan="6">{{ case.offenceTitle }}</td>
+                      </tr>
+                      <tr class="govuk-table__row">
+                        <td class="govuk-table__cell linked-cases-heading no-right-border" colspan="2">{{ t.offenceSummary }}:</td>
+                        <td class="govuk-table__cell no-left-border" colspan="6">{{ case.offenceSummary }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
               </div>
-            {% endfor %}
-          {% endfor %}
-        </div>
-      {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
 
     <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">

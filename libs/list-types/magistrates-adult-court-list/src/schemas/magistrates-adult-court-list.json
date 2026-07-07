@@ -1,149 +1,61 @@
 {
   "$defs": {
-    "venueAddress": {
-      "title": "Venue Address",
+    "address": {
+      "title": "Address",
       "type": "object",
       "properties": {
-        "line": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-          }
-        },
-        "town": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "county": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "postCode": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        }
-      }
-    },
-    "judiciary": {
-      "title": "Judiciary",
-      "type": "object",
-      "properties": {
-        "johKnownAs": {
-          "title": "JOH Known As",
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        }
-      }
-    },
-    "individualDetails": {
-      "title": "Individual Details",
-      "type": "object",
-      "properties": {
-        "individualForenames": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "individualSurname": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "dateOfBirth": {
-          "type": "string"
-        },
-        "age": {
-          "type": "string"
-        }
-      }
-    },
-    "organisationDetails": {
-      "title": "Organisation Details",
-      "type": "object",
-      "properties": {
-        "organisationName": {
-          "type": "string",
-          "pattern": "^(?!.*(?:<\\s*\\/[^>]*>|<[^>]*\\/>|&lt;\\s*\\/[^&]*&gt;|&lt;[^&]*\\/&gt;)).*$"
-        }
+        "line1": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "line2": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "line3": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "line4": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "line5": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "pcode": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" }
       }
     },
     "offence": {
       "title": "Offence",
       "type": "object",
       "properties": {
-        "offenceTitle": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        }
-      }
-    },
-    "party": {
-      "title": "Party",
-      "type": "object",
-      "properties": {
-        "partyRole": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "individualDetails": {
-          "$ref": "#/$defs/individualDetails"
-        },
-        "organisationDetails": {
-          "$ref": "#/$defs/organisationDetails"
-        },
-        "offence": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/offence"
-          }
-        }
+        "code": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "title": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "cy_title": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "sum": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "cy_sum": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" }
       }
     },
     "case": {
       "title": "Case",
       "type": "object",
       "properties": {
-        "caseUrn": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "party": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/party"
-          }
-        },
-        "reportingRestriction": {
-          "type": "boolean"
-        }
-      }
-    },
-    "hearing": {
-      "title": "Hearing",
-      "type": "object",
-      "properties": {
-        "hearingType": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "case": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/case"
+        "caseno": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "def_name": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "def_dob": { "type": "string" },
+        "def_age": { "type": "number" },
+        "def_addr": { "$ref": "#/$defs/address" },
+        "inf": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "offences": {
+          "type": "object",
+          "properties": {
+            "offence": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/offence" }
+            }
           }
         }
       }
     },
-    "sitting": {
-      "title": "Sitting",
+    "block": {
+      "title": "Block",
       "type": "object",
       "properties": {
-        "sittingStart": {
-          "type": "string"
-        },
-        "hearing": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/hearing"
+        "bstart": { "type": "string" },
+        "cases": {
+          "type": "object",
+          "properties": {
+            "case": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/case" }
+            }
           }
         }
       }
@@ -152,53 +64,16 @@
       "title": "Session",
       "type": "object",
       "properties": {
-        "judiciary": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/judiciary"
-          }
-        },
-        "sittings": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/sitting"
-          }
-        }
-      }
-    },
-    "courtRoom": {
-      "title": "Court Room",
-      "type": "object",
-      "properties": {
-        "courtRoomName": {
-          "type": "string",
-          "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-        },
-        "session": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/session"
-          }
-        }
-      }
-    },
-    "courtList": {
-      "title": "Court List",
-      "type": "object",
-      "required": ["courtHouse"],
-      "properties": {
-        "courtHouse": {
+        "lja": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "court": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
+        "room": { "type": "number" },
+        "sstart": { "type": "string" },
+        "blocks": {
           "type": "object",
           "properties": {
-            "courtHouseName": {
-              "type": "string",
-              "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
-            },
-            "courtRoom": {
+            "block": {
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/courtRoom"
-              }
+              "items": { "$ref": "#/$defs/block" }
             }
           }
         }
@@ -214,26 +89,32 @@
       "title": "Document",
       "type": "object",
       "properties": {
-        "publicationDate": {
-          "title": "Publication Date",
-          "type": "string"
+        "info": {
+          "type": "object",
+          "properties": {
+            "start_time": { "type": "string" }
+          }
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "job": {
+              "type": "object",
+              "properties": {
+                "printdate": { "type": "string" },
+                "sessions": {
+                  "type": "object",
+                  "properties": {
+                    "session": {
+                      "type": "array",
+                      "items": { "$ref": "#/$defs/session" }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
-      }
-    },
-    "venue": {
-      "title": "Venue",
-      "type": "object",
-      "properties": {
-        "venueAddress": {
-          "$ref": "#/$defs/venueAddress"
-        }
-      }
-    },
-    "courtLists": {
-      "title": "Court Lists",
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/courtList"
       }
     }
   }

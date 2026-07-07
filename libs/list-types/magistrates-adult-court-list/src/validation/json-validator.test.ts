@@ -7,61 +7,45 @@ const validMinimalData = {
 
 const validFullData = {
   document: {
-    publicationDate: "2020-09-13T23:30:00Z"
-  },
-  venue: {
-    venueAddress: {
-      line: ["THE LAW COURTS", "Main Road"],
-      postCode: "PR1 2LL"
-    }
-  },
-  courtLists: [
-    {
-      courtHouse: {
-        courtHouseName: "Oxford Combined Court Centre",
-        courtRoom: [
-          {
-            courtRoomName: "CourtRoom 1",
-            session: [
-              {
-                judiciary: [{ johKnownAs: "Judge Smith" }],
-                sittings: [
+    info: { start_time: "09:00:00" },
+    data: {
+      job: {
+        printdate: "13/09/2020",
+        sessions: {
+          session: [
+            {
+              lja: "North Northumbria Magistrates' Court",
+              court: "North Shields Magistrates' Court",
+              room: 1,
+              sstart: "09:00",
+              blocks: {
+                block: [
                   {
-                    sittingStart: "2022-07-27T09:40:00Z",
-                    hearing: [
-                      {
-                        hearingType: "Directions",
-                        case: [
-                          {
-                            caseUrn: "12341234",
-                            party: [
-                              {
-                                partyRole: "PROSECUTING_AUTHORITY",
-                                organisationDetails: { organisationName: "Crown Prosecution Service" }
-                              },
-                              {
-                                partyRole: "DEFENDANT",
-                                individualDetails: {
-                                  individualForenames: "John",
-                                  individualSurname: "Smith"
-                                },
-                                offence: [{ offenceTitle: "Drink driving" }]
-                              }
-                            ],
-                            reportingRestriction: true
+                    bstart: "09:00",
+                    cases: {
+                      case: [
+                        {
+                          caseno: "AB12345678",
+                          def_name: "Smith, John",
+                          def_dob: "01/01/1990",
+                          def_age: 35,
+                          def_addr: { line1: "1 Example Street", line5: "London", pcode: "SW1A 1AA" },
+                          inf: "Crown Prosecution Service",
+                          offences: {
+                            offence: [{ code: "RT88191", title: "Drink driving", sum: "On 01/01/2020 drove..." }]
                           }
-                        ]
-                      }
-                    ]
+                        }
+                      ]
+                    }
                   }
                 ]
               }
-            ]
-          }
-        ]
+            }
+          ]
+        }
       }
     }
-  ]
+  }
 };
 
 describe("validateMagistratesAdultCourtList", () => {
@@ -72,20 +56,26 @@ describe("validateMagistratesAdultCourtList", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it("should accept valid data with full structure", () => {
+    it("should accept valid data with full proprietary structure", () => {
       const result = validateMagistratesAdultCourtList(validFullData);
       expect(result.isValid).toBe(true);
     });
 
-    it("should accept document without publicationDate", () => {
-      const result = validateMagistratesAdultCourtList({ document: {} });
+    it("should accept document without job data", () => {
+      const result = validateMagistratesAdultCourtList({ document: { data: {} } });
       expect(result.isValid).toBe(true);
     });
 
-    it("should accept courtLists without cases", () => {
+    it("should accept document with sessions but no cases", () => {
       const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [{ courtHouse: { courtRoom: [] } }]
+        document: {
+          data: {
+            job: {
+              printdate: "01/01/2020",
+              sessions: { session: [{ court: "Test Court", lja: "Test LJA", room: 1, sstart: "09:00", blocks: { block: [] } }] }
+            }
+          }
+        }
       });
       expect(result.isValid).toBe(true);
     });
@@ -101,128 +91,131 @@ describe("validateMagistratesAdultCourtList", () => {
       const result = validateMagistratesAdultCourtList({ document: "not an object" });
       expect(result.isValid).toBe(false);
     });
-
-    it("should reject courtLists item without courtHouse", () => {
-      const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [{}]
-      });
-      expect(result.isValid).toBe(false);
-    });
   });
 
   describe("HTML injection protection", () => {
-    it("should reject HTML tags in courtRoomName", () => {
+    it("should reject HTML tags in def_name", () => {
       const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [{ courtRoomName: "<script>alert(1)</script>", session: [] }]
+        document: {
+          data: {
+            job: {
+              sessions: {
+                session: [
+                  {
+                    court: "Test Court",
+                    blocks: {
+                      block: [{ bstart: "09:00", cases: { case: [{ def_name: "<script>alert(1)</script>" }] } }]
+                    }
+                  }
+                ]
+              }
             }
           }
-        ]
+        }
       });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject HTML tags in johKnownAs", () => {
+    it("should reject HTML tags in court", () => {
       const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [
-                {
-                  courtRoomName: "Room 1",
-                  session: [{ judiciary: [{ johKnownAs: "<b>Judge</b>" }], sittings: [] }]
-                }
-              ]
+        document: {
+          data: {
+            job: {
+              sessions: { session: [{ court: "<b>Test Court</b>", blocks: { block: [] } }] }
             }
           }
-        ]
+        }
       });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject HTML tags in offenceTitle", () => {
+    it("should reject HTML tags in lja", () => {
       const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [
-                {
-                  courtRoomName: "Room 1",
-                  session: [
-                    {
-                      sittings: [
+        document: {
+          data: {
+            job: {
+              sessions: { session: [{ lja: "<script>xss</script>", court: "Test Court", blocks: { block: [] } }] }
+            }
+          }
+        }
+      });
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject HTML tags in offence title", () => {
+      const result = validateMagistratesAdultCourtList({
+        document: {
+          data: {
+            job: {
+              sessions: {
+                session: [
+                  {
+                    court: "Test Court",
+                    blocks: {
+                      block: [
                         {
-                          sittingStart: "2022-07-27T09:40:00Z",
-                          hearing: [
-                            {
-                              case: [
-                                {
-                                  party: [
-                                    {
-                                      partyRole: "DEFENDANT",
-                                      offence: [{ offenceTitle: "<script>xss</script>" }]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
+                          bstart: "09:00",
+                          cases: {
+                            case: [{ offences: { offence: [{ title: "<script>xss</script>" }] } }]
+                          }
                         }
                       ]
                     }
-                  ]
-                }
-              ]
+                  }
+                ]
+              }
             }
           }
-        ]
+        }
       });
       expect(result.isValid).toBe(false);
     });
 
-    it("should reject HTML tags in individualSurname", () => {
+    it("should reject HTML tags in informant", () => {
       const result = validateMagistratesAdultCourtList({
-        document: {},
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [
-                {
-                  courtRoomName: "Room 1",
-                  session: [
-                    {
-                      sittings: [
+        document: {
+          data: {
+            job: {
+              sessions: {
+                session: [
+                  {
+                    court: "Test Court",
+                    blocks: {
+                      block: [{ bstart: "09:00", cases: { case: [{ inf: "<b>CPS</b>" }] } }]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      });
+      expect(result.isValid).toBe(false);
+    });
+
+    it("should reject HTML tags in address line", () => {
+      const result = validateMagistratesAdultCourtList({
+        document: {
+          data: {
+            job: {
+              sessions: {
+                session: [
+                  {
+                    court: "Test Court",
+                    blocks: {
+                      block: [
                         {
-                          sittingStart: "2022-07-27T09:40:00Z",
-                          hearing: [
-                            {
-                              case: [
-                                {
-                                  party: [
-                                    {
-                                      partyRole: "DEFENDANT",
-                                      individualDetails: { individualSurname: "<b>Smith</b>" }
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
+                          bstart: "09:00",
+                          cases: { case: [{ def_addr: { line1: "<script>alert(1)</script>" } }] }
                         }
                       ]
                     }
-                  ]
-                }
-              ]
+                  }
+                ]
+              }
             }
           }
-        ]
+        }
       });
       expect(result.isValid).toBe(false);
     });
