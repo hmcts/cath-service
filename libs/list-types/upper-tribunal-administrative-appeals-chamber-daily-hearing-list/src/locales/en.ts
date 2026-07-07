@@ -21,9 +21,7 @@ export const en = {
     scotlandTitle: "Scotland",
     scotlandRemoteText: "Remote hearings",
     scotlandCvpText:
-      "When hearings are listed for Scotland the hearing will be available to representatives of the media or any other member of the public, on their request, and therefore will be a hearing conducted in public in accordance with Rule 37 of the Tribunal Procedure (Upper Tribunal) Rules 2008. It will be organised and conducted using Cloud Video Platform (CVP). Any media representative or any other member of the public wishing to witness the hearing will need to do so over the internet and provide an email address at which to be sent an appropriate link for access. Please contact UTAACMailbox@justice.gov.uk.",
-    observeLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
-    observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
+      "When hearings are listed for Scotland the hearing will be available to representatives of the media or any other member of the public, on their request, and therefore will be a hearing conducted in public in accordance with Rule 37 of the Tribunal Procedure (Upper Tribunal) Rules 2008. It will be organised and conducted using Cloud Video Platform (CVP). Any media representative or any other member of the public wishing to witness the hearing will need to do so over the internet and provide an email address at which to be sent an appropriate link for access. Please contact UTAACMailbox@justice.gov.uk."
   },
   openingStatementTitle: "Important information",
   searchCasesTitle: "Search Cases",

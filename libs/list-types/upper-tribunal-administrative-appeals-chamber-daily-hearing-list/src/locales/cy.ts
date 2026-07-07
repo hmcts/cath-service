@@ -21,9 +21,7 @@ export const cy = {
     scotlandTitle: "Yr Alban",
     scotlandRemoteText: "Gwrandawiadau o bell",
     scotlandCvpText:
-      "Pan restrir gwrandawiadau ar gyfer yr Alban, bydd y gwrandawiad ar gael i gynrychiolwyr y cyfryngau neu unrhyw aelod arall o'r cyhoedd, ar eu cais, a fydd felly yn wrandawiad a gynhelir yn gyhoeddus yn unol â Rheol 37 o Reolau Gweithdrefn Tribiwnlysoedd (Tribiwnlys Uwch) 2008. Bydd yn cael ei drefnu a'i gynnal gan ddefnyddio Platfform Fideo Cwmwl (CVP). Bydd angen i unrhyw gynrychiolydd cyfryngau neu unrhyw aelod arall o'r cyhoedd sy'n dymuno tystio i'r gwrandawiad wneud hynny dros y rhyngrwyd a darparu cyfeiriad e-bost i anfon dolen fynediad briodol ato. Cysylltwch â UTAACMailbox@justice.gov.uk.",
-    observeLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
-    observeLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
+      "Pan restrir gwrandawiadau ar gyfer yr Alban, bydd y gwrandawiad ar gael i gynrychiolwyr y cyfryngau neu unrhyw aelod arall o'r cyhoedd, ar eu cais, a fydd felly yn wrandawiad a gynhelir yn gyhoeddus yn unol â Rheol 37 o Reolau Gweithdrefn Tribiwnlysoedd (Tribiwnlys Uwch) 2008. Bydd yn cael ei drefnu a'i gynnal gan ddefnyddio Platfform Fideo Cwmwl (CVP). Bydd angen i unrhyw gynrychiolydd cyfryngau neu unrhyw aelod arall o'r cyhoedd sy'n dymuno tystio i'r gwrandawiad wneud hynny dros y rhyngrwyd a darparu cyfeiriad e-bost i anfon dolen fynediad briodol ato. Cysylltwch â UTAACMailbox@justice.gov.uk."
   },
   openingStatementTitle: "Gwybodaeth bwysig",
   searchCasesTitle: "Chwilio Achosion",
