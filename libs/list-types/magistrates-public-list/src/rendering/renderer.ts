@@ -168,7 +168,7 @@ function formatPublicationTime(isoDateTime: string): string {
     hour12: true,
     timeZone: "Europe/London"
   });
-  return raw.replace(/\s+(am|pm)$/i, (_, suffix: string) => suffix.toLowerCase());
+  return raw.replace(/:00\s*(am|pm)$/i, (_, suffix: string) => suffix.toLowerCase()).replace(/\s+(am|pm)$/i, (_, suffix: string) => suffix.toLowerCase());
 }
 
 function formatSittingTime(sittingStart: string | undefined): string {

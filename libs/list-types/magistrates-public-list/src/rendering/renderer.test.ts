@@ -103,6 +103,32 @@ describe("renderMagistratesPublicListData", () => {
     expect(sitting.time).toMatch(/(am|pm)$/i);
   });
 
+  it("should omit :00 minutes for on-the-hour sitting times", async () => {
+    const input = {
+      ...baseInput,
+      courtLists: [
+        {
+          courtHouse: {
+            courtRoom: [
+              {
+                courtRoomName: "Room 1",
+                session: [
+                  {
+                    sittings: [{ sittingStart: "2020-09-13T10:00:00Z", hearing: [] }]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    };
+    const result = await renderMagistratesPublicListData(input, baseOptions);
+    const sitting = result.listData.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0] as any;
+    expect(sitting.time).not.toContain(":00");
+    expect(sitting.time).toMatch(/(am|pm)$/i);
+  });
+
   it("should set sitting.time to empty string when sittingStart is absent", async () => {
     const input = {
       ...baseInput,
