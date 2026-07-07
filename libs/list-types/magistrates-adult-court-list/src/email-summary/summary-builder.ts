@@ -5,22 +5,18 @@ export { formatCaseSummaryForEmail };
 
 export function extractCaseSummary(jsonData: MagistratesAdultCourtListData): CaseSummary[] {
   const summaries: CaseSummary[] = [];
+  const sessions = jsonData.document.data?.job?.sessions?.session ?? [];
 
-  for (const courtList of jsonData.courtLists) {
-    for (const courtRoom of courtList.courtHouse.courtRoom) {
-      for (const session of courtRoom.session) {
-        for (const sitting of session.sittings) {
-          for (const hearing of sitting.hearing) {
-            for (const caseItem of hearing.case ?? []) {
-              summaries.push([
-                { label: "Defendant Name", value: caseItem.defendantName ?? "" },
-                { label: "Informant", value: caseItem.informant ?? "" },
-                { label: "Case Number", value: caseItem.caseNumber ?? "" },
-                { label: "Offence Title", value: caseItem.offenceTitle ?? "" }
-              ]);
-            }
-          }
-        }
+  for (const session of sessions) {
+    for (const block of session.blocks?.block ?? []) {
+      for (const caseItem of block.cases?.case ?? []) {
+        const offenceTitle = caseItem.offences?.offence?.[0]?.title ?? "";
+        summaries.push([
+          { label: "Defendant Name", value: caseItem.def_name ?? "" },
+          { label: "Informant", value: caseItem.inf ?? "" },
+          { label: "Case Number", value: caseItem.caseno ?? "" },
+          { label: "Offence Title", value: offenceTitle }
+        ]);
       }
     }
   }

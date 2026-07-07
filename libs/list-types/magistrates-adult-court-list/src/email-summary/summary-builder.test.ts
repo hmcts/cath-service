@@ -2,59 +2,51 @@ import { describe, expect, it } from "vitest";
 import type { MagistratesAdultCourtListData } from "../rendering/renderer.js";
 import { extractCaseSummary, formatCaseSummaryForEmail } from "./summary-builder.js";
 
-const buildMinimalData = (overrides: Partial<MagistratesAdultCourtListData> = {}): MagistratesAdultCourtListData => ({
-  document: { publicationDate: "2025-09-13T09:00:00Z" },
-  courtLists: [],
-  ...overrides
+const buildMinimalData = (sessions: object[] = []): MagistratesAdultCourtListData => ({
+  document: {
+    data: {
+      job: {
+        printdate: "13/09/2025",
+        sessions: { session: sessions as any }
+      }
+    }
+  }
 });
 
-const buildCourtList = (hearings: object[]) => ({
-  courtHouse: {
-    courtRoom: [
+const buildSession = (cases: object[]) => ({
+  lja: "Local Justice Area",
+  court: "Test Court",
+  room: 1,
+  sstart: "10:00",
+  blocks: {
+    block: [
       {
-        courtRoomName: "Room 1",
-        session: [
-          {
-            sittings: [
-              {
-                sittingStart: "2025-09-13T10:00:00Z",
-                hearing: hearings
-              }
-            ]
-          }
-        ]
+        bstart: "09:00",
+        cases: { case: cases }
       }
     ]
   }
 });
 
 describe("extractCaseSummary", () => {
-  it("should return empty array when there are no court lists", () => {
+  it("should return empty array when there are no sessions", () => {
     const result = extractCaseSummary(buildMinimalData());
     expect(result).toHaveLength(0);
   });
 
   it("should extract Defendant Name, Informant, Case Number and Offence Title per case", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            hearingType: "Trial",
-            case: [
-              {
-                blockStart: "2025-09-13T09:00:00Z",
-                defendantName: "Smith, John",
-                informant: "Crown Prosecution Service",
-                caseNumber: "AB12345678",
-                offenceCode: "RT88191",
-                offenceTitle: "Drink driving",
-                offenceSummary: "On 01/01/2025 drove a motor vehicle"
-              }
-            ]
+    const data = buildMinimalData([
+      buildSession([
+        {
+          caseno: "AB12345678",
+          def_name: "Smith, John",
+          inf: "Crown Prosecution Service",
+          offences: {
+            offence: [{ code: "RT88191", title: "Drink driving", sum: "On 01/01/2025 drove a motor vehicle" }]
           }
-        ])
-      ]
-    });
+        }
+      ])
+    ]);
 
     const result = extractCaseSummary(data);
 
@@ -68,56 +60,21 @@ describe("extractCaseSummary", () => {
   });
 
   it("should use empty string for missing optional fields", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            case: [
-              {
-                defendantName: "Jones, Mary",
-                caseNumber: "CD98765432",
-                offenceCode: "TH68001",
-                offenceTitle: "Theft"
-              }
-            ]
-          }
-        ])
-      ]
-    });
+    const data = buildMinimalData([buildSession([{ caseno: "CD98765432", def_name: "Jones, Mary" }])]);
 
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
     expect(result[0][1]).toEqual({ label: "Informant", value: "" });
+    expect(result[0][3]).toEqual({ label: "Offence Title", value: "" });
   });
 
-  it("should handle multiple cases across multiple court lists", () => {
-    const courtList1 = buildCourtList([
-      {
-        case: [
-          {
-            defendantName: "Adams, Alice",
-            informant: "CPS",
-            caseNumber: "CASE001",
-            offenceTitle: "Fraud"
-          }
-        ]
-      }
-    ]);
-    const courtList2 = buildCourtList([
-      {
-        case: [
-          {
-            defendantName: "Baker, Bob",
-            informant: "Police",
-            caseNumber: "CASE002",
-            offenceTitle: "Theft"
-          }
-        ]
-      }
+  it("should handle multiple cases across multiple sessions", () => {
+    const data = buildMinimalData([
+      buildSession([{ caseno: "CASE001", def_name: "Adams, Alice", inf: "CPS", offences: { offence: [{ code: "C1", title: "Fraud", sum: "" }] } }]),
+      buildSession([{ caseno: "CASE002", def_name: "Baker, Bob", inf: "Police", offences: { offence: [{ code: "C2", title: "Theft", sum: "" }] } }])
     ]);
 
-    const data = buildMinimalData({ courtLists: [courtList1, courtList2] });
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(2);
@@ -125,16 +82,8 @@ describe("extractCaseSummary", () => {
     expect(result[1][0]).toEqual({ label: "Defendant Name", value: "Baker, Bob" });
   });
 
-  it("should use empty string for missing defendantName", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            case: [{ caseNumber: "AB123", offenceCode: "RT001", offenceTitle: "Speeding" }]
-          }
-        ])
-      ]
-    });
+  it("should use empty string for missing def_name", () => {
+    const data = buildMinimalData([buildSession([{ caseno: "AB123", offences: { offence: [{ code: "RT001", title: "Speeding", sum: "" }] } }])]);
 
     const result = extractCaseSummary(data);
 
@@ -142,16 +91,8 @@ describe("extractCaseSummary", () => {
     expect(result[0][0]).toEqual({ label: "Defendant Name", value: "" });
   });
 
-  it("should use empty string for missing caseNumber", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            case: [{ defendantName: "Smith, John", offenceTitle: "Speeding" }]
-          }
-        ])
-      ]
-    });
+  it("should use empty string for missing caseno", () => {
+    const data = buildMinimalData([buildSession([{ def_name: "Smith, John", offences: { offence: [{ code: "RT001", title: "Speeding", sum: "" }] } }])]);
 
     const result = extractCaseSummary(data);
 
@@ -159,16 +100,8 @@ describe("extractCaseSummary", () => {
     expect(result[0][2]).toEqual({ label: "Case Number", value: "" });
   });
 
-  it("should use empty string for missing offenceTitle", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            case: [{ defendantName: "Smith, John", caseNumber: "AB123", offenceCode: "RT001" }]
-          }
-        ])
-      ]
-    });
+  it("should use empty string for missing offence title", () => {
+    const data = buildMinimalData([buildSession([{ caseno: "AB123", def_name: "Smith, John" }])]);
 
     const result = extractCaseSummary(data);
 
@@ -176,25 +109,41 @@ describe("extractCaseSummary", () => {
     expect(result[0][3]).toEqual({ label: "Offence Title", value: "" });
   });
 
-  it("should handle multiple cases in the same hearing", () => {
-    const data = buildMinimalData({
-      courtLists: [
-        buildCourtList([
-          {
-            case: [
-              { defendantName: "First, Person", caseNumber: "CASE001", offenceTitle: "Speeding" },
-              { defendantName: "Second, Person", caseNumber: "CASE002", offenceTitle: "Fraud" }
-            ]
-          }
-        ])
-      ]
-    });
+  it("should handle multiple cases in the same block", () => {
+    const data = buildMinimalData([
+      buildSession([
+        { caseno: "CASE001", def_name: "First, Person", offences: { offence: [{ code: "C1", title: "Speeding", sum: "" }] } },
+        { caseno: "CASE002", def_name: "Second, Person", offences: { offence: [{ code: "C2", title: "Fraud", sum: "" }] } }
+      ])
+    ]);
 
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(2);
     expect(result[0][2]).toEqual({ label: "Case Number", value: "CASE001" });
     expect(result[1][2]).toEqual({ label: "Case Number", value: "CASE002" });
+  });
+
+  it("should use the first offence title when multiple offences exist", () => {
+    const data = buildMinimalData([
+      buildSession([
+        {
+          caseno: "AB123",
+          def_name: "Smith, John",
+          offences: {
+            offence: [
+              { code: "C1", title: "First Offence", sum: "" },
+              { code: "C2", title: "Second Offence", sum: "" }
+            ]
+          }
+        }
+      ])
+    ]);
+
+    const result = extractCaseSummary(data);
+
+    expect(result).toHaveLength(1);
+    expect(result[0][3]).toEqual({ label: "Offence Title", value: "First Offence" });
   });
 });
 

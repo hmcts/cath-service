@@ -7,56 +7,88 @@ export interface RenderOptions {
   locale: string;
 }
 
-interface DefendantAddress {
-  line1?: string;
-  line2?: string;
-  line3?: string;
-  line4?: string;
-  line5?: string;
-  pcode?: string;
+interface VenueAddress {
+  line?: string[];
+  town?: string;
+  county?: string;
+  postCode?: string;
 }
 
-interface OffenceData {
-  code: string;
-  title: string;
-  cy_title?: string;
-  sum: string;
-  cy_sum?: string;
+interface Judiciary {
+  johKnownAs?: string;
 }
 
-interface RawCaseData {
-  caseno: string;
-  def_name: string;
-  def_dob?: string;
-  def_age?: number;
-  def_addr?: DefendantAddress;
-  inf?: string;
-  offences?: { offence?: OffenceData[] };
+interface IndividualDetails {
+  individualForenames?: string;
+  individualSurname?: string;
+  dateOfBirth?: string;
+  age?: string;
+  address?: VenueAddress;
 }
 
-interface RawBlockData {
-  bstart: string;
-  cases?: { case?: RawCaseData[] };
+interface OrganisationDetails {
+  organisationName?: string;
 }
 
-interface RawSessionData {
-  lja: string;
-  court: string;
-  room: number;
-  sstart: string;
-  blocks?: { block?: RawBlockData[] };
+interface Offence {
+  offenceTitle?: string;
+  offenceCode?: string;
+  offenceSummary?: string;
+}
+
+interface Party {
+  partyRole?: string;
+  individualDetails?: IndividualDetails;
+  organisationDetails?: OrganisationDetails;
+  offence?: Offence[];
+  subject?: boolean;
+}
+
+interface Case {
+  caseUrn?: string;
+  party?: Party[];
+  reportingRestriction?: boolean;
+}
+
+interface Hearing {
+  hearingType?: string;
+  case?: Case[];
+}
+
+interface Sitting {
+  sittingStart?: string;
+  hearing?: Hearing[];
+}
+
+interface Session {
+  judiciary?: Judiciary[];
+  sittings?: Sitting[];
+}
+
+interface CourtRoom {
+  courtRoomName?: string;
+  session?: Session[];
+}
+
+interface CourtHouse {
+  courtHouseName?: string;
+  courtRoom?: CourtRoom[];
+}
+
+interface CourtList {
+  courtHouse: CourtHouse;
+}
+
+interface VenueDetails {
+  venueAddress?: VenueAddress;
 }
 
 export interface MagistratesAdultCourtListData {
   document: {
-    info?: { start_time?: string };
-    data?: {
-      job?: {
-        printdate?: string;
-        sessions?: { session?: RawSessionData[] };
-      };
-    };
+    publicationDate?: string;
   };
+  venue?: VenueDetails;
+  courtLists?: CourtList[];
 }
 
 export async function renderMagistratesAdultCourtList(jsonData: MagistratesAdultCourtListData, options: RenderOptions) {
@@ -68,54 +100,32 @@ export async function renderMagistratesAdultCourtList(jsonData: MagistratesAdult
 async function buildHeader(jsonData: MagistratesAdultCourtListData, options: RenderOptions) {
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : (location?.name ?? "");
-  const printdate = jsonData.document.data?.job?.printdate ?? "";
-  const startTime = jsonData.document.info?.start_time;
+  const pubDateTime = jsonData.document.publicationDate;
+  const { publishedDate, publishedTime } = formatPublicationDateTime(pubDateTime, options.locale);
+  const venueAddress = formatVenueAddress(jsonData.venue?.venueAddress);
 
   return {
     locationName,
     contentDate: formatDisplayDate(options.contentDate, options.locale),
-    publishedDate: formatPrintDate(printdate, options.locale),
-    publishedTime: formatStartTime(startTime),
-    venueAddress: [] as string[]
+    publishedDate,
+    publishedTime,
+    venueAddress
   };
 }
 
-function transformToListData(jsonData: MagistratesAdultCourtListData, locale: string) {
-  const sessions = jsonData.document.data?.job?.sessions?.session ?? [];
-
-  const courtListMap = new Map<string, { courtHouse: { courtRoom: CourtRoomOutput[] } }>();
-
-  for (const session of sessions) {
-    const key = `${session.lja}||${session.court}`;
-    if (!courtListMap.has(key)) {
-      courtListMap.set(key, { courtHouse: { courtRoom: [] } });
-    }
-    const courtList = courtListMap.get(key)!;
-    courtList.courtHouse.courtRoom.push(transformSession(session, locale));
-  }
-
-  return { courtLists: Array.from(courtListMap.values()) };
+function formatPublicationDateTime(pubDateTime: string | undefined, locale: string): { publishedDate: string; publishedTime: string } {
+  if (!pubDateTime) return { publishedDate: "", publishedTime: "" };
+  const date = new Date(pubDateTime);
+  if (Number.isNaN(date.getTime())) return { publishedDate: "", publishedTime: "" };
+  const publishedDate = date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  const publishedTime = `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+  return { publishedDate, publishedTime };
 }
 
-interface CourtRoomOutput {
-  courtRoomName: string;
-  session: SessionOutput[];
-}
-
-interface SessionOutput {
-  formattedJudiciaries: string;
-  courtRoom: number;
-  lja: string;
-  sessionStart: string;
-  sittings: SittingOutput[];
-}
-
-interface SittingOutput {
-  hearing: HearingOutput[];
-}
-
-interface HearingOutput {
-  case: CaseOutput[];
+function formatVenueAddress(addr: VenueAddress | undefined): string[] {
+  if (!addr) return [];
+  const lines = [...(addr.line ?? []), addr.town, addr.county, addr.postCode];
+  return lines.filter((line): line is string => !!line && line.trim().length > 0);
 }
 
 interface CaseOutput {
@@ -131,66 +141,112 @@ interface CaseOutput {
   offenceSummary: string;
 }
 
-function transformSession(session: RawSessionData, locale: string): CourtRoomOutput {
-  const sittings = (session.blocks?.block ?? []).map((block) => transformBlock(block, locale));
+interface HearingOutput {
+  case: CaseOutput[];
+}
 
-  return {
-    courtRoomName: session.court,
-    session: [{ formattedJudiciaries: "", courtRoom: session.room, lja: session.lja, sessionStart: formatStartTime(session.sstart), sittings }]
+interface SittingOutput {
+  hearing: HearingOutput[];
+}
+
+interface SessionOutput {
+  formattedJudiciaries: string;
+  sittings: SittingOutput[];
+}
+
+interface CourtRoomOutput {
+  courtRoomName: string;
+  session: SessionOutput[];
+}
+
+interface CourtListOutput {
+  courtHouse: {
+    courtRoom: CourtRoomOutput[];
   };
 }
 
-function transformBlock(block: RawBlockData, locale: string): SittingOutput {
-  const cases = (block.cases?.case ?? []).map((rawCase) => transformCase(rawCase, formatStartTime(block.bstart), locale));
-  return { hearing: [{ case: cases }] };
+function transformToListData(jsonData: MagistratesAdultCourtListData, locale: string): { courtLists: CourtListOutput[] } {
+  const courtLists = (jsonData.courtLists ?? []).map((courtList) => transformCourtList(courtList, locale));
+  return { courtLists };
 }
 
-function transformCase(rawCase: RawCaseData, blockStart: string, locale: string): CaseOutput {
-  const offences = rawCase.offences?.offence ?? [];
-  const baseCase = {
+function transformCourtList(courtList: CourtList, locale: string): CourtListOutput {
+  const courtRooms = (courtList.courtHouse.courtRoom ?? []).map((room) => transformCourtRoom(room, locale));
+  return { courtHouse: { courtRoom: courtRooms } };
+}
+
+function transformCourtRoom(courtRoom: CourtRoom, locale: string): CourtRoomOutput {
+  const sessions = (courtRoom.session ?? []).map((session) => transformSession(session, locale));
+  return { courtRoomName: courtRoom.courtRoomName ?? "", session: sessions };
+}
+
+function transformSession(session: Session, locale: string): SessionOutput {
+  const formattedJudiciaries = (session.judiciary ?? [])
+    .map((j) => j.johKnownAs ?? "")
+    .filter(Boolean)
+    .join(", ");
+  const sittings = (session.sittings ?? []).map((sitting) => transformSitting(sitting, locale));
+  return { formattedJudiciaries, sittings };
+}
+
+function transformSitting(sitting: Sitting, locale: string): SittingOutput {
+  const blockStart = formatSittingStart(sitting.sittingStart, locale);
+  const hearings = (sitting.hearing ?? []).map((hearing) => transformHearing(hearing, blockStart, locale));
+  return { hearing: hearings };
+}
+
+function transformHearing(hearing: Hearing, blockStart: string, locale: string): HearingOutput {
+  const cases = (hearing.case ?? []).map((c) => transformCase(c, blockStart, locale));
+  return { case: cases };
+}
+
+function transformCase(c: Case, blockStart: string, locale: string): CaseOutput {
+  const parties = c.party ?? [];
+  const defendantParty = parties.find((p) => p.partyRole === "DEFENDANT");
+  const prosecutingParty = parties.find((p) => p.partyRole === "PROSECUTING_AUTHORITY");
+
+  const defendantName = formatIndividualName(defendantParty?.individualDetails);
+  const informant = prosecutingParty?.organisationDetails?.organisationName ?? formatIndividualName(prosecutingParty?.individualDetails);
+
+  const offences = defendantParty?.offence ?? [];
+  const offenceTitle = offences
+    .map((o) => o.offenceTitle ?? "")
+    .filter(Boolean)
+    .join(", ");
+
+  return {
     blockStart,
-    caseNumber: rawCase.caseno,
-    defendantName: rawCase.def_name,
-    dateOfBirth: rawCase.def_dob ?? "",
-    age: rawCase.def_age !== undefined ? String(rawCase.def_age) : "",
-    address: formatAddress(rawCase.def_addr),
-    informant: rawCase.inf ?? ""
-  };
-
-  if (offences.length === 0) {
-    return { ...baseCase, offenceCode: "", offenceTitle: "", offenceSummary: "" };
-  }
-
-  return {
-    ...baseCase,
-    offenceCode: offences.map((o) => o.code).join(", "),
-    offenceTitle: offences.map((o) => (locale === "cy" && o.cy_title ? o.cy_title : o.title)).join(", "),
-    offenceSummary: offences.map((o) => (locale === "cy" && o.cy_sum ? o.cy_sum : o.sum)).join(", ")
+    caseNumber: c.caseUrn ?? "",
+    defendantName,
+    dateOfBirth: defendantParty?.individualDetails?.dateOfBirth ?? "",
+    age: defendantParty?.individualDetails?.age ?? "",
+    address: formatIndividualAddress(defendantParty?.individualDetails?.address),
+    informant,
+    offenceCode: "",
+    offenceTitle,
+    offenceSummary: ""
   };
 }
 
-function formatAddress(addr: DefendantAddress | undefined): string {
+function formatIndividualName(details: IndividualDetails | undefined): string {
+  if (!details) return "";
+  const parts = [details.individualForenames, details.individualSurname].filter(Boolean);
+  return parts.join(" ");
+}
+
+function formatIndividualAddress(addr: VenueAddress | undefined): string {
   if (!addr) return "";
-  return [addr.line1, addr.line2, addr.line3, addr.line4, addr.line5, addr.pcode].filter(Boolean).join(", ");
+  const parts = [...(addr.line ?? []), addr.town, addr.county, addr.postCode];
+  return parts.filter((p): p is string => !!p && p.trim().length > 0).join(", ");
 }
 
-function formatPrintDate(printdate: string, locale: string): string {
-  const parts = printdate.split("/");
-  if (parts.length !== 3) return printdate;
-  const [day, month, year] = parts;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  return date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-}
-
-function formatStartTime(startTime: string | undefined): string {
-  if (!startTime) return "";
-  const [hoursStr, minutesStr] = startTime.split(":");
-  const hours = Number(hoursStr);
+function formatSittingStart(sittingStart: string | undefined, _locale: string): string {
+  if (!sittingStart) return "";
+  const date = new Date(sittingStart);
+  if (Number.isNaN(date.getTime())) return sittingStart;
+  const hours = date.getUTCHours();
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   const suffix = hours < 12 ? "am" : "pm";
   const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-  return `${hours12}:${minutesStr}${suffix}`;
+  return `${hours12}:${minutes}${suffix}`;
 }
