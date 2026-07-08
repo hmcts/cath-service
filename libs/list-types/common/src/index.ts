@@ -12,6 +12,7 @@ export {
   convertExcelForListTypeName,
   createConverter,
   getConverterForListType,
+  getConverterForListTypeName,
   hasConverterForListType,
   hasConverterForListTypeName,
   type ListTypeConverter,

@@ -57,7 +57,8 @@ describe("London Administrative Court page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -159,10 +160,11 @@ describe("London Administrative Court page controller", () => {
       );
     });
 
-    it("should return 400 when list type is not 18", async () => {
+    it("should return 400 when list type name does not match", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         listTypeId: 1,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -188,7 +190,8 @@ describe("London Administrative Court page controller", () => {
     it("should return 404 when JSON file is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -215,7 +218,8 @@ describe("London Administrative Court page controller", () => {
     it("should return 400 when JSON validation fails", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -268,7 +272,8 @@ describe("London Administrative Court page controller", () => {
     it("should use Welsh locale when specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -311,7 +316,8 @@ describe("London Administrative Court page controller", () => {
     it("should default to English locale when locale is not specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -354,7 +360,8 @@ describe("London Administrative Court page controller", () => {
     it("should use provenance label from PROVENANCE_LABELS", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -394,7 +401,8 @@ describe("London Administrative Court page controller", () => {
     it("should fall back to raw provenance if label not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 18,
+        listTypeId: 999,
+        listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
