@@ -119,9 +119,6 @@ const postHandler = async (req: Request, res: Response) => {
       noMatch: false
     });
 
-    // Save file to blob storage with artefactId as blob name (will overwrite if exists)
-    await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
-
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
     const selectedListType = await findListTypeById(listTypeId);
@@ -140,8 +137,10 @@ const postHandler = async (req: Request, res: Response) => {
         jsonData = canConvertById
           ? await convertExcelForListType(listTypeId, uploadData.file)
           : await convertExcelForListTypeName(listTypeName!, uploadData.file);
+        // Store converted JSON in blob — original Excel is not stored (no value after conversion)
         await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
-        await updateSourceArtefactId(artefactId, `${artefactId}.json`);
+        // Track the original uploaded Excel file name, not the synthetic JSON blob name
+        await updateSourceArtefactId(artefactId, uploadData.fileName);
 
         // Extract and store artefact search data from converted JSON
         try {
@@ -154,6 +153,7 @@ const postHandler = async (req: Request, res: Response) => {
         }
       }
     } else {
+      await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
       await updateSourceArtefactId(artefactId, uploadData.fileName);
       try {
         jsonData = JSON.parse(uploadData.file.toString("utf8"));
