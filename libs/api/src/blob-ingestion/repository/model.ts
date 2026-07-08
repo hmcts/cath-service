@@ -18,6 +18,8 @@ export interface BlobIngestionRequest {
   source_artefact_id?: string;
 }
 
+export type FlatFileIngestionRequest = Omit<BlobIngestionRequest, "hearing_list">;
+
 export interface BlobIngestionResponse {
   success: boolean;
   artefact_id?: string;
