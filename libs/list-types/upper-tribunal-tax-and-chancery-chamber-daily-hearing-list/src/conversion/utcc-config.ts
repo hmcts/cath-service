@@ -1,4 +1,4 @@
-import { createConverter, type ExcelConverterConfig, registerConverter, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
+import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
 
 export const UTCC_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -55,5 +55,4 @@ export const UTCC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utccConverter = createConverter(UTCC_EXCEL_CONFIG);
-registerConverter(28, utccConverter);
 registerConverterByName("UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST", utccConverter);

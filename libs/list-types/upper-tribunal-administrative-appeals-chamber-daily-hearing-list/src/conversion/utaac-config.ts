@@ -1,4 +1,4 @@
-import { createConverter, type ExcelConverterConfig, registerConverter, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
+import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
 
 export const UTAAC_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -55,5 +55,4 @@ export const UTAAC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utaacConverter = createConverter(UTAAC_EXCEL_CONFIG);
-registerConverter(30, utaacConverter);
 registerConverterByName("UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST", utaacConverter);

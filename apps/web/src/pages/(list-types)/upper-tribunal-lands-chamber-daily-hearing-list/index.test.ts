@@ -61,7 +61,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 29,
+        listTypeId: 999,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -163,7 +163,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 29,
+        listTypeId: 999,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -194,7 +194,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 29,
+        listTypeId: 999,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -245,7 +245,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 29,
+        listTypeId: 999,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -282,7 +282,7 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 29,
+        listTypeId: 999,
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
