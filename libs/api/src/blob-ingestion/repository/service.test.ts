@@ -39,7 +39,7 @@ describe("processBlobIngestion", async () => {
     vi.clearAllMocks();
     vi.mocked(processPublication).mockResolvedValue({});
     vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
-    vi.mocked(saveUploadedFile).mockResolvedValue(".json");
+    vi.mocked(saveUploadedFile).mockResolvedValue(undefined);
     vi.mocked(updateSourceArtefactId).mockResolvedValue(undefined);
   });
 
@@ -103,6 +103,26 @@ describe("processBlobIngestion", async () => {
       })
     );
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+  });
+
+  it("should use source_artefact_id from request when provided", async () => {
+    // Arrange
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
+    const requestWithSourceId: BlobIngestionRequest = { ...validRequest, source_artefact_id: "civil-daily-cause-list.json" };
+
+    // Act
+    const result = await processBlobIngestion(requestWithSourceId, 1000);
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "civil-daily-cause-list.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "civil-daily-cause-list.json");
   });
 
   it("should return validation errors when request is invalid", async () => {

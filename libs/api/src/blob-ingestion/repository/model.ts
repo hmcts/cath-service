@@ -15,6 +15,7 @@ export interface BlobIngestionRequest {
   display_from: string;
   display_to: string;
   hearing_list: unknown;
+  source_artefact_id?: string;
 }
 
 export interface BlobIngestionResponse {

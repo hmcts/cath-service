@@ -84,8 +84,9 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
     // Save JSON to blob storage for list display pages
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
-    await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
-    await updateSourceArtefactId(artefactId, "upload.json");
+    const sourceArtefactId = request.source_artefact_id || "upload.json";
+    await saveUploadedFile(artefactId, sourceArtefactId, jsonBuffer);
+    await updateSourceArtefactId(artefactId, sourceArtefactId);
 
     // Extract and store artefact search data for case number/name search
     await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
