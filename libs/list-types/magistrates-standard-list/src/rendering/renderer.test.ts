@@ -656,14 +656,14 @@ describe("renderMagistratesStandardListData", () => {
     expect(result.listData[0].sittings[0].sittingHeading).toMatch(/^10am$/);
   });
 
-  it("should use 2-digit day for content and published dates", async () => {
+  it("should format single-digit day without leading zero for content and published dates", async () => {
     const result = await renderMagistratesStandardListData(MINIMAL_JSON, {
       locale: "en",
       locationId: "123",
       contentDate: new Date("2025-01-03T00:00:00.000Z")
     });
 
-    expect(result.header.contentDate).toMatch(/^03 /);
+    expect(result.header.contentDate).toMatch(/^3 /);
     expect(result.header.publishedDate).toMatch(/^13 /);
   });
 });

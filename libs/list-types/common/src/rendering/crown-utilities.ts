@@ -43,7 +43,7 @@ export function formatTime(isoDateTime: string): string {
 export function formatContentDate(date: Date, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   return date.toLocaleDateString(localeCode, {
-    day: "2-digit",
+    day: "numeric",
     month: "long",
     year: "numeric"
   });
@@ -51,7 +51,7 @@ export function formatContentDate(date: Date, locale: string): string {
 
 export function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-  const dateStr = dt.toFormat("dd MMMM yyyy");
+  const dateStr = dt.toFormat("d MMMM yyyy");
   const hours = dt.hour;
   const minutes = dt.minute;
   const period = hours >= 12 ? "pm" : "am";
