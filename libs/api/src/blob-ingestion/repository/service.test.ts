@@ -73,6 +73,7 @@ describe("processBlobIngestion", async () => {
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "");
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
@@ -103,6 +104,7 @@ describe("processBlobIngestion", async () => {
       })
     );
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "");
   });
 
   it("should use source_artefact_id from request when provided", async () => {
@@ -121,7 +123,7 @@ describe("processBlobIngestion", async () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "civil-daily-cause-list.json", expect.any(Buffer));
+    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
     expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "civil-daily-cause-list.json");
   });
 
