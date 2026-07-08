@@ -22,6 +22,6 @@ export const GET = createListTypeHandler<CrownDailyListData>({
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render("crown-daily-cause-list", { en, cy, title: t.title, header, openJustice, listData, dataSource, t });
+    res.render("crown-daily-cause-list", { en, cy, pageTitle: t.title, header, openJustice, listData, dataSource, t });
   }
 });
