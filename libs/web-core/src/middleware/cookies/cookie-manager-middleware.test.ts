@@ -84,8 +84,9 @@ describe("configureCookieManager", () => {
       const useSpy = vi.spyOn(app, "use");
 
       await configureCookieManager(app, {
-        categories: { analytics: ["_ga"] },
-        policyPath: "/cookie-policy"
+        preferencesPath: "/cookie-preferences",
+        policyPath: "/cookie-policy",
+        categories: { analytics: ["_ga"] }
       });
 
       const middleware = useSpy.mock.calls[0][0] as any;

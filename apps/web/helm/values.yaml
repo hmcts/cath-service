@@ -13,6 +13,7 @@ nodejs:
     ENVIRONMENT: '{{ .Values.global.environment }}'
     POSTGRES_DATABASE: cath
     REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
+    THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
     CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net

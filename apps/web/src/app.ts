@@ -32,7 +32,11 @@ import { moduleRoot as siacPoacPaacModuleRoot } from "@hmcts/siac-poac-paac-week
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
 import { moduleRoot as sscsDailyHearingListModuleRoot } from "@hmcts/sscs-daily-hearing-list/config";
-import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
+import {
+  fileUploadRoutes as systemAdminFileUploadRoutes,
+  moduleRoot as systemAdminModuleRoot,
+  pages as systemAdminPages
+} from "@hmcts/system-admin-pages/config";
 import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
@@ -188,7 +192,7 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(publicPagesApiRoutes));
 
   // Register all pages from apps/web/src/pages (includes route groups and admin)
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }));
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, systemAdminPages));
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {

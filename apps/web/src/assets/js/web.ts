@@ -99,8 +99,9 @@ cookieManager.on("CookieBannerAction", (eventData: any) => {
 
 cookieManager.init(config);
 
-// Hide the cookie banner when navigating back to a page from bfcache if the user
-// has already set their cookie preferences
+// When navigating back to this page via bfcache the cookie manager does not
+// re-initialise, so the confirmation panel can remain visible even though the
+// user has already made a choice. Hide the banner if a preference is already set.
 window.addEventListener("pageshow", (event) => {
   if (event.persisted && document.cookie.includes("cookie_policy")) {
     const banner = document.querySelector<HTMLElement>(".govuk-cookie-banner");

@@ -111,8 +111,8 @@ async function loadCredentialsFromAzure() {
   }
 }
 
-function credentialsAlreadySet() {
-  return Object.values(SECRET_MAPPINGS).every(envVar => process.env[envVar]);
+function credentialsAlreadyInEnvironment() {
+  return Object.values(SECRET_MAPPINGS).every((envVar) => !!process.env[envVar]);
 }
 
 async function runPlaywright() {
@@ -121,8 +121,8 @@ async function runPlaywright() {
   console.log(process.env.CI === 'true' ? 'ℹ️  Running in CI' : 'ℹ️  Running locally');
   console.log('');
 
-  if (credentialsAlreadySet()) {
-    console.log('✅ Test credentials already set as environment variables, skipping Key Vault');
+  if (credentialsAlreadyInEnvironment()) {
+    console.log('✅ Test credentials already present in environment, skipping Key Vault fetch');
     console.log('');
   } else {
     try {
