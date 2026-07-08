@@ -208,6 +208,7 @@ describe("Web Application", () => {
         app,
         expect.objectContaining({
           preferencesPath: "/cookie-preferences",
+          policyPath: "/cookie-policy",
           categories: expect.objectContaining({
             essential: expect.arrayContaining(["connect.sid"]),
             analytics: expect.any(Array),
