@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags,
@@ -64,5 +63,4 @@ export const WPAFCC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const wpafccConverter = createConverter(WPAFCC_EXCEL_CONFIG);
-registerConverter(29, wpafccConverter);
 registerConverterByName("WPAFCC_WEEKLY_HEARING_LIST", wpafccConverter);

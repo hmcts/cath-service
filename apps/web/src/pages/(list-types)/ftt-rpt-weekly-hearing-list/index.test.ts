@@ -18,6 +18,11 @@ vi.mock("@hmcts/publication", () => ({
 vi.mock("@hmcts/ftt-rpt-weekly-hearing-list", () => ({
   fttRptWeeklyHearingListEn: {
     provenanceLabels: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" },
+    rptEasternCourtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    rptLondonCourtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    rptMidlandsCourtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    rptNorthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    rptSouthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     rptEasternPageTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     rptLondonPageTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
     rptMidlandsPageTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
@@ -26,6 +31,11 @@ vi.mock("@hmcts/ftt-rpt-weekly-hearing-list", () => ({
   },
   fttRptWeeklyHearingListCy: {
     provenanceLabels: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist" },
+    rptEasternCourtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    rptLondonCourtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    rptMidlandsCourtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    rptNorthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    rptSouthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     rptEasternPageTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     rptLondonPageTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
     rptMidlandsPageTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",

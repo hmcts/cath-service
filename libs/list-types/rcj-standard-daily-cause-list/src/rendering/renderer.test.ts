@@ -27,7 +27,7 @@ describe("renderStandardDailyCauseList", () => {
   it("should render hearing list with English locale", () => {
     const result = renderStandardDailyCauseList(mockHearings, {
       locale: "en",
-      listTypeId: 10,
+      listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
       listTitle: "Civil Courts at the RCJ Daily Cause List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -45,7 +45,7 @@ describe("renderStandardDailyCauseList", () => {
   it("should render hearing list with Welsh locale", () => {
     const result = renderStandardDailyCauseList(mockHearings, {
       locale: "cy",
-      listTypeId: 10,
+      listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
       listTitle: "Rhestr Achosion Dyddiol y Llysoedd Sifil yn y Llys Barn Brenhinol",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -59,7 +59,7 @@ describe("renderStandardDailyCauseList", () => {
   it("should handle empty additional information", () => {
     const result = renderStandardDailyCauseList(mockHearings, {
       locale: "en",
-      listTypeId: 10,
+      listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
       listTitle: "Civil Courts at the RCJ Daily Cause List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -71,7 +71,7 @@ describe("renderStandardDailyCauseList", () => {
   it("should preserve all hearing data", () => {
     const result = renderStandardDailyCauseList(mockHearings, {
       locale: "en",
-      listTypeId: 10,
+      listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"

@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags,
@@ -70,5 +69,4 @@ export const GRC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const grcConverter = createConverter(GRC_EXCEL_CONFIG);
-registerConverter(28, grcConverter);
 registerConverterByName("GRC_WEEKLY_HEARING_LIST", grcConverter);

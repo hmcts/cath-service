@@ -17,6 +17,9 @@ vi.mock("@hmcts/publication", () => ({
 
 vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
   siacPoacPaacWeeklyHearingListEn: {
+    siacCourtName: "Special Immigration Appeals Commission",
+    poacCourtName: "Proscribed Organisations Appeal Commission",
+    paacCourtName: "Pathogens Access Appeal Commission",
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
@@ -25,6 +28,9 @@ vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
     importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
   },
   siacPoacPaacWeeklyHearingListCy: {
+    siacCourtName: "Special Immigration Appeals Commission",
+    poacCourtName: "Proscribed Organisations Appeal Commission",
+    paacCourtName: "Pathogens Access Appeal Commission",
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",

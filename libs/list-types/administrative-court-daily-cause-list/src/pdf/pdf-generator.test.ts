@@ -17,6 +17,13 @@ vi.mock("../rendering/renderer.js", () => ({
   renderAdminCourt: vi.fn()
 }));
 
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {
+    MANUAL_UPLOAD: "Manual Upload",
+    SNL: "SNL"
+  }
+}));
+
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { renderAdminCourt } from "../rendering/renderer.js";
 import { generateAdministrativeCourtDailyCauseListPdf } from "./pdf-generator.js";
@@ -65,7 +72,7 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 22
+      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -87,15 +94,90 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "999",
       jsonData: mockHearingList,
-      listTypeId: 22
+      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, {
       locale: "en",
-      listTypeId: 22,
+      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Bristol and Cardiff Administrative Court Daily Cause List",
       contentDate: contentDate,
       lastReceivedDate: expect.any(String)
     });
+  });
+
+  it("should return error when PDF generation fails", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: false,
+      error: "Puppeteer crashed"
+    });
+
+    const result = await generateAdministrativeCourtDailyCauseListPdf({
+      artefactId: "failed-pdf",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Puppeteer crashed");
+  });
+
+  it("should return default error message when PDF buffer is missing", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: undefined,
+      sizeBytes: 0
+    });
+
+    const result = await generateAdministrativeCourtDailyCauseListPdf({
+      artefactId: "no-buffer",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      listTypeName: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should handle renderer exceptions gracefully", async () => {
+    vi.mocked(renderAdminCourt).mockImplementation(() => {
+      throw new Error("Renderer failed");
+    });
+
+    const result = await generateAdministrativeCourtDailyCauseListPdf({
+      artefactId: "renderer-error",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      listTypeName: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("should use fallback list title for unknown listTypeName", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    await generateAdministrativeCourtDailyCauseListPdf({
+      artefactId: "unknown-type",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      listTypeName: "UNKNOWN_COURT_LIST"
+    });
+
+    expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: "Administrative Court Daily Cause List" }));
   });
 });

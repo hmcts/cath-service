@@ -2,13 +2,11 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List (listTypeId: 32)
 export const FTT_LRT_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {
@@ -51,8 +49,5 @@ export const FTT_LRT_EXCEL_CONFIG: ExcelConverterConfig = {
   minRows: 1
 };
 
-// Register the FTT LRT converter with listTypeId 32 and by name
-// Name-based registration handles environments where the DB ID differs from the canonical seeded ID
 const fttLrtConverter = createConverter(FTT_LRT_EXCEL_CONFIG);
-registerConverter(32, fttLrtConverter);
 registerConverterByName("FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST", fttLrtConverter);

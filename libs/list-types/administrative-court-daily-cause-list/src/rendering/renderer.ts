@@ -3,7 +3,7 @@ import type { AdministrativeCourtHearing, AdministrativeCourtHearingList } from 
 
 export interface RenderOptions {
   locale: string;
-  listTypeId: number;
+  listTypeName: string;
   listTitle: string;
   contentDate: Date;
   lastReceivedDate: string;

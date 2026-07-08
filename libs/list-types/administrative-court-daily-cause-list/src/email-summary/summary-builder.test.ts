@@ -32,6 +32,30 @@ describe("extractCaseSummary", () => {
       { label: "Case details", value: "R (Smith) v Secretary of State" }
     ]);
   });
+
+  it("should fall back to empty string when hearing fields are empty", () => {
+    const hearingList: AdministrativeCourtHearingList = [
+      {
+        venue: "",
+        judge: "",
+        time: "",
+        caseNumber: "",
+        caseDetails: "",
+        hearingType: "",
+        additionalInformation: ""
+      }
+    ];
+
+    const result = extractCaseSummary(hearingList);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual([
+      { label: "Time", value: "" },
+      { label: "Case number", value: "" },
+      { label: "Hearing type", value: "" },
+      { label: "Case details", value: "" }
+    ]);
+  });
 });
 
 describe("formatCaseSummaryForEmail", () => {

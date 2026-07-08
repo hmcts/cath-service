@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags
@@ -51,8 +50,5 @@ export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
   minRows: 1
 };
 
-// Register the CST converter with listTypeId 9 and by name
-// Name-based registration handles environments where the DB ID differs from the canonical seeded ID
 const cstConverter = createConverter(CST_EXCEL_CONFIG);
-registerConverter(9, cstConverter);
 registerConverterByName("CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", cstConverter);

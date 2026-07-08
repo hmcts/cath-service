@@ -66,10 +66,8 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    hasConverterForListType: vi.fn(() => true),
-    convertExcelForListType: vi.fn(() => Promise.resolve({ cases: [] })),
-    hasConverterForListTypeName: vi.fn(() => false),
-    convertExcelForListTypeName: vi.fn()
+    hasConverterForListTypeName: vi.fn(() => true),
+    convertExcelForListTypeName: vi.fn(() => Promise.resolve({ cases: [] }))
   };
 });
 
@@ -249,6 +247,44 @@ describe("non-strategic-upload-summary page", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             listType: "Short Name"
+          })
+        })
+      );
+    });
+
+    it("should use Welsh display names when locale is cy", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-upload-id", lng: "cy" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            courtName: "Test Crown Court CY",
+            listType: "Rhestr Ddyddiol y Goron"
           })
         })
       );
@@ -502,7 +538,7 @@ describe("non-strategic-upload-summary page", () => {
     });
 
     it("should convert Excel file and call extractAndStoreArtefactSearch for non-strategic list type", async () => {
-      const { hasConverterForListType, convertExcelForListType } = await import("@hmcts/list-types-common");
+      const { hasConverterForListTypeName, convertExcelForListTypeName } = await import("@hmcts/list-types-common");
 
       const mockUploadData = {
         file: Buffer.from("excel content"),
@@ -519,8 +555,8 @@ describe("non-strategic-upload-summary page", () => {
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
-      vi.mocked(hasConverterForListType).mockReturnValue(true);
-      vi.mocked(convertExcelForListType).mockResolvedValue({ cases: [] });
+      vi.mocked(hasConverterForListTypeName).mockReturnValue(true);
+      vi.mocked(convertExcelForListTypeName).mockResolvedValue({ cases: [] });
       vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
 
       const session = { save: (callback: (err?: any) => void) => callback() };
@@ -539,7 +575,7 @@ describe("non-strategic-upload-summary page", () => {
     });
 
     it("should continue upload when extractAndStoreArtefactSearch throws after Excel conversion", async () => {
-      const { hasConverterForListType, convertExcelForListType } = await import("@hmcts/list-types-common");
+      const { hasConverterForListTypeName, convertExcelForListTypeName } = await import("@hmcts/list-types-common");
 
       const mockUploadData = {
         file: Buffer.from("excel content"),
@@ -556,8 +592,8 @@ describe("non-strategic-upload-summary page", () => {
 
       vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
-      vi.mocked(hasConverterForListType).mockReturnValue(true);
-      vi.mocked(convertExcelForListType).mockResolvedValue({ cases: [] });
+      vi.mocked(hasConverterForListTypeName).mockReturnValue(true);
+      vi.mocked(convertExcelForListTypeName).mockResolvedValue({ cases: [] });
       vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Search extraction failed"));
 
       const session = { save: (callback: (err?: any) => void) => callback() };

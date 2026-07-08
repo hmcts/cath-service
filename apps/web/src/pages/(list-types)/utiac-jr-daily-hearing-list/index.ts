@@ -30,7 +30,7 @@ function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact
   if (isLondon) {
     const { header, hearings } = renderUtiacJrLondonDailyHearingListData(jsonData as UtiacJrLondonHearingList, {
       locale,
-      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      courtName: t.courtName as string,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: pageTitle
@@ -40,7 +40,7 @@ function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact
   } else {
     const { header, hearings } = renderUtiacJrDailyHearingListData(jsonData as UtiacJrHearingList, {
       locale,
-      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      courtName: t.courtName as string,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: pageTitle

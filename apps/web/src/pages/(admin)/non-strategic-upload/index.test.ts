@@ -255,6 +255,27 @@ describe("non-strategic-upload page", () => {
       expect(listTypeOptions).toEqual(sortedListTypes);
     });
 
+    it("should pre-fill locationId from query parameter when not in session form data", async () => {
+      const req = {
+        session: {},
+        query: { locationId: "2" }
+      } as unknown as Request;
+      const res = {
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(GET, req, res);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            locationId: "2"
+          })
+        })
+      );
+    });
+
     it("should resolve location name from ID", async () => {
       const session = {
         nonStrategicUploadForm: { locationId: "1" },
@@ -476,8 +497,8 @@ describe("non-strategic-upload page", () => {
 
       // Mock the dynamic import
       vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListType: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
-        hasConverterForListType: vi.fn().mockReturnValue(true)
+        convertExcelForListTypeName: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
+        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {
@@ -528,7 +549,7 @@ describe("non-strategic-upload page", () => {
 
       // Mock successful Excel validation
       vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListType: vi.fn().mockResolvedValue([
+        convertExcelForListTypeName: vi.fn().mockResolvedValue([
           {
             date: "01/01/2025",
             caseName: "Test Case",
@@ -538,7 +559,7 @@ describe("non-strategic-upload page", () => {
             additionalInformation: "Test Info"
           }
         ]),
-        hasConverterForListType: vi.fn().mockReturnValue(true)
+        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
       }));
 
       const mockFile = {
