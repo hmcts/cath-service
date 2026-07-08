@@ -5495,12 +5495,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/multer@npm:2.1.0, @types/multer@npm:^2.1.0":
+"@types/multer@npm:2.1.0":
   version: 2.1.0
   resolution: "@types/multer@npm:2.1.0"
   dependencies:
     "@types/express": "npm:*"
   checksum: 10c0/f1f512918f79c5dac007d8d30de74372ad24932b34b43d09f250178dcce6da426297e0ea9c939322545519f133cd525dca0552781967d05f43d782ff0b169333
+  languageName: node
+  linkType: hard
+
+"@types/multer@npm:^2.1.0":
+  version: 2.2.0
+  resolution: "@types/multer@npm:2.2.0"
+  dependencies:
+    "@types/express": "npm:*"
+  checksum: 10c0/72472c2da0a9afe86e2d64cfec53f4564727affcb691f78fcbdef495978857903f03326e4ecf58f6d1c3c4c89bb39e5d94fb97d4722a1f448f777c4fa690754b
   languageName: node
   linkType: hard
 
