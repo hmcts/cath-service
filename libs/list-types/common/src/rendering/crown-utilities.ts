@@ -49,7 +49,7 @@ export function formatContentDate(date: Date, locale: string): string {
   });
 }
 
-export function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
+export function formatPublicationDateTime(isoDateTime: string, locale: string): string {
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
   const dateStr = dt.toFormat("d MMMM yyyy");
   const hours = dt.hour;
@@ -60,15 +60,8 @@ export function formatCrownLastUpdated(isoDateTime: string, locale: string): str
   return `${dateStr} at ${hour12}${minuteStr}${period}`;
 }
 
-export function formatPublicationDateTime(isoDateTime: string, locale: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-  const dateStr = dt.toFormat("d MMMM yyyy");
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  return `${dateStr} at ${hour12}${minuteStr}${period}`;
+export function formatCrownLastUpdated(isoDateTime: string, locale: string): string {
+  return formatPublicationDateTime(isoDateTime, locale);
 }
 
 export interface PddaCitizenName {
