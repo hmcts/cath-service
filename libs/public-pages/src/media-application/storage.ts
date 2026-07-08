@@ -1,16 +1,12 @@
-import fs from "node:fs/promises";
 import path from "node:path";
+import { CONTAINER, getContentType, uploadBlob } from "@hmcts/azure-blob";
 
-const TEMP_STORAGE_BASE = path.join(process.cwd(), "storage", "temp", "files");
+export async function saveIdProofFile(applicationId: string, originalName: string, fileBuffer: Buffer): Promise<string> {
+  const fileExtension = path.extname(originalName).toLowerCase();
+  const contentType = getContentType(fileExtension);
+  const blobKey = `${applicationId}${fileExtension}`;
 
-export async function saveIdProofFile(applicationId: string, originalFileName: string, fileBuffer: Buffer): Promise<string> {
-  const fileExtension = path.extname(originalFileName).toLowerCase();
-  const newFileName = `${applicationId}${fileExtension}`;
+  await uploadBlob(blobKey, fileBuffer, contentType, CONTAINER.FILES);
 
-  await fs.mkdir(TEMP_STORAGE_BASE, { recursive: true });
-
-  const filePath = path.join(TEMP_STORAGE_BASE, newFileName);
-  await fs.writeFile(filePath, fileBuffer);
-
-  return filePath;
+  return blobKey;
 }

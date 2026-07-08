@@ -146,7 +146,8 @@ vi.mock("@hmcts/public-pages/config", () => ({
 
 vi.mock("@hmcts/system-admin-pages/config", () => ({
   fileUploadRoutes: ["/reference-data-upload"],
-  moduleRoot: "/mock/system-admin"
+  moduleRoot: "/mock/system-admin",
+  pages: { path: "/mock/system-admin/pages" }
 }));
 
 vi.mock("@hmcts/web-core/config", () => ({
@@ -219,6 +220,7 @@ describe("Web Application", () => {
         app,
         expect.objectContaining({
           preferencesPath: "/cookie-preferences",
+          policyPath: "/cookie-policy",
           categories: expect.objectContaining({
             essential: expect.arrayContaining(["connect.sid"]),
             analytics: expect.any(Array),

@@ -1,11 +1,4 @@
-import {
-  createConverter,
-  type ExcelConverterConfig,
-  registerConverter,
-  registerConverterByName,
-  validateNoHtmlTags,
-  validateTimeFormat
-} from "@hmcts/list-types-common";
+import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags, validateTimeFormat } from "@hmcts/list-types-common";
 
 export const SEND_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -50,5 +43,4 @@ export const SEND_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const sendConverter = createConverter(SEND_EXCEL_CONFIG);
-registerConverter(28, sendConverter);
 registerConverterByName("SEND_DAILY_HEARING_LIST", sendConverter);

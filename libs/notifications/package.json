@@ -36,6 +36,7 @@
     "@hmcts/grc-weekly-hearing-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/magistrates-public-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",

@@ -1,4 +1,4 @@
-import { createConverter, type ExcelConverterConfig, registerConverter, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
+import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags } from "@hmcts/list-types-common";
 
 export const SSCS_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -61,16 +61,6 @@ export const SSCS_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const sscsConverter = createConverter(SSCS_EXCEL_CONFIG);
-
-// Register converters for all 8 SSCS list types by ID and by name
-// IDs 28-35 correspond to the seeded SSCS list types
-registerConverter(28, sscsConverter);
-registerConverter(29, sscsConverter);
-registerConverter(30, sscsConverter);
-registerConverter(31, sscsConverter);
-registerConverter(32, sscsConverter);
-registerConverter(33, sscsConverter);
-registerConverter(34, sscsConverter);
 
 registerConverterByName("SSCS_MIDLANDS_DAILY_HEARING_LIST", sscsConverter);
 registerConverterByName("SSCS_SOUTH_EAST_DAILY_HEARING_LIST", sscsConverter);

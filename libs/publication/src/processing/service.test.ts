@@ -62,6 +62,14 @@ vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
   generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
+  generateRcjStandardDailyCauseListPdf: vi.fn()
+}));
+
+vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
+  generateAdministrativeCourtDailyCauseListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/utiac-jr-daily-hearing-list")>();
   return {
@@ -127,6 +135,8 @@ describe("publication-processor", async () => {
   const { generateWpafccWeeklyHearingListPdf } = await import("@hmcts/wpafcc-weekly-hearing-list");
   const { generateUtiacStatutoryAppealDailyHearingListPdf } = await import("@hmcts/utiac-statutory-appeal-daily-hearing-list");
   const { generateUtiacJrLondonDailyHearingListPdf, generateUtiacJrLeedsDailyHearingListPdf } = await import("@hmcts/utiac-jr-daily-hearing-list");
+  const { generateRcjStandardDailyCauseListPdf } = await import("@hmcts/rcj-standard-daily-cause-list");
+  const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
@@ -627,6 +637,52 @@ describe("publication-processor", async () => {
 
       expect(generateUtaacDailyHearingListPdf).toHaveBeenCalled();
       expect(result).toEqual({ pdfPath: "test.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for RCJ Standard Daily Cause List via rcjStandardGenerator", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+        friendlyName: "Civil Courts RCJ Daily Cause List"
+      } as any);
+      vi.mocked(generateRcjStandardDailyCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/rcj-pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 50 });
+
+      expect(generateRcjStandardDailyCauseListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST" }));
+      expect(result).toEqual({ pdfPath: "/path/to/rcj-pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    });
+
+    it("should generate PDF for Birmingham Administrative Court via adminCourtGenerator", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({
+        name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+        friendlyName: "Birmingham Administrative Court Daily Cause List"
+      } as any);
+      vi.mocked(generateAdministrativeCourtDailyCauseListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/admin-court-pdf",
+        sizeBytes: 2048,
+        exceedsMaxSize: false
+      });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 60 });
+
+      expect(generateAdministrativeCourtDailyCauseListPdf).toHaveBeenCalledWith(
+        expect.objectContaining({ listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" })
+      );
+      expect(result).toEqual({ pdfPath: "/path/to/admin-court-pdf", sizeBytes: 2048, exceedsMaxSize: false });
+    });
+
+    it("should return empty result when list type DB lookup returns null", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 9999 });
+
+      expect(result).toEqual({});
     });
   });
 

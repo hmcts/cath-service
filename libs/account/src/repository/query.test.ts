@@ -216,6 +216,30 @@ describe("User Repository", () => {
       expect(result).toEqual(mockUser);
     });
 
+    it("should update firstName and surname", async () => {
+      const provenanceId = "123e4567-e89b-12d3-a456-426614174000";
+      const mockUser = {
+        userId: "user-123",
+        email: "test@example.com",
+        firstName: "Jane",
+        surname: "Smith",
+        userProvenance: "SSO",
+        userProvenanceId: provenanceId,
+        role: "VERIFIED",
+        createdDate: new Date(),
+        lastSignedInDate: new Date()
+      };
+
+      vi.mocked(prisma.user.update).mockResolvedValue(mockUser);
+
+      await updateUser(provenanceId, { firstName: "Jane", surname: "Smith" });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { userProvenanceId: provenanceId },
+        data: { firstName: "Jane", surname: "Smith" }
+      });
+    });
+
     it("should update last signed in date", async () => {
       const provenanceId = "123e4567-e89b-12d3-a456-426614174000";
       const lastSignedInDate = new Date();

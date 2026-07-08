@@ -1262,7 +1262,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-1",
         locationId: "123",
-        listTypeId: 24, // SJP_PRESS_LIST
+        listTypeId: 999, // arbitrary — must not affect behaviour; filter is by name
         contentDate: new Date("2025-10-25"),
         sensitivity: "PRIVATE",
         language: "ENGLISH",
@@ -1277,7 +1277,7 @@ describe("getLatestSjpArtefacts", () => {
       {
         artefactId: "sjp-2",
         locationId: "456",
-        listTypeId: 25, // SJP_PUBLIC_LIST
+        listTypeId: 998, // arbitrary — must not affect behaviour; filter is by name
         contentDate: new Date("2025-10-24"),
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -1297,16 +1297,16 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [24, 25, 26, 27] }
+        listType: { name: { in: ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"] } }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10
     });
     expect(result).toHaveLength(2);
     expect(result[0].artefactId).toBe("sjp-1");
-    expect(result[0].listTypeId).toBe(24);
+    expect(result[0].listTypeId).toBe(999);
     expect(result[1].artefactId).toBe("sjp-2");
-    expect(result[1].listTypeId).toBe(25);
+    expect(result[1].listTypeId).toBe(998);
   });
 
   it("should return empty array when no SJP artefacts found", async () => {
@@ -1321,7 +1321,7 @@ describe("getLatestSjpArtefacts", () => {
     const mockArtefacts = Array.from({ length: 15 }, (_, i) => ({
       artefactId: `sjp-${i}`,
       locationId: "123",
-      listTypeId: i % 2 === 0 ? 24 : 25,
+      listTypeId: 999, // arbitrary — must not affect behaviour; filter is by name
       contentDate: new Date("2025-10-25"),
       sensitivity: "PUBLIC",
       language: "ENGLISH",
@@ -1340,7 +1340,7 @@ describe("getLatestSjpArtefacts", () => {
 
     expect(prisma.artefact.findMany).toHaveBeenCalledWith({
       where: {
-        listTypeId: { in: [24, 25, 26, 27] }
+        listType: { name: { in: ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"] } }
       },
       orderBy: { lastReceivedDate: "desc" },
       take: 10

@@ -129,18 +129,12 @@ const postHandler = async (req: Request, res: Response) => {
     let jsonData: unknown;
 
     if (isExcelFile && selectedListType?.isNonStrategic) {
-      const { convertExcelForListType, convertExcelForListTypeName, hasConverterForListType, hasConverterForListTypeName } = await import(
-        "@hmcts/list-types-common"
-      );
+      const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
 
       const listTypeName = selectedListType.name;
-      const canConvertById = hasConverterForListType(listTypeId);
-      const canConvertByName = !canConvertById && listTypeName ? hasConverterForListTypeName(listTypeName) : false;
 
-      if (canConvertById || canConvertByName) {
-        jsonData = canConvertById
-          ? await convertExcelForListType(listTypeId, uploadData.file)
-          : await convertExcelForListTypeName(listTypeName!, uploadData.file);
+      if (listTypeName && hasConverterForListTypeName(listTypeName)) {
+        jsonData = await convertExcelForListTypeName(listTypeName, uploadData.file);
         const convertedExtension = await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
         await updateArtefactFileExtension(artefactId, convertedExtension);
 

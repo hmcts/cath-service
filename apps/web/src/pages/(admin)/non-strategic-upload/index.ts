@@ -137,12 +137,13 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedListType = listTypeId ? await findListTypeById(listTypeId) : null;
   const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
 
-  if (selectedListType?.isNonStrategic && isExcelFile && listTypeId) {
+  if (selectedListType?.isNonStrategic && isExcelFile) {
     try {
-      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
+      const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
+      const listTypeName = selectedListType.name;
 
-      if (hasConverterForListType(listTypeId)) {
-        await convertExcelForListType(listTypeId, req.file!.buffer);
+      if (listTypeName && hasConverterForListTypeName(listTypeName)) {
+        await convertExcelForListTypeName(listTypeName, req.file!.buffer);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
