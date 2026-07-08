@@ -19,7 +19,14 @@ export async function getFileExtension(artefactId: string): Promise<string> {
 export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
   const sourceArtefactId = await getSourceArtefactId(artefactId);
   const extension = path.extname(sourceArtefactId) || ".pdf";
-  return downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
+  const buffer = await downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
+  if (buffer) return buffer;
+  // Non-strategic Excel uploads store the original filename in source_artefact_id but the
+  // converted blob is always .json — fall back to .json when the primary lookup misses.
+  if (extension !== ".json") {
+    return downloadBlob(`${artefactId}.json`, CONTAINER.ARTEFACT);
+  }
+  return null;
 }
 
 export async function getPublicationJson(artefactId: string): Promise<unknown | null> {

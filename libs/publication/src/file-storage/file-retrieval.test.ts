@@ -195,6 +195,66 @@ describe("file-retrieval", () => {
       // Assert
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
     });
+
+    it("should fall back to .json blob when source_artefact_id is an Excel file and primary blob is missing", async () => {
+      // Arrange: non-strategic Excel upload — source_artefact_id stores original .xlsx name
+      // but the blob in storage is the converted .json
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+      const jsonBuffer = Buffer.from('{"hearings":[]}');
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "hearing-list.xlsx" } as any);
+      vi.mocked(downloadBlob).mockImplementation((blobName: string) => {
+        if (blobName === `${artefactId}.xlsx`) return Promise.resolve(null);
+        if (blobName === `${artefactId}.json`) return Promise.resolve(jsonBuffer);
+        return Promise.resolve(null);
+      });
+      const { getFileBuffer } = await import("./file-retrieval.js");
+
+      // Act
+      const result = await getFileBuffer(artefactId);
+
+      // Assert
+      expect(result).toEqual(jsonBuffer);
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.xlsx`, "artefact");
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
+    });
+
+    it("should return null when source_artefact_id is an Excel file and both primary and fallback blobs are missing", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "hearing-list.xlsx" } as any);
+      vi.mocked(downloadBlob).mockResolvedValue(null);
+      const { getFileBuffer } = await import("./file-retrieval.js");
+
+      // Act
+      const result = await getFileBuffer(artefactId);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.xlsx`, "artefact");
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
+    });
+
+    it("should not fall back to .json when source_artefact_id is already .json and blob is missing", async () => {
+      // Arrange: .json is the primary extension — no further fallback should occur
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "upload.json" } as any);
+      vi.mocked(downloadBlob).mockResolvedValue(null);
+      const { getFileBuffer } = await import("./file-retrieval.js");
+
+      // Act
+      const result = await getFileBuffer(artefactId);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(downloadBlob).toHaveBeenCalledTimes(1);
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
+    });
   });
 
   describe("getContentType", () => {
