@@ -2649,6 +2649,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-public-list@workspace:*, @hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/magistrates-standard-list@workspace:*, @hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
@@ -2690,6 +2707,7 @@ __metadata:
     "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
@@ -2799,6 +2817,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
@@ -3083,6 +3102,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
@@ -5495,12 +5515,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/multer@npm:2.1.0, @types/multer@npm:^2.1.0":
+"@types/multer@npm:2.1.0":
   version: 2.1.0
   resolution: "@types/multer@npm:2.1.0"
   dependencies:
     "@types/express": "npm:*"
   checksum: 10c0/f1f512918f79c5dac007d8d30de74372ad24932b34b43d09f250178dcce6da426297e0ea9c939322545519f133cd525dca0552781967d05f43d782ff0b169333
+  languageName: node
+  linkType: hard
+
+"@types/multer@npm:^2.1.0":
+  version: 2.2.0
+  resolution: "@types/multer@npm:2.2.0"
+  dependencies:
+    "@types/express": "npm:*"
+  checksum: 10c0/72472c2da0a9afe86e2d64cfec53f4564727affcb691f78fcbdef495978857903f03326e4ecf58f6d1c3c4c89bb39e5d94fb97d4722a1f448f777c4fa690754b
   languageName: node
   linkType: hard
 
