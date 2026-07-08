@@ -244,8 +244,8 @@ describe("non-strategic-upload page", () => {
       await callHandler(GET, req, res);
 
       expect(res.render).toHaveBeenCalled();
-      const renderCall = vi.mocked(res.render).mock.calls[0];
-      const listTypes = renderCall[1].listTypes as Array<{ value: string; text: string }>;
+      const renderCall = vi.mocked(res.render).mock.calls[0]!;
+      const listTypes = (renderCall[1] as any).listTypes as Array<{ value: string; text: string }>;
 
       // Filter out the placeholder option
       const listTypeOptions = listTypes.filter((lt) => lt.value !== "");
@@ -359,7 +359,7 @@ describe("non-strategic-upload page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(session.nonStrategicUploadErrors).toEqual(errors);
+      expect((session as any).nonStrategicUploadErrors).toEqual(errors);
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
     });
 
@@ -382,7 +382,7 @@ describe("non-strategic-upload page", () => {
 
       await callHandler(POST, req, res);
 
-      const savedErrors = session.nonStrategicUploadErrors as any[];
+      const savedErrors = (session as any).nonStrategicUploadErrors as any[];
       expect(savedErrors).toBeDefined();
       expect(savedErrors[0].text).toContain("2MB");
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
@@ -421,7 +421,7 @@ describe("non-strategic-upload page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(session.nonStrategicUploadForm).toMatchObject({
+      expect((session as any).nonStrategicUploadForm).toMatchObject({
         locationId: "123",
         listType: "1",
         sensitivity: "PUBLIC",
@@ -468,7 +468,7 @@ describe("non-strategic-upload page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(session.nonStrategicUploadSubmitted).toBe(true);
+      expect((session as any).nonStrategicUploadSubmitted).toBe(true);
     });
 
     it("should validate Excel file for Care Standards Tribunal (listType 9) and reject invalid file", async () => {
@@ -516,8 +516,8 @@ describe("non-strategic-upload page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(session.nonStrategicUploadErrors).toBeDefined();
-      expect(session.nonStrategicUploadErrors[0].text).toContain("Missing required field");
+      expect((session as any).nonStrategicUploadErrors).toBeDefined();
+      expect((session as any).nonStrategicUploadErrors[0].text).toContain("Missing required field");
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");
@@ -578,7 +578,7 @@ describe("non-strategic-upload page", () => {
       await callHandler(POST, req, res);
 
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
-      expect(session.nonStrategicUploadSubmitted).toBe(true);
+      expect((session as any).nonStrategicUploadSubmitted).toBe(true);
 
       vi.doUnmock("@hmcts/list-types-common");
     });

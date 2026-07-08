@@ -201,6 +201,70 @@ export function resolveDataSource(provenance: string, t?: { provenanceLabels?: R
   return t?.provenanceLabels?.[provenance] ?? PROVENANCE_LABELS[provenance] ?? provenance;
 }
 
+type WeeklyHearingListRenderFn<T> = (
+  data: T,
+  params: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }
+) => { header: { listTitle: string }; hearings: unknown };
+
+export function createWeeklyHearingListRender<T>(
+  renderFn: WeeklyHearingListRenderFn<T>,
+  courtName: string,
+  template: string,
+  en: SimpleLocaleContent,
+  cy: SimpleLocaleContent
+): SimpleRenderCallback<T> {
+  return ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
+    const { header, hearings } = renderFn(jsonData, {
+      locale,
+      courtName,
+      contentDate: artefact.contentDate,
+      lastReceivedDate: artefact.lastReceivedDate.toISOString(),
+      listTitle: t.pageTitle as string
+    });
+    const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
+    res.render(template, { en, cy, t, title: header.listTitle, header, hearings, dataSource });
+  };
+}
+
+export const LIST_LOAD_SERVER_ERROR = {
+  errorTitle: "Server Error",
+  errorMessage: "An error occurred while loading the list"
+} as const;
+
+type UtiacDailyRenderFn<T> = (
+  data: T,
+  params: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }
+) => { header: { listTitle: string }; hearings: unknown };
+
+export function createUtiacDailyRender<T>(
+  renderFn: UtiacDailyRenderFn<T>,
+  template: string,
+  en: SimpleLocaleContent,
+  cy: SimpleLocaleContent
+): SimpleRenderCallback<T> {
+  return ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
+    const { header, hearings } = renderFn(jsonData, {
+      locale,
+      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+      contentDate: artefact.contentDate,
+      lastReceivedDate: artefact.lastReceivedDate.toISOString(),
+      listTitle: t.pageTitle as string
+    });
+    const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
+    res.render(template, { en, cy, t, title: header.listTitle, header, hearings, dataSource });
+  };
+}
+
+export function createUtiacJrRegionalDailyRender<T>(
+  renderFn: UtiacDailyRenderFn<T>,
+  en: SimpleLocaleContent,
+  cy: SimpleLocaleContent
+): SimpleRenderCallback<T> {
+  return createUtiacDailyRender(renderFn, "utiac-jr-daily-hearing-list", en, cy);
+}
+
 export type ListTypeConfig = Record<string, { en: string; cy: string; template: string }>;
 
 type CauseListRenderFn<T> = (

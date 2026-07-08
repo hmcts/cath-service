@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -r \"yarn:dev:watch\" \"yarn:build:dev:watch\"",
-    "dev:watch": "mkdir -p dist/assets; nodemon -w yarn.lock -w src -w ../../libs -e 'json,ts' -x 'tsx --env-file-if-exists=../../.env src/server.ts'",
+    "dev:watch": "mkdir -p dist/assets; nodemon -w yarn.lock -w src -w ../../libs -e 'json,ts' -x \"tsx --env-file-if-exists=../../.env src/server.ts\"",
     "dev:nowatch": "yarn build:dev && tsx --env-file-if-exists=../../.env src/server.ts",
     "build:dev:watch": "yarn build:dev --watch",
     "build:dev": "NODE_OPTIONS='--import tsx' vite build --config vite.build.ts",
@@ -36,6 +36,7 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
+    "@hmcts/magistrates-standard-list": "workspace:*",
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",

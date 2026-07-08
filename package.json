@@ -8,7 +8,7 @@
     "libs/list-types/*"
   ],
   "scripts": {
-    "postinstall": "yarn db:generate",
+    "postinstall": "yarn db:generate && node scripts/install-hooks.js",
     "test": "turbo test",
     "test:force": "turbo test --force",
     "test:coverage": "turbo test -- --coverage",
@@ -38,7 +38,8 @@
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres-prisma run generate",
     "db:studio": "yarn workspace @hmcts/postgres run studio",
-    "db:drop": "yarn workspace @hmcts/postgres run migrate:reset"
+    "db:drop": "yarn workspace @hmcts/postgres run migrate:reset",
+    "requirements:build": "requirements/scripts/init_db.sh"
   },
   "keywords": [],
   "author": "HMCTS",
@@ -54,6 +55,7 @@
     "@vitest/ui": "4.1.9",
     "concurrently": "10.0.3",
     "happy-dom": "^20.0.5",
+    "lefthook": "2.1.9",
     "supertest": "7.2.2",
     "tsx": "4.22.4",
     "turbo": "2.9.18",
@@ -84,7 +86,7 @@
     "@types/passport": "1.0.17",
     "accessible-autocomplete": "^3.0.1",
     "jsonwebtoken": "9.0.3",
-    "jwks-rsa": "4.0.1",
+    "jwks-rsa": "4.1.0",
     "notifications-node-client": "^8.2.1",
     "openid-client": "6.8.4",
     "passport": "0.7.0",

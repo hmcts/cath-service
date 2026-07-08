@@ -1109,14 +1109,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@axe-core/playwright@npm:4.11.3":
-  version: 4.11.3
-  resolution: "@axe-core/playwright@npm:4.11.3"
+"@axe-core/playwright@npm:4.12.1":
+  version: 4.12.1
+  resolution: "@axe-core/playwright@npm:4.12.1"
   dependencies:
-    axe-core: "npm:~4.11.4"
+    axe-core: "npm:~4.12.1"
   peerDependencies:
     playwright-core: ">= 1.0.0"
-  checksum: 10c0/da1854726dbc461a71ac25e0435f5dd9b7d143dc9142f53b1aeb4a8d7edcb4533eddb59949e8a07c4f4e3dce85ae43b7f249b3801e8b255f605fc974b94616fe
+  checksum: 10c0/7a52498c8a09f7427581473ee9253b986efca7c61870187f5c64a1d04c4e4db43d4f26b0cf7650f75840ce7a7d69c7d07547ef76eb93704fa927a4fcf4020139
   languageName: node
   linkType: hard
 
@@ -2170,6 +2170,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/redis": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.2"
@@ -2224,7 +2225,7 @@ __metadata:
     express-session: "npm:1.19.0"
     govuk-frontend: "npm:6.2.0"
     helmet: "npm:8.2.0"
-    jwks-rsa: "npm:4.0.1"
+    jwks-rsa: "npm:4.1.0"
     multer: "npm:2.1.1"
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
@@ -2418,6 +2419,63 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/crown-daily-list@workspace:*, @hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-daily-list@workspace:libs/list-types/crown-daily-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/crown-firm-list@workspace:*, @hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-firm-list@workspace:libs/list-types/crown-firm-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/crown-warned-list@workspace:*, @hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/crown-warned-list@workspace:libs/list-types/crown-warned-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/daily-cause-list-common@workspace:*, @hmcts/daily-cause-list-common@workspace:libs/list-types/daily-cause-list-common":
   version: 0.0.0-use.local
   resolution: "@hmcts/daily-cause-list-common@workspace:libs/list-types/daily-cause-list-common"
@@ -2503,6 +2561,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/grc-weekly-hearing-list@workspace:*, @hmcts/grc-weekly-hearing-list@workspace:libs/list-types/grc-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/grc-weekly-hearing-list@workspace:libs/list-types/grc-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/legacy-third-party-fulfilment@workspace:*, @hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment":
   version: 0.0.0-use.local
   resolution: "@hmcts/legacy-third-party-fulfilment@workspace:libs/legacy-third-party-fulfilment"
@@ -2573,6 +2649,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-standard-list@workspace:*, @hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
+  dependencies:
+    "@hmcts/location": "workspace:*"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/notification@workspace:*, @hmcts/notification@workspace:libs/notification":
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
@@ -2594,16 +2678,26 @@ __metadata:
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
+    "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
+    "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
+    "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
+    "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
     notifications-node-client: "npm:8.4.0"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2692,21 +2786,30 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/crown-daily-list": "workspace:*"
+    "@hmcts/crown-firm-list": "workspace:*"
+    "@hmcts/crown-warned-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
+    "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/legacy-third-party-fulfilment": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
     "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*"
+    "@hmcts/sscs-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-jr-daily-hearing-list": "workspace:*"
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
     ajv: "npm:8.20.0"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.9"
@@ -2804,6 +2907,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/sscs-daily-hearing-list@workspace:*, @hmcts/sscs-daily-hearing-list@workspace:libs/list-types/sscs-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/sscs-daily-hearing-list@workspace:libs/list-types/sscs-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/subscriptions@workspace:*, @hmcts/subscriptions@workspace:libs/subscriptions":
   version: 0.0.0-use.local
   resolution: "@hmcts/subscriptions@workspace:libs/subscriptions"
@@ -2826,7 +2946,9 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
+    "@hmcts/third-party-user": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@launchdarkly/node-server-sdk": "npm:^9.7.0"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
     "@types/multer": "npm:^2.1.0"
@@ -2848,6 +2970,55 @@ __metadata:
   peerDependencies:
     "@prisma/client": "*"
     express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/third-party-user@workspace:*, @hmcts/third-party-user@workspace:libs/third-party-user":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/third-party-user@workspace:libs/third-party-user"
+  dependencies:
+    "@azure/identity": "npm:^4.2.1"
+    "@azure/keyvault-secrets": "npm:^4.7.0"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/utiac-jr-daily-hearing-list@workspace:*, @hmcts/utiac-jr-daily-hearing-list@workspace:libs/list-types/utiac-jr-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/utiac-jr-daily-hearing-list@workspace:libs/list-types/utiac-jr-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/utiac-statutory-appeal-daily-hearing-list@workspace:*, @hmcts/utiac-statutory-appeal-daily-hearing-list@workspace:libs/list-types/utiac-statutory-appeal-daily-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/utiac-statutory-appeal-daily-hearing-list@workspace:libs/list-types/utiac-statutory-appeal-daily-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2912,6 +3083,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
@@ -2950,6 +3122,24 @@ __metadata:
     typescript: "npm:6.0.3"
     vite: "npm:7.3.6"
     vite-plugin-static-copy: "npm:3.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/wpafcc-weekly-hearing-list@workspace:*, @hmcts/wpafcc-weekly-hearing-list@workspace:libs/list-types/wpafcc-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/wpafcc-weekly-hearing-list@workspace:libs/list-types/wpafcc-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -3006,6 +3196,34 @@ __metadata:
   version: 0.3.4
   resolution: "@kurkle/color@npm:0.3.4"
   checksum: 10c0/0e9fd55c614b005c5f0c4c755bca19ec0293bc7513b4ea3ec1725234f9c2fa81afbc78156baf555c8b9cb0d305619253c3f5bca016067daeebb3d00ebb4ea683
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-sdk-common@npm:2.25.1":
+  version: 2.25.1
+  resolution: "@launchdarkly/js-sdk-common@npm:2.25.1"
+  checksum: 10c0/3dcd12b3d4d0ad98cf9daf064b0fe9f6c49923b7ceb6dc871e7ae6316b67b78dfb30a542da7f53d4ed9f315e304ffb30565a018b9733ce0dd37f853f4c732d1b
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/js-server-sdk-common@npm:2.19.2":
+  version: 2.19.2
+  resolution: "@launchdarkly/js-server-sdk-common@npm:2.19.2"
+  dependencies:
+    "@launchdarkly/js-sdk-common": "npm:2.25.1"
+    semver: "npm:7.5.4"
+  checksum: 10c0/edbac0a48d8446d47291dd7cdff33a3ebbd9baba7f059359918ee02cc516b823cd06ee69ce70f5daf3f711ee1a54be5e2a25379bc0e076c21655ac082a9b0c07
+  languageName: node
+  linkType: hard
+
+"@launchdarkly/node-server-sdk@npm:^9.7.0":
+  version: 9.11.3
+  resolution: "@launchdarkly/node-server-sdk@npm:9.11.3"
+  dependencies:
+    "@launchdarkly/js-server-sdk-common": "npm:2.19.2"
+    https-proxy-agent: "npm:^7.0.6"
+    launchdarkly-eventsource: "npm:2.2.0"
+  checksum: 10c0/414ee1fdb52241dfff93d12c8eb26da05f24698eeeb35146e1edeb72cc99efb5503341c78ecd0d2b50b3ab993de8bd8e7410290e679a98c467bb3af5cf7520d1
   languageName: node
   linkType: hard
 
@@ -5923,10 +6141,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axe-core@npm:~4.11.4":
-  version: 4.11.4
-  resolution: "axe-core@npm:4.11.4"
-  checksum: 10c0/c4aa83fc3eac5f7a0d0cb1a28f9d073acf0c06ce8daacc38608faa278c57ce084c028c850746b98817ae4c101c30c1a32e95ea34748c4b4c7419b9b81221ef84
+"axe-core@npm:~4.12.1":
+  version: 4.12.1
+  resolution: "axe-core@npm:4.12.1"
+  checksum: 10c0/03438bd98cef38ad57554feea0d8de21705001db2655c27e0c33ff55e16dd7d6f49c28fb420dc93f7532e68ff363c0953056a5836e6f47068f193eb1765c7db7
   languageName: node
   linkType: hard
 
@@ -6308,7 +6526,8 @@ __metadata:
     concurrently: "npm:10.0.3"
     happy-dom: "npm:^20.0.5"
     jsonwebtoken: "npm:9.0.3"
-    jwks-rsa: "npm:4.0.1"
+    jwks-rsa: "npm:4.1.0"
+    lefthook: "npm:2.1.9"
     notifications-node-client: "npm:^8.2.1"
     openid-client: "npm:6.8.4"
     passport: "npm:0.7.0"
@@ -6910,7 +7129,7 @@ __metadata:
   resolution: "e2e-tests@workspace:e2e-tests"
   dependencies:
     "@aws-sdk/client-s3": "npm:3.823.0"
-    "@axe-core/playwright": "npm:4.11.3"
+    "@axe-core/playwright": "npm:4.12.1"
     "@azure/identity": "npm:4.13.1"
     "@azure/keyvault-secrets": "npm:4.11.2"
     "@playwright/test": "npm:1.61.1"
@@ -8365,16 +8584,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwks-rsa@npm:4.0.1":
-  version: 4.0.1
-  resolution: "jwks-rsa@npm:4.0.1"
+"jwks-rsa@npm:4.1.0":
+  version: 4.1.0
+  resolution: "jwks-rsa@npm:4.1.0"
   dependencies:
     "@types/jsonwebtoken": "npm:^9.0.4"
     debug: "npm:^4.3.4"
     jose: "npm:^6.1.3"
     limiter: "npm:^1.1.5"
+    lru-cache: "npm:^11.0.0"
     lru-memoizer: "npm:^3.0.0"
-  checksum: 10c0/aeca4b1de959707002150556f4f08ed3677fe9dd12bd0be0aa01220a86b88867357c7d2241f4975de9f53125d41cc3f5e4c5e929a8922f257b61634b208d7e3c
+  checksum: 10c0/09d03901705fdaaec4ef4dbfdabdcdd91c669b667e1bf10ac765bde3ef4c90f91d53e60ce4e7bfbec715f2490d25f6e0c58c6f75dff800399a2e1b9140e317b2
   languageName: node
   linkType: hard
 
@@ -8388,12 +8608,130 @@ __metadata:
   languageName: node
   linkType: hard
 
+"launchdarkly-eventsource@npm:2.2.0":
+  version: 2.2.0
+  resolution: "launchdarkly-eventsource@npm:2.2.0"
+  checksum: 10c0/fce94e58ef5eb560349b2f5405276c01b86d83afc3f7149c6e58ce4fcdf69f1ef8c97c9800bedf0986b41fa7a1f14740aee804d8c74f9fc81b6cf22f4bd5a7f1
+  languageName: node
+  linkType: hard
+
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
   dependencies:
     readable-stream: "npm:^2.0.5"
   checksum: 10c0/ea4e509a5226ecfcc303ba6782cc269be8867d372b9bcbd625c88955df1987ea1a20da4643bf9270336415a398d33531ebf0d5f0d393b9283dc7c98bfcbd7b69
+  languageName: node
+  linkType: hard
+
+"lefthook-darwin-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-darwin-arm64@npm:2.1.9"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"lefthook-darwin-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-darwin-x64@npm:2.1.9"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"lefthook-freebsd-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-freebsd-arm64@npm:2.1.9"
+  conditions: os=freebsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"lefthook-freebsd-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-freebsd-x64@npm:2.1.9"
+  conditions: os=freebsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"lefthook-linux-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-linux-arm64@npm:2.1.9"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"lefthook-linux-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-linux-x64@npm:2.1.9"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"lefthook-openbsd-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-openbsd-arm64@npm:2.1.9"
+  conditions: os=openbsd & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"lefthook-openbsd-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-openbsd-x64@npm:2.1.9"
+  conditions: os=openbsd & cpu=x64
+  languageName: node
+  linkType: hard
+
+"lefthook-windows-arm64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-windows-arm64@npm:2.1.9"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"lefthook-windows-x64@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook-windows-x64@npm:2.1.9"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"lefthook@npm:2.1.9":
+  version: 2.1.9
+  resolution: "lefthook@npm:2.1.9"
+  dependencies:
+    lefthook-darwin-arm64: "npm:2.1.9"
+    lefthook-darwin-x64: "npm:2.1.9"
+    lefthook-freebsd-arm64: "npm:2.1.9"
+    lefthook-freebsd-x64: "npm:2.1.9"
+    lefthook-linux-arm64: "npm:2.1.9"
+    lefthook-linux-x64: "npm:2.1.9"
+    lefthook-openbsd-arm64: "npm:2.1.9"
+    lefthook-openbsd-x64: "npm:2.1.9"
+    lefthook-windows-arm64: "npm:2.1.9"
+    lefthook-windows-x64: "npm:2.1.9"
+  dependenciesMeta:
+    lefthook-darwin-arm64:
+      optional: true
+    lefthook-darwin-x64:
+      optional: true
+    lefthook-freebsd-arm64:
+      optional: true
+    lefthook-freebsd-x64:
+      optional: true
+    lefthook-linux-arm64:
+      optional: true
+    lefthook-linux-x64:
+      optional: true
+    lefthook-openbsd-arm64:
+      optional: true
+    lefthook-openbsd-x64:
+      optional: true
+    lefthook-windows-arm64:
+      optional: true
+    lefthook-windows-x64:
+      optional: true
+  bin:
+    lefthook: bin/index.js
+  checksum: 10c0/676d9798942439d1cd5373bb0b2c9907f6a8097b29c05cc028d87d897d2a2cfe15a8f7e4f40b02fa93cd1ae0f02528f24053a10fb5c5967210a9c23f3c7b5059
   languageName: node
   linkType: hard
 
@@ -8599,6 +8937,15 @@ __metadata:
   version: 11.5.1
   resolution: "lru-cache@npm:11.5.1"
   checksum: 10c0/7b341cea79a8efe9c6a6f20c8757a77eca5b25d7ff983ccf4e11e547b81f6787824baa1c84705251dff84ab4ffac85717ac354b9d02e465f86a9f8b166409979
+  languageName: node
+  linkType: hard
+
+"lru-cache@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "lru-cache@npm:6.0.0"
+  dependencies:
+    yallist: "npm:^4.0.0"
+  checksum: 10c0/cb53e582785c48187d7a188d3379c181b5ca2a9c78d2bce3e7dee36f32761d1c42983da3fe12b55cb74e1779fa94cdc2e5367c028a9b35317184ede0c07a30a9
   languageName: node
   linkType: hard
 
@@ -9988,6 +10335,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver@npm:7.5.4":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: "npm:^6.0.0"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/5160b06975a38b11c1ab55950cb5b8a23db78df88275d3d8a42ccf1f29e55112ac995b3a26a522c36e3b5f76b0445f1eef70d696b8c7862a2b4303d7b0e7609e
+  languageName: node
+  linkType: hard
+
 "semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.7.4":
   version: 7.8.4
   resolution: "semver@npm:7.8.4"
@@ -11063,6 +11421,13 @@ __metadata:
   version: 5.0.8
   resolution: "y18n@npm:5.0.8"
   checksum: 10c0/4df2842c36e468590c3691c894bc9cdbac41f520566e76e24f59401ba7d8b4811eb1e34524d57e54bc6d864bcb66baab7ffd9ca42bf1eda596618f9162b91249
+  languageName: node
+  linkType: hard
+
+"yallist@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "yallist@npm:4.0.0"
+  checksum: 10c0/2286b5e8dbfe22204ab66e2ef5cc9bbb1e55dfc873bbe0d568aa943eb255d131890dfd5bf243637273d31119b870f49c18fcde2c6ffbb7a7a092b870dc90625a
   languageName: node
   linkType: hard
 

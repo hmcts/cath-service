@@ -1,0 +1,31 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {{ govukPanel({
+      titleText: panelTitle,
+      html: panelBody
+    }) }}
+
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h2 class="govuk-heading-m">{{ whatNext }}</h2>
+    <ul class="govuk-list">
+      <li>
+        <a href="/third-party-subscribers{{ lngParam }}" class="govuk-link">{{ manageAnotherLink }}</a>
+      </li>
+      <li>
+        <a href="/system-admin-dashboard{{ lngParam }}" class="govuk-link">{{ homeLink }}</a>
+      </li>
+    </ul>
+
+  </div>
+</div>
+{% endblock %}

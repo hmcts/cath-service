@@ -64,7 +64,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-warned-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [4]
   },
   {
@@ -86,7 +86,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "crown-firm-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: "Classified",
     subJurisdictionIds: [4]
   },
   {
@@ -472,5 +472,197 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "AST Daily Hearing List",
     subJurisdictionIds: [13]
+  },
+  {
+    id: 41,
+    name: "GRC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "General Regulatory Chamber Weekly Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol y Siambr Reoleiddio Gyffredinol",
+    shortenedFriendlyName: "GRC Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "grc-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [19]
+  },
+  {
+    id: 42,
+    name: "WPAFCC_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Siambr Pensiynau Rhyfel a Digollediad Lluoedd Arfog",
+    shortenedFriendlyName: "WPAFCC Weekly Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "wpafcc-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [17]
+  },
+  {
+    id: 43,
+    name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Siambr Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol - Apeliadau Statudol",
+    shortenedFriendlyName: "UTIAC Statutory Appeal Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-statutory-appeal-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [28]
+  },
+  {
+    id: 44,
+    name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR London Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 45,
+    name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Leeds Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 46,
+    name: "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Manchester Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 47,
+    name: "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Birmingham Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  {
+    id: 48,
+    name: "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
+    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
+    shortenedFriendlyName: "UTIAC JR Cardiff Daily Hearing List",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "utiac-jr-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [27]
+  },
+  // SSCS Daily Hearing Lists
+  {
+    id: 49,
+    name: "SSCS_MIDLANDS_DAILY_HEARING_LIST",
+    englishFriendlyName: "Midlands Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Midlands Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 50,
+    name: "SSCS_SOUTH_EAST_DAILY_HEARING_LIST",
+    englishFriendlyName: "South East Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS South East Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 51,
+    name: "SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST",
+    englishFriendlyName: "Wales and South West Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Wales and South West Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 52,
+    name: "SSCS_SCOTLAND_DAILY_HEARING_LIST",
+    englishFriendlyName: "Scotland Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS Scotland Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 53,
+    name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+    englishFriendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS North East Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 54,
+    name: "SSCS_NORTH_WEST_DAILY_HEARING_LIST",
+    englishFriendlyName: "North West Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS North West Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 55,
+    name: "SSCS_LONDON_DAILY_HEARING_LIST",
+    englishFriendlyName: "London Social Security and Child Support Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "sscs-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "SSCS London Daily Hearing List",
+    subJurisdictionIds: [8]
+  },
+  {
+    id: 56,
+    name: "MAGISTRATES_STANDARD_LIST",
+    englishFriendlyName: "Magistrates Standard List",
+    welshFriendlyName: "Rhestr Safonol y Llys Ynadon",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-standard-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
   }
 ];
