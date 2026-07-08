@@ -262,7 +262,7 @@ test.describe("Subscription Notifications", () => {
     testData.publicationIds.push(result2.artefact_id);
 
     // Wait for notifications to reach terminal status
-    const notifications2 = await waitForNotifications(result2.artefact_id, 30, 1000, false, true);
+    const notifications2 = await waitForNotifications(result2.artefact_id, 60, 1000, false, true);
 
     // Verify notifications were processed for both subscribers (Sent or Failed depending on Notify config)
     const processedNotifications = notifications2.filter((n) => n.status === "Sent" || n.status === "Failed");

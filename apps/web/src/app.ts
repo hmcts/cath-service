@@ -20,6 +20,7 @@ import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
 import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
@@ -123,6 +124,7 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    magistratesPublicListModuleRoot,
     magistratesStandardListModuleRoot,
     crownDailyListModuleRoot,
     crownFirmListModuleRoot,

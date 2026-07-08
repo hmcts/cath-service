@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.title }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+  <style>
+    .no-border-bottom {
+      border-bottom: none;
+    }
+    .address {
+      margin-top: 15px;
+    }
+    .address p {
+      margin-bottom: 2px;
+    }
+    .warning-row {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .warning-icon {
+      display: inline-block;
+      background-color: #0b0c0c;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 10px;
+      text-align: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .warning-text {
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.header }} {{ header.locationName }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p class="bold header-date">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.listUpdated | replace("DATE", header.publishedDate) }} {{ header.publishedTime }}</p>
+
+    {% if header.venueAddress | length %}
+      <div class="address">
+        {% for line in header.venueAddress %}
+          <p>{{ line }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.restrictionInformationHeading }}</h3>
+    <p>{{ t.restrictionInformationP1 }}</p>
+    <div class="warning-row">
+      <span class="warning-icon" aria-hidden="true">!</span>
+      <span class="warning-text">{{ t.restrictionInformationBoldText }}</span>
+    </div>
+    <p>{{ t.restrictionInformationP2 }}</p>
+    <p>{{ t.restrictionInformationP3 }}</p>
+    <p>{{ t.restrictionInformationP4 }}</p>
+    <ul>
+      <li>{{ t.restrictionBulletPoint1 }}</li>
+      <li>{{ t.restrictionBulletPoint2 }}</li>
+    </ul>
+  </div>
+
+  {% for courtList in listData.courtLists %}
+    {% set courtHouse = courtList.courtHouse %}
+    <h2>{{ t.sittingAt }} {{ header.locationName }}</h2>
+    {% for courtRoom in courtHouse.courtRoom %}
+      {% for session in courtRoom.session %}
+        <div class="court-section">
+          <h3>
+            {% if session.formattedJudiciaries | length %}
+              {{ courtRoom.courtRoomName }}: {{ session.formattedJudiciaries }}
+            {% else %}
+              {{ courtRoom.courtRoomName }}
+            {% endif %}
+          </h3>
+          <table>
+            <thead>
+              <tr>
+                <th>{{ t.sittingAt }}</th>
+                <th>{{ t.urn }}</th>
+                <th>{{ t.name }}</th>
+                <th>{{ t.hearingType }}</th>
+                <th>{{ t.prosecutingAuthority }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sitting in session.sittings %}
+                {% for hearing in sitting.hearing %}
+                  {% for case in hearing.case %}
+                    {% set hasOffences = case.offences | length %}
+                    {% set hasReporting = case.reportingRestriction %}
+                    {% set noBorder = "no-border-bottom" if (hasOffences or hasReporting) else "" %}
+                    <tr>
+                      <td class="{{ noBorder }}">{{ sitting.time }}</td>
+                      <td class="{{ noBorder }}">{{ case.caseUrn }}</td>
+                      <td class="{{ noBorder }}">{{ case.defendant }}</td>
+                      <td class="{{ noBorder }}">{{ hearing.hearingType }}</td>
+                      <td class="{{ noBorder }}">{{ case.prosecutingAuthority }}</td>
+                    </tr>
+                    {% if hasOffences %}
+                      <tr>
+                        <td class="{% if hasReporting %}no-border-bottom{% endif %}" colspan="2" style="border-right: none;"><strong>{{ t.offenceDetails }}:</strong></td>
+                        <td class="{% if hasReporting %}no-border-bottom{% endif %}" colspan="3" style="border-left: none;">
+                          {% for offence in case.offences %}
+                            {{ offence }}<br>
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                    {% if hasReporting %}
+                      <tr>
+                        <td colspan="2" style="border-right: none;"><strong>{{ t.reportingRestrictions }}:</strong></td>
+                        <td colspan="3" style="border-left: none;">{{ t.reportingRestrictionText }}</td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                  {% for application in hearing.application %}
+                    {% set hasOffences = application.offences | length %}
+                    {% set noBorder = "no-border-bottom" if hasOffences else "" %}
+                    <tr>
+                      <td class="{{ noBorder }}">{{ sitting.time }}</td>
+                      <td class="{{ noBorder }}">{{ application.applicationReference }}</td>
+                      <td class="{{ noBorder }}">{{ application.defendant }}</td>
+                      <td class="{{ noBorder }}"></td>
+                      <td class="{{ noBorder }}">{{ application.prosecutingAuthority }}</td>
+                    </tr>
+                    {% if hasOffences %}
+                      <tr>
+                        <td colspan="2" style="border-right: none;"><strong>{{ t.offenceDetails }}:</strong></td>
+                        <td colspan="3" style="border-left: none;">
+                          {% for offence in application.offences %}
+                            {{ offence }}<br>
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+      <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
