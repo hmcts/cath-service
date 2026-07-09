@@ -10,7 +10,6 @@ import {
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { MagistratesAdultCourtListData, RenderOptions } from "../rendering/renderer.js";
 import { renderMagistratesAdultCourtList } from "../rendering/renderer.js";
 
@@ -37,6 +36,7 @@ export async function generateMagistratesAdultCourtListPdf(options: PdfGeneratio
       () => import("../locales/cy.js")
     );
 
+    const { PROVENANCE_LABELS } = await import("@hmcts/publication");
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
     const env = configureNunjucks(__dirname);
