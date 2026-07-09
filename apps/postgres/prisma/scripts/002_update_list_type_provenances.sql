@@ -19,15 +19,11 @@ WHERE name IN (
   'SJP_DELTA_PUBLIC_LIST'
 );
 
--- Kings Bench Masters: MANUAL_UPLOAD → CFT_IDAM
-UPDATE list_types
-SET allowed_provenance = 'CFT_IDAM'
-WHERE name = 'KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST';
-
--- All non-strategic lists with MANUAL_UPLOAD → CFT_IDAM
+-- Kings Bench Masters + all non-strategic lists: MANUAL_UPLOAD → CFT_IDAM
 UPDATE list_types
 SET allowed_provenance = 'CFT_IDAM'
 WHERE name IN (
+  'KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST',
   'SIAC_WEEKLY_HEARING_LIST',
   'POAC_WEEKLY_HEARING_LIST',
   'PAAC_WEEKLY_HEARING_LIST',
