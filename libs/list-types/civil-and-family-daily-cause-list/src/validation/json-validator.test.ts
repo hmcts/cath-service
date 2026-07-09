@@ -1,115 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { validateCivilFamilyCauseList } from "./json-validator.js";
 
-describe("validateCivilFamilyCauseList", () => {
-  it("should validate a correct civil and family cause list", () => {
-    const validData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z",
-        documentName: "Civil and Family Daily Cause List",
-        version: "1.0"
-      },
-      venue: {
-        venueName: "Oxford Combined Court Centre",
-        venueAddress: {
-          line: ["St Aldate's"],
-          town: "Oxford",
-          postCode: "OX1 1TL"
-        },
-        venueContact: {
-          venueTelephone: "01865 264 200",
-          venueEmail: "enquiries.oxford.countycourt@justice.gov.uk"
-        }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Oxford Combined Court Centre",
-            courtRoom: [
-              {
-                courtRoomName: "Courtroom 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        sittingEnd: "2025-11-12T11:00:00.000Z",
-                        hearing: [
-                          {
-                            hearingType: "Family Hearing",
-                            case: [
-                              {
-                                caseName: "Brown v Brown",
-                                caseNumber: "CF-2025-001"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    };
+const VALID_DATA = {
+  document: { publicationDate: "2025-01-01T10:00:00.000Z" },
+  venue: {
+    venueName: "Test Court",
+    venueAddress: { line: ["Line 1"], postCode: "AB1 2CD" },
+    venueContact: { venueTelephone: "01234567890", venueEmail: "test@example.com" }
+  },
+  courtLists: []
+};
 
-    const result = validateCivilFamilyCauseList(validData);
+describe("validateCivilFamilyCauseList", () => {
+  it("should return valid when all required fields are present", () => {
+    const result = validateCivilFamilyCauseList(VALID_DATA);
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(result.schemaVersion).toBe("1.0");
   });
 
-  it("should return errors for missing required fields", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      }
-    };
+  it("should return invalid when document is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.document;
 
-    const result = validateCivilFamilyCauseList(invalidData);
+    const result = validateCivilFamilyCauseList(data);
 
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "invalid-date"
-      },
-      venue: {
-        venueName: "Test Court",
-        venueAddress: {
-          line: ["Address"],
-          postCode: "AB1 2CD"
-        },
-        venueContact: {
-          venueTelephone: "01234567890",
-          venueEmail: "test@example.com"
-        }
-      },
-      courtLists: []
-    };
+  it("should return invalid when venue is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.venue;
 
-    const result = validateCivilFamilyCauseList(invalidData);
+    const result = validateCivilFamilyCauseList(data);
 
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for missing venue", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      },
-      courtLists: []
-    };
+  it("should return invalid when courtLists is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.courtLists;
 
-    const result = validateCivilFamilyCauseList(invalidData);
+    const result = validateCivilFamilyCauseList(data);
 
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });

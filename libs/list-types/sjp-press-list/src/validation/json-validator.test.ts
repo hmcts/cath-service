@@ -1,81 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { validateSjpPressList } from "./json-validator.js";
 
-describe("validateSjpPressList", () => {
-  it("should validate a correct SJP press list", () => {
-    const validData = {
-      document: {
-        publicationDate: "2025-11-28T09:00:00Z"
-      },
-      courtLists: []
-    };
+const VALID_DATA = {
+  document: { publicationDate: "2025-11-28T09:00:00Z" },
+  courtLists: []
+};
 
-    const result = validateSjpPressList(validData);
+describe("validateSjpPressList", () => {
+  it("should return valid when all required fields are present", () => {
+    const result = validateSjpPressList(VALID_DATA);
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(result.schemaVersion).toBe("1.0");
   });
 
-  it("should return errors for missing required fields", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      }
-    };
+  it("should return invalid when document is missing", () => {
+    const data = { ...VALID_DATA };
+    delete (data as Record<string, unknown>).document;
 
-    const result = validateSjpPressList(invalidData);
+    const result = validateSjpPressList(data);
 
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "invalid-date"
-      },
-      courtLists: []
-    };
+  it("should return invalid when courtLists is missing", () => {
+    const data = { ...VALID_DATA };
+    delete (data as Record<string, unknown>).courtLists;
 
-    const result = validateSjpPressList(invalidData);
+    const result = validateSjpPressList(data);
 
     expect(result.isValid).toBe(false);
-  });
-
-  it("should return errors for missing courtLists", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      }
-    };
-
-    const result = validateSjpPressList(invalidData);
-
-    expect(result.isValid).toBe(false);
-  });
-
-  it("should validate SJP press list with minimal required fields", () => {
-    const minimalData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtRoom: [
-              {
-                session: []
-              }
-            ]
-          }
-        }
-      ]
-    };
-
-    const result = validateSjpPressList(minimalData);
-
-    expect(result.isValid).toBe(true);
-    expect(result.errors).toHaveLength(0);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });

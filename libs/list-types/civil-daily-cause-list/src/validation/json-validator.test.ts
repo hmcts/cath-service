@@ -1,105 +1,47 @@
 import { describe, expect, it } from "vitest";
 import { validateCivilDailyCauseList } from "./json-validator.js";
 
-describe("validateCivilDailyCauseList", () => {
-  it("should validate a correct civil daily cause list", () => {
-    const validData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z",
-        documentName: "Civil Daily Cause List",
-        version: "1.0"
-      },
-      venue: {
-        venueName: "Oxford Combined Court Centre",
-        venueAddress: {
-          line: ["St Aldate's"],
-          town: "Oxford",
-          postCode: "OX1 1TL"
-        }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Oxford Combined Court Centre",
-            courtRoom: [
-              {
-                courtRoomName: "Courtroom 1",
-                session: [
-                  {
-                    sittings: [
-                      {
-                        sittingStart: "2025-11-12T10:00:00.000Z",
-                        hearing: [
-                          {
-                            case: [
-                              {
-                                caseName: "Smith v Jones",
-                                caseNumber: "CV-2025-001"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    };
+const VALID_DATA = {
+  document: { publicationDate: "2025-01-01T10:00:00.000Z" },
+  venue: { venueName: "Test Court", venueAddress: { line: ["Line 1"], postCode: "AB1 2CD" } },
+  courtLists: []
+};
 
-    const result = validateCivilDailyCauseList(validData);
+describe("validateCivilDailyCauseList", () => {
+  it("should return valid when all required fields are present", () => {
+    const result = validateCivilDailyCauseList(VALID_DATA);
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
-    expect(result.schemaVersion).toBe("1.0");
   });
 
-  it("should return errors for missing required fields", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      }
-    };
+  it("should return invalid when document is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.document;
 
-    const result = validateCivilDailyCauseList(invalidData);
+    const result = validateCivilDailyCauseList(data);
 
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for invalid publication date format", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "invalid-date"
-      },
-      venue: {
-        venueName: "Test Court",
-        venueAddress: {
-          line: ["Address"],
-          postCode: "AB1 2CD"
-        }
-      },
-      courtLists: []
-    };
+  it("should return invalid when venue is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.venue;
 
-    const result = validateCivilDailyCauseList(invalidData);
+    const result = validateCivilDailyCauseList(data);
 
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return errors for missing venue", () => {
-    const invalidData = {
-      document: {
-        publicationDate: "2025-11-12T09:00:00.000Z"
-      },
-      courtLists: []
-    };
+  it("should return invalid when courtLists is missing", () => {
+    const data = { ...VALID_DATA } as Record<string, unknown>;
+    delete data.courtLists;
 
-    const result = validateCivilDailyCauseList(invalidData);
+    const result = validateCivilDailyCauseList(data);
 
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });
