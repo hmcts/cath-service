@@ -34,6 +34,24 @@ export function formatLastUpdatedDateTime(isoDateTime: string, locale: string): 
 }
 
 /**
+ * Formats an "HH:MM" time string to a compact 12-hour format
+ * Examples: "09:00" -> "9am", "10:05" -> "10:05am", "14:30" -> "2:30pm"
+ */
+export function formatHHMMTime(time: string): string {
+  const [hoursStr, minutesStr] = time.split(":");
+  const hours = Number.parseInt(hoursStr, 10);
+  const minutes = Number.parseInt(minutesStr ?? "0", 10);
+
+  if (Number.isNaN(hours)) return time;
+
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
+
+  return `${hour12}${minuteStr}${period}`;
+}
+
+/**
  * Normalizes time format by replacing "." with ":"
  * Example: "2.30pm" -> "2:30pm"
  */

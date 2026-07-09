@@ -2649,6 +2649,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-public-adult-court-list@workspace:libs/list-types/magistrates-public-adult-court-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-public-adult-court-list@workspace:libs/list-types/magistrates-public-adult-court-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/magistrates-public-list@workspace:*, @hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list"

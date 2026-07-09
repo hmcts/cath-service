@@ -8,6 +8,8 @@ const testListTypes: ListTypeInfo[] = [
   { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
   { id: 26, name: "SJP_DELTA_PRESS_LIST", friendlyName: "Single Justice Procedure Press List (New cases)" },
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" },
+  { id: 57, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", friendlyName: "Magistrates Public Adult Court List - Daily" },
+  { id: 58, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Public Adult Court List - Future" },
   { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" }
 ];
 
@@ -46,6 +48,15 @@ vi.mock("@hmcts/sjp-public-list", () => ({
     isValid: true,
     errors: [],
     schemaVersion: "1.0.0"
+  })
+}));
+
+// Mock the dynamic import for @hmcts/magistrates-public-adult-court-list (used by both daily and future variants)
+vi.mock("@hmcts/magistrates-public-adult-court-list", () => ({
+  validateMagistratesPublicAdultCourtList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
   })
 }));
 
@@ -141,6 +152,18 @@ describe("list-type-validator", () => {
 
     it("should validate SJP_DELTA_PUBLIC_LIST using the sjp-public-list package alias", async () => {
       const result = await validateListTypeJson("27", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY using the magistrates-public-adult-court-list package alias", async () => {
+      const result = await validateListTypeJson("57", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE using the magistrates-public-adult-court-list package alias", async () => {
+      const result = await validateListTypeJson("58", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(true);
     });
