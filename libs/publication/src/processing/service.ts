@@ -24,6 +24,9 @@ import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "
 import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import { generateSscsDailyHearingListPdf, importantInformationByListType, type SscsDailyHearingList } from "@hmcts/sscs-daily-hearing-list";
+import { generateUtaacDailyHearingListPdf, type UtaacHearingList } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import { generateUtlcDailyHearingListPdf, type UtlcHearingList } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import { generateUtccDailyHearingListPdf, type UtccHearingList } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
 import {
   createUtiacJrDailyHearingListPdfGenerator,
   generateUtiacJrLeedsDailyHearingListPdf,
@@ -269,6 +272,9 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
       jsonData: p.jsonData as UtiacJrHearingList,
       contentDate: p.contentDate
     }),
+  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtccDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtccHearingList }),
+  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtlcDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtlcHearingList }),
+  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtaacDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtaacHearingList }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListPdf({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListPdf({ ...p, jsonData: p.jsonData as MagistratesPublicListData })
 };

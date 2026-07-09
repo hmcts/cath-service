@@ -37,6 +37,9 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pages as systemAdminPages
 } from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utaacModuleRoot } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
+import { moduleRoot as utlcModuleRoot } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
+import { moduleRoot as utccModuleRoot } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
 import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
@@ -115,6 +118,9 @@ export async function createApp(): Promise<Express> {
     fttTaxChamberModuleRoot,
     fttLrtModuleRoot,
     fttRptModuleRoot,
+    utccModuleRoot,
+    utlcModuleRoot,
+    utaacModuleRoot,
     civilFamilyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
