@@ -14,6 +14,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform" }
 }));
 

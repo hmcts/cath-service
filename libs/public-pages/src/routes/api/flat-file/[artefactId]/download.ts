@@ -16,9 +16,14 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid request" });
   }
 
-  const result = await getFileForDownload(artefactId);
+  const result = await getFileForDownload(artefactId, req.user);
 
   if ("error" in result) {
+    if (result.error === "ACCESS_DENIED") {
+      res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+      return res.status(403).json({ error: "Access denied" });
+    }
+
     let statusCode = 404;
     let errorMessage = "File not found";
 

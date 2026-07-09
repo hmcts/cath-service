@@ -8,5 +8,7 @@ export const cy = {
   backMessage: "Gallwch fynd yn ôl i'r dudalen flaenorol i ddewis rhestr wrando wahanol.",
   backButton: "Yn ôl i'r dudalen flaenorol",
   downloadLinkText: "Lawrlwytho'r PDF hwn",
-  pdfNotSupportedMessage: "Nid yw eich porwr yn cefnogi gwylio PDF."
+  pdfNotSupportedMessage: "Nid yw eich porwr yn cefnogi gwylio PDF.",
+  error403Title: "Mynediad wedi'i wrthod",
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
 };

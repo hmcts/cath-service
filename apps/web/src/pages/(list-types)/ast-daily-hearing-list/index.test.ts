@@ -11,9 +11,18 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   };
 });
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 30, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"

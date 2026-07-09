@@ -1,12 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.js";
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getFileBuffer: vi.fn(),
   getFileExtension: vi.fn(),
   getContentType: vi.fn(),
-  getFileName: vi.fn()
+  getFileName: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true)
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -25,11 +34,14 @@ vi.mock("@hmcts/system-admin-pages", () => ({
   })
 }));
 
-import { getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
+import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
 
 describe("flat-file-service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true } as any);
   });
 
   describe("getFlatFileForDisplay", () => {
@@ -124,6 +136,61 @@ describe("flat-file-service", () => {
 
       expect(result).toEqual({ error: "FILE_NOT_FOUND" });
     });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is CLASSIFIED", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId, "en", undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(undefined, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is PRIVATE", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "PRIVATE" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId, "en", undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+    });
+
+    it("should return file data when user is undefined and artefact is PUBLIC", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "PUBLIC" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(true);
+      vi.mocked(getFileBuffer).mockResolvedValue(Buffer.from("test"));
+      vi.mocked(getFileExtension).mockResolvedValue(".pdf");
+
+      // Act
+      const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId, "en", undefined);
+
+      // Assert
+      expect(result).toMatchObject({ success: true });
+    });
+
+    it("should return file data when verified user with matching provenance requests a CLASSIFIED artefact", async () => {
+      // Arrange
+      const verifiedUser = { role: "VERIFIED", provenance: "MANUAL_UPLOAD" } as any;
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(true);
+      vi.mocked(getFileBuffer).mockResolvedValue(Buffer.from("classified content"));
+      vi.mocked(getFileExtension).mockResolvedValue(".pdf");
+
+      // Act
+      const result = await getFlatFileForDisplay(mockArtefact.artefactId, mockArtefact.locationId, "en", verifiedUser);
+
+      // Assert
+      expect(result).toMatchObject({ success: true });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(verifiedUser, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
   });
 
   describe("getFileForDownload", () => {
@@ -197,6 +264,50 @@ describe("flat-file-service", () => {
       const result = await getFileForDownload(mockArtefact.artefactId);
 
       expect(result).toEqual({ error: "FILE_NOT_FOUND" });
+    });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is CLASSIFIED", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getFileForDownload(mockArtefact.artefactId, undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(undefined, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is PRIVATE", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "PRIVATE" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getFileForDownload(mockArtefact.artefactId, undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+    });
+
+    it("should return file data when verified user with matching provenance requests a CLASSIFIED artefact", async () => {
+      // Arrange
+      const verifiedUser = { role: "VERIFIED", provenance: "MANUAL_UPLOAD" } as any;
+      const mockBuffer = Buffer.from("classified content");
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" });
+      vi.mocked(canAccessPublicationData).mockReturnValue(true);
+      vi.mocked(getFileBuffer).mockResolvedValue(mockBuffer);
+      vi.mocked(getFileExtension).mockResolvedValue(".pdf");
+      vi.mocked(getContentType).mockReturnValue("application/pdf");
+      vi.mocked(getFileName).mockReturnValue(`${mockArtefact.artefactId}.pdf`);
+
+      // Act
+      const result = await getFileForDownload(mockArtefact.artefactId, verifiedUser);
+
+      // Assert
+      expect(result).toMatchObject({ success: true });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(verifiedUser, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
     });
   });
 });

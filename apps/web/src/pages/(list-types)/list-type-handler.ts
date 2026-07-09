@@ -119,6 +119,8 @@ export function createListTypeHandler<T>(options: HandlerOptions<T>) {
 }
 
 type SimpleLocaleContent = {
+  error403Title?: string;
+  error403Message?: string;
   [key: string]: unknown;
 };
 
@@ -170,6 +172,25 @@ export function createSimpleListTypeHandler<T>(options: SimpleHandlerOptions<T>)
 
       if (!artefact) {
         return res.status(404).render("errors/common", { en, cy, ...NOT_FOUND_ERRORS });
+      }
+
+      const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
+      const listType: ListType | undefined = dbListType
+        ? { id: dbListType.id, provenance: dbListType.allowedProvenance, isNonStrategic: dbListType.isNonStrategic }
+        : undefined;
+
+      if (!canAccessPublicationData(req.user, artefact, listType)) {
+        res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+        return res.status(403).render("errors/403", {
+          en: {
+            title: (en.error403Title as string | undefined) ?? "Access denied",
+            message: (en.error403Message as string | undefined) ?? "You do not have permission to view this publication."
+          },
+          cy: {
+            title: (cy.error403Title as string | undefined) ?? "Mynediad wedi'i wrthod",
+            message: (cy.error403Message as string | undefined) ?? "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+          }
+        });
       }
 
       if (guardArtefact) {
