@@ -1,4 +1,3 @@
-// NOSONAR - data file: repeated object structure is intentional
 export interface ListTypeData {
   name: string;
   englishFriendlyName: string;
