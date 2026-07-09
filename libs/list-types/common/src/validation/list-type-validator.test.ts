@@ -144,26 +144,13 @@ describe("list-type-validator", () => {
       expect(result.isValid).toBe(false);
     });
 
-    it("should validate SJP_DELTA_PRESS_LIST using the sjp-press-list package alias", async () => {
-      const result = await validateListTypeJson("26", { test: "data" }, testListTypes);
-
-      expect(result.isValid).toBe(true);
-    });
-
-    it("should validate SJP_DELTA_PUBLIC_LIST using the sjp-public-list package alias", async () => {
-      const result = await validateListTypeJson("27", { test: "data" }, testListTypes);
-
-      expect(result.isValid).toBe(true);
-    });
-
-    it("should validate MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY using the magistrates-public-adult-court-list package alias", async () => {
-      const result = await validateListTypeJson("57", { test: "data" }, testListTypes);
-
-      expect(result.isValid).toBe(true);
-    });
-
-    it("should validate MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE using the magistrates-public-adult-court-list package alias", async () => {
-      const result = await validateListTypeJson("58", { test: "data" }, testListTypes);
+    it.each([
+      ["26", "SJP_DELTA_PRESS_LIST", "sjp-press-list"],
+      ["27", "SJP_DELTA_PUBLIC_LIST", "sjp-public-list"],
+      ["57", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", "magistrates-public-adult-court-list"],
+      ["58", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"]
+    ])("should validate %s (%s) using the %s package alias", async (id) => {
+      const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(true);
     });

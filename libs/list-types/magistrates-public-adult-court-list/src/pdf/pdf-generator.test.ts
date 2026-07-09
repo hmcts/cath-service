@@ -150,4 +150,70 @@ describe("generateMagistratesPublicAdultCourtListPdf", () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain("Unexpected failure");
   });
+
+  it("should generate PDF with Welsh locale", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
+    const result = await generateMagistratesPublicAdultCourtListPdf({
+      artefactId: "welsh-test",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy",
+      locationId: "240",
+      jsonData: mockJsonData
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("should use provenance label from PROVENANCE_LABELS when provenance is known", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
+    const result = await generateMagistratesPublicAdultCourtListPdf({
+      artefactId: "provenance-known",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockJsonData,
+      provenance: "CRIME_IDAM"
+    });
+
+    expect(result.success).toBe(true);
+    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("Crime IDAM"));
+  });
+
+  it("should fall back to provenance string when not in PROVENANCE_LABELS", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
+    const result = await generateMagistratesPublicAdultCourtListPdf({
+      artefactId: "provenance-unknown",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockJsonData,
+      provenance: "CUSTOM_SOURCE"
+    });
+
+    expect(result.success).toBe(true);
+    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("CUSTOM_SOURCE"));
+  });
+
+  it("should use explicit listTitle when provided", async () => {
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
+    const result = await generateMagistratesPublicAdultCourtListPdf({
+      artefactId: "listtitle-test",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockJsonData,
+      listTitle: "Magistrates Public Adult Court List - Daily"
+    });
+
+    expect(result.success).toBe(true);
+    expect(generatePdfFromHtml).toHaveBeenCalledWith(expect.stringContaining("Magistrates Public Adult Court List - Daily"));
+  });
 });
