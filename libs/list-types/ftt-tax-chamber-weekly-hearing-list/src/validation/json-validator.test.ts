@@ -16,77 +16,62 @@ const VALID_DATA = [
 describe("validateFttTaxChamberWeeklyHearingList", () => {
   it("should return valid when all required fields are present", () => {
     const result = validateFttTaxChamberWeeklyHearingList(VALID_DATA);
-
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it("should return invalid when date is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.date;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].date;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingTime is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.hearingTime;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingTime;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseName is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.caseName;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseName;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseReferenceNumber is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.caseReferenceNumber;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseReferenceNumber;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when judges is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.judges;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].judges;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when members is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.members;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].members;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when venuePlatform is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.venuePlatform;
-
-    const result = validateFttTaxChamberWeeklyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].venuePlatform;
+    const result = validateFttTaxChamberWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });

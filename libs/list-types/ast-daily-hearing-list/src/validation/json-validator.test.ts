@@ -15,67 +15,54 @@ const VALID_DATA = [
 describe("validateAstDailyHearingList", () => {
   it("should return valid when all required fields are present", () => {
     const result = validateAstDailyHearingList(VALID_DATA);
-
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it("should return invalid when appellant is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.appellant;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].appellant;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when appealReferenceNumber is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.appealReferenceNumber;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].appealReferenceNumber;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseType is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.caseType;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseType;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingType is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.hearingType;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingType;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingTime is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.hearingTime;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingTime;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when additionalInformation is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.additionalInformation;
-
-    const result = validateAstDailyHearingList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].additionalInformation;
+    const result = validateAstDailyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });

@@ -17,87 +17,70 @@ const VALID_DATA = [
 describe("validateWpafccWeeklyHearingList", () => {
   it("should return valid when all required fields are present", () => {
     const result = validateWpafccWeeklyHearingList(VALID_DATA);
-
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it("should return invalid when date is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).date;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].date;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingTime is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).hearingTime;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingTime;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseReferenceNumber is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).caseReferenceNumber;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseReferenceNumber;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseName is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).caseName;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseName;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when panel is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).panel;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].panel;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when modeOfHearing is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).modeOfHearing;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].modeOfHearing;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when venue is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).venue;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].venue;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when additionalInformation is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).additionalInformation;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].additionalInformation;
     const result = validateWpafccWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });

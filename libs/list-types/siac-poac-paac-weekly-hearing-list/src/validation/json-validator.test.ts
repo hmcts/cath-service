@@ -16,77 +16,62 @@ const VALID_DATA = [
 describe("validateSiacPoacPaacWeeklyHearingList", () => {
   it("should return valid when all required fields are present", () => {
     const result = validateSiacPoacPaacWeeklyHearingList(VALID_DATA);
-
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it("should return invalid when date is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).date;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].date;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when time is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).time;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].time;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when appellant is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).appellant;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].appellant;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseReferenceNumber is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).caseReferenceNumber;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseReferenceNumber;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingType is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).hearingType;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingType;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when courtroom is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).courtroom;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].courtroom;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when additionalInformation is missing", () => {
-    const data = [{ ...VALID_DATA[0] }];
-    delete (data[0] as Record<string, unknown>).additionalInformation;
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].additionalInformation;
     const result = validateSiacPoacPaacWeeklyHearingList(data);
-
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });

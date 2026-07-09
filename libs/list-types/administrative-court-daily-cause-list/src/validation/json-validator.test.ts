@@ -15,67 +15,54 @@ const VALID_DATA = [
 describe("validateAdministrativeCourtDailyCauseList", () => {
   it("should return valid when all required fields are present", () => {
     const result = validateAdministrativeCourtDailyCauseList(VALID_DATA);
-
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it("should return invalid when venue is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.venue;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].venue;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when judge is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.judge;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].judge;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when time is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.time;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].time;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseNumber is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.caseNumber;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseNumber;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when caseDetails is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.caseDetails;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseDetails;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when hearingType is missing", () => {
-    const item = { ...VALID_DATA[0] } as Record<string, unknown>;
-    delete item.hearingType;
-
-    const result = validateAdministrativeCourtDailyCauseList([item]);
-
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingType;
+    const result = validateAdministrativeCourtDailyCauseList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
