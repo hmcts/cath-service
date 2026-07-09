@@ -1,10 +1,8 @@
 export const cy = {
-  titleDaily: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion",
-  titleFuture: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol",
+  titleDaily: "Rhestr Llys Ynadon Oedolion - Dyddiol",
+  titleFuture: "Rhestr Llys Ynadon Oedolion – Dyfodol",
   title: "Rhestr Llys Ynadon Oedolion",
   pageTitle: "Rhestr Safonol y Llys Ynadon ar gyfer",
-  headerDaily: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion ar gyfer",
-  headerFuture: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol ar gyfer",
   header: "Rhestr Safonol y Llys Ynadon ar gyfer",
   listDate: "Rhestr ar gyfer",
   listUpdated: "Diweddarwyd diwethaf DATE am",
@@ -19,7 +17,7 @@ export const cy = {
   restrictionInformationP2: "Bydd cyfyngiadau penodol a orchmynnir gan y llys yn cael eu crybwyll ar yr achosion a restrir yma.",
   restrictionInformationP3:
     "Fodd bynnag, nid yw'r cyfyngiadau bob amser yn cael eu rhestru. Mae rhai yn berthnasol yn awtomatig. Er enghraifft, anhysbysrwydd a roddir i ddioddefwyr rhai troseddau rhywiol.",
-  restrictionInformationP4: "I ganfod pa gyfyngiadau riportio sy'n berthnasol ar achos penodol, cysylltwch \u00e2'r:",
+  restrictionInformationP4: "I ganfod pa gyfyngiadau riportio sy'n berthnasol ar achos penodol, cysylltwch â'r:",
   restrictionBulletPoint1: "llys yn uniongyrchol",
   restrictionBulletPoint2: "Gwasanaeth Llysoedd a Thribiwnlysoedd EM ar 0330 808 4407",
   blockStart: "Amser Cychwyn y Bloc",
@@ -41,10 +39,10 @@ export const cy = {
   dataSource: "Ffynhonnell y Data",
   errorTitle: "Cyhoeddiad ddim ar gael",
   errorMessage:
-    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch \u00e2'r llys yn uniongyrchol am gymorth.",
+    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiat\u00e2d i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
 };
 
-export const cyDaily = { ...cy, title: cy.titleDaily, header: cy.headerDaily };
-export const cyFuture = { ...cy, title: cy.titleFuture, header: cy.headerFuture };
+export const cyDaily = { ...cy, title: cy.titleDaily };
+export const cyFuture = { ...cy, title: cy.titleFuture };

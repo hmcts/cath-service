@@ -3,8 +3,6 @@ export const en = {
   titleFuture: "Magistrates Adult Court List - Future",
   title: "Magistrates Adult Court List",
   pageTitle: "Magistrates Standard List for",
-  headerDaily: "Magistrates Adult Court List - Daily for",
-  headerFuture: "Magistrates Adult Court List - Future for",
   header: "Magistrates Adult Court List for",
   listDate: "List for",
   listUpdated: "Last updated DATE at",
@@ -46,5 +44,5 @@ export const en = {
   error403Message: "You do not have permission to view this publication."
 };
 
-export const enDaily = { ...en, title: en.titleDaily, header: en.headerDaily };
-export const enFuture = { ...en, title: en.titleFuture, header: en.headerFuture };
+export const enDaily = { ...en, title: en.titleDaily };
+export const enFuture = { ...en, title: en.titleFuture };
