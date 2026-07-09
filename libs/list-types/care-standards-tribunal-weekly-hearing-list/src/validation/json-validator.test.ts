@@ -1,24 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { validateUtAdministrativeAppealsChamberDailyHearingList } from "./json-validator.js";
+import { validateCareStandardsTribunalWeeklyHearingList } from "./json-validator.js";
 
-describe("validateUtAdministrativeAppealsChamberDailyHearingList", () => {
+describe("validateCareStandardsTribunalWeeklyHearingList", () => {
   it("should return valid when all required fields are present", () => {
     // Arrange
     const validData = [
       {
-        time: "10am",
-        appellant: "Appellant 1",
-        caseReferenceNumber: "12345",
-        judges: "Judge 1",
-        members: "Member 1",
-        modeOfHearing: "Hearing mode 1",
-        venue: "Venue 1",
+        date: "02/01/2025",
+        caseName: "A Vs B",
+        hearingLength: "1 hour",
+        hearingType: "mda",
+        venue: "This is the venue of the hearing",
         additionalInformation: "This is additional information"
       }
     ];
 
     // Act
-    const result = validateUtAdministrativeAppealsChamberDailyHearingList(validData);
+    const result = validateCareStandardsTribunalWeeklyHearingList(validData);
 
     // Assert
     expect(result.isValid).toBe(true);
@@ -30,7 +28,7 @@ describe("validateUtAdministrativeAppealsChamberDailyHearingList", () => {
     const invalidData = [{}];
 
     // Act
-    const result = validateUtAdministrativeAppealsChamberDailyHearingList(invalidData);
+    const result = validateCareStandardsTribunalWeeklyHearingList(invalidData);
 
     // Assert
     expect(result.isValid).toBe(false);

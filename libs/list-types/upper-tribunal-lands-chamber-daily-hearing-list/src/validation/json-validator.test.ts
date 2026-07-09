@@ -1,38 +1,40 @@
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("@hmcts/publication", () => ({
-  validateJson: vi.fn()
-}));
-
-import { validateJson } from "@hmcts/publication";
+import { describe, expect, it } from "vitest";
 import { validateUtLandsChamberDailyHearingList } from "./json-validator.js";
 
 describe("validateUtLandsChamberDailyHearingList", () => {
-  it("should call validateJson with the provided data and schema and return the result", () => {
+  it("should return valid when all required fields are present", () => {
     // Arrange
-    const mockData = { hearings: [] };
-    const mockResult = { isValid: true, errors: [] };
-    vi.mocked(validateJson).mockReturnValue(mockResult as any);
+    const validData = [
+      {
+        time: "10am",
+        caseReferenceNumber: "12345",
+        caseName: "Case name 1",
+        judges: "Judge 1",
+        members: "Member 1",
+        hearingType: "Hearing type 1",
+        venue: "Venue 1",
+        modeOfHearing: "Mode of hearing 1",
+        additionalInformation: "This is additional information"
+      }
+    ];
 
     // Act
-    const result = validateUtLandsChamberDailyHearingList(mockData);
+    const result = validateUtLandsChamberDailyHearingList(validData);
 
     // Assert
-    expect(validateJson).toHaveBeenCalledWith(mockData, expect.any(Object), "1.0");
-    expect(result).toBe(mockResult);
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
-  it("should return the validation result when data is invalid", () => {
+  it("should return invalid when required fields are missing", () => {
     // Arrange
-    const mockData = { invalid: true };
-    const mockResult = { isValid: false, errors: ["Missing required field"] };
-    vi.mocked(validateJson).mockReturnValue(mockResult as any);
+    const invalidData = [{}];
 
     // Act
-    const result = validateUtLandsChamberDailyHearingList(mockData);
+    const result = validateUtLandsChamberDailyHearingList(invalidData);
 
     // Assert
-    expect(validateJson).toHaveBeenCalledWith(mockData, expect.any(Object), "1.0");
-    expect(result).toBe(mockResult);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });
