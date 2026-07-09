@@ -1,6 +1,6 @@
 export const cy = {
-  titleDaily: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon – Oedolion",
-  titleFuture: "Rhestr Llys Ynadon Oedolion – Dyfodol",
+  titleDaily: "Rhestr Achosion Cyhoeddus Llys Ynadon (Oedolion) - Dyddiol",
+  titleFuture: "Rhestr Achosion Cyhoeddus Llys Ynadon (Oedolion) - Dyfodol",
   heading: "Rhestr Gyhoeddus y Llys Ynadon ar gyfer",
   listDate: "Rhestr ar gyfer",
   listUpdated: "Diweddarwyd diwethaf",
