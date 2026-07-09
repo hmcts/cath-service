@@ -61,8 +61,8 @@ describe("validateMagistratesAdultCourtList", () => {
       expect(result.isValid).toBe(true);
     });
 
-    it("should accept document without job data", () => {
-      const result = validateMagistratesAdultCourtList({ document: { data: {} } });
+    it("should accept document without data", () => {
+      const result = validateMagistratesAdultCourtList({ document: {} });
       expect(result.isValid).toBe(true);
     });
 
