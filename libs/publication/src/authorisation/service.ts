@@ -31,7 +31,7 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
   if (sensitivity === Sensitivity.CLASSIFIED) {
     if (!isVerifiedUser(user)) return false;
     if (!listType) return false;
-    return listType.provenance.split(",").includes(user!.provenance);
+    return !!user.provenance && listType.provenance.split(",").includes(user.provenance);
   }
 
   return false;
