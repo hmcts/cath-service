@@ -6,8 +6,7 @@ INSERT INTO list_types (name, friendly_name, welsh_friendly_name, shortened_frie
 VALUES
   ('CIVIL_DAILY_CAUSE_LIST', 'Civil Daily Cause List', 'Civil Daily Cause List', 'Civil Daily Cause List', 'civil-daily-cause-list', 'Public', 'CFT_IDAM', false),
   ('FAMILY_DAILY_CAUSE_LIST', 'Family Daily Cause List', 'Family Daily Cause List', 'Family Daily Cause List', 'family-daily-cause-list', 'Private', 'CFT_IDAM', false),
-  ('CRIME_DAILY_LIST', 'Crime Daily List', 'Crime Daily List', 'Crime Daily List', 'crime-daily-list', 'Public', 'CRIME_IDAM', false),
-  ('MAGISTRATES_PUBLIC_LIST', 'Magistrates Public List', 'Magistrates Public List', 'Magistrates Public List', 'magistrates-public-list', NULL, 'CRIME_IDAM,PI_AAD', false),
+  ('MAGISTRATES_PUBLIC_LIST', 'Magistrates Public List', 'Magistrates Public List', 'Magistrates Public List', 'magistrates-public-list', 'Public', 'CRIME_IDAM,PI_AAD', false),
   ('CROWN_WARNED_LIST', 'Crown Warned List', 'Crown Warned List', 'Crown Warned List', 'crown-warned-list', 'Classified', 'CRIME_IDAM', false),
   ('CROWN_DAILY_LIST', 'Crown Daily List', 'Crown Daily List', 'Crown Daily List', 'crown-daily-cause-list', 'Public', 'CRIME_IDAM', false),
   ('CROWN_FIRM_LIST', 'Crown Firm List', 'Crown Firm List', 'Crown Firm List', 'crown-firm-list', 'Classified', 'CRIME_IDAM', false),

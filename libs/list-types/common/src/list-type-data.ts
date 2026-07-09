@@ -32,23 +32,13 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [2]
   },
   {
-    name: "CRIME_DAILY_LIST",
-    englishFriendlyName: "Crime Daily List",
-    welshFriendlyName: "Crime Daily List",
-    provenance: "CRIME_IDAM",
-    urlPath: "crime-daily-list",
-    isNonStrategic: false,
-    defaultSensitivity: "Public",
-    subJurisdictionIds: [4]
-  },
-  {
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",
     provenance: "CRIME_IDAM,PI_AAD",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: null,
+    defaultSensitivity: "Public",
     subJurisdictionIds: [7]
   },
   {

@@ -2607,7 +2607,6 @@ __metadata:
   resolution: "@hmcts/list-types-common@workspace:libs/list-types/common"
   dependencies:
     "@hmcts/azure-blob": "workspace:*"
-    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
@@ -2623,6 +2622,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/location@workspace:libs/location"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     typescript: "npm:6.0.3"
   peerDependencies:
@@ -2769,6 +2769,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@prisma/client": "npm:7.8.0"
     "@types/node": "npm:24.10.4"
