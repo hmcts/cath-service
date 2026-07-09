@@ -5,14 +5,13 @@ import {
   renderMagistratesPublicAdultCourtListData,
   validateMagistratesPublicAdultCourtList
 } from "@hmcts/magistrates-public-adult-court-list";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
-import { createListTypeHandler } from "../list-type-handler.js";
+import { createListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
 export const GET = createListTypeHandler<MagistratesPublicAdultCourtListData>({
   en,
   cy,
   validate: validateMagistratesPublicAdultCourtList,
-  logPrefix: "magistrates-public-adult-court-list-future",
+  logPrefix: "magistrates-public-adult-court-list",
   checkAccess: true,
   render: async ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
@@ -21,8 +20,8 @@ export const GET = createListTypeHandler<MagistratesPublicAdultCourtListData>({
       contentDate: artefact.contentDate,
       locale
     });
-    const dataSource = PROVENANCE_LABELS[artefact.provenance as keyof typeof PROVENANCE_LABELS] || artefact.provenance;
-    res.render("magistrates-public-adult-court-list-future/magistrates-public-adult-court-list-future", {
+    const dataSource = resolveDataSource(artefact.provenance);
+    res.render("magistrates-public-adult-court-list", {
       en,
       cy,
       title: `${t.heading} ${header.locationName}`,
