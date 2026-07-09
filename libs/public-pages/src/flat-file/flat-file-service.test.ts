@@ -1,21 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.js";
 
-vi.mock("@hmcts/postgres-prisma", () => ({
-  prisma: {
-    listType: {
-      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
-    }
-  }
-}));
-
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getFileBuffer: vi.fn(),
   getFileExtension: vi.fn(),
   getContentType: vi.fn(),
   getFileName: vi.fn(),
-  canAccessPublicationData: vi.fn().mockReturnValue(true)
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: true })
 }));
 
 vi.mock("@hmcts/location", () => ({
@@ -34,14 +27,12 @@ vi.mock("@hmcts/system-admin-pages", () => ({
   })
 }));
 
-import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName } from "@hmcts/publication";
 
 describe("flat-file-service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(canAccessPublicationData).mockReturnValue(true);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true } as any);
   });
 
   describe("getFlatFileForDisplay", () => {

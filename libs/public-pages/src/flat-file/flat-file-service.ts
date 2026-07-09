@@ -1,7 +1,6 @@
 import type { UserProfile } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName, type ListType } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName, resolveListType } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
 export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en", user: UserProfile | undefined = undefined) {
@@ -24,12 +23,7 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
     return { error: "EXPIRED" as const };
   }
 
-  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
-  const listType: ListType | undefined = dbListType
-    ? { id: dbListType.id, provenance: dbListType.allowedProvenance, isNonStrategic: dbListType.isNonStrategic }
-    : undefined;
-
-  if (!canAccessPublicationData(user, artefact, listType)) {
+  if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) {
     return { error: "ACCESS_DENIED" as const };
   }
 
@@ -75,12 +69,7 @@ export async function getFileForDownload(artefactId: string, user: UserProfile |
     return { error: "EXPIRED" as const };
   }
 
-  const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
-  const listType: ListType | undefined = dbListType
-    ? { id: dbListType.id, provenance: dbListType.allowedProvenance, isNonStrategic: dbListType.isNonStrategic }
-    : undefined;
-
-  if (!canAccessPublicationData(user, artefact, listType)) {
+  if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) {
     return { error: "ACCESS_DENIED" as const };
   }
 

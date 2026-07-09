@@ -2,23 +2,15 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createSimpleListTypeHandler } from "./list-type-handler.js";
 
-vi.mock("@hmcts/postgres-prisma", () => ({
-  prisma: {
-    listType: {
-      findUnique: vi.fn()
-    }
-  }
-}));
-
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
   canAccessPublicationData: vi.fn(),
+  resolveListType: vi.fn(),
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload" }
 }));
 
-import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, resolveListType } from "@hmcts/publication";
 
 const mockValidate = vi.fn().mockReturnValue({ isValid: true, errors: [] });
 const mockRender = vi.fn();
@@ -51,12 +43,6 @@ const mockArtefact = {
   supersededCount: 0
 };
 
-const mockDbListType = {
-  id: 999,
-  allowedProvenance: "CFT_IDAM",
-  isNonStrategic: true
-};
-
 describe("createSimpleListTypeHandler — access control", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
@@ -77,7 +63,7 @@ describe("createSimpleListTypeHandler — access control", () => {
     };
 
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockDbListType as any);
+    vi.mocked(resolveListType).mockResolvedValue({ id: 999, provenance: "CFT_IDAM", isNonStrategic: true });
     vi.mocked(canAccessPublicationData).mockReturnValue(true);
     vi.mocked(getPublicationJson).mockResolvedValue([]);
   });
