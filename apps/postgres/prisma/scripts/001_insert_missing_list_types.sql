@@ -1,5 +1,5 @@
--- Insert any list types missing from the list_types table.
--- Idempotent: ON CONFLICT (name) DO NOTHING skips rows that already exist.
+-- Upsert all list types: insert if missing, update all fields if already present.
+-- Idempotent: safe to re-run at any time.
 -- Junction table (list_type_sub_jurisdiction) is managed by the seed script.
 
 INSERT INTO list_types (name, friendly_name, welsh_friendly_name, shortened_friendly_name, url, default_sensitivity, allowed_provenance, is_non_strategic)
@@ -63,4 +63,11 @@ VALUES
   ('UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST', 'Upper Tribunal Tax and Chancery Chamber Daily Hearing List', 'Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri', 'UT (T and CC) Daily Hearing List', 'upper-tribunal-tax-and-chancery-chamber-daily-hearing-list', 'Public', 'CFT_IDAM', true),
   ('UT_LANDS_CHAMBER_DAILY_HEARING_LIST', 'Upper Tribunal (Lands Chamber) Daily Hearing List', 'Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)', 'UT (LC) Daily Hearing List', 'upper-tribunal-lands-chamber-daily-hearing-list', 'Public', 'CFT_IDAM', true),
   ('UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST', 'Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List', 'Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)', 'UT (AAC) Daily Hearing List', 'upper-tribunal-administrative-appeals-chamber-daily-hearing-list', 'Public', 'CFT_IDAM', true)
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (name) DO UPDATE SET
+  friendly_name         = EXCLUDED.friendly_name,
+  welsh_friendly_name   = EXCLUDED.welsh_friendly_name,
+  shortened_friendly_name = EXCLUDED.shortened_friendly_name,
+  url                   = EXCLUDED.url,
+  default_sensitivity   = EXCLUDED.default_sensitivity,
+  allowed_provenance    = EXCLUDED.allowed_provenance,
+  is_non_strategic      = EXCLUDED.is_non_strategic;
