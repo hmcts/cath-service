@@ -673,6 +673,75 @@ Comments that mention numeric IDs (e.g. `// listTypeId: 42`) will rot as environ
 /** Used by list type ID 42 */
 ```
 
+**6. Schema validation is MANDATORY for every new list type**
+
+Every list type that accepts JSON uploads MUST have:
+
+- A JSON schema file at `libs/list-types/<name>/src/schemas/<name>.json`
+- A `validate*` wrapper at `libs/list-types/<name>/src/validation/json-validator.ts`
+- The wrapper exported from `libs/list-types/<name>/src/index.ts`
+- A test file at `libs/list-types/<name>/src/validation/json-validator.test.ts`
+
+A CI guard test at `libs/list-types/common/src/validation/guard.test.ts` **will fail** if any package ships a schema without a `validate*` export. Fix the guard failure before merging.
+
+**Validator wrapper pattern** (use `createJsonValidator` from `@hmcts/list-types-common`):
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.ts
+import { createJsonValidator, type ValidationResult } from "@hmcts/list-types-common";
+import { schemaPath } from "../config.js";
+
+export function validateMyListType(jsonData: unknown): ValidationResult {
+  return createJsonValidator(schemaPath)(jsonData);
+}
+```
+
+Export from `index.ts`:
+
+```typescript
+export { validateMyListType } from "./validation/json-validator.js";
+```
+
+**Test file pattern** — real schema execution, no mocks, AAA style:
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.test.ts
+import { describe, expect, it } from "vitest";
+import { validateMyListType } from "./json-validator.js";
+
+describe("validateMyListType", () => {
+  it("should return valid when all required fields are present", () => {
+    // Arrange — read the schema to identify every required field; fixture must satisfy all of them
+    const validData = [{ field1: "value", field2: "value" /* ... */ }];
+
+    // Act
+    const result = validateMyListType(validData);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("should return invalid when required fields are missing", () => {
+    // Arrange
+    const invalidData = [{}];
+
+    // Act
+    const result = validateMyListType(invalidData);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+```
+
+**Rules:**
+- Never mock `@hmcts/publication` or `@hmcts/list-types-common` in validator tests — call the real function against the real schema
+- The valid fixture must satisfy ALL `required` arrays at every nesting level of the schema — read the schema before writing the fixture
+- Most schemas use `"type": "array"` at the root; fixtures are arrays of objects. Some use `"type": "object"` — check the schema root before writing the fixture
+- Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
@@ -857,6 +926,7 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 13. **Don't export functions in order to test them** - Only export functions that are intended to be used outside the module
 14. **Don't add comments unless they are meaningful** - If necessary, explain why something is done, not what is done
 15. **Don't hardcode `listTypeId` numeric values** - `ListType.id` is autoincrement and differs per environment. Always use `artefact.listTypeName` (the stable `@unique` string column). See [List Type Implementation](#list-type-implementation) below.
+16. **Don't add a list type schema without a validator and tests** - Every `src/schemas/*.json` file requires a `src/validation/json-validator.ts` wrapper and a `src/validation/json-validator.test.ts`. The CI guard test in `libs/list-types/common` will fail if you don't. See [List Type Implementation](#list-type-implementation) item 6.
 
 ## Debugging Tips
 
