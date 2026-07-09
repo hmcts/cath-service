@@ -12,7 +12,7 @@ export const en = {
   restrictionInformationP1:
     "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.",
   restrictionInformationBoldText:
-    "You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.",
+    "Warning You'll be in contempt of court if you publish any information which is protected by a reporting restriction. You could get a fine, prison sentence or both.",
   restrictionInformationP2: "Specific restrictions ordered by the court will be mentioned on the cases listed here.",
   restrictionInformationP3:
     "However, restrictions are not always listed. Some apply automatically. For example, anonymity given to the victims of certain sexual offences.",
