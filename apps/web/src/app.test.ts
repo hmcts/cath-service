@@ -73,6 +73,18 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
   pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
 }));
 
+vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utcc"
+}));
+
+vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utlc"
+}));
+
+vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utaac"
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   moduleRoot: "/mock/civil-family",
   pageRoutes: { path: "/mock/civil-family/pages" }
@@ -134,7 +146,8 @@ vi.mock("@hmcts/public-pages/config", () => ({
 
 vi.mock("@hmcts/system-admin-pages/config", () => ({
   fileUploadRoutes: ["/reference-data-upload"],
-  moduleRoot: "/mock/system-admin"
+  moduleRoot: "/mock/system-admin",
+  pages: { path: "/mock/system-admin/pages" }
 }));
 
 vi.mock("@hmcts/web-core/config", () => ({
@@ -207,6 +220,7 @@ describe("Web Application", () => {
         app,
         expect.objectContaining({
           preferencesPath: "/cookie-preferences",
+          policyPath: "/cookie-policy",
           categories: expect.objectContaining({
             essential: expect.arrayContaining(["connect.sid"]),
             analytics: expect.any(Array),

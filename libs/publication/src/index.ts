@@ -19,7 +19,7 @@ export {
   deleteArtefactSearchByArtefactId,
   findArtefactSearchByArtefactId
 } from "./repository/artefact-search-queries.js";
-export type { Artefact } from "./repository/model.js";
+export type { Artefact, ArtefactWithListType } from "./repository/model.js";
 export {
   type ArtefactMetadata,
   type ArtefactSummary,

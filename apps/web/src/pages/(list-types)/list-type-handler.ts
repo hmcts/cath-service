@@ -287,24 +287,22 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
 
 type MultiListRenderFn<T> = (
   jsonData: T,
-  params: { locale: string; listTypeId: number; listTitle: string; contentDate: Date; lastReceivedDate: string }
+  params: { locale: string; listTypeName: string; listTitle: string; contentDate: Date; lastReceivedDate: string }
 ) => { header: { listTitle: string }; hearings: unknown };
 
 type MultiListHandlerOptions<T> = {
   en: SimpleLocaleContent;
   cy: SimpleLocaleContent;
-  listTypeIdToName: Record<number, string>;
   listTypeConfig: ListTypeConfig;
   renderFn: MultiListRenderFn<T>;
   resolveTemplate: (listConfig: { en: string; cy: string; template: string }) => string;
 };
 
 export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T>) {
-  const { en, cy, listTypeIdToName, listTypeConfig, renderFn, resolveTemplate } = opts;
+  const { en, cy, listTypeConfig, renderFn, resolveTemplate } = opts;
 
   const guardArtefact = (artefact: Artefact, res: Response): boolean => {
-    const listTypeName = listTypeIdToName[artefact.listTypeId];
-    if (!listTypeName || !listTypeConfig[listTypeName]) {
+    if (!artefact.listTypeName || !listTypeConfig[artefact.listTypeName]) {
       res.status(400).render("errors/common", {
         en,
         cy,
@@ -318,14 +316,13 @@ export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T
 
   const render = ({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: T; locale: string; res: Response }): void => {
     const t = locale === "cy" ? cy : en;
-    const listTypeId = artefact.listTypeId;
-    const listTypeName = listTypeIdToName[listTypeId];
+    const listTypeName = artefact.listTypeName ?? "";
     const listConfig = listTypeConfig[listTypeName];
     const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderFn(jsonData, {
       locale,
-      listTypeId,
+      listTypeName,
       listTitle,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()

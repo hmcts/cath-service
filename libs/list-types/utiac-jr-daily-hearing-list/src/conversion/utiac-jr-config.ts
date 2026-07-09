@@ -1,11 +1,4 @@
-import {
-  createConverter,
-  type ExcelConverterConfig,
-  registerConverter,
-  registerConverterByName,
-  validateNoHtmlTags,
-  validateTimeFormatSimple
-} from "@hmcts/list-types-common";
+import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags, validateTimeFormatSimple } from "@hmcts/list-types-common";
 
 export const UTIAC_JR_REGIONAL_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -110,15 +103,10 @@ export const UTIAC_JR_LONDON_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utiacJrRegionalConverter = createConverter(UTIAC_JR_REGIONAL_EXCEL_CONFIG);
-registerConverter(32, utiacJrRegionalConverter);
 registerConverterByName("UTIAC_JR_LEEDS_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverter(33, utiacJrRegionalConverter);
 registerConverterByName("UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverter(34, utiacJrRegionalConverter);
 registerConverterByName("UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", utiacJrRegionalConverter);
-registerConverter(35, utiacJrRegionalConverter);
 registerConverterByName("UTIAC_JR_CARDIFF_DAILY_HEARING_LIST", utiacJrRegionalConverter);
 
 const utiacJrLondonConverter = createConverter(UTIAC_JR_LONDON_EXCEL_CONFIG);
-registerConverter(31, utiacJrLondonConverter);
 registerConverterByName("UTIAC_JR_LONDON_DAILY_HEARING_LIST", utiacJrLondonConverter);

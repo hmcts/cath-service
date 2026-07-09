@@ -6,7 +6,7 @@ export interface ListTypeData {
   provenance: string;
   urlPath?: string;
   isNonStrategic: boolean;
-  defaultSensitivity: string;
+  defaultSensitivity: string | null;
   shortenedFriendlyName?: string;
   subJurisdictionIds: number[];
 }
@@ -53,7 +53,7 @@ export const listTypeData: ListTypeData[] = [
     provenance: "CRIME_IDAM",
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
-    defaultSensitivity: "Public",
+    defaultSensitivity: null,
     subJurisdictionIds: [7]
   },
   {
@@ -667,6 +667,42 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     id: 57,
+    name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (T and CC) Daily Hearing List",
+    subJurisdictionIds: [30]
+  },
+  {
+    id: 58,
+    name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Lands Chamber) Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-lands-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (LC) Daily Hearing List",
+    subJurisdictionIds: [29]
+  },
+  {
+    id: 59,
+    name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "upper-tribunal-administrative-appeals-chamber-daily-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "UT (AAC) Daily Hearing List",
+    subJurisdictionIds: [26]
+  },
+  {
+    id: 60,
     name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
     englishFriendlyName: "Magistrates Adult Court List - Daily",
     welshFriendlyName: "Rhestr Achosion Dyddiol Cyhoeddus y Llys Ynadon \u2013 Oedolion",
@@ -677,7 +713,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [7]
   },
   {
-    id: 58,
+    id: 61,
     name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
     englishFriendlyName: "Magistrates Adult Court List - Future",
     welshFriendlyName: "Rhestr Llys Ynadon Oedolion \u2013 Dyfodol",

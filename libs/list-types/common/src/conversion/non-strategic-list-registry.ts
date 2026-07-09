@@ -29,6 +29,10 @@ export function hasConverterForListType(listTypeId: number): boolean {
   return converterRegistry.has(listTypeId);
 }
 
+export function getConverterForListTypeName(listTypeName: string): ListTypeConverter | undefined {
+  return nameConverterRegistry.get(listTypeName);
+}
+
 export function hasConverterForListTypeName(listTypeName: string): boolean {
   return nameConverterRegistry.has(listTypeName);
 }

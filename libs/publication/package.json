@@ -42,6 +42,7 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
     "@hmcts/magistrates-adult-court-list": "workspace:*",
+    "@hmcts/magistrates-public-list": "workspace:*",
     "@hmcts/magistrates-standard-list": "workspace:*",
     "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
@@ -49,6 +50,9 @@
     "@hmcts/send-daily-hearing-list": "workspace:*",
     "@hmcts/siac-poac-paac-weekly-hearing-list": "workspace:*",
     "@hmcts/sscs-daily-hearing-list": "workspace:*",
+    "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*",
+    "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*",
+    "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/utiac-jr-daily-hearing-list": "workspace:*",
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
@@ -57,6 +61,6 @@
   },
   "devDependencies": {
     "typescript": "6.0.3",
-    "vitest": "4.1.9"
+    "vitest": "4.1.10"
   }
 }

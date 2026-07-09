@@ -21,6 +21,7 @@ import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-commo
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
 import { moduleRoot as magistratesAdultCourtListModuleRoot } from "@hmcts/magistrates-adult-court-list/config";
+import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
 import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
@@ -32,7 +33,14 @@ import { moduleRoot as siacPoacPaacModuleRoot } from "@hmcts/siac-poac-paac-week
 import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
 import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
 import { moduleRoot as sscsDailyHearingListModuleRoot } from "@hmcts/sscs-daily-hearing-list/config";
-import { fileUploadRoutes as systemAdminFileUploadRoutes, moduleRoot as systemAdminModuleRoot } from "@hmcts/system-admin-pages/config";
+import {
+  fileUploadRoutes as systemAdminFileUploadRoutes,
+  moduleRoot as systemAdminModuleRoot,
+  pages as systemAdminPages
+} from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utaacModuleRoot } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
+import { moduleRoot as utlcModuleRoot } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
+import { moduleRoot as utccModuleRoot } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
 import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
@@ -111,6 +119,9 @@ export async function createApp(): Promise<Express> {
     fttTaxChamberModuleRoot,
     fttLrtModuleRoot,
     fttRptModuleRoot,
+    utccModuleRoot,
+    utlcModuleRoot,
+    utaacModuleRoot,
     civilFamilyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
@@ -120,6 +131,7 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    magistratesPublicListModuleRoot,
     magistratesStandardListModuleRoot,
     magistratesAdultCourtListModuleRoot,
     crownDailyListModuleRoot,
@@ -145,6 +157,7 @@ export async function createApp(): Promise<Express> {
 
   await configureCookieManager(app, {
     preferencesPath: "/cookie-preferences",
+    policyPath: "/cookie-policy",
     categories: {
       essential: ["connect.sid"],
       analytics: ["_ga", "_gid"],
@@ -187,7 +200,7 @@ export async function createApp(): Promise<Express> {
   app.use(await createSimpleRouter(publicPagesApiRoutes));
 
   // Register all pages from apps/web/src/pages (includes route groups and admin)
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }));
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, systemAdminPages));
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
