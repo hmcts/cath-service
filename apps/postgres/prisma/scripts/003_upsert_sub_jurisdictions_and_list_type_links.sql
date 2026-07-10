@@ -1,6 +1,17 @@
 -- Ensure all sub-jurisdictions exist and all list type → sub-jurisdiction links are in place.
 -- Safe to re-run (fully idempotent via ON CONFLICT DO NOTHING / DO UPDATE).
 
+-- Step 0: Upsert parent jurisdictions (required FK for sub-jurisdictions)
+INSERT INTO jurisdiction (jurisdiction_id, name, welsh_name)
+VALUES
+  (1, 'Civil',     'Sifil'),
+  (2, 'Family',    'Teulu'),
+  (3, 'Crime',     'Trosedd'),
+  (4, 'Tribunal',  'Tribiwnlys')
+ON CONFLICT (jurisdiction_id) DO UPDATE SET
+  name       = EXCLUDED.name,
+  welsh_name = EXCLUDED.welsh_name;
+
 -- Step 1: Upsert all sub-jurisdictions
 -- Jurisdiction IDs: 1=Civil, 2=Family, 3=Crime, 4=Tribunal
 INSERT INTO sub_jurisdiction (sub_jurisdiction_id, name, welsh_name, jurisdiction_id)

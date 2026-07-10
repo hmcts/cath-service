@@ -36,6 +36,15 @@ printf "DELETE FROM _prisma_migrations WHERE migration_name IN ('20260527140208'
 echo "Running database migrations..."
 npx --ignore-scripts prisma migrate deploy --config=./prisma.config.ts
 
+echo "Running reference data scripts..."
+for script in prisma/scripts/001_insert_missing_list_types.sql \
+              prisma/scripts/002_update_list_type_provenances.sql \
+              prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql \
+              prisma/scripts/004_soft_delete_crime_daily_list.sql; do
+  echo "  Applying $script..."
+  npx --ignore-scripts prisma db execute --file "$script" --config=./prisma.config.ts
+done
+
 echo "Migrations completed successfully"
 echo "Starting health proxy on port 5555..."
 node health-server.mjs &
