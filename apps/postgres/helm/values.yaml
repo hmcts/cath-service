@@ -4,6 +4,7 @@ nodejs:
   aadIdentityName: cath
   ingressHost: cath-postgres.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctspublic.azurecr.io/cath/cath-postgres:latest'
+  startupFailureThreshold: 72
   environment:
     POSTGRES_DATABASE: cath
   keyVaults:
