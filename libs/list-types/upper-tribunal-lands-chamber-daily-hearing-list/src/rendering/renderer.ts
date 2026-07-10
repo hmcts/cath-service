@@ -3,7 +3,6 @@ import type { UtlcHearing, UtlcHearingList } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
-  courtName: string;
   contentDate: Date;
   lastReceivedDate: string;
   listTitle: string;
