@@ -5,7 +5,6 @@ import { renderUtaacDailyHearingListData } from "./renderer.js";
 describe("renderUtaacDailyHearingListData", () => {
   const baseOptions = {
     locale: "en",
-    courtName: "Upper Tribunal (Administrative Appeals Chamber)",
     contentDate: new Date(2025, 0, 15),
     lastReceivedDate: "2025-01-15T09:55:00Z",
     listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List"
