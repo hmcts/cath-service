@@ -26,6 +26,13 @@ vi.mock("@hmcts/web-core", () => ({
   notFoundHandler: vi.fn(() => vi.fn())
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: { findUnique: vi.fn() },
+    artefact: { findUnique: vi.fn(), findMany: vi.fn() }
+  }
+}));
+
 vi.mock("redis", () => ({
   createClient: vi.fn(() => ({
     on: vi.fn(),
