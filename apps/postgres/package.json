@@ -17,6 +17,7 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
+    "@hmcts/list-types-common": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "http-proxy": "1.18.1"
   },

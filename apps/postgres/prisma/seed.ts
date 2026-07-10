@@ -1,4 +1,5 @@
-import { listTypeData, locationData } from "@hmcts/location";
+import { listTypeData } from "@hmcts/list-types-common";
+import { locationData } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 
 async function seedReferenceData() {

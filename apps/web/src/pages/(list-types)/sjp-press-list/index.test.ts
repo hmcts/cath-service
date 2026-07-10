@@ -30,12 +30,14 @@ vi.mock("@hmcts/publication", () => ({
   PROVENANCE_LABELS: {
     MANUAL: "Manual Upload",
     API: "API Upload"
-  }
+  },
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, name: "SJP_PRESS_LIST", provenance: "PI_AAD", isNonStrategic: false })
 }));
 
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getPublicationJson } from "@hmcts/publication";
 import { validateSjpPressList } from "@hmcts/sjp-press-list";
 
 describe("SJP Press List Controller", () => {
@@ -55,6 +57,7 @@ describe("SJP Press List Controller", () => {
     res.status = vi.fn().mockReturnValue(res);
     res.render = vi.fn().mockReturnValue(res);
     res.redirect = vi.fn().mockReturnValue(res);
+    res.setHeader = vi.fn();
     res.locals = { locale: "en" };
     return res;
   };
@@ -129,6 +132,7 @@ describe("SJP Press List Controller", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
   });
 
   describe("GET", () => {
@@ -152,6 +156,24 @@ describe("SJP Press List Controller", () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.render).toHaveBeenCalledWith("errors/404", expect.objectContaining({ locale: "en" }));
+    });
+
+    it("should render 403 error when user cannot access publication", async () => {
+      const req = mockRequest({ query: { artefactId: "test-123" } });
+      const res = mockResponse();
+
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+        artefactId: "test-123",
+        locationId: "1",
+        contentDate: new Date("2025-01-20"),
+        provenance: "MANUAL"
+      } as never);
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      await getHandler(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.render).toHaveBeenCalledWith("errors/403", expect.objectContaining({ locale: "en" }));
     });
 
     it("should render 404 error when list type is not press", async () => {
