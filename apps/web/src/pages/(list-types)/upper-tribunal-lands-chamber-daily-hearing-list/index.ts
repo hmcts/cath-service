@@ -20,7 +20,6 @@ export const GET = createSimpleListTypeHandler<UtlcHearingList>({
     const t = locale === "cy" ? cy : en;
     const { header, hearings } = renderUtlcDailyHearingListData(jsonData, {
       locale,
-      courtName: "Upper Tribunal (Lands Chamber)",
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString(),
       listTitle: t.pageTitle
