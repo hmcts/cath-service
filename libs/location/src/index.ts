@@ -7,7 +7,6 @@ export {
   type RegionItem,
   type SubJurisdictionItem
 } from "./filtering/service.js";
-export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { locationData } from "./location-data.js";
 export {
   createLocationMetadata,

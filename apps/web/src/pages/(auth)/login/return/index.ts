@@ -213,6 +213,6 @@ function extractUserProfile(idToken: string, _provider: string): UserProfile {
     email: payload.email || payload.emails?.[0] || payload.signInNames?.emailAddress,
     displayName: payload.name || payload.given_name || payload.family_name || "Unknown",
     role: "VERIFIED",
-    provenance: "B2C"
+    provenance: "PI_AAD"
   };
 }
