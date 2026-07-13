@@ -44,6 +44,7 @@
     "@hmcts/magistrates-public-list": "workspace:*",
     "@hmcts/magistrates-standard-list": "workspace:*",
     "@hmcts/notifications": "workspace:*",
+    "@hmcts/pht-weekly-hearing-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",

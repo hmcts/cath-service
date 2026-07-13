@@ -630,5 +630,16 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     shortenedFriendlyName: "UT (AAC) Daily Hearing List",
     subJurisdictionIds: [26]
+  },
+  {
+    name: "PHT_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Primary Health Tribunal Weekly Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Iechyd Sylfaenol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "pht-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: null,
+    shortenedFriendlyName: "PHT Weekly Hearing List",
+    subJurisdictionIds: [22]
   }
 ];

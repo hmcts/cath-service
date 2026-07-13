@@ -95,7 +95,9 @@
       "@hmcts/sscs-daily-hearing-list/config": ["libs/list-types/sscs-daily-hearing-list/src/config"],
       "@hmcts/azure-blob": ["libs/azure-blob/src"],
       "@hmcts/magistrates-standard-list": ["libs/list-types/magistrates-standard-list/src"],
-      "@hmcts/magistrates-standard-list/config": ["libs/list-types/magistrates-standard-list/src/config"]
+      "@hmcts/magistrates-standard-list/config": ["libs/list-types/magistrates-standard-list/src/config"],
+      "@hmcts/pht-weekly-hearing-list": ["libs/list-types/pht-weekly-hearing-list/src"],
+      "@hmcts/pht-weekly-hearing-list/config": ["libs/list-types/pht-weekly-hearing-list/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
