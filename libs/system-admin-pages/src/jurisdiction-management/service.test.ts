@@ -200,13 +200,29 @@ describe("jurisdiction-management-service", () => {
       );
     });
 
-    it("should return error when record has dependencies", async () => {
+    it("should return sub-jurisdiction error message when Jurisdiction has dependencies", async () => {
       // Arrange
       vi.mocked(findJurisdictionDataById).mockResolvedValue({ jurisdictionId: 1, name: "Civil", welshName: "Sifil" });
       vi.mocked(hasDependencies).mockResolvedValue(true);
 
       // Act
       const errors = await deleteJurisdictionData(1, "Jurisdiction", testUser);
+
+      // Assert
+      expect(errors).toContainEqual({
+        text: "This record cannot be deleted because it is linked to one or more sub-jurisdictions",
+        href: "#"
+      });
+      expect(hardDeleteJurisdictionRecord).not.toHaveBeenCalled();
+    });
+
+    it("should return location error message when Sub-Jurisdiction has dependencies", async () => {
+      // Arrange
+      vi.mocked(findJurisdictionDataById).mockResolvedValue({ subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1 });
+      vi.mocked(hasDependencies).mockResolvedValue(true);
+
+      // Act
+      const errors = await deleteJurisdictionData(10, "Sub-Jurisdiction", testUser);
 
       // Assert
       expect(errors).toContainEqual({

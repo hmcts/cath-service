@@ -3,6 +3,7 @@ export const en = {
   backLink: "/jurisdiction-data-modify",
   nameLabel: "Name",
   typeLabel: "Type",
+  parentJurisdictionLabel: "Parent Jurisdiction",
   yesOption: "Yes",
   noOption: "No",
   continueButton: "Continue",

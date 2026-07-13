@@ -84,7 +84,12 @@ export async function deleteJurisdictionData(id: number, type: JurisdictionDataT
 
   const hasLinked = await hasDependencies(id, type);
   if (hasLinked) {
-    return [{ text: "This record cannot be deleted because it is linked to one or more locations", href: "#" }];
+    const dependencyErrorMessage: Record<JurisdictionDataType, string> = {
+      Jurisdiction: "This record cannot be deleted because it is linked to one or more sub-jurisdictions",
+      "Sub-Jurisdiction": "This record cannot be deleted because it is linked to one or more locations",
+      Region: "This record cannot be deleted because it is linked to one or more locations"
+    };
+    return [{ text: dependencyErrorMessage[type], href: "#" }];
   }
 
   await hardDeleteJurisdictionRecord(id, type);

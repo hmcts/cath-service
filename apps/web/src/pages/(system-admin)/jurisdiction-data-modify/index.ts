@@ -27,6 +27,12 @@ const getHandler = async (req: Request, res: Response) => {
   const jurisdictionId =
     type === "Sub-Jurisdiction" && "jurisdictionId" in record && record.jurisdictionId != null ? (record.jurisdictionId as number) : undefined;
 
+  let parentJurisdictionName: string | undefined;
+  if (type === "Sub-Jurisdiction" && jurisdictionId !== undefined) {
+    const parentRecord = await findJurisdictionDataById(jurisdictionId, "Jurisdiction");
+    parentJurisdictionName = parentRecord && "name" in parentRecord ? parentRecord.name : undefined;
+  }
+
   const session = req.session as JurisdictionDataSession;
   session.jurisdictionData = { id, type, name, welshName, jurisdictionId };
 
@@ -34,7 +40,7 @@ const getHandler = async (req: Request, res: Response) => {
     en,
     cy,
     t,
-    record: { name, type },
+    record: { name, type, parentJurisdictionName },
     updateHref: "/jurisdiction-data-update",
     deleteHref: "/jurisdiction-data-delete"
   });

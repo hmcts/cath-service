@@ -1,8 +1,14 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { deleteJurisdictionData, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
+import { deleteJurisdictionData, findJurisdictionDataById, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+async function resolveParentJurisdictionName(type: string, jurisdictionId: number | undefined): Promise<string | undefined> {
+  if (type !== "Sub-Jurisdiction" || jurisdictionId === undefined) return undefined;
+  const parent = await findJurisdictionDataById(jurisdictionId, "Jurisdiction");
+  return parent && "name" in parent ? parent.name : undefined;
+}
 
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
@@ -13,11 +19,14 @@ const getHandler = async (req: Request, res: Response) => {
     return res.redirect("/jurisdiction-data-list");
   }
 
+  const { name, type, jurisdictionId } = session.jurisdictionData;
+  const parentJurisdictionName = await resolveParentJurisdictionName(type, jurisdictionId);
+
   res.render("jurisdiction-data-delete/index", {
     en,
     cy,
     t,
-    record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
+    record: { name, type, parentJurisdictionName },
     radioError: undefined,
     errors: undefined
   });
@@ -32,25 +41,26 @@ const postHandler = async (req: Request, res: Response) => {
     return res.redirect("/jurisdiction-data-list");
   }
 
+  const { id, type, name, jurisdictionId } = session.jurisdictionData;
   const selection = req.body.confirmation;
 
   if (!selection) {
+    const parentJurisdictionName = await resolveParentJurisdictionName(type, jurisdictionId);
     const errors = [{ text: t.noSelectionError, href: "#confirmation" }];
     return res.render("jurisdiction-data-delete/index", {
       en,
       cy,
       t,
-      record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
+      record: { name, type, parentJurisdictionName },
       radioError: { text: t.noSelectionError },
       errors
     });
   }
 
   if (selection === "no") {
-    return res.redirect(`/jurisdiction-data-modify?id=${session.jurisdictionData.id}&type=${encodeURIComponent(session.jurisdictionData.type)}`);
+    return res.redirect(`/jurisdiction-data-modify?id=${id}&type=${encodeURIComponent(type)}`);
   }
 
-  const { id, type } = session.jurisdictionData;
   const user = {
     userId: req.user?.id || "unknown",
     userEmail: req.user?.email || "unknown",
@@ -61,11 +71,12 @@ const postHandler = async (req: Request, res: Response) => {
   const deleteErrors = await deleteJurisdictionData(id, type, user);
 
   if (deleteErrors.length > 0) {
+    const parentJurisdictionName = await resolveParentJurisdictionName(type, jurisdictionId);
     return res.render("jurisdiction-data-delete/index", {
       en,
       cy,
       t,
-      record: { name: session.jurisdictionData.name, type: session.jurisdictionData.type },
+      record: { name, type, parentJurisdictionName },
       radioError: undefined,
       errors: deleteErrors
     });

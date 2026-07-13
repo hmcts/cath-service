@@ -23,18 +23,23 @@
       }) }}
     {% endif %}
 
-    {{ govukSummaryList({
-      rows: [
-        {
-          key: { text: nameLabel },
-          value: { text: record.name }
-        },
-        {
-          key: { text: typeLabel },
-          value: { text: record.type }
-        }
-      ]
-    }) }}
+    {% set summaryRows = [
+      {
+        key: { text: nameLabel },
+        value: { text: record.name }
+      },
+      {
+        key: { text: typeLabel },
+        value: { text: record.type }
+      }
+    ] %}
+    {% if record.parentJurisdictionName %}
+      {% set summaryRows = summaryRows.concat([{
+        key: { text: parentJurisdictionLabel },
+        value: { text: record.parentJurisdictionName }
+      }]) %}
+    {% endif %}
+    {{ govukSummaryList({ rows: summaryRows }) }}
 
     <h1 class="govuk-heading-l">{{ title }}</h1>
 

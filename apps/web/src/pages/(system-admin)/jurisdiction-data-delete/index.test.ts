@@ -11,11 +11,12 @@ vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
   return {
     ...actual,
-    deleteJurisdictionData: vi.fn()
+    deleteJurisdictionData: vi.fn(),
+    findJurisdictionDataById: vi.fn()
   };
 });
 
-import { deleteJurisdictionData } from "@hmcts/system-admin-pages";
+import { deleteJurisdictionData, findJurisdictionDataById } from "@hmcts/system-admin-pages";
 
 describe("jurisdiction-data-delete page", () => {
   let req: Partial<Request>;
@@ -48,7 +49,32 @@ describe("jurisdiction-data-delete page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data-delete/index",
         expect.objectContaining({
-          record: { name: "Civil", type: "Jurisdiction" }
+          record: { name: "Civil", type: "Jurisdiction", parentJurisdictionName: undefined }
+        })
+      );
+    });
+
+    it("should render with parent jurisdiction name for Sub-Jurisdiction", async () => {
+      // Arrange
+      req.session = {
+        jurisdictionData: { id: 10, type: "Sub-Jurisdiction", name: "County Court", welshName: "Llys Sirol", jurisdictionId: 2 }
+      } as any;
+      vi.mocked(findJurisdictionDataById).mockResolvedValue({
+        jurisdictionId: 2,
+        name: "Civil",
+        welshName: "Sifil",
+        deletedAt: null
+      });
+
+      // Act
+      const handler = GET[GET.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "jurisdiction-data-delete/index",
+        expect.objectContaining({
+          record: { name: "County Court", type: "Sub-Jurisdiction", parentJurisdictionName: "Civil" }
         })
       );
     });
@@ -114,7 +140,9 @@ describe("jurisdiction-data-delete page", () => {
     it("should re-render with error when dependency check fails", async () => {
       // Arrange
       req.body = { confirmation: "yes" };
-      vi.mocked(deleteJurisdictionData).mockResolvedValue([{ text: "This record cannot be deleted because it is linked to one or more locations", href: "#" }]);
+      vi.mocked(deleteJurisdictionData).mockResolvedValue([
+        { text: "This record cannot be deleted because it is linked to one or more sub-jurisdictions", href: "#" }
+      ]);
 
       // Act
       const handler = POST[POST.length - 1];

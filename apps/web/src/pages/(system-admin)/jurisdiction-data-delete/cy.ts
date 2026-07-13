@@ -3,6 +3,7 @@ export const cy = {
   backLink: "/jurisdiction-data-modify",
   nameLabel: "Enw",
   typeLabel: "Math",
+  parentJurisdictionLabel: "Awdurdodaeth Rhiant",
   yesOption: "Ydw",
   noOption: "Nac ydw",
   continueButton: "Parhau",

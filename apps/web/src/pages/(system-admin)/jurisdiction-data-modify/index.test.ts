@@ -52,7 +52,7 @@ describe("jurisdiction-data-modify page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data-modify/index",
         expect.objectContaining({
-          record: { name: "Civil", type: "Jurisdiction" },
+          record: { name: "Civil", type: "Jurisdiction", parentJurisdictionName: undefined },
           updateHref: "/jurisdiction-data-update",
           deleteHref: "/jurisdiction-data-delete"
         })
@@ -82,16 +82,23 @@ describe("jurisdiction-data-modify page", () => {
       });
     });
 
-    it("should store jurisdictionId in session for Sub-Jurisdiction type", async () => {
+    it("should store jurisdictionId in session and render parent jurisdiction name for Sub-Jurisdiction type", async () => {
       // Arrange
       req.query = { id: "10", type: "Sub-Jurisdiction" };
-      vi.mocked(findJurisdictionDataById).mockResolvedValue({
-        subJurisdictionId: 10,
-        name: "County Court",
-        welshName: "Llys Sirol",
-        jurisdictionId: 2,
-        deletedAt: null
-      });
+      vi.mocked(findJurisdictionDataById)
+        .mockResolvedValueOnce({
+          subJurisdictionId: 10,
+          name: "County Court",
+          welshName: "Llys Sirol",
+          jurisdictionId: 2,
+          deletedAt: null
+        })
+        .mockResolvedValueOnce({
+          jurisdictionId: 2,
+          name: "Civil",
+          welshName: "Sifil",
+          deletedAt: null
+        });
 
       // Act
       const handler = GET[GET.length - 1];
@@ -105,6 +112,12 @@ describe("jurisdiction-data-modify page", () => {
         welshName: "Llys Sirol",
         jurisdictionId: 2
       });
+      expect(res.render).toHaveBeenCalledWith(
+        "jurisdiction-data-modify/index",
+        expect.objectContaining({
+          record: { name: "County Court", type: "Sub-Jurisdiction", parentJurisdictionName: "Civil" }
+        })
+      );
     });
 
     it("should redirect to list when id is missing", async () => {
