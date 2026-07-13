@@ -12,7 +12,7 @@ import {
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import type { PhtHearingList } from "../models/types.js";
-import { renderPhtData } from "../rendering/renderer.js";
+import { PHT_COURT_NAME, PHT_LIST_TITLE, renderPhtData } from "../rendering/renderer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,10 +25,10 @@ export async function generatePhtWeeklyHearingListPdf(options: PdfGenerationOpti
   try {
     const renderedData = renderPhtData(options.jsonData, {
       locale: options.locale,
-      courtName: "Primary Health Tribunal",
+      courtName: PHT_COURT_NAME,
       contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
-      listTitle: "Primary Health Tribunal Weekly Hearing List"
+      listTitle: PHT_LIST_TITLE
     });
 
     const translations = await loadTranslations(

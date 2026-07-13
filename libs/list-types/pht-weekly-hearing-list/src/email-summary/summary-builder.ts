@@ -1,7 +1,7 @@
-import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
-import type { PhtHearingList } from "../models/types.js";
+export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
 
-export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
+import type { CaseSummary } from "@hmcts/list-types-common";
+import type { PhtHearingList } from "../models/types.js";
 
 export function extractCaseSummary(jsonData: PhtHearingList): CaseSummary[] {
   return jsonData.map((hearing) => [
