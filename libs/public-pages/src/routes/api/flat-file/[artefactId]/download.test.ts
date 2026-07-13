@@ -139,6 +139,21 @@ describe("Flat File Download Route", () => {
       expect(jsonSpy).toHaveBeenCalledWith({ error: "File not found" });
       expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
+
+    it("should return 403 with Access denied message for ACCESS_DENIED error", async () => {
+      // Arrange
+      const { getFileForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getFileForDownload).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(403);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "Access denied" });
+      expect(sendSpy).not.toHaveBeenCalled();
+      expect(setHeaderSpy).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+    });
   });
 
   describe("Successful Download", () => {
@@ -257,7 +272,7 @@ describe("Flat File Download Route", () => {
   });
 
   describe("Integration with Service", () => {
-    it("should pass artefactId to getFileForDownload service", async () => {
+    it("should pass artefactId and req.user to getFileForDownload service", async () => {
       const validUuid = "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6";
       mockRequest.params = { artefactId: validUuid };
       const { getFileForDownload } = await import("../../../../flat-file/flat-file-service.js");
@@ -265,7 +280,7 @@ describe("Flat File Download Route", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(getFileForDownload).toHaveBeenCalledWith(validUuid);
+      expect(getFileForDownload).toHaveBeenCalledWith(validUuid, undefined);
     });
 
     it("should call getFileForDownload exactly once", async () => {

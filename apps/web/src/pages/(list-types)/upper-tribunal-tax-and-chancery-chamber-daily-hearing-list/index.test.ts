@@ -7,9 +7,19 @@ vi.mock("@hmcts/list-types-common", () => ({
   createJsonValidator: () => mockValidate
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: false }),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     SNL: "ListAssist"
@@ -106,7 +116,6 @@ describe("Upper Tribunal Tax and Chancery Chamber page controller", () => {
       expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(renderUtccDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        courtName: "Upper Tribunal Tax and Chancery Chamber",
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list"

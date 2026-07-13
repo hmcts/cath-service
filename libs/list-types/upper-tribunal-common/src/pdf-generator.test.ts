@@ -49,16 +49,7 @@ describe("createUtDailyHearingListPdfGenerator", () => {
   });
 
   const makeGenerator = () =>
-    createUtDailyHearingListPdfGenerator(
-      "Test Court",
-      "Test List Title",
-      mockRenderFn,
-      mockImportEn,
-      mockImportCy,
-      "/fake/dirname",
-      mockProvenanceLabels,
-      mockGeneratePdfFn
-    );
+    createUtDailyHearingListPdfGenerator(mockRenderFn, mockImportEn, mockImportCy, "/fake/dirname", mockProvenanceLabels, mockGeneratePdfFn);
 
   it("should generate and store PDF successfully", async () => {
     // Arrange
@@ -71,10 +62,7 @@ describe("createUtDailyHearingListPdfGenerator", () => {
     // Assert
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("artefact-123.pdf");
-    expect(mockRenderFn).toHaveBeenCalledWith(
-      baseOptions.jsonData,
-      expect.objectContaining({ courtName: "Test Court", listTitle: "Test List Title", locale: "en" })
-    );
+    expect(mockRenderFn).toHaveBeenCalledWith(baseOptions.jsonData, expect.objectContaining({ listTitle: "English", locale: "en" }));
   });
 
   it("should use Welsh translations when locale is cy", async () => {
