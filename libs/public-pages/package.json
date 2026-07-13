@@ -30,6 +30,7 @@
     "express": "^5.2.0"
   },
   "dependencies": {
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",

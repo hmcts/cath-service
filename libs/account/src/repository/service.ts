@@ -1,4 +1,4 @@
-import { createUser, updateUser } from "./query.js";
+import { createUser, findUserByProvenanceId, updateUser } from "./query.js";
 
 export function splitName(fullName: string): { givenName: string; surname: string } {
   const trimmed = fullName.trim();
@@ -27,6 +27,19 @@ export async function createLocalMediaUser(email: string, name: string, azureAdU
   });
 }
 
-export async function updateLocalMediaUser(azureAdUserId: string, firstName: string, surname: string): Promise<void> {
-  await updateUser(azureAdUserId, { firstName, surname });
+export async function updateLocalMediaUser(email: string, azureAdUserId: string, firstName: string, surname: string): Promise<void> {
+  const existing = await findUserByProvenanceId(azureAdUserId);
+
+  if (existing) {
+    await updateUser(azureAdUserId, { firstName, surname });
+  } else {
+    await createUser({
+      email,
+      firstName,
+      surname,
+      userProvenance: "B2C_IDAM",
+      userProvenanceId: azureAdUserId,
+      role: "VERIFIED"
+    });
+  }
 }

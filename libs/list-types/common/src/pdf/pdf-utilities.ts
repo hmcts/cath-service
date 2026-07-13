@@ -51,6 +51,13 @@ export function createPdfErrorResult(error: unknown): PdfGenerationResult {
   };
 }
 
+export interface PdfFromHtmlResult {
+  success: boolean;
+  pdfBuffer?: Buffer;
+  sizeBytes?: number;
+  error?: string;
+}
+
 export async function loadTranslations(
   locale: string,
   importEn: () => Promise<{ en: Record<string, unknown> }>,

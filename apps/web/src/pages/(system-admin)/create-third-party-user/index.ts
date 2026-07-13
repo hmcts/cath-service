@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { validateThirdPartyUserName } from "@hmcts/system-admin-pages";
+import { findThirdPartyUserByName, validateThirdPartyUserName } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -38,6 +38,15 @@ const postHandler = async (req: Request, res: Response) => {
     return res.render("create-third-party-user/index", {
       ...content,
       errors: [{ ...validationError, text: errorText }],
+      name: name || ""
+    });
+  }
+
+  const existingUser = await findThirdPartyUserByName(name!.trim());
+  if (existingUser) {
+    return res.render("create-third-party-user/index", {
+      ...content,
+      errors: [{ href: "#name", text: content.nameDuplicate }],
       name: name || ""
     });
   }

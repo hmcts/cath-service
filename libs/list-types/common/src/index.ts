@@ -12,6 +12,7 @@ export {
   convertExcelForListTypeName,
   createConverter,
   getConverterForListType,
+  getConverterForListTypeName,
   hasConverterForListType,
   hasConverterForListTypeName,
   type ListTypeConverter,
@@ -26,6 +27,7 @@ export {
   formatCaseSummaryForEmail,
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
+export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
@@ -40,6 +42,7 @@ export {
   type ListPdfOptions,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
+  type PdfFromHtmlResult,
   type PdfGenerationResult,
   type RenderedListData,
   type RenderedPdfData,

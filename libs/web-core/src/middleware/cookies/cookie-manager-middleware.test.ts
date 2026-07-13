@@ -80,6 +80,23 @@ describe("configureCookieManager", () => {
       expect(res.locals?.cookieManager?.showBanner).toBe(false);
     });
 
+    it("should not show banner on the policyPath page", async () => {
+      const useSpy = vi.spyOn(app, "use");
+
+      await configureCookieManager(app, {
+        preferencesPath: "/cookie-preferences",
+        policyPath: "/cookie-policy",
+        categories: { analytics: ["_ga"] }
+      });
+
+      const middleware = useSpy.mock.calls[0][0] as any;
+      req = { ...req, path: "/cookie-policy" };
+
+      middleware(req, res, next);
+
+      expect(res.locals?.cookieManager?.showBanner).toBe(false);
+    });
+
     it("should not show banner when cookies have been accepted", async () => {
       const useSpy = vi.spyOn(app, "use");
 

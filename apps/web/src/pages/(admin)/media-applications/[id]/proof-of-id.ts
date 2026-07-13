@@ -1,7 +1,7 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import { getApplicationById } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { CONTAINER, downloadBlob, getContentType } from "@hmcts/azure-blob";
 import { getParam } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 
@@ -23,34 +23,21 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).send("File not found");
     }
 
-    const filePath = application.proofOfIdPath;
-    const fileExists = await fs
-      .access(filePath)
-      .then(() => true)
-      .catch(() => false);
+    const blobKey = path.basename(application.proofOfIdPath);
+    const fileBuffer = await downloadBlob(blobKey, CONTAINER.FILES);
 
-    if (!fileExists) {
+    if (fileBuffer === null) {
       return res.status(404).send("File not found");
     }
 
-    const fileExtension = path.extname(filePath).toLowerCase();
-    const contentTypeMap: Record<string, string> = {
-      ".pdf": "application/pdf",
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".png": "image/png"
-    };
-
-    const contentType = contentTypeMap[fileExtension] || "application/octet-stream";
-    const fileName = path.basename(filePath);
+    const extension = path.extname(blobKey).toLowerCase();
+    const contentType = getContentType(extension);
 
     res.setHeader("Content-Type", contentType);
-    res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
-
-    const fileBuffer = await fs.readFile(filePath);
+    res.setHeader("Content-Disposition", `inline; filename="${blobKey}"`);
+    res.setHeader("Content-Length", fileBuffer.length);
     res.send(fileBuffer);
-  } catch (error) {
-    console.error("Error serving proof of ID file:", error);
+  } catch (_error) {
     res.status(500).send("Error loading file");
   }
 };

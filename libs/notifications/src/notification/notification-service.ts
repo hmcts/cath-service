@@ -38,6 +38,10 @@ import {
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
 import {
+  extractMagistratesPublicListCaseSummary as extractMagistratesPublicSummary,
+  formatMagistratesPublicListCaseSummaryForEmail as formatMagistratesPublicSummaryForEmail
+} from "@hmcts/magistrates-public-list";
+import {
   extractCaseSummary as extractMagistratesStandardSummary,
   formatCaseSummaryForEmail as formatMagistratesStandardSummaryForEmail
 } from "@hmcts/magistrates-standard-list";
@@ -49,6 +53,18 @@ import {
   formatCaseSummaryForEmail as formatSiacPoacPaacSummaryForEmail
 } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import { extractCaseSummary as extractSscsSummary, formatCaseSummaryForEmail as formatSscsSummaryForEmail } from "@hmcts/sscs-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtaacSummary,
+  formatCaseSummaryForEmail as formatUtaacSummaryForEmail
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtlcSummary,
+  formatCaseSummaryForEmail as formatUtlcSummaryForEmail
+} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtccSummary,
+  formatCaseSummaryForEmail as formatUtccSummaryForEmail
+} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
 import {
   extractCaseSummary as extractUtiacJrLeedsSummary,
   extractLondonCaseSummary as extractUtiacJrLondonSummary,
@@ -233,9 +249,25 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
+  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtccSummary as SummaryExtractor,
+    format: formatUtccSummaryForEmail
+  },
+  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtlcSummary as SummaryExtractor,
+    format: formatUtlcSummaryForEmail
+  },
+  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtaacSummary as SummaryExtractor,
+    format: formatUtaacSummaryForEmail
+  },
   MAGISTRATES_STANDARD_LIST: {
     extract: extractMagistratesStandardSummary as SummaryExtractor,
     format: formatMagistratesStandardSummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_LIST: {
+    extract: extractMagistratesPublicSummary as SummaryExtractor,
+    format: formatMagistratesPublicSummaryForEmail
   }
 };
 

@@ -10,13 +10,10 @@ if [ -d "/mnt/secrets" ]; then
     if [ -d "$vault_dir" ]; then
       for secret in "$vault_dir"*; do
         name=$(basename "$secret")
-        # Skip CSI driver internal entries (start with ..)
         case "$name" in
           ..*) continue ;;
         esac
-        # Check for regular file or symlink pointing to a file
         if [ -f "$secret" ] || [ -L "$secret" ]; then
-          # Verify it's not a symlink to a directory
           if [ ! -d "$secret" ]; then
             value=$(cat "$secret")
             export "$name"="$value"
@@ -59,10 +56,12 @@ DROP INDEX IF EXISTS "admin_audit_log_performed_at_idx";
 DROP INDEX IF EXISTS "admin_audit_log_entity_type_idx";
 DROP TABLE IF EXISTS "admin_audit_log";
 
--- Mark both migrations as applied so prisma migrate deploy skips them.
+-- Mark migrations as applied so prisma migrate deploy skips them.
 -- Delete any existing record (whatever state) then re-insert as complete.
 DELETE FROM _prisma_migrations
 WHERE migration_name IN (
+  '20260527140208',
+  '20260528115459_add_third_party_push_log',
   '20260623000000_add_file_extension_to_artefact',
   '20260702000000_remove_soft_delete_and_admin_audit_log'
 );
@@ -79,6 +78,15 @@ SQL
 
 echo "Running database migrations..."
 ../../node_modules/.bin/prisma migrate deploy --config=./prisma.config.ts
+
+echo "Running reference data scripts..."
+for script in prisma/scripts/001_insert_missing_list_types.sql \
+              prisma/scripts/002_update_list_type_provenances.sql \
+              prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql \
+              prisma/scripts/004_soft_delete_crime_daily_list.sql; do
+  echo "  Applying $script..."
+  ../../node_modules/.bin/prisma db execute --file "$script" --config=./prisma.config.ts
+done
 
 echo "Migrations completed successfully"
 echo "Starting Prisma Studio on port 5556..."

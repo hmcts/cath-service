@@ -25,8 +25,8 @@ describe("system-admin-dashboard template", () => {
       expect(en.title).toBe("System Admin Dashboard");
     });
 
-    it("should have 10 tiles", () => {
-      expect(en.tiles).toHaveLength(10);
+    it("should have 11 tiles", () => {
+      expect(en.tiles).toHaveLength(11);
     });
 
     it("should have tiles with required properties", () => {
@@ -44,39 +44,39 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[0].title).toBe("Reference Data");
       expect(en.tiles[1].title).toBe("Delete Court");
       expect(en.tiles[2].title).toBe("Manage Third Party Users");
-      expect(en.tiles[3].title).toBe("User Management");
-      expect(en.tiles[4].title).toBe("Blob Explorer");
-      expect(en.tiles[5].title).toBe("Bulk Create Media Accounts");
-      expect(en.tiles[6].title).toBe("Audit Log Viewer");
-      expect(en.tiles[7].title).toBe("Manage List Types");
-      expect(en.tiles[8].title).toBe("Configure List Type");
-      expect(en.tiles[9].title).toBe("Manage Jurisdiction Data");
+      expect(en.tiles[3].title).toBe("Manage Third-Party Subscribers");
+      expect(en.tiles[4].title).toBe("User Management");
+      expect(en.tiles[5].title).toBe("Blob Explorer");
+      expect(en.tiles[6].title).toBe("Bulk Create Media Accounts");
+      expect(en.tiles[7].title).toBe("Audit Log Viewer");
+      expect(en.tiles[8].title).toBe("Manage List Types");
+      expect(en.tiles[9].title).toBe("Configure List Type");
     });
 
     it("should have correct href for each tile", () => {
       expect(en.tiles[0].href).toBe("/reference-data");
       expect(en.tiles[1].href).toBe("/delete-court");
       expect(en.tiles[2].href).toBe("/manage-third-party-users");
-      expect(en.tiles[3].href).toBe("/find-users");
-      expect(en.tiles[4].href).toBe("/blob-explorer-locations");
-      expect(en.tiles[5].href).toBe("/bulk-media-accounts");
-      expect(en.tiles[6].href).toBe("/audit-log-list");
-      expect(en.tiles[7].href).toBe("/manage-list-types");
-      expect(en.tiles[8].href).toBe("/configure-list-type-enter-details");
-      expect(en.tiles[9].href).toBe("/jurisdiction-data");
+      expect(en.tiles[3].href).toBe("/third-party-subscribers");
+      expect(en.tiles[4].href).toBe("/find-users");
+      expect(en.tiles[5].href).toBe("/blob-explorer-locations");
+      expect(en.tiles[6].href).toBe("/bulk-media-accounts");
+      expect(en.tiles[7].href).toBe("/audit-log-list");
+      expect(en.tiles[8].href).toBe("/manage-list-types");
+      expect(en.tiles[9].href).toBe("/configure-list-type-enter-details");
     });
 
     it("should have descriptions for all tiles", () => {
       expect(en.tiles[0].description).toBe("Upload CSV data, manage jurisdiction and location data");
       expect(en.tiles[1].description).toBe("Delete court from reference data");
       expect(en.tiles[2].description).toBe("View, create, update and remove third-party users and subscriptions");
-      expect(en.tiles[3].description).toBe("Find, update and delete users");
-      expect(en.tiles[4].description).toBe("Discover content uploaded to all locations");
-      expect(en.tiles[5].description).toBe("Upload a CSV file for bulk creation of media accounts");
-      expect(en.tiles[6].description).toBe("View audit logs on system admin actions");
-      expect(en.tiles[7].description).toBe("View, create and update list type configuration");
-      expect(en.tiles[8].description).toBe("Add and manage list type configurations");
-      expect(en.tiles[9].description).toBe("View, create, update and remove jurisdictions and sub-jurisdictions");
+      expect(en.tiles[3].description).toBe("View, create, update and remove third-party subscribers and their OAuth configuration");
+      expect(en.tiles[4].description).toBe("Find, update and delete users");
+      expect(en.tiles[5].description).toBe("Discover content uploaded to all locations");
+      expect(en.tiles[6].description).toBe("Upload a CSV file for bulk creation of media accounts");
+      expect(en.tiles[7].description).toBe("View audit logs on system admin actions");
+      expect(en.tiles[8].description).toBe("View, create and update list type configuration");
+      expect(en.tiles[9].description).toBe("Add and manage list type configurations");
     });
   });
 });

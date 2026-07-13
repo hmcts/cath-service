@@ -1,9 +1,11 @@
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { convertExcelForListType, getConverterForListType, hasConverterForListType } from "./non-strategic-list-registry.js";
+import { convertExcelForListTypeName, getConverterForListTypeName, hasConverterForListTypeName } from "./non-strategic-list-registry.js";
 
 // Import CST module to register its converter
 import "@hmcts/care-standards-tribunal-weekly-hearing-list";
+
+const CST_NAME = "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -17,31 +19,31 @@ async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
 }
 
 describe("list-type-converters", () => {
-  describe("getConverterForListType", () => {
-    it("should return converter for Care Standards Tribunal (listTypeId 9)", () => {
-      const converter = getConverterForListType(9);
+  describe("getConverterForListTypeName", () => {
+    it("should return converter for Care Standards Tribunal", () => {
+      const converter = getConverterForListTypeName(CST_NAME);
       expect(converter).toBeDefined();
       expect(converter?.config).toBeDefined();
       expect(converter?.convertExcelToJson).toBeInstanceOf(Function);
     });
 
     it("should return undefined for unknown list type", () => {
-      const converter = getConverterForListType(999);
+      const converter = getConverterForListTypeName("UNKNOWN_LIST_TYPE");
       expect(converter).toBeUndefined();
     });
   });
 
-  describe("hasConverterForListType", () => {
-    it("should return true for Care Standards Tribunal (listTypeId 9)", () => {
-      expect(hasConverterForListType(9)).toBe(true);
+  describe("hasConverterForListTypeName", () => {
+    it("should return true for Care Standards Tribunal", () => {
+      expect(hasConverterForListTypeName(CST_NAME)).toBe(true);
     });
 
     it("should return false for unknown list type", () => {
-      expect(hasConverterForListType(999)).toBe(false);
+      expect(hasConverterForListTypeName("UNKNOWN_LIST_TYPE")).toBe(false);
     });
   });
 
-  describe("convertExcelForListType", () => {
+  describe("convertExcelForListTypeName", () => {
     it("should convert valid Excel file for CST list", async () => {
       const excelData = [
         ["Date", "Case name", "Hearing length", "Hearing type", "Venue", "Additional information"],
@@ -49,7 +51,7 @@ describe("list-type-converters", () => {
       ];
 
       const buffer = await createExcelBuffer(excelData);
-      const result = await convertExcelForListType(9, buffer);
+      const result = await convertExcelForListTypeName(CST_NAME, buffer);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
@@ -70,7 +72,7 @@ describe("list-type-converters", () => {
       ];
 
       const buffer = await createExcelBuffer(excelData);
-      const result = await convertExcelForListType(9, buffer);
+      const result = await convertExcelForListTypeName(CST_NAME, buffer);
 
       expect(result).toHaveLength(2);
       expect(result[0]).toMatchObject({ caseName: "A Vs B" });
@@ -84,7 +86,7 @@ describe("list-type-converters", () => {
       ];
 
       const buffer = await createExcelBuffer(excelData);
-      const result = await convertExcelForListType(9, buffer);
+      const result = await convertExcelForListTypeName(CST_NAME, buffer);
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({ caseName: "A Vs B" });
@@ -97,7 +99,7 @@ describe("list-type-converters", () => {
       ];
 
       const buffer = await createExcelBuffer(excelData);
-      const result = await convertExcelForListType(9, buffer);
+      const result = await convertExcelForListTypeName(CST_NAME, buffer);
 
       expect(result[0]).toMatchObject({
         caseName: "A Vs B",
@@ -113,7 +115,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Excel file must contain columns/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Excel file must contain columns/);
     });
 
     it("should reject empty Excel file", async () => {
@@ -124,7 +126,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow("Excel file must contain at least 1 data row");
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow("Excel file must contain at least 1 data row");
     });
 
     it("should reject invalid date format (wrong pattern)", async () => {
@@ -135,7 +137,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Invalid date format.*Expected format: dd\/MM\/yyyy/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Invalid date format.*Expected format: dd\/MM\/yyyy/);
     });
 
     it("should reject date without leading zeros", async () => {
@@ -146,7 +148,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Invalid date format/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Invalid date format/);
     });
 
     it("should reject invalid dates (e.g., 32/01/2025)", async () => {
@@ -157,7 +159,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Date does not exist in calendar/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Date does not exist in calendar/);
     });
 
     it("should reject HTML tags in case name", async () => {
@@ -168,7 +170,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
 
     it("should reject HTML tags in hearing type", async () => {
@@ -179,7 +181,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
 
     it("should reject HTML tags in venue", async () => {
@@ -190,7 +192,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
 
     it("should reject HTML tags in additional information", async () => {
@@ -201,7 +203,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/HTML tags are not allowed/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/HTML tags are not allowed/);
     });
 
     it("should reject empty required fields", async () => {
@@ -212,7 +214,7 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Missing required field 'Case name'/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Missing required field 'Case name'/);
     });
 
     it("should include row number in error messages", async () => {
@@ -224,12 +226,12 @@ describe("list-type-converters", () => {
 
       const buffer = await createExcelBuffer(excelData);
 
-      await expect(convertExcelForListType(9, buffer)).rejects.toThrow(/Error in row 3/);
+      await expect(convertExcelForListTypeName(CST_NAME, buffer)).rejects.toThrow(/Error in row 3/);
     });
 
-    it("should throw error for unknown list type", async () => {
+    it("should throw error for unknown list type name", async () => {
       const buffer = Buffer.from("dummy");
-      await expect(convertExcelForListType(999, buffer)).rejects.toThrow("No converter found for list type ID: 999");
+      await expect(convertExcelForListTypeName("UNKNOWN_LIST_TYPE", buffer)).rejects.toThrow("No converter found for list type name: UNKNOWN_LIST_TYPE");
     });
   });
 });

@@ -18,6 +18,7 @@ export enum AuditLogAction {
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
   UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
+  UPDATE_THIRD_PARTY_OAUTH_CONFIG = "Update third party OAuth config",
   UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
 }
 

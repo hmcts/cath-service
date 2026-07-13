@@ -10,7 +10,7 @@ export {
   validateLocationSelected,
   validateRadioSelection as validateDeleteCourtRadioSelection
 } from "./delete-court/validation.js";
-
+export { isFeatureEnabled } from "./feature-flags/launch-darkly.js";
 export * from "./jurisdiction-management/queries.js";
 export * from "./jurisdiction-management/service.js";
 export * from "./list-type/queries.js";
