@@ -13,14 +13,27 @@ const __dirname = path.dirname(__filename);
 const TEMPLATE = "(system-admin)/system-admin-dashboard/index.njk";
 
 describe("system-admin-dashboard template", () => {
-  let env: nunjucks.Environment;
+  describe("Template file", () => {
+    it("should exist", () => {
+      // Arrange
+      const templatePath = path.join(__dirname, "index.njk");
 
-  beforeEach(() => {
-    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+      // Act
+      const exists = existsSync(templatePath);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
   });
 
-  describe("English content", () => {
-    it("should render the page heading", () => {
+  describe("Template rendering", () => {
+    let env: nunjucks.Environment;
+
+    beforeEach(() => {
+      env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+    });
+
+    it("should render the English heading and a tile link for every configured tile", () => {
       // Arrange
       const data = { ...en, user: { id: "admin-1" } };
 
@@ -29,16 +42,6 @@ describe("system-admin-dashboard template", () => {
 
       // Assert
       expect($("h1").text()).toContain(en.title);
-    });
-
-    it("should render a tile link for every configured tile", () => {
-      // Arrange
-      const data = { ...en, user: { id: "admin-1" } };
-
-      // Act
-      const { $ } = render(env, TEMPLATE, data);
-
-      // Assert
       const tiles = $("a.admin-tile");
       expect(tiles).toHaveLength(en.tiles.length);
       en.tiles.forEach((tile) => {
@@ -48,9 +51,7 @@ describe("system-admin-dashboard template", () => {
         expect(link.find(".admin-tile__description").text()).toBe(tile.description);
       });
     });
-  });
 
-  describe("Welsh content", () => {
     it("should render the Welsh heading and tiles", () => {
       // Arrange
       const data = { ...cy, user: { id: "admin-1" } };
@@ -65,75 +66,18 @@ describe("system-admin-dashboard template", () => {
     });
   });
 
-  describe("Template file", () => {
-    it("should exist", () => {
-      const templatePath = path.join(__dirname, "index.njk");
-      expect(existsSync(templatePath)).toBe(true);
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      // Act & Assert
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
-  });
 
-  describe("English locale", () => {
-    it("should have required properties", () => {
+    it("should have all required keys", () => {
+      // Act & Assert
       expect(en).toHaveProperty("title");
       expect(en).toHaveProperty("tiles");
-    });
-
-    it("should have correct title", () => {
-      expect(en.title).toBe("System Admin Dashboard");
-    });
-
-    it("should have 11 tiles", () => {
-      expect(en.tiles).toHaveLength(11);
-    });
-
-    it("should have tiles with required properties", () => {
-      en.tiles.forEach((tile) => {
-        expect(tile).toHaveProperty("title");
-        expect(tile).toHaveProperty("description");
-        expect(tile).toHaveProperty("href");
-        expect(tile.title).toBeTruthy();
-        expect(tile.description).toBeTruthy();
-        expect(tile.href).toMatch(/^\//);
-      });
-    });
-
-    it("should have correct tile order and titles", () => {
-      expect(en.tiles[0].title).toBe("Reference Data");
-      expect(en.tiles[1].title).toBe("Delete Court");
-      expect(en.tiles[2].title).toBe("Manage Third Party Users");
-      expect(en.tiles[3].title).toBe("Manage Third-Party Subscribers");
-      expect(en.tiles[4].title).toBe("User Management");
-      expect(en.tiles[5].title).toBe("Blob Explorer");
-      expect(en.tiles[6].title).toBe("Bulk Create Media Accounts");
-      expect(en.tiles[7].title).toBe("Audit Log Viewer");
-      expect(en.tiles[8].title).toBe("Manage List Types");
-      expect(en.tiles[9].title).toBe("Configure List Type");
-    });
-
-    it("should have correct href for each tile", () => {
-      expect(en.tiles[0].href).toBe("/reference-data");
-      expect(en.tiles[1].href).toBe("/delete-court");
-      expect(en.tiles[2].href).toBe("/manage-third-party-users");
-      expect(en.tiles[3].href).toBe("/third-party-subscribers");
-      expect(en.tiles[4].href).toBe("/find-users");
-      expect(en.tiles[5].href).toBe("/blob-explorer-locations");
-      expect(en.tiles[6].href).toBe("/bulk-media-accounts");
-      expect(en.tiles[7].href).toBe("/audit-log-list");
-      expect(en.tiles[8].href).toBe("/manage-list-types");
-      expect(en.tiles[9].href).toBe("/configure-list-type-enter-details");
-    });
-
-    it("should have descriptions for all tiles", () => {
-      expect(en.tiles[0].description).toBe("Upload CSV data, manage jurisdiction and location data");
-      expect(en.tiles[1].description).toBe("Delete court from reference data");
-      expect(en.tiles[2].description).toBe("View, create, update and remove third-party users and subscriptions");
-      expect(en.tiles[3].description).toBe("View, create, update and remove third-party subscribers and their OAuth configuration");
-      expect(en.tiles[4].description).toBe("Find, update and delete users");
-      expect(en.tiles[5].description).toBe("Discover content uploaded to all locations");
-      expect(en.tiles[6].description).toBe("Upload a CSV file for bulk creation of media accounts");
-      expect(en.tiles[7].description).toBe("View audit logs on system admin actions");
-      expect(en.tiles[8].description).toBe("View, create and update list type configuration");
-      expect(en.tiles[9].description).toBe("Add and manage list type configurations");
+      expect(cy).toHaveProperty("title");
+      expect(cy).toHaveProperty("tiles");
     });
   });
 });

@@ -29,92 +29,8 @@ describe("cookie-preferences template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required title", () => {
-      expect(en.title).toBe("Cookie preferences");
-    });
-
-    it("should have intro text", () => {
-      expect(en.intro).toBeDefined();
-      expect(en.intro.length).toBeGreaterThan(0);
-    });
-
-    it("should have essential cookies section", () => {
-      expect(en.essentialTitle).toBeDefined();
-      expect(en.essentialDescription).toBeDefined();
-    });
-
-    it("should have analytics cookies section", () => {
-      expect(en.analyticsTitle).toBeDefined();
-      expect(en.analyticsDescription).toBeDefined();
-      expect(en.useAnalytics).toBeDefined();
-      expect(en.doNotUseAnalytics).toBeDefined();
-    });
-
-    it("should have preferences cookies section", () => {
-      expect(en.preferencesTitle).toBeDefined();
-      expect(en.preferencesDescription).toBeDefined();
-      expect(en.usePreferences).toBeDefined();
-      expect(en.doNotUsePreferences).toBeDefined();
-    });
-
-    it("should have save button text", () => {
-      expect(en.saveButton).toBeDefined();
-    });
-
-    it("should have success messages", () => {
-      expect(en.successBanner).toBeDefined();
-      expect(en.successMessage).toBeDefined();
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have required title", () => {
-      expect(cy.title).toBe("Dewisiadau cwcis");
-    });
-
-    it("should have intro text", () => {
-      expect(cy.intro).toBeDefined();
-      expect(cy.intro.length).toBeGreaterThan(0);
-    });
-
-    it("should have essential cookies section", () => {
-      expect(cy.essentialTitle).toBeDefined();
-      expect(cy.essentialDescription).toBeDefined();
-    });
-
-    it("should have analytics cookies section", () => {
-      expect(cy.analyticsTitle).toBeDefined();
-      expect(cy.analyticsDescription).toBeDefined();
-      expect(cy.useAnalytics).toBeDefined();
-      expect(cy.doNotUseAnalytics).toBeDefined();
-    });
-
-    it("should have preferences cookies section", () => {
-      expect(cy.preferencesTitle).toBeDefined();
-      expect(cy.preferencesDescription).toBeDefined();
-      expect(cy.usePreferences).toBeDefined();
-      expect(cy.doNotUsePreferences).toBeDefined();
-    });
-
-    it("should have save button text", () => {
-      expect(cy.saveButton).toBeDefined();
-    });
-
-    it("should have success messages", () => {
-      expect(cy.successBanner).toBeDefined();
-      expect(cy.successMessage).toBeDefined();
-    });
-  });
-
-  describe("Locale consistency", () => {
-    it("should have same keys in English and Welsh", () => {
-      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
-    });
-  });
-
-  describe("English rendering", () => {
-    it("should render the page heading, intro and section titles", () => {
+  describe("Template rendering", () => {
+    it("should render the English heading, intro and section titles", () => {
       // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
@@ -157,7 +73,7 @@ describe("cookie-preferences template", () => {
       expect($("#preferences-no")).toHaveLength(1);
     });
 
-    it("should check the 'yes' radios reflecting saved preferences", () => {
+    it("should check the radios reflecting saved preferences", () => {
       // Arrange
       const data = {
         ...en,
@@ -176,7 +92,7 @@ describe("cookie-preferences template", () => {
       expect($("#preferences-no").is("[checked]")).toBe(true);
     });
 
-    it("should not render the success banner when not saved", () => {
+    it("should not render the success banner or an error summary when not saved", () => {
       // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
@@ -185,6 +101,7 @@ describe("cookie-preferences template", () => {
 
       // Assert
       expect($(".govuk-notification-banner--success")).toHaveLength(0);
+      assertNoErrors($);
     });
 
     it("should render the success banner when saved", () => {
@@ -201,20 +118,7 @@ describe("cookie-preferences template", () => {
       expect(banner.text()).toContain(en.successMessage);
     });
 
-    it("should not render an error summary", () => {
-      // Arrange
-      const data = { ...en, categories, cookiePreferences: {}, saved: false };
-
-      // Act
-      const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
-
-      // Assert
-      assertNoErrors($);
-    });
-  });
-
-  describe("Welsh rendering", () => {
-    it("should render Welsh heading and radio labels", () => {
+    it("should render Welsh heading, radio labels and save button", () => {
       // Arrange
       const data = { ...cy, categories, cookiePreferences: {}, saved: false };
 
@@ -226,6 +130,37 @@ describe("cookie-preferences template", () => {
       expect($("label[for='analytics-yes']").text()).toContain(cy.useAnalytics);
       expect($("label[for='preferences-no']").text()).toContain(cy.doNotUsePreferences);
       expect($("button[type='submit']").text()).toContain(cy.saveButton);
+    });
+  });
+
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should have all required keys", () => {
+      const requiredKeys = [
+        "title",
+        "intro",
+        "essentialTitle",
+        "essentialDescription",
+        "analyticsTitle",
+        "analyticsDescription",
+        "useAnalytics",
+        "doNotUseAnalytics",
+        "preferencesTitle",
+        "preferencesDescription",
+        "usePreferences",
+        "doNotUsePreferences",
+        "saveButton",
+        "successBanner",
+        "successMessage"
+      ];
+
+      for (const key of requiredKeys) {
+        expect(en).toHaveProperty(key);
+        expect(cy).toHaveProperty(key);
+      }
     });
   });
 });

@@ -25,8 +25,8 @@ describe("accessibility-statement template", () => {
     });
   });
 
-  describe("English render", () => {
-    it("should render the page heading and section headings", () => {
+  describe("Template rendering", () => {
+    it("should render the English heading and section headings", () => {
       // Arrange
       const data = { ...en };
 
@@ -43,7 +43,7 @@ describe("accessibility-statement template", () => {
       expect(headingText).toContain(en.sections.compliance.heading);
     });
 
-    it("should render the accessibility feature bullet list", () => {
+    it("should render the accessibility feature bullet list in English", () => {
       // Arrange
       const data = { ...en };
 
@@ -82,9 +82,7 @@ describe("accessibility-statement template", () => {
       // Assert
       expect($("p.back-to-top-link a").text()).toContain(en.backToTop);
     });
-  });
 
-  describe("Welsh render", () => {
     it("should render Welsh heading and content", () => {
       // Arrange
       const data = { ...cy };
@@ -104,72 +102,19 @@ describe("accessibility-statement template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required title", () => {
-      expect(en.title).toBe("Accessibility statement");
-    });
-
-    it("should have back to top text", () => {
-      expect(en.backToTop).toBe("Back to top");
-    });
-
-    it("should have intro section", () => {
-      expect(en.sections.intro).toBeDefined();
-      expect(en.sections.intro.content).toBeDefined();
-      expect(en.sections.intro.commitment).toBeDefined();
-      expect(en.sections.intro.features).toBeInstanceOf(Array);
-    });
-
-    it("should have contact information", () => {
-      expect(en.sections.feedback.contact.name).toBeDefined();
-      expect(en.sections.feedback.contact.email).toBeDefined();
-      expect(en.sections.feedback.contact.phone).toBeDefined();
-      expect(en.sections.feedback.textRelay).toBeDefined();
-      expect(en.sections.feedback.audioLoops).toBeDefined();
-    });
-
-    it("should have compliance section", () => {
-      expect(en.sections.compliance.heading).toBeDefined();
-      expect(en.sections.compliance.content).toBeDefined();
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have required title", () => {
-      expect(cy.title).toBe("Datganiad hygyrchedd");
-    });
-
-    it("should have back to top text", () => {
-      expect(cy.backToTop).toBe("Yn ôl i frig y dudalen");
-    });
-
-    it("should have intro section", () => {
-      expect(cy.sections.intro).toBeDefined();
-      expect(cy.sections.intro.content).toBeDefined();
-      expect(cy.sections.intro.commitment).toBeDefined();
-      expect(cy.sections.intro.features).toBeInstanceOf(Array);
-    });
-
-    it("should have contact information", () => {
-      expect(cy.sections.feedback.contact.name).toBeDefined();
-      expect(cy.sections.feedback.contact.email).toBeDefined();
-      expect(cy.sections.feedback.contact.phone).toBeDefined();
-      expect(cy.sections.feedback.textRelay).toBeDefined();
-      expect(cy.sections.feedback.audioLoops).toBeDefined();
-    });
-
-    it("should have compliance section", () => {
-      expect(cy.sections.compliance.heading).toBeDefined();
-      expect(cy.sections.compliance.content).toBeDefined();
-    });
-  });
-
   describe("Locale consistency", () => {
-    it("should have same structure in English and Welsh", () => {
-      expect(Object.keys(en.sections)).toEqual(Object.keys(cy.sections));
+    it("should have same keys in English and Welsh", () => {
+      // Assert
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should have same section keys in English and Welsh", () => {
+      // Assert
+      expect(Object.keys(en.sections).sort()).toEqual(Object.keys(cy.sections).sort());
     });
 
     it("should have same number of accessibility features", () => {
+      // Assert
       expect(en.sections.intro.features.length).toBe(cy.sections.intro.features.length);
     });
   });

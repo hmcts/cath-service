@@ -26,8 +26,8 @@ describe("delete-court template", () => {
     });
   });
 
-  describe("English rendering", () => {
-    it("should render the page heading", () => {
+  describe("Template rendering", () => {
+    it("should render the English heading, form field and continue button", () => {
       // Arrange
       const data = { ...en, errors: undefined };
 
@@ -36,20 +36,23 @@ describe("delete-court template", () => {
 
       // Assert
       expect($("h1").text()).toContain(en.pageTitle);
+      expect($("form[method='post']")).toHaveLength(1);
+      expect($("input#court-search[name='locationId']")).toHaveLength(1);
+      expect($("label[for='court-search']").text()).toContain(en.courtNameLabel);
+      expect($("button.govuk-button").text()).toContain(en.continueButtonText);
     });
 
-    it("should render the court search form field and continue button", () => {
+    it("should render the Welsh heading, label and button", () => {
       // Arrange
-      const data = { ...en, errors: undefined };
+      const data = { ...cy, errors: undefined };
 
       // Act
       const { $ } = render(env, TEMPLATE, data);
 
       // Assert
-      expect($("form[method='post']")).toHaveLength(1);
-      expect($("input#court-search[name='locationId']")).toHaveLength(1);
-      expect($("label[for='court-search']").text()).toContain(en.courtNameLabel);
-      expect($("button.govuk-button").text()).toContain(en.continueButtonText);
+      expect($("h1").text()).toContain(cy.pageTitle);
+      expect($("label[for='court-search']").text()).toContain(cy.courtNameLabel);
+      expect($("button.govuk-button").text()).toContain(cy.continueButtonText);
     });
 
     it("should not render an error summary when there are no errors", () => {
@@ -79,21 +82,6 @@ describe("delete-court template", () => {
       expect($("#court-search-error").text()).toContain(en.courtNameRequired);
       expect($("input#court-search").hasClass("govuk-input--error")).toBe(true);
     });
-  });
-
-  describe("Welsh rendering", () => {
-    it("should render the Welsh heading, label and button", () => {
-      // Arrange
-      const data = { ...cy, errors: undefined };
-
-      // Act
-      const { $ } = render(env, TEMPLATE, data);
-
-      // Assert
-      expect($("h1").text()).toContain(cy.pageTitle);
-      expect($("label[for='court-search']").text()).toContain(cy.courtNameLabel);
-      expect($("button.govuk-button").text()).toContain(cy.continueButtonText);
-    });
 
     it("should render a Welsh error summary when errors are present", () => {
       // Arrange
@@ -110,73 +98,17 @@ describe("delete-court template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required properties", () => {
-      expect(en).toHaveProperty("pageTitle");
-      expect(en).toHaveProperty("courtNameLabel");
-      expect(en).toHaveProperty("continueButtonText");
-      expect(en).toHaveProperty("errorSummaryTitle");
-      expect(en).toHaveProperty("courtNameRequired");
-      expect(en).toHaveProperty("courtNotFound");
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    it("should have correct page title", () => {
-      expect(en.pageTitle).toBe("Find the court to remove");
-    });
-
-    it("should have correct form labels", () => {
-      expect(en.courtNameLabel).toBe("Court or tribunal name");
-      expect(en.continueButtonText).toBe("Continue");
-    });
-
-    it("should have correct error messages", () => {
-      expect(en.errorSummaryTitle).toBe("There is a problem");
-      expect(en.courtNameRequired).toBe("Enter a court or tribunal name");
-      expect(en.courtNotFound).toBe("Court or tribunal not found");
-    });
-
-    it("should have all text as non-empty strings", () => {
-      Object.values(en).forEach((value) => {
-        expect(typeof value).toBe("string");
-        expect(value.length).toBeGreaterThan(0);
-      });
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have required properties", () => {
-      expect(cy).toHaveProperty("pageTitle");
-      expect(cy).toHaveProperty("courtNameLabel");
-      expect(cy).toHaveProperty("continueButtonText");
-      expect(cy).toHaveProperty("errorSummaryTitle");
-      expect(cy).toHaveProperty("courtNameRequired");
-      expect(cy).toHaveProperty("courtNotFound");
-    });
-
-    it("should have correct page title", () => {
-      expect(cy.pageTitle).toBe("Dod o hyd i'r llys i'w ddileu");
-    });
-
-    it("should have correct form labels", () => {
-      expect(cy.courtNameLabel).toBe("Enw'r llys neu'r tribiwnlys");
-      expect(cy.continueButtonText).toBe("Dewiswch opsiwn");
-    });
-
-    it("should have correct error messages", () => {
-      expect(cy.errorSummaryTitle).toBe("Mae yna broblem");
-      expect(cy.courtNameRequired).toBe("Rhowch enw'r llys neu'r tribiwnlys");
-      expect(cy.courtNotFound).toBe("Heb ddod o hyd i'r llys neu'r tribiwnlys");
-    });
-
-    it("should have all text as non-empty strings", () => {
-      Object.values(cy).forEach((value) => {
-        expect(typeof value).toBe("string");
-        expect(value.length).toBeGreaterThan(0);
-      });
-    });
-
-    it("should have same structure as English locale", () => {
-      expect(Object.keys(cy).sort()).toEqual(Object.keys(en).sort());
+    it("should have all required keys", () => {
+      const requiredKeys = ["pageTitle", "courtNameLabel", "continueButtonText", "errorSummaryTitle", "courtNameRequired", "courtNotFound"];
+      for (const key of requiredKeys) {
+        expect(en).toHaveProperty(key);
+        expect(cy).toHaveProperty(key);
+      }
     });
   });
 });

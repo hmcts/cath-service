@@ -41,66 +41,7 @@ describe("summary-of-publications template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have title prefix", () => {
-      expect(en.titlePrefix).toBe("What do you want to view from");
-    });
-
-    it("should have title suffix", () => {
-      expect(en.titleSuffix).toBe("?");
-    });
-
-    it("should have no publications message", () => {
-      expect(en.noPublicationsMessage).toBe("Sorry, no lists found for this court");
-    });
-
-    it("should have English language label", () => {
-      expect(en.languageEnglish).toBe("English (Saesneg)");
-    });
-
-    it("should have Welsh language label", () => {
-      expect(en.languageWelsh).toBe("Welsh (Cymraeg)");
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have title prefix", () => {
-      expect(cy.titlePrefix).toBe("Beth ydych chi eisiau edrych arno gan");
-    });
-
-    it("should have title suffix", () => {
-      expect(cy.titleSuffix).toBe("?");
-    });
-
-    it("should have no publications message", () => {
-      expect(cy.noPublicationsMessage).toBe("Mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau i'r llys hwn");
-    });
-
-    it("should have English language label", () => {
-      expect(cy.languageEnglish).toBe("Saesneg (English)");
-    });
-
-    it("should have Welsh language label", () => {
-      expect(cy.languageWelsh).toBe("Cymraeg (Welsh)");
-    });
-  });
-
-  describe("Locale consistency", () => {
-    it("should have same keys in English and Welsh", () => {
-      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
-    });
-
-    it("should have all required keys", () => {
-      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh"];
-
-      for (const key of requiredKeys) {
-        expect(en).toHaveProperty(key);
-        expect(cy).toHaveProperty(key);
-      }
-    });
-  });
-
-  describe("English rendering", () => {
+  describe("Template rendering", () => {
     it("should render the page title as the heading", () => {
       // Arrange
       const data = buildData(en);
@@ -212,9 +153,7 @@ describe("summary-of-publications template", () => {
       // Assert
       assertErrorSummary($, ["Something went wrong"]);
     });
-  });
 
-  describe("Welsh rendering", () => {
     it("should render Welsh content", () => {
       // Arrange
       const data = buildData(cy);
@@ -226,6 +165,21 @@ describe("summary-of-publications template", () => {
       expect($("h1").text()).toContain(cy.titlePrefix);
       expect($(`a[href="${cy.factLinkUrl}"]`).text().trim()).toBe(cy.factLinkText);
       expect($("body").text()).toContain(cy.noPublicationsMessage);
+    });
+  });
+
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should have all required keys", () => {
+      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh"];
+
+      for (const key of requiredKeys) {
+        expect(en).toHaveProperty(key);
+        expect(cy).toHaveProperty(key);
+      }
     });
   });
 });

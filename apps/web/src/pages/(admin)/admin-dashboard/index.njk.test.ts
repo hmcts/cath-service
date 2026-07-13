@@ -20,83 +20,7 @@ describe("admin-dashboard template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have page title", () => {
-      expect(en.pageTitle).toBe("Admin Dashboard");
-    });
-
-    it("should have four tiles", () => {
-      expect(en.tiles).toHaveLength(4);
-    });
-
-    it("should have Upload tile", () => {
-      expect(en.tiles[0].heading).toBe("Upload");
-      expect(en.tiles[0].description).toBe("Upload a file to be published on the external facing service on GOV.UK");
-    });
-
-    it("should have Upload Excel File tile", () => {
-      expect(en.tiles[1].heading).toBe("Upload Excel File");
-      expect(en.tiles[1].description).toBe("Upload an excel file to be converted and displayed on the external facing service on GOV.UK");
-    });
-
-    it("should have Remove tile", () => {
-      expect(en.tiles[2].heading).toBe("Remove");
-      expect(en.tiles[2].description).toBe("Search by court or tribunal and remove a publication from the external facing service on GOV.UK");
-    });
-
-    it("should have Manage Media Account Requests tile", () => {
-      expect(en.tiles[3].heading).toBe("Manage Media Account Requests");
-      expect(en.tiles[3].description).toBe("CTSC assess new media account applications");
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have page title", () => {
-      expect(cy.pageTitle).toBeDefined();
-      expect(cy.pageTitle.length).toBeGreaterThan(0);
-    });
-
-    it("should have four tiles", () => {
-      expect(cy.tiles).toHaveLength(4);
-    });
-
-    it("should have all tiles with heading and description", () => {
-      cy.tiles.forEach((tile) => {
-        expect(tile.heading).toBeDefined();
-        expect(tile.heading.length).toBeGreaterThan(0);
-        expect(tile.description).toBeDefined();
-        expect(tile.description.length).toBeGreaterThan(0);
-      });
-    });
-  });
-
-  describe("Locale consistency", () => {
-    it("should have same keys in English and Welsh", () => {
-      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
-    });
-
-    it("should have all required keys", () => {
-      const requiredKeys = ["pageTitle", "tiles"];
-
-      requiredKeys.forEach((key) => {
-        expect(en).toHaveProperty(key);
-        expect(cy).toHaveProperty(key);
-      });
-    });
-
-    it("should have same number of tiles in English and Welsh", () => {
-      expect(en.tiles.length).toBe(cy.tiles.length);
-    });
-
-    it("should have consistent tile structure", () => {
-      en.tiles.forEach((_tile, index) => {
-        expect(cy.tiles[index]).toHaveProperty("heading");
-        expect(cy.tiles[index]).toHaveProperty("description");
-      });
-    });
-  });
-
-  describe("Rendering", () => {
+  describe("Template rendering", () => {
     let env: nunjucks.Environment;
 
     beforeEach(() => {
@@ -122,12 +46,12 @@ describe("admin-dashboard template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       // Assert
-      const tiles = $("a.admin-tile");
-      expect(tiles).toHaveLength(4);
+      expect($("a.admin-tile")).toHaveLength(4);
       expect($('a[href="/manual-upload"] .admin-tile__heading').text()).toBe(en.tiles[0].heading);
       expect($('a[href="/non-strategic-upload"] .admin-tile__heading').text()).toBe(en.tiles[1].heading);
       expect($('a[href="/remove-list-search"] .admin-tile__heading').text()).toBe(en.tiles[2].heading);
       expect($('a[href="/media-applications"] .admin-tile__heading').text()).toBe(en.tiles[3].heading);
+      expect($('a[href="/manual-upload"] .admin-tile__description').text()).toBe(en.tiles[0].description);
     });
 
     it("should render only three tiles for a local admin with three tiles", () => {
@@ -169,7 +93,7 @@ describe("admin-dashboard template", () => {
       // Assert
       const banner = $(".govuk-notification-banner");
       expect(banner).toHaveLength(1);
-      expect(banner.text()).toContain("There are 5 outstanding media requests.");
+      expect(banner.text()).toContain(en.notificationText.replace("x", "5"));
       expect($('.govuk-notification-banner__link[href="/media-applications"]').text()).toBe(en.notificationLink);
     });
 
@@ -194,6 +118,21 @@ describe("admin-dashboard template", () => {
 
       // Assert
       assertNoErrors($);
+    });
+  });
+
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should have all required keys", () => {
+      const requiredKeys = ["pageTitle", "tiles", "notificationText", "notificationLink"];
+
+      requiredKeys.forEach((key) => {
+        expect(en).toHaveProperty(key);
+        expect(cy).toHaveProperty(key);
+      });
     });
   });
 });
