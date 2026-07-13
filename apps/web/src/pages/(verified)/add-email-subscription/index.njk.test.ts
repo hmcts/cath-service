@@ -1,0 +1,120 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const TEMPLATE = "(verified)/add-email-subscription/index.njk";
+
+describe("add-email-subscription template", () => {
+  let env: nunjucks.Environment;
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
+  describe("English content", () => {
+    it("should render the page heading", () => {
+      // Arrange
+      const data = { ...en };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("h1").text().trim()).toBe(en.heading);
+    });
+
+    it("should render the inset text", () => {
+      // Arrange
+      const data = { ...en };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($(".govuk-inset-text").text()).toContain(en.insetText);
+    });
+
+    it("should render the three radio options", () => {
+      // Arrange
+      const data = { ...en };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      const values = $('input[name="subscriptionMethod"]')
+        .map((_, el) => $(el).attr("value"))
+        .get();
+      expect(values).toEqual(["courtOrTribunal", "caseName", "caseReference"]);
+      expect($("body").text()).toContain(en.courtOrTribunalOption);
+      expect($("body").text()).toContain(en.caseNameOption);
+      expect($("body").text()).toContain(en.caseReferenceOption);
+    });
+
+    it("should render the continue button and back link", () => {
+      // Arrange
+      const data = { ...en };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("button").text()).toContain(en.continueButton);
+      const back = $('a[href="/subscription-management"]');
+      expect(back.length).toBe(1);
+      expect(back.text().trim()).toBe(en.back);
+    });
+
+    it("should not render an error summary without errors", () => {
+      // Arrange
+      const data = { ...en };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      assertNoErrors($);
+    });
+  });
+
+  describe("Welsh content", () => {
+    it("should render Welsh heading, options and back link", () => {
+      // Arrange
+      const data = { ...cy };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("h1").text().trim()).toBe(cy.heading);
+      expect($("body").text()).toContain(cy.courtOrTribunalOption);
+      expect($('a[href="/subscription-management"]').text().trim()).toBe(cy.back);
+    });
+  });
+
+  describe("Error state", () => {
+    it("should render the error summary when errors are present", () => {
+      // Arrange
+      const data = {
+        ...en,
+        errors: {
+          titleText: en.errorSummaryTitle,
+          errorList: [{ text: en.errorSelectOption, href: "#subscriptionMethod" }]
+        }
+      };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      assertErrorSummary($, [en.errorSelectOption]);
+    });
+  });
+});

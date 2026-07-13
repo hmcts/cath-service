@@ -471,7 +471,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       const mockData = createMockData();
       const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
-      expect(html).toContain('aria-label="' + en.common.searchCasesLabel + '"');
+      expect(html).toContain(`aria-label="${en.common.searchCasesLabel}"`);
       expect(html).toContain('class="govuk-visually-hidden"');
     });
 
@@ -480,7 +480,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain('role="table"');
-      expect(html).toContain('aria-label="' + mockData.header.listTitle + '"');
+      expect(html).toContain(`aria-label="${mockData.header.listTitle}"`);
     });
 
     it("should render with different data source values", () => {
@@ -518,7 +518,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       const mockData = createMockData();
       const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
-      expect(html).toContain('<h2 class="govuk-heading-s">' + en.common.searchCasesTitle);
+      expect(html).toContain(`<h2 class="govuk-heading-s">${en.common.searchCasesTitle}`);
     });
 
     it("should render with very long case details text", () => {

@@ -1,12 +1,44 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const TEMPLATE = "(admin)/manual-upload-summary/index.njk";
+
+const sampleData = {
+  courtName: "Manchester Crown Court",
+  file: "cause-list.json",
+  listType: "Civil Daily Cause List",
+  hearingStartDate: "1 January 2026",
+  sensitivity: "Public",
+  language: "English",
+  displayFileDates: "1 January 2026 to 2 January 2026"
+};
+
+function baseData(lang: typeof en | typeof cy) {
+  return {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    subHeading: lang.subHeading,
+    courtName: lang.courtName,
+    file: lang.file,
+    listType: lang.listType,
+    hearingStartDate: lang.hearingStartDate,
+    sensitivity: lang.sensitivity,
+    language: lang.language,
+    displayFileDates: lang.displayFileDates,
+    change: lang.change,
+    confirmButton: lang.confirmButton,
+    data: sampleData
+  };
+}
 
 describe("manual-upload-summary template", () => {
   describe("Template file", () => {
@@ -165,6 +197,138 @@ describe("manual-upload-summary template", () => {
       expect(cy.displayFileDates.length).toBeGreaterThan(0);
       expect(cy.change.length).toBeGreaterThan(0);
       expect(cy.confirmButton.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Rendering", () => {
+    let env: nunjucks.Environment;
+
+    beforeEach(() => {
+      env = createTestEnvironment([
+        path.join(__dirname, "../../"), // apps/web/src/pages/
+        path.join(__dirname, "../../../../../../libs/web-core/src/views")
+      ]);
+    });
+
+    describe("English content", () => {
+      it("should render the heading and sub-heading", () => {
+        // Arrange
+        const data = baseData(en);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        expect($("h1").text()).toContain(en.heading);
+        expect($("h2").text()).toContain(en.subHeading);
+      });
+
+      it("should render the summary list keys and values", () => {
+        // Arrange
+        const data = baseData(en);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        const keys = $(".govuk-summary-list__key")
+          .map((_, el) => $(el).text().trim())
+          .get();
+        expect(keys).toEqual([en.courtName, en.file, en.listType, en.hearingStartDate, en.sensitivity, en.language, en.displayFileDates]);
+
+        const values = $(".govuk-summary-list__value")
+          .map((_, el) => $(el).text().trim())
+          .get();
+        expect(values).toEqual([
+          sampleData.courtName,
+          sampleData.file,
+          sampleData.listType,
+          sampleData.hearingStartDate,
+          sampleData.sensitivity,
+          sampleData.language,
+          sampleData.displayFileDates
+        ]);
+      });
+
+      it("should render change links pointing back to the manual upload page", () => {
+        // Arrange
+        const data = baseData(en);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        const hrefs = $(".govuk-summary-list__actions a")
+          .map((_, el) => $(el).attr("href"))
+          .get();
+        expect(hrefs).toEqual([
+          "/manual-upload#court",
+          "/manual-upload#file",
+          "/manual-upload#listType",
+          "/manual-upload#hearingStartDate-day",
+          "/manual-upload#sensitivity",
+          "/manual-upload#language",
+          "/manual-upload#displayFrom-day"
+        ]);
+        expect($(".govuk-summary-list__actions a").first().text()).toContain(en.change);
+      });
+
+      it("should render the confirm button inside a post form", () => {
+        // Arrange
+        const data = baseData(en);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        expect($("form").attr("method")).toBe("post");
+        expect($("form button").text()).toContain(en.confirmButton);
+      });
+
+      it("should not render an error summary when there are no errors", () => {
+        // Arrange
+        const data = baseData(en);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        assertNoErrors($);
+      });
+    });
+
+    describe("Welsh content", () => {
+      it("should render Welsh heading, keys and confirm button", () => {
+        // Arrange
+        const data = baseData(cy);
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        expect($("h1").text()).toContain(cy.heading);
+        expect($("h2").text()).toContain(cy.subHeading);
+        const keys = $(".govuk-summary-list__key")
+          .map((_, el) => $(el).text().trim())
+          .get();
+        expect(keys).toContain(cy.courtName);
+        expect(keys).toContain(cy.displayFileDates);
+        expect($("form button").text()).toContain(cy.confirmButton);
+      });
+    });
+
+    describe("Error state", () => {
+      it("should not render an error summary even when errors are passed (template has no error block)", () => {
+        // Arrange
+        const errorText = "We could not process your upload. Please try again.";
+        const data = { ...baseData(en), errors: [{ text: errorText, href: "#" }] };
+
+        // Act
+        const { $ } = render(env, TEMPLATE, data);
+
+        // Assert
+        assertNoErrors($);
+      });
     });
   });
 });

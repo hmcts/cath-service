@@ -1,18 +1,112 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "(system-admin)/delete-court/index.njk";
+
 describe("delete-court template", () => {
+  let env: nunjucks.Environment;
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
   describe("Template file", () => {
     it("should exist", () => {
       const templatePath = path.join(__dirname, "index.njk");
       expect(existsSync(templatePath)).toBe(true);
+    });
+  });
+
+  describe("English rendering", () => {
+    it("should render the page heading", () => {
+      // Arrange
+      const data = { ...en, errors: undefined };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("h1").text()).toContain(en.pageTitle);
+    });
+
+    it("should render the court search form field and continue button", () => {
+      // Arrange
+      const data = { ...en, errors: undefined };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("form[method='post']")).toHaveLength(1);
+      expect($("input#court-search[name='locationId']")).toHaveLength(1);
+      expect($("label[for='court-search']").text()).toContain(en.courtNameLabel);
+      expect($("button.govuk-button").text()).toContain(en.continueButtonText);
+    });
+
+    it("should not render an error summary when there are no errors", () => {
+      // Arrange
+      const data = { ...en, errors: undefined };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      assertNoErrors($);
+    });
+
+    it("should render an error summary and inline error when errors are present", () => {
+      // Arrange
+      const data = {
+        ...en,
+        errors: [{ text: en.courtNameRequired, href: "#court-search" }]
+      };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      assertErrorSummary($, [en.courtNameRequired]);
+      expect($(".govuk-form-group--error label[for='court-search']")).toHaveLength(1);
+      expect($("#court-search-error").text()).toContain(en.courtNameRequired);
+      expect($("input#court-search").hasClass("govuk-input--error")).toBe(true);
+    });
+  });
+
+  describe("Welsh rendering", () => {
+    it("should render the Welsh heading, label and button", () => {
+      // Arrange
+      const data = { ...cy, errors: undefined };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      expect($("h1").text()).toContain(cy.pageTitle);
+      expect($("label[for='court-search']").text()).toContain(cy.courtNameLabel);
+      expect($("button.govuk-button").text()).toContain(cy.continueButtonText);
+    });
+
+    it("should render a Welsh error summary when errors are present", () => {
+      // Arrange
+      const data = {
+        ...cy,
+        errors: [{ text: cy.courtNameRequired, href: "#court-search" }]
+      };
+
+      // Act
+      const { $ } = render(env, TEMPLATE, data);
+
+      // Assert
+      assertErrorSummary($, [cy.courtNameRequired]);
     });
   });
 
