@@ -1,6 +1,7 @@
 import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common";
 
 export const en = {
+  courtName: "First-tier Tribunal (War Pensions and Armed Forces Compensation)",
   pageTitle: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List",
   listForWeekCommencing: "List for week commencing",
   lastUpdated: "Last updated",

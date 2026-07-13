@@ -23,7 +23,8 @@ describe("Hearing Lists Page Controller", () => {
     mockResponse = {
       locals: {},
       render: renderSpy,
-      status: statusSpy
+      status: statusSpy,
+      setHeader: vi.fn()
     };
   });
 
@@ -204,6 +205,36 @@ describe("Hearing Lists Page Controller", () => {
         locale: expect.any(String),
         locationId: "9"
       });
+    });
+
+    it("should return 403 for ACCESS_DENIED error and render errors/403 page", async () => {
+      // Arrange
+      const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(403);
+      expect(renderSpy).toHaveBeenCalledWith("errors/403", {
+        en: expect.any(Object),
+        cy: expect.any(Object)
+      });
+    });
+
+    it("should not redirect to download endpoint when ACCESS_DENIED for non-PDF artefact", async () => {
+      // Arrange
+      mockResponse.redirect = vi.fn();
+      const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+      expect(statusSpy).toHaveBeenCalledWith(403);
     });
 
     it("should use Welsh error messages for errors when locale is cy", async () => {

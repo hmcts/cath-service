@@ -9,15 +9,30 @@ vi.mock("@hmcts/list-types-common", () => ({
   provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: false }),
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" }
 }));
 
 vi.mock("@hmcts/ftt-rpt-weekly-hearing-list", () => ({
   fttRptWeeklyHearingListEn: {
     provenanceLabels: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" },
+    rptEasternCourtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    rptLondonCourtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    rptMidlandsCourtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    rptNorthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    rptSouthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     rptEasternPageTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     rptLondonPageTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
     rptMidlandsPageTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
@@ -26,6 +41,11 @@ vi.mock("@hmcts/ftt-rpt-weekly-hearing-list", () => ({
   },
   fttRptWeeklyHearingListCy: {
     provenanceLabels: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist" },
+    rptEasternCourtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+    rptLondonCourtName: "First-tier Tribunal (Residential Property Tribunal): London region",
+    rptMidlandsCourtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
+    rptNorthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
+    rptSouthernCourtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     rptEasternPageTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     rptLondonPageTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
     rptMidlandsPageTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",

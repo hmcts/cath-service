@@ -1,6 +1,5 @@
-import { prisma } from "@hmcts/postgres-prisma";
 import type { Artefact } from "@hmcts/publication";
-import { canAccessPublicationData, getArtefactById, getPublicationJson, type ListType, PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export type ValidationResult = { isValid: boolean; errors: unknown[] };
@@ -24,105 +23,56 @@ type HandlerOptions<T> = {
   checkAccess?: boolean;
 };
 
+function renderError(res: Response, status: number, template: string, extras: object) {
+  return res.status(status).render(template, extras);
+}
+
 export function createListTypeHandler<T>(options: HandlerOptions<T>) {
   const { en, cy, validate, logPrefix, render, checkAccess = false } = options;
 
   return async (req: Request, res: Response) => {
     const locale = res.locals.locale || "en";
     const t = locale === "cy" ? cy : en;
-
     const artefactId = req.query.artefactId as string;
 
-    if (!artefactId) {
-      return res.status(400).render("errors/common", {
-        en,
-        cy,
-        errorTitle: t.errorTitle,
-        errorMessage: t.errorMessage
-      });
-    }
+    if (!artefactId) return renderError(res, 400, "errors/common", { en, cy, errorTitle: t.errorTitle, errorMessage: t.errorMessage });
 
     try {
       const artefact = await getArtefactById(artefactId);
+      if (!artefact) return renderError(res, 404, "errors/common", { en, cy, errorTitle: t.errorTitle, errorMessage: t.errorMessage });
 
-      if (!artefact) {
-        return res.status(404).render("errors/common", {
-          en,
-          cy,
-          errorTitle: t.errorTitle,
-          errorMessage: t.errorMessage
+      if (checkAccess && !canAccessPublicationData(req.user, artefact, await resolveListType(artefact.listTypeId))) {
+        return renderError(res, 403, "errors/403", {
+          en: { title: en.error403Title, message: en.error403Message },
+          cy: { title: cy.error403Title, message: cy.error403Message }
         });
-      }
-
-      if (checkAccess) {
-        const dbListType = await prisma.listType.findUnique({
-          where: { id: artefact.listTypeId }
-        });
-
-        const listType: ListType | undefined = dbListType
-          ? {
-              id: dbListType.id,
-              provenance: dbListType.allowedProvenance,
-              isNonStrategic: dbListType.isNonStrategic
-            }
-          : undefined;
-
-        const canAccess = canAccessPublicationData(req.user, artefact, listType);
-
-        if (!canAccess) {
-          return res.status(403).render("errors/403", {
-            en: {
-              title: en.error403Title,
-              message: en.error403Message
-            },
-            cy: {
-              title: cy.error403Title,
-              message: cy.error403Message
-            }
-          });
-        }
       }
 
       const jsonData = await getPublicationJson(artefactId);
       if (!jsonData) {
         console.error(`[${logPrefix}] Blob not found for artefactId: ${artefactId}`);
-        return res.status(404).render("errors/common", {
-          en,
-          cy,
-          errorTitle: t.errorTitle,
-          errorMessage: t.errorMessage
-        });
+        return renderError(res, 404, "errors/common", { en, cy, errorTitle: t.errorTitle, errorMessage: t.errorMessage });
       }
 
       const validationResult = validate(jsonData);
       if (!validationResult.isValid) {
         console.error(`[${logPrefix}] Validation errors:`, validationResult.errors);
-        return res.status(400).render("errors/common", {
-          en,
-          cy,
-          errorTitle: t.errorTitle,
-          errorMessage: t.errorMessage
-        });
+        return renderError(res, 400, "errors/common", { en, cy, errorTitle: t.errorTitle, errorMessage: t.errorMessage });
       }
 
       await render({ artefact, jsonData: jsonData as T, locale, res });
     } catch (error) {
       console.error(`[${logPrefix}] Unexpected error:`, error);
-      return res.status(500).render("errors/common", {
-        en,
-        cy,
-        errorTitle: t.errorTitle,
-        errorMessage: t.errorMessage
-      });
+      return renderError(res, 500, "errors/common", { en, cy, errorTitle: t.errorTitle, errorMessage: t.errorMessage });
     }
   };
 }
 
 type SimpleLocaleContent = {
+  error403Title?: string;
+  error403Message?: string;
   [key: string]: unknown;
 };
-
-type SimpleRenderCallback<T> = (params: { artefact: Artefact; jsonData: T; locale: string; res: Response }) => Promise<void> | void;
 
 type SimpleHandlerOptions<T> = {
   en: SimpleLocaleContent;
@@ -131,7 +81,7 @@ type SimpleHandlerOptions<T> = {
   logPrefix: string;
   guardArtefact?: (artefact: Artefact, res: Response) => boolean;
   serverError?: { errorTitle: string; errorMessage: string };
-  render: SimpleRenderCallback<T>;
+  render: RenderCallback<T>;
 };
 
 const BAD_REQUEST_ERRORS = {
@@ -170,6 +120,20 @@ export function createSimpleListTypeHandler<T>(options: SimpleHandlerOptions<T>)
 
       if (!artefact) {
         return res.status(404).render("errors/common", { en, cy, ...NOT_FOUND_ERRORS });
+      }
+
+      if (!canAccessPublicationData(req.user, artefact, await resolveListType(artefact.listTypeId))) {
+        res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+        return res.status(403).render("errors/403", {
+          en: {
+            title: (en.error403Title as string | undefined) ?? "Access denied",
+            message: (en.error403Message as string | undefined) ?? "You do not have permission to view this publication."
+          },
+          cy: {
+            title: (cy.error403Title as string | undefined) ?? "Mynediad wedi'i wrthod",
+            message: (cy.error403Message as string | undefined) ?? "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+          }
+        });
       }
 
       if (guardArtefact) {
@@ -212,7 +176,7 @@ export function createWeeklyHearingListRender<T>(
   template: string,
   en: SimpleLocaleContent,
   cy: SimpleLocaleContent
-): SimpleRenderCallback<T> {
+): RenderCallback<T> {
   return ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
     const { header, hearings } = renderFn(jsonData, {
@@ -232,37 +196,23 @@ export const LIST_LOAD_SERVER_ERROR = {
   errorMessage: "An error occurred while loading the list"
 } as const;
 
-type UtiacDailyRenderFn<T> = (
-  data: T,
-  params: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }
-) => { header: { listTitle: string }; hearings: unknown };
+const UTIAC_COURT_NAME = "Upper Tribunal (Immigration and Asylum) Chamber";
 
 export function createUtiacDailyRender<T>(
-  renderFn: UtiacDailyRenderFn<T>,
+  renderFn: WeeklyHearingListRenderFn<T>,
   template: string,
   en: SimpleLocaleContent,
   cy: SimpleLocaleContent
-): SimpleRenderCallback<T> {
-  return ({ artefact, jsonData, locale, res }) => {
-    const t = locale === "cy" ? cy : en;
-    const { header, hearings } = renderFn(jsonData, {
-      locale,
-      courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
-      contentDate: artefact.contentDate,
-      lastReceivedDate: artefact.lastReceivedDate.toISOString(),
-      listTitle: t.pageTitle as string
-    });
-    const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
-    res.render(template, { en, cy, t, pageTitle: header.listTitle, header, hearings, dataSource });
-  };
+): RenderCallback<T> {
+  return createWeeklyHearingListRender(renderFn, UTIAC_COURT_NAME, template, en, cy);
 }
 
 export function createUtiacJrRegionalDailyRender<T>(
-  renderFn: UtiacDailyRenderFn<T>,
+  renderFn: WeeklyHearingListRenderFn<T>,
   en: SimpleLocaleContent,
   cy: SimpleLocaleContent
-): SimpleRenderCallback<T> {
-  return createUtiacDailyRender(renderFn, "utiac-jr-daily-hearing-list", en, cy);
+): RenderCallback<T> {
+  return createWeeklyHearingListRender(renderFn, UTIAC_COURT_NAME, "utiac-jr-daily-hearing-list", en, cy);
 }
 
 export type ListTypeConfig = Record<string, { en: string; cy: string; template: string }>;
@@ -287,24 +237,22 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
 
 type MultiListRenderFn<T> = (
   jsonData: T,
-  params: { locale: string; listTypeId: number; listTitle: string; contentDate: Date; lastReceivedDate: string }
+  params: { locale: string; listTypeName: string; listTitle: string; contentDate: Date; lastReceivedDate: string }
 ) => { header: { listTitle: string }; hearings: unknown };
 
 type MultiListHandlerOptions<T> = {
   en: SimpleLocaleContent;
   cy: SimpleLocaleContent;
-  listTypeIdToName: Record<number, string>;
   listTypeConfig: ListTypeConfig;
   renderFn: MultiListRenderFn<T>;
   resolveTemplate: (listConfig: { en: string; cy: string; template: string }) => string;
 };
 
 export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T>) {
-  const { en, cy, listTypeIdToName, listTypeConfig, renderFn, resolveTemplate } = opts;
+  const { en, cy, listTypeConfig, renderFn, resolveTemplate } = opts;
 
   const guardArtefact = (artefact: Artefact, res: Response): boolean => {
-    const listTypeName = listTypeIdToName[artefact.listTypeId];
-    if (!listTypeName || !listTypeConfig[listTypeName]) {
+    if (!artefact.listTypeName || !listTypeConfig[artefact.listTypeName]) {
       res.status(400).render("errors/common", {
         en,
         cy,
@@ -318,14 +266,13 @@ export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T
 
   const render = ({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: T; locale: string; res: Response }): void => {
     const t = locale === "cy" ? cy : en;
-    const listTypeId = artefact.listTypeId;
-    const listTypeName = listTypeIdToName[listTypeId];
+    const listTypeName = artefact.listTypeName ?? "";
     const listConfig = listTypeConfig[listTypeName];
     const listTitle = listConfig[locale as "en" | "cy"];
 
     const { header, hearings } = renderFn(jsonData, {
       locale,
-      listTypeId,
+      listTypeName,
       listTitle,
       contentDate: artefact.contentDate,
       lastReceivedDate: artefact.lastReceivedDate.toISOString()

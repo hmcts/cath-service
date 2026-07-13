@@ -13,7 +13,7 @@ export const ROUTES = ["/london-administrative-court-daily-cause-list"];
 
 const validate = createJsonValidator(schemaPath);
 
-const LONDON_ADMIN_COURT_LIST_TYPE_ID = 18;
+const SUPPORTED_LIST_TYPE = "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
 
 export const GET = createSimpleListTypeHandler<LondonAdminCourtData>({
   en,
@@ -21,7 +21,7 @@ export const GET = createSimpleListTypeHandler<LondonAdminCourtData>({
   validate,
   logPrefix: "london-administrative-court-daily-cause-list",
   guardArtefact: (artefact, res) => {
-    if (artefact.listTypeId !== LONDON_ADMIN_COURT_LIST_TYPE_ID) {
+    if (artefact.listTypeName !== SUPPORTED_LIST_TYPE) {
       res.status(400).render("errors/common", {
         en,
         cy,

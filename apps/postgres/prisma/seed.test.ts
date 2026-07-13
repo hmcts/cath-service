@@ -83,7 +83,10 @@ const mockListTypeData = [
 ];
 
 vi.mock("@hmcts/location", () => ({
-  locationData: mockLocationData,
+  locationData: mockLocationData
+}));
+
+vi.mock("@hmcts/list-types-common", () => ({
   listTypeData: mockListTypeData
 }));
 
