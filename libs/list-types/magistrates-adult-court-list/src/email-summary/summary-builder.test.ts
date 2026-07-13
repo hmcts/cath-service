@@ -124,7 +124,7 @@ describe("extractCaseSummary", () => {
     expect(result[1][2]).toEqual({ label: "Case number", value: "CASE002" });
   });
 
-  it("should use the first offence title when multiple offences exist", () => {
+  it("should join all offence titles when multiple offences exist", () => {
     const data = buildMinimalData([
       buildSession([
         {
@@ -143,7 +143,7 @@ describe("extractCaseSummary", () => {
     const result = extractCaseSummary(data);
 
     expect(result).toHaveLength(1);
-    expect(result[0][3]).toEqual({ label: "Offence title", value: "First Offence" });
+    expect(result[0][3]).toEqual({ label: "Offence title", value: "First Offence, Second Offence" });
   });
 });
 

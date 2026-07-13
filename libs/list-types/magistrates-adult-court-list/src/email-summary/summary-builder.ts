@@ -10,7 +10,10 @@ export function extractCaseSummary(jsonData: MagistratesAdultCourtListData): Cas
   for (const session of sessions) {
     for (const block of session.blocks?.block ?? []) {
       for (const caseItem of block.cases?.case ?? []) {
-        const offenceTitle = caseItem.offences?.offence?.[0]?.title ?? "";
+        const offenceTitle = (caseItem.offences?.offence ?? [])
+          .map((o) => o.title)
+          .filter(Boolean)
+          .join(", ");
         summaries.push([
           { label: "Defendant name", value: caseItem.def_name ?? "" },
           { label: "Informant", value: caseItem.inf ?? "" },
