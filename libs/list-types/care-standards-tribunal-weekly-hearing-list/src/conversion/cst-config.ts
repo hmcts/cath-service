@@ -7,7 +7,6 @@ import {
   validateNoHtmlTags
 } from "@hmcts/list-types-common";
 
-// Care Standards Tribunal Weekly Hearing List (listTypeId: 9)
 export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
     {

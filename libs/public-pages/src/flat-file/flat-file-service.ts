@@ -1,39 +1,44 @@
 import path from "node:path";
+import type { UserProfile } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { getArtefactById, getContentType, getFileBuffer, getFileName, getSourceArtefactId } from "@hmcts/publication";
+import type { Artefact } from "@hmcts/publication";
+import {
+  canAccessPublicationData,
+  getArtefactById,
+  getContentType,
+  getFileBuffer,
+  getFileExtension,
+  getFileName,
+  getSourceArtefactId,
+  resolveListType
+} from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
-export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en") {
-  const artefact = await getArtefactById(artefactId);
+type GuardError = { error: "NOT_FLAT_FILE" | "EXPIRED" | "ACCESS_DENIED" };
 
-  if (!artefact) {
-    return { error: "NOT_FOUND" as const };
-  }
-
-  if (artefact.locationId !== locationId) {
-    return { error: "LOCATION_MISMATCH" as const };
-  }
-
-  if (!artefact.isFlatFile) {
-    return { error: "NOT_FLAT_FILE" as const };
-  }
-
+async function checkArtefactAccess(artefact: Artefact, user: UserProfile | undefined): Promise<GuardError | null> {
+  if (!artefact.isFlatFile) return { error: "NOT_FLAT_FILE" };
   const now = new Date();
-  if (now < artefact.displayFrom || now > artefact.displayTo) {
-    return { error: "EXPIRED" as const };
-  }
+  if (now < artefact.displayFrom || now > artefact.displayTo) return { error: "EXPIRED" };
+  if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) return { error: "ACCESS_DENIED" };
+  return null;
+}
+
+export async function getFlatFileForDisplay(artefactId: string, locationId: string, locale: string = "en", user: UserProfile | undefined = undefined) {
+  const artefact = await getArtefactById(artefactId);
+  if (!artefact) return { error: "NOT_FOUND" as const };
+  if (artefact.locationId !== locationId) return { error: "LOCATION_MISMATCH" as const };
+
+  const accessError = await checkArtefactAccess(artefact, user);
+  if (accessError) return accessError;
 
   const fileBuffer = await getFileBuffer(artefact.artefactId);
+  if (!fileBuffer) return { error: "FILE_NOT_FOUND" as const };
 
-  if (!fileBuffer) {
-    return { error: "FILE_NOT_FOUND" as const };
-  }
-
-  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
-  const listType = await findListTypeById(artefact.listTypeId);
+  const [location, listTypeInfo] = await Promise.all([getLocationById(Number.parseInt(artefact.locationId, 10)), findListTypeById(artefact.listTypeId)]);
 
   const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
-  const listTypeName = locale === "cy" ? listType?.welshFriendlyName || "Unknown" : listType?.friendlyName || "Unknown";
+  const listTypeName = locale === "cy" ? listTypeInfo?.welshFriendlyName || "Unknown" : listTypeInfo?.friendlyName || "Unknown";
 
   const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 
@@ -48,27 +53,15 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
   };
 }
 
-export async function getFileForDownload(artefactId: string) {
+export async function getFileForDownload(artefactId: string, user: UserProfile | undefined = undefined) {
   const artefact = await getArtefactById(artefactId);
+  if (!artefact) return { error: "NOT_FOUND" as const };
 
-  if (!artefact) {
-    return { error: "NOT_FOUND" as const };
-  }
-
-  if (!artefact.isFlatFile) {
-    return { error: "NOT_FLAT_FILE" as const };
-  }
-
-  const now = new Date();
-  if (now < artefact.displayFrom || now > artefact.displayTo) {
-    return { error: "EXPIRED" as const };
-  }
+  const accessError = await checkArtefactAccess(artefact, user);
+  if (accessError) return accessError;
 
   const fileBuffer = await getFileBuffer(artefact.artefactId);
-
-  if (!fileBuffer) {
-    return { error: "FILE_NOT_FOUND" as const };
-  }
+  if (!fileBuffer) return { error: "FILE_NOT_FOUND" as const };
 
   const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 

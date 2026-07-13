@@ -1,4 +1,5 @@
-import { listTypeData, locationData } from "@hmcts/location";
+import { listTypeData } from "@hmcts/list-types-common";
+import { locationData } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 
 async function seedReferenceData() {
@@ -40,24 +41,25 @@ async function seedReferenceData() {
       });
     }
     console.log(`Seeded ${locationData.jurisdictions.length} jurisdictions`);
-
-    console.log("Seeding sub-jurisdictions...");
-    for (const subJurisdiction of locationData.subJurisdictions) {
-      await prisma.subJurisdiction.upsert({
-        where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
-        create: {
-          subJurisdictionId: subJurisdiction.subJurisdictionId,
-          name: subJurisdiction.name,
-          welshName: subJurisdiction.welshName,
-          jurisdictionId: subJurisdiction.jurisdictionId
-        },
-        update: { name: subJurisdiction.name, welshName: subJurisdiction.welshName, jurisdictionId: subJurisdiction.jurisdictionId }
-      });
-    }
-    console.log(`Seeded ${locationData.subJurisdictions.length} sub-jurisdictions`);
   } else {
     console.log("Skipping location seed: tables already contain data");
   }
+
+  // Always upsert sub-jurisdictions to pick up new entries
+  console.log("Seeding sub-jurisdictions...");
+  for (const subJurisdiction of locationData.subJurisdictions) {
+    await prisma.subJurisdiction.upsert({
+      where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
+      create: {
+        subJurisdictionId: subJurisdiction.subJurisdictionId,
+        name: subJurisdiction.name,
+        welshName: subJurisdiction.welshName,
+        jurisdictionId: subJurisdiction.jurisdictionId
+      },
+      update: { name: subJurisdiction.name, welshName: subJurisdiction.welshName, jurisdictionId: subJurisdiction.jurisdictionId }
+    });
+  }
+  console.log(`Seeded ${locationData.subJurisdictions.length} sub-jurisdictions`);
 
   // Always run list type seeding to pick up new entries
   console.log("Seeding list types...");
@@ -222,6 +224,7 @@ async function main() {
   console.log("Starting seed...");
   await seedReferenceData();
   await seedTestData();
+
   console.log("Seed completed successfully!");
 }
 

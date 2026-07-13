@@ -6,7 +6,8 @@ export {
   canAccessPublicationMetadata,
   filterAccessiblePublications,
   filterPublicationsForSummary,
-  type ListType
+  type ListType,
+  resolveListType
 } from "./authorisation/service.js";
 export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson, getSourceArtefactId } from "./file-storage/file-retrieval.js";
