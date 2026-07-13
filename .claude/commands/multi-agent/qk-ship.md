@@ -37,9 +37,75 @@ Use TodoWrite to create workflow checklist:
 ## PHASE 0: VERIFICATION & WORKTREE SETUP
 ## ═══════════════════════════════════════
 
-## Step 0: Verify Ticket and Mark In Progress [AGENT]
+## Step 0a: Check Ticket Refinement [AGENT]
 
 *Mark "Verify ticket status" as in_progress*
+
+Verify the GitHub issue has been properly refined and is ready for implementation.
+
+```
+AGENT: general-purpose
+DESCRIPTION: Verify ticket #$ARGUMENT refinement status
+PROMPT:
+"Check if GitHub issue #$ARGUMENT is properly refined and ready for implementation.
+
+**Step 1: Fetch issue from GitHub**
+
+\`\`\`bash
+gh issue view $ARGUMENT --json number,title,body,labels,comments
+\`\`\`
+
+**Step 2: Check refinement indicators**
+
+Review the issue for:
+
+1. **Labels check:**
+   - Has 'refinement-done' label OR
+   - Has 'ready-for-dev' label OR
+   - Explicitly marked as refined in title/body
+
+2. **Acceptance criteria check:**
+   - Issue body contains clear acceptance criteria section OR
+   - Acceptance criteria are clearly defined OR
+   - Requirements are specific and measurable
+
+3. **Outstanding questions check:**
+   - Look for unresolved questions in body/comments
+   - Check for labels like 'needs-clarification', 'question', 'blocked'
+   - Look for recent comments asking for clarification
+   - Check if last comment is unanswered question
+
+**Step 3: Decision logic**
+
+If ANY of these are true, STOP with warning:
+- Has 'needs-clarification' or 'question' or 'blocked' label
+- Comments contain unanswered questions (check timestamps)
+- No clear acceptance criteria found
+- Issue body says 'TBD', 'TODO', or similar placeholders
+
+If refinement looks good:
+- Display summary: title, labels, acceptance criteria count
+- Continue to next step
+
+**Step 4: Output**
+
+If NOT ready:
+  Return: '❌ Ticket #$ARGUMENT not ready for implementation:
+  - [List specific issues found]
+  
+  Recommendation: Review issue on GitHub and ensure refinement is complete.'
+
+If ready:
+  Return: '✅ Ticket #$ARGUMENT refinement verified:
+  - Title: [title]
+  - Labels: [labels]
+  - Acceptance criteria: [count] found
+  - No outstanding questions'"
+
+WAIT FOR AGENT
+```
+
+## Step 0b: Verify Ticket and Mark In Progress [AGENT]
 
 Check requirements.db to ensure ticket is available, then mark it as in_progress.
 
@@ -805,7 +871,9 @@ echo ""
 
 *Mark "Final guards" as completed*
 
-## Step 12: Summary
+## Step 12: Git Workflow and PR Creation
+
+### 12a: Review Changes
 
 ```bash
 EXECUTE:
@@ -822,7 +890,120 @@ echo "   • Tests ✅"
 echo "   • Security Review ✅"
 echo "   • Code Quality ✅"
 echo ""
-echo "📋 NEXT STEPS"
+
+# Show git status and diff summary
+git status
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 CHANGES SUMMARY"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+git diff --stat
+echo ""
+```
+
+### 12b: Ask Developer About PR Creation
+
+Use AskUserQuestion to ask if developer wants you to create the PR and monitor it:
+
+```
+QUESTION 1:
+Header: "PR Creation"
+Question: "Would you like me to commit these changes and create a pull request for issue #$ARGUMENT?"
+Options:
+  1. "Yes, create PR and monitor CI checks" - I'll commit, push, create PR, and monitor CI/CD checks until they pass
+  2. "Yes, create PR only" - I'll commit, push, and create the PR but won't monitor CI checks
+  3. "No, I'll handle it manually" - You can review and commit the changes yourself
+
+[WAIT FOR USER RESPONSE]
+```
+
+### 12c: Execute Based on User Choice
+
+**If "Yes, create PR and monitor CI checks":**
+
+```bash
+EXECUTE:
+# Commit changes
+echo "Committing changes..."
+git add .
+git commit -m "feat: implement issue #$ARGUMENT
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+# Push to remote
+echo "Pushing to remote..."
+git push -u origin vibe-$ARGUMENT
+
+# Create PR
+echo "Creating pull request..."
+gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+
+## Implementation Summary
+- Implemented all acceptance criteria
+- All tests passing
+- Security review completed
+- Code quality checks passed
+
+🤖 Generated with Claude Code"
+
+# Get PR number
+PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
+echo ""
+echo "✅ PR #$PR_NUMBER created"
+echo ""
+```
+
+**Then proceed to CI/CD Monitoring (see Step 13)**
+
+**If "Yes, create PR only":**
+
+```bash
+EXECUTE:
+# Commit changes
+echo "Committing changes..."
+git add .
+git commit -m "feat: implement issue #$ARGUMENT
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+# Push to remote
+echo "Pushing to remote..."
+git push -u origin vibe-$ARGUMENT
+
+# Create PR
+echo "Creating pull request..."
+gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+
+## Implementation Summary
+- Implemented all acceptance criteria
+- All tests passing
+- Security review completed
+- Code quality checks passed
+
+🤖 Generated with Claude Code"
+
+# Get PR number
+PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ PR #$PR_NUMBER created successfully"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "CI/CD checks will run automatically."
+echo "If you need me to monitor and fix any failures, just ask:"
+echo "   'Can you watch PR #$PR_NUMBER?'"
+echo ""
+```
+
+**DONE - Workflow complete**
+
+**If "No, I'll handle it manually":**
+
+```bash
+EXECUTE:
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 MANUAL COMMIT INSTRUCTIONS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "1. Review changes:"
@@ -834,15 +1015,14 @@ echo "   git add ."
 echo "   git commit -m \"feat: implement issue #$ARGUMENT\""
 echo ""
 echo "3. Push and create PR:"
-echo "   git push"
+echo "   git push -u origin vibe-$ARGUMENT"
 echo "   gh pr create --title \"Issue #$ARGUMENT\" --body \"Closes #$ARGUMENT\""
-echo ""
-echo "4. Optional - Monitor CI/CD:"
-echo "   Ask: 'Can you watch the CI checks?'"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 ```
+
+**DONE - Workflow complete**
 
 ## ═══════════════════════════════════════
 ## OPTIONAL STEP: CI/CD MONITORING
