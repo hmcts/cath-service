@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fttTaxChamberWeeklyHearingListCy as cy, fttTaxChamberWeeklyHearingListEn as en } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import { render } from "@hmcts/test-support";
 import nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
@@ -138,7 +139,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const dataSource = "TAX";
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(header.listTitle);
@@ -157,7 +158,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('<h1 class="govuk-heading-l"');
@@ -173,7 +174,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(en.factLinkText);
@@ -188,7 +189,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -208,7 +209,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(en.searchCasesTitle);
@@ -223,7 +224,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('<table class="govuk-table"');
@@ -243,7 +244,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(en.backToTop);
@@ -258,7 +259,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const dataSource = "TAX";
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(en.dataSource);
@@ -279,7 +280,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(cy.listForWeekCommencing);
@@ -296,7 +297,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(cy.tableHeaders.date);
@@ -317,7 +318,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings: unknown[] = [];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -331,7 +332,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain(hearings[0].caseReferenceNumber);
@@ -350,7 +351,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("TC/2024/001");
@@ -374,7 +375,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("15/03/2024");
@@ -397,7 +398,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -413,7 +414,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('role="table"');
@@ -427,7 +428,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-visually-hidden");
@@ -441,7 +442,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain('<thead class="govuk-table__head">');
@@ -458,7 +459,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-grid-row");
@@ -472,7 +473,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-heading-l");
@@ -486,7 +487,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-body");
@@ -499,7 +500,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-link");
@@ -512,7 +513,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -527,7 +528,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-input");
@@ -540,7 +541,7 @@ describe("ftt-tax-chamber-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
 
         // Assert
         expect(html).toContain("govuk-table");

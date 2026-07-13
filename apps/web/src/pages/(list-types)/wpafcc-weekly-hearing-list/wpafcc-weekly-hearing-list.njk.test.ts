@@ -1,8 +1,9 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { wpafccWeeklyHearingListCy, wpafccWeeklyHearingListEn } from "@hmcts/wpafcc-weekly-hearing-list";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -260,7 +257,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
     describe("Basic rendering", () => {
       it("should render header with list title", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -271,7 +268,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render week commencing date", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -281,7 +278,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render last updated information", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -293,7 +290,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render FACT link with correct URL and text", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -304,7 +301,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render important information details component", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -316,7 +313,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render important information link with target blank", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -328,7 +325,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render search input with correct attributes", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -341,7 +338,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render table with all headers", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -357,7 +354,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render data source footer", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -368,7 +365,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -381,7 +378,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
     describe("Hearings table variations", () => {
       it("should render empty table when no hearings", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -394,7 +391,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render single hearing with all fields populated", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -421,7 +418,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render multiple hearings", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -469,7 +466,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render hearing with empty additional information", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -490,7 +487,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render different hearing modes correctly", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -532,7 +529,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render panel with multiple members", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -554,7 +551,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
     describe("Welsh translation rendering", () => {
       it("should render in Welsh when t is cy", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           t: wpafccWeeklyHearingListCy,
           en: wpafccWeeklyHearingListEn,
           cy: wpafccWeeklyHearingListCy,
@@ -577,7 +574,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should render table header in Welsh", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           t: wpafccWeeklyHearingListCy,
           en: wpafccWeeklyHearingListEn,
           cy: wpafccWeeklyHearingListCy,
@@ -597,7 +594,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
     describe("Accessibility features", () => {
       it("should have proper ARIA labels on search input", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -606,7 +603,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have proper table role and aria-label", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -616,7 +613,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have proper heading structure", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -628,7 +625,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have proper table structure with scope attributes", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -639,7 +636,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have skip link target", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -649,7 +646,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have visually hidden label for search input", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -659,7 +656,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should have proper link attributes for external important information link", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -671,7 +668,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
 
     describe("GOV.UK Design System compliance", () => {
       it("should use govuk-grid-row and govuk-grid-column-full", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -681,7 +678,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should use govuk-table classes", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -706,7 +703,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should use govuk-body classes for paragraphs", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -715,7 +712,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should use govuk-details component correctly", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -727,7 +724,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should use govuk-link class for links", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -736,7 +733,7 @@ describe("wpafcc-weekly-hearing-list.njk", () => {
       });
 
       it("should use govuk-input with width modifier", () => {
-        const html = env.render("wpafcc-weekly-hearing-list.njk", {
+        const { html } = render(env, "wpafcc-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });

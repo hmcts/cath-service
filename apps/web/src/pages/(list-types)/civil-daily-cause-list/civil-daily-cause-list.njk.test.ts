@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { civilDailyCauseListCy as cy, civilDailyCauseListEn as en } from "@hmcts/civil-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("civil-daily-cause-list.njk", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
   describe("Template file", () => {
     it("should exist", () => {
@@ -217,7 +214,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("Court house address variations", () => {
       it("should render court house with full address", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -246,7 +243,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render court house with partial address", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -273,7 +270,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should handle empty address lines", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -297,7 +294,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should not render court house section when address is missing", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -317,7 +314,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("Session judiciary variations", () => {
       it("should render session with judiciary", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -346,7 +343,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render session without judiciary", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -378,7 +375,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("No hearings message", () => {
       it("should show no hearings message when sittings are empty", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -406,7 +403,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should show no hearings message when hearings are empty", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -442,7 +439,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should not show no hearings message when there are hearings", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -492,7 +489,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("Duration variations", () => {
       it("should render duration with hours only (plural)", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -539,7 +536,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render duration with hour only (singular)", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -587,7 +584,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render duration with minutes only (plural)", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -634,7 +631,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render duration with minute only (singular)", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -682,7 +679,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render duration with hours and minutes", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -729,7 +726,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render empty duration when both are zero", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -780,7 +777,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("Case variations", () => {
       it("should render case with sequence indicator", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -828,7 +825,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render case without sequence indicator", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -877,7 +874,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render case with reporting restrictions", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -926,7 +923,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should not render reporting restriction row when empty", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -976,7 +973,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render multiple cases in same sitting", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1031,7 +1028,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render multiple hearings in same sitting", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1093,7 +1090,7 @@ describe("civil-daily-cause-list.njk", () => {
 
     describe("Multiple court rooms and sessions", () => {
       it("should render multiple court rooms", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1131,7 +1128,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render multiple sessions in same court room", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1164,7 +1161,7 @@ describe("civil-daily-cause-list.njk", () => {
       });
 
       it("should render multiple court houses", () => {
-        const html = env.render("civil-daily-cause-list.njk", {
+        const { html } = render(env, "civil-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [

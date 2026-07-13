@@ -1,26 +1,23 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import {
   upperTribunalLandsChamberDailyHearingListCy as cy,
   upperTribunalLandsChamberDailyHearingListEn as en
 } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -192,7 +189,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Header section", () => {
       it("should render title as h1 with anchor", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -206,7 +203,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render FACT link", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -221,7 +218,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render list date", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -235,7 +232,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render last updated information", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -253,7 +250,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Opening statement section", () => {
       it("should render details component", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -268,7 +265,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render opening statement title", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -281,7 +278,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render contact text", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -295,7 +292,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render observe link", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -313,7 +310,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -328,7 +325,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render search title", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -341,7 +338,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render search label", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -354,7 +351,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should have visually hidden label for accessibility", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -370,7 +367,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Table structure", () => {
       it("should render table with correct role and aria-label", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -385,7 +382,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render all table headers", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -406,7 +403,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should use scope=col for header cells", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -447,7 +444,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       ];
 
       it("should render single hearing row", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -468,7 +465,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render multiple hearing rows", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -489,7 +486,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render empty members field", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -504,7 +501,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render empty additional information", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -519,7 +516,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -537,7 +534,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Footer section", () => {
       it("should render data source", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -551,7 +548,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -565,7 +562,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should have back-to-top class for styling", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -587,7 +584,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
           lastUpdatedTime: "12:00pm"
         };
 
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: cy,
@@ -614,7 +611,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
           lastUpdatedTime: "12:00pm"
         };
 
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: cy,
@@ -636,7 +633,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
           lastUpdatedTime: "12:00pm"
         };
 
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: cy,
@@ -658,7 +655,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Accessibility", () => {
       it("should have GOV.UK grid structure", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -672,7 +669,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should have proper heading hierarchy", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -686,7 +683,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should have table semantic structure", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -701,7 +698,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
       });
 
       it("should use semantic HTML5 elements", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,
@@ -718,7 +715,7 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
 
     describe("Custom styling", () => {
       it("should include back-to-top custom styles in head block", () => {
-        const html = env.render("upper-tribunal-lands-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
           en,
           cy,
           t: en,

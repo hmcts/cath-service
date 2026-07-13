@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy as cy, rcjStandardDailyCauseListEn as en } from "@hmcts/rcj-standard-daily-cause-list";
+import { render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -256,7 +257,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render template successfully with complete data", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Senior Courts Costs Office Daily Cause List");
       expect(html).toContain("Royal Courts of Justice");
@@ -266,7 +267,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render header with list title and date", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(mockData.header.listTitle);
       expect(html).toContain(`List for ${mockData.header.listDate}`);
@@ -276,7 +277,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render location details", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.locationLine1);
       expect(html).toContain(en.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.locationLine2);
@@ -285,7 +286,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render FACT link with correct text and URL", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.factLinkUrl);
       expect(html).toContain(en.common.factLinkText);
@@ -294,7 +295,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render important information details component", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.importantInfoTitle);
       expect(html).toContain("Hearings in the Senior Courts Costs Office");
@@ -304,7 +305,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render important information with multi-paragraph text", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       const paragraphCount = (html.match(/<p class="govuk-body">/g) || []).length;
       expect(paragraphCount).toBeGreaterThan(0);
@@ -312,7 +313,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render more info link at end of important information", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.moreInfoLinkText);
       expect(html).toContain(en.SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST.moreInfoLinkUrl);
@@ -320,7 +321,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render search cases section", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.searchCasesTitle);
       expect(html).toContain(en.common.searchCasesLabel);
@@ -329,7 +330,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render table with correct headers", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.tableHeaders.venue);
       expect(html).toContain(en.common.tableHeaders.judge);
@@ -342,7 +343,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render hearings data in table rows", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Court Room 1");
       expect(html).toContain("Master Smith");
@@ -362,7 +363,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render with empty hearings array", () => {
       const mockData = createMockData({ hearings: [] });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Senior Courts Costs Office Daily Cause List");
       expect(html).toContain(en.common.tableHeaders.venue);
@@ -382,7 +383,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           }
         ]
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Court Room 3");
       expect(html).toContain("Master Williams");
@@ -403,7 +404,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           }
         ]
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Test Case");
       expect(html).toContain("Assessment");
@@ -423,7 +424,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           }
         ]
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("CA-2026-000001");
       expect(html).toContain('<td class="govuk-table__cell"></td>');
@@ -431,7 +432,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render data source provenance", () => {
       const mockData = createMockData({ dataSource: "CPP" });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.dataSource);
       expect(html).toContain("CPP");
@@ -439,7 +440,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render back to top link", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(en.common.backToTop);
       expect(html).toContain('href="#top"');
@@ -456,7 +457,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           lastUpdatedTime: "4:30pm"
         }
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Swyddfa Costau");
       expect(html).toContain("Llysoedd Barn Brenhinol");
@@ -468,7 +469,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should have accessible search input with aria-label", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain('aria-label="' + en.common.searchCasesLabel + '"');
       expect(html).toContain('class="govuk-visually-hidden"');
@@ -476,7 +477,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should have accessible table with role and aria-label", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain('role="table"');
       expect(html).toContain('aria-label="' + mockData.header.listTitle + '"');
@@ -491,7 +492,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
       dataSources.forEach(({ source, expected }) => {
         const mockData = createMockData({ dataSource: source });
-        const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+        const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
         expect(html).toContain(expected);
       });
@@ -499,7 +500,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render details component with open attribute", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("govuk-details");
       expect(html).toContain("open");
@@ -507,7 +508,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should have proper heading hierarchy with h1", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain('<h1 class="govuk-heading-l"');
       expect(html).toContain('id="top"');
@@ -515,7 +516,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
 
     it("should render search heading as h2", () => {
       const mockData = createMockData();
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain('<h2 class="govuk-heading-s">' + en.common.searchCasesTitle);
     });
@@ -535,7 +536,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           }
         ]
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain(longText);
     });
@@ -554,7 +555,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
           }
         ]
       });
-      const html = env.render("senior-courts-costs-office-daily-cause-list.njk", mockData);
+      const { html } = render(env, "senior-courts-costs-office-daily-cause-list.njk", mockData);
 
       expect(html).toContain("Court Room 1 &amp; 2");
       expect(html).toContain("Master O&#39;Brien");

@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { magistratesPublicListCy, magistratesPublicListEn } from "@hmcts/magistrates-public-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("magistrates-public-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -172,25 +169,25 @@ describe("magistrates-public-list.njk", () => {
 
     describe("Header section", () => {
       it("should render page title with location name", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("Magistrates Public List for");
         expect(html).toContain("Westminster Magistrates Court");
       });
 
       it("should render content date", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("15 January 2026");
       });
 
       it("should render published date and time", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("14 January 2026");
         expect(html).toContain("12:00pm");
       });
 
       it("should render FACT link", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
       });
@@ -204,39 +201,39 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("181 Marylebone Road");
         expect(html).toContain("London");
         expect(html).toContain("NW1 5BR");
       });
 
       it("should not render venue address section when empty", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).not.toContain("181 Marylebone Road");
       });
     });
 
     describe("Restriction information section", () => {
       it("should render restriction heading", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("Restrictions on publishing or writing about these cases");
       });
 
       it("should render warning text", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("govuk-warning-text");
         expect(html).toContain("contempt of court");
       });
 
       it("should render restriction information paragraphs", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("You must check if any reporting restrictions apply");
         expect(html).toContain("Specific restrictions ordered by the court");
         expect(html).toContain("restrictions are not always listed");
       });
 
       it("should render restriction bullet points", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("the court directly");
         expect(html).toContain("HM Courts and Tribunals Service on 0330 808 4407");
       });
@@ -244,7 +241,7 @@ describe("magistrates-public-list.njk", () => {
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('type="text"');
@@ -253,7 +250,7 @@ describe("magistrates-public-list.njk", () => {
 
     describe("Empty court lists", () => {
       it("should render with no court lists", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain('id="court-lists-container"');
       });
     });
@@ -283,7 +280,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("Court 1");
         expect(html).toContain("District Judge Smith");
         expect(html).toContain("govuk-accordion");
@@ -313,7 +310,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("Court 2");
         expect(html).not.toContain(": District Judge");
       });
@@ -362,7 +359,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("Sitting at");
         expect(html).toContain("URN");
         expect(html).toContain("Name");
@@ -412,7 +409,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("12AA3456789");
         expect(html).toContain("John Smith");
@@ -467,7 +464,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("Jane Doe");
         expect(html).not.toContain("Offence Details");
       });
@@ -514,7 +511,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("John Smith");
         expect(html).not.toContain("Press/Publication restrictions apply to this case");
       });
@@ -561,7 +558,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("no-border-bottom");
       });
     });
@@ -608,7 +605,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("2:00pm");
         expect(html).toContain("APP-2026-001");
         expect(html).toContain("David Brown");
@@ -657,7 +654,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("APP-2026-002");
         expect(html).toContain("Sarah Green");
         expect(html).not.toContain("Public Order Offence");
@@ -704,7 +701,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("APP-2026-001");
         const hearingTypeMatches = html.match(/<td class="govuk-table__cell[^"]*">\s*<\/td>/g);
         expect(hearingTypeMatches).toBeTruthy();
@@ -761,7 +758,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("12AA3456789");
         expect(html).toContain("John Smith");
         expect(html).toContain("12BB9876543");
@@ -827,7 +824,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("Morning Case");
         expect(html).toContain("2:00pm");
@@ -903,7 +900,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("Court 1");
         expect(html).toContain("District Judge A");
         expect(html).toContain("Court One Case");
@@ -962,7 +959,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", data);
+        const { html } = render(env, "magistrates-public-list.njk", data);
         expect(html).toContain("12AA3456789");
         expect(html).toContain("Case Defendant");
         expect(html).toContain("APP-2026-001");
@@ -972,7 +969,7 @@ describe("magistrates-public-list.njk", () => {
 
     describe("Footer section", () => {
       it("should render data source", () => {
-        const html = env.render("magistrates-public-list.njk", baseData);
+        const { html } = render(env, "magistrates-public-list.njk", baseData);
         expect(html).toContain("Data Source");
         expect(html).toContain("Manual Upload");
       });
@@ -985,7 +982,7 @@ describe("magistrates-public-list.njk", () => {
           t: magistratesPublicListCy
         };
 
-        const html = env.render("magistrates-public-list.njk", welshData);
+        const { html } = render(env, "magistrates-public-list.njk", welshData);
         expect(html).toContain("Rhestr Gyhoeddus y Llys Ynadon ar gyfer");
         expect(html).toContain("Rhestr ar gyfer");
         expect(html).toContain("Diweddarwyd diwethaf");
@@ -1036,7 +1033,7 @@ describe("magistrates-public-list.njk", () => {
           }
         };
 
-        const html = env.render("magistrates-public-list.njk", welshData);
+        const { html } = render(env, "magistrates-public-list.njk", welshData);
         expect(html).toContain("Yn eistedd yn");
         expect(html).toContain("URN");
         expect(html).toContain("Enw");
@@ -1050,7 +1047,7 @@ describe("magistrates-public-list.njk", () => {
           t: magistratesPublicListCy
         };
 
-        const html = env.render("magistrates-public-list.njk", welshData);
+        const { html } = render(env, "magistrates-public-list.njk", welshData);
         expect(html).toContain("Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn");
         expect(html).toContain("Rhaid i chi wirio");
         expect(html).toContain("dirmyg llys");

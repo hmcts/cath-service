@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy as cy, rcjStandardDailyCauseListEn as en } from "@hmcts/rcj-standard-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -309,7 +306,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
     describe("Basic template structure", () => {
       it("should render template with header information", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -321,7 +318,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render fact link with correct URL", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -331,7 +328,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render list date and last updated", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -343,7 +340,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render important information section", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -354,7 +351,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render search cases section", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -364,7 +361,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render table headers", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -379,7 +376,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render data source", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -389,7 +386,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -401,7 +398,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
     describe("Hearings table variations", () => {
       it("should render single hearing", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -426,7 +423,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render multiple hearings", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -471,7 +468,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should handle empty hearings array", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -481,7 +478,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should handle hearings with empty fields", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -503,7 +500,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should handle hearings with special characters in case details", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -523,7 +520,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
       it("should handle hearings with long case details", () => {
         const longCaseDetails = "R v A Very Long Case Name With Multiple Defendants Including Smith, Jones, Williams, and Others";
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -557,7 +554,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
           hearings: []
         };
 
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", welshData);
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", welshData);
 
         expect(html).toContain(cy.COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST.pageTitle);
         expect(html).toContain(cy.COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST.locationLine1);
@@ -579,7 +576,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
           hearings: []
         };
 
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", welshData);
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", welshData);
 
         expect(html).toContain(cy.common.tableHeaders.venue);
         expect(html).toContain(cy.common.tableHeaders.judge);
@@ -593,7 +590,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
     describe("Accessibility features", () => {
       it("should have heading with id for anchor link", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -602,7 +599,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should have aria-label on search input", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -611,7 +608,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should have role attribute on table", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -620,7 +617,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should have aria-label on table", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -629,7 +626,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should have scope attribute on table headers", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -640,7 +637,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
 
     describe("Links and external references", () => {
       it("should render quick guide link with target blank and security attributes", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -651,7 +648,7 @@ describe("court-of-appeal-criminal-division-daily-cause-list template", () => {
       });
 
       it("should render fact link correctly", () => {
-        const html = env.render("court-of-appeal-criminal-division-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-criminal-division-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });

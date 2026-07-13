@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sscsDailyHearingListCy, sscsDailyHearingListEn } from "@hmcts/sscs-daily-hearing-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("sscs-daily-hearing-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -155,27 +152,27 @@ describe("sscs-daily-hearing-list.njk", () => {
 
     describe("Header section", () => {
       it("should render page title", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Upper Tribunal (Immigration and Asylum) Chamber Hearing List");
         expect(html).toContain("govuk-heading-l");
         expect(html).toContain('id="top"');
       });
 
       it("should render FACT link", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales, and some non-devolved tribunals in Scotland.");
       });
 
       it("should render list date", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("15 January 2026");
       });
 
       it("should render last updated date and time", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Last updated");
         expect(html).toContain("14 January 2026");
         expect(html).toContain("at");
@@ -185,18 +182,18 @@ describe("sscs-daily-hearing-list.njk", () => {
 
     describe("Important information section", () => {
       it("should render important information details element", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Important information");
         expect(html).toContain("govuk-details");
       });
 
       it("should render important information text with line breaks", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Open justice is a fundamental principle of our justice system.");
       });
 
       it("should render important information link as clickable", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing");
         expect(html).toContain('target="_blank"');
         expect(html).toContain('rel="noopener noreferrer"');
@@ -208,40 +205,40 @@ describe("sscs-daily-hearing-list.njk", () => {
           importantInformationText: "First line\n\nThird line"
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", dataWithEmptyLines);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", dataWithEmptyLines);
         expect(html).toContain("First line");
         expect(html).toContain("Third line");
       });
 
       it("should be open by default", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toMatch(/<details[^>]*\sopen/);
       });
     });
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('type="text"');
       });
 
       it("should have accessible search label", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain('aria-label="Search by appeal reference, hearing type, appellant, or other details"');
         expect(html).toContain("govuk-visually-hidden");
       });
 
       it("should have correct input width", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-!-width-one-half");
       });
     });
 
     describe("Hearings table", () => {
       it("should render table with correct headers", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Venue");
         expect(html).toContain("Appeal reference number");
         expect(html).toContain("Hearing type");
@@ -254,14 +251,14 @@ describe("sscs-daily-hearing-list.njk", () => {
       });
 
       it("should render table with accessible attributes", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="Upper Tribunal (Immigration and Asylum) Chamber Hearing List"');
         expect(html).toContain('id="hearings-table"');
       });
 
       it("should render empty table body when no hearings", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-table__body");
         expect(html).toContain('id="hearings-table-container"');
       });
@@ -286,7 +283,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", data);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", data);
         expect(html).toContain("Birmingham");
         expect(html).toContain("SC123/45/67890");
         expect(html).toContain("Final Hearing");
@@ -327,7 +324,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", data);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", data);
         expect(html).toContain("SC123/45/67890");
         expect(html).toContain("John Smith");
         expect(html).toContain("SC987/65/43210");
@@ -352,7 +349,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", data);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", data);
         expect(html).toContain("Birmingham");
         expect(html).toContain("SC123/45/67890");
         expect(html).toContain("John Smith");
@@ -377,7 +374,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", data);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", data);
         expect(html).toContain("new-line-wrap");
         expect(html).toContain("Judge A Smith\nJudge B Jones");
       });
@@ -385,32 +382,32 @@ describe("sscs-daily-hearing-list.njk", () => {
 
     describe("Footer section", () => {
       it("should render data source", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Data source");
         expect(html).toContain("Manual Upload");
       });
 
       it("should render back to top link", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
 
       it("should have correct styling for back to top", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("back-to-top");
       });
     });
 
     describe("Custom styles", () => {
       it("should include custom CSS for back-to-top", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain(".back-to-top");
         expect(html).toContain("margin-top: 40px");
       });
 
       it("should include custom CSS for new-line-wrap", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain(".new-line-wrap");
         expect(html).toContain("white-space: pre");
       });
@@ -423,7 +420,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           t: sscsDailyHearingListCy
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", welshData);
         expect(html).toContain("Rhestr ar gyfer");
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("am");
@@ -437,7 +434,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           t: sscsDailyHearingListCy
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", welshData);
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Cyfeirnod Apêl");
         expect(html).toContain("Math o Wrandawiad");
@@ -455,7 +452,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           t: sscsDailyHearingListCy
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", welshData);
         expect(html).toContain("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr");
         expect(html).toContain("a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.");
       });
@@ -466,7 +463,7 @@ describe("sscs-daily-hearing-list.njk", () => {
           t: sscsDailyHearingListCy
         };
 
-        const html = env.render("sscs-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", welshData);
         expect(html).toContain("Ffynhonnell data");
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
@@ -474,17 +471,17 @@ describe("sscs-daily-hearing-list.njk", () => {
 
     describe("Layout and structure", () => {
       it("should use full-width column", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-grid-column-full");
       });
 
       it("should use base template", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-grid-row");
       });
 
       it("should have proper spacing classes", () => {
-        const html = env.render("sscs-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "sscs-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-!-font-weight-bold");
         expect(html).toContain("govuk-!-margin-bottom-1");
         expect(html).toContain("govuk-!-margin-top-6");

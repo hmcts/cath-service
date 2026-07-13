@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy as cy, rcjStandardDailyCauseListEn as en } from "@hmcts/rcj-standard-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("mayor-city-civil-daily-cause-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -187,21 +184,21 @@ describe("mayor-city-civil-daily-cause-list template", () => {
 
     describe("Basic template rendering", () => {
       it("should render header with list title", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Test List Title");
         expect(html).toContain('<h1 class="govuk-heading-l" id="top">');
       });
 
       it("should render fact link section", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
       });
 
       it("should render all location lines", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Mayor &amp; City");
         expect(html).toContain("Guildhall Buildings");
@@ -210,14 +207,14 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render list date and last updated", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("List for 13 July 2026");
         expect(html).toContain("Last updated 13 July 2026 at 9:00am");
       });
 
       it("should render important information details", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Important information");
         expect(html).toContain("Central London County Court");
@@ -225,14 +222,14 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render search box", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
       });
 
       it("should render table headers", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
@@ -244,13 +241,13 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render data source footer", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Data source: Test Source");
       });
 
       it("should render back to top link", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('<a href="#top"');
         expect(html).toContain("Back to top");
@@ -259,7 +256,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
 
     describe("Hearing data variations", () => {
       it("should render single hearing", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", {
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -284,7 +281,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render multiple hearings", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", {
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -315,7 +312,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", {
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -325,7 +322,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should handle empty hearing fields", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", {
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -345,7 +342,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should escape special characters in hearing data", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", {
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -367,13 +364,13 @@ describe("mayor-city-civil-daily-cause-list template", () => {
 
     describe("Important information variations", () => {
       it("should render details component as open by default", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('<details class="govuk-details" open>');
       });
 
       it("should render both hearings info and media observers text", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Central London County Court");
         expect(html).toContain("enquiries.centrallondon.countycourt@justice.gov.uk");
@@ -382,27 +379,27 @@ describe("mayor-city-civil-daily-cause-list template", () => {
 
     describe("Accessibility features", () => {
       it("should have aria-label on search input", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('aria-label="Search by case number, details, venue, judge, or other information"');
       });
 
       it("should have role=table and aria-label on hearings table", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="Test List Title"');
       });
 
       it("should have id=top for back to top anchor", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('id="top"');
         expect(html).toContain('<a href="#top"');
       });
 
       it("should have govuk-visually-hidden label for search", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain('class="govuk-label govuk-visually-hidden"');
         expect(html).toContain('for="case-search-input"');
@@ -424,7 +421,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       };
 
       it("should render with Welsh content", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", welshTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", welshTemplateData);
 
         expect(html).toContain("Rhestr Achosion Dyddiol y Llys Sifil");
         expect(html).toContain("Gwybodaeth bwysig");
@@ -432,7 +429,7 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render Welsh table headers", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", welshTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", welshTemplateData);
 
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Barnwr");
@@ -444,14 +441,14 @@ describe("mayor-city-civil-daily-cause-list template", () => {
       });
 
       it("should render Welsh footer text", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", welshTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", welshTemplateData);
 
         expect(html).toContain("Ffynhonnell data: Ffynhonnell Prawf");
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
 
       it("should render Welsh list date metadata", () => {
-        const html = env.render("mayor-city-civil-daily-cause-list.njk", welshTemplateData);
+        const { html } = render(env, "mayor-city-civil-daily-cause-list.njk", welshTemplateData);
 
         expect(html).toContain("Rhestr ar gyfer 13 Gorffennaf 2026");
         expect(html).toContain("Diweddarwyd ddiwethaf 13 Gorffennaf 2026 am 9:00am");

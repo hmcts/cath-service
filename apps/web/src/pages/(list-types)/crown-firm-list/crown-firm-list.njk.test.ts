@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { crownFirmListCy as cy, crownFirmListEn as en } from "@hmcts/crown-firm-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("crown-firm-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -343,7 +340,7 @@ describe("crown-firm-list template", () => {
 
     describe("Header variations", () => {
       it("should render header with version", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -359,7 +356,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render header without version", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -373,7 +370,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render address lines", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: []
         });
@@ -386,7 +383,7 @@ describe("crown-firm-list template", () => {
 
     describe("Day group and court house variations", () => {
       it("should render day group with full court house info", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -411,7 +408,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render day group without phone", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -436,7 +433,7 @@ describe("crown-firm-list template", () => {
 
     describe("Sitting variations", () => {
       it("should render sitting with judiciary", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -464,7 +461,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render sitting without judiciary", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -495,7 +492,7 @@ describe("crown-firm-list template", () => {
 
     describe("Case and hearing variations", () => {
       it("should render case with all fields", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -542,7 +539,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render case with empty optional fields", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -588,7 +585,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render reporting restriction row when present", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -631,7 +628,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should not render reporting restriction row when empty", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -676,7 +673,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render multiple cases in one hearing", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -730,7 +727,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render multiple hearings in one sitting", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: [
             {
@@ -792,7 +789,7 @@ describe("crown-firm-list template", () => {
 
     describe("Reporting restrictions section", () => {
       it("should render reporting restrictions section", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: []
         });
@@ -807,7 +804,7 @@ describe("crown-firm-list template", () => {
 
     describe("Search and navigation", () => {
       it("should render search input", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: []
         });
@@ -818,7 +815,7 @@ describe("crown-firm-list template", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           groupedListData: []
         });
@@ -830,7 +827,7 @@ describe("crown-firm-list template", () => {
 
     describe("Data source", () => {
       it("should render data source", () => {
-        const html = env.render("crown-firm-list.njk", {
+        const { html } = render(env, "crown-firm-list.njk", {
           ...baseTemplateData,
           dataSource: "CRIME",
           groupedListData: []

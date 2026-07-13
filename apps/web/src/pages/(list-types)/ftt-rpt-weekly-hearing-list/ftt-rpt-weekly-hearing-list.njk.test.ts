@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fttRptWeeklyHearingListCy as cy, fttRptWeeklyHearingListEn as en } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import { render } from "@hmcts/test-support";
 import nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
@@ -178,7 +179,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const dataSource = "RPT";
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(header.listTitle);
@@ -197,7 +198,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('<h1 class="govuk-heading-l"');
@@ -213,7 +214,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(en.factLinkText);
@@ -228,7 +229,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -245,7 +246,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('data-module="govuk-details"');
@@ -258,7 +259,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(en.searchCasesTitle);
@@ -273,7 +274,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('<table class="govuk-table"');
@@ -295,7 +296,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(en.backToTop);
@@ -310,7 +311,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const dataSource = "RPT";
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(en.dataSource);
@@ -331,7 +332,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(header.listTitle);
@@ -345,7 +346,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(cy.tableHeaders.date);
@@ -361,7 +362,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings: unknown[] = [];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -375,7 +376,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(hearings[0].caseReferenceNumber);
@@ -394,7 +395,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("RPT/2024/001");
@@ -420,7 +421,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("15/03/2024");
@@ -446,7 +447,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -465,7 +466,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("Video hearing");
@@ -485,7 +486,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("Birmingham Tribunals Centre");
@@ -505,7 +506,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("Leasehold");
@@ -526,7 +527,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("9:00am");
@@ -546,7 +547,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("01/01/2024");
@@ -563,7 +564,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('role="table"');
@@ -577,7 +578,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-visually-hidden");
@@ -591,7 +592,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('<thead class="govuk-table__head">');
@@ -606,7 +607,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('id="top"');
@@ -621,7 +622,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-grid-row");
@@ -635,7 +636,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-heading-l");
@@ -649,7 +650,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-body");
@@ -662,7 +663,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-link");
@@ -675,7 +676,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -690,7 +691,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-input");
@@ -703,7 +704,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-table");
@@ -721,7 +722,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-form-group");
@@ -734,7 +735,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain("govuk-label");
@@ -749,7 +750,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain('target="_blank"');
@@ -763,7 +764,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(en.factLinkUrl);
@@ -776,7 +777,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
+        const { html } = render(env, "ftt-rpt-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "RPT" });
 
         // Assert
         expect(html).toContain(en.importantInformationLinkUrl);

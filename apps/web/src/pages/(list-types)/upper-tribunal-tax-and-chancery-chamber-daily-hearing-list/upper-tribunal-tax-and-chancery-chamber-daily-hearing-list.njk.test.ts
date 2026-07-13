@@ -1,26 +1,23 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import {
   upperTribunalTaxAndChanceryChamberDailyHearingListCy,
   upperTribunalTaxAndChanceryChamberDailyHearingListEn
 } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -218,26 +215,26 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
 
     describe("Page header", () => {
       it("should render page title as h1", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('<h1 class="govuk-heading-l" id="top">');
         expect(html).toContain("Upper Tribunal Tax and Chancery Chamber Daily Hearing List");
       });
 
       it("should render FACT link", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales, and some non-devolved tribunals in Scotland.");
       });
 
       it("should render list date", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("10 July 2026");
       });
 
       it("should render last updated date and time", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Last updated");
         expect(html).toContain("10 July 2026");
         expect(html).toContain("at");
@@ -247,17 +244,17 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
 
     describe("Opening statement details", () => {
       it("should render opening statement title", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Important information");
       });
 
       it("should render contact text with email", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("uttc@justice.gov.uk");
       });
 
       it("should render observe link with correct URL", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Observe a court or tribunal hearing");
         expect(html).toContain("https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing");
         expect(html).toContain('target="_blank"');
@@ -265,38 +262,38 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
       });
 
       it("should have details element open by default", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('<details class="govuk-details govuk-!-margin-top-6" data-module="govuk-details" open>');
       });
     });
 
     describe("Search section", () => {
       it("should render search cases heading", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Search Cases");
       });
 
       it("should render search input with label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('name="search"');
         expect(html).toContain("Search by case reference, case name, judge, venue, or other details");
       });
 
       it("should have visually hidden label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('class="govuk-label govuk-visually-hidden"');
       });
 
       it("should have aria-label on search input", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('aria-label="Search by case reference, case name, judge, venue, or other details"');
       });
     });
 
     describe("Hearings table", () => {
       it("should render table with correct headers", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Time");
         expect(html).toContain("Case reference number");
         expect(html).toContain("Case name");
@@ -308,13 +305,13 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
       });
 
       it("should render table with aria-label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="Upper Tribunal Tax and Chancery Chamber Daily Hearing List"');
       });
 
       it("should render empty tbody when no hearings", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('<tbody class="govuk-table__body">');
         expect(html).toContain("</tbody>");
       });
@@ -335,7 +332,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("TC/2026/12345");
         expect(html).toContain("Smith v HMRC");
@@ -372,7 +369,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("TC/2026/12345");
         expect(html).toContain("Smith v HMRC");
@@ -397,7 +394,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("TC/2026/12345");
         expect(html).toContain("Smith v HMRC");
@@ -419,7 +416,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("Judge John Doe, Judge Jane Smith");
         expect(html).toContain("Robert Brown, Sarah Wilson");
       });
@@ -427,7 +424,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
 
     describe("Data source", () => {
       it("should render data source with label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Data source");
         expect(html).toContain("Manual Upload");
       });
@@ -437,37 +434,37 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
           ...baseData,
           dataSource: "XHIBIT"
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("XHIBIT");
       });
 
       it("should render data source in small text", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('class="govuk-body-s govuk-!-margin-top-6"');
       });
     });
 
     describe("Back to top link", () => {
       it("should render back to top link", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
 
       it("should have back-to-top class wrapper", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('<div class="back-to-top">');
       });
 
       it("should render as a govuk-link", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain('class="govuk-link"');
       });
     });
 
     describe("Custom styles", () => {
       it("should include custom back-to-top style in head block", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", baseData);
         expect(html).toContain(".back-to-top {");
         expect(html).toContain("margin-top: 40px;");
       });
@@ -490,33 +487,33 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
       };
 
       it("should render Welsh page title", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri");
       });
 
       it("should render Welsh list date label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Rhestr ar gyfer");
       });
 
       it("should render Welsh last updated text", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("am");
       });
 
       it("should render Welsh opening statement title", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Gwybodaeth bwysig");
       });
 
       it("should render Welsh search cases heading", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Chwilio Achosion");
       });
 
       it("should render Welsh table headers", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Amser");
         expect(html).toContain("Rhif cyfeirnod achos");
         expect(html).toContain("Enw&#39;r achos");
@@ -528,24 +525,24 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
       });
 
       it("should render Welsh data source label", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Ffynhonnell data");
         expect(html).toContain("Llwytho â Llaw");
       });
 
       it("should render Welsh back to top link", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
 
       it("should render Welsh FACT link text", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
         expect(html).toContain("yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.");
       });
 
       it("should render Welsh observe link text", () => {
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", welshData);
         expect(html).toContain("Arsylwi gwrandawiad llys neu dribiwnlys");
       });
     });
@@ -567,7 +564,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain(
           "A Very Long Case Name Involving Multiple Parties and Complex Tax Matters Including International Transactions and Transfer Pricing"
         );
@@ -589,7 +586,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("O&#39;Brien &amp; Smith v HMRC");
         expect(html).toContain("Judge Mary O&#39;Connor");
       });
@@ -599,7 +596,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
           ...baseData,
           hearings: []
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain('<tbody class="govuk-table__body">');
         expect(html).not.toContain("10:00am");
       });
@@ -620,7 +617,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("TC/2026/12345");
         expect(html).toContain("Smith v HMRC");
@@ -632,7 +629,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
           ...baseData,
           dataSource: ""
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("Data source:");
       });
 
@@ -653,7 +650,7 @@ describe("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", () =>
             }
           ]
         };
-        const html = env.render("upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
+        const { html } = render(env, "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list.njk", data);
         expect(html).toContain("This is a remote hearing");
         expect(html).toContain("test your connection in advance");
       });

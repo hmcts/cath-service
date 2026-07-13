@@ -4,23 +4,20 @@ import {
   londonAdministrativeCourtDailyCauseListCy as cy,
   londonAdministrativeCourtDailyCauseListEn as en
 } from "@hmcts/london-administrative-court-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("London Administrative Court Daily Cause List template", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -191,7 +188,7 @@ describe("London Administrative Court Daily Cause List template", () => {
 
     describe("Header section", () => {
       it("should render title as h1 with anchor", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -206,7 +203,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render FACT link", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -222,7 +219,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render venue location lines", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -238,7 +235,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render list date", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -253,7 +250,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render last updated information", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -272,7 +269,7 @@ describe("London Administrative Court Daily Cause List template", () => {
 
     describe("Important information section", () => {
       it("should render details component open by default", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -287,7 +284,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render important information title", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -301,7 +298,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render important information text", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -315,7 +312,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render judgments section heading", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -329,7 +326,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render judgments text", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -345,7 +342,7 @@ describe("London Administrative Court Daily Cause List template", () => {
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -361,7 +358,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render search title", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -375,7 +372,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render search label with aria-label", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -389,7 +386,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should have visually hidden label for accessibility", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -427,7 +424,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       ];
 
       it("should render table with correct role and aria-label when hearings exist", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -443,7 +440,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render all table headers", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -463,7 +460,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should use scope=col for header cells", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -478,7 +475,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render single hearing row", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -498,7 +495,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render multiple hearing rows", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -513,7 +510,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render empty additional information", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -529,7 +526,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should show no hearings message when main hearings empty", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -567,7 +564,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       ];
 
       it("should render planning court heading", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -581,7 +578,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render planning court section with section-divider class", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -596,7 +593,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render planning court table with correct aria-label", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -610,7 +607,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render single planning court hearing", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -627,7 +624,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render multiple planning court hearings", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -642,7 +639,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should show no hearings message when planning court empty", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -657,7 +654,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render planning court heading even when empty", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -698,7 +695,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       ];
 
       it("should render both sections when both have hearings", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -715,7 +712,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should show main hearings table and planning court no hearings message", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -732,7 +729,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should show main hearings no hearings message and planning court table", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -750,7 +747,7 @@ describe("London Administrative Court Daily Cause List template", () => {
 
     describe("Footer section", () => {
       it("should render data source", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -765,7 +762,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -780,7 +777,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should have back-to-top class for styling", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -803,7 +800,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       };
 
       it("should render with Welsh content when t is cy", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: cy,
@@ -822,7 +819,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should render Welsh venue location", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: cy,
@@ -843,7 +840,7 @@ describe("London Administrative Court Daily Cause List template", () => {
           lastUpdatedTime: "12:00pm"
         };
 
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: cy,
@@ -870,7 +867,7 @@ describe("London Administrative Court Daily Cause List template", () => {
           }
         ];
 
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: cy,
@@ -892,7 +889,7 @@ describe("London Administrative Court Daily Cause List template", () => {
 
     describe("Accessibility", () => {
       it("should have GOV.UK grid structure", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -907,7 +904,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should have proper heading hierarchy", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -935,7 +932,7 @@ describe("London Administrative Court Daily Cause List template", () => {
           }
         ];
 
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -952,7 +949,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       });
 
       it("should use semantic HTML5 elements", () => {
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,
@@ -980,7 +977,7 @@ describe("London Administrative Court Daily Cause List template", () => {
           }
         ];
 
-        const html = env.render("london-administrative-court-daily-cause-list.njk", {
+        const { html } = render(env, "london-administrative-court-daily-cause-list.njk", {
           en,
           cy,
           t: en,

@@ -1,24 +1,21 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { crownWarnedListCy, crownWarnedListEn } from "@hmcts/crown-warned-list";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.join(webCoreModuleRoot, "views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("crown-warned-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -207,13 +204,13 @@ describe("crown-warned-list.njk", () => {
 
     describe("Header section", () => {
       it("should render page title with location name", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Crown Warned List for");
         expect(html).toContain("Birmingham Crown Court");
       });
 
       it("should render address lines", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("The Priory Courts");
         expect(html).toContain("33 Bull Street");
         expect(html).toContain("Birmingham");
@@ -221,18 +218,18 @@ describe("crown-warned-list.njk", () => {
       });
 
       it("should render date range", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("15 January 2026 to 19 January 2026");
       });
 
       it("should render last updated date", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Last updated");
         expect(html).toContain("14 January 2026 at 12:00pm");
       });
 
       it("should render version when present", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Version");
         expect(html).toContain("1.0");
       });
@@ -242,12 +239,12 @@ describe("crown-warned-list.njk", () => {
           ...baseData,
           header: { ...baseData.header, version: "" }
         };
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).not.toContain("Version");
       });
 
       it("should render FACT link", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
       });
@@ -255,13 +252,13 @@ describe("crown-warned-list.njk", () => {
 
     describe("Pre-statement section", () => {
       it("should render week commencing statement when present", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("The undermentioned cases are warned for the hearing period of week commencing");
         expect(html).toContain("13 January 2026");
       });
 
       it("should render pre-statement suffix paragraphs", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Listing Officer immediately");
         expect(html).toContain("Crown Prosecution Service unless otherwise stated");
         expect(html).toContain("*denotes a defendant in custody");
@@ -272,14 +269,14 @@ describe("crown-warned-list.njk", () => {
           ...baseData,
           header: { ...baseData.header, weekCommencing: "" }
         };
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).not.toContain("The undermentioned cases are warned");
       });
     });
 
     describe("Reporting restrictions section", () => {
       it("should render reporting restrictions section", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Restrictions on publishing or writing about these cases");
         expect(html).toContain("govuk-warning-text");
         expect(html).toContain("Warning");
@@ -287,20 +284,20 @@ describe("crown-warned-list.njk", () => {
       });
 
       it("should render reporting restrictions contact information", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("the court directly");
         expect(html).toContain("HM Courts and Tribunals Service on 0330 808 4407");
       });
 
       it("should render reporting restrictions as list items", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("govuk-list govuk-list--bullet");
       });
     });
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('type="text"');
@@ -309,7 +306,7 @@ describe("crown-warned-list.njk", () => {
 
     describe("Empty categories", () => {
       it("should render with no categories", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain('id="court-lists-container"');
         expect(html).toContain("govuk-accordion");
       });
@@ -337,7 +334,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("For Trial");
         expect(html).toContain("govuk-accordion__section");
       });
@@ -363,7 +360,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("To be allocated");
         expect(html).not.toContain("TO_BE_ALLOCATED");
       });
@@ -403,7 +400,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("For Trial");
         expect(html).toContain("For Sentence");
       });
@@ -421,7 +418,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("Fixed For");
         expect(html).toContain("Case Reference");
         expect(html).toContain("Defendant Name(s)");
@@ -441,7 +438,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain('data-module="moj-sortable-table"');
         expect(html).toContain('aria-sort="none"');
       });
@@ -467,7 +464,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("15/01/2026");
         expect(html).toContain("T20267890");
         expect(html).toContain("John Smith, Jane Doe");
@@ -497,7 +494,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain('<span aria-hidden="true">*</span>');
         expect(html).toContain("John Smith");
       });
@@ -523,7 +520,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).not.toContain('<span aria-hidden="true">*</span>John Smith');
       });
 
@@ -548,7 +545,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("T20267890");
       });
 
@@ -591,7 +588,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("T20267890");
         expect(html).toContain("John Smith");
         expect(html).toContain("T20267891");
@@ -604,13 +601,13 @@ describe("crown-warned-list.njk", () => {
 
     describe("Footer section", () => {
       it("should render data source", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Data Source");
         expect(html).toContain("CPP");
       });
 
       it("should render back to top link", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
@@ -623,7 +620,7 @@ describe("crown-warned-list.njk", () => {
           t: crownWarnedListCy
         };
 
-        const html = env.render("crown-warned-list.njk", welshData);
+        const { html } = render(env, "crown-warned-list.njk", welshData);
         expect(html).toContain("Rhestr Rybuddiol y Goron ar gyfer");
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("Fersiwn");
@@ -652,7 +649,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", welshData);
+        const { html } = render(env, "crown-warned-list.njk", welshData);
         expect(html).toContain("Wedi&#39;i bennu ar gyfer");
         expect(html).toContain("Cyfeirnod Achos");
         expect(html).toContain("Enw(au) Diffynyddion");
@@ -667,7 +664,7 @@ describe("crown-warned-list.njk", () => {
           t: crownWarnedListCy
         };
 
-        const html = env.render("crown-warned-list.njk", welshData);
+        const { html } = render(env, "crown-warned-list.njk", welshData);
         expect(html).toContain("Mae&#39;r achosion a grybwyllir isod");
       });
 
@@ -693,14 +690,14 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", welshData);
+        const { html } = render(env, "crown-warned-list.njk", welshData);
         expect(html).toContain("I&#39;w ddyrannu");
       });
     });
 
     describe("Accordion component", () => {
       it("should render accordion container", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain('class="govuk-accordion"');
         expect(html).toContain('data-module="govuk-accordion"');
         expect(html).toContain('id="accordion-warned-list"');
@@ -717,7 +714,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("govuk-accordion__section--expanded");
       });
 
@@ -732,7 +729,7 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("govuk-accordion__section-header");
         expect(html).toContain("govuk-accordion__section-heading");
         expect(html).toContain("govuk-accordion__section-button");
@@ -749,14 +746,14 @@ describe("crown-warned-list.njk", () => {
           ]
         };
 
-        const html = env.render("crown-warned-list.njk", data);
+        const { html } = render(env, "crown-warned-list.njk", data);
         expect(html).toContain("govuk-accordion__section-content");
       });
     });
 
     describe("Custom styles", () => {
       it("should include custom CSS in head block", () => {
-        const html = env.render("crown-warned-list.njk", baseData);
+        const { html } = render(env, "crown-warned-list.njk", baseData);
         expect(html).toContain("govuk-accordion__controls");
         expect(html).toContain("no-wrap");
         expect(html).toContain("white-space: nowrap");

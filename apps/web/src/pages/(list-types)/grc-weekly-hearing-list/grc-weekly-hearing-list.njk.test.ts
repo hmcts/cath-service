@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { grcWeeklyHearingListCy as cy, grcWeeklyHearingListEn as en } from "@hmcts/grc-weekly-hearing-list";
+import { render } from "@hmcts/test-support";
 import nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
@@ -150,7 +151,7 @@ describe("grc-weekly-hearing-list template", () => {
         const dataSource = "GRC";
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(header.listTitle);
@@ -169,7 +170,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('<h1 class="govuk-heading-l"');
@@ -185,7 +186,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(en.factLinkText);
@@ -200,7 +201,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -220,7 +221,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('data-module="govuk-details"');
@@ -233,7 +234,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(en.searchCasesTitle);
@@ -248,7 +249,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('<table class="govuk-table"');
@@ -270,7 +271,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(en.backToTop);
@@ -285,7 +286,7 @@ describe("grc-weekly-hearing-list template", () => {
         const dataSource = "GRC";
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(en.dataSource);
@@ -306,7 +307,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(cy.listForWeekCommencing);
@@ -323,7 +324,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(cy.tableHeaders.additionalInformation);
@@ -338,7 +339,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings: unknown[] = [];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -352,7 +353,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(hearings[0].caseReferenceNumber);
@@ -371,7 +372,7 @@ describe("grc-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("GRC/2024/001");
@@ -397,7 +398,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("15/03/2024");
@@ -423,7 +424,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -442,7 +443,7 @@ describe("grc-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("Video hearing");
@@ -462,7 +463,7 @@ describe("grc-weekly-hearing-list template", () => {
         ];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("Birmingham Tribunals Centre");
@@ -479,7 +480,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('role="table"');
@@ -493,7 +494,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-visually-hidden");
@@ -507,7 +508,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('<thead class="govuk-table__head">');
@@ -522,7 +523,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('id="top"');
@@ -537,7 +538,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-grid-row");
@@ -551,7 +552,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-heading-l");
@@ -565,7 +566,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-body");
@@ -578,7 +579,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-link");
@@ -591,7 +592,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -606,7 +607,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-input");
@@ -619,7 +620,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-table");
@@ -637,7 +638,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-form-group");
@@ -650,7 +651,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain("govuk-label");
@@ -665,7 +666,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain('target="_blank"');
@@ -679,7 +680,7 @@ describe("grc-weekly-hearing-list template", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
+        const { html } = render(env, "grc-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "GRC" });
 
         // Assert
         expect(html).toContain(en.importantInformationLinkUrl);

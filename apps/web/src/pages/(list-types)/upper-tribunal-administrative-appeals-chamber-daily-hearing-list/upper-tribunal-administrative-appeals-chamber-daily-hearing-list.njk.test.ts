@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import {
   upperTribunalAdministrativeAppealsChamberDailyHearingListCy as cy,
   upperTribunalAdministrativeAppealsChamberDailyHearingListEn as en
 } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -16,12 +17,8 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -356,7 +353,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Header rendering", () => {
       it("should render header with list title", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -365,7 +362,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render hearing date", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -375,7 +372,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render last updated information", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -387,7 +384,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Opening statement details", () => {
       it("should render opening statement with all sections", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -401,7 +398,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render contact email addresses", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -413,7 +410,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Search functionality", () => {
       it("should render search input", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -423,7 +420,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render search label with accessibility attributes", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -434,7 +431,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Hearings table", () => {
       it("should render table with all headers", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -450,7 +447,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render hearing with all fields populated", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -477,7 +474,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render hearing with empty optional fields", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -502,7 +499,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render multiple hearings", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -547,7 +544,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -561,7 +558,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Footer elements", () => {
       it("should render data source", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           dataSource: "Manual Upload",
           hearings: []
@@ -572,7 +569,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render back to top link", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -582,7 +579,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should have anchor at top of page", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -593,7 +590,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Welsh translation", () => {
       it("should render with Welsh locale", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           t: cy,
           en,
           cy,
@@ -615,7 +612,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should render Welsh table headers", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           t: cy,
           en,
           cy,
@@ -642,7 +639,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Accessibility features", () => {
       it("should have proper table aria-label", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -652,7 +649,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should have proper heading structure", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -662,7 +659,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should have details element with module attribute", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -672,7 +669,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should have visually hidden search label", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -683,7 +680,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Custom styling", () => {
       it("should include custom back-to-top styles", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -695,7 +692,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
 
     describe("Data variations", () => {
       it("should handle long appellant names", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -715,7 +712,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should handle multiple judges", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -736,7 +733,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       });
 
       it("should handle special characters in data", () => {
-        const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+        const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -760,7 +757,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
         const dataSources = ["XHIBIT", "SNL", "Common Platform", "Manual Upload"];
 
         dataSources.forEach((source) => {
-          const html = env.render("upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
+          const { html } = render(env, "upper-tribunal-administrative-appeals-chamber-daily-hearing-list.njk", {
             ...baseTemplateData,
             dataSource: source,
             hearings: []

@@ -2,19 +2,15 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy, rcjStandardDailyCauseListEn } from "@hmcts/rcj-standard-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-const env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-  autoescape: true,
-  noCache: true
-});
+const env = createTestEnvironment([__dirname, webCoreViews]);
 
 describe("county-court-central-london-civil-daily-cause-list.njk", () => {
   describe("Template file", () => {
@@ -241,7 +237,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("County Court at Central London Civil Daily Cause List");
         expect(html).toContain("List for 15 January 2026");
@@ -264,7 +260,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Royal Courts of Justice");
         expect(html).toContain("Thomas More Building");
@@ -286,7 +282,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toMatch(/govuk-!-font-weight-bold.*Royal Courts of Justice/s);
         expect(html).toMatch(/govuk-!-margin-bottom-0.*Thomas More Building/s);
@@ -308,7 +304,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Important information");
         expect(html).toContain("Central London County Court");
@@ -329,7 +325,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("open");
         expect(html).toContain("govuk-details");
@@ -351,7 +347,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Search Cases");
         expect(html).toContain("case-search-input");
@@ -372,7 +368,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toMatch(/govuk-visually-hidden.*Search by case number/s);
       });
@@ -393,7 +389,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
@@ -418,7 +414,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         const headerMatches = html.match(/<th scope="col"/g);
         expect(headerMatches).toHaveLength(7);
@@ -440,7 +436,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("govuk-table__body");
         expect(html).not.toContain("<td");
@@ -470,7 +466,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Court 1");
         expect(html).toContain("Mr Justice Smith");
@@ -514,7 +510,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Court 1");
         expect(html).toContain("Court 2");
@@ -548,7 +544,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("AB123456");
         expect(html).toContain("10:00am");
@@ -572,7 +568,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Data source: Manual Upload");
       });
@@ -591,7 +587,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain('href="#top"');
         expect(html).toContain("Back to top");
@@ -611,7 +607,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "CPP"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Data source: CPP");
       });
@@ -632,7 +628,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
@@ -655,7 +651,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain('aria-label="County Court at Central London Civil Daily Cause List"');
       });
@@ -674,7 +670,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain('id="top"');
       });
@@ -698,7 +694,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Llwytho â Llaw"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Rhestr Achosion Dyddiol Sifil yn y Llys Sirol yng Nghanol Llundain");
         expect(html).toContain("Llysoedd Barn Brenhinol");
@@ -720,7 +716,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Llwytho â Llaw"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Barnwr");
@@ -745,7 +741,7 @@ describe("county-court-central-london-civil-daily-cause-list.njk", () => {
           dataSource: "Llwytho â Llaw"
         };
 
-        const html = env.render("county-court-central-london-civil-daily-cause-list.njk", data);
+        const { html } = render(env, "county-court-central-london-civil-daily-cause-list.njk", data);
 
         expect(html).toContain("Ffynhonnell data: Llwytho â Llaw");
         expect(html).toContain("Yn ôl i frig y dudalen");

@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy, rcjStandardDailyCauseListEn } from "@hmcts/rcj-standard-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("kings-bench-masters-daily-cause-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -307,27 +304,27 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
 
     describe("Page header", () => {
       it("should render page title", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("King&#39;s Bench Masters Daily Cause List");
         expect(html).toContain('id="top"');
       });
 
       it("should render FACT link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales");
       });
 
       it("should render location details", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Royal Courts of Justice");
         expect(html).toContain("Strand, London");
         expect(html).toContain("WC2A 2LL");
       });
 
       it("should render list date and time", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("10 July 2026");
         expect(html).toContain("Last updated");
@@ -338,64 +335,64 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
 
     describe("Important information details", () => {
       it("should render important information section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Important information");
       });
 
       it("should render press and public access section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Press and Public Access");
         expect(html).toContain("media representative");
         expect(html).toContain("Bear Garden");
       });
 
       it("should render press and public text with paragraph breaks", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("media representative");
         expect(html).toContain("press and public");
       });
 
       it("should render judgments section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Judgments");
         expect(html).toContain("Judgments handed down");
         expect(html).toContain("National Archives");
       });
 
       it("should render bundles section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Bundles");
         expect(html).toContain("In-person hearings");
         expect(html).toContain("Remote hearings");
       });
 
       it("should render bundles text with paragraph breaks", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Bear Garden");
         expect(html).toContain("3 days before");
       });
 
       it("should render in person hearings section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("In-Person Hearings");
         expect(html).toContain("masters' chambers");
         expect(html).toContain("6 attendees");
       });
 
       it("should render King's Bench Guide link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("King's Bench Guide");
         expect(html).toContain("judiciary.uk");
       });
 
       it("should render trial windows link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Current trial windows");
         expect(html).toContain("gov.uk");
       });
 
       it("should render details component as open by default", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-details");
         expect(html).toContain("open");
       });
@@ -403,37 +400,37 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
 
     describe("Search functionality", () => {
       it("should render search container", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("search-container");
       });
 
       it("should render search title", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Search Cases");
       });
 
       it("should render search input with correct attributes", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('name="search"');
         expect(html).toContain('type="text"');
       });
 
       it("should render visually hidden label for accessibility", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-visually-hidden");
         expect(html).toContain("Search by case number, details, venue, judge, or other information");
       });
 
       it("should have aria-label for accessibility", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain('aria-label="Search by case number, details, venue, judge, or other information"');
       });
     });
 
     describe("Hearings table", () => {
       it("should render table with all headers", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
         expect(html).toContain("Time");
@@ -444,14 +441,14 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
       });
 
       it("should have table accessibility attributes", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="King&#39;s Bench Masters Daily Cause List"');
         expect(html).toContain('id="hearings-table"');
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-table");
         expect(html).toContain("govuk-table__head");
         expect(html).toContain("govuk-table__body");
@@ -472,7 +469,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Master Smith");
         expect(html).toContain("10:00am");
@@ -506,7 +503,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Court Room 2");
         expect(html).toContain("Master Smith");
@@ -530,7 +527,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Master Smith");
         expect(html).toContain("KB-2026-001");
       });
@@ -550,7 +547,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("KB-2026-001");
       });
@@ -570,7 +567,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Case Management");
       });
@@ -578,12 +575,12 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
 
     describe("Data source", () => {
       it("should render data source label", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Data source");
       });
 
       it("should render data source value", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("XHIBIT");
       });
 
@@ -592,7 +589,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
           ...baseData,
           dataSource: "SNL"
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("SNL");
       });
 
@@ -601,20 +598,20 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
           ...baseData,
           dataSource: ""
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Data source");
       });
     });
 
     describe("Back to top link", () => {
       it("should render back to top link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
 
       it("should have correct CSS class", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("back-to-top");
       });
     });
@@ -650,76 +647,76 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
       };
 
       it("should render Welsh page title", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Rhestr Achosion Dyddiol Meistri Mainc y Brenin");
       });
 
       it("should render Welsh location details", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Llysoedd Barn Brenhinol");
       });
 
       it("should render Welsh FACT link text", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
       });
 
       it("should render Welsh date and time labels", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Rhestr ar gyfer");
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("am");
       });
 
       it("should render Welsh important information title", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Gwybodaeth bwysig");
       });
 
       it("should render Welsh press and public access section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Mynediad");
         expect(html).toContain("gynrychiolydd");
         expect(html).toContain("Bear Garden");
       });
 
       it("should render Welsh judgments section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Dyfarniadau");
         expect(html).toContain("Archifau Cenedlaethol");
       });
 
       it("should render Welsh bundles section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Bwnde");
         expect(html).toContain("Gwrandawiadau wyneb yn wyneb");
         expect(html).toContain("Gwrandawiadau o bell");
       });
 
       it("should render Welsh in person hearings section", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Gwrandawiadau Wyneb yn Wyneb");
         expect(html).toContain("siambrau");
         expect(html).toContain("6 mynychwr");
       });
 
       it("should render Welsh King's Bench Guide link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Canllaw Mainc y Brenin");
       });
 
       it("should render Welsh trial windows link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Cyfnodau treial cyfredol");
       });
 
       it("should render Welsh search title", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Chwilio Achosion");
       });
 
       it("should render Welsh table headers", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Barnwr");
         expect(html).toContain("Amser");
@@ -730,12 +727,12 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
       });
 
       it("should render Welsh data source label", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Ffynhonnell data");
       });
 
       it("should render Welsh back to top link", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", welshData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", welshData);
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
 
@@ -754,7 +751,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Ystafell Llys 1");
         expect(html).toContain("Meistr Smith");
         expect(html).toContain("Prawf v Enghraifft");
@@ -780,7 +777,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("very long case detail");
       });
 
@@ -799,7 +796,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Master O&#39;Brien");
         expect(html).toContain("Test &amp; Example &lt;Company&gt; Ltd");
       });
@@ -818,7 +815,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
           ...baseData,
           hearings
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Court Room 50");
       });
@@ -832,7 +829,7 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             lastUpdatedTime: ""
           }
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Last updated");
       });
 
@@ -845,12 +842,12 @@ describe("kings-bench-masters-daily-cause-list.njk", () => {
             locationLine3: ""
           }
         };
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", data);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", data);
         expect(html).toContain("Royal Courts of Justice");
       });
 
       it("should handle text with multiple paragraph breaks", () => {
-        const html = env.render("kings-bench-masters-daily-cause-list.njk", baseData);
+        const { html } = render(env, "kings-bench-masters-daily-cause-list.njk", baseData);
         expect(html).toContain("</p><p");
       });
     });

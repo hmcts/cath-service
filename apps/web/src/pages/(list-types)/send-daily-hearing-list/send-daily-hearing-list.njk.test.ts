@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sendDailyHearingListCy, sendDailyHearingListEn } from "@hmcts/send-daily-hearing-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("send-daily-hearing-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -163,26 +160,26 @@ describe("send-daily-hearing-list.njk", () => {
 
     describe("Header section", () => {
       it("should render page title", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List");
         expect(html).toContain('id="top"');
       });
 
       it("should render FACT link", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales, and some non-devolved tribunals in Scotland.");
       });
 
       it("should render list for date", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("15 January 2026");
       });
 
       it("should render last updated date and time", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Last updated");
         expect(html).toContain("14 January 2026");
         expect(html).toContain("at");
@@ -192,18 +189,18 @@ describe("send-daily-hearing-list.njk", () => {
 
     describe("Important information section", () => {
       it("should render important information details element", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Important information");
         expect(html).toContain("govuk-details");
       });
 
       it("should render details with open attribute", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("open");
       });
 
       it("should render all important information paragraphs", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
 
         sendDailyHearingListEn.importantInformationParagraphs.forEach((paragraph) => {
           expect(html).toContain(paragraph);
@@ -211,43 +208,43 @@ describe("send-daily-hearing-list.njk", () => {
       });
 
       it("should render SEND email address in important information", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("send@justice.gov.uk");
       });
     });
 
     describe("Search section", () => {
       it("should render search input", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('type="text"');
       });
 
       it("should render search input with aria-label", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain('aria-label="Search by case reference, respondent, venue, or other details"');
       });
 
       it("should render search label as visually hidden", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-visually-hidden");
       });
     });
 
     describe("Hearings table", () => {
       it("should render table with hearings-table id", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain('id="hearings-table"');
       });
 
       it("should render table with role attribute", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain('role="table"');
       });
 
       it("should render table headers", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Time");
         expect(html).toContain("Case reference number");
         expect(html).toContain("Respondent");
@@ -257,7 +254,7 @@ describe("send-daily-hearing-list.njk", () => {
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-table__body");
       });
     });
@@ -278,7 +275,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("10:00am");
         expect(html).toContain("SEND/2026/001");
         expect(html).toContain("Sample Local Authority");
@@ -310,7 +307,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("SEND/2026/001");
         expect(html).toContain("First Authority");
         expect(html).toContain("SEND/2026/002");
@@ -332,7 +329,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("SEND/2026/001");
         expect(html).toContain("Sample Authority");
       });
@@ -352,7 +349,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("Very Long Local Authority Name For Testing Purposes");
       });
 
@@ -371,7 +368,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("Authority &amp; Partner");
         expect(html).toContain("Room 1 - Building A");
       });
@@ -379,24 +376,24 @@ describe("send-daily-hearing-list.njk", () => {
 
     describe("Footer section", () => {
       it("should render data source label and value", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Data source");
         expect(html).toContain("Manual Upload");
       });
 
       it("should render data source with govuk-body-s class", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("govuk-body-s");
       });
 
       it("should render back to top link", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
 
       it("should render back to top with correct CSS class", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("back-to-top");
       });
     });
@@ -408,7 +405,7 @@ describe("send-daily-hearing-list.njk", () => {
           dataSource: "P&I"
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("P&amp;I");
       });
 
@@ -418,7 +415,7 @@ describe("send-daily-hearing-list.njk", () => {
           dataSource: ""
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("Data source");
       });
 
@@ -428,7 +425,7 @@ describe("send-daily-hearing-list.njk", () => {
           dataSource: "Publications and Information Directorate"
         };
 
-        const html = env.render("send-daily-hearing-list.njk", data);
+        const { html } = render(env, "send-daily-hearing-list.njk", data);
         expect(html).toContain("Publications and Information Directorate");
       });
     });
@@ -446,7 +443,7 @@ describe("send-daily-hearing-list.njk", () => {
           }
         };
 
-        const html = env.render("send-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "send-daily-hearing-list.njk", welshData);
         expect(html).toContain("Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)");
         expect(html).toContain("Rhestr ar gyfer");
         expect(html).toContain("Diweddarwyd ddiwethaf");
@@ -475,7 +472,7 @@ describe("send-daily-hearing-list.njk", () => {
           ]
         };
 
-        const html = env.render("send-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "send-daily-hearing-list.njk", welshData);
         expect(html).toContain("Amser");
         expect(html).toContain("Cyfeirnod yr achos");
         expect(html).toContain("Atebydd");
@@ -496,7 +493,7 @@ describe("send-daily-hearing-list.njk", () => {
           }
         };
 
-        const html = env.render("send-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "send-daily-hearing-list.njk", welshData);
         expect(html).toContain("Chwilio achosion");
       });
 
@@ -512,7 +509,7 @@ describe("send-daily-hearing-list.njk", () => {
           }
         };
 
-        const html = env.render("send-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "send-daily-hearing-list.njk", welshData);
         // Check that at least one paragraph is rendered (accounts for HTML encoding)
         expect(html).toContain("Gwybodaeth bwysig");
         expect(html).toContain("send@justice.gov.uk");
@@ -531,7 +528,7 @@ describe("send-daily-hearing-list.njk", () => {
           }
         };
 
-        const html = env.render("send-daily-hearing-list.njk", welshData);
+        const { html } = render(env, "send-daily-hearing-list.njk", welshData);
         expect(html).toContain("Ffynhonnell Data");
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
@@ -539,7 +536,7 @@ describe("send-daily-hearing-list.njk", () => {
 
     describe("Custom CSS styles", () => {
       it("should include custom back-to-top styling in head block", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("back-to-top");
         expect(html).toContain("margin-top: 40px");
       });
@@ -547,18 +544,18 @@ describe("send-daily-hearing-list.njk", () => {
 
     describe("Accessibility attributes", () => {
       it("should have aria-label on table", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain("aria-label=");
       });
 
       it("should have proper heading hierarchy", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain('class="govuk-heading-l"');
         expect(html).toContain('class="govuk-heading-s"');
       });
 
       it("should have scope attributes on table headers", () => {
-        const html = env.render("send-daily-hearing-list.njk", baseData);
+        const { html } = render(env, "send-daily-hearing-list.njk", baseData);
         expect(html).toContain('scope="col"');
       });
     });

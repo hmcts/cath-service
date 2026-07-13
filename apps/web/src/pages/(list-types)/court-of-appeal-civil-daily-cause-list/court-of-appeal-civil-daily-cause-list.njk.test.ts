@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { courtOfAppealCivilDailyCauseListCy as cy, courtOfAppealCivilDailyCauseListEn as en } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("court-of-appeal-civil-daily-cause-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -180,7 +177,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
 
     describe("Header section", () => {
       it("should render header with list title", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -193,7 +190,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render fact link with URL", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -206,7 +203,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render location details", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -220,7 +217,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render list date and last updated information", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -238,7 +235,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
 
     describe("Important information section", () => {
       it("should render govukDetails component with important information", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -255,7 +252,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render live streaming link in important information", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -269,7 +266,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
 
     describe("Search section", () => {
       it("should render search input with label", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -285,7 +282,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should have visually hidden label for screen readers", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -312,7 +309,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -353,7 +350,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -380,7 +377,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -398,7 +395,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render empty state when no daily hearings", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -423,7 +420,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -451,7 +448,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -496,7 +493,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -524,7 +521,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -538,7 +535,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render empty state when no future judgments", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -552,7 +549,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should have section divider class for future judgments", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -568,7 +565,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       it("should render data source", () => {
         const dataSource = "HMCTS Publishing Service";
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -581,7 +578,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -596,7 +593,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
 
     describe("Welsh language rendering", () => {
       it("should render all Welsh text correctly", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: cy,
           header: {
             listTitle: cy.pageTitle,
@@ -629,7 +626,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: cy,
           header: {
             listTitle: cy.pageTitle,
@@ -651,7 +648,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
 
     describe("GOV.UK Design System compliance", () => {
       it("should use GOV.UK grid classes", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -664,7 +661,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should use GOV.UK typography classes", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -680,7 +677,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should use GOV.UK spacing utilities", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -707,7 +704,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -724,7 +721,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should use GOV.UK input component classes", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -751,7 +748,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -764,7 +761,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should have proper heading hierarchy", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -778,7 +775,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should have visually hidden label for search input", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],
@@ -803,7 +800,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
           }
         ];
 
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings,
@@ -815,7 +812,7 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
       });
 
       it("should have anchor with id for back to top functionality", () => {
-        const html = env.render("court-of-appeal-civil-daily-cause-list.njk", {
+        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
           t: en,
           header: mockHeader,
           dailyHearings: [],

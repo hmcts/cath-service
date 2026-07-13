@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { render } from "@hmcts/test-support";
 import { londonTableHeaders, londonTableHeadersCy, utiacJrDailyHearingListCy, utiacJrDailyHearingListEn } from "@hmcts/utiac-jr-daily-hearing-list";
 import nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
@@ -236,7 +237,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List");
         expect(html).toContain("List for");
@@ -269,7 +270,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("Hearing time");
         expect(html).toContain("Case title");
@@ -310,7 +311,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("10:00am");
         expect(html).toContain("Smith v Secretary of State");
@@ -361,7 +362,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "XHIBIT"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("10:00am");
         expect(html).toContain("Smith v Secretary of State");
@@ -401,7 +402,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("Smith v Secretary of State");
         expect(html).toContain("JR/01234/2026");
@@ -428,7 +429,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Llwytho â llaw"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("10 Gorffennaf 2026");
@@ -457,7 +458,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Llwytho â llaw"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("Gwybodaeth ychwanegol");
       });
@@ -491,7 +492,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Llwytho â llaw"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("10:00am");
         expect(html).toContain("Smith v Secretary of State");
@@ -520,7 +521,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain('id="top"');
         expect(html).toContain('href="#top"');
@@ -544,7 +545,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain('aria-label="Search by case reference number, case title, judge, venue, or other details"');
         expect(html).toContain('id="case-search-input"');
@@ -568,7 +569,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain('aria-label="Test List Title"');
       });
@@ -591,7 +592,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain('<thead class="govuk-table__head">');
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -618,7 +619,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain('class="govuk-details');
         expect(html).toContain('data-module="govuk-details"');
@@ -646,7 +647,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing");
         expect(html).toContain('target="_blank"');
@@ -673,7 +674,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
           dataSource: "Manual Upload"
         };
 
-        const html = env.render("utiac-jr-london-daily-hearing-list.njk", templateData);
+        const { html } = render(env, "utiac-jr-london-daily-hearing-list.njk", templateData);
 
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("Find contact details and other information about courts and tribunals");

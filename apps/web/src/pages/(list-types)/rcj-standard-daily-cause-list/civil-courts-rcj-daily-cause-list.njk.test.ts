@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy, rcjStandardDailyCauseListEn } from "@hmcts/rcj-standard-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("civil-courts-rcj-daily-cause-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -226,27 +223,27 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
 
     describe("Page header", () => {
       it("should render page title", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Civil Courts at the Royal Courts of Justice Daily Cause List");
         expect(html).toContain('id="top"');
       });
 
       it("should render FACT link", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales");
       });
 
       it("should render location details", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Royal Courts of Justice");
         expect(html).toContain("Strand, London");
         expect(html).toContain("WC2A 2LL");
       });
 
       it("should render list date and time", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("List for");
         expect(html).toContain("10 July 2026");
         expect(html).toContain("Last updated");
@@ -257,29 +254,29 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
 
     describe("Important information details", () => {
       it("should render important information section", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Important information");
       });
 
       it("should render media inquiries text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("mediaenquiries.civilcourtsatthercj@justice.gov.uk");
         expect(html).toContain("Arrangements will then be made for you to attend");
       });
 
       it("should render open justice text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("principles of open justice");
       });
 
       it("should render court exclusion text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("exclude observers");
         expect(html).toContain("proper administration of justice");
       });
 
       it("should render details component as open by default", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-details");
         expect(html).toContain("open");
       });
@@ -287,37 +284,37 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
 
     describe("Search functionality", () => {
       it("should render search container", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("search-container");
       });
 
       it("should render search title", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Search Cases");
       });
 
       it("should render search input with correct attributes", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain('id="case-search-input"');
         expect(html).toContain('name="search"');
         expect(html).toContain('type="text"');
       });
 
       it("should render visually hidden label for accessibility", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-visually-hidden");
         expect(html).toContain("Search by case number, details, venue, judge, or other information");
       });
 
       it("should have aria-label for accessibility", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain('aria-label="Search by case number, details, venue, judge, or other information"');
       });
     });
 
     describe("Hearings table", () => {
       it("should render table with all headers", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
         expect(html).toContain("Time");
@@ -328,14 +325,14 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
       });
 
       it("should have table accessibility attributes", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="Civil Courts at the Royal Courts of Justice Daily Cause List"');
         expect(html).toContain('id="hearings-table"');
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("govuk-table");
         expect(html).toContain("govuk-table__head");
         expect(html).toContain("govuk-table__body");
@@ -356,7 +353,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Judge Smith");
         expect(html).toContain("10:00am");
@@ -390,7 +387,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Court Room 2");
         expect(html).toContain("Judge Smith");
@@ -414,7 +411,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Judge Smith");
         expect(html).toContain("AB-2026-001");
       });
@@ -434,7 +431,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("AB-2026-001");
       });
@@ -454,7 +451,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Hearing");
       });
@@ -462,12 +459,12 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
 
     describe("Data source", () => {
       it("should render data source label", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Data source");
       });
 
       it("should render data source value", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("XHIBIT");
       });
 
@@ -476,7 +473,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
           ...baseData,
           dataSource: "SNL"
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("SNL");
       });
 
@@ -485,20 +482,20 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
           ...baseData,
           dataSource: ""
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Data source");
       });
     });
 
     describe("Back to top link", () => {
       it("should render back to top link", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
       });
 
       it("should have correct CSS class", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", baseData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", baseData);
         expect(html).toContain("back-to-top");
       });
     });
@@ -525,55 +522,55 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
       };
 
       it("should render Welsh page title", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Rhestr Achosion Dyddiol Llys Sifil yn y Llysoedd Barn Brenhinol");
       });
 
       it("should render Welsh location details", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Llysoedd Barn Brenhinol");
       });
 
       it("should render Welsh FACT link text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
       });
 
       it("should render Welsh date and time labels", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Rhestr ar gyfer");
         expect(html).toContain("Diweddarwyd ddiwethaf");
         expect(html).toContain("am");
       });
 
       it("should render Welsh important information title", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Gwybodaeth bwysig");
       });
 
       it("should render Welsh media inquiries text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("mediaenquiries.civilcourtsatthercj@justice.gov.uk");
         expect(html).toContain("trefniadau i chi fynychu");
       });
 
       it("should render Welsh open justice text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("cyfiawnder agored");
       });
 
       it("should render Welsh court exclusion text", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("eithrio arsylwyr");
       });
 
       it("should render Welsh search title", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Chwilio Achosion");
       });
 
       it("should render Welsh table headers", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Barnwr");
         expect(html).toContain("Amser");
@@ -584,12 +581,12 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
       });
 
       it("should render Welsh data source label", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Ffynhonnell data");
       });
 
       it("should render Welsh back to top link", () => {
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", welshData);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", welshData);
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
 
@@ -608,7 +605,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Ystafell Llys 1");
         expect(html).toContain("Barnwr Smith");
         expect(html).toContain("Prawf v Enghraifft");
@@ -634,7 +631,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("very long case detail");
       });
 
@@ -653,7 +650,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             }
           ]
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Judge O&#39;Brien");
         expect(html).toContain("Test &amp; Example &lt;Company&gt; Ltd");
       });
@@ -672,7 +669,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
           ...baseData,
           hearings
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Court Room 50");
       });
@@ -686,7 +683,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             lastUpdatedTime: ""
           }
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Last updated");
       });
 
@@ -699,7 +696,7 @@ describe("civil-courts-rcj-daily-cause-list.njk", () => {
             locationLine3: ""
           }
         };
-        const html = env.render("civil-courts-rcj-daily-cause-list.njk", data);
+        const { html } = render(env, "civil-courts-rcj-daily-cause-list.njk", data);
         expect(html).toContain("Royal Courts of Justice");
       });
     });

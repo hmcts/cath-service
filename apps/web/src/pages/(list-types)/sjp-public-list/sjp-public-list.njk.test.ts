@@ -1,23 +1,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sjpPublicListCy, sjpPublicListEn } from "@hmcts/sjp-public-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("sjp-public-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
 
     // Add custom filters for date/time formatting
     env.addFilter("date", (value: string | Date) => {
@@ -246,7 +243,7 @@ describe("sjp-public-list.njk", () => {
 
     describe("Page header", () => {
       it("should render page title", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Single Justice Procedure cases that are ready for hearing (Full list)");
       });
 
@@ -255,12 +252,12 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           title: sjpPublicListEn.SJP_DELTA_PUBLIC_LIST.title
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Single Justice Procedure cases that are ready for hearing (New cases)");
       });
 
       it("should render FACT link", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("in England and Wales");
@@ -271,14 +268,14 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           totalCases: 42
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("List containing");
         expect(html).toContain("42");
         expect(html).toContain("case(s)");
       });
 
       it("should render generated date and time", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("generated on");
         expect(html).toContain("10 July 2026");
         expect(html).toContain("at");
@@ -288,7 +285,7 @@ describe("sjp-public-list.njk", () => {
 
     describe("Filter button", () => {
       it("should render show filters button when filters are hidden", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Show filters");
         expect(html).toContain('id="filter-toggle"');
       });
@@ -298,7 +295,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           showFilter: true
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Hide filters");
       });
 
@@ -310,7 +307,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Hide filters");
       });
 
@@ -322,14 +319,14 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Hide filters");
       });
     });
 
     describe("Pagination", () => {
       it("should not render pagination when only one page", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).not.toContain("govuk-pagination");
       });
 
@@ -344,7 +341,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3, 4, 5]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("govuk-pagination");
         expect(html).toContain("Previous");
         expect(html).toContain("Next");
@@ -361,7 +358,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain("govuk-pagination__prev");
       });
 
@@ -376,7 +373,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain("govuk-pagination__next");
       });
 
@@ -391,7 +388,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3, 4]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('aria-label="Page 1"');
         expect(html).toContain('aria-label="Page 2"');
         expect(html).toContain('aria-label="Page 3"');
@@ -409,7 +406,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('aria-current="page"');
         expect(html).toContain("govuk-pagination__item--current");
       });
@@ -429,7 +426,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("postcode=SW1A");
         expect(html).toContain("postcode=E1");
         expect(html).toContain("prosecutor=CPS");
@@ -439,7 +436,7 @@ describe("sjp-public-list.njk", () => {
 
     describe("Filter panel", () => {
       it("should be hidden by default", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain('class="filter-form layout-width-two-filters hidden"');
       });
 
@@ -448,7 +445,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           showFilter: true
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain('class="filter-form layout-width-two-filters hidden"');
       });
 
@@ -460,39 +457,39 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain('class="filter-form layout-width-two-filters hidden"');
       });
 
       it("should render filter title", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Filter");
       });
 
       it("should render selected filters heading", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Selected filters");
       });
 
       it("should render clear filters link", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Clear filters");
         expect(html).toContain("showFilter=true");
       });
 
       it("should render apply filters button", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Apply filters");
       });
 
       it("should render filter search input", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Search filters");
         expect(html).toContain('id="filter-search"');
       });
 
       it("should include hidden artefactId field", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain('name="artefactId"');
         expect(html).toContain('value="test-artefact-123"');
       });
@@ -500,7 +497,7 @@ describe("sjp-public-list.njk", () => {
 
     describe("Selected filter tags", () => {
       it("should not render tags when no filters selected", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).not.toContain('class="filter-tag"');
       });
 
@@ -512,7 +509,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("SW1A");
         expect(html).toContain("E1");
         expect(html).toContain('class="filter-tag"');
@@ -526,7 +523,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS", "TfL"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("CPS");
         expect(html).toContain("TfL");
         expect(html).toContain('class="filter-tag"');
@@ -540,7 +537,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('aria-label="Remove SW1A filter"');
         expect(html).toContain('aria-label="Remove CPS filter"');
         expect(html).toContain('class="filter-tag-remove"');
@@ -554,14 +551,14 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("prosecutor=CPS");
       });
     });
 
     describe("Postcode filter", () => {
       it("should render postcode filter heading", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Postcode");
         expect(html).toContain('id="postcodes-anchor"');
       });
@@ -571,7 +568,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           postcodeAreas: ["SW1A", "E1", "N1"]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("SW1A");
         expect(html).toContain("E1");
         expect(html).toContain("N1");
@@ -587,7 +584,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('value="SW1A" checked');
         expect(html).toContain('value="N1" checked');
       });
@@ -601,7 +598,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         const e1Regex = /value="E1"(?!.*checked)/;
         expect(html).toMatch(e1Regex);
       });
@@ -612,7 +609,7 @@ describe("sjp-public-list.njk", () => {
           postcodeAreas: ["SW1A"],
           hasLondonPostcodes: true
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("London Postcodes");
         expect(html).toContain('id="postcode-london"');
         expect(html).toContain('value="LONDON_POSTCODES"');
@@ -624,7 +621,7 @@ describe("sjp-public-list.njk", () => {
           postcodeAreas: ["SW1A"],
           hasLondonPostcodes: false
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain("London Postcodes");
       });
 
@@ -637,14 +634,14 @@ describe("sjp-public-list.njk", () => {
             prosecutors: []
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('value="LONDON_POSTCODES" checked');
       });
     });
 
     describe("Prosecutor filter", () => {
       it("should render prosecutor filter heading", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Prosecutor");
         expect(html).toContain('id="prosecutor-anchor"');
       });
@@ -654,7 +651,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           prosecutors: ["CPS", "TfL", "Local Authority"]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("CPS");
         expect(html).toContain("TfL");
         expect(html).toContain("Local Authority");
@@ -670,7 +667,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain('value="CPS" checked');
       });
 
@@ -683,7 +680,7 @@ describe("sjp-public-list.njk", () => {
             prosecutors: ["CPS"]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         const tflRegex = /value="TfL"(?!.*checked)/;
         expect(html).toMatch(tflRegex);
       });
@@ -703,7 +700,7 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "John Smith" }, { text: "SW1A 1AA" }, { text: "Speeding" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Name");
         expect(html).toContain("Postcode");
         expect(html).toContain("Offence");
@@ -724,7 +721,7 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "John Smith" }, { text: "SW1A 1AA" }, { text: "Speeding" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("John Smith");
         expect(html).toContain("SW1A 1AA");
         expect(html).toContain("Speeding");
@@ -753,7 +750,7 @@ describe("sjp-public-list.njk", () => {
             [{ text: "Jane Doe" }, { text: "E1 6AN" }, { text: "No insurance" }, { text: "TfL" }]
           ]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("John Smith");
         expect(html).toContain("Jane Doe");
         expect(html).toContain("SW1A 1AA");
@@ -773,7 +770,7 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "John Smith" }, { text: "" }, { text: "Speeding" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("John Smith");
         expect(html).toContain("Speeding");
       });
@@ -791,20 +788,20 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "John Smith" }, { text: "SW1A 1AA" }, { text: "" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("John Smith");
         expect(html).toContain("SW1A 1AA");
       });
 
       it("should render no cases found message when empty", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("No cases found");
       });
     });
 
     describe("Back to top link", () => {
       it("should render back to top link", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("Back to top");
         expect(html).toContain("back-to-top-link");
       });
@@ -812,30 +809,30 @@ describe("sjp-public-list.njk", () => {
 
     describe("JavaScript section", () => {
       it("should include filter toggle script", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("document.getElementById('filter-toggle')");
         expect(html).toContain("document.getElementById('filter-panel')");
         expect(html).toContain("document.getElementById('content-area')");
       });
 
       it("should include filter section toggle script", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("setupFilterToggle('postcodes-anchor', 'postcodes-link', 'postcodes-checkbox')");
         expect(html).toContain("setupFilterToggle('prosecutor-anchor', 'prosecutor-link', 'prosecutor-checkbox')");
       });
 
       it("should include CSP nonce in script tag", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain('nonce="test-nonce"');
       });
 
       it("should use correct hide filters text in script", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("filterToggle.textContent = 'Hide filters'");
       });
 
       it("should use correct show filters text in script", () => {
-        const html = env.render("sjp-public-list.njk", baseData);
+        const { html } = render(env, "sjp-public-list.njk", baseData);
         expect(html).toContain("filterToggle.textContent = 'Show filters'");
       });
     });
@@ -873,19 +870,19 @@ describe("sjp-public-list.njk", () => {
       };
 
       it("should render Welsh page title", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("Achosion Gweithdrefn Un Ynad sy&#39;n barod ar gyfer gwrandawiad (Rhestr Lawn)");
       });
 
       it("should render Welsh list summary", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("Rhestr sy&#39;n cynnwys");
         expect(html).toContain("a gynhyrchwyd ar");
         expect(html).toContain("am");
       });
 
       it("should render Welsh filter labels", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("Hidlydd");
         expect(html).toContain("Hidlwyr a ddewiswyd");
         expect(html).toContain("Dangos hidlwyr");
@@ -906,7 +903,7 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "John Smith" }, { text: "SW1A 1AA" }, { text: "Goryrru" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Enw");
         expect(html).toContain("Cod post");
         expect(html).toContain("Trosedd");
@@ -914,17 +911,17 @@ describe("sjp-public-list.njk", () => {
       });
 
       it("should render Welsh no cases found message", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("Dim achosion wedi&#39;u darganfod");
       });
 
       it("should render Welsh back to top link", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("Yn ôl i frig y dudalen");
       });
 
       it("should use Welsh text in JavaScript", () => {
-        const html = env.render("sjp-public-list.njk", welshData);
+        const { html } = render(env, "sjp-public-list.njk", welshData);
         expect(html).toContain("filterToggle.textContent = 'Cuddio hidlwyr'");
         expect(html).toContain("filterToggle.textContent = 'Dangos hidlwyr'");
       });
@@ -936,7 +933,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           totalCases: 0
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("0");
         expect(html).toContain("case(s)");
         expect(html).toContain("No cases found");
@@ -956,7 +953,7 @@ describe("sjp-public-list.njk", () => {
           ],
           casesRows: [[{ text: "Single Case" }, { text: "SW1A 1AA" }, { text: "Speeding" }, { text: "CPS" }]]
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("1");
         expect(html).toContain("case(s)");
         expect(html).toContain("Single Case");
@@ -967,7 +964,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           prosecutors: []
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Prosecutor");
         expect(html).toContain('id="prosecutor-checkbox"');
       });
@@ -977,7 +974,7 @@ describe("sjp-public-list.njk", () => {
           ...baseData,
           postcodeAreas: []
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).toContain("Postcode");
         expect(html).toContain('id="postcodes-checkbox"');
       });
@@ -994,7 +991,7 @@ describe("sjp-public-list.njk", () => {
             pageNumbers: [1, 2, 3, 4, 5]
           }
         };
-        const html = env.render("sjp-public-list.njk", data);
+        const { html } = render(env, "sjp-public-list.njk", data);
         expect(html).not.toContain("govuk-pagination__prev");
         expect(html).toContain("govuk-pagination__next");
       });

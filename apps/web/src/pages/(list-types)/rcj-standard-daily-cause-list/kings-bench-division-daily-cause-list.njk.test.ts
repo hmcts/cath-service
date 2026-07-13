@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy, rcjStandardDailyCauseListEn } from "@hmcts/rcj-standard-daily-cause-list";
+import { render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -293,7 +294,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("King&#39;s Bench Division Daily Cause List");
         expect(html).toContain('<h1 class="govuk-heading-l" id="top">');
@@ -313,7 +314,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Royal Courts of Justice");
         expect(html).toContain("Strand, London");
@@ -334,7 +335,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("List for");
         expect(html).toContain("10 July 2026");
@@ -359,7 +360,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Important information");
         expect(html).toContain("Remote hearings before a Judge");
@@ -382,7 +383,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("MS Teams");
         expect(html).toContain("kbjudgeslistingoffice@justice.gov.uk");
@@ -402,7 +403,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Remote hand-down");
         expect(html).toContain("The National Archives");
@@ -423,7 +424,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("In-person hearings");
         expect(html).toContain("3 days before the hearing");
@@ -444,7 +445,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         const paragraphCount = (html.match(/<p class="govuk-body">/g) || []).length;
         expect(paragraphCount).toBeGreaterThan(0);
@@ -466,7 +467,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
         expect(html).toContain("Find contact details and other information about courts and tribunals");
@@ -489,7 +490,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Search Cases");
         expect(html).toContain('id="case-search-input"');
@@ -511,7 +512,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("govuk-visually-hidden");
         expect(html).toContain("Search by case number, details, venue, judge, or other information");
@@ -533,7 +534,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
@@ -558,7 +559,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain('role="table"');
         expect(html).toContain('aria-label="King&#39;s Bench Division Daily Cause List"');
@@ -578,7 +579,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("<tbody");
         expect(html).toContain("</tbody>");
@@ -610,7 +611,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Court 1");
         expect(html).toContain("Mr Justice Smith");
@@ -663,7 +664,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("KB-2026-001234");
         expect(html).toContain("KB-2026-005678");
@@ -700,7 +701,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("KB-2026-001234");
         expect(html).toContain("Smith v Jones");
@@ -724,7 +725,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Data source");
         expect(html).toContain("Court Data Platform");
@@ -745,7 +746,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Court Data Platform"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Back to top");
         expect(html).toContain('href="#top"');
@@ -767,7 +768,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Platfform Data Llys"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Rhestr Achosion Dyddiol Adran Mainc y Brenin");
         expect(html).toContain("Llysoedd Barn Brenhinol");
@@ -793,7 +794,7 @@ describe("kings-bench-division-daily-cause-list.njk", () => {
           dataSource: "Platfform Data Llys"
         };
 
-        const html = env.render("kings-bench-division-daily-cause-list.njk", mockData);
+        const { html } = render(env, "kings-bench-division-daily-cause-list.njk", mockData);
 
         expect(html).toContain("Lleoliad");
         expect(html).toContain("Barnwr");

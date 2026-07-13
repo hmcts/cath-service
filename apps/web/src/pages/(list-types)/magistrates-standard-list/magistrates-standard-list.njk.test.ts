@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { magistratesStandardListCy as cy, magistratesStandardListEn as en } from "@hmcts/magistrates-standard-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("magistrates-standard-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -507,7 +504,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("No hearings scenario", () => {
       it("should render no hearings message when listData is empty", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: []
         });
@@ -518,7 +515,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Venue address variations", () => {
       it("should render venue address when present", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -533,7 +530,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should handle empty venue address array", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -549,7 +546,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Court room rendering", () => {
       it("should render court house name when present", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -565,7 +562,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render LJA when present", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -581,7 +578,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render without LJA when not present", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -599,7 +596,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Sitting variations", () => {
       it("should render sitting heading", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -619,7 +616,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render multiple sittings in accordion sections", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -646,7 +643,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Hearing variations", () => {
       it("should render hearing with all fields", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -700,7 +697,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render hearing without optional fields", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -738,7 +735,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render hearing with DOB only", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -775,7 +772,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render hearing with age only", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -814,7 +811,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Offence variations", () => {
       it("should render offence with all details", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -872,7 +869,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render offence with title only", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -912,7 +909,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render offence with code and title", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -953,7 +950,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should render multiple offences", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -1002,7 +999,7 @@ describe("magistrates-standard-list template", () => {
       });
 
       it("should not render offence without title", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {
@@ -1043,7 +1040,7 @@ describe("magistrates-standard-list template", () => {
 
     describe("Multiple hearings in sitting", () => {
       it("should render multiple hearings with border between them", () => {
-        const html = env.render("magistrates-standard-list.njk", {
+        const { html } = render(env, "magistrates-standard-list.njk", {
           ...baseTemplateData,
           listData: [
             {

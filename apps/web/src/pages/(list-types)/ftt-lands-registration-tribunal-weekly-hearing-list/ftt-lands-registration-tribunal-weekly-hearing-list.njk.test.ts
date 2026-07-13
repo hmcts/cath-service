@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fttLrtWeeklyHearingListCy as cy, fttLrtWeeklyHearingListEn as en } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -298,7 +295,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
 
     describe("Basic template rendering", () => {
       it("should render template with header information", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -310,7 +307,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render fact link", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -321,7 +318,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render important information details", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -332,7 +329,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render search input", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -342,7 +339,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render table headers", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -356,7 +353,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render data source", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -366,7 +363,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -378,7 +375,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
 
     describe("Hearing variations", () => {
       it("should render hearing with all fields populated", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -401,7 +398,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render multiple hearings", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -440,7 +437,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should render hearing with empty optional fields", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -460,7 +457,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should handle empty hearings array", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: []
         });
@@ -470,7 +467,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should handle long case names", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -490,7 +487,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should handle special characters in case names", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -509,7 +506,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should handle different venue/platform types", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -554,7 +551,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
       });
 
       it("should handle different hearing times", () => {
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", {
           ...baseTemplateData,
           hearings: [
             {
@@ -607,7 +604,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
           ]
         };
 
-        const html = env.render("ftt-lands-registration-tribunal-weekly-hearing-list.njk", welshTemplateData);
+        const { html } = render(env, "ftt-lands-registration-tribunal-weekly-hearing-list.njk", welshTemplateData);
 
         expect(html).toContain("First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List");
         expect(html).toContain("Dydd Llun 7 Gorffennaf 2026");

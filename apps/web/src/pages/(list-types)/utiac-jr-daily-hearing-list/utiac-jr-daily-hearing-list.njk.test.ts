@@ -1,20 +1,16 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { utiacJrDailyHearingListCy, utiacJrDailyHearingListEn } from "@hmcts/utiac-jr-daily-hearing-list";
-import nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-const env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-  autoescape: true,
-  noCache: true
-});
+const env = createTestEnvironment([__dirname, webCoreViews]);
 
 describe("utiac-jr-daily-hearing-list.njk", () => {
   describe("Template file", () => {
@@ -210,7 +206,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("With multiple hearings", () => {
       it("should render template with full hearing data", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull, mockHearingMinimal],
@@ -232,7 +228,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render template with minimal hearing data", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingMinimal],
@@ -247,7 +243,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render correct number of table rows", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull, mockHearingMinimal],
@@ -261,7 +257,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("With empty hearings array", () => {
       it("should render template with no hearings", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [],
@@ -277,7 +273,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Table headers rendering", () => {
       it("should render all table headers in correct order", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -305,7 +301,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Important information section", () => {
       it("should render important information details component", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -320,7 +316,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render details component with open attribute", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -333,7 +329,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Search functionality", () => {
       it("should render search input with correct attributes", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -349,7 +345,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Links and navigation", () => {
       it("should render FACT link correctly", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -362,7 +358,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render back to top link", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -374,7 +370,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render top anchor", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -387,7 +383,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Welsh translation rendering", () => {
       it("should render template with Welsh content", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListCy,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -405,7 +401,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Data source rendering", () => {
       it("should render data source text", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -419,7 +415,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
         const dataSources = ["Manual Upload", "Automated Import", "Court and Tribunal Hearings Service (CTHS)"];
 
         dataSources.forEach((source) => {
-          const html = env.render("utiac-jr-daily-hearing-list.njk", {
+          const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
             t: utiacJrDailyHearingListEn,
             header: mockHeader,
             hearings: [mockHearingFull],
@@ -433,7 +429,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
 
     describe("Accessibility attributes", () => {
       it("should render table with aria-label", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -445,7 +441,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render search input with aria-label", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],
@@ -456,7 +452,7 @@ describe("utiac-jr-daily-hearing-list.njk", () => {
       });
 
       it("should render visually hidden label for search input", () => {
-        const html = env.render("utiac-jr-daily-hearing-list.njk", {
+        const { html } = render(env, "utiac-jr-daily-hearing-list.njk", {
           t: utiacJrDailyHearingListEn,
           header: mockHeader,
           hearings: [mockHearingFull],

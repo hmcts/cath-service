@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { crownDailyListCy as cy, crownDailyListEn as en } from "@hmcts/crown-daily-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("crown-daily-cause-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -396,7 +393,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Header variations", () => {
       it("should render header with version", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -410,7 +407,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render header without version", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -425,7 +422,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render multiple address lines", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           header: {
             ...baseTemplateData.header,
@@ -443,7 +440,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Court house address variations", () => {
       it("should render court house with full address", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -469,7 +466,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render court house without phone number", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -496,7 +493,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Session judiciary variations", () => {
       it("should render session with judiciary", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -528,7 +525,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render session without judiciary", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -561,7 +558,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Table column variations", () => {
       it("should render table with listing notes column when session has listing notes", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -610,7 +607,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render table without listing notes column when session has no listing notes", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -661,7 +658,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Case variations", () => {
       it("should render multiple sittings with different times", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -728,7 +725,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render multiple hearings within a sitting", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -789,7 +786,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render multiple cases within a hearing", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -847,7 +844,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render case with reporting restriction", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -896,7 +893,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should not render reporting restriction row when empty", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -946,7 +943,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render reporting restriction with correct colspan when listing notes present", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -996,7 +993,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render reporting restriction with correct colspan when listing notes absent", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1047,7 +1044,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Multiple court lists", () => {
       it("should render multiple court houses", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1076,7 +1073,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render multiple accordions with unique IDs", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1127,7 +1124,7 @@ describe("crown-daily-cause-list template", () => {
 
     describe("Empty data variations", () => {
       it("should render with no court lists", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: { courtLists: [] }
         });
@@ -1138,7 +1135,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render court house with no court rooms", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1158,7 +1155,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render court room with no sessions", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [
@@ -1183,7 +1180,7 @@ describe("crown-daily-cause-list template", () => {
       });
 
       it("should render session with no sittings", () => {
-        const html = env.render("crown-daily-cause-list.njk", {
+        const { html } = render(env, "crown-daily-cause-list.njk", {
           ...baseTemplateData,
           listData: {
             courtLists: [

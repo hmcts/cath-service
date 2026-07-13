@@ -1,24 +1,21 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { cicWeeklyHearingListCy as cy, cicWeeklyHearingListEn as en } from "@hmcts/cic-weekly-hearing-list";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.join(webCoreModuleRoot, "views");
-const govukFrontend = path.join(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("cic-weekly-hearing-list.njk", () => {
   let env: nunjucks.Environment;
 
   beforeEach(() => {
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Locale content", () => {
@@ -133,7 +130,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const dataSource = "CRIME";
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(header.listTitle);
@@ -151,7 +148,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('<h1 class="govuk-heading-l"');
@@ -166,7 +163,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(en.factLinkText);
@@ -180,7 +177,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -198,7 +195,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(en.searchCasesTitle);
@@ -212,7 +209,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('<table class="govuk-table"');
@@ -232,7 +229,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(en.backToTop);
@@ -246,7 +243,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const dataSource = "CRIME";
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
 
         // Assert
         expect(html).toContain(en.dataSource);
@@ -266,7 +263,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(cy.listForWeekCommencing);
@@ -282,7 +279,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(cy.tableHeaders.date);
@@ -303,7 +300,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings: unknown[] = [];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -316,7 +313,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain(hearings[0].caseReferenceNumber);
@@ -334,7 +331,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         ];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("CIC/2024/001");
@@ -358,7 +355,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("15/03/2024");
@@ -382,7 +379,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [hearing];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('<tbody class="govuk-table__body">');
@@ -397,7 +394,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('role="table"');
@@ -410,7 +407,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-visually-hidden");
@@ -423,7 +420,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain('<thead class="govuk-table__head">');
@@ -439,7 +436,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-grid-row");
@@ -452,7 +449,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-heading-l");
@@ -465,7 +462,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-body");
@@ -477,7 +474,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-link");
@@ -489,7 +486,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-details");
@@ -503,7 +500,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-input");
@@ -515,7 +512,7 @@ describe("cic-weekly-hearing-list.njk", () => {
         const hearings = [createMockHearing()];
 
         // Act
-        const html = env.render("cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
+        const { html } = render(env, "cic-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "CRIME" });
 
         // Assert
         expect(html).toContain("govuk-table");

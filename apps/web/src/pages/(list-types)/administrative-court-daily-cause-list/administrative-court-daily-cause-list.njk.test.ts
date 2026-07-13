@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { administrativeCourtDailyCauseListCy as cy, administrativeCourtDailyCauseListEn as en } from "@hmcts/administrative-court-daily-cause-list";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,12 +14,8 @@ describe("administrative-court-daily-cause-list template", () => {
 
   beforeEach(() => {
     const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-    const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
-    env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-      autoescape: true,
-      noCache: true
-    });
+    env = createTestEnvironment([__dirname, webCoreViews]);
   });
 
   describe("Template file", () => {
@@ -443,7 +440,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Header rendering", () => {
       it("should render header with title and dates", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Birmingham Administrative Court Daily Cause List");
         expect(html).toContain("List for");
@@ -455,7 +452,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Fact link rendering", () => {
       it("should render fact link when present", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Find contact details and other information about courts and tribunals");
         expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
@@ -470,7 +467,7 @@ describe("administrative-court-daily-cause-list template", () => {
             factLinkText: ""
           }
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", dataWithoutFactLink);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", dataWithoutFactLink);
 
         expect(html).not.toContain("Find contact details and other information");
       });
@@ -478,7 +475,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Important information rendering", () => {
       it("should render important information details when present", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Important information");
         expect(html).toContain("Hearings take place in public");
@@ -490,7 +487,7 @@ describe("administrative-court-daily-cause-list template", () => {
           ...baseTemplateData,
           listTypeName: null
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", dataWithoutListTypeName);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", dataWithoutListTypeName);
 
         const detailsMatch = html.match(/govuk-details/g);
         expect(detailsMatch).toBeNull();
@@ -499,7 +496,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Search rendering", () => {
       it("should render search input", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Search Cases");
         expect(html).toContain("case-search-input");
@@ -509,7 +506,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Table rendering", () => {
       it("should render table headers", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Venue");
         expect(html).toContain("Judge");
@@ -521,7 +518,7 @@ describe("administrative-court-daily-cause-list template", () => {
       });
 
       it("should render empty table when no hearings", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("govuk-table");
         expect(html).toContain("hearings-table");
@@ -551,7 +548,7 @@ describe("administrative-court-daily-cause-list template", () => {
             }
           ]
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", dataWithHearings);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", dataWithHearings);
 
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Judge Smith");
@@ -572,7 +569,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Data source rendering", () => {
       it("should render data source", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Data source");
         expect(html).toContain("CPP");
@@ -581,7 +578,7 @@ describe("administrative-court-daily-cause-list template", () => {
 
     describe("Back to top rendering", () => {
       it("should render back to top link", () => {
-        const html = env.render("administrative-court-daily-cause-list.njk", baseTemplateData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", baseTemplateData);
 
         expect(html).toContain("Back to top");
         expect(html).toContain("#top");
@@ -601,7 +598,7 @@ describe("administrative-court-daily-cause-list template", () => {
             lastUpdatedTime: "9:00am"
           }
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", welshData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", welshData);
 
         expect(html).toContain("Rhestr Achosion Dyddiol Llys Gweinyddol Birmingham");
         expect(html).toContain("Gwybodaeth bwysig");
@@ -625,7 +622,7 @@ describe("administrative-court-daily-cause-list template", () => {
             listTitle: "Leeds Administrative Court Daily Cause List"
           }
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", leedsData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", leedsData);
 
         expect(html).toContain("Leeds Administrative Court Daily Cause List");
         expect(html).toContain("leeds@administrativecourtoffice.justice.gov.uk");
@@ -642,7 +639,7 @@ describe("administrative-court-daily-cause-list template", () => {
             listTitle: "Bristol and Cardiff Administrative Court Daily Cause List"
           }
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", bristolCardiffData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", bristolCardiffData);
 
         expect(html).toContain("Bristol and Cardiff Administrative Court Daily Cause List");
       });
@@ -657,7 +654,7 @@ describe("administrative-court-daily-cause-list template", () => {
             listTitle: "Manchester Administrative Court Daily Cause List"
           }
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", manchesterData);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", manchesterData);
 
         expect(html).toContain("Manchester Administrative Court Daily Cause List");
         expect(html).toContain("manchester@administrativecourtoffice.justice.gov.uk");
@@ -681,7 +678,7 @@ describe("administrative-court-daily-cause-list template", () => {
             }
           ]
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", dataWithEmptyStrings);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", dataWithEmptyStrings);
 
         expect(html).toContain("govuk-table");
       });
@@ -701,7 +698,7 @@ describe("administrative-court-daily-cause-list template", () => {
           ...baseTemplateData,
           hearings
         };
-        const html = env.render("administrative-court-daily-cause-list.njk", dataWithManyHearings);
+        const { html } = render(env, "administrative-court-daily-cause-list.njk", dataWithManyHearings);
 
         expect(html).toContain("Court Room 1");
         expect(html).toContain("Court Room 10");
