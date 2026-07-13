@@ -207,13 +207,13 @@ export async function hasDependencies(id: number, type: JurisdictionDataType): P
     }
     case "Sub-Jurisdiction": {
       const [locationCount, listTypeCount] = await Promise.all([
-        prisma.locationSubJurisdiction.count({ where: { subJurisdictionId: id } }),
+        prisma.locationSubJurisdiction.count({ where: { subJurisdictionId: id, location: { deletedAt: null } } }),
         prisma.listTypeSubJurisdiction.count({ where: { subJurisdictionId: id } })
       ]);
       return locationCount > 0 || listTypeCount > 0;
     }
     case "Region": {
-      const count = await prisma.locationRegion.count({ where: { regionId: id } });
+      const count = await prisma.locationRegion.count({ where: { regionId: id, location: { deletedAt: null } } });
       return count > 0;
     }
   }

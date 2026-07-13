@@ -309,7 +309,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(result).toBe(true);
-      expect(prisma.locationSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
+      expect(prisma.locationSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10, location: { deletedAt: null } } });
     });
 
     it("should return true when sub-jurisdiction is linked to list types", async () => {
@@ -346,7 +346,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(result).toBe(true);
-      expect(prisma.locationRegion.count).toHaveBeenCalledWith({ where: { regionId: 5 } });
+      expect(prisma.locationRegion.count).toHaveBeenCalledWith({ where: { regionId: 5, location: { deletedAt: null } } });
     });
   });
 
