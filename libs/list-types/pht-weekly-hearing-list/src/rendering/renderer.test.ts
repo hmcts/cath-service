@@ -26,8 +26,8 @@ describe("renderPhtData", () => {
     const result = renderPhtData(hearingList, options);
 
     expect(result.header.listTitle).toBe("Primary Health Tribunal Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("02 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
+    expect(result.header.weekCommencingDate).toBe("2 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
