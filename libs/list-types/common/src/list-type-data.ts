@@ -640,7 +640,7 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "magistrates-public-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
-    subJurisdictionIds: []
+    subJurisdictionIds: [7]
   },
   {
     id: 61,
@@ -651,6 +651,6 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "magistrates-public-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
-    subJurisdictionIds: []
+    subJurisdictionIds: [7]
   }
 ];
