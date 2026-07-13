@@ -31,5 +31,6 @@ export const en = {
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  backToTop: "Back to top"
 };
