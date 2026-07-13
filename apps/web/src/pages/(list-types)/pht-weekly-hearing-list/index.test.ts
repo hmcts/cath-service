@@ -3,19 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockValidate = vi.hoisted(() => vi.fn());
 
-vi.mock("@hmcts/list-types-common", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
-  return {
-    ...actual,
-    createJsonValidator: () => mockValidate,
-    provenanceLabelsEn: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" },
-    provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
-  };
-});
-
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({}),
+  validateJson: vi.fn().mockReturnValue({ isValid: true, errors: [] }),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -26,7 +19,8 @@ vi.mock("@hmcts/pht-weekly-hearing-list", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/pht-weekly-hearing-list")>();
   return {
     ...actual,
-    renderPhtData: vi.fn()
+    renderPhtData: vi.fn(),
+    validatePhtWeeklyHearingList: mockValidate
   };
 });
 

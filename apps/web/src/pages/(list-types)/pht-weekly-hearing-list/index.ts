@@ -1,14 +1,16 @@
-import { createJsonValidator } from "@hmcts/list-types-common";
-import { phtWeeklyHearingListCy as cy, phtWeeklyHearingListEn as en, type PhtHearingList, renderPhtData } from "@hmcts/pht-weekly-hearing-list";
-import { schemaPath } from "@hmcts/pht-weekly-hearing-list/config";
+import {
+  phtWeeklyHearingListCy as cy,
+  phtWeeklyHearingListEn as en,
+  type PhtHearingList,
+  renderPhtData,
+  validatePhtWeeklyHearingList
+} from "@hmcts/pht-weekly-hearing-list";
 import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
-
-const validate = createJsonValidator(schemaPath);
 
 export const GET = createSimpleListTypeHandler<PhtHearingList>({
   en,
   cy,
-  validate,
+  validate: validatePhtWeeklyHearingList,
   logPrefix: "pht-weekly-hearing-list",
   serverError: { errorTitle: "Server Error", errorMessage: "An error occurred while loading the list" },
   render: ({ artefact, jsonData, locale, res }) => {
