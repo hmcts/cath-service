@@ -1,4 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@hmcts/list-types-common", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
+  return { ...actual };
+});
+
+vi.mock("@hmcts/publication", () => ({
+  PROVENANCE_LABELS: {}
+}));
+
 import type { PhtHearingList } from "../models/types.js";
 import { renderPhtData } from "./renderer.js";
 
@@ -26,8 +36,8 @@ describe("renderPhtData", () => {
     const result = renderPhtData(hearingList, options);
 
     expect(result.header.listTitle).toBe("Primary Health Tribunal Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("2 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
+    expect(result.header.weekCommencingDate).toBe("02 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
