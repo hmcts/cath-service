@@ -152,7 +152,7 @@ describe("jurisdiction-data-delete page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "jurisdiction-data-delete/index",
         expect.objectContaining({
-          errors: [{ text: "This record cannot be deleted because it is linked to one or more locations", href: "#" }]
+          errors: [{ text: "This record cannot be deleted because it is linked to one or more sub-jurisdictions", href: "#" }]
         })
       );
     });
