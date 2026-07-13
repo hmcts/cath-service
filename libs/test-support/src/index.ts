@@ -5,6 +5,8 @@ export type { RenderResult } from "./nunjucks-test-helper.js";
 
 // Nunjucks test helpers for unit testing templates
 export {
+  assertErrorSummary,
+  assertNoErrors,
   createTestEnvironment,
   render
 } from "./nunjucks-test-helper.js";

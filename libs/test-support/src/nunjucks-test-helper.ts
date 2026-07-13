@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type CheerioAPI, load } from "cheerio";
 import nunjucks from "nunjucks";
+import { expect } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,4 +40,34 @@ export function render(env: nunjucks.Environment, template: string, data: Record
   const html = env.render(template, data);
   const $ = load(html);
   return { html, $ };
+}
+
+/**
+ * Assert that the rendered page contains no GOV.UK error summary
+ *
+ * @param $ - Cheerio instance for the rendered page
+ */
+export function assertNoErrors($: CheerioAPI): void {
+  expect($(".govuk-error-summary")).toHaveLength(0);
+}
+
+/**
+ * Assert that the rendered page shows a GOV.UK error summary containing the
+ * given messages
+ *
+ * @param $ - Cheerio instance for the rendered page
+ * @param expectedMessages - Error messages expected in the summary list
+ */
+export function assertErrorSummary($: CheerioAPI, expectedMessages: string[]): void {
+  const summary = $(".govuk-error-summary");
+  expect(summary).toHaveLength(1);
+
+  const listedErrors = summary
+    .find(".govuk-error-summary__list li")
+    .map((_, el) => $(el).text().trim())
+    .get();
+
+  for (const message of expectedMessages) {
+    expect(listedErrors).toContain(message);
+  }
 }
