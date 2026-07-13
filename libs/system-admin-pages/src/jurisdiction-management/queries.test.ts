@@ -252,25 +252,31 @@ describe("jurisdiction-management-queries", () => {
       expect(prisma.jurisdiction.delete).toHaveBeenCalledWith({ where: { jurisdictionId: 1 } });
     });
 
-    it("should hard delete a sub-jurisdiction", async () => {
+    it("should delete orphaned junction rows and hard delete a sub-jurisdiction in transaction", async () => {
       // Arrange
+      vi.mocked(prisma.locationSubJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as never);
       vi.mocked(prisma.subJurisdiction.delete).mockResolvedValue({} as never);
+      mockTransaction.mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops));
 
       // Act
       await hardDeleteJurisdictionRecord(10, "Sub-Jurisdiction");
 
       // Assert
+      expect(prisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
       expect(prisma.subJurisdiction.delete).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
     });
 
-    it("should hard delete a region", async () => {
+    it("should delete orphaned junction rows and hard delete a region in transaction", async () => {
       // Arrange
+      vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 1 } as never);
       vi.mocked(prisma.region.delete).mockResolvedValue({} as never);
+      mockTransaction.mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops));
 
       // Act
       await hardDeleteJurisdictionRecord(5, "Region");
 
       // Assert
+      expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({ where: { regionId: 5 } });
       expect(prisma.region.delete).toHaveBeenCalledWith({ where: { regionId: 5 } });
     });
   });

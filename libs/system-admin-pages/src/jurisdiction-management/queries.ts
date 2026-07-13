@@ -147,10 +147,13 @@ export async function hardDeleteJurisdictionRecord(id: number, type: Jurisdictio
       await prisma.jurisdiction.delete({ where: { jurisdictionId: id } });
       break;
     case "Sub-Jurisdiction":
-      await prisma.subJurisdiction.delete({ where: { subJurisdictionId: id } });
+      await prisma.$transaction([
+        prisma.locationSubJurisdiction.deleteMany({ where: { subJurisdictionId: id } }),
+        prisma.subJurisdiction.delete({ where: { subJurisdictionId: id } })
+      ]);
       break;
     case "Region":
-      await prisma.region.delete({ where: { regionId: id } });
+      await prisma.$transaction([prisma.locationRegion.deleteMany({ where: { regionId: id } }), prisma.region.delete({ where: { regionId: id } })]);
       break;
   }
 }
