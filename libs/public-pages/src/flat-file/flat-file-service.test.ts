@@ -4,6 +4,7 @@ import { getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.j
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getFileBuffer: vi.fn(),
+  getFileExtension: vi.fn(),
   getSourceArtefactId: vi.fn(),
   getContentType: vi.fn(),
   getFileName: vi.fn(),
