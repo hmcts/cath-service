@@ -5,7 +5,6 @@ import { renderUtlcDailyHearingListData } from "./renderer.js";
 describe("renderUtlcDailyHearingListData", () => {
   const baseOptions = {
     locale: "en",
-    courtName: "Upper Tribunal (Lands Chamber)",
     contentDate: new Date(2025, 0, 15),
     lastReceivedDate: "2025-01-15T09:55:00Z",
     listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing List"

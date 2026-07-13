@@ -117,7 +117,6 @@ describe("Upper Tribunal Lands Chamber page controller", () => {
       expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(renderUtlcDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        courtName: "Upper Tribunal (Lands Chamber)",
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing list"

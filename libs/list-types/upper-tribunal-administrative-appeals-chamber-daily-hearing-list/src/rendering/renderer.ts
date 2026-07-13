@@ -3,7 +3,6 @@ import type { UtaacHearing, UtaacHearingList } from "../models/types.js";
 
 export interface RenderOptions {
   locale: string;
-  courtName: string;
   contentDate: Date;
   lastReceivedDate: string;
   listTitle: string;

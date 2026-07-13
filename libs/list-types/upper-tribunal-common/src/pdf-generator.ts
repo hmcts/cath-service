@@ -11,7 +11,6 @@ import {
 
 export interface DailyHearingListRenderOptions {
   locale: string;
-  courtName: string;
   contentDate: Date;
   lastReceivedDate: string;
   listTitle: string;
@@ -23,8 +22,6 @@ export interface DailyHearingListRenderedData {
 }
 
 export function createUtDailyHearingListPdfGenerator<T>(
-  courtName: string,
-  listTitle: string,
   renderFn: (data: T, options: DailyHearingListRenderOptions) => DailyHearingListRenderedData,
   importEn: () => Promise<{ en: Record<string, unknown> }>,
   importCy: () => Promise<{ cy: Record<string, unknown> }>,
@@ -34,15 +31,14 @@ export function createUtDailyHearingListPdfGenerator<T>(
 ) {
   return async function generatePdf(options: BasePdfGenerationOptions<T> & { contentDate: Date }): Promise<PdfGenerationResult> {
     try {
+      const translations = await loadTranslations(options.locale, importEn, importCy);
+
       const renderedData = renderFn(options.jsonData, {
         locale: options.locale,
-        courtName,
         contentDate: options.contentDate,
         lastReceivedDate: new Date().toISOString(),
-        listTitle
+        listTitle: translations.pageTitle as string
       });
-
-      const translations = await loadTranslations(options.locale, importEn, importCy);
 
       const provenanceLabel = options.provenance ? provenanceLabels[options.provenance] || options.provenance : "";
 

@@ -116,7 +116,6 @@ describe("Upper Tribunal Administrative Appeals Chamber page controller", () => 
       expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(renderUtaacDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        courtName: "Upper Tribunal (Administrative Appeals Chamber)",
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing list"
