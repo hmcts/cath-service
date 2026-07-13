@@ -25,6 +25,10 @@ if [ -d "/mnt/secrets" ]; then
   done
 fi
 
+echo "Starting health proxy on port 5555..."
+node health-server.mjs &
+HEALTH_PID=$!
+
 echo "Resolving any failed migrations..."
 printf "UPDATE _prisma_migrations SET rolled_back_at = NOW() WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;" | \
   npx --ignore-scripts prisma db execute --stdin --config=./prisma.config.ts 2>/dev/null || true
@@ -46,10 +50,6 @@ for script in prisma/scripts/001_insert_missing_list_types.sql \
 done
 
 echo "Migrations completed successfully"
-echo "Starting health proxy on port 5555..."
-node health-server.mjs &
-HEALTH_PID=$!
-
 echo "Starting Prisma Studio on port 5556..."
 npx --ignore-scripts prisma studio --config=./prisma.config.ts --port 5556 --browser none &
 STUDIO_PID=$!

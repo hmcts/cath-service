@@ -5,7 +5,6 @@ import { renderUtccDailyHearingListData } from "./renderer.js";
 describe("renderUtccDailyHearingListData", () => {
   const baseOptions = {
     locale: "en",
-    courtName: "Upper Tribunal Tax and Chancery Chamber",
     contentDate: new Date(2025, 0, 15),
     lastReceivedDate: "2025-01-15T09:55:00Z",
     listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List"

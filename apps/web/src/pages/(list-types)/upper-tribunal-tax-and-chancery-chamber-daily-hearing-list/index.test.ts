@@ -116,7 +116,6 @@ describe("Upper Tribunal Tax and Chancery Chamber page controller", () => {
       expect(getPublicationJson).toHaveBeenCalledWith("test-artefact-123");
       expect(renderUtccDailyHearingListData).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        courtName: "Upper Tribunal Tax and Chancery Chamber",
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString(),
         listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing list"

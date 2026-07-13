@@ -154,10 +154,9 @@ describe("generateUtlcDailyHearingListPdf", () => {
 
     expect(renderUtlcDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "Upper Tribunal (Lands Chamber)",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing List"
+      listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)"
     });
   });
 });
