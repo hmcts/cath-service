@@ -3,8 +3,8 @@ import {
   createJurisdictionRecord,
   deleteLocationJurisdictions,
   findJurisdictionDataById,
+  getDependencyType,
   hardDeleteJurisdictionRecord,
-  hasDependencies,
   listAllJurisdictionData,
   updateJurisdictionRecord,
   updateLocationJurisdictions
@@ -281,78 +281,89 @@ describe("jurisdiction-management-queries", () => {
     });
   });
 
-  describe("hasDependencies", () => {
-    it("should return true when jurisdiction has sub-jurisdictions", async () => {
+  describe("getDependencyType", () => {
+    it("should return 'sub-jurisdictions' when jurisdiction has sub-jurisdictions", async () => {
       // Arrange
       vi.mocked(prisma.subJurisdiction.count).mockResolvedValue(3);
 
       // Act
-      const result = await hasDependencies(1, "Jurisdiction");
+      const result = await getDependencyType(1, "Jurisdiction");
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toBe("sub-jurisdictions");
       expect(prisma.subJurisdiction.count).toHaveBeenCalledWith({ where: { jurisdictionId: 1 } });
     });
 
-    it("should return false when jurisdiction has no sub-jurisdictions", async () => {
+    it("should return null when jurisdiction has no sub-jurisdictions", async () => {
       // Arrange
       vi.mocked(prisma.subJurisdiction.count).mockResolvedValue(0);
 
       // Act
-      const result = await hasDependencies(1, "Jurisdiction");
+      const result = await getDependencyType(1, "Jurisdiction");
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toBeNull();
     });
 
-    it("should return true when sub-jurisdiction is linked to locations", async () => {
+    it("should return 'locations' when sub-jurisdiction is linked to active locations", async () => {
       // Arrange
       vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(2);
       vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(0);
 
       // Act
-      const result = await hasDependencies(10, "Sub-Jurisdiction");
+      const result = await getDependencyType(10, "Sub-Jurisdiction");
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toBe("locations");
       expect(prisma.locationSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10, location: { deletedAt: null } } });
     });
 
-    it("should return true when sub-jurisdiction is linked to list types", async () => {
+    it("should return 'list-types' when sub-jurisdiction is linked to list types but no active locations", async () => {
       // Arrange
       vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(0);
       vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(1);
 
       // Act
-      const result = await hasDependencies(10, "Sub-Jurisdiction");
+      const result = await getDependencyType(10, "Sub-Jurisdiction");
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toBe("list-types");
       expect(prisma.listTypeSubJurisdiction.count).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
     });
 
-    it("should return false when sub-jurisdiction has no dependencies", async () => {
+    it("should return null when sub-jurisdiction has no dependencies", async () => {
       // Arrange
       vi.mocked(prisma.locationSubJurisdiction.count).mockResolvedValue(0);
       vi.mocked(prisma.listTypeSubJurisdiction.count).mockResolvedValue(0);
 
       // Act
-      const result = await hasDependencies(10, "Sub-Jurisdiction");
+      const result = await getDependencyType(10, "Sub-Jurisdiction");
 
       // Assert
-      expect(result).toBe(false);
+      expect(result).toBeNull();
     });
 
-    it("should return true when region is linked to locations", async () => {
+    it("should return 'locations' when region is linked to active locations", async () => {
       // Arrange
       vi.mocked(prisma.locationRegion.count).mockResolvedValue(1);
 
       // Act
-      const result = await hasDependencies(5, "Region");
+      const result = await getDependencyType(5, "Region");
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toBe("locations");
       expect(prisma.locationRegion.count).toHaveBeenCalledWith({ where: { regionId: 5, location: { deletedAt: null } } });
+    });
+
+    it("should return null when region has no active location links", async () => {
+      // Arrange
+      vi.mocked(prisma.locationRegion.count).mockResolvedValue(0);
+
+      // Act
+      const result = await getDependencyType(5, "Region");
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 

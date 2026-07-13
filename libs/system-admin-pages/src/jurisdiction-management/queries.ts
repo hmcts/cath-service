@@ -202,22 +202,26 @@ export async function deleteLocationJurisdictions(locationId: number): Promise<v
   });
 }
 
-export async function hasDependencies(id: number, type: JurisdictionDataType): Promise<boolean> {
+export type DependencyType = "sub-jurisdictions" | "locations" | "list-types" | null;
+
+export async function getDependencyType(id: number, type: JurisdictionDataType): Promise<DependencyType> {
   switch (type) {
     case "Jurisdiction": {
       const count = await prisma.subJurisdiction.count({ where: { jurisdictionId: id } });
-      return count > 0;
+      return count > 0 ? "sub-jurisdictions" : null;
     }
     case "Sub-Jurisdiction": {
       const [locationCount, listTypeCount] = await Promise.all([
         prisma.locationSubJurisdiction.count({ where: { subJurisdictionId: id, location: { deletedAt: null } } }),
         prisma.listTypeSubJurisdiction.count({ where: { subJurisdictionId: id } })
       ]);
-      return locationCount > 0 || listTypeCount > 0;
+      if (locationCount > 0) return "locations";
+      if (listTypeCount > 0) return "list-types";
+      return null;
     }
     case "Region": {
       const count = await prisma.locationRegion.count({ where: { regionId: id, location: { deletedAt: null } } });
-      return count > 0;
+      return count > 0 ? "locations" : null;
     }
   }
 }

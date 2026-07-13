@@ -34,7 +34,7 @@ vi.mock("./queries.js", () => ({
   createJurisdictionRecord: vi.fn(),
   updateJurisdictionRecord: vi.fn(),
   hardDeleteJurisdictionRecord: vi.fn(),
-  hasDependencies: vi.fn(),
+  getDependencyType: vi.fn(),
   updateLocationJurisdictions: vi.fn(),
   deleteLocationJurisdictions: vi.fn()
 }));
@@ -45,8 +45,8 @@ import {
   createJurisdictionRecord,
   deleteLocationJurisdictions,
   findJurisdictionDataById,
+  getDependencyType,
   hardDeleteJurisdictionRecord,
-  hasDependencies,
   listAllJurisdictionData,
   updateLocationJurisdictions
 } from "./queries.js";
@@ -179,7 +179,7 @@ describe("jurisdiction-management-service", () => {
     it("should hard-delete and write audit log when no dependencies", async () => {
       // Arrange
       vi.mocked(findJurisdictionDataById).mockResolvedValue({ jurisdictionId: 1, name: "Civil", welshName: "Sifil" });
-      vi.mocked(hasDependencies).mockResolvedValue(false);
+      vi.mocked(getDependencyType).mockResolvedValue(null);
       vi.mocked(hardDeleteJurisdictionRecord).mockResolvedValue();
       vi.mocked(logAction).mockResolvedValue();
 
@@ -200,10 +200,10 @@ describe("jurisdiction-management-service", () => {
       );
     });
 
-    it("should return sub-jurisdiction error message when Jurisdiction has dependencies", async () => {
+    it("should return sub-jurisdiction error message when Jurisdiction has sub-jurisdiction dependencies", async () => {
       // Arrange
       vi.mocked(findJurisdictionDataById).mockResolvedValue({ jurisdictionId: 1, name: "Civil", welshName: "Sifil" });
-      vi.mocked(hasDependencies).mockResolvedValue(true);
+      vi.mocked(getDependencyType).mockResolvedValue("sub-jurisdictions");
 
       // Act
       const errors = await deleteJurisdictionData(1, "Jurisdiction", testUser);
@@ -216,10 +216,10 @@ describe("jurisdiction-management-service", () => {
       expect(hardDeleteJurisdictionRecord).not.toHaveBeenCalled();
     });
 
-    it("should return location error message when Sub-Jurisdiction has dependencies", async () => {
+    it("should return location error message when Sub-Jurisdiction is linked to active locations", async () => {
       // Arrange
       vi.mocked(findJurisdictionDataById).mockResolvedValue({ subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1 });
-      vi.mocked(hasDependencies).mockResolvedValue(true);
+      vi.mocked(getDependencyType).mockResolvedValue("locations");
 
       // Act
       const errors = await deleteJurisdictionData(10, "Sub-Jurisdiction", testUser);
@@ -227,6 +227,22 @@ describe("jurisdiction-management-service", () => {
       // Assert
       expect(errors).toContainEqual({
         text: "This record cannot be deleted because it is linked to one or more locations",
+        href: "#"
+      });
+      expect(hardDeleteJurisdictionRecord).not.toHaveBeenCalled();
+    });
+
+    it("should return list-type error message when Sub-Jurisdiction is linked to list types", async () => {
+      // Arrange
+      vi.mocked(findJurisdictionDataById).mockResolvedValue({ subJurisdictionId: 10, name: "County Court", welshName: "Llys Sirol", jurisdictionId: 1 });
+      vi.mocked(getDependencyType).mockResolvedValue("list-types");
+
+      // Act
+      const errors = await deleteJurisdictionData(10, "Sub-Jurisdiction", testUser);
+
+      // Assert
+      expect(errors).toContainEqual({
+        text: "This record cannot be deleted because it is linked to one or more list types",
         href: "#"
       });
       expect(hardDeleteJurisdictionRecord).not.toHaveBeenCalled();
