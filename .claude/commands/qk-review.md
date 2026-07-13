@@ -86,6 +86,13 @@ Perform a comprehensive review covering:
 - Progressive enhancement (works without JS)
 - Plain English content
 
+**STEP 2b: Measure Test Coverage**
+1. Run: git diff --name-only to identify which workspaces (libs/* and apps/*) changed
+2. Run: yarn test:coverage
+3. For each changed workspace, read its 'Coverage summary' block in the output and take the
+   percentage from the 'Statements :' line (e.g. "Statements : 87% (…)")
+4. Record each changed workspace's statement coverage % for use in the report
+
 **STEP 3: Generate Review Report**
 Create a review report at docs/tickets/$ARGUMENT/review.md with the following structure:
 
@@ -121,7 +128,8 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
 - Unit tests: [assessment]
 - E2E tests: [assessment]
 - Accessibility tests: [assessment]
-- Coverage percentage: [if available]
+- Statement coverage per changed workspace (from STEP 2b):
+  - <workspace>: <NN>%  (flag ⚠️ if below 80%)
 
 ## Acceptance Criteria Verification
 [Check each acceptance criterion from ticket.md]
@@ -137,6 +145,11 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
 
 ## Overall Assessment
 [APPROVED / NEEDS CHANGES / MAJOR REVISIONS REQUIRED]
+
+Coverage rule: if any changed workspace is below 80% statement coverage (per STEP 2b), the
+Overall Assessment MUST be at least NEEDS CHANGES, and each such workspace MUST be listed under
+HIGH PRIORITY Issues (or CRITICAL if coverage is far below). This verdict is advisory — it does
+not block the developer from committing.
 
 ---
 
