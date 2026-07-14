@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createArtefactSearch, deleteArtefactSearchByArtefactId, findArtefactSearchByArtefactId } from "./artefact-search-queries.js";
 import {
   createArtefact,
-  createArtefactSearch,
-  deleteArtefactSearchByArtefactId,
   deleteArtefacts,
-  findArtefactSearchByArtefactId,
   getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,

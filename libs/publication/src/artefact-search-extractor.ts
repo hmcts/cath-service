@@ -1,5 +1,5 @@
 import { getConfigForListType } from "@hmcts/list-search-config";
-import * as repository from "./repository/queries.js";
+import * as artefactSearchRepository from "./repository/artefact-search-queries.js";
 
 interface CaseData {
   caseNumber: string | null;
@@ -151,11 +151,11 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
 
       if (cases.length > 0) {
         // Delete existing entries for this artefact to ensure idempotency
-        await repository.deleteArtefactSearchByArtefactId(artefactId);
+        await artefactSearchRepository.deleteArtefactSearchByArtefactId(artefactId);
 
         // Create new entries for all cases
         for (const caseData of cases) {
-          await repository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
+          await artefactSearchRepository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
         }
       }
     }

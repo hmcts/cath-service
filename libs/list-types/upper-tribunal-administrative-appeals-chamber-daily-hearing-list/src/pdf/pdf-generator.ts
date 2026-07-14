@@ -8,11 +8,13 @@ import { renderUtaacDailyHearingListData } from "../rendering/renderer.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const generateUtaacDailyHearingListPdf = createUtDailyHearingListPdfGenerator<UtaacHearingList>(
-  renderUtaacDailyHearingListData,
-  () => import("../locales/en.js"),
-  () => import("../locales/cy.js"),
-  __dirname,
-  PROVENANCE_LABELS,
-  generatePdfFromHtml
-);
+export function generateUtaacDailyHearingListPdf(options: Parameters<ReturnType<typeof createUtDailyHearingListPdfGenerator<UtaacHearingList>>>[0]) {
+  return createUtDailyHearingListPdfGenerator<UtaacHearingList>(
+    renderUtaacDailyHearingListData,
+    () => import("../locales/en.js"),
+    () => import("../locales/cy.js"),
+    __dirname,
+    PROVENANCE_LABELS,
+    generatePdfFromHtml
+  )(options);
+}
