@@ -40,7 +40,9 @@ PROMPT FOR AGENT:
 **STEP 1: Analyze Changes**
 1. Run: git diff --name-only to see all changed files
 2. Run: git diff to see the actual changes
-3. Read docs/tickets/$ARGUMENT/ticket.md to understand the requirements
+3. Read docs/tickets/$ARGUMENT/ticket.md to understand the requirements, and extract the
+   acceptance criteria verbatim (the 'Acceptance Criteria'/'AC' section or checklist items in
+   the Description) so each one can be checked individually in the report
 4. Read docs/tickets/$ARGUMENT/plan.md to understand the intended approach
 5. Read docs/tickets/$ARGUMENT/tasks.md to verify all tasks were completed
 
@@ -132,9 +134,11 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
   - <workspace>: <NN>%  (flag ⚠️ if below 80%)
 
 ## Acceptance Criteria Verification
-[Check each acceptance criterion from ticket.md]
-- [ ] Criterion 1: [Status and notes]
-- [ ] Criterion 2: [Status and notes]
+[List EVERY acceptance criterion extracted from ticket.md — do not summarise or omit any.
+Mark each '- [x]' if met or '- [ ]' if not met, with a short note and, where possible, a
+file:line reference to the code or test that satisfies it.]
+- [ ] Criterion 1: [Status and notes — file:line]
+- [ ] Criterion 2: [Status and notes — file:line]
 ...
 
 ## Next Steps
@@ -150,6 +154,11 @@ Coverage rule: if any changed workspace is below 80% statement coverage (per STE
 Overall Assessment MUST be at least NEEDS CHANGES, and each such workspace MUST be listed under
 HIGH PRIORITY Issues (or CRITICAL if coverage is far below). This verdict is advisory — it does
 not block the developer from committing.
+
+Acceptance Criteria rule: if any acceptance criterion is NOT met (any '- [ ]' in the Acceptance
+Criteria Verification section), the Overall Assessment MUST be at least NEEDS CHANGES, and each
+unmet criterion MUST be listed under CRITICAL Issues — an unmet criterion is an unimplemented
+requirement. This verdict is advisory — it does not block the developer from committing.
 
 ---
 
@@ -178,7 +187,7 @@ ACTION: Read the review report and present key findings to the user
    - Number of critical issues
    - Number of high priority issues
    - Number of suggestions
-   - Acceptance criteria status
+   - Acceptance criteria status (N/M criteria met, with any unmet criteria named)
 
 3. Show the full review report location
 ```
@@ -193,6 +202,8 @@ Code review complete for issue #$ARGUMENT!
 
 📊 Review Summary:
 [Display counts of critical/high priority/suggestions]
+
+Acceptance Criteria: [N/M met — name any unmet criteria]
 
 Overall Assessment: [APPROVED/NEEDS CHANGES/MAJOR REVISIONS REQUIRED]
 

@@ -74,6 +74,14 @@ Work through each task in the Testing Tasks section of tasks.md:
    - Report, in your final summary, each such workspace and its statement coverage %, and
      clearly list any that are below 80%
    - Do NOT block on this — just report the numbers accurately
+4. Verify acceptance criteria:
+   - Re-read docs/tickets/$ARGUMENT/ticket.md and extract every acceptance criterion from the
+     Description (look for an 'Acceptance Criteria'/'AC' section or checklist items)
+   - For each criterion, state whether the implemented code satisfies it (met / not met /
+     partially met) with a one-line justification
+   - Report this as an 'Acceptance Criteria' checklist in your final summary, e.g.
+     "- [x] <criterion> — <justification>" for met and "- [ ]" for not met
+   - Do NOT block on unmet criteria — just report them accurately
 
 **IMPORTANT NOTES:**
 - Follow the @CLAUDE.md guidelines (use libs/ for features, not apps/)
@@ -124,6 +132,7 @@ Implementation of issue #$ARGUMENT complete!
 ✅ All testing tasks completed
 ✅ Tests passing
 ✅ Application verified
+[Acceptance criteria: N/N met — any unmet criteria are detailed in the agent summary above]
 
 Task tracking: docs/tickets/$ARGUMENT/tasks.md
 
