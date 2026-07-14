@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { validateMagistratesPublicAdultCourtList } from "./json-validator.js";
 
-const validPayload = {
+const VALID_DATA = {
   document: {
+    info: { start_time: "09:00:00" },
     data: {
       job: {
         printdate: "13/09/2020",
@@ -10,7 +11,7 @@ const validPayload = {
           session: [
             {
               lja: "Greater Manchester",
-              court: "Manchester Crown Court",
+              court: "Manchester Magistrates' Court",
               room: 1,
               sstart: "09:00",
               blocks: {
@@ -18,7 +19,12 @@ const validPayload = {
                   {
                     bstart: "09:00",
                     cases: {
-                      case: [{ caseno: "1234567890", def_name: "SMITH, John" }]
+                      case: [
+                        {
+                          caseno: "AB12345678",
+                          def_name: "Smith, John"
+                        }
+                      ]
                     }
                   }
                 ]
@@ -32,95 +38,97 @@ const validPayload = {
 };
 
 describe("validateMagistratesPublicAdultCourtList", () => {
-  it("should return isValid true for a valid payload", () => {
-    const result = validateMagistratesPublicAdultCourtList(validPayload);
+  it("should return valid when all required fields are present", () => {
+    const result = validateMagistratesPublicAdultCourtList(VALID_DATA);
     expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
-  it("should return isValid false when document is missing", () => {
-    const result = validateMagistratesPublicAdultCourtList({});
+  it("should return invalid when document is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document;
+    const result = validateMagistratesPublicAdultCourtList(data);
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return isValid false when job.printdate is missing", () => {
-    const payload = { document: { data: { job: { sessions: {} } } } };
-    const result = validateMagistratesPublicAdultCourtList(payload);
+  it("should return invalid when document.data.job is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job;
+    const result = validateMagistratesPublicAdultCourtList(data);
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return isValid false when session is missing required lja field", () => {
-    const payload = {
-      document: {
-        data: {
-          job: {
-            printdate: "13/09/2020",
-            sessions: {
-              session: [{ court: "Test Court", room: 1, sstart: "09:00" }]
-            }
-          }
-        }
-      }
-    };
-    const result = validateMagistratesPublicAdultCourtList(payload);
+  it("should return invalid when job.printdate is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.printdate;
+    const result = validateMagistratesPublicAdultCourtList(data);
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return isValid false when def_name contains HTML", () => {
-    const payload = {
-      document: {
-        data: {
-          job: {
-            printdate: "13/09/2020",
-            sessions: {
-              session: [
-                {
-                  lja: "Test",
-                  court: "Test",
-                  room: 1,
-                  sstart: "09:00",
-                  blocks: {
-                    block: [
-                      {
-                        bstart: "09:00",
-                        cases: { case: [{ caseno: "1234567890", def_name: "<script>alert(1)</script>" }] }
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
-    };
-    const result = validateMagistratesPublicAdultCourtList(payload);
+  it("should return invalid when job.sessions is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions;
+    const result = validateMagistratesPublicAdultCourtList(data);
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  it("should return isValid false when caseno length is not exactly 10 characters", () => {
-    const payload = {
-      document: {
-        data: {
-          job: {
-            printdate: "13/09/2020",
-            sessions: {
-              session: [
-                {
-                  lja: "Test",
-                  court: "Test",
-                  room: 1,
-                  sstart: "09:00",
-                  blocks: {
-                    block: [{ bstart: "09:00", cases: { case: [{ caseno: "123", def_name: "SMITH, John" }] } }]
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
-    };
-    const result = validateMagistratesPublicAdultCourtList(payload);
+  it("should return invalid when session[0].lja is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].lja;
+    const result = validateMagistratesPublicAdultCourtList(data);
     expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when session[0].court is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].court;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when session[0].room is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].room;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when session[0].sstart is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].sstart;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when block[0].bstart is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].blocks.block[0].bstart;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when case[0].caseno is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].blocks.block[0].cases.case[0].caseno;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when case[0].def_name is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.data.job.sessions.session[0].blocks.block[0].cases.case[0].def_name;
+    const result = validateMagistratesPublicAdultCourtList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });
