@@ -25,6 +25,7 @@ export const londonTableHeadersCy = {
 };
 
 export const cy = {
+  courtName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber']",
   listForDate: "[WELSH TRANSLATION REQUIRED: 'List for']",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",

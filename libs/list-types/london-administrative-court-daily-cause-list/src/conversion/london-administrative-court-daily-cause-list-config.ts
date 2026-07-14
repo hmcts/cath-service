@@ -1,4 +1,4 @@
-import { createMultiSheetConverter, RCJ_EXCEL_CONFIG_SIMPLE_TIME, registerConverter } from "@hmcts/list-types-common";
+import { createMultiSheetConverter, RCJ_EXCEL_CONFIG_SIMPLE_TIME, registerConverterByName } from "@hmcts/list-types-common";
 
 // Standard 7 fields configuration for both tabs
 export const STANDARD_CONFIG = RCJ_EXCEL_CONFIG_SIMPLE_TIME;
@@ -10,8 +10,7 @@ const convertLondonAdminExcel = (buffer: Buffer) =>
     { worksheetName: "Planning Court", worksheetIndex: 1, dataKey: "planningCourt", config: STANDARD_CONFIG }
   ]);
 
-// Register the converter with listTypeId 18
-registerConverter(18, {
+registerConverterByName("LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", {
   config: STANDARD_CONFIG,
   convertExcelToJson: convertLondonAdminExcel as any
 });

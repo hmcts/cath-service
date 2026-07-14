@@ -9,14 +9,27 @@ vi.mock("@hmcts/list-types-common", () => ({
   provenanceLabelsCy: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist", COMMON_PLATFORM: "Common Platform", CP_CATH: "Libra", PDDA: "PDDA" }
 }));
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: false }),
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload", SNL: "ListAssist" }
 }));
 
 vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
   siacPoacPaacWeeklyHearingListEn: {
+    siacCourtName: "Special Immigration Appeals Commission",
+    poacCourtName: "Proscribed Organisations Appeal Commission",
+    paacCourtName: "Pathogens Access Appeal Commission",
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
@@ -25,6 +38,9 @@ vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
     importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
   },
   siacPoacPaacWeeklyHearingListCy: {
+    siacCourtName: "Special Immigration Appeals Commission",
+    poacCourtName: "Proscribed Organisations Appeal Commission",
+    paacCourtName: "Pathogens Access Appeal Commission",
     siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
     poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
     paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",

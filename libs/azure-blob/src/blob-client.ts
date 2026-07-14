@@ -3,6 +3,7 @@ import { BlobServiceClient, StorageSharedKeyCredential } from "@azure/storage-bl
 
 export const CONTAINER = {
   ARTEFACT: "artefact",
+  FILES: "files",
   PUBLICATIONS: "publications"
 } as const;
 

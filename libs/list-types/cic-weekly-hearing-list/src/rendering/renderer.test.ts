@@ -27,11 +27,11 @@ describe("renderCicWeeklyHearingListData", () => {
     const result = renderCicWeeklyHearingListData(hearingList, options);
 
     expect(result.header.listTitle).toBe("Criminal Injuries Compensation Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("06 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
+    expect(result.header.weekCommencingDate).toBe("6 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
     expect(result.hearings).toHaveLength(1);
-    expect(result.hearings[0].date).toBe("02 January 2025");
+    expect(result.hearings[0].date).toBe("2 January 2025");
     expect(result.hearings[0].hearingTime).toBe("10am");
     expect(result.hearings[0].caseReferenceNumber).toBe("CIC/2025/001");
     expect(result.hearings[0].caseName).toBe("Smith v CICA");

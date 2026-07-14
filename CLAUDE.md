@@ -505,6 +505,293 @@ export function authenticate() {
 }
 ```
 
+## List Type Implementation
+
+The `list_type` table uses an autoincrement `id` column. These IDs are assigned at insert time and **differ between environments** (local, STG, production). Any code that compares against a numeric `listTypeId` will break on environments where the seed order differs.
+
+### Rule: Always use `listTypeName`, never `listTypeId`
+
+The `name` column is `@unique` and stable across all environments. Use it for all list type guards and routing logic.
+
+**Wrong — breaks on STG/production:**
+```typescript
+const MY_LIST_TYPE_ID = 42;
+
+if (artefact.listTypeId !== MY_LIST_TYPE_ID) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+**Correct — works everywhere:**
+```typescript
+const SUPPORTED_LIST_TYPE = "MY_LIST_TYPE_NAME";
+
+if (artefact.listTypeName !== SUPPORTED_LIST_TYPE) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+### `listTypeName` is only populated by `getArtefactById`
+
+`getArtefactsByLocation` and `getArtefactsByIds` do NOT perform the `listType` join. Only `getArtefactById` returns `ArtefactWithListType` (with `listTypeName` guaranteed non-null). When you need `listTypeName`, ensure the artefact comes from `getArtefactById`.
+
+```typescript
+// ArtefactWithListType guarantees listTypeName is a string
+import type { ArtefactWithListType } from "@hmcts/publication";
+```
+
+### Court names and other list-type-specific strings must come from locale files
+
+Do not hardcode display strings (court names, page titles, etc.) in controllers. Hardcoded English strings will not change when the locale switches to Welsh.
+
+**Wrong:**
+```typescript
+courtName: "Upper Tribunal (Immigration and Asylum) Chamber"
+```
+
+**Correct — add to both `en.ts` and `cy.ts` in the lib's locale files:**
+```typescript
+// libs/my-list-type/src/locales/en.ts
+export const en = {
+  courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+  ...
+};
+
+// libs/my-list-type/src/locales/cy.ts
+export const cy = {
+  courtName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber']",
+  ...
+};
+
+// controller
+const t = locale === "cy" ? cy : en;
+courtName: t.courtName as string
+```
+
+### Multi-list-type handlers
+
+When a single controller handles several list types (e.g. RCJ, administrative court), use `createMultiListGuardAndRender` with a string-keyed `LIST_TYPE_CONFIG`. Do not include an `id`→`name` mapping — the guard reads `artefact.listTypeName` directly.
+
+```typescript
+const LIST_TYPE_CONFIG: ListTypeConfig = {
+  MY_LIST_TYPE_A: { en: en.pageTitleA, cy: cy.pageTitleA, template: "template-a" },
+  MY_LIST_TYPE_B: { en: en.pageTitleB, cy: cy.pageTitleB, template: "template-b" }
+};
+
+const { guardArtefact, render } = createMultiListGuardAndRender({
+  en, cy,
+  listTypeConfig: LIST_TYPE_CONFIG,
+  renderFn,
+  resolveTemplate: (c) => c.template
+});
+```
+
+### Test fixtures must not rely on specific numeric IDs
+
+Use `listTypeId: 999` (or any arbitrary value) in test artefact fixtures to prove the logic is ID-independent. The `listTypeName` field drives all routing.
+
+```typescript
+const mockArtefact = {
+  listTypeId: 999,               // arbitrary — must not affect behaviour
+  listTypeName: "MY_LIST_TYPE",  // this is what matters
+  ...
+};
+```
+
+### Implementing a new list type — checklist
+
+Every new list type MUST follow these rules. Never use `ListType.id` (numeric) anywhere.
+
+**1. PDF generator — use `listTypeName`, not `listTypeId`**
+
+The PDF generator interface must accept `listTypeName: string`, not a numeric ID:
+
+```typescript
+// libs/my-list-type/src/pdf/pdf-generator.ts
+interface PdfGenerationOptions extends BasePdfGenerationOptions<MyHearingList> {
+  contentDate: Date;
+  listTypeName: string;   // ✅ string name, never a numeric ID
+}
+
+const LIST_TITLE_MAP: Record<string, string> = {
+  MY_LIST_TYPE_NAME: "My List Type Display Title"
+};
+
+export async function generateMyListTypePdf(options: PdfGenerationOptions) {
+  const listTitle = LIST_TITLE_MAP[options.listTypeName] || "Default Title";
+  // ...
+}
+```
+
+**2. Register the PDF generator by name in `service.ts`**
+
+Add to `PDF_GENERATOR_REGISTRY` in `libs/publication/src/processing/service.ts` using the string `listTypeName` as key:
+
+```typescript
+const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
+  // ...existing entries...
+  MY_LIST_TYPE_NAME: (p) => generateMyListTypePdf({ ...p, jsonData: p.jsonData as MyHearingList }),
+};
+```
+
+**3. Register the Excel converter by name**
+
+Use `registerConverterByName` — never reference a numeric ID:
+
+```typescript
+// libs/my-list-type/src/conversion/my-config.ts
+registerConverterByName("MY_LIST_TYPE_NAME", createConverter(MY_EXCEL_CONFIG));
+```
+
+**4. Prisma queries — filter by name, never by id**
+
+When querying artefacts for a specific list type, use the `listType` relation filter:
+
+```typescript
+// ✅ Correct — stable across environments
+await prisma.artefact.findMany({
+  where: { listType: { name: { in: ["MY_LIST_TYPE_NAME"] } } }
+});
+
+// ❌ Wrong — numeric ID differs per environment
+await prisma.artefact.findMany({
+  where: { listTypeId: { in: [42] } }
+});
+```
+
+**5. Never reference `ListType.id` in code comments or JSDoc**
+
+Comments that mention numeric IDs (e.g. `// listTypeId: 42`) will rot as environments diverge. Use the stable name instead:
+
+```typescript
+// ✅ Correct
+/** Used by: MY_LIST_TYPE_NAME */
+
+// ❌ Wrong
+/** Used by list type ID 42 */
+```
+
+**6. Schema validation is MANDATORY for every new list type**
+
+Every list type that accepts JSON uploads MUST have:
+
+- A JSON schema file at `libs/list-types/<name>/src/schemas/<name>.json`
+- A `validate*` wrapper at `libs/list-types/<name>/src/validation/json-validator.ts`
+- The wrapper exported from `libs/list-types/<name>/src/index.ts`
+- A test file at `libs/list-types/<name>/src/validation/json-validator.test.ts`
+
+A CI guard test at `libs/list-types/common/src/validation/guard.test.ts` **will fail** if any package ships a schema without a `validate*` export. Fix the guard failure before merging.
+
+**Validator wrapper pattern** (use `createJsonValidator` from `@hmcts/list-types-common`):
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.ts
+import { createJsonValidator, type ValidationResult } from "@hmcts/list-types-common";
+import { schemaPath } from "../config.js";
+
+export function validateMyListType(jsonData: unknown): ValidationResult {
+  return createJsonValidator(schemaPath)(jsonData);
+}
+```
+
+Export from `index.ts`:
+
+```typescript
+export { validateMyListType } from "./validation/json-validator.js";
+```
+
+**Test file pattern** — real schema execution, no mocks, one `it` per required field at every nesting level:
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.test.ts
+import { describe, expect, it } from "vitest";
+import { validateMyListType } from "./json-validator.js";
+
+// Fully-hydrated fixture — satisfies ALL required arrays at EVERY nesting level.
+// Read the schema before writing this; missing a nested required field will cause
+// the valid-data test to fail with a confusing schema error.
+const VALID_DATA = [
+  {
+    topLevelField: "value",
+    nestedObject: {
+      requiredNestedField: "value",
+      deeplyNested: [
+        {
+          deepField: "value"
+        }
+      ]
+    }
+  }
+];
+
+describe("validateMyListType", () => {
+  it("should return valid when all required fields are present", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  // One test per required field — top-level and nested.
+  // Use JSON.parse(JSON.stringify()) deep clone so each test is fully isolated.
+
+  it("should return invalid when topLevelField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].topLevelField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when requiredNestedField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].nestedObject.requiredNestedField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when deepField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].nestedObject.deeplyNested[0].deepField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+```
+
+**Rules:**
+- Never mock `@hmcts/publication` or `@hmcts/list-types-common` in validator tests — call the real function against the real schema
+- The valid fixture (`VALID_DATA`) must satisfy ALL `required` arrays at EVERY nesting level of the schema — read the entire schema before writing the fixture, including deeply nested `required` arrays inside `items` and `properties`
+- Most schemas use `"type": "array"` at the root; fixtures are arrays of objects. Some use `"type": "object"` — check the schema root before writing the fixture
+- **One `it` block per required field** — do not use a single `[{}]` fixture that removes all fields at once; that does not prove each field is individually enforced
+- **Always use `JSON.parse(JSON.stringify(VALID_DATA))` for deep cloning** — never use spread (`{ ...VALID_DATA[0] }`) which only shallow-copies and leaves nested objects shared between tests
+- **Test every required field at every nesting depth** — a field buried 7 levels deep (e.g. `courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseNumber`) needs its own `it` block the same as a top-level field
+- Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
@@ -688,6 +975,8 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 12. **Don't create generic files like utils.ts** - Be specific (e.g., object-properties.ts, date-formatting.ts)
 13. **Don't export functions in order to test them** - Only export functions that are intended to be used outside the module
 14. **Don't add comments unless they are meaningful** - If necessary, explain why something is done, not what is done
+15. **Don't hardcode `listTypeId` numeric values** - `ListType.id` is autoincrement and differs per environment. Always use `artefact.listTypeName` (the stable `@unique` string column). See [List Type Implementation](#list-type-implementation) below.
+16. **Don't add a list type schema without a validator and tests** - Every `src/schemas/*.json` file requires a `src/validation/json-validator.ts` wrapper and a `src/validation/json-validator.test.ts`. The CI guard test in `libs/list-types/common` will fail if you don't. See [List Type Implementation](#list-type-implementation) item 6.
 
 ## Debugging Tips
 

@@ -4,8 +4,7 @@ import { validateTimeFormat, validateTimeFormatSimple } from "./validators.js";
 
 /**
  * Standard RCJ 7-field configuration with strict time validation (hour range 1-12)
- * Used by: RCJ Standard Daily Cause Lists (listTypeIds 10-17)
- *          Administrative Court Daily Cause Lists (listTypeIds 20-23)
+ * Used by: RCJ Standard Daily Cause Lists and Administrative Court Daily Cause Lists
  */
 export const RCJ_EXCEL_CONFIG: ExcelConverterConfig = {
   fields: [
@@ -58,8 +57,8 @@ export const RCJ_EXCEL_CONFIG: ExcelConverterConfig = {
 /**
  * RCJ 7-field configuration with simple time validation (no hour range check)
  * Used by multi-sheet converters where minRows can be 0 (optional sheets)
- * Used by: London Administrative Court (listTypeId 18)
- *          Court of Appeal Civil Division (listTypeId 19)
+ * Used by: London Administrative Court Daily Cause List
+ *          Court of Appeal (Civil Division) Daily Cause List
  */
 export const RCJ_EXCEL_CONFIG_SIMPLE_TIME: ExcelConverterConfig = {
   fields: [

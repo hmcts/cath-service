@@ -57,19 +57,19 @@ const postHandler = async (req: Request, res: Response) => {
   }
 
   const listTypeIds = Array.isArray(req.body.listTypes) ? req.body.listTypes.map(Number) : req.body.listTypes ? [Number(req.body.listTypes)] : [];
-  const listTypes = await findAllListTypes();
 
   const subscriptions = listTypeIds.map((listTypeId: number) => ({ listTypeId }));
 
   await updateThirdPartySubscriptions(session.manageThirdPartyUser.userId, subscriptions);
 
+  const listTypes = await findAllListTypes();
   const getListTypeNames = (ids: number[]) =>
     ids
       .map((id) => {
-        const listType = listTypes.find((lt) => lt.id === id);
-        return listType?.friendlyName || listType?.name;
+        const lt = listTypes.find((l) => l.id === id);
+        return lt?.friendlyName || lt?.name;
       })
-      .filter((name): name is string => Boolean(name))
+      .filter(Boolean)
       .join(", ") || "None";
 
   const previousListTypes = getListTypeNames(session.manageThirdPartyUser.originalSubscriptions);

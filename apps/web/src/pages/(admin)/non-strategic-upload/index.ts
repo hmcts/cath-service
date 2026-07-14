@@ -3,23 +3,30 @@ import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST con
 import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
 import "@hmcts/cic-weekly-hearing-list"; // Register CIC converter
 import "@hmcts/send-daily-hearing-list"; // Register SEND converter
+import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"; // Register UTCC converter
+import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTLC converter
+import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language } from "@hmcts/publication";
+import { Language, Sensitivity } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-async function getListTypes() {
+async function getListTypesData() {
   const nonStrategicListTypes = await findNonStrategicListTypes();
-  const options = nonStrategicListTypes.map((listType) => ({
-    value: listType.id.toString(),
-    text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
-  }));
-  return [{ value: "", text: "<Please choose a list type>" }, ...options];
+  const options = [
+    { value: "", text: "<Please choose a list type>" },
+    ...nonStrategicListTypes.map((listType) => ({
+      value: listType.id.toString(),
+      text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
+    }))
+  ];
+  const sensitivityMap = Object.fromEntries(nonStrategicListTypes.map((listType) => [listType.id.toString(), Sensitivity.PUBLIC]));
+  return { options, sensitivityMap };
 }
 
 const SENSITIVITY_OPTIONS = [
@@ -54,7 +61,7 @@ function transformDateFields(body: any): UploadFormData {
   };
 }
 
-function selectOption(options: any[], selectedValue: string | undefined) {
+function selectOption(options: { value: string; text: string }[], selectedValue: string | undefined) {
   return options.map((item) => ({ ...item, selected: item.value === selectedValue }));
 }
 
@@ -87,16 +94,17 @@ const getHandler = async (req: Request, res: Response) => {
   const location = locationId && !Number.isNaN(locationId) ? await getLocationById(locationId) : null;
   const locationName = location?.name || formData.locationName || "";
 
-  const listTypes = await getListTypes();
+  const [{ options: listTypeOptions, sensitivityMap }, locations] = await Promise.all([getListTypesData(), getAllLocations(locale)]);
 
   res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
     data: { ...formData, locationName },
-    locations: await getAllLocations(locale),
-    listTypes: selectOption(listTypes, formData.listType),
+    locations,
+    listTypes: selectOption(listTypeOptions, formData.listType),
     sensitivityOptions: selectOption(SENSITIVITY_OPTIONS, formData.sensitivity),
     languageOptions: selectOption(LANGUAGE_OPTIONS, formData.language || Language.ENGLISH),
+    listTypeSensitivityMap: JSON.stringify(sensitivityMap),
     locale
   });
 };
@@ -129,12 +137,13 @@ const postHandler = async (req: Request, res: Response) => {
   const selectedListType = listTypeId ? await findListTypeById(listTypeId) : null;
   const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
 
-  if (selectedListType?.isNonStrategic && isExcelFile && listTypeId) {
+  if (selectedListType?.isNonStrategic && isExcelFile) {
     try {
-      const { convertExcelForListType, hasConverterForListType } = await import("@hmcts/list-types-common");
+      const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
+      const listTypeName = selectedListType.name;
 
-      if (hasConverterForListType(listTypeId)) {
-        await convertExcelForListType(listTypeId, req.file!.buffer);
+      if (listTypeName && hasConverterForListTypeName(listTypeName)) {
+        await convertExcelForListTypeName(listTypeName, req.file!.buffer);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";

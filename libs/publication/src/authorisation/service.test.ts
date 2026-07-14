@@ -110,6 +110,11 @@ describe("canAccessPublication", () => {
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(false);
     });
 
+    it("should allow PI_AAD verified users", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      expect(canAccessPublication(user, privateArtefact, undefined)).toBe(true);
+    });
+
     it("should deny non-verified users", () => {
       const user = createUser("PUBLIC", "PUBLIC");
       expect(canAccessPublication(user, privateArtefact, undefined)).toBe(false);
@@ -175,6 +180,24 @@ describe("canAccessPublication", () => {
       const user = createUser("VERIFIED", "CRIME_IDAM");
       const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should allow CRIME_IDAM user when list allows CRIME_IDAM,PI_AAD", () => {
+      const user = createUser("VERIFIED", "CRIME_IDAM");
+      const listType = createListType("CRIME_IDAM,PI_AAD");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should allow PI_AAD user when list allows CRIME_IDAM,PI_AAD", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      const listType = createListType("CRIME_IDAM,PI_AAD");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should deny CFT_IDAM user when list allows only CRIME_IDAM,PI_AAD", () => {
+      const user = createUser("VERIFIED", "CFT_IDAM");
+      const listType = createListType("CRIME_IDAM,PI_AAD");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
   });
 

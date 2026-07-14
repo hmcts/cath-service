@@ -2,7 +2,6 @@ import {
   createConverter,
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
-  registerConverter,
   registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags,
@@ -64,5 +63,4 @@ export const CIC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const cicConverter = createConverter(CIC_EXCEL_CONFIG);
-registerConverter(29, cicConverter);
 registerConverterByName("CIC_WEEKLY_HEARING_LIST", cicConverter);

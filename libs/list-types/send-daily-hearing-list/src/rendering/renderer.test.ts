@@ -26,7 +26,7 @@ describe("renderSendDailyHearingListData", () => {
 
     expect(result.header.listTitle).toBe("First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List");
     expect(result.header.listForDate).toBe("20 June 2025");
-    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
     expect(result.hearings).toHaveLength(1);
     expect(result.hearings[0].time).toBe("10am");

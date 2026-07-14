@@ -20,6 +20,7 @@ export const londonTableHeaders = {
 };
 
 export const en = {
+  courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
   listForDate: "List for",
   lastUpdated: "Last updated",
   at: "at",

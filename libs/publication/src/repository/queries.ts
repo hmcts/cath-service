@@ -2,12 +2,9 @@ import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
-import type { Artefact } from "./model.js";
+import type { Artefact, ArtefactWithListType } from "./model.js";
 
-const SJP_PRESS_LIST_ID = 24;
-const SJP_PUBLIC_LIST_ID = 25;
-const SJP_DELTA_PRESS_LIST_ID = 26;
-const SJP_DELTA_PUBLIC_LIST_ID = 27;
+const SJP_LIST_TYPE_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"];
 
 export interface ArtefactSummary {
   artefactId: string;
@@ -88,7 +85,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
   return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
-export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
+export async function getArtefactById(artefactId: string): Promise<ArtefactWithListType | null> {
   const artefact = await prisma.artefact.findUnique({
     where: { artefactId },
     select: {
@@ -328,7 +325,7 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
 export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   const artefacts = await prisma.artefact.findMany({
     where: {
-      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID, SJP_DELTA_PRESS_LIST_ID, SJP_DELTA_PUBLIC_LIST_ID] }
+      listType: { name: { in: SJP_LIST_TYPE_NAMES } }
     },
     orderBy: { lastReceivedDate: "desc" },
     take: 10
@@ -351,26 +348,4 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       noMatch: artefact.noMatch
     })
   );
-}
-
-export async function createArtefactSearch(artefactId: string, caseNumber: string | null, caseName: string | null) {
-  return await prisma.artefactSearch.create({
-    data: {
-      artefactId,
-      caseNumber,
-      caseName
-    }
-  });
-}
-
-export async function findArtefactSearchByArtefactId(artefactId: string) {
-  return await prisma.artefactSearch.findFirst({
-    where: { artefactId }
-  });
-}
-
-export async function deleteArtefactSearchByArtefactId(artefactId: string) {
-  return await prisma.artefactSearch.deleteMany({
-    where: { artefactId }
-  });
 }

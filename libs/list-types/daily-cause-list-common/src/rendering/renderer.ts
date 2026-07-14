@@ -16,7 +16,7 @@ function formatTime(isoDateTime: string): string {
 function formatContentDate(date: Date, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   return date.toLocaleDateString(localeCode, {
-    day: "2-digit",
+    day: "numeric",
     month: "long",
     year: "numeric"
   });
