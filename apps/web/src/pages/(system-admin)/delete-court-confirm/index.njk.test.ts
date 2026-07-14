@@ -73,6 +73,12 @@ describe("delete-court-confirm template", () => {
         .map((_, el) => $(el).attr("value"))
         .get();
       expect(radioValues).toEqual(["yes", "no"]);
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(en.radioYes);
+      expect(radioLabels).toContain(en.radioNo);
+      expect($(".govuk-fieldset__legend").text()).toContain(en.radioLegend);
       expect($(".govuk-button").text()).toContain(en.continueButtonText);
     });
 
@@ -96,7 +102,36 @@ describe("delete-court-confirm template", () => {
         .map((_, el) => $(el).text().trim())
         .get();
       expect(keys).toContain(cy.tableHeadings.courtName);
+      expect(keys).toContain(cy.tableHeadings.locationType);
+      expect(keys).toContain(cy.tableHeadings.jurisdiction);
+      expect(keys).toContain(cy.tableHeadings.region);
       expect($(".govuk-button").text()).toContain(cy.continueButtonText);
+    });
+
+    it("should render the Welsh radio options and legend", () => {
+      const data = buildData(cy);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(cy.radioYes);
+      expect(radioLabels).toContain(cy.radioNo);
+      expect($(".govuk-fieldset__legend").text()).toContain(cy.radioLegend);
+    });
+
+    it("should render Welsh error summaries for each validation message", () => {
+      const messages = [cy.noRadioSelected, cy.activeSubscriptions, cy.activeArtefacts, cy.locationNotFound];
+
+      for (const message of messages) {
+        const data = { ...buildData(cy), errors: [{ text: message }] };
+
+        const { $ } = render(env, TEMPLATE, data);
+
+        assertErrorSummary($, [message]);
+        expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
+      }
     });
   });
 
@@ -117,6 +152,22 @@ describe("delete-court-confirm template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.activeSubscriptions]);
+    });
+
+    it("should render the error summary with an active artefacts error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.activeArtefacts }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.activeArtefacts]);
+    });
+
+    it("should render the error summary with a location not found error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.locationNotFound }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.locationNotFound]);
     });
   });
 

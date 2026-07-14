@@ -70,7 +70,23 @@ describe("select-account template", () => {
       expect(radioLabels).toContain(cy.commonPlatformLabel);
       expect(radioLabels).toContain(cy.cathLabel);
       expect($("button").text()).toContain(cy.continueButton);
+      const createLink = $("a[href='/create-media-account']");
+      expect(createLink.text()).toContain(cy.createAccountLink);
+      expect($("body").text()).toContain(cy.createAccountText);
       assertNoErrors($);
+    });
+
+    it("should render the Welsh error summary when errors are present", () => {
+      const data = {
+        ...cy,
+        errors: [{ text: cy.errorMessage, href: "#accountType" }],
+        data: { accountType: undefined }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.errorMessage]);
+      expect($(".govuk-error-summary").text()).toContain(cy.errorSummaryTitle);
     });
 
     it("should render the error summary when errors are present", () => {

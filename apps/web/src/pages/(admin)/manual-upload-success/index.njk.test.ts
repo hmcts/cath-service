@@ -32,6 +32,7 @@ describe("manual-upload-success template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
+      expect($("title").text()).toContain(en.pageTitle);
       const panel = $(".govuk-panel");
       expect(panel.find(".govuk-panel__title").text()).toContain(en.title);
       expect(panel.find(".govuk-panel__body").text()).toContain(en.uploadedMessage);
@@ -46,6 +47,7 @@ describe("manual-upload-success template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
+      expect($("title").text()).toContain(cy.pageTitle);
       expect($(".govuk-panel__title").text()).toContain(cy.title);
       expect($(".govuk-panel__body").text()).toContain(cy.uploadedMessage);
       expect($("h2").text()).toContain(cy.nextStepsHeading);

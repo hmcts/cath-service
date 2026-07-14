@@ -99,7 +99,8 @@ describe("courts-tribunals-list template", () => {
       expect($("button").text()).toContain(en.applyFilters);
       expect($.root().text()).toContain(en.jurisdictionHeading);
       expect($.root().text()).toContain(en.regionHeading);
-      expect($.root().text()).toContain(en.showFilters);
+      expect($("#show-filters-btn").text()).toContain(en.showFilters);
+      expect($("#hide-filters-btn").text()).toContain(en.hideFilters);
       expect($.root().text()).toContain(en.backToTop);
     });
 
@@ -143,6 +144,13 @@ describe("courts-tribunals-list template", () => {
 
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.filterHeading);
+      expect($("h3").text()).toContain(cy.selectedFiltersHeading);
+      expect($(`a[href="/courts-tribunals-list"]`).text()).toContain(cy.clearFilters);
+      expect($("button").text()).toContain(cy.applyFilters);
+      expect($("#hide-filters-btn").text()).toContain(cy.hideFilters);
+      expect($("#show-filters-btn").text()).toContain(cy.showFilters);
+      expect($.root().text()).toContain(cy.jurisdictionHeading);
+      expect($.root().text()).toContain(cy.regionHeading);
       expect($(`a[href="/summary-of-publications?locationId=501"]`).text()).toContain("Canolfan Wrandawiadau Tribiwnlys Aberdeen");
       expect($.root().text()).toContain(cy.backToTop);
       assertNoErrors($);

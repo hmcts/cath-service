@@ -91,6 +91,17 @@ describe("search template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
+    });
+
+    it("should render the Welsh error summary title and message when errors are present", () => {
+      const errors = [{ text: cy.errorMessage, href: "#location" }];
+      const data = { ...cy, locale: "cy", errors };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
     });
   });
 

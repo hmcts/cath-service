@@ -53,6 +53,26 @@ describe("accessibility-statement template", () => {
       }
     });
 
+    it("should render the English intro, feedback and compliance content", () => {
+      const data = { ...en };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const bodyText = $("body").text();
+      expect(bodyText).toContain(en.sections.intro.content);
+      expect(bodyText).toContain(en.sections.intro.commitment);
+      expect(bodyText).toContain(en.sections.feedback.textRelay);
+      expect(bodyText).toContain(en.sections.feedback.audioLoops);
+      expect(bodyText).toContain(en.sections.compliance.content);
+
+      const subHeadingText = $("h4")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(subHeadingText).toContain(en.sections.feedback.contact.name);
+      expect(bodyText).toContain(en.sections.feedback.contact.phone);
+      expect(bodyText).toContain(en.sections.feedback.contact.email);
+    });
+
     it("should render external links with their hrefs", () => {
       const data = { ...en };
 
@@ -84,6 +104,27 @@ describe("accessibility-statement template", () => {
       for (const feature of cy.sections.intro.features) {
         expect(bulletText).toContain(feature);
       }
+    });
+
+    it("should render the Welsh intro, feedback and compliance content", () => {
+      const data = { ...cy };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const bodyText = $("body").text();
+      expect(bodyText).toContain(cy.sections.intro.content);
+      expect(bodyText).toContain(cy.sections.intro.commitment);
+      expect(bodyText).toContain(cy.sections.feedback.textRelay);
+      expect(bodyText).toContain(cy.sections.feedback.audioLoops);
+      expect(bodyText).toContain(cy.sections.compliance.content);
+
+      const headingText = $("h3, h4")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headingText).toContain(cy.sections.compliance.heading);
+      expect(headingText).toContain(cy.sections.feedback.contact.name);
+      expect(bodyText).toContain(cy.sections.feedback.contact.phone);
+      expect(bodyText).toContain(cy.sections.feedback.contact.email);
     });
   });
 

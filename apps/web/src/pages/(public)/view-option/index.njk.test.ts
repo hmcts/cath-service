@@ -74,6 +74,21 @@ describe("view-option template", () => {
       expect($(".govuk-button").text()).toContain(cy.continueButton);
     });
 
+    it("should render both radio options with their Welsh hints and HTML labels", () => {
+      const data = { ...cy };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-hint").text()).toContain(cy.courtTribunalHint);
+      expect($(".govuk-hint").text()).toContain(cy.sjpCaseHint);
+      const labelsHtml = $(".govuk-radios__label")
+        .map((_, el) => $(el).html())
+        .get()
+        .join("");
+      expect(labelsHtml).toContain(cy.courtTribunalLabel);
+      expect(labelsHtml).toContain(cy.sjpCaseLabel);
+    });
+
     it("should not render an error summary when there are no errors", () => {
       const data = { ...en };
 
@@ -91,7 +106,20 @@ describe("view-option template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
       expect($(".govuk-form-group--error")).toHaveLength(1);
+    });
+
+    it("should render the Welsh error summary and message when there are errors", () => {
+      const data = {
+        ...cy,
+        errors: [{ text: cy.errorMessage, href: "#viewOption" }]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
     });
   });
 

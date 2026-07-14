@@ -62,13 +62,30 @@ describe("index template", () => {
       expect(startButton.text()).toContain(en.continueButton);
     });
 
-    it("should render the sign in link", () => {
+    it("should render the sign in prompt text and link", () => {
       const data = { ...en, serviceName: SERVICE_NAME, otherLocale: "cy" };
 
       const { $ } = render(env, "index.njk", data);
 
-      const signInLink = $('a[href="/sign-in"]');
-      expect(signInLink.text()).toBe(en.signInLink);
+      const signInParagraph = $('a[href="/sign-in"]').parent();
+      expect(signInParagraph.text()).toContain(en.signInText);
+      expect(signInParagraph.find("a").text()).toBe(en.signInLink);
+    });
+
+    it("should render the additional info paragraph", () => {
+      const data = { ...en, serviceName: SERVICE_NAME, otherLocale: "cy" };
+
+      const { $ } = render(env, "index.njk", data);
+
+      expect($.root().text()).toContain(en.additionalInfo);
+    });
+
+    it("should render the Welsh availability text in the inset", () => {
+      const data = { ...en, serviceName: SERVICE_NAME, otherLocale: "cy" };
+
+      const { $ } = render(env, "index.njk", data);
+
+      expect($(".govuk-inset-text").text()).toContain(en.welshAvailableText);
     });
 
     it("should render the Welsh language switch link", () => {
@@ -126,6 +143,20 @@ describe("index template", () => {
         expect(bulletText).toContain(item);
       }
       expect($("a.govuk-button--start").text()).toContain(cy.continueButton);
+    });
+
+    it("should render Welsh additional info, sign in and availability text", () => {
+      const data = { ...cy, serviceName: SERVICE_NAME, otherLocale: "en" };
+
+      const { $ } = render(env, "index.njk", data);
+
+      expect($.root().text()).toContain(cy.additionalInfo);
+
+      const signInParagraph = $('a[href="/sign-in"]').parent();
+      expect(signInParagraph.text()).toContain(cy.signInText);
+      expect(signInParagraph.find("a").text()).toBe(cy.signInLink);
+
+      expect($(".govuk-inset-text").text()).toContain(cy.welshAvailableText);
     });
 
     it("should render the English language switch link", () => {
