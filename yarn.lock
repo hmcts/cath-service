@@ -1810,6 +1810,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/magistrates-adult-court-list@workspace:*, @hmcts/magistrates-adult-court-list@workspace:libs/list-types/magistrates-adult-court-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/magistrates-adult-court-list@workspace:libs/list-types/magistrates-adult-court-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.9"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/magistrates-public-list@workspace:*, @hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-public-list@workspace:libs/list-types/magistrates-public-list"
@@ -1868,6 +1885,7 @@ __metadata:
     "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
@@ -1983,6 +2001,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
@@ -2339,6 +2358,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
+    "@hmcts/magistrates-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
@@ -4415,11 +4435,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:>=20.0.0":
-  version: 26.1.0
-  resolution: "@types/node@npm:26.1.0"
+  version: 25.9.3
+  resolution: "@types/node@npm:25.9.3"
   dependencies:
-    undici-types: "npm:~8.3.0"
-  checksum: 10c0/61c22ad1ef215e24138cb8b7368fb68bab9de4c123b3f23d411749b015ba1b7d22f878ad54add26a0b69068d7e07c04af665069d8571b6c6c3b9b2fb73b7bd91
+    undici-types: "npm:>=7.24.0 <7.24.7"
+  checksum: 10c0/72d3aece9d42c2c641bcd3f3cb2dc2828b4bd384dfcbd910c404b8859a68bd69d50c4769ce7defd4ff5e049768e23e615f09407ea2cbbb5f44b90d75a7c6b8ca
   languageName: node
   linkType: hard
 
@@ -10071,6 +10091,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"undici-types@npm:>=7.24.0 <7.24.7":
+  version: 7.24.6
+  resolution: "undici-types@npm:7.24.6"
+  checksum: 10c0/d9cd8befb643ac904615c280a095ba4240531f6bb4a5e75a22a7483630ca8d3f1016d2ab6ace6ceda1f63b3a2db2fe037fafe121d6917a0187573aa548ff78ca
+  languageName: node
+  linkType: hard
+
 "undici-types@npm:~6.20.0":
   version: 6.20.0
   resolution: "undici-types@npm:6.20.0"
@@ -10089,13 +10116,6 @@ __metadata:
   version: 7.16.0
   resolution: "undici-types@npm:7.16.0"
   checksum: 10c0/3033e2f2b5c9f1504bdc5934646cb54e37ecaca0f9249c983f7b1fc2e87c6d18399ebb05dc7fd5419e02b2e915f734d872a65da2e3eeed1813951c427d33cc9a
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~8.3.0":
-  version: 8.3.0
-  resolution: "undici-types@npm:8.3.0"
-  checksum: 10c0/c8aa7e2fbebfce519654dafadc0ece59be888d2ccaf180fb4495da875e7b536d2456345c384069c7e6f3e9c9ab7435f074957da306f142343eee86ff8048855a
   languageName: node
   linkType: hard
 
