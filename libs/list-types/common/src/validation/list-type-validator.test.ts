@@ -10,6 +10,8 @@ const testListTypes: ListTypeInfo[] = [
   { id: 27, name: "SJP_DELTA_PUBLIC_LIST", friendlyName: "Single Justice Procedure Public List (New cases)" },
   { id: 57, name: "MAGISTRATES_ADULT_COURT_LIST_DAILY", friendlyName: "Magistrates Adult Court List - Daily" },
   { id: 58, name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Adult Court List - Future" },
+  { id: 59, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", friendlyName: "Magistrates Public Adult Court List - Daily" },
+  { id: 60, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Public Adult Court List - Future" },
   { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" }
 ];
 
@@ -54,6 +56,15 @@ vi.mock("@hmcts/sjp-public-list", () => ({
 // Mock the dynamic import for @hmcts/magistrates-adult-court-list (used by both DAILY and FUTURE variants)
 vi.mock("@hmcts/magistrates-adult-court-list", () => ({
   validateMagistratesAdultCourtList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+// Mock the dynamic import for @hmcts/magistrates-public-adult-court-list (used by both daily and future variants)
+vi.mock("@hmcts/magistrates-public-adult-court-list", () => ({
+  validateMagistratesPublicAdultCourtList: vi.fn().mockReturnValue({
     isValid: true,
     errors: [],
     schemaVersion: "1.0"
@@ -144,14 +155,15 @@ describe("list-type-validator", () => {
       expect(result.isValid).toBe(false);
     });
 
-    it("should validate SJP_DELTA_PRESS_LIST using the sjp-press-list package alias", async () => {
-      const result = await validateListTypeJson("26", { test: "data" }, testListTypes);
-
-      expect(result.isValid).toBe(true);
-    });
-
-    it("should validate SJP_DELTA_PUBLIC_LIST using the sjp-public-list package alias", async () => {
-      const result = await validateListTypeJson("27", { test: "data" }, testListTypes);
+    it.each([
+      ["26", "SJP_DELTA_PRESS_LIST", "sjp-press-list"],
+      ["27", "SJP_DELTA_PUBLIC_LIST", "sjp-public-list"],
+      ["57", "MAGISTRATES_ADULT_COURT_LIST_DAILY", "magistrates-adult-court-list"],
+      ["58", "MAGISTRATES_ADULT_COURT_LIST_FUTURE", "magistrates-adult-court-list"],
+      ["59", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", "magistrates-public-adult-court-list"],
+      ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"]
+    ])("should validate %s (%s) using the %s package alias", async (id) => {
+      const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(true);
     });

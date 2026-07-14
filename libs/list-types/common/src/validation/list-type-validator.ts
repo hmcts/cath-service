@@ -31,7 +31,9 @@ const PACKAGE_ALIASES: Record<string, string> = {
   "utiac-jr-leeds-daily-hearing-list": "utiac-jr-daily-hearing-list",
   "utiac-jr-manchester-daily-hearing-list": "utiac-jr-daily-hearing-list",
   "utiac-jr-birmingham-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "utiac-jr-cardiff-daily-hearing-list": "utiac-jr-daily-hearing-list"
+  "utiac-jr-cardiff-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "magistrates-public-adult-court-list-daily": "magistrates-public-adult-court-list",
+  "magistrates-public-adult-court-list-future": "magistrates-public-adult-court-list"
 };
 
 /**
