@@ -132,7 +132,7 @@ const postHandler = async (req: Request, res: Response) => {
       if (listTypeName && hasConverterForListTypeName(listTypeName)) {
         jsonData = await convertExcelForListTypeName(listTypeName, uploadData.file);
         // Store converted JSON in blob — original Excel is not stored (no value after conversion)
-        await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
+        await saveUploadedFile(artefactId, artefactId, Buffer.from(JSON.stringify(jsonData)));
         // Track the original uploaded Excel file name, not the synthetic JSON blob name
         await updateSourceArtefactId(artefactId, uploadData.fileName);
 

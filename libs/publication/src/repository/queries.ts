@@ -78,6 +78,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
       language: data.language,
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
+      lastReceivedDate: data.lastReceivedDate ?? new Date(),
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
       noMatch: data.noMatch ?? false
@@ -170,9 +171,14 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   });
 
   for (const artefact of artefacts) {
-    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
-    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
+    // New blobs are stored without an extension (just the artefactId).
+    deleteBlob(artefact.artefactId, CONTAINER.ARTEFACT).catch((error) => {
       console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    });
+    // Backward-compat: older blobs were stored with the extension appended — best-effort cleanup.
+    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
+    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
+      // Silently ignore — legacy blob may not exist for new artefacts.
     });
     deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
       // 404 is expected if no PDF was generated for this artefact
@@ -191,7 +197,7 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   });
 }
 
-export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string): Promise<void> {
+export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string | null): Promise<void> {
   await prisma.artefact.update({
     where: { artefactId },
     data: { sourceArtefactId }

@@ -11,7 +11,7 @@ describe("file-storage", () => {
   });
 
   describe("saveUploadedFile", () => {
-    it("should upload blob with correct name for CSV", async () => {
+    it("should upload blob with artefactId as name (no extension)", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
@@ -21,10 +21,10 @@ describe("file-storage", () => {
       await saveUploadedFile("test-artefact-123", "hearing-list.csv", Buffer.from("a,b,c"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123.csv", Buffer.from("a,b,c"));
+      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123", Buffer.from("a,b,c"));
     });
 
-    it("should upload blob with correct name for PDF", async () => {
+    it("should upload blob with artefactId as name regardless of original file extension", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
@@ -34,20 +34,7 @@ describe("file-storage", () => {
       await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-456.pdf", Buffer.from("pdf-content"));
-    });
-
-    it("should upload blob with correct name for Excel", async () => {
-      // Arrange
-      const { uploadBlob } = await import("@hmcts/azure-blob");
-      vi.mocked(uploadBlob).mockResolvedValue(undefined);
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      // Act
-      await saveUploadedFile("artefact-789", "report.xlsx", Buffer.from("xlsx-content"));
-
-      // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-789.xlsx", Buffer.from("xlsx-content"));
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-456", Buffer.from("pdf-content"));
     });
 
     it("should propagate uploadBlob errors", async () => {

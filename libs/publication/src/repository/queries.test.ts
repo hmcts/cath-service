@@ -584,7 +584,7 @@ describe("deleteArtefacts", () => {
     vi.clearAllMocks();
   });
 
-  it("should delete artefacts by their IDs and trigger blob deletion using sourceArtefactId", async () => {
+  it("should delete artefacts by their IDs — new-style blob (no extension) and legacy blob with extension", async () => {
     const { deleteBlob } = await import("@hmcts/azure-blob");
     vi.mocked(prisma.artefact.findMany).mockResolvedValue([
       { artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: "upload.json" },
@@ -601,13 +601,18 @@ describe("deleteArtefacts", () => {
         }
       }
     });
+    // New-style (no extension)
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "artefact");
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001", "artefact");
+    // Legacy backward-compat (with extension)
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.json", "artefact");
-    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "publications");
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "artefact");
+    // Publications blob
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "publications");
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "publications");
   });
 
-  it("should derive blob extension from sourceArtefactId for flat file names", async () => {
+  it("should delete both new-style and legacy blobs for flat file names", async () => {
     const { deleteBlob } = await import("@hmcts/azure-blob");
     vi.mocked(prisma.artefact.findMany).mockResolvedValue([
       { artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: "civil-daily-cause-list.pdf" }
@@ -616,6 +621,7 @@ describe("deleteArtefacts", () => {
 
     await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
 
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000", "artefact");
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "artefact");
   });
 
@@ -671,7 +677,7 @@ describe("updateSourceArtefactId", () => {
     });
   });
 
-  it("should store upload.json for API ingested publications", async () => {
+  it("should store the provided string value", async () => {
     // Arrange
     vi.mocked(prisma.artefact.update).mockResolvedValue({} as any);
     const artefactId = "550e8400-e29b-41d4-a716-446655440000";
@@ -683,6 +689,21 @@ describe("updateSourceArtefactId", () => {
     expect(prisma.artefact.update).toHaveBeenCalledWith({
       where: { artefactId },
       data: { sourceArtefactId: "upload.json" }
+    });
+  });
+
+  it("should store null when no source_artefact_id is provided", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.update).mockResolvedValue({} as any);
+    const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+
+    // Act
+    await updateSourceArtefactId(artefactId, null);
+
+    // Assert
+    expect(prisma.artefact.update).toHaveBeenCalledWith({
+      where: { artefactId },
+      data: { sourceArtefactId: null }
     });
   });
 });

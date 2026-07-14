@@ -106,7 +106,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
 
     const jsonBuffer = Buffer.from(JSON.stringify(request.hearing_list));
     await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
-    await updateSourceArtefactId(artefactId, request.source_artefact_id ?? "");
+    await updateSourceArtefactId(artefactId, request.source_artefact_id || null);
     await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, request.hearing_list);
 
     await logIngestionResult({ sourceSystem: request.provenance, courtId: request.court_id, status: "SUCCESS", artefactId });
@@ -147,19 +147,37 @@ export async function processFlatFileBlobIngestion(request: FlatFileIngestionReq
 
   const locationId = validation.resolvedLocationId ?? request.court_id;
   const noMatch = !validation.locationExists;
-  const sourceArtefactId = request.source_artefact_id ?? "";
+  const sourceArtefactId = request.source_artefact_id || null;
 
   try {
     const { artefactId, isUpdate } = await createArtefact({ artefactId: randomUUID(), ...buildArtefactParams(request, validation, true) });
 
-    const fileName = sourceArtefactId || `${artefactId}.pdf`;
-    await saveUploadedFile(artefactId, fileName, file);
+    await saveUploadedFile(artefactId, artefactId, file);
     await updateSourceArtefactId(artefactId, sourceArtefactId);
 
     await logIngestionResult({ sourceSystem: request.provenance, courtId: request.court_id, status: "SUCCESS", artefactId });
 
     if (!noMatch) {
-      fireAndForgetPublication(request, artefactId, locationId, validation.listTypeId, isUpdate, {} as CauseListData, "[flat-file-ingestion]");
+      processPublication({
+        artefactId,
+        locationId,
+        listTypeId: validation.listTypeId,
+        contentDate: new Date(request.content_date),
+        locale: request.language === "WELSH" ? "cy" : "en",
+        provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
+        sensitivity: request.sensitivity,
+        language: request.language,
+        displayFrom: new Date(request.display_from),
+        displayTo: new Date(request.display_to),
+        isUpdate,
+        logPrefix: "[flat-file-ingestion]"
+      }).catch((error) => {
+        console.error("[flat-file-ingestion] Failed to process publication:", {
+          artefactId,
+          courtId: request.court_id,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      });
     }
 
     return {

@@ -566,8 +566,8 @@ describe("non-strategic-upload-summary page", () => {
       await callHandler(POST, req, res);
 
       expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("artefact-id-123", 7, { cases: [] });
-      // Excel is NOT saved to blob — only the converted JSON is
-      expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "artefact-id-123.json", expect.any(Buffer));
+      // Excel is NOT saved to blob — only the converted JSON is (blob name has no extension)
+      expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "artefact-id-123", expect.any(Buffer));
       expect(saveUploadedFile).not.toHaveBeenCalledWith("artefact-id-123", "test.xlsx", expect.anything());
       // source_artefact_id stores the original Excel file name, not the synthetic JSON blob name
       expect(updateSourceArtefactId).toHaveBeenCalledWith("artefact-id-123", "test.xlsx");

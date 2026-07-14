@@ -11,7 +11,7 @@ describe("file-storage", () => {
   });
 
   describe("saveUploadedFile", () => {
-    it("should upload blob with correct name for JSON", async () => {
+    it("should upload blob with artefactId as name (no extension)", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
@@ -21,10 +21,10 @@ describe("file-storage", () => {
       await saveUploadedFile("test-artefact-123", "upload.json", Buffer.from("{}"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123.json", Buffer.from("{}"));
+      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123", Buffer.from("{}"));
     });
 
-    it("should upload blob with correct name for PDF", async () => {
+    it("should upload blob with artefactId as name regardless of original file extension", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
@@ -34,33 +34,7 @@ describe("file-storage", () => {
       await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-456.pdf", Buffer.from("pdf-content"));
-    });
-
-    it("should extract last extension from filename with multiple dots", async () => {
-      // Arrange
-      const { uploadBlob } = await import("@hmcts/azure-blob");
-      vi.mocked(uploadBlob).mockResolvedValue(undefined);
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      // Act
-      await saveUploadedFile("multi-ext", "archive.tar.gz", Buffer.from("data"));
-
-      // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("multi-ext.gz", Buffer.from("data"));
-    });
-
-    it("should upload blob with no extension for filename without extension", async () => {
-      // Arrange
-      const { uploadBlob } = await import("@hmcts/azure-blob");
-      vi.mocked(uploadBlob).mockResolvedValue(undefined);
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      // Act
-      await saveUploadedFile("artefact-789", "document", Buffer.from("content"));
-
-      // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-789", Buffer.from("content"));
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-456", Buffer.from("pdf-content"));
     });
 
     it("should propagate uploadBlob errors", async () => {

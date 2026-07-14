@@ -17,12 +17,18 @@ export async function getFileExtension(artefactId: string): Promise<string> {
 }
 
 export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
+  // New blobs are stored without an extension (just the artefactId).
+  const buffer = await downloadBlob(artefactId, CONTAINER.ARTEFACT);
+  if (buffer) return buffer;
+
+  // Backward-compat: older blobs were stored with the extension appended.
   const sourceArtefactId = await getSourceArtefactId(artefactId);
   const extension = path.extname(sourceArtefactId) || ".pdf";
-  const buffer = await downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
-  if (buffer) return buffer;
-  // Non-strategic Excel uploads store the original filename in source_artefact_id but the
-  // converted blob is always .json — fall back to .json when the primary lookup misses.
+  const legacyBuffer = await downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
+  if (legacyBuffer) return legacyBuffer;
+
+  // Non-strategic Excel uploads stored the original Excel filename in source_artefact_id
+  // but the converted blob was always .json — fall back to .json if legacy extension missed.
   if (extension !== ".json") {
     return downloadBlob(`${artefactId}.json`, CONTAINER.ARTEFACT);
   }

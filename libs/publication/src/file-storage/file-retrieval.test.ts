@@ -130,7 +130,7 @@ describe("file-retrieval", () => {
   });
 
   describe("getFileBuffer", () => {
-    it("should return buffer when blob is found", async () => {
+    it("should return buffer when new-style blob (no extension) is found", async () => {
       // Arrange
       const { prisma } = await import("@hmcts/postgres-prisma");
       const { downloadBlob } = await import("@hmcts/azure-blob");
@@ -145,10 +145,33 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toEqual(mockBuffer);
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
+    });
+
+    it("should fall back to legacy blob with extension when new-style blob is missing", async () => {
+      // Arrange: artefact was uploaded before the fix — blob name has .pdf extension
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const legacyBuffer = Buffer.from("legacy content");
+      const artefactId = "550e8400-e29b-41d4-a716-446655440000";
+      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "civil-daily-cause-list.pdf" } as any);
+      vi.mocked(downloadBlob).mockImplementation((blobName: string) => {
+        if (blobName === artefactId) return Promise.resolve(null);
+        if (blobName === `${artefactId}.pdf`) return Promise.resolve(legacyBuffer);
+        return Promise.resolve(null);
+      });
+      const { getFileBuffer } = await import("./file-retrieval.js");
+
+      // Act
+      const result = await getFileBuffer(artefactId);
+
+      // Assert
+      expect(result).toEqual(legacyBuffer);
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, "artefact");
     });
 
-    it("should return null when blob is not found", async () => {
+    it("should return null when no blob is found in any location", async () => {
       // Arrange
       const { prisma } = await import("@hmcts/postgres-prisma");
       const { downloadBlob } = await import("@hmcts/azure-blob");
@@ -164,39 +187,27 @@ describe("file-retrieval", () => {
       expect(result).toBeNull();
     });
 
-    it("should use .pdf fallback extension when artefact has no sourceArtefactId", async () => {
+    it("should use .pdf fallback extension for legacy lookup when artefact has no sourceArtefactId", async () => {
       // Arrange
       const { prisma } = await import("@hmcts/postgres-prisma");
       const { downloadBlob } = await import("@hmcts/azure-blob");
       const artefactId = "550e8400-e29b-41d4-a716-446655440000";
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
-      vi.mocked(downloadBlob).mockResolvedValue(Buffer.from("content"));
+      vi.mocked(downloadBlob).mockImplementation((blobName: string) => {
+        if (blobName === artefactId) return Promise.resolve(null);
+        return Promise.resolve(Buffer.from("legacy"));
+      });
       const { getFileBuffer } = await import("./file-retrieval.js");
 
       // Act
       await getFileBuffer(artefactId);
 
       // Assert
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, "artefact");
     });
 
-    it("should use extension derived from sourceArtefactId for json files", async () => {
-      // Arrange
-      const { prisma } = await import("@hmcts/postgres-prisma");
-      const { downloadBlob } = await import("@hmcts/azure-blob");
-      const artefactId = "550e8400-e29b-41d4-a716-446655440000";
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "upload.json" } as any);
-      vi.mocked(downloadBlob).mockResolvedValue(Buffer.from("{}"));
-      const { getFileBuffer } = await import("./file-retrieval.js");
-
-      // Act
-      await getFileBuffer(artefactId);
-
-      // Assert
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
-    });
-
-    it("should fall back to .json blob when source_artefact_id is an Excel file and primary blob is missing", async () => {
+    it("should fall back to .json blob when legacy extension blob is also missing (non-strategic Excel uploads)", async () => {
       // Arrange: non-strategic Excel upload — source_artefact_id stores original .xlsx name
       // but the blob in storage is the converted .json
       const { prisma } = await import("@hmcts/postgres-prisma");
@@ -205,6 +216,7 @@ describe("file-retrieval", () => {
       const jsonBuffer = Buffer.from('{"hearings":[]}');
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ sourceArtefactId: "hearing-list.xlsx" } as any);
       vi.mocked(downloadBlob).mockImplementation((blobName: string) => {
+        if (blobName === artefactId) return Promise.resolve(null);
         if (blobName === `${artefactId}.xlsx`) return Promise.resolve(null);
         if (blobName === `${artefactId}.json`) return Promise.resolve(jsonBuffer);
         return Promise.resolve(null);
@@ -216,11 +228,12 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toEqual(jsonBuffer);
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.xlsx`, "artefact");
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
     });
 
-    it("should return null when source_artefact_id is an Excel file and both primary and fallback blobs are missing", async () => {
+    it("should return null when all fallback lookups miss", async () => {
       // Arrange
       const { prisma } = await import("@hmcts/postgres-prisma");
       const { downloadBlob } = await import("@hmcts/azure-blob");
@@ -234,12 +247,10 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.xlsx`, "artefact");
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
     });
 
-    it("should not fall back to .json when source_artefact_id is already .json and blob is missing", async () => {
-      // Arrange: .json is the primary extension — no further fallback should occur
+    it("should not fall back to .json when legacy extension is already .json and all blobs are missing", async () => {
+      // Arrange: .json extension — the .json fallback path should not add a second .json attempt
       const { prisma } = await import("@hmcts/postgres-prisma");
       const { downloadBlob } = await import("@hmcts/azure-blob");
       const artefactId = "550e8400-e29b-41d4-a716-446655440000";
@@ -252,7 +263,9 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toBeNull();
-      expect(downloadBlob).toHaveBeenCalledTimes(1);
+      // artefactId (new), artefactId.json (legacy) — no third attempt
+      expect(downloadBlob).toHaveBeenCalledTimes(2);
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
       expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
     });
   });
@@ -366,7 +379,7 @@ describe("file-retrieval", () => {
 
       // Assert
       expect(result).toEqual(data);
-      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.json`, "artefact");
+      expect(downloadBlob).toHaveBeenCalledWith(artefactId, "artefact");
     });
 
     it("should return null when blob is not found", async () => {

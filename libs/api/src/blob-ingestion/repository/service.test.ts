@@ -74,7 +74,7 @@ describe("processBlobIngestion", async () => {
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
-    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "");
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", null);
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
@@ -105,7 +105,7 @@ describe("processBlobIngestion", async () => {
       })
     );
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
-    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "");
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", null);
   });
 
   it("should use source_artefact_id from request when provided", async () => {
@@ -544,11 +544,11 @@ describe("processFlatFileBlobIngestion", async () => {
     // Act
     await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
 
-    // Assert: blob stored using source_artefact_id filename (falls back to <artefactId>.pdf when absent)
-    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "flat-artefact-id.pdf", fileBuffer);
+    // Assert: blob stored using artefactId only (no extension)
+    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "flat-artefact-id", fileBuffer);
   });
 
-  it("should use source_artefact_id as blob filename when provided", async () => {
+  it("should store source_artefact_id in database when provided", async () => {
     // Arrange
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
@@ -562,12 +562,12 @@ describe("processFlatFileBlobIngestion", async () => {
     // Act
     await processFlatFileBlobIngestion(requestWithSourceId, fileBuffer, fileBuffer.length);
 
-    // Assert
-    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "civil-daily.pdf", fileBuffer);
+    // Assert: blob name is always artefactId; source_artefact_id is stored in the DB
+    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "flat-artefact-id", fileBuffer);
     expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", "civil-daily.pdf");
   });
 
-  it("should store empty string in source_artefact_id column when not provided", async () => {
+  it("should store null in source_artefact_id column when not provided", async () => {
     // Arrange
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
@@ -581,7 +581,7 @@ describe("processFlatFileBlobIngestion", async () => {
     await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
 
     // Assert
-    expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", "");
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", null);
   });
 
   it("should return no_match=true and 'location not found' message when location absent", async () => {
