@@ -66,9 +66,23 @@ describe("delete-court template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.courtNameRequired]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
       expect($(".govuk-form-group--error label[for='court-search']")).toHaveLength(1);
       expect($("#court-search-error").text()).toContain(en.courtNameRequired);
       expect($("input#court-search").hasClass("govuk-input--error")).toBe(true);
+    });
+
+    it("should render the English court not found error in the summary", () => {
+      const data = {
+        ...en,
+        errors: [{ text: en.courtNotFound, href: "#court-search" }]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.courtNotFound]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
+      expect($("#court-search-error").text()).toContain(en.courtNotFound);
     });
 
     it("should render a Welsh error summary when errors are present", () => {
@@ -80,6 +94,20 @@ describe("delete-court template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [cy.courtNameRequired]);
+      expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
+    });
+
+    it("should render the Welsh court not found error in the summary", () => {
+      const data = {
+        ...cy,
+        errors: [{ text: cy.courtNotFound, href: "#court-search" }]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.courtNotFound]);
+      expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
+      expect($("#court-search-error").text()).toContain(cy.courtNotFound);
     });
   });
 

@@ -38,8 +38,11 @@ describe("cookie-preferences template", () => {
       expect($("h1").text()).toContain(en.title);
       expect($("p.govuk-body").first().text()).toContain(en.intro);
       expect($("body").text()).toContain(en.essentialTitle);
+      expect($("body").text()).toContain(en.essentialDescription);
       expect($("body").text()).toContain(en.analyticsTitle);
+      expect($("body").text()).toContain(en.analyticsDescription);
       expect($("body").text()).toContain(en.preferencesTitle);
+      expect($("body").text()).toContain(en.preferencesDescription);
     });
 
     it("should render the form posting to /cookie-preferences with a save button", () => {
@@ -62,6 +65,10 @@ describe("cookie-preferences template", () => {
       expect($("#analytics-no")).toHaveLength(1);
       expect($("#preferences-yes")).toHaveLength(1);
       expect($("#preferences-no")).toHaveLength(1);
+      expect($("label[for='analytics-yes']").text()).toContain(en.useAnalytics);
+      expect($("label[for='analytics-no']").text()).toContain(en.doNotUseAnalytics);
+      expect($("label[for='preferences-yes']").text()).toContain(en.usePreferences);
+      expect($("label[for='preferences-no']").text()).toContain(en.doNotUsePreferences);
     });
 
     it("should check the radios reflecting saved preferences", () => {
@@ -100,15 +107,35 @@ describe("cookie-preferences template", () => {
       expect(banner.text()).toContain(en.successMessage);
     });
 
-    it("should render Welsh heading, radio labels and save button", () => {
+    it("should render Welsh heading, intro, section content and radio labels", () => {
       const data = { ...cy, categories, cookiePreferences: {}, saved: false };
 
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
       expect($("h1").text()).toContain(cy.title);
+      expect($("p.govuk-body").first().text()).toContain(cy.intro);
+      expect($("body").text()).toContain(cy.essentialTitle);
+      expect($("body").text()).toContain(cy.essentialDescription);
+      expect($("body").text()).toContain(cy.analyticsTitle);
+      expect($("body").text()).toContain(cy.analyticsDescription);
+      expect($("body").text()).toContain(cy.preferencesTitle);
+      expect($("body").text()).toContain(cy.preferencesDescription);
       expect($("label[for='analytics-yes']").text()).toContain(cy.useAnalytics);
+      expect($("label[for='analytics-no']").text()).toContain(cy.doNotUseAnalytics);
+      expect($("label[for='preferences-yes']").text()).toContain(cy.usePreferences);
       expect($("label[for='preferences-no']").text()).toContain(cy.doNotUsePreferences);
       expect($("button[type='submit']").text()).toContain(cy.saveButton);
+    });
+
+    it("should render the Welsh success banner when saved", () => {
+      const data = { ...cy, categories, cookiePreferences: {}, saved: true };
+
+      const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
+
+      const banner = $(".govuk-notification-banner--success");
+      expect(banner).toHaveLength(1);
+      expect(banner.text()).toContain(cy.successBanner);
+      expect(banner.text()).toContain(cy.successMessage);
     });
   });
 

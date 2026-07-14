@@ -12,17 +12,37 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "(admin)/manual-upload/index.njk";
 
-const baseData = (t: typeof en) => ({
+type Content = typeof en;
+
+const baseData = (t: Content) => ({
   ...t,
   data: { locationName: "" },
   locations: [],
-  listTypes: [{ value: "", text: "<Please choose a list type>" }],
+  listTypes: [{ value: "", text: t.listTypePlaceholder }],
   sensitivityOptions: [{ value: "", text: "<Please choose a sensitivity>" }],
   languageOptions: [{ value: "", text: "" }],
   listTypeSensitivityMap: "{}",
   locale: "en",
   hideLanguageToggle: true
 });
+
+const allErrors = (t: Content) => [
+  { text: t.errorMessages.fileRequired, href: "#file" },
+  { text: t.errorMessages.fileType, href: "#file" },
+  { text: t.errorMessages.fileSize, href: "#file" },
+  { text: t.errorMessages.courtRequired, href: "#court" },
+  { text: t.errorMessages.courtTooShort, href: "#court" },
+  { text: t.errorMessages.listTypeRequired, href: "#listType" },
+  { text: t.errorMessages.hearingStartDateRequired, href: "#hearingStartDate" },
+  { text: t.errorMessages.hearingStartDateInvalid, href: "#hearingStartDate" },
+  { text: t.errorMessages.sensitivityRequired, href: "#sensitivity" },
+  { text: t.errorMessages.languageRequired, href: "#language" },
+  { text: t.errorMessages.displayFromRequired, href: "#displayFrom" },
+  { text: t.errorMessages.displayFromInvalid, href: "#displayFrom" },
+  { text: t.errorMessages.displayToRequired, href: "#displayTo" },
+  { text: t.errorMessages.displayToInvalid, href: "#displayTo" },
+  { text: t.errorMessages.displayToBeforeFrom, href: "#displayTo" }
+];
 
 describe("manual-upload template", () => {
   let env: nunjucks.Environment;
@@ -121,6 +141,107 @@ describe("manual-upload template", () => {
 
       assertErrorSummary($, [en.errorMessages.fileRequired, en.errorMessages.courtRequired]);
       expect($(".govuk-form-group--error label[for='file']")).toHaveLength(1);
+    });
+
+    it("should render the English page title, all field labels, hints and placeholder", () => {
+      const { html, $ } = render(env, TEMPLATE, baseData(en));
+
+      expect(html).toContain(en.pageTitle);
+      expect($("label[for='court']").text()).toContain(en.courtLabel);
+      expect($("label[for='listType']").text()).toContain(en.listTypeLabel);
+      expect(html).toContain(en.listTypePlaceholder);
+      expect($("label[for='sensitivity']").text()).toContain(en.sensitivityLabel);
+      expect($("label[for='language']").text()).toContain(en.languageLabel);
+      expect(html).toContain(en.hearingStartDateLabel);
+      expect(html).toContain(en.hearingStartDateHint);
+      expect(html).toContain(en.displayFromLabel);
+      expect(html).toContain(en.displayFromHint);
+      expect(html).toContain(en.displayToLabel);
+      expect(html).toContain(en.displayToHint);
+      expect(html).toContain(en.dayLabel);
+      expect(html).toContain(en.monthLabel);
+      expect(html).toContain(en.yearLabel);
+    });
+
+    it("should render all English page help aside content", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en));
+
+      const aside = $("aside.app-related-items").text();
+      expect(aside).toContain(en.pageHelpTitle);
+      expect(aside).toContain(en.pageHelpLists);
+      expect(aside).toContain(en.pageHelpListsText);
+      expect(aside).toContain(en.pageHelpSensitivity);
+      expect(aside).toContain(en.pageHelpSensitivityText);
+      expect(aside).toContain(en.pageHelpSensitivityPublicText);
+      expect(aside).toContain(en.pageHelpSensitivityPrivate);
+      expect(aside).toContain(en.pageHelpSensitivityPrivateText);
+      expect(aside).toContain(en.pageHelpSensitivityClassified);
+      expect(aside).toContain(en.pageHelpSensitivityClassifiedText);
+      expect(aside).toContain(en.pageHelpDisplayFrom);
+      expect(aside).toContain(en.pageHelpDisplayFromText);
+      expect(aside).toContain(en.pageHelpDisplayTo);
+      expect(aside).toContain(en.pageHelpDisplayToText);
+    });
+
+    it("should render every English validation error in the error summary", () => {
+      const errors = allErrors(en);
+      const data = { ...baseData(en), errors };
+
+      const { html, $ } = render(env, TEMPLATE, data);
+
+      expect(html).toContain(en.errorSummaryTitle);
+      assertErrorSummary(
+        $,
+        errors.map((error) => error.text)
+      );
+    });
+
+    it("should render the Welsh page title, warning, field labels, hints and placeholder", () => {
+      const { html, $ } = render(env, TEMPLATE, baseData(cy));
+
+      const bodyText = $("body").text();
+      expect(html).toContain(cy.pageTitle);
+      expect($(".manual-upload-warning__text").text()).toContain(cy.warningMessage);
+      expect($("a.back-to-top-link").text()).toContain(cy.backToTop);
+      expect($("label[for='file']").text()).toContain(cy.fileUploadLabel);
+      expect($("label[for='court']").text()).toContain(cy.courtLabel);
+      expect($("label[for='listType']").text()).toContain(cy.listTypeLabel);
+      expect(bodyText).toContain(cy.listTypePlaceholder);
+      expect($("label[for='sensitivity']").text()).toContain(cy.sensitivityLabel);
+      expect($("label[for='language']").text()).toContain(cy.languageLabel);
+      expect(bodyText).toContain(cy.hearingStartDateLabel);
+      expect(bodyText).toContain(cy.hearingStartDateHint);
+      expect(bodyText).toContain(cy.displayFromLabel);
+      expect(bodyText).toContain(cy.displayFromHint);
+      expect(bodyText).toContain(cy.displayToLabel);
+      expect(bodyText).toContain(cy.displayToHint);
+      expect(bodyText).toContain(cy.dayLabel);
+      expect(bodyText).toContain(cy.monthLabel);
+      expect(bodyText).toContain(cy.yearLabel);
+    });
+
+    it("should render all Welsh page help aside content", () => {
+      const { $ } = render(env, TEMPLATE, baseData(cy));
+
+      const aside = $("aside.app-related-items").text();
+      expect(aside).toContain(cy.pageHelpTitle);
+      expect(aside).toContain(cy.pageHelpLists);
+      expect(aside).toContain(cy.pageHelpSensitivity);
+      expect(aside).toContain(cy.pageHelpDisplayFrom);
+      expect(aside).toContain(cy.pageHelpDisplayTo);
+    });
+
+    it("should render every Welsh validation error in the error summary", () => {
+      const errors = allErrors(cy);
+      const data = { ...baseData(cy), errors };
+
+      const { html, $ } = render(env, TEMPLATE, data);
+
+      expect(html).toContain(cy.errorSummaryTitle);
+      assertErrorSummary(
+        $,
+        errors.map((error) => error.text)
+      );
     });
   });
 

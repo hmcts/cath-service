@@ -67,6 +67,14 @@ describe("manual-upload-summary template", () => {
       expect($("h2").text()).toContain(en.subHeading);
     });
 
+    it("should render the English page title", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("title").text()).toContain(en.pageTitle);
+    });
+
     it("should render the summary list keys and values", () => {
       const data = baseData(en);
 
@@ -120,7 +128,15 @@ describe("manual-upload-summary template", () => {
       expect($("form button").text()).toContain(en.confirmButton);
     });
 
-    it("should render Welsh heading, keys and confirm button", () => {
+    it("should render the Welsh page title", () => {
+      const data = baseData(cy);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("title").text()).toContain(cy.pageTitle);
+    });
+
+    it("should render Welsh heading, all summary keys, change links and confirm button", () => {
       const data = baseData(cy);
 
       const { $ } = render(env, TEMPLATE, data);
@@ -130,8 +146,15 @@ describe("manual-upload-summary template", () => {
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(keys).toContain(cy.courtName);
-      expect(keys).toContain(cy.displayFileDates);
+      expect(keys).toEqual([cy.courtName, cy.file, cy.listType, cy.hearingStartDate, cy.sensitivity, cy.language, cy.displayFileDates]);
+
+      const changeLinks = $(".govuk-summary-list__actions a")
+        .map((_, el) => $(el).text())
+        .get();
+      for (const link of changeLinks) {
+        expect(link).toContain(cy.change);
+      }
+
       expect($("form button").text()).toContain(cy.confirmButton);
     });
 

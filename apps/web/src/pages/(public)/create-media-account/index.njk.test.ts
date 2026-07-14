@@ -20,6 +20,24 @@ const buildData = (content: typeof en, overrides: Record<string, unknown> = {}) 
   ...overrides
 });
 
+const allFieldErrors = (content: typeof en) => [
+  { text: content.errorFullNameBlank, href: "#fullName" },
+  { text: content.errorFullNameWhiteSpace, href: "#fullName" },
+  { text: content.errorFullNameDoubleWhiteSpace, href: "#fullName" },
+  { text: content.errorFullNameWithoutWhiteSpace, href: "#fullName" },
+  { text: content.errorEmailBlank, href: "#email" },
+  { text: content.errorEmailStartWithWhiteSpace, href: "#email" },
+  { text: content.errorEmailDoubleWhiteSpace, href: "#email" },
+  { text: content.errorEmailInvalid, href: "#email" },
+  { text: content.errorEmployerBlank, href: "#employer" },
+  { text: content.errorEmployerWhiteSpace, href: "#employer" },
+  { text: content.errorEmployerDoubleWhiteSpace, href: "#employer" },
+  { text: content.errorFileBlank, href: "#idProof" },
+  { text: content.errorFileSize, href: "#idProof" },
+  { text: content.errorFileType, href: "#idProof" },
+  { text: content.errorTermsRequired, href: "#termsAccepted" }
+];
+
 describe("create-media-account template", () => {
   let env: nunjucks.Environment;
 
@@ -54,12 +72,43 @@ describe("create-media-account template", () => {
 
       expect($('label[for="fullName"]').text()).toContain(en.fullNameLabel);
       expect($('label[for="email"]').text()).toContain(en.emailLabel);
+      expect($("#email-hint").text()).toContain(en.emailHint);
       expect($('label[for="employer"]').text()).toContain(en.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(en.uploadLabel);
       expect($("#idProof-hint").text()).toContain(en.uploadHint);
       expect($('input[name="email"]').attr("type")).toBe("email");
       expect($('input[name="idProof"]').attr("type")).toBe("file");
       expect($('input[name="termsAccepted"]').attr("type")).toBe("checkbox");
+    });
+
+    it("should render the terms and conditions text and checkbox label", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#termsAccepted-hint").text()).toContain(en.termsText);
+      expect($('label[for="termsAccepted"]').text()).toContain(en.termsCheckboxLabel);
+    });
+
+    it("should render every field validation message in the error summary", () => {
+      const data = buildData(en, { errors: allFieldErrors(en) });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [
+        en.errorFullNameWhiteSpace,
+        en.errorFullNameDoubleWhiteSpace,
+        en.errorFullNameWithoutWhiteSpace,
+        en.errorEmailStartWithWhiteSpace,
+        en.errorEmailDoubleWhiteSpace,
+        en.errorEmailInvalid,
+        en.errorEmployerBlank,
+        en.errorEmployerWhiteSpace,
+        en.errorEmployerDoubleWhiteSpace,
+        en.errorFileSize,
+        en.errorFileType,
+        en.errorTermsRequired
+      ]);
     });
 
     it("should render the continue button and back to top link", () => {
@@ -122,6 +171,23 @@ describe("create-media-account template", () => {
       expect($('a[href="#top"]').text()).toContain(cy.backToTop);
     });
 
+    it("should render the Welsh opening text, hints and terms content", () => {
+      const data = buildData(cy, { locale: "cy" });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const bodyText = $(".govuk-body").text();
+      expect(bodyText).toContain(cy.openingText1);
+      expect(bodyText).toContain(cy.openingText2);
+      expect(bodyText).toContain(cy.openingText3);
+      expect($('label[for="employer"]').text()).toContain(cy.employerLabel);
+      expect($('label[for="idProof"]').text()).toContain(cy.uploadLabel);
+      expect($("#idProof-hint").text()).toContain(cy.uploadHint);
+      expect($("#email-hint").text()).toContain(cy.emailHint);
+      expect($("#termsAccepted-hint").text()).toContain(cy.termsText);
+      expect($('label[for="termsAccepted"]').text()).toContain(cy.termsCheckboxLabel);
+    });
+
     it("should render the Welsh error summary", () => {
       const errors = [{ text: cy.errorFullNameBlank, href: "#fullName" }];
       const data = buildData(cy, { locale: "cy", errors });
@@ -130,6 +196,30 @@ describe("create-media-account template", () => {
 
       assertErrorSummary($, [cy.errorFullNameBlank]);
       expect($(".govuk-error-summary").text()).toContain(cy.errorSummaryTitle);
+    });
+
+    it("should render every Welsh field validation message in the error summary", () => {
+      const data = buildData(cy, { locale: "cy", errors: allFieldErrors(cy) });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [
+        cy.errorFullNameBlank,
+        cy.errorFullNameWhiteSpace,
+        cy.errorFullNameDoubleWhiteSpace,
+        cy.errorFullNameWithoutWhiteSpace,
+        cy.errorEmailBlank,
+        cy.errorEmailStartWithWhiteSpace,
+        cy.errorEmailDoubleWhiteSpace,
+        cy.errorEmailInvalid,
+        cy.errorEmployerBlank,
+        cy.errorEmployerWhiteSpace,
+        cy.errorEmployerDoubleWhiteSpace,
+        cy.errorFileBlank,
+        cy.errorFileSize,
+        cy.errorFileType,
+        cy.errorTermsRequired
+      ]);
     });
   });
 

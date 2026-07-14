@@ -139,8 +139,36 @@ describe("summary-of-publications template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.titlePrefix);
+      expect($("h1").text()).toContain(cy.titleSuffix);
       expect($(`a[href="${cy.factLinkUrl}"]`).text().trim()).toBe(cy.factLinkText);
       expect($("body").text()).toContain(cy.noPublicationsMessage);
+    });
+
+    it("should render Welsh language labels for publications", () => {
+      const publications = [
+        {
+          id: "english-artefact",
+          displayName: "Rhestr Achosion Dyddiol 12 Gorffennaf 2026",
+          languageLabel: cy.languageEnglish,
+          isFlatFile: false,
+          locationId: "5",
+          urlPath: null
+        },
+        {
+          id: "welsh-artefact",
+          displayName: "Rhestr Achosion Dyddiol 12 Gorffennaf 2026",
+          languageLabel: cy.languageWelsh,
+          isFlatFile: false,
+          locationId: "5",
+          urlPath: null
+        }
+      ];
+      const data = buildData(cy, { publications });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("ul.govuk-list").text()).toContain(cy.languageEnglish);
+      expect($("ul.govuk-list").text()).toContain(cy.languageWelsh);
     });
   });
 
