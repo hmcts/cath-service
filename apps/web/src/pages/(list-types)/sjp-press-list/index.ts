@@ -1,6 +1,6 @@
 import { calculatePagination, determineListType, extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { getPublicationJson, PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getPublicationJson, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
 import { sjpPressListCy, sjpPressListEn, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
@@ -25,6 +25,11 @@ const getHandler = async (req: Request, res: Response) => {
     const artefact = await prisma.artefact.findUnique({ where: { artefactId } });
     if (!artefact) {
       return res.status(404).render("errors/404", { en, cy, locale });
+    }
+
+    if (!canAccessPublicationData(req.user, artefact, await resolveListType(artefact.listTypeId))) {
+      res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+      return res.status(403).render("errors/403", { en, cy, locale });
     }
 
     const jsonData = await loadJsonData(artefactId);

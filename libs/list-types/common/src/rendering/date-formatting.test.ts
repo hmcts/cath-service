@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./date-formatting.js";
+import { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./date-formatting.js";
 
 describe("date-formatting", () => {
   describe("formatDisplayDate", () => {
@@ -79,6 +79,36 @@ describe("date-formatting", () => {
       const result = formatLastUpdatedDateTime(isoDateTime, "cy");
       expect(result.date).toBe("15 Ionawr 2026");
       expect(result.time).toBe("2:30pm");
+    });
+  });
+
+  describe("formatHHMMTime", () => {
+    it("should format whole hour AM dropping minutes", () => {
+      expect(formatHHMMTime("09:00")).toBe("9am");
+    });
+
+    it("should format whole hour PM dropping minutes", () => {
+      expect(formatHHMMTime("14:00")).toBe("2pm");
+    });
+
+    it("should format time with minutes AM", () => {
+      expect(formatHHMMTime("10:05")).toBe("10:05am");
+    });
+
+    it("should format time with minutes PM", () => {
+      expect(formatHHMMTime("22:30")).toBe("10:30pm");
+    });
+
+    it("should format noon as 12pm", () => {
+      expect(formatHHMMTime("12:00")).toBe("12pm");
+    });
+
+    it("should format midnight as 12am", () => {
+      expect(formatHHMMTime("00:00")).toBe("12am");
+    });
+
+    it("should return original string for invalid input", () => {
+      expect(formatHHMMTime("invalid")).toBe("invalid");
     });
   });
 

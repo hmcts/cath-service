@@ -37,21 +37,6 @@ const mockDbListTypes = [
     updatedAt: new Date(),
     deletedAt: null,
     subJurisdictions: []
-  },
-  {
-    id: 3,
-    name: "CRIME_DAILY_LIST",
-    friendlyName: "Crime Daily List",
-    welshFriendlyName: null,
-    shortenedFriendlyName: null,
-    url: null,
-    defaultSensitivity: null,
-    allowedProvenance: "CRIME_IDAM",
-    isNonStrategic: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    deletedAt: null,
-    subJurisdictions: []
   }
 ];
 

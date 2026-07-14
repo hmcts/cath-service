@@ -20,6 +20,8 @@ import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as magistratesAdultCourtListModuleRoot } from "@hmcts/magistrates-adult-court-list/config";
+import { moduleRoot as magistratesPublicAdultCourtListModuleRoot } from "@hmcts/magistrates-public-adult-court-list/config";
 import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
 import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
 import {
@@ -37,6 +39,9 @@ import {
   moduleRoot as systemAdminModuleRoot,
   pages as systemAdminPages
 } from "@hmcts/system-admin-pages/config";
+import { moduleRoot as utaacModuleRoot } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
+import { moduleRoot as utlcModuleRoot } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
+import { moduleRoot as utccModuleRoot } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
 import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
 import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
@@ -115,6 +120,9 @@ export async function createApp(): Promise<Express> {
     fttTaxChamberModuleRoot,
     fttLrtModuleRoot,
     fttRptModuleRoot,
+    utccModuleRoot,
+    utlcModuleRoot,
+    utaacModuleRoot,
     civilFamilyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
@@ -124,8 +132,10 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    magistratesPublicAdultCourtListModuleRoot,
     magistratesPublicListModuleRoot,
     magistratesStandardListModuleRoot,
+    magistratesAdultCourtListModuleRoot,
     crownDailyListModuleRoot,
     crownFirmListModuleRoot,
     crownWarnedListModuleRoot,

@@ -1,5 +1,5 @@
+import { listTypeData } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { listTypeData } from "./list-type-data.js";
 
 export async function seedListTypes() {
   console.log("Checking if list type data seeding is needed...");
