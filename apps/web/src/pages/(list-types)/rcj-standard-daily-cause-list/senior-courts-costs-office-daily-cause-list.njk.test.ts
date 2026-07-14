@@ -2,14 +2,13 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { rcjStandardDailyCauseListCy as cy, rcjStandardDailyCauseListEn as en } from "@hmcts/rcj-standard-daily-cause-list";
-import { render } from "@hmcts/test-support";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const govukFrontend = path.resolve("node_modules/govuk-frontend/dist");
 const webCoreViews = path.join(webCoreModuleRoot, "views");
 
 describe("senior-courts-costs-office-daily-cause-list.njk", () => {
@@ -247,9 +246,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
     });
 
     beforeEach(() => {
-      env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-        autoescape: true,
-        throwOnUndefined: false,
+      env = createTestEnvironment([__dirname, webCoreViews], {
         trimBlocks: true,
         lstripBlocks: true
       });

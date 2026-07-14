@@ -16,16 +16,18 @@ export interface RenderResult {
  * Create a Nunjucks environment configured for testing
  *
  * @param modulePaths - Array of paths to template directories
+ * @param options - Optional Nunjucks environment options (merged over the defaults)
  * @returns Configured Nunjucks environment
  */
-export function createTestEnvironment(modulePaths: string[]): nunjucks.Environment {
+export function createTestEnvironment(modulePaths: string[], options: nunjucks.ConfigureOptions = {}): nunjucks.Environment {
   // From libs/test-support/src, go up to project root then to govuk-frontend
   const govukPath = path.join(__dirname, "../../../node_modules/govuk-frontend/dist");
 
-  return nunjucks.configure([...modulePaths, govukPath], {
-    autoescape: true,
-    noCache: true
-  });
+  // Build an isolated environment rather than nunjucks.configure(), which mutates
+  // a shared global environment and lets concurrent test files clobber each
+  // other's template search paths.
+  const loader = new nunjucks.FileSystemLoader([...modulePaths, govukPath], { noCache: true });
+  return new nunjucks.Environment(loader, { autoescape: true, ...options });
 }
 
 /**

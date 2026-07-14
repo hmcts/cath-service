@@ -1,16 +1,15 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { render } from "@hmcts/test-support";
+import { createTestEnvironment, render } from "@hmcts/test-support";
 import { londonTableHeaders, londonTableHeadersCy, utiacJrDailyHearingListCy, utiacJrDailyHearingListEn } from "@hmcts/utiac-jr-daily-hearing-list";
-import nunjucks from "nunjucks";
+import type nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("utiac-jr-london-daily-hearing-list.njk", () => {
   describe("Template file", () => {
@@ -212,10 +211,7 @@ describe("utiac-jr-london-daily-hearing-list.njk", () => {
     let env: nunjucks.Environment;
 
     function setup() {
-      env = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-        autoescape: true,
-        throwOnUndefined: false
-      });
+      env = createTestEnvironment([__dirname, webCoreViews]);
     }
 
     describe("with English content", () => {

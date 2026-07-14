@@ -2,15 +2,14 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { grcWeeklyHearingListCy as cy, grcWeeklyHearingListEn as en } from "@hmcts/grc-weekly-hearing-list";
-import { render } from "@hmcts/test-support";
-import nunjucks from "nunjucks";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
 import { describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-const govukFrontend = path.resolve(__dirname, "../../../../../../node_modules/govuk-frontend/dist");
 
 describe("grc-weekly-hearing-list template", () => {
   describe("Template file", () => {
@@ -114,8 +113,7 @@ describe("grc-weekly-hearing-list template", () => {
     let env: nunjucks.Environment;
 
     const setupNunjucks = () => {
-      const environment = nunjucks.configure([__dirname, webCoreViews, govukFrontend], {
-        autoescape: true,
+      const environment = createTestEnvironment([__dirname, webCoreViews], {
         trimBlocks: true,
         lstripBlocks: true
       });
