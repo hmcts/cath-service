@@ -59,12 +59,10 @@ describe("system-admin-dashboard template", () => {
 
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
-      // Act & Assert
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
     it("should have all required keys", () => {
-      // Act & Assert
       expect(en).toHaveProperty("title");
       expect(en).toHaveProperty("tiles");
       expect(cy).toHaveProperty("title");

@@ -118,7 +118,6 @@ describe("delete-court-success template", () => {
 
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert - Check the success panel
       const panel = $(".govuk-panel");
       expect(panel).toHaveLength(1);
       expect($(".govuk-panel__title").text().trim()).toBe(en.pageTitle);
@@ -154,7 +153,6 @@ describe("delete-court-success template", () => {
 
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert - Check all three links exist
       const links = $(".govuk-list a");
       expect(links).toHaveLength(3);
 
@@ -207,7 +205,6 @@ describe("delete-court-success template", () => {
 
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert - Check Welsh link text
       const removeLink = $('a[href="/delete-court?lng=cy"]');
       expect(removeLink.text()).toBe(cy.removeAnotherCourtLink);
 
@@ -231,7 +228,6 @@ describe("delete-court-success template", () => {
 
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert - All links should have ?lng=cy
       expect($('a[href="/delete-court?lng=cy"]')).toHaveLength(1);
       expect($('a[href="/reference-data-upload?lng=cy"]')).toHaveLength(1);
       expect($('a[href="/system-admin-dashboard?lng=cy"]')).toHaveLength(1);
