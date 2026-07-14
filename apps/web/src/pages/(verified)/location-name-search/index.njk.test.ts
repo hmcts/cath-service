@@ -47,75 +47,57 @@ describe("location-name-search template", () => {
 
   describe("English content", () => {
     it("should render the heading and description", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(en.heading);
       expect($("p.govuk-body").first().text().trim()).toBe(en.description);
     });
 
     it("should render the filter panel headings", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($.root().text()).toContain(en.filterHeading);
       expect($.root().text()).toContain(en.selectedFiltersHeading);
     });
 
     it("should render a clear filters link back to the search", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const clearLink = $('a[href="/location-name-search"]');
       expect(clearLink.length).toBeGreaterThan(0);
       expect(clearLink.first().text()).toContain(en.clearFilters);
     });
 
     it("should render a back link to subscription management", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('.govuk-back-link[href="/subscription-management"]')).toHaveLength(1);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and description", () => {
-      // Arrange
       const data = buildData(cy, "cy");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(cy.heading);
       expect($("p.govuk-body").first().text().trim()).toBe(cy.description);
     });
 
     it("should render the Welsh filter panel headings", () => {
-      // Arrange
       const data = buildData(cy, "cy");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($.root().text()).toContain(cy.filterHeading);
       expect($.root().text()).toContain(cy.selectedFiltersHeading);
     });

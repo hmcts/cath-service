@@ -21,7 +21,6 @@ describe("reference-data-upload template", () => {
 
   describe("English content", () => {
     it("should render page heading and title", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -34,16 +33,13 @@ describe("reference-data-upload template", () => {
         errorSummaryTitle: en.errorSummaryTitle
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.pageTitle);
       expect($(".govuk-warning-text__text").text()).toContain(en.warningText);
     });
 
     it("should render download link", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -55,17 +51,14 @@ describe("reference-data-upload template", () => {
         continueButtonText: en.continueButtonText
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       const downloadLink = $('a[href="/reference-data-download"]');
       expect(downloadLink).toHaveLength(1);
       expect(downloadLink.text()).toBe(en.downloadLinkText);
     });
 
     it("should render action buttons with correct links", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -77,10 +70,8 @@ describe("reference-data-upload template", () => {
         continueButtonText: en.continueButtonText
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       const jurisdictionBtn = $('a[href="/add-jurisdiction"]');
       expect(jurisdictionBtn.text().trim()).toBe(en.addJurisdictionLinkText);
       expect(jurisdictionBtn.hasClass("govuk-button--secondary")).toBe(true);
@@ -93,7 +84,6 @@ describe("reference-data-upload template", () => {
     });
 
     it("should render file upload form with correct attributes", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -105,10 +95,8 @@ describe("reference-data-upload template", () => {
         continueButtonText: en.continueButtonText
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       const form = $("form");
       expect(form.attr("method")).toBe("post");
       expect(form.attr("enctype")).toBe("multipart/form-data");
@@ -123,7 +111,6 @@ describe("reference-data-upload template", () => {
     });
 
     it("should not render error summary when no errors", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -136,15 +123,12 @@ describe("reference-data-upload template", () => {
         errors: null
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render error summary when errors exist", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
@@ -158,15 +142,12 @@ describe("reference-data-upload template", () => {
         errors: [{ text: en.errorMessages.fileRequired, href: "#file" }]
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessages.fileRequired]);
     });
 
     it("should render file upload error message when error exists", () => {
-      // Arrange
       const errors = [{ text: en.errorMessages.fileType, href: "#file" }];
       const data = {
         pageTitle: en.pageTitle,
@@ -181,10 +162,8 @@ describe("reference-data-upload template", () => {
         errors
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       const formGroup = $("#file").closest(".govuk-form-group");
       expect(formGroup.hasClass("govuk-form-group--error")).toBe(true);
 
@@ -195,7 +174,6 @@ describe("reference-data-upload template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh page heading and title", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
@@ -207,16 +185,13 @@ describe("reference-data-upload template", () => {
         continueButtonText: cy.continueButtonText
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.pageTitle);
       expect($(".govuk-warning-text__text").text()).toContain(cy.warningText);
     });
 
     it("should render Welsh button text", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
@@ -228,10 +203,8 @@ describe("reference-data-upload template", () => {
         continueButtonText: cy.continueButtonText
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       const submitButton = $("button[type='submit']");
       expect(submitButton.text().trim()).toBe(cy.continueButtonText);
 
@@ -240,7 +213,6 @@ describe("reference-data-upload template", () => {
     });
 
     it("should render Welsh error messages", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
@@ -254,10 +226,8 @@ describe("reference-data-upload template", () => {
         errors: [{ text: cy.errorMessages.fileRequired, href: "#file" }]
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
 
-      // Assert
       assertErrorSummary($, [cy.errorMessages.fileRequired]);
     });
   });

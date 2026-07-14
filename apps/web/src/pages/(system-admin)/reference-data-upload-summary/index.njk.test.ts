@@ -46,38 +46,29 @@ describe("reference-data-upload-summary template", () => {
 
   describe("English content", () => {
     it("should render the page heading and preview title", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($("h2.govuk-heading-l").text()).toContain(en.previewTitle);
     });
 
     it("should render the file name summary row with a change link", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-summary-list").text()).toContain("locations.csv");
       const changeLink = $('a[href="/reference-data-upload"]');
       expect(changeLink.text()).toContain(en.changeLink);
     });
 
     it("should render the table headers and the preview row data", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("thead .govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -91,28 +82,22 @@ describe("reference-data-upload-summary template", () => {
     });
 
     it("should render the confirm button and no error summary when hasErrors is false", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
       expect($("form[method='post'] button").text()).toContain(en.confirmButtonText);
     });
 
     it("should render the error summary and hide the confirm button when hasErrors is true", () => {
-      // Arrange
       const data = buildData(en, {
         hasErrors: true,
         errors: [{ text: "Invalid location ID", href: "#file" }]
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, ["Invalid location ID"]);
       expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
       expect($("form[method='post']")).toHaveLength(0);
@@ -121,13 +106,10 @@ describe("reference-data-upload-summary template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading", () => {
-      // Arrange
       const data = buildData(cy, { locale: "cy" });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($("h2.govuk-heading-l").text()).toContain(cy.previewTitle);
     });

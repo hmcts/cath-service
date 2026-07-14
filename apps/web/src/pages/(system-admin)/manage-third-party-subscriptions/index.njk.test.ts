@@ -25,26 +25,20 @@ describe("manage-third-party-subscriptions template", () => {
 
   describe("English content", () => {
     it("should render the page heading and save button", () => {
-      // Arrange
       const data = { ...en, listTypes, currentListTypeIds: [], errors: undefined, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($("button").text()).toContain(en.saveButtonText);
       assertNoErrors($);
     });
 
     it("should render a checkbox per list type using English friendly names", () => {
-      // Arrange
       const data = { ...en, listTypes, currentListTypeIds: [1], errors: undefined, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const checkboxes = $("input[type='checkbox'][name='listTypes']");
       expect(checkboxes).toHaveLength(2);
       expect($(".govuk-fieldset__legend").text()).toContain(en.listTypesLabel);
@@ -53,38 +47,29 @@ describe("manage-third-party-subscriptions template", () => {
     });
 
     it("should pre-check checkboxes for current subscriptions", () => {
-      // Arrange
       const data = { ...en, listTypes, currentListTypeIds: [1], errors: undefined, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input[type='checkbox'][value='1']").attr("checked")).toBeDefined();
       expect($("input[type='checkbox'][value='2']").attr("checked")).toBeUndefined();
     });
 
     it("should not render any checkboxes when there are no list types", () => {
-      // Arrange
       const data = { ...en, listTypes: [], currentListTypeIds: [], errors: undefined, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input[type='checkbox'][name='listTypes']")).toHaveLength(0);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading and Welsh friendly names", () => {
-      // Arrange
       const data = { ...cy, listTypes, currentListTypeIds: [], errors: undefined, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($("button").text()).toContain(cy.saveButtonText);
       expect($.html()).toContain("Rhestr Achos Dyddiol Sifil");
@@ -94,13 +79,10 @@ describe("manage-third-party-subscriptions template", () => {
 
   describe("Error states", () => {
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const data = { ...en, listTypes: undefined, currentListTypeIds: undefined, errors: [{ text: en.userNotFound }], locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.userNotFound]);
     });
   });

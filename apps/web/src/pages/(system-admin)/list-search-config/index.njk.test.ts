@@ -38,25 +38,19 @@ describe("list-search-config template", () => {
 
   describe("English content", () => {
     it("should render the page heading and body", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.heading);
       expect($("p.govuk-body").text().trim()).toBe(en.body);
     });
 
     it("should render both field inputs with their labels inside a post form", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       expect($("#caseNumberFieldName")).toHaveLength(1);
       expect($("#caseNumberFieldName").attr("name")).toBe("caseNumberFieldName");
@@ -68,7 +62,6 @@ describe("list-search-config template", () => {
     });
 
     it("should render existing field values", () => {
-      // Arrange
       const data = {
         ...buildData(en),
         data: {
@@ -77,27 +70,21 @@ describe("list-search-config template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#caseNumberFieldName").attr("value")).toBe("caseRef");
       expect($("#caseNameFieldName").attr("value")).toBe("caseName");
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary and field errors when validation fails", () => {
-      // Arrange
       const data = {
         ...buildData(en),
         errors: [
@@ -110,10 +97,8 @@ describe("list-search-config template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorCaseNumberInvalid, en.errorCaseNameInvalid]);
       expect($("#caseNumberFieldName-error").text()).toContain(en.errorCaseNumberInvalid);
       expect($("#caseNameFieldName-error").text()).toContain(en.errorCaseNameInvalid);
@@ -122,13 +107,10 @@ describe("list-search-config template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, labels and button", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.heading);
       expect($("p.govuk-body").text().trim()).toBe(cy.body);
       expect($('label[for="caseNumberFieldName"]').text().trim()).toBe(cy.caseNumberFieldLabel);
@@ -137,7 +119,6 @@ describe("list-search-config template", () => {
     });
 
     it("should render the Welsh error summary when validation fails", () => {
-      // Arrange
       const data = {
         ...buildData(cy),
         errors: [{ text: cy.errorCaseNumberInvalid, href: "#case-number-field-name" }],
@@ -146,10 +127,8 @@ describe("list-search-config template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorCaseNumberInvalid]);
     });
   });

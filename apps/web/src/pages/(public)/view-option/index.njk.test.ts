@@ -28,24 +28,18 @@ describe("view-option template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading as the fieldset legend", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
     });
 
     it("should render both radio options with their hints and HTML labels", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $("input[type='radio'][name='viewOption']");
       expect(radios).toHaveLength(2);
       expect($("input[value='court-tribunal']")).toHaveLength(1);
@@ -61,13 +55,10 @@ describe("view-option template", () => {
     });
 
     it("should render the continue button and post the form to itself", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-button").text()).toContain(en.continueButton);
       const form = $("form");
       expect(form).toHaveLength(1);
@@ -75,39 +66,30 @@ describe("view-option template", () => {
     });
 
     it("should render the Welsh heading and button", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($(".govuk-button").text()).toContain(cy.continueButton);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render the error summary and highlight the form group when there are errors", () => {
-      // Arrange
       const data = {
         ...en,
         errors: [{ text: en.errorMessage, href: "#viewOption" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessage]);
       expect($(".govuk-form-group--error")).toHaveLength(1);
     });

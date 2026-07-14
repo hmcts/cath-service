@@ -46,13 +46,10 @@ describe("rejected.njk template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel with the page title", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(en.pageTitle);
@@ -60,13 +57,10 @@ describe("rejected.njk template", () => {
     });
 
     it("should render the applicant details in the summary list", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const summaryText = $(".govuk-summary-list").text();
       expect(summaryText).toContain(en.tableHeaders.name);
       expect(summaryText).toContain(mockApplication.name);
@@ -78,13 +72,10 @@ describe("rejected.njk template", () => {
     });
 
     it("should render the what happens next section with a mailto link", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text()).toContain(en.whatHappensNextHeading);
       const mailto = $(`a[href="mailto:${mockApplication.email}"]`);
       expect(mailto).toHaveLength(1);
@@ -92,14 +83,11 @@ describe("rejected.njk template", () => {
     });
 
     it("should render selected rejection reasons as a numbered list", () => {
-      // Arrange
       const reasonsList = [en.reasons.invalidId, en.reasons.detailsMismatch];
       const data = buildData(en, { reasonsList });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const orderedList = $("ol.govuk-list--number");
       expect(orderedList).toHaveLength(1);
       expect($(".govuk-summary-list").text()).toContain(en.reasonsHeading);
@@ -110,13 +98,10 @@ describe("rejected.njk template", () => {
     });
 
     it("should not render the reasons row when reasonsList is empty", () => {
-      // Arrange
       const data = buildData(en, { reasonsList: [] });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("ol.govuk-list--number")).toHaveLength(0);
       expect($(".govuk-summary-list").text()).not.toContain(en.reasonsHeading);
     });
@@ -124,13 +109,10 @@ describe("rejected.njk template", () => {
 
   describe("Welsh content", () => {
     it("should render the panel title and headings in Welsh", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.pageTitle);
       expect($("h2.govuk-heading-m").text()).toContain(cy.whatHappensNextHeading);
       expect($(".govuk-summary-list").text()).toContain(cy.tableHeaders.name);
@@ -140,7 +122,6 @@ describe("rejected.njk template", () => {
 
   describe("Error state", () => {
     it("should render the error summary and return link when an error is present", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.loadFailed,
@@ -148,10 +129,8 @@ describe("rejected.njk template", () => {
         application: null
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const errorSummary = $(".govuk-error-summary");
       expect(errorSummary).toHaveLength(1);
       expect(errorSummary.text()).toContain(en.errorMessages.loadFailed);

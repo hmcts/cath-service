@@ -23,24 +23,18 @@ describe("location-metadata-search template", () => {
 
   describe("English content", () => {
     it("should render the heading", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
     });
 
     it("should render the search input with label and hint", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const input = $("input#location-search");
       expect(input).toHaveLength(1);
       expect(input.attr("name")).toBe("locationId");
@@ -49,13 +43,10 @@ describe("location-metadata-search template", () => {
     });
 
     it("should render the autocomplete data attributes on the input", () => {
-      // Arrange
       const data = { ...en, errors: undefined, lng: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const input = $("input#location-search");
       expect(input.attr("data-autocomplete")).toBe("true");
       expect(input.attr("data-locale")).toBe("en");
@@ -63,49 +54,37 @@ describe("location-metadata-search template", () => {
     });
 
     it("should render the continue button inside a post form", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       expect($("button.govuk-button").text()).toContain(en.continueButtonText);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading", () => {
-      // Arrange
       const data = { ...cy, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
     });
 
     it("should render the Welsh label, hint and button", () => {
-      // Arrange
       const data = { ...cy, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("label[for='location-search']").text()).toContain(cy.searchInstruction);
       expect($("#location-search-hint").text()).toContain(cy.searchHint);
       expect($("button.govuk-button").text()).toContain(cy.continueButtonText);
@@ -114,26 +93,20 @@ describe("location-metadata-search template", () => {
 
   describe("error state", () => {
     it("should render the error summary with the session error message", () => {
-      // Arrange
       const errors = [{ text: en.locationNotFound, href: "#location-search" }];
       const data = { ...en, errors };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.locationNotFound]);
     });
 
     it("should mark the input as errored when there are errors", () => {
-      // Arrange
       const errors = [{ text: en.locationNameRequired, href: "#location-search" }];
       const data = { ...en, errors };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input#location-search").hasClass("govuk-input--error")).toBe(true);
     });
   });

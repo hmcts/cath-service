@@ -23,7 +23,6 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
 
   describe("error state", () => {
     it("should render the error title, message and back link with English content", () => {
-      // Arrange
       const data = {
         en,
         cy,
@@ -36,10 +35,8 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
         locationId: "9"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(en.errorTitle);
       expect($("p.govuk-body").eq(0).text()).toContain(en.errorNotFound);
       expect($("p.govuk-body").eq(1).text()).toContain(en.backMessage);
@@ -50,7 +47,6 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
     });
 
     it("should render the error summary with the error message", () => {
-      // Arrange
       const data = {
         en,
         cy,
@@ -63,15 +59,12 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
         locationId: "9"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorInvalidRequest]);
     });
 
     it("should render Welsh error content", () => {
-      // Arrange
       const data = {
         en,
         cy,
@@ -84,10 +77,8 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
         locationId: "42"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(cy.errorTitle);
       expect($('a[href="/summary-of-publications?locationId=42"]').text().trim()).toBe(cy.backButton);
       assertErrorSummary($, [cy.errorNotFound]);
@@ -96,7 +87,6 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
 
   describe("PDF viewer state", () => {
     it("should render the PDF object with the download URL and no error summary", () => {
-      // Arrange
       const data = {
         en,
         cy,
@@ -113,10 +103,8 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
         downloadLinkText: en.downloadLinkText
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const object = $("object");
       expect(object.attr("data")).toBe("/api/flat-file/test-artefact-id/download");
       expect(object.attr("type")).toBe("application/pdf");
@@ -130,7 +118,6 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
     });
 
     it("should render the Welsh fallback message and download link text", () => {
-      // Arrange
       const data = {
         en,
         cy,
@@ -147,10 +134,8 @@ describe("hearing-lists [locationId] [artefactId] template", () => {
         downloadLinkText: cy.downloadLinkText
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("object p").text()).toContain(cy.pdfNotSupportedMessage);
       expect($('a[href="/api/flat-file/test-artefact-id/download"]').text().trim()).toBe(cy.downloadLinkText);
       expect($("html").attr("lang")).toBe("cy");

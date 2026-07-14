@@ -24,24 +24,18 @@ describe("confirm-bulk-unsubscribe template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions, courtSubscriptions, hasCaseSubscriptions: true, hasCourtSubscriptions: true, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.confirmHeading);
     });
 
     it("should render the case subscriptions table with case details", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions, courtSubscriptions: [], hasCaseSubscriptions: true, hasCourtSubscriptions: false, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.tabSubscriptionsByCase);
       expect($("th").text()).toContain(en.tableHeaderCaseName);
       expect($("th").text()).toContain(en.tableHeaderReferenceNumber);
@@ -50,57 +44,44 @@ describe("confirm-bulk-unsubscribe template", () => {
     });
 
     it("should render the court subscriptions table with court details", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions: [], courtSubscriptions, hasCaseSubscriptions: false, hasCourtSubscriptions: true, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("th").text()).toContain(en.tableHeaderCourtName);
       expect($("td").text()).toContain("Central London County Court");
     });
 
     it("should render the confirm radios and continue button", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions, courtSubscriptions, hasCaseSubscriptions: true, hasCourtSubscriptions: true, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="confirm"][value="yes"]').length).toBe(1);
       expect($('input[name="confirm"][value="no"]').length).toBe(1);
       expect($(".govuk-button").text()).toContain(en.continueButton);
     });
 
     it("should render the form posting to the confirm endpoint with csrf token", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions, courtSubscriptions, hasCaseSubscriptions: true, hasCourtSubscriptions: true, csrfToken: "csrf-abc" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('form[action="/confirm-bulk-unsubscribe"]').attr("method")).toBe("post");
       expect($('input[name="_csrf"]').attr("value")).toBe("csrf-abc");
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, caseSubscriptions, courtSubscriptions, hasCaseSubscriptions: true, hasCourtSubscriptions: true, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("error state", () => {
     it("should render the error summary when validation fails", () => {
-      // Arrange
       const data = {
         ...en,
         caseSubscriptions,
@@ -111,23 +92,18 @@ describe("confirm-bulk-unsubscribe template", () => {
         errors: [{ text: en.errorNoRadioMessage, href: en.errorNoRadioHref }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoRadioMessage]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh heading, tables and button", () => {
-      // Arrange
       const data = { ...cy, caseSubscriptions, courtSubscriptions, hasCaseSubscriptions: true, hasCourtSubscriptions: true, csrfToken: "token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.confirmHeading);
       expect($("h2").text()).toContain(cy.tabSubscriptionsByCase);
       expect($("th").text()).toContain(cy.tableHeaderCourtName);

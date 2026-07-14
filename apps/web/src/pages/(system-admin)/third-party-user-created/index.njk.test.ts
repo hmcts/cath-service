@@ -20,52 +20,40 @@ describe("third-party-user-created template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel with title and user name", () => {
-      // Arrange
       const data = { ...en, userName: "Acme Ltd" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel");
       expect(panel.find(".govuk-panel__title").text()).toContain(en.pageTitle);
       expect(panel.find(".govuk-panel__body").text()).toContain("Acme Ltd");
     });
 
     it("should render the what next heading and navigation links", () => {
-      // Arrange
       const data = { ...en, userName: "Acme Ltd" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.whatNextHeading);
       expect($('a[href="/manage-third-party-users"]').text()).toContain(en.manageAnotherUserLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(en.homeLink);
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en, userName: "Acme Ltd" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the confirmation panel, heading and links in Welsh with Welsh link hrefs", () => {
-      // Arrange
       const data = { ...cy, userName: "Acme Ltd", locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.pageTitle);
       expect($(".govuk-panel__body").text()).toContain("Acme Ltd");
       expect($("h2").text()).toContain(cy.whatNextHeading);

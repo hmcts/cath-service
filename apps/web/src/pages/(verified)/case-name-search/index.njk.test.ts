@@ -20,13 +20,10 @@ describe("case-name-search template", () => {
 
   describe("English content", () => {
     it("should render the heading, hint, back link and continue button", () => {
-      // Arrange
       const data = { ...en, caseName: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("#caseName-hint").text()).toContain(en.caseNameHint);
       expect($(".govuk-back-link").attr("href")).toBe("/add-email-subscription");
@@ -36,18 +33,14 @@ describe("case-name-search template", () => {
     });
 
     it("should render the submitted case name as the input value", () => {
-      // Arrange
       const data = { ...en, caseName: "Smith" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#caseName").attr("value")).toBe("Smith");
     });
 
     it("should render the min-length error summary and inline error when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         caseName: "AB",
@@ -57,16 +50,13 @@ describe("case-name-search template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMinLength]);
       expect($(".govuk-error-message").text()).toContain(en.errorMinLength);
     });
 
     it("should render the no-results inline error text instead of the summary text", () => {
-      // Arrange
       const data = {
         ...en,
         caseName: "Unknown Case",
@@ -77,10 +67,8 @@ describe("case-name-search template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoResultsSummary]);
       expect($(".govuk-error-message").text()).toContain(en.errorNoResultsInline);
     });
@@ -88,20 +76,16 @@ describe("case-name-search template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and continue button", () => {
-      // Arrange
       const data = { ...cy, caseName: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("button").text()).toContain(cy.continueButton);
       assertNoErrors($);
     });
 
     it("should render the Welsh min-length error summary", () => {
-      // Arrange
       const data = {
         ...cy,
         caseName: "AB",
@@ -111,10 +95,8 @@ describe("case-name-search template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorMinLength]);
       expect($(".govuk-error-message").text()).toContain(cy.errorMinLength);
     });

@@ -19,13 +19,10 @@ describe("cookie-policy template", () => {
 
   describe("English content", () => {
     it("should render the page heading and main sections", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($("h2").text()).toContain(en.mainHeading);
       expect($("h2").text()).toContain(en.changeSettings.heading);
@@ -34,26 +31,20 @@ describe("cookie-policy template", () => {
     });
 
     it("should render the manage cookies link", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $(`a[href="${en.intro.manageCookiesUrl}"]`);
       expect(link.length).toBeGreaterThan(0);
       expect(link.text()).toContain(en.intro.manageCookiesLink);
     });
 
     it("should render the cookie tables with header row", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("table").length).toBeGreaterThan(0);
       const headerText = $("table thead").first().text();
       expect(headerText).toContain(en.tableHeaders.name);
@@ -62,13 +53,10 @@ describe("cookie-policy template", () => {
     });
 
     it("should render the settings form posting to /cookie-policy with the csrf token and save button", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const form = $('form[action="/cookie-policy"]');
       expect(form.attr("method")).toBe("POST");
       expect($('input[name="_csrf"]').attr("value")).toBe("test-csrf");
@@ -80,25 +68,19 @@ describe("cookie-policy template", () => {
 
   describe("radio selection state", () => {
     it("should check the enabled radios when preferences are enabled", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: { analytics: true, performance: true }, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="analytics"][value="on"]').attr("checked")).toBeDefined();
       expect($('input[name="performance"][value="on"]').attr("checked")).toBeDefined();
     });
 
     it("should check the disabled radios when preferences are not enabled", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="analytics"][value="off"]').attr("checked")).toBeDefined();
       expect($('input[name="performance"][value="off"]').attr("checked")).toBeDefined();
     });
@@ -106,39 +88,30 @@ describe("cookie-policy template", () => {
 
   describe("success banner", () => {
     it("should render the success notification banner when saved is true", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: true, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const banner = $(".govuk-notification-banner");
       expect(banner.length).toBe(1);
       expect(banner.text()).toContain(en.successMessage);
     });
 
     it("should not render the success banner when saved is false", () => {
-      // Arrange
       const data = { ...en, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-notification-banner").length).toBe(0);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading and settings heading", () => {
-      // Arrange
       const data = { ...cy, cookiePreferences: {}, categories: {}, saved: false, csrfToken: "test-csrf" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.changeSettings.heading);
       expect($("button").text()).toContain(cy.changeSettings.saveButton);

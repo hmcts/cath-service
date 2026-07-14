@@ -40,26 +40,20 @@ describe("manual-upload template", () => {
 
   describe("Template rendering", () => {
     it("should render the English page heading and warning", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($(".manual-upload-warning h2").text()).toContain(en.warningTitle);
       expect($(".manual-upload-warning__text").text()).toContain(en.warningMessage);
     });
 
     it("should render the form with file upload, court field and continue button", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form[method='post']").attr("enctype")).toBe("multipart/form-data");
       expect($("input#file[name='file']")).toHaveLength(1);
       expect($("label[for='file']").text()).toContain(en.fileUploadLabel);
@@ -68,26 +62,20 @@ describe("manual-upload template", () => {
     });
 
     it("should render the list type, sensitivity and language selects", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("select#listType[name='listType']")).toHaveLength(1);
       expect($("select#sensitivity[name='sensitivity']")).toHaveLength(1);
       expect($("select#language[name='language']")).toHaveLength(1);
     });
 
     it("should render the page help aside", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const aside = $("aside.app-related-items").text();
       expect(aside).toContain(en.pageHelpTitle);
       expect(aside).toContain(en.pageHelpSensitivityPublic);
@@ -95,42 +83,32 @@ describe("manual-upload template", () => {
     });
 
     it("should populate the court field from data", () => {
-      // Arrange
       const data = { ...baseData(en), data: { locationName: "Test Court" } };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input#court").attr("value")).toBe("Test Court");
     });
 
     it("should render the Welsh heading, warning and button", () => {
-      // Arrange
       const data = baseData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($(".manual-upload-warning h2").text()).toContain(cy.warningTitle);
       expect($("button.govuk-button").text()).toContain(cy.continueButton);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...baseData(en),
         errors: [
@@ -139,10 +117,8 @@ describe("manual-upload template", () => {
         ]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessages.fileRequired, en.errorMessages.courtRequired]);
       expect($(".govuk-form-group--error label[for='file']")).toHaveLength(1);
     });
@@ -150,17 +126,14 @@ describe("manual-upload template", () => {
 
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
-      // Assert
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
     it("should have same error message keys in English and Welsh", () => {
-      // Assert
       expect(Object.keys(en.errorMessages).sort()).toEqual(Object.keys(cy.errorMessages).sort());
     });
 
     it("should have all required keys", () => {
-      // Arrange
       const requiredKeys = [
         "title",
         "pageTitle",
@@ -188,7 +161,6 @@ describe("manual-upload template", () => {
         "errorMessages"
       ];
 
-      // Assert
       requiredKeys.forEach((key) => {
         expect(en).toHaveProperty(key);
         expect(cy).toHaveProperty(key);
@@ -196,7 +168,6 @@ describe("manual-upload template", () => {
     });
 
     it("should have all required error message keys", () => {
-      // Arrange
       const requiredErrorKeys = [
         "fileRequired",
         "fileType",
@@ -215,7 +186,6 @@ describe("manual-upload template", () => {
         "displayToBeforeFrom"
       ];
 
-      // Assert
       requiredErrorKeys.forEach((key) => {
         expect(en.errorMessages).toHaveProperty(key);
         expect(cy.errorMessages).toHaveProperty(key);

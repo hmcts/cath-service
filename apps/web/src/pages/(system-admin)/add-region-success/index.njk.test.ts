@@ -20,13 +20,10 @@ describe("add-region-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel and next-step links", () => {
-      // Arrange
       const data = { ...en, regionSuccess: { name: "London" }, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.successBannerTitle);
       expect($("h2").text()).toContain(en.nextStepsTitle);
       expect($('a[href="/add-region"]').text()).toContain(en.addAnotherText);
@@ -38,13 +35,10 @@ describe("add-region-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh text and append the language query to links", () => {
-      // Arrange
       const data = { ...cy, regionSuccess: { name: "Llundain" }, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.successBannerTitle);
       expect($("h2").text()).toContain(cy.nextStepsTitle);
       expect($('a[href="/add-region?lng=cy"]').text()).toContain(cy.addAnotherText);

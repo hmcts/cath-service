@@ -28,24 +28,18 @@ describe("admin-dashboard template", () => {
     });
 
     it("should render the page heading from English content", () => {
-      // Arrange
       const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 0, notificationText: en.notificationText, notificationLink: en.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render all four tiles with correct headings and links for a CTSC admin", () => {
-      // Arrange
       const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 0, notificationText: en.notificationText, notificationLink: en.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("a.admin-tile")).toHaveLength(4);
       expect($('a[href="/manual-upload"] .admin-tile__heading').text()).toBe(en.tiles[0].heading);
       expect($('a[href="/non-strategic-upload"] .admin-tile__heading').text()).toBe(en.tiles[1].heading);
@@ -55,7 +49,6 @@ describe("admin-dashboard template", () => {
     });
 
     it("should render only three tiles for a local admin with three tiles", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tiles: en.tiles.slice(0, 3),
@@ -64,33 +57,25 @@ describe("admin-dashboard template", () => {
         notificationLink: en.notificationLink
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("a.admin-tile")).toHaveLength(3);
       expect($('a[href="/media-applications"]')).toHaveLength(0);
     });
 
     it("should not render the notification banner when pendingCount is zero", () => {
-      // Arrange
       const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 0, notificationText: en.notificationText, notificationLink: en.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-notification-banner")).toHaveLength(0);
     });
 
     it("should render the notification banner with the pending count when there are outstanding requests", () => {
-      // Arrange
       const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 5, notificationText: en.notificationText, notificationLink: en.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const banner = $(".govuk-notification-banner");
       expect(banner).toHaveLength(1);
       expect(banner.text()).toContain(en.notificationText.replace("x", "5"));
@@ -98,25 +83,19 @@ describe("admin-dashboard template", () => {
     });
 
     it("should render Welsh content when Welsh tiles are provided", () => {
-      // Arrange
       const data = { pageTitle: cy.pageTitle, tiles: cy.tiles, pendingCount: 0, notificationText: cy.notificationText, notificationLink: cy.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($('a[href="/media-applications"] .admin-tile__heading').text()).toBe(cy.tiles[3].heading);
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 0, notificationText: en.notificationText, notificationLink: en.notificationLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });

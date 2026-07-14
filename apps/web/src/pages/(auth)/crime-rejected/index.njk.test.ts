@@ -20,13 +20,10 @@ describe("crime-rejected template", () => {
 
   describe("English content", () => {
     it("should render the page heading and body content", () => {
-      // Arrange
       const data = { en, cy, t: en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($("h2").text()).toContain(en.whatYouCanDo);
       expect($.root().text()).toContain(en.message);
@@ -34,13 +31,10 @@ describe("crime-rejected template", () => {
     });
 
     it("should render the return to sign in link", () => {
-      // Arrange
       const data = { en, cy, t: en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $(`a[href="/sign-in"]:contains("${en.returnToSignIn}")`);
       expect(link.length).toBe(1);
       expect(link.text()).toContain(en.returnToSignIn);
@@ -49,13 +43,10 @@ describe("crime-rejected template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and body content", () => {
-      // Arrange
       const data = { en, cy, t: cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.whatYouCanDo);
       expect($.root().text()).toContain(cy.message);

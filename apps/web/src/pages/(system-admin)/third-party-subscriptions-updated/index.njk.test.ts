@@ -20,25 +20,19 @@ describe("third-party-subscriptions-updated template", () => {
 
   describe("English content", () => {
     it("should render the panel title and success message", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.pageTitle);
       expect($(".govuk-panel__body").text()).toContain(en.successMessage);
     });
 
     it("should render the further info text and manage users link", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.furtherInfoText);
       const link = $('a[href="/manage-third-party-users"]');
       expect(link).toHaveLength(1);
@@ -46,38 +40,29 @@ describe("third-party-subscriptions-updated template", () => {
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh panel title and success message", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.pageTitle);
       expect($(".govuk-panel__body").text()).toContain(cy.successMessage);
     });
 
     it("should append the Welsh language query to the manage users link", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $('a[href="/manage-third-party-users?lng=cy"]');
       expect(link).toHaveLength(1);
       expect(link.text()).toContain(cy.manageThirdPartyUsersLink);

@@ -40,24 +40,18 @@ describe("view-list-types template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(en) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
     });
 
     it("should render the table headers", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(en) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("thead th")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -76,13 +70,10 @@ describe("view-list-types template", () => {
     });
 
     it("should render a data row with cell values and action links", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(en) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const cells = $("tbody tr td")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -94,61 +85,46 @@ describe("view-list-types template", () => {
     });
 
     it("should render navigation links", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(en) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('a[href="/configure-list-type-enter-details"]').text()).toBe(en.addNewListTypeLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toBe(en.backToDashboard);
     });
 
     it("should render the empty state when there are no list types", () => {
-      // Arrange
       const data = { ...en, tableRows: [] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("table").length).toBe(0);
       expect($("p.govuk-body").text()).toContain(en.noListTypesText);
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(en) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading", () => {
-      // Arrange
       const data = { ...cy, tableRows: buildTableRows(cy) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
     });
 
     it("should render the Welsh table headers", () => {
-      // Arrange
       const data = { ...cy, tableRows: buildTableRows(cy) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("thead th")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -157,25 +133,19 @@ describe("view-list-types template", () => {
     });
 
     it("should render the Welsh navigation links", () => {
-      // Arrange
       const data = { ...cy, tableRows: buildTableRows(cy) };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('a[href="/configure-list-type-enter-details"]').text()).toBe(cy.addNewListTypeLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toBe(cy.backToDashboard);
     });
 
     it("should render the Welsh empty state", () => {
-      // Arrange
       const data = { ...cy, tableRows: [] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(cy.noListTypesText);
     });
   });

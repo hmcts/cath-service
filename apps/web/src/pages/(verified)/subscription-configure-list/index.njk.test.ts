@@ -37,38 +37,29 @@ describe("subscription-configure-list template", () => {
 
   describe("English content", () => {
     it("should render the page heading and description", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(en.heading);
       expect($("p.govuk-body").first().text().trim()).toBe(en.description);
     });
 
     it("should render a back link to subscription management", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const backLink = $('a.govuk-back-link[href="/subscription-management"]');
       expect(backLink).toHaveLength(1);
       expect(backLink.text().trim()).toBe(en.back);
     });
 
     it("should render a checkbox for each list type within a post form", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       const checkboxes = $("input[type='checkbox'][name='selectedListTypes']");
       expect(checkboxes).toHaveLength(3);
@@ -77,26 +68,20 @@ describe("subscription-configure-list template", () => {
     });
 
     it("should mark the subscribed list type as checked", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#listType_102").is(":checked")).toBe(true);
       expect($("#listType_101").is(":checked")).toBe(false);
       expect($("#listType_201").is(":checked")).toBe(false);
     });
 
     it("should render the grouping letter as a row header", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("th.govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -105,13 +90,10 @@ describe("subscription-configure-list template", () => {
     });
 
     it("should render the list type names and continue button", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const cellText = $("td.govuk-table__cell")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -121,13 +103,10 @@ describe("subscription-configure-list template", () => {
     });
 
     it("should render the no list types message when there are no groups", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: [] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form")).toHaveLength(0);
       const bodyText = $("p.govuk-body")
         .map((_, el) => $(el).text().trim())
@@ -136,18 +115,14 @@ describe("subscription-configure-list template", () => {
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when no list type is selected", () => {
-      // Arrange
       const data = {
         ...en,
         listTypeGroups: LIST_TYPE_GROUPS,
@@ -157,23 +132,18 @@ describe("subscription-configure-list template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorSelectListType]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, description and controls", () => {
-      // Arrange
       const data = { ...cy, listTypeGroups: LIST_TYPE_GROUPS };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(cy.heading);
       expect($("p.govuk-body").first().text().trim()).toBe(cy.description);
       expect($("button.govuk-button").text().trim()).toBe(cy.continueButton);
@@ -181,7 +151,6 @@ describe("subscription-configure-list template", () => {
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const data = {
         ...cy,
         listTypeGroups: LIST_TYPE_GROUPS,
@@ -191,10 +160,8 @@ describe("subscription-configure-list template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorSelectListType]);
     });
   });

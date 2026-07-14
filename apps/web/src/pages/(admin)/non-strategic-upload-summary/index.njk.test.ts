@@ -45,25 +45,19 @@ describe("non-strategic-upload-summary template", () => {
 
   describe("English content", () => {
     it("should render the page heading and sub heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("h2").text()).toContain(en.subHeading);
     });
 
     it("should render summary list keys, values and change links", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -82,38 +76,29 @@ describe("non-strategic-upload-summary template", () => {
     });
 
     it("should render the confirm button inside a post form", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form[method='post']").length).toBe(1);
       expect($("form button.govuk-button").text()).toContain(en.confirmButton);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh heading and summary keys", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("h2").text()).toContain(cy.subHeading);
       const keys = $(".govuk-summary-list__key")
@@ -127,14 +112,11 @@ describe("non-strategic-upload-summary template", () => {
 
   describe("Error state", () => {
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const errorMessage = "We could not process your upload. Please try again.";
       const data = buildData(en, { errors: [{ text: errorMessage, href: "#" }] });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [errorMessage]);
     });
   });

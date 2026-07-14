@@ -44,13 +44,10 @@ describe("audit-log-detail template", () => {
 
   describe("English content", () => {
     it("should render the heading, detail table and navigation links", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.detailTitle);
 
       const tableText = $(".govuk-table").text();
@@ -76,27 +73,21 @@ describe("audit-log-detail template", () => {
     });
 
     it("should render N/A when details are missing", () => {
-      // Arrange
       const data = buildData(en);
       data.log = { ...log, details: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-table").text()).toContain("N/A");
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, labels and navigation links", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.detailTitle);
 
       const tableText = $(".govuk-table").text();

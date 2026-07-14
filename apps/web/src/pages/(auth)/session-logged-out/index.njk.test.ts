@@ -20,50 +20,38 @@ describe("session-logged-out template", () => {
 
   describe("English content", () => {
     it("should render the sign out confirmation panel", () => {
-      // Arrange
       const data = { en, cy, title: en.title };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(en.title);
     });
 
     it("should not render a back link", () => {
-      // Arrange
       const data = { en, cy, title: en.title };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-back-link")).toHaveLength(0);
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { en, cy, title: en.title };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the sign out confirmation panel in Welsh", () => {
-      // Arrange
       const data = { en, cy, title: cy.title };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(cy.title);

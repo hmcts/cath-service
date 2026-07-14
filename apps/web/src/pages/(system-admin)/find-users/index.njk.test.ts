@@ -48,24 +48,18 @@ describe("find-users template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.pageTitle);
     });
 
     it("should render the filter form inputs and apply button", () => {
-      // Arrange
       const data = { ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       expect($("input#email")).toHaveLength(1);
       expect($("input#userId")).toHaveLength(1);
@@ -76,13 +70,10 @@ describe("find-users template", () => {
     });
 
     it("should render the results count and table with a user row", () => {
-      // Arrange
       const data = { ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").first().text().trim()).toBe(en.resultsCount(1));
       const headers = $(".govuk-table__header")
         .map((_, el) => $(el).text().trim())
@@ -97,7 +88,6 @@ describe("find-users template", () => {
     });
 
     it("should render selected filter tags and clear filters link when filters are applied", () => {
-      // Arrange
       const data = {
         ...baseData,
         filters: { email: "user@example.com" },
@@ -110,10 +100,8 @@ describe("find-users template", () => {
         ]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".user-management-selected-filters h3").text().trim()).toBe(en.selectedFiltersHeading);
       const removeLink = $('a[href="/find-users/remove-filter?filter=email"]');
       expect(removeLink).toHaveLength(1);
@@ -124,7 +112,6 @@ describe("find-users template", () => {
     });
 
     it("should render pagination when there is more than one page", () => {
-      // Arrange
       const data = {
         ...baseData,
         currentPage: 1,
@@ -136,38 +123,29 @@ describe("find-users template", () => {
         ]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-pagination")).toHaveLength(1);
       expect($('.govuk-pagination a[href="/find-users?page=2"]').length).toBeGreaterThan(0);
     });
 
     it("should not render the results table when there are no results", () => {
-      // Arrange
       const data = { ...baseData, userRows: [], totalCount: 0, totalPages: 0 };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-table")).toHaveLength(0);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when a no-results error exists", () => {
-      // Arrange
       const data = {
         ...baseData,
         totalCount: 0,
@@ -176,30 +154,24 @@ describe("find-users template", () => {
         errors: [{ text: en.noResultsError, href: "#email" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.noResultsError]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and controls", () => {
-      // Arrange
       const data = { ...baseData, ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.pageTitle);
       expect($("button.govuk-button").text().trim()).toBe(cy.applyFiltersButton);
       expect($("p.govuk-body").first().text().trim()).toBe(cy.resultsCount(1));
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const data = {
         ...baseData,
         ...cy,
@@ -209,10 +181,8 @@ describe("find-users template", () => {
         errors: [{ text: cy.noResultsError, href: "#email" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.noResultsError]);
     });
   });

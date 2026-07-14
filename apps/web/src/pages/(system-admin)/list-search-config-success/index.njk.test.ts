@@ -20,7 +20,6 @@ describe("list-search-config-success template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel heading", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -28,33 +27,25 @@ describe("list-search-config-success template", () => {
         returnLink: en.returnLink
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panelHeading = $(".govuk-panel--confirmation .govuk-panel__title");
       expect(panelHeading.text().trim()).toBe(en.heading);
     });
 
     it("should render the body text", () => {
-      // Arrange
       const data = { heading: en.heading, body: en.body, returnLink: en.returnLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain(en.body);
     });
 
     it("should render the return link pointing to manage-list-types", () => {
-      // Arrange
       const data = { heading: en.heading, body: en.body, returnLink: en.returnLink };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $('a[href="/manage-list-types"]');
       expect(link.length).toBe(1);
       expect(link.text().trim()).toBe(en.returnLink);
@@ -63,7 +54,6 @@ describe("list-search-config-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, body and return link", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         heading: cy.heading,
@@ -71,10 +61,8 @@ describe("list-search-config-success template", () => {
         returnLink: cy.returnLink
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(cy.heading);
       expect($("body").text()).toContain(cy.body);
       expect($('a[href="/manage-list-types"]').text().trim()).toBe(cy.returnLink);

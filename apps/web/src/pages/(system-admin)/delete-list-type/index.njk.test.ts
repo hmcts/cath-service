@@ -24,24 +24,18 @@ describe("delete-list-type template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.title);
     });
 
     it("should render the list type name in the summary list", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const summaryKeys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -53,13 +47,10 @@ describe("delete-list-type template", () => {
     });
 
     it("should render both radio options within a post form", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       const radios = $("input[type='radio'][name='confirmDelete']");
       expect(radios).toHaveLength(2);
@@ -68,13 +59,10 @@ describe("delete-list-type template", () => {
     });
 
     it("should render the confirm button and cancel link", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text().trim()).toBe(en.confirmButton);
       const cancelLink = $('a[href="/view-list-types"]');
       expect(cancelLink).toHaveLength(1);
@@ -82,30 +70,23 @@ describe("delete-list-type template", () => {
     });
 
     it("should pre-select the previously chosen radio from data", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: { confirmDelete: "yes" } };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input[type='radio'][value='yes']").is(":checked")).toBe(true);
       expect($("input[type='radio'][value='no']").is(":checked")).toBe(false);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when a confirmation error exists", () => {
-      // Arrange
       const data = {
         ...en,
         errorSummaryTitle: en.common.errorSummaryTitle,
@@ -114,30 +95,24 @@ describe("delete-list-type template", () => {
         errors: [{ text: en.errorConfirmationRequired, href: "#confirmDelete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorConfirmationRequired]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and controls", () => {
-      // Arrange
       const data = { ...cy, listTypeName: LIST_TYPE_NAME, data: {} };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.title);
       expect($("button.govuk-button").text().trim()).toBe(cy.confirmButton);
       expect($('a[href="/view-list-types"]').text().trim()).toBe(cy.cancelLink);
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const data = {
         ...cy,
         errorSummaryTitle: cy.common.errorSummaryTitle,
@@ -146,10 +121,8 @@ describe("delete-list-type template", () => {
         errors: [{ text: cy.errorCannotDelete, href: "#confirmDelete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorCannotDelete]);
     });
   });

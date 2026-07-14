@@ -21,7 +21,6 @@ describe("reject-reasons.njk", () => {
 
   describe("English content", () => {
     it("should render the heading, hint, checkboxes and continue button", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         selectAllText: en.selectAllText,
@@ -33,10 +32,8 @@ describe("reject-reasons.njk", () => {
         hideLanguageToggle: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($(".govuk-hint").text()).toContain(en.selectAllText);
       assertNoErrors($);
@@ -58,7 +55,6 @@ describe("reject-reasons.njk", () => {
     });
 
     it("should pre-check checkboxes for selected reasons", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         selectAllText: en.selectAllText,
@@ -70,10 +66,8 @@ describe("reject-reasons.njk", () => {
         hideLanguageToggle: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input[value='notAccredited']").attr("checked")).toBeDefined();
       expect($("input[value='detailsMismatch']").attr("checked")).toBeDefined();
       expect($("input[value='invalidId']").attr("checked")).toBeUndefined();
@@ -82,7 +76,6 @@ describe("reject-reasons.njk", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, hint and checkbox labels", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         selectAllText: cy.selectAllText,
@@ -94,10 +87,8 @@ describe("reject-reasons.njk", () => {
         hideLanguageToggle: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($(".govuk-hint").text()).toContain(cy.selectAllText);
 
@@ -114,7 +105,6 @@ describe("reject-reasons.njk", () => {
 
   describe("Validation errors", () => {
     it("should render the error summary when no reason is selected", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         selectAllText: en.selectAllText,
@@ -127,10 +117,8 @@ describe("reject-reasons.njk", () => {
         hideLanguageToggle: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessages.selectAtLeastOne]);
       expect($(".govuk-error-message").text()).toContain(en.errorMessages.selectAtLeastOne);
       expect($("form")).toHaveLength(1);
@@ -139,17 +127,14 @@ describe("reject-reasons.njk", () => {
 
   describe("Load failure", () => {
     it("should show the load error message and hide the form", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.loadFailed,
         hideLanguageToggle: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-error-summary").text()).toContain(en.errorMessages.loadFailed);
       expect($("form")).toHaveLength(0);
     });

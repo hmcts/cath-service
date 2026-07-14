@@ -37,36 +37,27 @@ describe("blob-explorer-flat-file template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.flatFileTitle);
     });
 
     it("should render the metadata heading and re-submit button", () => {
-      // Arrange
       const data = { ...en, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text()).toContain(en.flatFileMetadataHeading);
       expect($("form[method='post'] button").text()).toContain(en.flatFileResubmitButton);
     });
 
     it("should render the metadata table values", () => {
-      // Arrange
       const data = { ...en, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       const tableText = $(".govuk-table").text();
       expect(tableText).toContain(en.metadataArtefactId);
       expect(tableText).toContain(mockMetadata.locationName);
@@ -76,38 +67,29 @@ describe("blob-explorer-flat-file template", () => {
     });
 
     it("should render the link to the flat file", () => {
-      // Arrange
       const flatFileUrl = "https://example.com/file.pdf";
       const data = { ...en, metadata: mockMetadata, flatFileUrl, formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       const link = $(`a[href="${flatFileUrl}"]`);
       expect(link).toHaveLength(1);
       expect(link.text()).toBe(en.flatFileLinkToFile);
     });
 
     it("should not render an error summary when no error", () => {
-      // Arrange
       const data = { ...en, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary and hide the table when error is set", () => {
-      // Arrange
       const data = { ...en, error: en.flatFileError };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       assertErrorSummary($, [en.flatFileError]);
       expect($(".govuk-table")).toHaveLength(0);
     });
@@ -115,26 +97,20 @@ describe("blob-explorer-flat-file template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh page heading and metadata", () => {
-      // Arrange
       const data = { ...cy, metadata: mockMetadata, flatFileUrl: "https://example.com/file.pdf", formatDateTime };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.flatFileTitle);
       expect($("h2.govuk-heading-m").text()).toContain(cy.flatFileMetadataHeading);
       expect($("form[method='post'] button").text()).toContain(cy.flatFileResubmitButton);
     });
 
     it("should render Welsh error summary", () => {
-      // Arrange
       const data = { ...cy, error: cy.flatFileError };
 
-      // Act
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      // Assert
       assertErrorSummary($, [cy.flatFileError]);
     });
   });

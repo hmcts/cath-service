@@ -18,26 +18,20 @@ describe("password-reset-success template", () => {
 
   describe("English content", () => {
     it("should render the title in the confirmation panel", () => {
-      // Arrange
       const data = { title: en.title, signInLink: en.signInLink };
 
-      // Act
       const { $ } = render(env, "(auth)/password-reset-success/index.njk", data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel.length).toBe(1);
       expect(panel.find("h1").text()).toContain(en.title);
     });
 
     it("should render the sign in link pointing to /sign-in", () => {
-      // Arrange
       const data = { title: en.title, signInLink: en.signInLink };
 
-      // Act
       const { $ } = render(env, "(auth)/password-reset-success/index.njk", data);
 
-      // Assert
       const link = $('.govuk-body a[href="/sign-in"]');
       expect(link.length).toBe(1);
       expect(link.text()).toContain(en.signInLink);
@@ -46,13 +40,10 @@ describe("password-reset-success template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh title and sign in link", () => {
-      // Arrange
       const data = { title: cy.title, signInLink: cy.signInLink };
 
-      // Act
       const { $ } = render(env, "(auth)/password-reset-success/index.njk", data);
 
-      // Assert
       expect($(".govuk-panel--confirmation h1").text()).toContain(cy.title);
       expect($('.govuk-body a[href="/sign-in"]').text()).toContain(cy.signInLink);
     });

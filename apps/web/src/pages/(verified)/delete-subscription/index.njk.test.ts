@@ -21,24 +21,18 @@ describe("delete-subscription template", () => {
 
   describe("English content", () => {
     it("should render the confirmation heading", () => {
-      // Arrange
       const data = { ...en, subscriptionId: SUBSCRIPTION_ID, csrfToken: "csrf-token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.header);
     });
 
     it("should render both radio options and continue button", () => {
-      // Arrange
       const data = { ...en, subscriptionId: SUBSCRIPTION_ID, csrfToken: "csrf-token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $('input[name="unsubscribe-confirm"]');
       expect(radios.length).toBe(2);
       expect(radios.eq(0).attr("value")).toBe("yes");
@@ -50,31 +44,24 @@ describe("delete-subscription template", () => {
     });
 
     it("should render the hidden subscription and csrf inputs", () => {
-      // Arrange
       const data = { ...en, subscriptionId: SUBSCRIPTION_ID, csrfToken: "csrf-token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="subscription"]').attr("value")).toBe(SUBSCRIPTION_ID);
       expect($('input[name="_csrf"]').attr("value")).toBe("csrf-token");
       expect($("form").attr("action")).toBe("/delete-subscription");
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, subscriptionId: SUBSCRIPTION_ID, csrfToken: "csrf-token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         subscriptionId: SUBSCRIPTION_ID,
@@ -85,23 +72,18 @@ describe("delete-subscription template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSelection]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh confirmation heading and options", () => {
-      // Arrange
       const data = { ...cy, subscriptionId: SUBSCRIPTION_ID, csrfToken: "csrf-token" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(cy.header);
       const body = $("body").text();
       expect(body).toContain(cy.radio1);

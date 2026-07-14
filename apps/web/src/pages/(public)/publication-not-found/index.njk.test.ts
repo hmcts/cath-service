@@ -36,83 +36,62 @@ describe("publication-not-found template", () => {
 
   describe("English content", () => {
     it("should render the heading", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
     });
 
     it("should render the body text", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.bodyText);
     });
 
     it("should render the start button linking to the courts and tribunals list", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const button = $("a.govuk-button--start");
       expect(button.text().trim()).toBe(en.buttonText);
       expect(button.attr("href")).toBe("/courts-tribunals-list");
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
     });
 
     it("should render the Welsh body text", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(cy.bodyText);
     });
 
     it("should render the Welsh button text with the same link", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const button = $("a.govuk-button--start");
       expect(button.text().trim()).toBe(cy.buttonText);
       expect(button.attr("href")).toBe("/courts-tribunals-list");

@@ -106,7 +106,6 @@ describe("delete-court-success template", () => {
 
   describe("English content", () => {
     it("should render success panel with correct title and text", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         bannerText: en.bannerText,
@@ -117,7 +116,6 @@ describe("delete-court-success template", () => {
         locale: "en"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
       // Assert - Check the success panel
@@ -128,7 +126,6 @@ describe("delete-court-success template", () => {
     });
 
     it("should render next steps heading", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         bannerText: en.bannerText,
@@ -139,15 +136,12 @@ describe("delete-court-success template", () => {
         locale: "en"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text()).toBe(en.nextStepsTitle);
     });
 
     it("should render all three navigation links", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         bannerText: en.bannerText,
@@ -158,7 +152,6 @@ describe("delete-court-success template", () => {
         locale: "en"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
       // Assert - Check all three links exist
@@ -184,7 +177,6 @@ describe("delete-court-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh success panel", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         bannerText: cy.bannerText,
@@ -195,17 +187,14 @@ describe("delete-court-success template", () => {
         locale: "cy"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(cy.pageTitle);
       expect($(".govuk-panel__body").text().trim()).toBe(cy.bannerText);
       expect($("h2.govuk-heading-m").text()).toBe(cy.nextStepsTitle);
     });
 
     it("should render Welsh navigation links", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         bannerText: cy.bannerText,
@@ -216,7 +205,6 @@ describe("delete-court-success template", () => {
         locale: "cy"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
       // Assert - Check Welsh link text
@@ -231,7 +219,6 @@ describe("delete-court-success template", () => {
     });
 
     it("should add lng=cy query parameter to links when locale is Welsh", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         bannerText: cy.bannerText,
@@ -242,7 +229,6 @@ describe("delete-court-success template", () => {
         locale: "cy"
       };
 
-      // Act
       const { $ } = render(env, "(system-admin)/delete-court-success/index.njk", data);
 
       // Assert - All links should have ?lng=cy

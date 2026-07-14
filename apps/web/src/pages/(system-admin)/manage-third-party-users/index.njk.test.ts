@@ -34,13 +34,10 @@ describe("manage-third-party-users template", () => {
 
   describe("English content", () => {
     it("should render the page heading and create-user button", () => {
-      // Arrange
       const data = { ...en, locale: "en", users: mockUsers };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       const createLink = $("a.govuk-button");
       expect(createLink.text().trim()).toBe(en.createNewUserButton);
@@ -49,13 +46,10 @@ describe("manage-third-party-users template", () => {
     });
 
     it("should render the table headers and a row per user", () => {
-      // Arrange
       const data = { ...en, locale: "en", users: mockUsers };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $(".govuk-table__head .govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -73,13 +67,10 @@ describe("manage-third-party-users template", () => {
     });
 
     it("should render the no-users message when the list is empty", () => {
-      // Arrange
       const data = { ...en, locale: "en", users: [] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.noUsersMessage);
       expect($(".govuk-table")).toHaveLength(0);
       assertNoErrors($);
@@ -88,13 +79,10 @@ describe("manage-third-party-users template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, button and manage links with lng=cy", () => {
-      // Arrange
       const data = { ...cy, locale: "cy", users: mockUsers };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       const createLink = $("a.govuk-button");
       expect(createLink.text().trim()).toBe(cy.createNewUserButton);

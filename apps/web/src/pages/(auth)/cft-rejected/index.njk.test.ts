@@ -18,13 +18,10 @@ describe("cft-rejected template", () => {
 
   describe("English content", () => {
     it("should render the heading, message and sign in link", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, "(auth)/cft-rejected/index.njk", data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($("h2").text()).toContain(en.whatYouCanDo);
       expect($.root().text()).toContain(en.message);
@@ -37,13 +34,10 @@ describe("cft-rejected template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, message and sign in link", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, "(auth)/cft-rejected/index.njk", data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.whatYouCanDo);
       expect($.root().text()).toContain(cy.message);

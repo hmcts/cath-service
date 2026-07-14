@@ -34,25 +34,19 @@ describe("case-search-results template", () => {
 
   describe("English content", () => {
     it("should render the page heading and results count", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("p.govuk-body").text()).toContain(`${RESULTS.length} ${en.resultsFound}`);
     });
 
     it("should render the table headers and a checkbox row per result", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("thead th")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -65,39 +59,30 @@ describe("case-search-results template", () => {
     });
 
     it("should render the continue button and a back link to the search source", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text()).toContain(en.continueButton);
       expect($("a.govuk-back-link").attr("href")).toBe("/case-name-search");
       expect($("a.govuk-back-link").text()).toContain(en.back);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh heading, count and continue button", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("p.govuk-body").text()).toContain(`${RESULTS.length} ${cy.resultsFound}`);
       expect($("button.govuk-button").text()).toContain(cy.continueButton);
@@ -106,17 +91,14 @@ describe("case-search-results template", () => {
 
   describe("Error states", () => {
     it("should render an error summary and inline error when no case is selected", () => {
-      // Arrange
       const errors = {
         titleText: en.errorSummaryTitle,
         errorList: [{ text: en.errorNoSelection, href: "#selectedCase-1" }]
       };
       const data = buildData(en, { errors });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSelection]);
       expect($("#selectedCase-error").text()).toContain(en.errorNoSelection);
       expect($("input#selectedCase-1").hasClass("govuk-checkboxes__input--error")).toBe(true);

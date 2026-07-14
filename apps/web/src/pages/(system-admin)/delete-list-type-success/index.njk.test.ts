@@ -20,25 +20,19 @@ describe("delete-list-type-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel title and banner", () => {
-      // Arrange
       const data = { t: en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.deleteListType.success.title);
       expect($(".govuk-panel__body").text()).toContain(en.deleteListType.success.banner);
     });
 
     it("should render the description heading and next-step links", () => {
-      // Arrange
       const data = { t: en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.deleteListType.success.description);
       expect($('a[href="/view-list-types"]').text()).toContain(en.deleteListType.success.viewListTypesLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(en.deleteListType.success.returnLink);
@@ -47,13 +41,10 @@ describe("delete-list-type-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh panel title and links", () => {
-      // Arrange
       const data = { t: cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.deleteListType.success.title);
       expect($('a[href="/view-list-types"]').text()).toContain(cy.deleteListType.success.viewListTypesLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(cy.deleteListType.success.returnLink);

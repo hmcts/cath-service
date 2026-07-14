@@ -20,24 +20,18 @@ describe("account-home template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { title: en.title, sections: en.sections };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.title);
     });
 
     it("should render the three tiles with headings and descriptions", () => {
-      // Arrange
       const data = { title: en.title, sections: en.sections };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const tileHeadings = $(".verified-tile-heading")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -50,13 +44,10 @@ describe("account-home template", () => {
     });
 
     it("should link each tile to the correct destination", () => {
-      // Arrange
       const data = { title: en.title, sections: en.sections };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('a[href="/search"]').length).toBe(1);
       expect($('a[href="/summary-of-publications?locationId=9"]').length).toBe(1);
       expect($('a[href="/subscription-management"]').length).toBe(1);
@@ -65,13 +56,10 @@ describe("account-home template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and tile headings", () => {
-      // Arrange
       const data = { title: cy.title, sections: cy.sections };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.title);
       const tileHeadings = $(".verified-tile-heading")
         .map((_, el) => $(el).text().trim())

@@ -39,26 +39,20 @@ describe("subscription-add-list template", () => {
 
   describe("English content", () => {
     it("should render the heading and description", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("p.govuk-body").text()).toContain(en.description);
       assertNoErrors($);
     });
 
     it("should render a checkbox and label for each list type item", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="selectedListTypes"]')).toHaveLength(3);
       expect($("#listType_1").attr("value")).toBe("1");
       expect($("#listType_2").attr("value")).toBe("2");
@@ -68,39 +62,30 @@ describe("subscription-add-list template", () => {
     });
 
     it("should render one grouping header per letter group", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headerText = $("table#list-types-table th").text();
       expect(headerText).toContain("C");
       expect(headerText).toContain("F");
     });
 
     it("should render the selection counter and continue button", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text()).toContain(en.userSelections);
       expect($("#selectionCount").text()).toBe("0");
       expect($("button.govuk-button").text()).toContain(en.continueButton);
     });
 
     it("should render the back link", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("a.govuk-back-link").attr("href")).toBe("/pending-subscriptions");
       expect($("a.govuk-back-link").text()).toContain(en.back);
     });
@@ -108,13 +93,10 @@ describe("subscription-add-list template", () => {
 
   describe("no list types", () => {
     it("should render a message and no form when there are no list type groups", () => {
-      // Arrange
       const data = buildData(en, { listTypeGroups: [] });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.noListTypes);
       expect($("form")).toHaveLength(0);
       expect($("table")).toHaveLength(0);
@@ -123,7 +105,6 @@ describe("subscription-add-list template", () => {
 
   describe("error state", () => {
     it("should render the error summary when a selection error is passed", () => {
-      // Arrange
       const data = buildData(en, {
         errors: {
           titleText: en.errorSummaryTitle,
@@ -131,10 +112,8 @@ describe("subscription-add-list template", () => {
         }
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorSelectListType]);
       expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
     });
@@ -142,13 +121,10 @@ describe("subscription-add-list template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, description, counter and button", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("p.govuk-body").text()).toContain(cy.description);
       expect($("h2.govuk-heading-m").text()).toContain(cy.userSelections);

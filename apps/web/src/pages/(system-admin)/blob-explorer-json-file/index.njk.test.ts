@@ -36,7 +36,6 @@ describe("blob-explorer-json-file template", () => {
 
   describe("English content", () => {
     it("should render the heading, metadata table, resubmit button and template link", () => {
-      // Arrange
       const data = {
         ...en,
         metadata: mockMetadata,
@@ -46,10 +45,8 @@ describe("blob-explorer-json-file template", () => {
         locale: "en"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.jsonFileTitle);
       expect($("h2").text()).toContain(en.jsonFileMetadataHeading);
       expect($("button").text()).toContain(en.jsonFileResubmitButton);
@@ -68,7 +65,6 @@ describe("blob-explorer-json-file template", () => {
     });
 
     it("should omit the template link and JSON details when they are not provided", () => {
-      // Arrange
       const data = {
         ...en,
         metadata: mockMetadata,
@@ -78,23 +74,18 @@ describe("blob-explorer-json-file template", () => {
         locale: "en"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`a:contains("${en.jsonFileLinkToTemplate}")`)).toHaveLength(0);
       expect($(".govuk-details")).toHaveLength(0);
       assertNoErrors($);
     });
 
     it("should render an error summary and hide the metadata when an error is present", () => {
-      // Arrange
       const data = { ...en, error: en.jsonFileError, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.jsonFileError]);
       expect($(".govuk-table")).toHaveLength(0);
       expect($("button")).toHaveLength(0);
@@ -103,7 +94,6 @@ describe("blob-explorer-json-file template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh headings and metadata labels", () => {
-      // Arrange
       const data = {
         ...cy,
         metadata: mockMetadata,
@@ -113,10 +103,8 @@ describe("blob-explorer-json-file template", () => {
         locale: "cy"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.jsonFileTitle);
       expect($("h2").text()).toContain(cy.jsonFileMetadataHeading);
       expect($(".govuk-table").text()).toContain(cy.metadataArtefactId);

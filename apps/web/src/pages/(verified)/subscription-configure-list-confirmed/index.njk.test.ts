@@ -20,36 +20,27 @@ describe("subscription-configure-list-confirmed template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel title", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(en.panelTitle);
     });
 
     it("should render the continue text with the your-account link", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.continueText);
       expect($('a[href="/account-home"]').text()).toContain(en.yourAccountLink);
     });
 
     it("should render the four next-step links with correct hrefs", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('a[href="/add-email-subscription"]').text()).toContain(en.addNewSubscriptionLink);
       expect($('a[href="/subscription-management"]').text()).toContain(en.manageSubscriptionsLink);
       expect($('a[href="/search"]').text()).toContain(en.findCourtLink);
@@ -59,13 +50,10 @@ describe("subscription-configure-list-confirmed template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh panel title and next-step links", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(cy.panelTitle);
       expect($('a[href="/account-home"]').text()).toContain(cy.yourAccountLink);
       expect($('a[href="/add-email-subscription"]').text()).toContain(cy.addNewSubscriptionLink);

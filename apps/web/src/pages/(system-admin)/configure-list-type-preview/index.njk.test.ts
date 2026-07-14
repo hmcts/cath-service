@@ -31,25 +31,19 @@ describe("configure-list-type-preview template", () => {
 
   describe("English content", () => {
     it("should render the page heading and description", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil, Family" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       expect($("h1").text()).toContain(en.configureListType.preview.title);
       expect($(".govuk-body").first().text()).toContain(en.configureListType.preview.description);
     });
 
     it("should render the summary list rows with the submitted data", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil, Family" };
 
-      // Act
       const { $, html } = render(env, TEMPLATE, templateData);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -66,35 +60,26 @@ describe("configure-list-type-preview template", () => {
     });
 
     it("should render Yes for a non-strategic list type", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil" };
 
-      // Act
       const { html } = render(env, TEMPLATE, templateData);
 
-      // Assert
       expect(html).toContain(en.configureListType.preview.yesOption);
     });
 
     it("should render No when the list type is strategic", () => {
-      // Arrange
       const templateData = { t: en, data: { ...data, isNonStrategic: false }, subJurisdictionsText: "Civil" };
 
-      // Act
       const { html } = render(env, TEMPLATE, templateData);
 
-      // Assert
       expect(html).toContain(en.configureListType.preview.noOption);
     });
 
     it("should render change links pointing to the enter details and sub jurisdictions pages", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       const hrefs = $(".govuk-summary-list__actions a")
         .map((_, el) => $(el).attr("href"))
         .get();
@@ -103,48 +88,36 @@ describe("configure-list-type-preview template", () => {
     });
 
     it("should render the confirm button inside a post form", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       expect($("form[method='post'] button").text()).toContain(en.common.confirm);
     });
 
     it("should not render an error summary when no error is passed", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when an error is passed", () => {
-      // Arrange
       const templateData = { t: en, data, subJurisdictionsText: "Civil", error: "Failed to save list type" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       assertErrorSummary($, ["Failed to save list type"]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and confirm button", () => {
-      // Arrange
       const templateData = { t: cy, data, subJurisdictionsText: "Sifil, Teulu" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, templateData);
 
-      // Assert
       expect($("h1").text()).toContain(cy.configureListType.preview.title);
       expect($("form[method='post'] button").text()).toContain(cy.common.confirm);
     });

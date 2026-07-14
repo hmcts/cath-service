@@ -28,24 +28,18 @@ describe("manage-third-party-user template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, user: mockUser, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render the user details in a summary list", () => {
-      // Arrange
       const data = { ...en, user: mockUser, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -61,13 +55,10 @@ describe("manage-third-party-user template", () => {
     });
 
     it("should render manage subscriptions and delete buttons with English links", () => {
-      // Arrange
       const data = { ...en, user: mockUser, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const manageLink = $(`a[href="/manage-third-party-subscriptions?id=${mockUser.id}"]`);
       const deleteLink = $(`a[href="/delete-third-party-user?id=${mockUser.id}"]`);
       expect(manageLink.text().trim()).toBe(en.manageSubscriptionsButton);
@@ -78,24 +69,18 @@ describe("manage-third-party-user template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading", () => {
-      // Arrange
       const data = { ...cy, user: mockUser, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
     });
 
     it("should append the Welsh locale query to action links", () => {
-      // Arrange
       const data = { ...cy, user: mockUser, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`a[href="/manage-third-party-subscriptions?id=${mockUser.id}&lng=cy"]`).length).toBe(1);
       expect($(`a[href="/delete-third-party-user?id=${mockUser.id}&lng=cy"]`).length).toBe(1);
     });
@@ -103,13 +88,10 @@ describe("manage-third-party-user template", () => {
 
   describe("No user", () => {
     it("should render the heading without a summary list or action buttons", () => {
-      // Arrange
       const data = { ...en, errors: [{ text: en.userNotFound }], locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($(".govuk-summary-list").length).toBe(0);
       expect($("a.govuk-button").length).toBe(0);

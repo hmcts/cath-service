@@ -20,35 +20,26 @@ describe("add-email-subscription template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.heading);
     });
 
     it("should render the inset text", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-inset-text").text()).toContain(en.insetText);
     });
 
     it("should render the three radio options", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const values = $('input[name="subscriptionMethod"]')
         .map((_, el) => $(el).attr("value"))
         .get();
@@ -59,13 +50,10 @@ describe("add-email-subscription template", () => {
     });
 
     it("should render the continue button and back link", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button").text()).toContain(en.continueButton);
       const back = $('a[href="/subscription-management"]');
       expect(back.length).toBe(1);
@@ -73,26 +61,20 @@ describe("add-email-subscription template", () => {
     });
 
     it("should not render an error summary without errors", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh heading, options and back link", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.heading);
       expect($("body").text()).toContain(cy.courtOrTribunalOption);
       expect($('a[href="/subscription-management"]').text().trim()).toBe(cy.back);
@@ -101,7 +83,6 @@ describe("add-email-subscription template", () => {
 
   describe("Error state", () => {
     it("should render the error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         errors: {
@@ -110,10 +91,8 @@ describe("add-email-subscription template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorSelectOption]);
     });
   });

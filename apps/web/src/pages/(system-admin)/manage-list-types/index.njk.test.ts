@@ -25,36 +25,27 @@ describe("manage-list-types template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, listTypes };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
     });
 
     it("should render the name column heading and visually hidden caption", () => {
-      // Arrange
       const data = { ...en, listTypes };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("th.govuk-table__header").first().text().trim()).toBe(en.nameColumnHeading);
       expect($("caption").text().trim()).toBe(en.tableCaption);
     });
 
     it("should render a row per list type with configure links", () => {
-      // Arrange
       const data = { ...en, listTypes };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const rows = $("tbody .govuk-table__row");
       expect(rows).toHaveLength(listTypes.length);
       expect($('a[href="/list-search-config/1"]').text().trim()).toBe(en.configureLink);
@@ -64,13 +55,10 @@ describe("manage-list-types template", () => {
     });
 
     it("should render an empty table body when there are no list types", () => {
-      // Arrange
       const data = { ...en, listTypes: [] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("tbody .govuk-table__row")).toHaveLength(0);
       assertNoErrors($);
     });
@@ -78,13 +66,10 @@ describe("manage-list-types template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, headings and configure links", () => {
-      // Arrange
       const data = { ...cy, listTypes };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("th.govuk-table__header").first().text().trim()).toBe(cy.nameColumnHeading);
       expect($("caption").text().trim()).toBe(cy.tableCaption);

@@ -25,25 +25,19 @@ describe("blob-explorer-locations template", () => {
 
   describe("English content", () => {
     it("should render the page heading and description", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.locationsTitle);
       expect($("p.govuk-body").first().text()).toContain(en.locationsDescription);
     });
 
     it("should render a table row per location with publication links and counts", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headings = $(".govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -56,24 +50,18 @@ describe("blob-explorer-locations template", () => {
     });
 
     it("should not render an error summary when there is no error", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an empty state message when there are no rows", () => {
-      // Arrange
       const data = { ...en, tableRows: [], locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-table")).toHaveLength(0);
       expect($.text()).toContain("No publications found");
     });
@@ -81,13 +69,10 @@ describe("blob-explorer-locations template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading", () => {
-      // Arrange
       const data = { ...cy, tableRows: buildTableRows(), locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.locationsTitle);
       expect($("p.govuk-body").first().text()).toContain(cy.locationsDescription);
     });
@@ -95,13 +80,10 @@ describe("blob-explorer-locations template", () => {
 
   describe("Error state", () => {
     it("should render an error summary when the controller passes an error", () => {
-      // Arrange
       const data = { ...en, error: en.locationsError, tableRows: [], locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.locationsError]);
     });
   });

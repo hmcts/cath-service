@@ -20,13 +20,10 @@ describe("delete-user-success template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel, success message and return link", () => {
-      // Arrange
       const data = { ...en, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(en.panelTitle);
       expect($("p.govuk-body").first().text()).toContain(en.successMessage);
       const link = $('a[href="/find-users"]');
@@ -38,13 +35,10 @@ describe("delete-user-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh content and preserve the language query on the return link", () => {
-      // Arrange
       const data = { ...cy, lng: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(cy.panelTitle);
       expect($("p.govuk-body").first().text()).toContain(cy.successMessage);
       const link = $('a[href="/find-users?lng=cy"]');

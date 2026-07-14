@@ -15,13 +15,10 @@ const TEMPLATE = "(system-admin)/system-admin-dashboard/index.njk";
 describe("system-admin-dashboard template", () => {
   describe("Template file", () => {
     it("should exist", () => {
-      // Arrange
       const templatePath = path.join(__dirname, "index.njk");
 
-      // Act
       const exists = existsSync(templatePath);
 
-      // Assert
       expect(exists).toBe(true);
     });
   });
@@ -34,13 +31,10 @@ describe("system-admin-dashboard template", () => {
     });
 
     it("should render the English heading and a tile link for every configured tile", () => {
-      // Arrange
       const data = { ...en, user: { id: "admin-1" } };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       const tiles = $("a.admin-tile");
       expect(tiles).toHaveLength(en.tiles.length);
@@ -53,13 +47,10 @@ describe("system-admin-dashboard template", () => {
     });
 
     it("should render the Welsh heading and tiles", () => {
-      // Arrange
       const data = { ...cy, user: { id: "admin-1" } };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("a.admin-tile")).toHaveLength(cy.tiles.length);
       expect($(`a.admin-tile[href="${cy.tiles[0].href}"] .admin-tile__heading`).text()).toBe(cy.tiles[0].title);

@@ -24,24 +24,18 @@ describe("delete-user-confirm/[userId] template", () => {
 
   describe("English content", () => {
     it("should render the page heading with the user email", () => {
-      // Arrange
       const data = { ...en, user: USER, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.pageTitle(USER.email));
     });
 
     it("should render both radio options within a post form", () => {
-      // Arrange
       const data = { ...en, user: USER, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       const radios = $("input[type='radio'][name='confirmation']");
       expect(radios).toHaveLength(2);
@@ -50,13 +44,10 @@ describe("delete-user-confirm/[userId] template", () => {
     });
 
     it("should render the yes and no option labels", () => {
-      // Arrange
       const data = { ...en, user: USER, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const labels = $("label.govuk-radios__label")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -65,29 +56,22 @@ describe("delete-user-confirm/[userId] template", () => {
     });
 
     it("should render the continue button", () => {
-      // Arrange
       const data = { ...en, user: USER, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text().trim()).toBe(en.continueButton);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, user: USER, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when a validation error exists", () => {
-      // Arrange
       const errorText = "Select yes if you want to delete this user";
       const data = {
         ...en,
@@ -96,23 +80,18 @@ describe("delete-user-confirm/[userId] template", () => {
         errors: [{ text: errorText, href: "#confirmation" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [errorText]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and controls", () => {
-      // Arrange
       const data = { ...cy, user: USER, lng: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.pageTitle(USER.email));
       expect($("button.govuk-button").text().trim()).toBe(cy.continueButton);
       const labels = $("label.govuk-radios__label")
@@ -123,7 +102,6 @@ describe("delete-user-confirm/[userId] template", () => {
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const errorText = "Dewiswch ydw os ydych am ddileu'r defnyddiwr hwn";
       const data = {
         ...cy,
@@ -132,10 +110,8 @@ describe("delete-user-confirm/[userId] template", () => {
         errors: [{ text: errorText, href: "#confirmation" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [errorText]);
     });
   });

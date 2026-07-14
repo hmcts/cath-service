@@ -20,13 +20,10 @@ describe("configure-list-type-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel and return link", () => {
-      // Arrange
       const data = { t: en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.configureListType.success.title);
       expect($(".govuk-panel__body").text()).toContain(en.configureListType.success.banner);
       expect($("h2").text()).toContain(en.configureListType.success.description);
@@ -37,13 +34,10 @@ describe("configure-list-type-success template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh success panel and return link", () => {
-      // Arrange
       const data = { t: cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.configureListType.success.title);
       expect($(".govuk-panel__body").text()).toContain(cy.configureListType.success.banner);
       expect($("h2").text()).toContain(cy.configureListType.success.description);

@@ -28,13 +28,10 @@ describe("delete-court template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading, form field and continue button", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($("form[method='post']")).toHaveLength(1);
       expect($("input#court-search[name='locationId']")).toHaveLength(1);
@@ -43,40 +40,31 @@ describe("delete-court template", () => {
     });
 
     it("should render the Welsh heading, label and button", () => {
-      // Arrange
       const data = { ...cy, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($("label[for='court-search']").text()).toContain(cy.courtNameLabel);
       expect($("button.govuk-button").text()).toContain(cy.continueButtonText);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary and inline error when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         errors: [{ text: en.courtNameRequired, href: "#court-search" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.courtNameRequired]);
       expect($(".govuk-form-group--error label[for='court-search']")).toHaveLength(1);
       expect($("#court-search-error").text()).toContain(en.courtNameRequired);
@@ -84,16 +72,13 @@ describe("delete-court template", () => {
     });
 
     it("should render a Welsh error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...cy,
         errors: [{ text: cy.courtNameRequired, href: "#court-search" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.courtNameRequired]);
     });
   });

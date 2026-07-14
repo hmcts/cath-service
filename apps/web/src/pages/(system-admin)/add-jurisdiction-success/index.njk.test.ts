@@ -20,35 +20,26 @@ describe("add-jurisdiction-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel title", () => {
-      // Arrange
       const data = { ...en, jurisdictionSuccess: { name: "Civil" }, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.successBannerTitle);
     });
 
     it("should render the next steps heading", () => {
-      // Arrange
       const data = { ...en, jurisdictionSuccess: { name: "Civil" }, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.nextStepsTitle);
     });
 
     it("should render the next steps links with English hrefs", () => {
-      // Arrange
       const data = { ...en, jurisdictionSuccess: { name: "Civil" }, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('a[href="/add-jurisdiction"]').text()).toBe(en.addAnotherText);
       expect($('a[href="/add-sub-jurisdiction"]').text()).toBe(en.addSubJurisdictionText);
       expect($('a[href="/add-region"]').text()).toBe(en.addRegionText);
@@ -56,26 +47,20 @@ describe("add-jurisdiction-success template", () => {
     });
 
     it("should render without an error summary", () => {
-      // Arrange
       const data = { ...en, jurisdictionSuccess: { name: "Civil" }, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh panel title and links with lng=cy hrefs", () => {
-      // Arrange
       const data = { ...cy, jurisdictionSuccess: { name: "Sifil" }, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.successBannerTitle);
       expect($("h2").text()).toContain(cy.nextStepsTitle);
       expect($('a[href="/add-jurisdiction?lng=cy"]').text()).toBe(cy.addAnotherText);

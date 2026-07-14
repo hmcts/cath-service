@@ -23,37 +23,28 @@ describe("add-sub-jurisdiction-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel with the banner title", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel");
       expect(panel).toHaveLength(1);
       expect($(".govuk-panel__title").text().trim()).toBe(en.successBannerTitle);
     });
 
     it("should render the next steps heading", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text().trim()).toBe(en.nextStepsTitle);
     });
 
     it("should render the three navigation links without a language query", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const links = $(".govuk-list a");
       expect(links).toHaveLength(3);
 
@@ -73,25 +64,19 @@ describe("add-sub-jurisdiction-success template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh success panel and heading", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(cy.successBannerTitle);
       expect($("h2.govuk-heading-m").text().trim()).toBe(cy.nextStepsTitle);
     });
 
     it("should append the lng=cy query parameter to all navigation links", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const addAnother = $('a[href="/add-sub-jurisdiction?lng=cy"]');
       expect(addAnother).toHaveLength(1);
       expect(addAnother.text().trim()).toBe(cy.addAnotherText);

@@ -43,66 +43,50 @@ describe("summary-of-publications template", () => {
 
   describe("Template rendering", () => {
     it("should render the page title as the heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(`${en.titlePrefix} Oxford Combined Court Centre${en.titleSuffix}`);
     });
 
     it("should render the fact link with url and additional text", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $(`a[href="${en.factLinkUrl}"]`);
       expect(link.text().trim()).toBe(en.factLinkText);
       expect($("body").text()).toContain(en.factAdditionalText);
     });
 
     it("should render the no publications message when there are no publications", () => {
-      // Arrange
       const data = buildData(en, { publications: [] });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain(en.noPublicationsMessage);
       assertNoErrors($);
     });
 
     it("should not show the no publications message when a noListMessage is present", () => {
-      // Arrange
       const data = buildData(en, { noListMessage: "<p>Custom no list message</p>" });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain("Custom no list message");
       expect($("body").text()).not.toContain(en.noPublicationsMessage);
     });
 
     it("should render the caution message when present", () => {
-      // Arrange
       const data = buildData(en, { cautionMessage: "<strong>Caution notice</strong>" });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain("Caution notice");
     });
 
     it("should render the select list message and publication links when publications exist", () => {
-      // Arrange
       const publications = [
         {
           id: "flat-file-artefact",
@@ -131,10 +115,8 @@ describe("summary-of-publications template", () => {
       ];
       const data = buildData(en, { publications });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain(en.selectListMessage);
       expect($('a[href="/hearing-lists/5/flat-file-artefact"]')).toHaveLength(1);
       expect($('a[href="/civil-daily-cause-list?artefactId=url-artefact"]')).toHaveLength(1);
@@ -144,24 +126,18 @@ describe("summary-of-publications template", () => {
     });
 
     it("should render an error summary when an error is present", () => {
-      // Arrange
       const data = buildData(en, { error: "Something went wrong" });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, ["Something went wrong"]);
     });
 
     it("should render Welsh content", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.titlePrefix);
       expect($(`a[href="${cy.factLinkUrl}"]`).text().trim()).toBe(cy.factLinkText);
       expect($("body").text()).toContain(cy.noPublicationsMessage);

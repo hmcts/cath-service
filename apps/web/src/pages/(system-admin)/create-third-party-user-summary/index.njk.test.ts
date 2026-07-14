@@ -20,13 +20,10 @@ describe("create-third-party-user-summary template", () => {
 
   describe("English content", () => {
     it("should render the heading, summary row and confirm button", () => {
-      // Arrange
       const data = { ...en, name: "Test User", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
       expect($(".govuk-summary-list__key").text()).toContain(en.nameLabel);
       expect($(".govuk-summary-list__value").text()).toContain("Test User");
@@ -38,13 +35,10 @@ describe("create-third-party-user-summary template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh text and append the language query to the change link", () => {
-      // Arrange
       const data = { ...cy, name: "Test User", lng: "cy", locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($(".govuk-summary-list__key").text()).toContain(cy.nameLabel);
       expect($('a[href="/create-third-party-user?lng=cy"]').text()).toContain(cy.changeLink);

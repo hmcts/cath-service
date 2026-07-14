@@ -34,26 +34,20 @@ describe("delete-court-confirm template", () => {
     });
   });
 
-  describe("English render", () => {
+  describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render the summary list with location details", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -71,13 +65,10 @@ describe("delete-court-confirm template", () => {
     });
 
     it("should render the radio options and continue button", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radioValues = $("input[name='confirmDelete']")
         .map((_, el) => $(el).attr("value"))
         .get();
@@ -86,26 +77,20 @@ describe("delete-court-confirm template", () => {
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
-  describe("Welsh render", () => {
+  describe("Welsh content", () => {
     it("should render the Welsh page heading and headings", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
@@ -117,26 +102,20 @@ describe("delete-court-confirm template", () => {
 
   describe("Error states", () => {
     it("should render the error summary with a radio validation error", () => {
-      // Arrange
       const data = { ...buildData(en), errors: [{ text: en.noRadioSelected, href: "#confirm-delete" }] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.noRadioSelected]);
       expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
       expect($(".govuk-error-message").text()).toContain(en.noRadioSelected);
     });
 
     it("should render the error summary with a location validation error", () => {
-      // Arrange
       const data = { ...buildData(en), errors: [{ text: en.activeSubscriptions }] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.activeSubscriptions]);
     });
   });

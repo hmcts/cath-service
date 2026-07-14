@@ -51,39 +51,30 @@ describe("bulk-unsubscribe template", () => {
 
   describe("English content", () => {
     it("should render the page heading and bulk unsubscribe button", () => {
-      // Arrange
       const data = { ...en, ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.bulkUnsubscribeHeading);
       expect($("button").text()).toContain(en.bulkUnsubscribeButton);
       assertNoErrors($);
     });
 
     it("should render a checkbox per subscription with subscription ids as values", () => {
-      // Arrange
       const data = { ...en, ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input.row-checkbox[value='case-1']").length).toBeGreaterThan(0);
       expect($("input.row-checkbox[value='court-1']").length).toBeGreaterThan(0);
       expect($("input[name='_csrf']").attr("value")).toBe("test-csrf-token");
     });
 
     it("should render subscription details in the tables", () => {
-      // Arrange
       const data = { ...en, ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($.html()).toContain("Test Case");
       expect($.html()).toContain("REF123");
       expect($.html()).toContain("Birmingham Crown Court");
@@ -92,19 +83,15 @@ describe("bulk-unsubscribe template", () => {
     });
 
     it("should pre-check checkboxes for previously selected subscriptions", () => {
-      // Arrange
       const data = { ...en, ...baseData, previouslySelected: ["case-1"] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input.row-checkbox[value='case-1']").attr("checked")).toBeDefined();
       expect($("input.row-checkbox[value='court-1']").attr("checked")).toBeUndefined();
     });
 
     it("should render the empty state message and no form when there are no subscriptions", () => {
-      // Arrange
       const data = {
         ...en,
         caseSubscriptions: [],
@@ -119,10 +106,8 @@ describe("bulk-unsubscribe template", () => {
         csrfToken: "test-csrf-token"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($.html()).toContain(en.emptyStateMessage);
       expect($("form")).toHaveLength(0);
     });
@@ -130,13 +115,10 @@ describe("bulk-unsubscribe template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and button", () => {
-      // Arrange
       const data = { ...cy, ...baseData };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.bulkUnsubscribeHeading);
       expect($("button").text()).toContain(cy.bulkUnsubscribeButton);
       expect($.html()).toContain(cy.tableHeaderCaseName);
@@ -145,17 +127,14 @@ describe("bulk-unsubscribe template", () => {
 
   describe("Error states", () => {
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         ...baseData,
         errors: [{ text: en.errorNoSelectionMessage, href: en.errorNoSelectionHref }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSelectionMessage]);
     });
   });

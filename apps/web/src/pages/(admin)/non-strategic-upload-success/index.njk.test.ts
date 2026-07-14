@@ -20,26 +20,20 @@ describe("non-strategic-upload-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel with title and uploaded message", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel");
       expect(panel.find(".govuk-panel__title").text()).toContain(en.title);
       expect(panel.find(".govuk-panel__body").text()).toContain(en.uploadedMessage);
     });
 
     it("should render the next steps heading and navigation links", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.nextStepsHeading);
       expect($('a[href="/non-strategic-upload"]').text()).toContain(en.uploadAnotherLink);
       expect($('a[href="/remove-list-search"]').text()).toContain(en.removeFileLink);
@@ -47,26 +41,20 @@ describe("non-strategic-upload-success template", () => {
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the success panel and links in Welsh", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.title);
       expect($(".govuk-panel__body").text()).toContain(cy.uploadedMessage);
       expect($("h2").text()).toContain(cy.nextStepsHeading);

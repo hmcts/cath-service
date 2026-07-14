@@ -23,37 +23,28 @@ describe("subscription-add-list-language template", () => {
 
   describe("English content", () => {
     it("should render the heading as the fieldset legend", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-fieldset__heading").text().trim()).toBe(en.heading);
     });
 
     it("should render a back link to the previous step", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const backLink = $("a.govuk-back-link");
       expect(backLink.attr("href")).toBe("/subscription-add-list");
       expect(backLink.text().trim()).toBe(en.back);
     });
 
     it("should render the three language radio options", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $('input[type="radio"][name="language"]');
       expect(radios).toHaveLength(3);
       expect(radios.map((_, el) => $(el).attr("value")).get()).toEqual(["ENGLISH", "WELSH", "ENGLISH_AND_WELSH"]);
@@ -61,13 +52,10 @@ describe("subscription-add-list-language template", () => {
     });
 
     it("should render the submit button", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const form = $("form");
       expect(form.attr("method")).toBe("post");
       expect(form.attr("novalidate")).toBeDefined();
@@ -75,30 +63,23 @@ describe("subscription-add-list-language template", () => {
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should mark the previously selected option as checked", () => {
-      // Arrange
       const data = { ...en, selectedLanguage: "WELSH" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[value="WELSH"]').attr("checked")).toBeDefined();
       expect($('input[value="ENGLISH"]').attr("checked")).toBeUndefined();
     });
 
     it("should render the error summary when validation fails", () => {
-      // Arrange
       const data = {
         ...en,
         errors: {
@@ -107,10 +88,8 @@ describe("subscription-add-list-language template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorSelectVersion]);
       expect($(".govuk-error-summary__title").text().trim()).toBe(en.errorSummaryTitle);
     });
@@ -118,13 +97,10 @@ describe("subscription-add-list-language template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading, options and button", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-fieldset__heading").text().trim()).toBe(cy.heading);
       expect($('label[for="language"]').text().trim()).toBe(cy.englishOption);
       expect($("button.govuk-button").text().trim()).toBe(cy.continueButton);
@@ -132,7 +108,6 @@ describe("subscription-add-list-language template", () => {
     });
 
     it("should render the Welsh error summary title", () => {
-      // Arrange
       const data = {
         ...cy,
         errors: {
@@ -141,10 +116,8 @@ describe("subscription-add-list-language template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorSelectVersion]);
       expect($(".govuk-error-summary__title").text().trim()).toBe(cy.errorSummaryTitle);
     });

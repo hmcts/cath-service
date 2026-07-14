@@ -24,24 +24,18 @@ describe("delete-third-party-user template", () => {
 
   describe("English content", () => {
     it("should render the page heading with the user name", () => {
-      // Arrange
       const data = { ...en, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(`${en.pageTitle} ${USER_NAME}?`);
     });
 
     it("should render both radio options within a post form", () => {
-      // Arrange
       const data = { ...en, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       const radios = $("input[type='radio'][name='confirmDelete']");
       expect(radios).toHaveLength(2);
@@ -50,13 +44,10 @@ describe("delete-third-party-user template", () => {
     });
 
     it("should render the radio option labels", () => {
-      // Arrange
       const data = { ...en, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const labels = $("label.govuk-radios__label")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -64,63 +55,48 @@ describe("delete-third-party-user template", () => {
     });
 
     it("should render the continue button", () => {
-      // Arrange
       const data = { ...en, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text().trim()).toBe(en.continueButtonText);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { ...en, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when a radio selection error exists", () => {
-      // Arrange
       const data = {
         ...en,
         userName: USER_NAME,
         errors: [{ text: en.noRadioSelected, href: "#confirm-delete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.noRadioSelected]);
     });
 
     it("should render a user not found error summary", () => {
-      // Arrange
       const data = { ...en, errors: [{ text: en.userNotFound }] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.userNotFound]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and controls", () => {
-      // Arrange
       const data = { ...cy, userName: USER_NAME, errors: undefined };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(`${cy.pageTitle} ${USER_NAME}?`);
       expect($("button.govuk-button").text().trim()).toBe(cy.continueButtonText);
       const labels = $("label.govuk-radios__label")
@@ -130,17 +106,14 @@ describe("delete-third-party-user template", () => {
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const data = {
         ...cy,
         userName: USER_NAME,
         errors: [{ text: cy.noRadioSelected, href: "#confirm-delete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.noRadioSelected]);
     });
   });

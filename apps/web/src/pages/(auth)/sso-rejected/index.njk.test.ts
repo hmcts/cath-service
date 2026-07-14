@@ -22,25 +22,19 @@ describe("sso-rejected template", () => {
 
   describe("English content", () => {
     it("should render the page heading and paragraph", () => {
-      // Arrange
       const data = { en, cy, ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.header);
       expect($.root().text()).toContain(en.paragraph1);
     });
 
     it("should render the ServiceNow link", () => {
-      // Arrange
       const data = { en, cy, ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $(`a[href="${SERVICE_NOW_HREF}"]`);
       expect(link.length).toBe(1);
       expect(link.text()).toContain(en.linkText);
@@ -49,25 +43,19 @@ describe("sso-rejected template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and paragraph", () => {
-      // Arrange
       const data = { en, cy, ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.header);
       expect($.root().text()).toContain(cy.paragraph1);
     });
 
     it("should render the ServiceNow link in Welsh", () => {
-      // Arrange
       const data = { en, cy, ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const link = $(`a[href="${SERVICE_NOW_HREF}"]`);
       expect(link.length).toBe(1);
       expect(link.text()).toContain(cy.linkText);

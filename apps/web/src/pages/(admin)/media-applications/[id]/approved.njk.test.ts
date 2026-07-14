@@ -35,7 +35,6 @@ describe("approved.njk template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel with the page title", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
@@ -45,17 +44,14 @@ describe("approved.njk template", () => {
         application: mockApplication
       };
 
-      // Act
       const { $ } = render(env, template, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(en.pageTitle);
     });
 
     it("should render the application details in a summary list", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
@@ -65,10 +61,8 @@ describe("approved.njk template", () => {
         application: mockApplication
       };
 
-      // Act
       const { $ } = render(env, template, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -84,7 +78,6 @@ describe("approved.njk template", () => {
     });
 
     it("should render the what happens next section", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
@@ -94,10 +87,8 @@ describe("approved.njk template", () => {
         application: mockApplication
       };
 
-      // Act
       const { $ } = render(env, template, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.whatHappensNextHeading);
       expect($.html()).toContain(en.whatHappensNextText);
     });
@@ -105,7 +96,6 @@ describe("approved.njk template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh page title and headers", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         tableHeaders: cy.tableHeaders,
@@ -115,10 +105,8 @@ describe("approved.njk template", () => {
         application: mockApplication
       };
 
-      // Act
       const { $ } = render(env, template, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.pageTitle);
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
@@ -130,17 +118,14 @@ describe("approved.njk template", () => {
 
   describe("Error state", () => {
     it("should render the error summary and no panel when an error is passed", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.loadFailed,
         application: null
       };
 
-      // Act
       const { $ } = render(env, template, data);
 
-      // Assert
       const errorSummary = $(".govuk-error-summary");
       expect(errorSummary).toHaveLength(1);
       expect(errorSummary.text()).toContain(en.errorMessages.loadFailed);

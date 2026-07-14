@@ -49,24 +49,18 @@ describe("reject template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render the applicant details summary list", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2.govuk-heading-m").text()).toContain(en.subheading);
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
@@ -86,13 +80,10 @@ describe("reject template", () => {
     });
 
     it("should render the rejection reasons row when reasons are present", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -102,26 +93,20 @@ describe("reject template", () => {
     });
 
     it("should render the proof of ID row with a view link", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const proofLink = $(`a[href="/media-applications/${mockApplication.id}/proof-of-id"]`);
       expect(proofLink.length).toBe(1);
       expect(proofLink.text()).toContain(en.viewLinkText);
     });
 
     it("should render the email preview details with the applicant name", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const details = $("details.govuk-details");
       expect(details.length).toBe(1);
       expect(details.find(".govuk-details__summary-text").text()).toContain(en.emailPreview.summaryText);
@@ -130,13 +115,10 @@ describe("reject template", () => {
     });
 
     it("should render the confirmation radios and continue button", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $('input[name="confirm"]');
       expect(radios).toHaveLength(2);
       expect(radios.map((_, el) => $(el).attr("value")).get()).toEqual(["yes", "no"]);
@@ -148,41 +130,32 @@ describe("reject template", () => {
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary when validation fails", () => {
-      // Arrange
       const data = buildData(en, {
         errors: [{ text: en.errorMessages.selectOption, href: "#confirm" }]
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessages.selectOption]);
     });
 
     it("should render a load-failed error message instead of the form", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.loadFailed,
         application: null
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-error-summary").text()).toContain(en.errorMessages.loadFailed);
       expect($('input[name="confirm"]')).toHaveLength(0);
     });
@@ -190,13 +163,10 @@ describe("reject template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and applicant detail keys", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
@@ -206,13 +176,10 @@ describe("reject template", () => {
     });
 
     it("should render Welsh radio labels and button text", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const labels = $(".govuk-radios__label")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -221,15 +188,12 @@ describe("reject template", () => {
     });
 
     it("should render the Welsh error summary", () => {
-      // Arrange
       const data = buildData(cy, {
         errors: [{ text: cy.errorMessages.selectOption, href: "#confirm" }]
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorMessages.selectOption]);
     });
   });

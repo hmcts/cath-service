@@ -38,50 +38,38 @@ describe("subscription-management template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
     });
 
     it("should render the add and bulk unsubscribe buttons", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const addButton = $('a[href="/add-email-subscription"]');
       expect(addButton.text()).toContain(en.addEmailSubscriptionButton);
       expect($('a[href="/bulk-unsubscribe"]').text()).toContain(en.bulkUnsubscribeButton);
     });
 
     it("should render the case and court subscription tables with details", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#all-case-subscriptions-table").text()).toContain("Smith v Jones");
       expect($("#all-case-subscriptions-table").text()).toContain("CASE-123");
       expect($("#all-court-subscriptions-table").text()).toContain("Central London County Court");
     });
 
     it("should render an unsubscribe form for each subscription", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const forms = $('form[action="/delete-subscription"]');
       expect(forms.length).toBeGreaterThanOrEqual(2);
       expect($('input[name="subscriptionId"][value="case-1"]').length).toBeGreaterThanOrEqual(1);
@@ -89,7 +77,6 @@ describe("subscription-management template", () => {
     });
 
     it("should render the no-subscriptions message when count is zero", () => {
-      // Arrange
       const data = buildData(en, {
         caseSubscriptions: [],
         courtSubscriptions: [],
@@ -101,10 +88,8 @@ describe("subscription-management template", () => {
         allSubscriptionsCount: 0
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-body").text()).toContain(en.noSubscriptions);
       expect($("#all-case-subscriptions-table").length).toBe(0);
     });
@@ -112,19 +97,15 @@ describe("subscription-management template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and buttons", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($('a[href="/add-email-subscription"]').text()).toContain(cy.addEmailSubscriptionButton);
     });
 
     it("should render the Welsh no-subscriptions message when count is zero", () => {
-      // Arrange
       const data = buildData(cy, {
         caseSubscriptions: [],
         courtSubscriptions: [],
@@ -136,10 +117,8 @@ describe("subscription-management template", () => {
         allSubscriptionsCount: 0
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-body").text()).toContain(cy.noSubscriptions);
     });
   });

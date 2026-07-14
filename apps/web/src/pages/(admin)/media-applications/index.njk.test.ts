@@ -31,7 +31,6 @@ describe("media-applications index template", () => {
 
   describe("English content", () => {
     it("should render the page heading and a table row per application", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
@@ -40,10 +39,8 @@ describe("media-applications index template", () => {
         applications: mockApplications
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
 
       const headers = $(".govuk-table__head .govuk-table__header")
@@ -66,7 +63,6 @@ describe("media-applications index template", () => {
     });
 
     it("should show the no-applications message when the list is empty", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         tableHeaders: en.tableHeaders,
@@ -75,27 +71,22 @@ describe("media-applications index template", () => {
         applications: []
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body").text()).toContain(en.noApplications);
       expect($(".govuk-table")).toHaveLength(0);
       assertNoErrors($);
     });
 
     it("should render the error summary when loading fails", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.loadFailed,
         applications: []
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const summary = $(".govuk-error-summary");
       expect(summary).toHaveLength(1);
       expect(summary.text()).toContain(en.errorMessages.loadFailed);
@@ -105,7 +96,6 @@ describe("media-applications index template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and table headers", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         tableHeaders: cy.tableHeaders,
@@ -114,10 +104,8 @@ describe("media-applications index template", () => {
         applications: mockApplications
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
 
       const headers = $(".govuk-table__head .govuk-table__header")

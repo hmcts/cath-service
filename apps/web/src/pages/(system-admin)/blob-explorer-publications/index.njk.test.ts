@@ -29,25 +29,19 @@ describe("blob-explorer-publications template", () => {
 
   describe("English content", () => {
     it("should render the page heading and description", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locationId: "123", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.publicationsTitle);
       expect($("p.govuk-body").first().text()).toContain(en.publicationsDescription);
     });
 
     it("should render a table with the publication headings and rows", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locationId: "123", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headings = $(".govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -64,49 +58,37 @@ describe("blob-explorer-publications template", () => {
     });
 
     it("should not render an error summary when there is no error", () => {
-      // Arrange
       const data = { ...en, tableRows: buildTableRows(), locationId: "123", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render the empty state when there are no publications", () => {
-      // Arrange
       const data = { ...en, tableRows: [], locationId: "123", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-table")).toHaveLength(0);
       expect($("body").text()).toContain("No publications found for this location.");
     });
 
     it("should render an error summary when an error is passed", () => {
-      // Arrange
       const data = { ...en, error: en.publicationsError, tableRows: [], locationId: "123", locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.publicationsError]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and description", () => {
-      // Arrange
       const data = { ...cy, tableRows: buildTableRows(), locationId: "123", locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.publicationsTitle);
       expect($("p.govuk-body").first().text()).toContain(cy.publicationsDescription);
     });

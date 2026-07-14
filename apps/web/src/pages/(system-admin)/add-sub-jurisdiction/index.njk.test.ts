@@ -34,24 +34,18 @@ describe("add-sub-jurisdiction template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render the jurisdiction select with placeholder and options", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const options = $("#jurisdictionId option");
       expect(options).toHaveLength(3);
       expect(options.first().text()).toBe(en.jurisdictionPlaceholder);
@@ -59,13 +53,10 @@ describe("add-sub-jurisdiction template", () => {
     });
 
     it("should render name and welsh name inputs with hints", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input#name")).toHaveLength(1);
       expect($("input#welshName")).toHaveLength(1);
       expect($("#name-hint").text().trim()).toBe(en.nameHint);
@@ -73,53 +64,41 @@ describe("add-sub-jurisdiction template", () => {
     });
 
     it("should render the save button", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text()).toContain(en.saveButtonText);
     });
 
     it("should preserve submitted values in the inputs", () => {
-      // Arrange
       const data = buildData(en, {
         data: { jurisdictionId: "1", name: "Civil Court", welshName: "Llys Sifil" }
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input#name").attr("value")).toBe("Civil Court");
       expect($("input#welshName").attr("value")).toBe("Llys Sifil");
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh heading and button", () => {
-      // Arrange
       const data = buildData(cy, {
         jurisdictionItems: [{ value: "", text: cy.jurisdictionPlaceholder }]
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($("button.govuk-button").text()).toContain(cy.saveButtonText);
       expect($("#name-hint").text().trim()).toBe(cy.nameHint);
@@ -128,17 +107,14 @@ describe("add-sub-jurisdiction template", () => {
 
   describe("Error states", () => {
     it("should render the error summary with field messages", () => {
-      // Arrange
       const errors = [
         { text: "Select a jurisdiction", href: "#jurisdictionId" },
         { text: "Enter a name", href: "#name" }
       ];
       const data = buildData(en, { errors });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, ["Select a jurisdiction", "Enter a name"]);
       expect($("#name-error").text()).toContain("Enter a name");
     });

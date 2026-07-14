@@ -28,13 +28,10 @@ describe("select-account template", () => {
 
   describe("Template rendering", () => {
     it("should render the page heading and all account options in English", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       const radioLabels = $(".govuk-radios__label")
         .map((_, el) => $(el).text().trim())
@@ -50,13 +47,10 @@ describe("select-account template", () => {
     });
 
     it("should render the continue button and create-account link in English", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button").text()).toContain(en.continueButton);
       const createLink = $("a[href='/create-media-account']");
       expect(createLink.text()).toContain(en.createAccountLink);
@@ -64,13 +58,10 @@ describe("select-account template", () => {
     });
 
     it("should render the page heading and account options in Welsh", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       const radioLabels = $(".govuk-radios__label")
         .map((_, el) => $(el).text().trim())
@@ -83,33 +74,27 @@ describe("select-account template", () => {
     });
 
     it("should render the error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         errors: [{ text: en.errorMessage, href: "#accountType" }],
         data: { accountType: undefined }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorMessage]);
       expect($(".govuk-error-summary").text()).toContain(en.errorSummaryTitle);
     });
 
     it("should pre-select the previously chosen account when re-rendering with data", () => {
-      // Arrange
       const data = {
         ...en,
         errors: [{ text: en.errorMessage, href: "#accountType" }],
         data: { accountType: "cath" }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("input[value='cath']").attr("checked")).toBeDefined();
       expect($("input[value='hmcts']").attr("checked")).toBeUndefined();
     });

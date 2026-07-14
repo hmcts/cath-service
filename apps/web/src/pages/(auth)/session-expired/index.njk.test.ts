@@ -18,7 +18,6 @@ describe("session-expired template", () => {
 
   describe("English content", () => {
     it("should render the heading in the confirmation panel", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -26,17 +25,14 @@ describe("session-expired template", () => {
         signInAgainLink: en.signInAgainLink
       };
 
-      // Act
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel.length).toBe(1);
       expect(panel.find("h1").text()).toContain(en.heading);
     });
 
     it("should render the body text", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -44,15 +40,12 @@ describe("session-expired template", () => {
         signInAgainLink: en.signInAgainLink
       };
 
-      // Act
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
-      // Assert
       expect($("body").text()).toContain(en.bodyText);
     });
 
     it("should render the sign in again link pointing to /sign-in", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -60,10 +53,8 @@ describe("session-expired template", () => {
         signInAgainLink: en.signInAgainLink
       };
 
-      // Act
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
-      // Assert
       const link = $('.govuk-grid-row a[href="/sign-in"]');
       expect(link.length).toBe(1);
       expect(link.text()).toContain(en.signInAgainLink);
@@ -72,7 +63,6 @@ describe("session-expired template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, body text and link", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         heading: cy.heading,
@@ -80,10 +70,8 @@ describe("session-expired template", () => {
         signInAgainLink: cy.signInAgainLink
       };
 
-      // Act
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
-      // Assert
       expect($(".govuk-panel--confirmation h1").text()).toContain(cy.heading);
       expect($("body").text()).toContain(cy.bodyText);
       expect($('.govuk-grid-row a[href="/sign-in"]').text()).toContain(cy.signInAgainLink);

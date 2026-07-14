@@ -31,13 +31,10 @@ describe("cookie-preferences template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading, intro and section titles", () => {
-      // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($("p.govuk-body").first().text()).toContain(en.intro);
       expect($("body").text()).toContain(en.essentialTitle);
@@ -46,13 +43,10 @@ describe("cookie-preferences template", () => {
     });
 
     it("should render the form posting to /cookie-preferences with a save button", () => {
-      // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       const form = $("form.cookie-preferences-form");
       expect(form.attr("action")).toBe("/cookie-preferences");
       expect(form.attr("method")).toBe("POST");
@@ -60,13 +54,10 @@ describe("cookie-preferences template", () => {
     });
 
     it("should render analytics and preferences radio inputs", () => {
-      // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       expect($("#analytics-yes")).toHaveLength(1);
       expect($("#analytics-no")).toHaveLength(1);
       expect($("#preferences-yes")).toHaveLength(1);
@@ -74,7 +65,6 @@ describe("cookie-preferences template", () => {
     });
 
     it("should check the radios reflecting saved preferences", () => {
-      // Arrange
       const data = {
         ...en,
         categories,
@@ -82,10 +72,8 @@ describe("cookie-preferences template", () => {
         saved: false
       };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       expect($("#analytics-yes").is("[checked]")).toBe(true);
       expect($("#analytics-no").is("[checked]")).toBe(false);
       expect($("#preferences-yes").is("[checked]")).toBe(false);
@@ -93,25 +81,19 @@ describe("cookie-preferences template", () => {
     });
 
     it("should not render the success banner or an error summary when not saved", () => {
-      // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: false };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       expect($(".govuk-notification-banner--success")).toHaveLength(0);
       assertNoErrors($);
     });
 
     it("should render the success banner when saved", () => {
-      // Arrange
       const data = { ...en, categories, cookiePreferences: {}, saved: true };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       const banner = $(".govuk-notification-banner--success");
       expect(banner).toHaveLength(1);
       expect(banner.text()).toContain(en.successBanner);
@@ -119,13 +101,10 @@ describe("cookie-preferences template", () => {
     });
 
     it("should render Welsh heading, radio labels and save button", () => {
-      // Arrange
       const data = { ...cy, categories, cookiePreferences: {}, saved: false };
 
-      // Act
       const { $ } = render(env, "(core)/cookie-preferences/index.njk", data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("label[for='analytics-yes']").text()).toContain(cy.useAnalytics);
       expect($("label[for='preferences-no']").text()).toContain(cy.doNotUsePreferences);

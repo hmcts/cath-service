@@ -48,24 +48,18 @@ describe("media-applications/[id] template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.pageTitle);
     });
 
     it("should render applicant details in the summary list", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const summaryText = $(".govuk-summary-list").text();
       expect(summaryText).toContain(en.tableHeaders.name);
       expect(summaryText).toContain(application.name);
@@ -74,13 +68,10 @@ describe("media-applications/[id] template", () => {
     });
 
     it("should render a proof of id link opening in a new window", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const proofLink = $(`a[href="/media-applications/${application.id}/proof-of-id"]`);
       expect(proofLink).toHaveLength(1);
       expect(proofLink.text()).toContain(en.viewProofOfId);
@@ -88,13 +79,10 @@ describe("media-applications/[id] template", () => {
     });
 
     it("should render approve and reject forms pointing to the correct actions", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`form[action="/media-applications/${application.id}/approve"]`)).toHaveLength(1);
       expect($(`form[action="/media-applications/${application.id}/reject-reasons"]`)).toHaveLength(1);
       const buttonText = $(".govuk-button").text();
@@ -103,40 +91,31 @@ describe("media-applications/[id] template", () => {
     });
 
     it("should not render an error summary for a valid application", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render the file-not-available text when proof of id is missing", () => {
-      // Arrange
       const data = {
         ...buildData(en),
         application: { ...application, proofOfIdPath: null }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-summary-list").text()).toContain(en.fileNotAvailable);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading and labels", () => {
-      // Arrange
       const data = buildData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.pageTitle);
       expect($(".govuk-summary-list").text()).toContain(cy.tableHeaders.email);
       expect($(".govuk-button").text()).toContain(cy.approveButton);
@@ -145,17 +124,14 @@ describe("media-applications/[id] template", () => {
 
   describe("Error state", () => {
     it("should render the error message and a back link when an error is present", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         error: en.errorMessages.alreadyReviewed,
         application: null
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const errorSummary = $(".govuk-error-summary");
       expect(errorSummary).toHaveLength(1);
       expect(errorSummary.text()).toContain(en.errorMessages.alreadyReviewed);

@@ -37,24 +37,18 @@ describe("blob-explorer-confirm-resubmission template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(en.confirmTitle);
     });
 
     it("should render the metadata table with values", () => {
-      // Arrange
       const data = { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const tableText = $(".govuk-table").text();
       expect(tableText).toContain(en.metadataLocationName);
       expect(tableText).toContain(metadata.locationName);
@@ -65,13 +59,10 @@ describe("blob-explorer-confirm-resubmission template", () => {
     });
 
     it("should render the confirm form and cancel link", () => {
-      // Arrange
       const data = { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const form = $("form");
       expect(form.attr("method")).toBe("post");
 
@@ -83,24 +74,18 @@ describe("blob-explorer-confirm-resubmission template", () => {
     });
 
     it("should not render error summary when no error", () => {
-      // Arrange
       const data = { ...en, metadata, artefactId: "abc-123", formatDateTime, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render error summary and no table when error exists", () => {
-      // Arrange
       const data = { ...en, error: en.confirmError, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.confirmError]);
       expect($(".govuk-table")).toHaveLength(0);
     });
@@ -108,25 +93,19 @@ describe("blob-explorer-confirm-resubmission template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and confirm button", () => {
-      // Arrange
       const data = { ...cy, metadata, artefactId: "abc-123", formatDateTime, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.confirmTitle);
       expect($("button[type='submit']").text().trim()).toBe(cy.confirmButton);
     });
 
     it("should render Welsh error summary when error exists", () => {
-      // Arrange
       const data = { ...cy, error: cy.confirmError, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.confirmError]);
     });
   });

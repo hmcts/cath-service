@@ -80,13 +80,10 @@ describe("courts-tribunals-list template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading and filter panel", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       expect($("h2").text()).toContain(en.filterHeading);
       expect($.root().text()).toContain(en.selectedFiltersHeading);
@@ -95,13 +92,10 @@ describe("courts-tribunals-list template", () => {
     });
 
     it("should render the apply filters button and section headings", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button").text()).toContain(en.applyFilters);
       expect($.root().text()).toContain(en.jurisdictionHeading);
       expect($.root().text()).toContain(en.regionHeading);
@@ -110,55 +104,43 @@ describe("courts-tribunals-list template", () => {
     });
 
     it("should render court listings with English names and publication links", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`a[href="/summary-of-publications?locationId=501"]`).text()).toContain("Aberdeen Tribunal Hearing Centre");
       expect($(`a[href="/summary-of-publications?locationId=502"]`).text()).toContain("Ashford Court");
       expect($(".court-letter").text()).toContain("A");
     });
 
     it("should render A-Z navigation with available letters as links", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`.az-navigation a[href="#letter-A"]`)).toHaveLength(1);
       expect($(".az-navigation__letter--disabled").length).toBeGreaterThan(0);
     });
 
     it("should render selected filter tags with remove links", () => {
-      // Arrange
       const data = buildData(en, "en", {
         selectedJurisdictions: [1],
         selectedJurisdictionsDisplay: ["Civil"],
         jurisdictionRemoveUrls: ["/courts-tribunals-list"]
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const tag = $(".filter-tag");
       expect(tag.text()).toContain("Civil");
       expect(tag.find("a.filter-tag-remove").attr("aria-label")).toContain("Civil");
     });
 
     it("should render Welsh headings and court names", () => {
-      // Arrange
       const data = buildData(cy, "cy");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.filterHeading);
       expect($(`a[href="/summary-of-publications?locationId=501"]`).text()).toContain("Canolfan Wrandawiadau Tribiwnlys Aberdeen");

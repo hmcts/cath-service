@@ -44,24 +44,18 @@ describe("remove-list-confirmation template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(en.heading);
     });
 
     it("should render the table headers", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headers = $("thead .govuk-table__header")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -76,13 +70,10 @@ describe("remove-list-confirmation template", () => {
     });
 
     it("should render a row for each artefact", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const rows = $("tbody .govuk-table__row");
       expect(rows).toHaveLength(1);
       const cells = rows
@@ -101,13 +92,10 @@ describe("remove-list-confirmation template", () => {
     });
 
     it("should render the confirmation radios and continue button", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $('input[name="confirmation"]');
       expect(radios).toHaveLength(2);
       expect(radios.map((_, el) => $(el).attr("value")).get()).toEqual(["yes", "no"]);
@@ -119,41 +107,32 @@ describe("remove-list-confirmation template", () => {
     });
 
     it("should not render error summary when no errors", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render error summary when errors exist", () => {
-      // Arrange
       const data = {
         ...baseData(en),
         errorSummaryTitle: en.errorSummaryTitle,
         errors: [{ text: en.errorNoSelection, href: "#confirmation" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSelection]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and headers", () => {
-      // Arrange
       const data = baseData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(cy.heading);
       const headers = $("thead .govuk-table__header")
         .map((_, el) => $(el).text().trim())
@@ -163,13 +142,10 @@ describe("remove-list-confirmation template", () => {
     });
 
     it("should render Welsh radio and button text", () => {
-      // Arrange
       const data = baseData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button[type='submit']").text().trim()).toBe(cy.continueButton);
       const labels = $(".govuk-radios__label")
         .map((_, el) => $(el).text().trim())
@@ -178,17 +154,14 @@ describe("remove-list-confirmation template", () => {
     });
 
     it("should render Welsh error summary", () => {
-      // Arrange
       const data = {
         ...baseData(cy),
         errorSummaryTitle: cy.errorSummaryTitle,
         errors: [{ text: cy.errorNoSelection, href: "#confirmation" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorNoSelection]);
     });
   });

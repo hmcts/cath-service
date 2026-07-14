@@ -20,25 +20,19 @@ describe("third-party-user-deleted template", () => {
 
   describe("English content", () => {
     it("should render the success panel with title and message", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(en.pageTitle);
       expect($(".govuk-panel__body").text()).toContain(en.successMessage);
     });
 
     it("should render the what-next heading and English next-step links", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).toContain(en.whatNextHeading);
       expect($('a[href="/manage-third-party-users"]').text()).toContain(en.manageAnotherUserLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(en.homeLink);
@@ -47,13 +41,10 @@ describe("third-party-user-deleted template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh panel title, message and language-suffixed links", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.pageTitle);
       expect($(".govuk-panel__body").text()).toContain(cy.successMessage);
       expect($('a[href="/manage-third-party-users?lng=cy"]').text()).toContain(cy.manageAnotherUserLink);

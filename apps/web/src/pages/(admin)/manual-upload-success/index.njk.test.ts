@@ -28,13 +28,10 @@ describe("manual-upload-success template", () => {
 
   describe("Template rendering", () => {
     it("should render the success panel and navigation links in English", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel");
       expect(panel.find(".govuk-panel__title").text()).toContain(en.title);
       expect(panel.find(".govuk-panel__body").text()).toContain(en.uploadedMessage);
@@ -45,13 +42,10 @@ describe("manual-upload-success template", () => {
     });
 
     it("should render the success panel and navigation links in Welsh", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text()).toContain(cy.title);
       expect($(".govuk-panel__body").text()).toContain(cy.uploadedMessage);
       expect($("h2").text()).toContain(cy.nextStepsHeading);
@@ -61,13 +55,10 @@ describe("manual-upload-success template", () => {
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });

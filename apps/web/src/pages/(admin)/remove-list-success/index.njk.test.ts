@@ -32,13 +32,10 @@ describe("remove-list-success template", () => {
 
   describe("English content", () => {
     it("should render the confirmation panel heading and message", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, "(admin)/remove-list-success/index.njk", data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect($(".govuk-panel__title").text().trim()).toBe(en.heading);
@@ -46,24 +43,18 @@ describe("remove-list-success template", () => {
     });
 
     it("should render the next steps prompt", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, "(admin)/remove-list-success/index.njk", data);
 
-      // Assert
       expect($("p.govuk-body").first().text().trim()).toBe(en.nextSteps);
     });
 
     it("should render all three navigation links with default hrefs", () => {
-      // Arrange
       const data = buildData(en, "en");
 
-      // Act
       const { $ } = render(env, "(admin)/remove-list-success/index.njk", data);
 
-      // Assert
       const removeLink = $('a[href="/remove-list-search"]');
       expect(removeLink).toHaveLength(1);
       expect(removeLink.text().trim()).toBe(en.removeAnotherLink);
@@ -80,26 +71,20 @@ describe("remove-list-success template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh panel and prompt", () => {
-      // Arrange
       const data = buildData(cy, "cy");
 
-      // Act
       const { $ } = render(env, "(admin)/remove-list-success/index.njk", data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(cy.heading);
       expect($(".govuk-panel__body").text().trim()).toBe(cy.message);
       expect($("p.govuk-body").first().text().trim()).toBe(cy.nextSteps);
     });
 
     it("should append lng=cy to all navigation links when locale is Welsh", () => {
-      // Arrange
       const data = buildData(cy, "cy");
 
-      // Act
       const { $ } = render(env, "(admin)/remove-list-success/index.njk", data);
 
-      // Assert
       const removeLink = $('a[href="/remove-list-search?lng=cy"]');
       expect(removeLink).toHaveLength(1);
       expect(removeLink.text().trim()).toBe(cy.removeAnotherLink);

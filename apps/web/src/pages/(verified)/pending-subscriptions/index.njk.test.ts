@@ -20,17 +20,14 @@ describe("pending-subscriptions template", () => {
 
   describe("English content", () => {
     it("should render the heading and a location table with a remove action", () => {
-      // Arrange
       const data = {
         ...en,
         locations: [{ locationId: "42", name: "Birmingham Civil Court" }],
         confirmButton: en.confirmButton
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("table th").eq(0).text()).toContain(en.tableHeaderLocation);
       expect($("table td").first().text()).toContain("Birmingham Civil Court");
@@ -41,23 +38,19 @@ describe("pending-subscriptions template", () => {
     });
 
     it("should render the confirm button text passed by the controller", () => {
-      // Arrange
       const data = {
         ...en,
         locations: [{ locationId: "1", name: "Court A" }],
         confirmButton: en.confirmButton
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const confirmForm = $('form input[name="action"][value="confirm"]').closest("form");
       expect(confirmForm.find("button").text()).toContain(en.confirmButton);
     });
 
     it("should render a case subscriptions table when case subscriptions are present", () => {
-      // Arrange
       const data = {
         ...en,
         locations: [],
@@ -65,10 +58,8 @@ describe("pending-subscriptions template", () => {
         confirmButton: en.confirmSubscription
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("th").text()).toContain(en.caseNameLabel);
       expect($("th").text()).toContain(en.referenceNumberLabel);
       expect($("td").text()).toContain("R v Smith");
@@ -78,7 +69,6 @@ describe("pending-subscriptions template", () => {
     });
 
     it("should render an error summary and add-subscriptions button when nothing is pending", () => {
-      // Arrange
       const data = {
         ...en,
         locations: [],
@@ -89,10 +79,8 @@ describe("pending-subscriptions template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       assertErrorSummary($, [en.errorAtLeastOne]);
       const addForm = $('form[action="/add-email-subscription"]');
@@ -102,7 +90,6 @@ describe("pending-subscriptions template", () => {
 
   describe("Welsh content", () => {
     it("should render the heading and location table in Welsh", () => {
-      // Arrange
       const data = {
         ...cy,
         locale: "cy",
@@ -110,10 +97,8 @@ describe("pending-subscriptions template", () => {
         confirmButton: cy.confirmButton
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("table th").eq(0).text()).toContain(cy.tableHeaderLocation);
       expect($("table td").first().text()).toContain("Llys Sifil Caerdydd");

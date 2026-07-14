@@ -20,13 +20,10 @@ describe("blob-explorer-resubmission-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel with title and banner", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(en.successTitle);
@@ -34,13 +31,10 @@ describe("blob-explorer-resubmission-success template", () => {
     });
 
     it("should render the next steps text and link to locations", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain(en.successNextSteps);
       const link = $('a[href="/blob-explorer-locations"]');
       expect(link).toHaveLength(1);
@@ -48,26 +42,20 @@ describe("blob-explorer-resubmission-success template", () => {
     });
 
     it("should not render an error summary", () => {
-      // Arrange
       const data = { ...en, locale: "en" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the success panel with Welsh title and banner", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
       expect(panel.find(".govuk-panel__title").text()).toContain(cy.successTitle);
@@ -75,13 +63,10 @@ describe("blob-explorer-resubmission-success template", () => {
     });
 
     it("should render the Welsh next steps text and link to locations", () => {
-      // Arrange
       const data = { ...cy, locale: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("body").text()).toContain(cy.successNextSteps);
       const link = $('a[href="/blob-explorer-locations"]');
       expect(link).toHaveLength(1);

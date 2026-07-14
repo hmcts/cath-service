@@ -27,13 +27,10 @@ describe("accessibility-statement template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading and section headings", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.title);
       const headingText = $("h2, h3, h4")
         .map((_, el) => $(el).text().trim())
@@ -44,13 +41,10 @@ describe("accessibility-statement template", () => {
     });
 
     it("should render the accessibility feature bullet list in English", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const bulletText = $("ul.govuk-list--bullet li")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -60,37 +54,28 @@ describe("accessibility-statement template", () => {
     });
 
     it("should render external links with their hrefs", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(`a[href="${en.sections.intro.abilityNetUrl}"]`).text()).toContain(en.sections.intro.abilityNetLink);
       expect($(`a[href="${en.sections.enforcement.eassUrl}"]`).text()).toContain(en.sections.enforcement.eassLinkText);
       expect($(`a[href="${en.sections.compliance.wcagUrl}"]`).text()).toContain(en.sections.compliance.wcagLinkText);
     });
 
     it("should render the back to top link", () => {
-      // Arrange
       const data = { ...en };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.back-to-top-link a").text()).toContain(en.backToTop);
     });
 
     it("should render Welsh heading and content", () => {
-      // Arrange
       const data = { ...cy };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.title);
       expect($("p.back-to-top-link a").text()).toContain(cy.backToTop);
       const bulletText = $("ul.govuk-list--bullet li")
@@ -104,17 +89,14 @@ describe("accessibility-statement template", () => {
 
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
-      // Assert
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
     it("should have same section keys in English and Welsh", () => {
-      // Assert
       expect(Object.keys(en.sections).sort()).toEqual(Object.keys(cy.sections).sort());
     });
 
     it("should have same number of accessibility features", () => {
-      // Assert
       expect(en.sections.intro.features.length).toBe(cy.sections.intro.features.length);
     });
   });

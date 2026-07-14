@@ -22,7 +22,6 @@ describe("configure-list-type-enter-details template", () => {
 
   describe("English content", () => {
     it("should render the page heading and view all button", () => {
-      // Arrange
       const data = {
         ...en,
         data: {},
@@ -30,17 +29,14 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: false
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.configureListType.enterDetails.title);
       expect($('a[href="/view-list-types"]').text()).toContain(en.configureListType.enterDetails.viewAllLink);
       assertNoErrors($);
     });
 
     it("should render all form field labels", () => {
-      // Arrange
       const data = {
         ...en,
         data: {},
@@ -48,10 +44,8 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: false
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const bodyText = $("body").text();
       expect(bodyText).toContain(en.configureListType.enterDetails.nameLabel);
       expect(bodyText).toContain(en.configureListType.enterDetails.friendlyNameLabel);
@@ -64,7 +58,6 @@ describe("configure-list-type-enter-details template", () => {
     });
 
     it("should render the continue button", () => {
-      // Arrange
       const data = {
         ...en,
         data: {},
@@ -72,15 +65,12 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: false
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-button").text()).toContain(en.common.continue);
     });
 
     it("should populate inputs with existing form data", () => {
-      // Arrange
       const data = {
         ...en,
         data: {
@@ -92,10 +82,8 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: true
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#name").val()).toBe("MY_LIST_TYPE");
       expect($("#friendlyName").val()).toBe("My List Type");
       expect($("#url").val()).toBe("my-list-type");
@@ -105,7 +93,6 @@ describe("configure-list-type-enter-details template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh page heading and continue button", () => {
-      // Arrange
       const data = {
         ...cy,
         data: {},
@@ -113,10 +100,8 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: false
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.configureListType.enterDetails.title);
       expect($(".govuk-button").text()).toContain(cy.common.continue);
     });
@@ -124,7 +109,6 @@ describe("configure-list-type-enter-details template", () => {
 
   describe("Error states", () => {
     it("should render an error summary when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         data: { name: "" },
@@ -134,10 +118,8 @@ describe("configure-list-type-enter-details template", () => {
         isEdit: false
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, ["Enter a name"]);
       expect($(".govuk-error-summary__title").text()).toContain(en.common.errorSummaryTitle);
     });

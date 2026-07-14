@@ -25,25 +25,19 @@ describe("configure-list-type-select-sub-jurisdictions template", () => {
 
   describe("English content", () => {
     it("should render the page heading and description", () => {
-      // Arrange
       const data = { t: en, items: buildItems() };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.configureListType.selectSubJurisdictions.title);
       expect($("p.govuk-body").text()).toContain(en.configureListType.selectSubJurisdictions.description);
     });
 
     it("should render a checkbox for each sub-jurisdiction with correct checked state", () => {
-      // Arrange
       const data = { t: en, items: buildItems() };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const checkboxes = $('input[type="checkbox"][name="subJurisdictions"]');
       expect(checkboxes).toHaveLength(2);
       expect($('input[value="1"]').is(":checked")).toBe(true);
@@ -53,37 +47,28 @@ describe("configure-list-type-select-sub-jurisdictions template", () => {
     });
 
     it("should render the continue button", () => {
-      // Arrange
       const data = { t: en, items: buildItems() };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text()).toContain(en.common.continue);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = { t: en, items: buildItems() };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and description", () => {
-      // Arrange
       const data = { t: cy, items: buildItems() };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.configureListType.selectSubJurisdictions.title);
       expect($("p.govuk-body").text()).toContain(cy.configureListType.selectSubJurisdictions.description);
       expect($("button.govuk-button").text()).toContain(cy.common.continue);
@@ -92,7 +77,6 @@ describe("configure-list-type-select-sub-jurisdictions template", () => {
 
   describe("Error state", () => {
     it("should render an error summary and inline error when validation fails", () => {
-      // Arrange
       const errorMessage = "Select at least one sub-jurisdiction";
       const data = {
         t: en,
@@ -101,10 +85,8 @@ describe("configure-list-type-select-sub-jurisdictions template", () => {
         errorList: [{ text: errorMessage, href: "#subJurisdictions" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [errorMessage]);
       expect($(".govuk-error-message").text()).toContain(errorMessage);
     });

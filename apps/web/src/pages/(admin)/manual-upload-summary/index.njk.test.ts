@@ -59,25 +59,19 @@ describe("manual-upload-summary template", () => {
     });
 
     it("should render the English heading and sub-heading", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("h2").text()).toContain(en.subHeading);
     });
 
     it("should render the summary list keys and values", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -98,13 +92,10 @@ describe("manual-upload-summary template", () => {
     });
 
     it("should render change links pointing back to the manual upload page", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const hrefs = $(".govuk-summary-list__actions a")
         .map((_, el) => $(el).attr("href"))
         .get();
@@ -121,25 +112,19 @@ describe("manual-upload-summary template", () => {
     });
 
     it("should render the confirm button inside a post form", () => {
-      // Arrange
       const data = baseData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       expect($("form button").text()).toContain(en.confirmButton);
     });
 
     it("should render Welsh heading, keys and confirm button", () => {
-      // Arrange
       const data = baseData(cy);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("h2").text()).toContain(cy.subHeading);
       const keys = $(".govuk-summary-list__key")
@@ -151,13 +136,10 @@ describe("manual-upload-summary template", () => {
     });
 
     it("should not render an error summary even when errors are passed (template has no error block)", () => {
-      // Arrange
       const data = { ...baseData(en), errors: [{ text: "We could not process your upload. Please try again.", href: "#" }] };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
   });

@@ -20,35 +20,26 @@ describe("case-reference-search template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = { ...en, caseReference: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.heading);
     });
 
     it("should render the inset text guidance", () => {
-      // Arrange
       const data = { ...en, caseReference: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-inset-text").text()).toContain(en.insetText);
     });
 
     it("should render the reference input and continue button with no errors", () => {
-      // Arrange
       const data = { ...en, caseReference: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("#caseReference").length).toBe(1);
       expect($('input[name="caseReference"]').attr("value") ?? "").toBe("");
       expect($("button.govuk-button").text().trim()).toBe(en.continueButton);
@@ -56,31 +47,24 @@ describe("case-reference-search template", () => {
     });
 
     it("should render the back link to add-email-subscription", () => {
-      // Arrange
       const data = { ...en, caseReference: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const backLink = $('a[href="/add-email-subscription"]');
       expect(backLink.length).toBe(1);
       expect(backLink.text().trim()).toBe(en.back);
     });
 
     it("should preserve the submitted case reference value", () => {
-      // Arrange
       const data = { ...en, caseReference: "AB-123" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="caseReference"]').attr("value")).toBe("AB-123");
     });
 
     it("should render the error summary and inline error when errors are present", () => {
-      // Arrange
       const data = {
         ...en,
         caseReference: "UNKNOWN-999",
@@ -91,10 +75,8 @@ describe("case-reference-search template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorSummary]);
       expect($(".govuk-error-summary__title").text().trim()).toBe(en.errorSummaryTitle);
       expect($(".govuk-error-message").text()).toContain(en.errorInline);
@@ -103,13 +85,10 @@ describe("case-reference-search template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, inset text and continue button", () => {
-      // Arrange
       const data = { ...cy, caseReference: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.heading);
       expect($(".govuk-inset-text").text()).toContain(cy.insetText);
       expect($("button.govuk-button").text().trim()).toBe(cy.continueButton);
@@ -117,7 +96,6 @@ describe("case-reference-search template", () => {
     });
 
     it("should render Welsh error summary and inline error when errors are present", () => {
-      // Arrange
       const data = {
         ...cy,
         caseReference: "UNKNOWN-999",
@@ -128,10 +106,8 @@ describe("case-reference-search template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorSummary]);
       expect($(".govuk-error-message").text()).toContain(cy.errorInline);
     });

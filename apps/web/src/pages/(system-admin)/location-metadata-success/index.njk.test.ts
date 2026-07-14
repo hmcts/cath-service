@@ -20,32 +20,26 @@ describe("location-metadata-success template", () => {
 
   describe("English content", () => {
     it("should render the success panel with the created page title", () => {
-      // Arrange
       const data = {
         ...en,
         pageTitle: en.pageTitleCreated
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const panel = $(".govuk-panel");
       expect(panel).toHaveLength(1);
       expect($(".govuk-panel__title").text().trim()).toBe(en.pageTitleCreated);
     });
 
     it("should render the next steps heading and search link without a language query", () => {
-      // Arrange
       const data = {
         ...en,
         pageTitle: en.pageTitleUpdated
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("p.govuk-body.govuk-\\!-font-weight-bold").text().trim()).toBe(en.nextStepsTitle);
 
       const searchLink = $('a[href="/location-metadata-search"]');
@@ -54,33 +48,27 @@ describe("location-metadata-success template", () => {
     });
 
     it("should render the deleted page title in the panel", () => {
-      // Arrange
       const data = {
         ...en,
         pageTitle: en.pageTitleDeleted
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(en.pageTitleDeleted);
     });
   });
 
   describe("Welsh content", () => {
     it("should render Welsh panel title, heading and a Welsh search link", () => {
-      // Arrange
       const data = {
         ...cy,
         pageTitle: cy.pageTitleCreated,
         lng: "cy"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-panel__title").text().trim()).toBe(cy.pageTitleCreated);
       expect($("p.govuk-body.govuk-\\!-font-weight-bold").text().trim()).toBe(cy.nextStepsTitle);
 

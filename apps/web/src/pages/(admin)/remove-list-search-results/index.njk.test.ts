@@ -60,13 +60,10 @@ describe("remove-list-search-results template", () => {
 
   describe("English content", () => {
     it("should render the heading, sub-heading and results count", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(en.heading);
       expect($("h2").text()).toContain(en.subHeading);
       expect($("p.govuk-body").text()).toContain(en.showingResults);
@@ -76,13 +73,10 @@ describe("remove-list-search-results template", () => {
     });
 
     it("should render a table row and checkbox per artefact", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("tbody.govuk-table__body tr")).toHaveLength(sampleRows.length);
       expect($('input[name="artefacts"]')).toHaveLength(sampleRows.length);
       expect($('input[name="artefacts"]').first().attr("value")).toBe("artefact-1");
@@ -91,13 +85,10 @@ describe("remove-list-search-results template", () => {
     });
 
     it("should render sortable column headers with English labels", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const headerText = $("thead").text();
       expect(headerText).toContain(en.tableHeaders.listType);
       expect(headerText).toContain(en.tableHeaders.courtName);
@@ -109,26 +100,20 @@ describe("remove-list-search-results template", () => {
     });
 
     it("should render the continue button", () => {
-      // Arrange
       const data = buildData(en);
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button.govuk-button").text()).toContain(en.continueButton);
     });
   });
 
   describe("no results", () => {
     it("should not render the table or form when resultCount is zero", () => {
-      // Arrange
       const data = buildData(en, { artefactRows: [], resultCount: 0 });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h2").text()).not.toContain(en.subHeading);
       expect($("table")).toHaveLength(0);
       expect($("form")).toHaveLength(0);
@@ -138,13 +123,10 @@ describe("remove-list-search-results template", () => {
 
   describe("sorting state", () => {
     it("should mark the active sorted column with aria-sort when not default sort", () => {
-      // Arrange
       const data = buildData(en, { sortBy: "listType", order: "asc", isDefaultSort: false });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const listTypeHeader = $("th")
         .filter((_, el) => $(el).text().includes(en.tableHeaders.listType))
         .first();
@@ -154,16 +136,13 @@ describe("remove-list-search-results template", () => {
 
   describe("error state", () => {
     it("should render the error summary when a selection error is passed", () => {
-      // Arrange
       const data = buildData(en, {
         errors: [{ text: en.errorNoSelection, href: "#artefacts" }],
         errorSummaryTitle: en.errorSummaryTitle
       });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSelection]);
       expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
     });
@@ -171,13 +150,10 @@ describe("remove-list-search-results template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading and table headers", () => {
-      // Arrange
       const data = buildData(cy, { locale: "cy" });
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text()).toContain(cy.heading);
       expect($("h2").text()).toContain(cy.subHeading);
       const headerText = $("thead").text();

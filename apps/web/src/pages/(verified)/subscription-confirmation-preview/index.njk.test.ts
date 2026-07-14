@@ -23,7 +23,6 @@ describe("subscription-confirmation-preview template", () => {
 
   describe("English content", () => {
     it("should render the heading, location, list type and version tables", () => {
-      // Arrange
       const data = {
         ...en,
         confirmedCaseSubscriptions: [],
@@ -33,10 +32,8 @@ describe("subscription-confirmation-preview template", () => {
         pendingLanguage: "ENGLISH"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.heading);
       expect($.text()).toContain("Blackburn Crown Court");
       expect($.text()).toContain("Civil Daily Cause List");
@@ -48,7 +45,6 @@ describe("subscription-confirmation-preview template", () => {
     });
 
     it("should render remove and confirm actions for locations", () => {
-      // Arrange
       const data = {
         ...en,
         confirmedCaseSubscriptions: [],
@@ -57,10 +53,8 @@ describe("subscription-confirmation-preview template", () => {
         languageDisplay: "English"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($('input[name="locationId"][value="42"]')).toHaveLength(1);
       expect($('input[name="action"][value="remove-location"]')).toHaveLength(1);
       expect($('input[name="action"][value="remove-list-type"]')).toHaveLength(1);
@@ -71,7 +65,6 @@ describe("subscription-confirmation-preview template", () => {
     });
 
     it("should render the select list types link when no list types selected", () => {
-      // Arrange
       const data = {
         ...en,
         confirmedCaseSubscriptions: [],
@@ -84,16 +77,13 @@ describe("subscription-confirmation-preview template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoListType]);
       expect($("#select-list-types-link").text().trim()).toBe(en.selectListTypesLink);
     });
 
     it("should render the case subscriptions table when only cases are confirmed", () => {
-      // Arrange
       const data = {
         ...en,
         confirmedCaseSubscriptions: [{ caseName: "Smith v Jones", caseNumber: "ABC123" }],
@@ -102,10 +92,8 @@ describe("subscription-confirmation-preview template", () => {
         languageDisplay: en.noLanguageSelected
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("th").text()).toContain(en.tableHeaderCaseName);
       expect($("th").text()).toContain(en.tableHeaderReferenceNumber);
       expect($.text()).toContain("Smith v Jones");
@@ -114,7 +102,6 @@ describe("subscription-confirmation-preview template", () => {
     });
 
     it("should render an error summary and add subscriptions button when nothing is selected", () => {
-      // Arrange
       const data = {
         ...en,
         confirmedCaseSubscriptions: [],
@@ -127,10 +114,8 @@ describe("subscription-confirmation-preview template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorNoSubscription]);
       expect($("button[type='submit']").text()).toContain(en.addSubscriptionsButton);
       expect($('form[action="/add-email-subscription"]')).toHaveLength(1);
@@ -139,7 +124,6 @@ describe("subscription-confirmation-preview template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and table headers", () => {
-      // Arrange
       const data = {
         ...cy,
         confirmedCaseSubscriptions: [],
@@ -148,17 +132,14 @@ describe("subscription-confirmation-preview template", () => {
         languageDisplay: "Saesneg"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.heading);
       expect($("th").text()).toContain(cy.tableHeaderCourt);
       expect($("button[type='submit']").text()).toContain(cy.confirmButton);
     });
 
     it("should render the Welsh error summary when nothing is selected", () => {
-      // Arrange
       const data = {
         ...cy,
         confirmedCaseSubscriptions: [],
@@ -171,10 +152,8 @@ describe("subscription-confirmation-preview template", () => {
         }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorNoSubscription]);
     });
   });

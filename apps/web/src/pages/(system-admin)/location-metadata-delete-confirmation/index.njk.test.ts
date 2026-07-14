@@ -31,24 +31,18 @@ describe("location-metadata-delete-confirmation template", () => {
 
   describe("English content", () => {
     it("should render the heading with the location name", () => {
-      // Arrange
       const data = baseData(en, "Manchester Crown Court");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(`${en.heading} Manchester Crown Court?`);
     });
 
     it("should render the confirmation radios and continue button", () => {
-      // Arrange
       const data = baseData(en, "Manchester Crown Court");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const radios = $('input[name="confirmDelete"]');
       expect(radios).toHaveLength(2);
       expect(radios.map((_, el) => $(el).attr("value")).get()).toEqual(["yes", "no"]);
@@ -65,51 +59,39 @@ describe("location-metadata-delete-confirmation template", () => {
     });
 
     it("should not render error summary when no errors", () => {
-      // Arrange
       const data = baseData(en, "Manchester Crown Court");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render error summary when errors exist", () => {
-      // Arrange
       const data = {
         ...baseData(en, "Manchester Crown Court"),
         errors: [{ text: en.noRadioSelected, href: "#confirm-delete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.noRadioSelected]);
     });
   });
 
   describe("Welsh content", () => {
     it("should render the Welsh heading with the location name", () => {
-      // Arrange
       const data = baseData(cy, "Llys y Goron Caerdydd");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(`${cy.heading} Llys y Goron Caerdydd?`);
     });
 
     it("should render Welsh radio and button text", () => {
-      // Arrange
       const data = baseData(cy, "Llys y Goron Caerdydd");
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("button[type='submit']").text().trim()).toBe(cy.continueButtonText);
       const labels = $(".govuk-radios__label")
         .map((_, el) => $(el).text().trim())
@@ -118,16 +100,13 @@ describe("location-metadata-delete-confirmation template", () => {
     });
 
     it("should render Welsh error summary", () => {
-      // Arrange
       const data = {
         ...baseData(cy, "Llys y Goron Caerdydd"),
         errors: [{ text: cy.noRadioSelected, href: "#confirm-delete" }]
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.noRadioSelected]);
     });
   });

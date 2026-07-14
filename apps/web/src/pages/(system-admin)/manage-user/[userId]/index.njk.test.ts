@@ -33,38 +33,29 @@ describe("manage-user template", () => {
 
   describe("English content", () => {
     it("should render the page heading with the user email", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...en, user, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(en.pageTitle(user.email));
     });
 
     it("should render the warning text", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...en, user, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($(".govuk-warning-text__text").text()).toContain(en.warningText);
     });
 
     it("should render the user details in the summary list", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...en, user, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const keys = $(".govuk-summary-list__key")
         .map((_, el) => $(el).text().trim())
         .get();
@@ -77,14 +68,11 @@ describe("manage-user template", () => {
     });
 
     it("should render the delete user form pointing at the confirmation route", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...en, user, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const form = $("form");
       expect(form.attr("method")).toBe("get");
       expect(form.attr("action")).toBe(`/delete-user-confirm/${user.userId}`);
@@ -92,14 +80,11 @@ describe("manage-user template", () => {
     });
 
     it("should render the back link to the user list", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...en, user, lng: "" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const backLink = $("a.govuk-link[href='/find-users']");
       expect(backLink.text().trim()).toBe(en.backLink);
     });
@@ -107,28 +92,22 @@ describe("manage-user template", () => {
 
   describe("Welsh content", () => {
     it("should render Welsh heading, warning and button", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...cy, user, lng: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1.govuk-heading-l").text().trim()).toBe(cy.pageTitle(user.email));
       expect($(".govuk-warning-text__text").text()).toContain(cy.warningText);
       expect($("button.govuk-button--warning").text().trim()).toBe(cy.deleteUserButton);
     });
 
     it("should append the language query to the form action and back link", () => {
-      // Arrange
       const user = buildUser();
       const data = { ...cy, user, lng: "cy" };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("action")).toBe(`/delete-user-confirm/${user.userId}?lng=cy`);
       expect($("a.govuk-link[href='/find-users?lng=cy']").text().trim()).toBe(cy.backLink);
     });

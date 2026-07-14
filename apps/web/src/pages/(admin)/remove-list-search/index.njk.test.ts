@@ -23,7 +23,6 @@ describe("remove-list-search template", () => {
 
   describe("English content", () => {
     it("should render the page heading", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -34,15 +33,12 @@ describe("remove-list-search template", () => {
         locationName: ""
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(en.heading);
     });
 
     it("should render the search input with label and hint", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -53,10 +49,8 @@ describe("remove-list-search template", () => {
         locationName: ""
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const input = $("#locationId");
       expect(input).toHaveLength(1);
       expect(input.attr("name")).toBe("locationId");
@@ -65,7 +59,6 @@ describe("remove-list-search template", () => {
     });
 
     it("should render the input autocomplete data attributes", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -76,10 +69,8 @@ describe("remove-list-search template", () => {
         locationName: "Blackburn Crown Court"
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       const input = $("#locationId");
       expect(input.attr("data-autocomplete")).toBe("true");
       expect(input.attr("data-location-id")).toBe("42");
@@ -88,7 +79,6 @@ describe("remove-list-search template", () => {
     });
 
     it("should render the continue button inside a post form", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -99,16 +89,13 @@ describe("remove-list-search template", () => {
         locationName: ""
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("form").attr("method")).toBe("post");
       expect($("button[type='submit']").text().trim()).toBe(en.continueButton);
     });
 
     it("should not render an error summary when there are no errors", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -119,15 +106,12 @@ describe("remove-list-search template", () => {
         locationName: ""
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertNoErrors($);
     });
 
     it("should render an error summary and field error when validation fails", () => {
-      // Arrange
       const data = {
         pageTitle: en.pageTitle,
         heading: en.heading,
@@ -141,10 +125,8 @@ describe("remove-list-search template", () => {
         locationError: { text: en.errorLocationRequired }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [en.errorLocationRequired]);
       expect($("#locationId-error").text()).toContain(en.errorLocationRequired);
       expect($("#locationId").closest(".govuk-form-group").hasClass("govuk-form-group--error")).toBe(true);
@@ -153,7 +135,6 @@ describe("remove-list-search template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and button", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         heading: cy.heading,
@@ -164,17 +145,14 @@ describe("remove-list-search template", () => {
         locationName: ""
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       expect($("h1").text().trim()).toBe(cy.heading);
       expect($('label[for="locationId"]').text().trim()).toBe(cy.searchLabel);
       expect($("button[type='submit']").text().trim()).toBe(cy.continueButton);
     });
 
     it("should render the Welsh error summary when validation fails", () => {
-      // Arrange
       const data = {
         pageTitle: cy.pageTitle,
         heading: cy.heading,
@@ -188,10 +166,8 @@ describe("remove-list-search template", () => {
         locationError: { text: cy.errorLocationRequired }
       };
 
-      // Act
       const { $ } = render(env, TEMPLATE, data);
 
-      // Assert
       assertErrorSummary($, [cy.errorLocationRequired]);
     });
   });
