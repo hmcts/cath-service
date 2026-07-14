@@ -3,395 +3,177 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { familyDailyCauseListCy as cy, familyDailyCauseListEn as en } from "@hmcts/family-daily-cause-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "family-daily-cause-list.njk";
+
+interface CaseOverrides {
+  caseNumber?: string;
+  caseName?: string;
+  caseType?: string;
+  caseSequenceIndicator?: string;
+  applicant?: string;
+  applicantRepresentative?: string;
+  respondent?: string;
+  respondentRepresentative?: string;
+  formattedReportingRestriction?: string;
+}
+
+interface SittingOverrides {
+  time?: string;
+  durationAsHours?: number;
+  durationAsMinutes?: number;
+  caseHearingChannel?: string;
+  hearing?: unknown[];
+}
+
+interface CourtHouseAddress {
+  line?: string[];
+  town?: string;
+  county?: string;
+  postCode?: string;
+}
+
+// Fixture builders — each layer defaults to a realistic minimal shape and only
+// the varied leaf fields are passed per test, keeping the deep artefact tree
+// (courtLists → courtHouse → courtRoom → session → sitting → hearing → case)
+// out of individual tests.
+function buildCase(overrides: CaseOverrides = {}) {
+  return {
+    caseNumber: "F123",
+    caseName: "Test v Test",
+    caseType: "Family",
+    applicant: "",
+    respondent: "",
+    ...overrides
+  };
+}
+
+function buildSitting({ time = "10:00am", durationAsHours = 1, durationAsMinutes = 0, caseHearingChannel = "In person", hearing }: SittingOverrides = {}) {
+  return {
+    time,
+    durationAsHours,
+    durationAsMinutes,
+    caseHearingChannel,
+    hearing: hearing ?? [{ hearingType: "Hearing", case: [buildCase()] }]
+  };
+}
+
+function buildSession({
+  courtRoomName = "Family Court 1",
+  formattedJudiciaries = "",
+  sittings
+}: {
+  courtRoomName?: string;
+  formattedJudiciaries?: string;
+  sittings?: unknown[];
+} = {}) {
+  return {
+    courtRoomName,
+    session: [{ formattedJudiciaries, sittings: sittings ?? [buildSitting()] }]
+  };
+}
+
+function buildCourtHouse({
+  courtHouseName = "Test Family Court House",
+  courtHouseAddress,
+  omitAddress = false,
+  courtRoom = [buildSession()]
+}: {
+  courtHouseName?: string;
+  courtHouseAddress?: CourtHouseAddress;
+  omitAddress?: boolean;
+  courtRoom?: unknown[];
+} = {}) {
+  const address = courtHouseAddress ?? { line: ["Test Address"], town: "", county: "", postCode: "" };
+  return {
+    courtHouse: {
+      courtHouseName,
+      ...(omitAddress ? {} : { courtHouseAddress: address }),
+      courtRoom
+    }
+  };
+}
+
+function baseData(locale: typeof en | typeof cy = en) {
+  return {
+    t: locale,
+    en,
+    cy,
+    header: {
+      locationName: "Test Family Court",
+      addressLines: ["123 Family Court Street", "Test City", "TC1 1AA"],
+      contentDate: "10 July 2026",
+      lastUpdated: "10 July 2026 at 9:00am"
+    },
+    openJustice: {
+      venueName: "Test Family Venue",
+      email: "family@example.com",
+      phone: "01234 567890"
+    },
+    dataSource: "Test Family Source"
+  };
+}
+
+function renderList(courtLists: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, listData: { courtLists } });
+}
+
+// The rendered hearings table columns, in order.
+const COLUMN = {
+  time: 0,
+  caseRef: 1,
+  caseName: 2,
+  caseType: 3,
+  hearingType: 4,
+  location: 5,
+  duration: 6,
+  applicant: 7,
+  respondent: 8
+} as const;
+
+function normalize(text: string) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+// Case rows carry 9 cells; reporting-restriction rows carry a single colspan cell.
+function caseRows($: CheerioAPI) {
+  return $("tbody.govuk-table__body tr").filter((_, row) => $(row).find("td[colspan]").length === 0);
+}
+
+function firstDataRowCells($: CheerioAPI) {
+  return caseRows($)
+    .first()
+    .find("td")
+    .map((_, el) => normalize($(el).text()))
+    .get();
+}
+
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
+
 describe("family-daily-cause-list template", () => {
-  let env: nunjucks.Environment;
-
-  beforeEach(() => {
-    const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
-
-    env = createTestEnvironment([__dirname, webCoreViews]);
-  });
-
   describe("Template file", () => {
     it("should exist", () => {
-      const templatePath = path.join(__dirname, "family-daily-cause-list.njk");
-      expect(existsSync(templatePath)).toBe(true);
-    });
-  });
-
-  describe("English locale", () => {
-    it("should have title", () => {
-      expect(en.title).toBe("Family Daily Cause List");
-    });
-
-    it("should have page title", () => {
-      expect(en.pageTitle).toBe("Family Daily Cause List for");
-    });
-
-    it("should have fact link text", () => {
-      expect(en.factLinkText).toBe("Find contact details and other information about courts and tribunals");
-    });
-
-    it("should have fact link URL", () => {
-      expect(en.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-    });
-
-    it("should have fact additional text", () => {
-      expect(en.factAdditionalText).toBe("in England and Wales, and some non-devolved tribunals in Scotland.");
-    });
-
-    it("should have list for label", () => {
-      expect(en.listFor).toBe("List for");
-    });
-
-    it("should have last updated label", () => {
-      expect(en.lastUpdated).toBe("Last updated");
-    });
-
-    it("should have important information text", () => {
-      expect(en.importantInformation).toBe("Important information");
-    });
-
-    it("should have open justice intro text", () => {
-      expect(en.openJusticeIntro).toContain("Open justice is a fundamental principle");
-    });
-
-    it("should have open justice contact function", () => {
-      expect(typeof en.openJusticeContact).toBe("function");
-      const contactText = en.openJusticeContact("Test Court", "test@example.com", "123456");
-      expect(contactText).toContain("Test Court");
-      expect(contactText).toContain("test@example.com");
-      expect(contactText).toContain("123456");
-    });
-
-    it("should have open justice decision text", () => {
-      expect(en.openJusticeDecision).toContain("The judge hearing the case will decide");
-    });
-
-    it("should have open justice private text", () => {
-      expect(en.openJusticePrivate).toContain("Sometimes it is necessary for hearings to be held in private");
-    });
-
-    it("should have open justice more info text", () => {
-      expect(en.openJusticeMoreInfo).toBe("For more information, please visit");
-    });
-
-    it("should have open justice link", () => {
-      expect(en.openJusticeLink).toBe("https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing");
-    });
-
-    it("should have search cases text", () => {
-      expect(en.searchCases).toBe("Search Cases");
-    });
-
-    it("should have time label", () => {
-      expect(en.time).toBe("Time");
-    });
-
-    it("should have before judge label", () => {
-      expect(en.before).toBe("Before");
-    });
-
-    it("should have case ref label", () => {
-      expect(en.caseRef).toBe("Case ref");
-    });
-
-    it("should have case name label", () => {
-      expect(en.caseName).toBe("Case name");
-    });
-
-    it("should have case type label", () => {
-      expect(en.caseType).toBe("Case type");
-    });
-
-    it("should have hearing type label", () => {
-      expect(en.hearingType).toBe("Hearing type");
-    });
-
-    it("should have location label", () => {
-      expect(en.location).toBe("Location");
-    });
-
-    it("should have duration label", () => {
-      expect(en.duration).toBe("Duration");
-    });
-
-    it("should have applicant label", () => {
-      expect(en.applicant).toBe("Applicant");
-    });
-
-    it("should have respondent label", () => {
-      expect(en.respondent).toBe("Respondent");
-    });
-
-    it("should have legal advisor label", () => {
-      expect(en.legalAdvisor).toBe("Legal Advisor");
-    });
-
-    it("should have reporting restrictions label", () => {
-      expect(en.reportingRestrictions).toBe("Reporting Restriction");
-    });
-
-    it("should have no hearings text", () => {
-      expect(en.noHearings).toBe("No hearings today");
-    });
-
-    it("should have link to top text", () => {
-      expect(en.linkToTop).toBe("Back to top");
-    });
-
-    it("should have data source label", () => {
-      expect(en.dataSource).toBe("Data Source");
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have title", () => {
-      expect(cy.title).toBe("Rhestr Achosion Dyddiol Teulu");
-    });
-
-    it("should have page title", () => {
-      expect(cy.pageTitle).toBe("Rhestr Achosion Dyddiol Teulu ar gyfer");
-    });
-
-    it("should have fact link text", () => {
-      expect(cy.factLinkText).toBe("Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd");
-    });
-
-    it("should have fact link URL", () => {
-      expect(cy.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-    });
-
-    it("should have fact additional text", () => {
-      expect(cy.factAdditionalText).toBe("yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.");
-    });
-
-    it("should have list for label", () => {
-      expect(cy.listFor).toBe("Rhestr ar gyfer");
-    });
-
-    it("should have last updated label", () => {
-      expect(cy.lastUpdated).toBe("Diweddarwyd ddiwethaf");
-    });
-
-    it("should have important information text", () => {
-      expect(cy.importantInformation).toBe("Gwybodaeth bwysig");
-    });
-
-    it("should have open justice intro text", () => {
-      expect(cy.openJusticeIntro).toContain("Mae cyfiawnder agored yn egwyddor sylfaenol");
-    });
-
-    it("should have open justice contact function", () => {
-      expect(typeof cy.openJusticeContact).toBe("function");
-      const contactText = cy.openJusticeContact("Llys Prawf", "prawf@enghraifft.com", "123456");
-      expect(contactText).toContain("Llys Prawf");
-      expect(contactText).toContain("prawf@enghraifft.com");
-      expect(contactText).toContain("123456");
-    });
-
-    it("should have open justice decision text", () => {
-      expect(cy.openJusticeDecision).toContain("Bydd y barnwr sy'n gwrando'r achos yn penderfynu");
-    });
-
-    it("should have open justice private text", () => {
-      expect(cy.openJusticePrivate).toContain("Weithiau mae'n angenrheidiol cynnal gwrandawiadau yn breifat");
-    });
-
-    it("should have open justice more info text", () => {
-      expect(cy.openJusticeMoreInfo).toBe("I gael rhagor o wybodaeth, ewch i");
-    });
-
-    it("should have open justice link", () => {
-      expect(cy.openJusticeLink).toBe("https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing");
-    });
-
-    it("should have search cases text", () => {
-      expect(cy.searchCases).toBe("Chwilio Achosion");
-    });
-
-    it("should have time label", () => {
-      expect(cy.time).toBe("Amser");
-    });
-
-    it("should have before judge label", () => {
-      expect(cy.before).toBe("Gerbron");
-    });
-
-    it("should have case ref label", () => {
-      expect(cy.caseRef).toBe("Cyfeirnod yr achos");
-    });
-
-    it("should have case name label", () => {
-      expect(cy.caseName).toBe("Enw'r achos");
-    });
-
-    it("should have case type label", () => {
-      expect(cy.caseType).toBe("Math o achos");
-    });
-
-    it("should have hearing type label", () => {
-      expect(cy.hearingType).toBe("Math o wrandawiad");
-    });
-
-    it("should have location label", () => {
-      expect(cy.location).toBe("Lleoliad");
-    });
-
-    it("should have duration label", () => {
-      expect(cy.duration).toBe("Hyd");
-    });
-
-    it("should have applicant label", () => {
-      expect(cy.applicant).toBe("Ceisydd");
-    });
-
-    it("should have respondent label", () => {
-      expect(cy.respondent).toBe("Atebydd");
-    });
-
-    it("should have legal advisor label", () => {
-      expect(cy.legalAdvisor).toBe("Cynrychiolydd Cyfreithiol");
-    });
-
-    it("should have reporting restrictions label", () => {
-      expect(cy.reportingRestrictions).toBe("Cyfyngiad Adrodd");
-    });
-
-    it("should have no hearings text", () => {
-      expect(cy.noHearings).toBe("Dim gwrandawiadau heddiw");
-    });
-
-    it("should have link to top text", () => {
-      expect(cy.linkToTop).toBe("Yn ôl i'r brig");
-    });
-
-    it("should have data source label", () => {
-      expect(cy.dataSource).toBe("Ffynhonnell Data");
+      expect(existsSync(path.join(__dirname, TEMPLATE))).toBe(true);
     });
   });
 
   describe("Locale consistency", () => {
-    it("should have same keys in English and Welsh", () => {
+    it("should have the same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    it("should have all required keys", () => {
-      const requiredKeys = [
-        "title",
-        "pageTitle",
-        "factLinkText",
-        "factLinkUrl",
-        "factAdditionalText",
-        "listFor",
-        "lastUpdated",
-        "importantInformation",
-        "openJusticeIntro",
-        "openJusticeContact",
-        "openJusticeDecision",
-        "openJusticePrivate",
-        "openJusticeMoreInfo",
-        "openJusticeLink",
-        "openJusticeLinkText",
-        "time",
-        "before",
-        "caseRef",
-        "caseName",
-        "caseType",
-        "hearingType",
-        "location",
-        "duration",
-        "applicant",
-        "respondent",
-        "legalAdvisor",
-        "reportingRestrictions",
-        "noHearings",
-        "linkToTop",
-        "searchCases",
-        "dataSource"
-      ];
-
-      requiredKeys.forEach((key) => {
-        expect(en).toHaveProperty(key);
-        expect(cy).toHaveProperty(key);
-      });
-    });
-  });
-
-  describe("Content validation", () => {
-    it("should have non-empty strings for all English string content", () => {
-      expect(en.title.length).toBeGreaterThan(0);
-      expect(en.pageTitle.length).toBeGreaterThan(0);
-      expect(en.factLinkText.length).toBeGreaterThan(0);
-      expect(en.factLinkUrl.length).toBeGreaterThan(0);
-      expect(en.factAdditionalText.length).toBeGreaterThan(0);
-      expect(en.listFor.length).toBeGreaterThan(0);
-      expect(en.lastUpdated.length).toBeGreaterThan(0);
-      expect(en.importantInformation.length).toBeGreaterThan(0);
-      expect(en.openJusticeIntro.length).toBeGreaterThan(0);
-      expect(en.openJusticeDecision.length).toBeGreaterThan(0);
-      expect(en.openJusticePrivate.length).toBeGreaterThan(0);
-      expect(en.openJusticeMoreInfo.length).toBeGreaterThan(0);
-      expect(en.openJusticeLink.length).toBeGreaterThan(0);
-      expect(en.openJusticeLinkText.length).toBeGreaterThan(0);
-      expect(en.time.length).toBeGreaterThan(0);
-      expect(en.before.length).toBeGreaterThan(0);
-      expect(en.caseRef.length).toBeGreaterThan(0);
-      expect(en.caseName.length).toBeGreaterThan(0);
-      expect(en.caseType.length).toBeGreaterThan(0);
-      expect(en.hearingType.length).toBeGreaterThan(0);
-      expect(en.location.length).toBeGreaterThan(0);
-      expect(en.duration.length).toBeGreaterThan(0);
-      expect(en.applicant.length).toBeGreaterThan(0);
-      expect(en.respondent.length).toBeGreaterThan(0);
-      expect(en.legalAdvisor.length).toBeGreaterThan(0);
-      expect(en.reportingRestrictions.length).toBeGreaterThan(0);
-      expect(en.noHearings.length).toBeGreaterThan(0);
-      expect(en.linkToTop.length).toBeGreaterThan(0);
-      expect(en.searchCases.length).toBeGreaterThan(0);
-      expect(en.dataSource.length).toBeGreaterThan(0);
-    });
-
-    it("should have non-empty strings for all Welsh string content", () => {
-      expect(cy.title.length).toBeGreaterThan(0);
-      expect(cy.pageTitle.length).toBeGreaterThan(0);
-      expect(cy.factLinkText.length).toBeGreaterThan(0);
-      expect(cy.factLinkUrl.length).toBeGreaterThan(0);
-      expect(cy.factAdditionalText.length).toBeGreaterThan(0);
-      expect(cy.listFor.length).toBeGreaterThan(0);
-      expect(cy.lastUpdated.length).toBeGreaterThan(0);
-      expect(cy.importantInformation.length).toBeGreaterThan(0);
-      expect(cy.openJusticeIntro.length).toBeGreaterThan(0);
-      expect(cy.openJusticeDecision.length).toBeGreaterThan(0);
-      expect(cy.openJusticePrivate.length).toBeGreaterThan(0);
-      expect(cy.openJusticeMoreInfo.length).toBeGreaterThan(0);
-      expect(cy.openJusticeLink.length).toBeGreaterThan(0);
-      expect(cy.openJusticeLinkText.length).toBeGreaterThan(0);
-      expect(cy.time.length).toBeGreaterThan(0);
-      expect(cy.before.length).toBeGreaterThan(0);
-      expect(cy.caseRef.length).toBeGreaterThan(0);
-      expect(cy.caseName.length).toBeGreaterThan(0);
-      expect(cy.caseType.length).toBeGreaterThan(0);
-      expect(cy.hearingType.length).toBeGreaterThan(0);
-      expect(cy.location.length).toBeGreaterThan(0);
-      expect(cy.duration.length).toBeGreaterThan(0);
-      expect(cy.applicant.length).toBeGreaterThan(0);
-      expect(cy.respondent.length).toBeGreaterThan(0);
-      expect(cy.legalAdvisor.length).toBeGreaterThan(0);
-      expect(cy.reportingRestrictions.length).toBeGreaterThan(0);
-      expect(cy.noHearings.length).toBeGreaterThan(0);
-      expect(cy.linkToTop.length).toBeGreaterThan(0);
-      expect(cy.searchCases.length).toBeGreaterThan(0);
-      expect(cy.dataSource.length).toBeGreaterThan(0);
-    });
-
-    it("should have valid URLs", () => {
+    it("should use https URLs for FACT and open justice links", () => {
       expect(en.factLinkUrl).toMatch(/^https:\/\//);
       expect(en.openJusticeLink).toMatch(/^https:\/\//);
       expect(cy.factLinkUrl).toMatch(/^https:\/\//);
@@ -399,897 +181,479 @@ describe("family-daily-cause-list template", () => {
     });
   });
 
-  describe("Template rendering with data variations", () => {
-    const baseTemplateData = {
-      t: en,
-      en,
-      cy,
-      header: {
-        locationName: "Test Family Court",
-        addressLines: ["123 Family Court Street", "Test City", "TC1 1AA"],
-        contentDate: "10 July 2026",
-        lastUpdated: "10 July 2026 at 9:00am"
-      },
-      openJustice: {
-        venueName: "Test Family Venue",
-        email: "family@example.com",
-        phone: "01234 567890"
-      },
-      dataSource: "Test Family Source"
-    };
+  describe("Page header", () => {
+    it("should render the heading with the page title and location name", () => {
+      const { $ } = renderList([]);
 
-    describe("Court house address variations", () => {
-      it("should render court house with full address", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Main Family Court House",
-                  courtHouseAddress: {
-                    line: ["1 Family Court Street", "Building B"],
-                    town: "London",
-                    county: "Greater London",
-                    postCode: "SW1A 1AA"
-                  },
-                  courtRoom: []
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Main Family Court House");
-        expect(html).toContain("1 Family Court Street");
-        expect(html).toContain("Building B");
-        expect(html).toContain("London");
-        expect(html).toContain("Greater London");
-        expect(html).toContain("SW1A 1AA");
-      });
-
-      it("should render court house with partial address", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Branch Family Court",
-                  courtHouseAddress: {
-                    line: ["2 Branch Family Road"],
-                    town: "Manchester",
-                    postCode: "M1 1AA"
-                  },
-                  courtRoom: []
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Branch Family Court");
-        expect(html).toContain("2 Branch Family Road");
-        expect(html).toContain("Manchester");
-        expect(html).toContain("M1 1AA");
-        expect(html).not.toContain("Greater London");
-      });
-
-      it("should handle empty address lines", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Simple Family Court",
-                  courtHouseAddress: {
-                    line: ["", "Valid Family Line", ""],
-                    postCode: "AB1 2CD"
-                  },
-                  courtRoom: []
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Simple Family Court");
-        expect(html).toContain("Valid Family Line");
-        expect(html).toContain("AB1 2CD");
-      });
-
-      it("should not render court house name when address is missing", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Address-less Family Court",
-                  courtRoom: []
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).not.toContain("Address-less Family Court");
-      });
+      const heading = $(".govuk-heading-l").first().text();
+      expect(heading).toContain(en.pageTitle);
+      expect(heading).toContain("Test Family Court");
     });
 
-    describe("Session judiciary variations", () => {
-      it("should render session with judiciary", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "Judge Family Smith",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderList([]);
 
-        expect(html).toContain("Family Court 1");
-        expect(html).toContain("Before");
-        expect(html).toContain("Judge Family Smith");
-      });
-
-      it("should render session without judiciary", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 2",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Family Court 2");
-        expect(html).not.toContain("Before");
-      });
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
     });
 
-    describe("No hearings message", () => {
-      it("should display no hearings message when session has no hearings", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "Judge Smith",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: []
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
+    it("should render the list-for date and last-updated line", () => {
+      const { $ } = renderList([]);
 
-        expect(html).toContain("No hearings today");
-      });
+      const bodyText = $(".govuk-body").text();
+      expect(bodyText).toContain(`${en.listFor} 10 July 2026`);
+      expect(bodyText).toContain(`${en.lastUpdated} 10 July 2026 at 9:00am`);
     });
 
-    describe("Duration variations", () => {
-      it("should render duration with hours only (plural)", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 2,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Final Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FH123",
-                                      caseName: "Family Case A v B",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
+    it("should render the header address lines", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, addressLines: ["Line 1", "Line 2", "TC1 1AA"] } });
 
-        expect(html).toContain("2 hours");
-      });
-
-      it("should render duration with hour only (singular)", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 1,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Directions",
-                                  case: [
-                                    {
-                                      caseNumber: "FD123",
-                                      caseName: "Family Test v Test",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("1 hour");
-        expect(html).not.toContain("1 hours");
-      });
-
-      it("should render duration with minutes only (plural)", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "11:00am",
-                              durationAsHours: 0,
-                              durationAsMinutes: 30,
-                              caseHearingChannel: "Video",
-                              hearing: [
-                                {
-                                  hearingType: "First Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FF123",
-                                      caseName: "Short Family Case",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("30 mins");
-      });
-
-      it("should render duration with minute only (singular)", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "2:00pm",
-                              durationAsHours: 0,
-                              durationAsMinutes: 1,
-                              caseHearingChannel: "Telephone",
-                              hearing: [
-                                {
-                                  hearingType: "Mention",
-                                  case: [
-                                    {
-                                      caseNumber: "FM123",
-                                      caseName: "Quick Family Case",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("1 min");
-        expect(html).not.toContain("1 mins");
-      });
-
-      it("should render duration with hours and minutes", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "9:30am",
-                              durationAsHours: 2,
-                              durationAsMinutes: 45,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Full Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FL123",
-                                      caseName: "Long Family Case",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("2 hours 45 mins");
-      });
+      const bodyText = $(".govuk-body").text();
+      for (const line of ["Line 1", "Line 2", "TC1 1AA"]) {
+        expect(bodyText).toContain(line);
+      }
     });
 
-    describe("Case variations", () => {
-      it("should render case with sequence indicator", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 1,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Final Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FS123",
-                                      caseName: "Smith v Jones",
-                                      caseSequenceIndicator: "2 of 3",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
+    it("should render the important-information open-justice section", () => {
+      const { $ } = renderList([]);
 
-        expect(html).toContain("Smith v Jones [2 of 3]");
-      });
-
-      it("should render case without sequence indicator", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 1,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "F456",
-                                      caseName: "Brown v White",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      respondent: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Brown v White");
-        expect(html).not.toContain("[");
-        expect(html).not.toContain("]");
-      });
-
-      it("should render case with applicant and representative", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 1,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FA789",
-                                      caseName: "Green v Black",
-                                      caseType: "Family",
-                                      applicant: "John Green",
-                                      applicantRepresentative: "Family Solicitors Ltd",
-                                      respondent: "",
-                                      respondentRepresentative: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("John Green");
-        expect(html).toContain("Legal Advisor");
-        expect(html).toContain("Family Solicitors Ltd");
-      });
-
-      it("should render case with respondent and representative", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "2:00pm",
-                              durationAsHours: 1,
-                              durationAsMinutes: 30,
-                              caseHearingChannel: "Video",
-                              hearing: [
-                                {
-                                  hearingType: "Directions",
-                                  case: [
-                                    {
-                                      caseNumber: "FR456",
-                                      caseName: "Red v Blue",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      applicantRepresentative: "",
-                                      respondent: "Mary Blue",
-                                      respondentRepresentative: "Blue Family Law LLP"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Mary Blue");
-        expect(html).toContain("Legal Advisor");
-        expect(html).toContain("Blue Family Law LLP");
-      });
-
-      it("should render case without parties", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "3:00pm",
-                              durationAsHours: 0,
-                              durationAsMinutes: 15,
-                              caseHearingChannel: "Telephone",
-                              hearing: [
-                                {
-                                  hearingType: "Mention",
-                                  case: [
-                                    {
-                                      caseNumber: "FN789",
-                                      caseName: "Orange v Purple",
-                                      caseType: "Family",
-                                      applicant: "",
-                                      applicantRepresentative: "",
-                                      respondent: "",
-                                      respondentRepresentative: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Orange v Purple");
-        const rows = html.match(/<td[^>]*class="govuk-table__cell[^"]*"[^>]*>[^<]*<\/td>/g) || [];
-        const emptyApplicantCell = rows.some((row) => row.includes("govuk-table__cell") && row.replace(/<[^>]+>/g, "").trim() === "");
-        expect(emptyApplicantCell).toBe(true);
-      });
-
-      it("should render case with reporting restrictions", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "11:00am",
-                              durationAsHours: 2,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Final Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FRC123",
-                                      caseName: "Restricted Family Case",
-                                      caseType: "Family",
-                                      applicant: "Applicant Name",
-                                      respondent: "Respondent Name",
-                                      formattedReportingRestriction: "Section 39 applies, Section 11 applies"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Reporting Restriction");
-        expect(html).toContain("Section 39 applies, Section 11 applies");
-      });
-
-      it("should not render reporting restriction row when empty", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "Test Family Court",
-                  courtRoom: [
-                    {
-                      courtRoomName: "Family Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              durationAsHours: 1,
-                              durationAsMinutes: 0,
-                              caseHearingChannel: "In person",
-                              hearing: [
-                                {
-                                  hearingType: "Hearing",
-                                  case: [
-                                    {
-                                      caseNumber: "FN123",
-                                      caseName: "Normal Family Case",
-                                      caseType: "Family",
-                                      applicant: "Test Applicant",
-                                      respondent: "Test Respondent",
-                                      formattedReportingRestriction: ""
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
-
-        expect(html).toContain("Normal Family Case");
-        const restrictionMatches = html.match(/Reporting Restriction/g);
-        expect(restrictionMatches).toBeNull();
-      });
+      const details = $("details.govuk-details");
+      expect(details).toHaveLength(1);
+      expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformation);
+      const openJusticeLink = details.find(`a[href="${en.openJusticeLink}"]`);
+      expect(openJusticeLink).toHaveLength(1);
+      expect(details.text()).toContain("Test Family Venue");
+      expect(details.text()).toContain("family@example.com");
     });
 
-    describe("Multiple court lists", () => {
-      it("should render multiple court lists", () => {
-        const { html } = render(env, "family-daily-cause-list.njk", {
-          ...baseTemplateData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtHouseName: "First Family Court",
-                  courtHouseAddress: {
-                    line: ["1 First Street"],
-                    postCode: "F1 1AA"
-                  },
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1A",
-                      session: [
-                        {
-                          formattedJudiciaries: "Judge A",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              },
-              {
-                courtHouse: {
-                  courtHouseName: "Second Family Court",
-                  courtHouseAddress: {
-                    line: ["2 Second Street"],
-                    postCode: "F2 2BB"
-                  },
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 2A",
-                      session: [
-                        {
-                          formattedJudiciaries: "Judge B",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        });
+    it("should render the search-cases input", () => {
+      const { $ } = renderList([]);
 
-        expect(html).toContain("First Family Court");
-        expect(html).toContain("1 First Street");
-        expect(html).toContain("F1 1AA");
-        expect(html).toContain("Court 1A");
-        expect(html).toContain("Judge A");
-        expect(html).toContain("Second Family Court");
-        expect(html).toContain("2 Second Street");
-        expect(html).toContain("F2 2BB");
-        expect(html).toContain("Court 2A");
-        expect(html).toContain("Judge B");
-      });
+      expect($("#case-search-input")).toHaveLength(1);
+      expect($(".govuk-form-group h2.govuk-heading-m").text()).toContain(en.searchCases);
+    });
+  });
+
+  describe("Court house address", () => {
+    it("should render the court house name and full address", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Main Family Court House",
+          courtHouseAddress: { line: ["1 Family Court Street", "Building B"], town: "London", county: "Greater London", postCode: "SW1A 1AA" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
+      expect(block.find("h2.govuk-heading-l").text()).toContain("Main Family Court House");
+      const paragraphs = block
+        .find("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(paragraphs).toEqual(["1 Family Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
+    });
+
+    it("should omit empty address fields such as county", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Branch Family Court",
+          courtHouseAddress: { line: ["2 Branch Family Road"], town: "Manchester", postCode: "M1 1AA" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
+      const paragraphs = block
+        .find("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(paragraphs).toEqual(["2 Branch Family Road", "Manchester", "M1 1AA"]);
+      expect(paragraphs).not.toContain("Greater London");
+    });
+
+    it("should skip empty address lines", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Simple Family Court",
+          courtHouseAddress: { line: ["", "Valid Family Line", ""], postCode: "AB1 2CD" },
+          courtRoom: []
+        })
+      ]);
+
+      const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
+      const paragraphs = block
+        .find("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(paragraphs).toEqual(["Valid Family Line", "AB1 2CD"]);
+    });
+
+    it("should not render the name/address block when the address is missing", () => {
+      const { $ } = renderList([buildCourtHouse({ courtHouseName: "Address-less Family Court", omitAddress: true, courtRoom: [] })]);
+
+      expect($("#court-lists-container > div.govuk-\\!-margin-bottom-6")).toHaveLength(0);
+      const headings = $(".govuk-heading-l")
+        .map((_, el) => $(el).text())
+        .get();
+      expect(headings.some((h) => h.includes("Address-less Family Court"))).toBe(false);
+    });
+
+    it("should render one court house block per court list", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "First Family Court",
+          courtHouseAddress: { line: ["1 First Street"], postCode: "F1 1AA" },
+          courtRoom: [buildSession({ courtRoomName: "Court 1A", formattedJudiciaries: "Judge A", sittings: [] })]
+        }),
+        buildCourtHouse({
+          courtHouseName: "Second Family Court",
+          courtHouseAddress: { line: ["2 Second Street"], postCode: "F2 2BB" },
+          courtRoom: [buildSession({ courtRoomName: "Court 2A", formattedJudiciaries: "Judge B", sittings: [] })]
+        })
+      ]);
+
+      const courtHouseNames = $("#court-lists-container > div.govuk-\\!-margin-bottom-6 h2.govuk-heading-l")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(courtHouseNames).toEqual(["First Family Court", "Second Family Court"]);
+
+      const sectionButtons = $(".govuk-accordion__section-button")
+        .map((_, el) => normalize($(el).text()))
+        .get();
+      expect(sectionButtons).toEqual([`Court 1A, ${en.before}: Judge A`, `Court 2A, ${en.before}: Judge B`]);
+    });
+  });
+
+  describe("Session accordion headings", () => {
+    it("should include the judiciary in the section heading when present", () => {
+      const { $ } = renderList([
+        buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Family Court 1", formattedJudiciaries: "Judge Family Smith", sittings: [] })] })
+      ]);
+
+      const heading = normalize($(".govuk-accordion__section-button").text());
+      expect(heading).toBe(`Family Court 1, ${en.before}: Judge Family Smith`);
+    });
+
+    it("should not render a judiciary segment when none is provided", () => {
+      const { $ } = renderList([buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Family Court 2", formattedJudiciaries: "", sittings: [] })] })]);
+
+      const heading = normalize($(".govuk-accordion__section-button").text());
+      expect(heading).toBe("Family Court 2");
+      expect(heading).not.toContain(en.before);
+    });
+  });
+
+  describe("No hearings message", () => {
+    it("should render the no-hearings message and no table when the session has no hearings", () => {
+      const { $ } = renderList([
+        buildCourtHouse({ courtRoom: [buildSession({ formattedJudiciaries: "Judge Smith", sittings: [buildSitting({ hearing: [] })] })] })
+      ]);
+
+      expect($(".govuk-accordion__section-content").text()).toContain(en.noHearings);
+      expect($("table")).toHaveLength(0);
+    });
+  });
+
+  describe("Hearings table", () => {
+    it("should render all table headers in order", () => {
+      const { $ } = renderList([buildCourtHouse({ courtRoom: [buildSession()] })]);
+
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([en.time, en.caseRef, en.caseName, en.caseType, en.hearingType, en.location, en.duration, en.applicant, en.respondent]);
+    });
+
+    it("should place each case field in its correct column", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  time: "10:00am",
+                  caseHearingChannel: "In person",
+                  hearing: [
+                    {
+                      hearingType: "Final Hearing",
+                      case: [
+                        buildCase({ caseNumber: "FH123", caseName: "Smith v Jones", caseType: "Family", applicant: "John Green", respondent: "Mary Blue" })
+                      ]
+                    }
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.time]).toBe("10:00am");
+      expect(cells[COLUMN.caseRef]).toBe("FH123");
+      expect(cells[COLUMN.caseName]).toBe("Smith v Jones");
+      expect(cells[COLUMN.caseType]).toBe("Family");
+      expect(cells[COLUMN.hearingType]).toBe("Final Hearing");
+      expect(cells[COLUMN.location]).toBe("In person");
+      expect(cells[COLUMN.applicant]).toBe("John Green");
+      expect(cells[COLUMN.respondent]).toBe("Mary Blue");
+    });
+
+    it("should render a row per case within a hearing", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    {
+                      hearingType: "Hearing",
+                      case: [buildCase({ caseNumber: "F1", caseName: "A v B" }), buildCase({ caseNumber: "F2", caseName: "C v D" })]
+                    }
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      const caseRefs = caseRows($)
+        .map((_, row) => $(row).find("td").eq(COLUMN.caseRef).text().trim())
+        .get();
+      expect(caseRefs).toEqual(["F1", "F2"]);
+    });
+  });
+
+  describe("Duration formatting", () => {
+    function renderWithDuration(durationAsHours: number, durationAsMinutes: number) {
+      return renderList([buildCourtHouse({ courtRoom: [buildSession({ sittings: [buildSitting({ durationAsHours, durationAsMinutes })] })] })]).$;
+    }
+
+    it("should render hours only in the plural", () => {
+      expect(firstDataRowCells(renderWithDuration(2, 0))[COLUMN.duration]).toBe("2 hours");
+    });
+
+    it("should render an hour in the singular", () => {
+      expect(firstDataRowCells(renderWithDuration(1, 0))[COLUMN.duration]).toBe("1 hour");
+    });
+
+    it("should render minutes only in the plural", () => {
+      expect(firstDataRowCells(renderWithDuration(0, 30))[COLUMN.duration]).toBe("30 mins");
+    });
+
+    it("should render a minute in the singular", () => {
+      expect(firstDataRowCells(renderWithDuration(0, 1))[COLUMN.duration]).toBe("1 min");
+    });
+
+    it("should render hours and minutes together", () => {
+      expect(firstDataRowCells(renderWithDuration(2, 45))[COLUMN.duration]).toBe("2 hours 45 mins");
+    });
+  });
+
+  describe("Case name and parties", () => {
+    it("should append the sequence indicator to the case name when present", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({ hearing: [{ hearingType: "Final Hearing", case: [buildCase({ caseName: "Smith v Jones", caseSequenceIndicator: "2 of 3" })] }] })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(firstDataRowCells($)[COLUMN.caseName]).toBe("Smith v Jones [2 of 3]");
+    });
+
+    it("should render the case name without brackets when there is no sequence indicator", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [buildSession({ sittings: [buildSitting({ hearing: [{ hearingType: "Hearing", case: [buildCase({ caseName: "Brown v White" })] }] })] })]
+        })
+      ]);
+
+      expect(firstDataRowCells($)[COLUMN.caseName]).toBe("Brown v White");
+    });
+
+    it("should render the applicant with their representative", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    {
+                      hearingType: "Hearing",
+                      case: [buildCase({ caseName: "Green v Black", applicant: "John Green", applicantRepresentative: "Family Solicitors Ltd" })]
+                    }
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(firstDataRowCells($)[COLUMN.applicant]).toBe(`John Green, ${en.legalAdvisor}: Family Solicitors Ltd`);
+    });
+
+    it("should render the respondent with their representative", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    {
+                      hearingType: "Directions",
+                      case: [buildCase({ caseName: "Red v Blue", respondent: "Mary Blue", respondentRepresentative: "Blue Family Law LLP" })]
+                    }
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(firstDataRowCells($)[COLUMN.respondent]).toBe(`Mary Blue, ${en.legalAdvisor}: Blue Family Law LLP`);
+    });
+
+    it("should render empty applicant and respondent cells when no parties are present", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({ hearing: [{ hearingType: "Mention", case: [buildCase({ caseName: "Orange v Purple", applicant: "", respondent: "" })] }] })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.caseName]).toBe("Orange v Purple");
+      expect(cells[COLUMN.applicant]).toBe("");
+      expect(cells[COLUMN.respondent]).toBe("");
+    });
+  });
+
+  describe("Reporting restriction row", () => {
+    it("should render a restriction row spanning all columns when a restriction is present", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    {
+                      hearingType: "Final Hearing",
+                      case: [buildCase({ caseName: "Restricted Family Case", formattedReportingRestriction: "Section 39 applies, Section 11 applies" })]
+                    }
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      const restrictionCell = $("tbody.govuk-table__body td[colspan]");
+      expect(restrictionCell).toHaveLength(1);
+      expect(restrictionCell.attr("colspan")).toBe("9");
+      expect(restrictionCell.find("strong").text()).toContain(en.reportingRestrictions);
+      expect(restrictionCell.text()).toContain("Section 39 applies, Section 11 applies");
+      expect(caseRows($).first().hasClass("no-border-bottom")).toBe(true);
+    });
+
+    it("should not render a restriction row when the restriction is empty", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [{ hearingType: "Hearing", case: [buildCase({ caseName: "Normal Family Case", formattedReportingRestriction: "" })] }]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(firstDataRowCells($)[COLUMN.caseName]).toBe("Normal Family Case");
+      expect($("tbody.govuk-table__body td[colspan]")).toHaveLength(0);
+    });
+  });
+
+  describe("Footer", () => {
+    it("should render the data source", () => {
+      const { $ } = renderList([], { dataSource: "Family Data Platform" });
+
+      const footer = $("p.govuk-body").filter((_, el) => $(el).text().includes(en.dataSource));
+      expect(footer.text()).toContain("Family Data Platform");
+    });
+
+    it("should render a back-to-top link", () => {
+      const { $ } = renderList([]);
+
+      const backToTop = $("a[href='#top']");
+      expect(backToTop.text()).toContain(en.linkToTop);
+    });
+  });
+
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, table headers and labels", () => {
+      const { $ } = renderList(
+        [buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Family Court 1", formattedJudiciaries: "Barnwr Jones" })] })],
+        {},
+        cy
+      );
+
+      expect($(".govuk-heading-l").first().text()).toContain(cy.pageTitle);
+      expect($(".govuk-accordion__section-button").text()).toContain(cy.before);
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toContain(cy.time);
+      expect(headers).toContain(cy.caseName);
+      expect(headers).toContain(cy.respondent);
+      expect($("a[href='#top']").text()).toContain(cy.linkToTop);
+    });
+  });
+
+  describe("Empty data variations", () => {
+    it("should render the header and guidance with no court lists", () => {
+      const { $ } = renderList([]);
+
+      expect($(".govuk-heading-l").first().text()).toContain(en.pageTitle);
+      expect($("details.govuk-details")).toHaveLength(1);
+      expect($("#court-lists-container").children()).toHaveLength(0);
+    });
+
+    it("should render a court house with no court rooms without a table", () => {
+      const { $ } = renderList([
+        buildCourtHouse({ courtHouseName: "Empty Family Court", courtHouseAddress: { line: ["Empty Street"], postCode: "E1 1AA" }, courtRoom: [] })
+      ]);
+
+      expect($("#court-lists-container > div.govuk-\\!-margin-bottom-6 h2.govuk-heading-l").text()).toContain("Empty Family Court");
+      expect($("table")).toHaveLength(0);
+    });
+
+    it("should render a court room with no sessions without an accordion section", () => {
+      const { $ } = renderList([buildCourtHouse({ courtRoom: [{ courtRoomName: "Family Court 1", session: [] }] })]);
+
+      expect($(".govuk-accordion__section")).toHaveLength(0);
+      expect($("table")).toHaveLength(0);
     });
   });
 });

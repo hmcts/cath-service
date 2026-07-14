@@ -1,765 +1,385 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { crownWarnedListCy, crownWarnedListEn } from "@hmcts/crown-warned-list";
+import { crownWarnedListCy as cy, crownWarnedListEn as en } from "@hmcts/crown-warned-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "crown-warned-list.njk";
 const webCoreViews = path.join(webCoreModuleRoot, "views");
 
-describe("crown-warned-list.njk", () => {
-  let env: nunjucks.Environment;
+interface CaseOverrides {
+  fixedFor?: string;
+  caseNumber?: string;
+  defendants?: string;
+  prosecutingAuthority?: string;
+  linkedCases?: string;
+  listingNotes?: string;
+  isInCustody?: boolean;
+}
 
-  beforeEach(() => {
-    env = createTestEnvironment([__dirname, webCoreViews]);
-  });
+// Fixture builders — each test passes only the varied leaf fields; the full
+// case / category / header tree stays out of the individual tests.
+function buildCase(overrides: CaseOverrides = {}) {
+  return {
+    fixedFor: "15/01/2026",
+    caseNumber: "T20267890",
+    defendants: "John Smith",
+    prosecutingAuthority: "Crown Prosecution Service",
+    linkedCases: "",
+    listingNotes: "",
+    isInCustody: false,
+    ...overrides
+  };
+}
 
-  describe("Locale content", () => {
-    describe("English locale", () => {
-      it("should have all required keys", () => {
-        const requiredKeys = [
-          "title",
-          "pageTitle",
-          "factLinkUrl",
-          "factLinkText",
-          "factAdditionalText",
-          "lastUpdated",
-          "version",
-          "preStatementPrefix",
-          "preStatementSuffix2",
-          "preStatementSuffix3",
-          "preStatementSuffix4",
-          "fixedFor",
-          "caseRef",
-          "defendant",
-          "prosecutingAuthority",
-          "linkedCases",
-          "listingNotes",
-          "toBeAllocated",
-          "searchCases",
-          "reportingRestrictions",
-          "reportingRestrictionsTitle",
-          "reportingRestrictionsBodyIntro",
-          "reportingRestrictionsWarning",
-          "reportingRestrictionsBodySpecific",
-          "reportingRestrictionsBodyHowever",
-          "reportingRestrictionsBodyContact",
-          "reportingRestrictionsContactCourt",
-          "reportingRestrictionsContactHmcts",
-          "courtHouseDetails",
-          "backToTop",
-          "dataSource",
-          "errorTitle",
-          "errorMessage",
-          "error403Title",
-          "error403Message"
-        ];
+function buildCategory({ category = "For Trial", cases = [buildCase()] }: { category?: string; cases?: unknown[] } = {}) {
+  return { category, cases };
+}
 
-        requiredKeys.forEach((key) => {
-          expect(crownWarnedListEn).toHaveProperty(key);
-        });
-      });
+function baseData(locale: typeof en | typeof cy = en) {
+  return {
+    t: locale,
+    en,
+    cy,
+    header: {
+      locationName: "Birmingham Crown Court",
+      addressLines: ["The Priory Courts", "33 Bull Street", "Birmingham", "B4 6DS"],
+      dateRange: "15 January 2026 to 19 January 2026",
+      lastUpdated: "14 January 2026 at 12:00pm",
+      weekCommencing: "13 January 2026",
+      version: "1.0"
+    },
+    openJustice: { venueName: "Birmingham Crown Court", email: "", phone: "0121 681 3400" },
+    dataSource: "CPP",
+    groupedCategories: [] as unknown[]
+  };
+}
 
-      it("should have correct static text values", () => {
-        expect(crownWarnedListEn.title).toBe("Crown Warned List");
-        expect(crownWarnedListEn.pageTitle).toBe("Crown Warned List for");
-        expect(crownWarnedListEn.lastUpdated).toBe("Last updated");
-        expect(crownWarnedListEn.version).toBe("Version");
-        expect(crownWarnedListEn.searchCases).toBe("Search Cases");
-        expect(crownWarnedListEn.toBeAllocated).toBe("To be allocated");
-      });
+function renderList(groupedCategories: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, groupedCategories });
+}
 
-      it("should have correct table header labels", () => {
-        expect(crownWarnedListEn.fixedFor).toBe("Fixed For");
-        expect(crownWarnedListEn.caseRef).toBe("Case Reference");
-        expect(crownWarnedListEn.defendant).toBe("Defendant Name(s)");
-        expect(crownWarnedListEn.prosecutingAuthority).toBe("Prosecuting Authority");
-        expect(crownWarnedListEn.linkedCases).toBe("Linked Cases");
-        expect(crownWarnedListEn.listingNotes).toBe("Listing Notes");
-      });
+// Rendered case-table columns, in order.
+const COLUMN = { fixedFor: 0, caseRef: 1, defendant: 2, prosecutor: 3, linkedCases: 4, listingNotes: 5 } as const;
 
-      it("should have reporting restrictions content", () => {
-        expect(crownWarnedListEn.reportingRestrictionsTitle).toBe("Restrictions on publishing or writing about these cases");
-        expect(crownWarnedListEn.reportingRestrictionsWarning).toContain("Warning");
-        expect(crownWarnedListEn.reportingRestrictionsContactCourt).toBe("the court directly");
-        expect(crownWarnedListEn.reportingRestrictionsContactHmcts).toBe("HM Courts and Tribunals Service on 0330 808 4407");
-      });
+function firstDataRowCells($: CheerioAPI) {
+  return $("tbody.govuk-table__body tr")
+    .first()
+    .find("td")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should have pre-statement content", () => {
-        expect(crownWarnedListEn.preStatementPrefix).toContain("week commencing");
-        expect(crownWarnedListEn.preStatementSuffix2).toContain("Listing Officer");
-        expect(crownWarnedListEn.preStatementSuffix3).toContain("Crown Prosecution Service");
-        expect(crownWarnedListEn.preStatementSuffix4).toBe("*denotes a defendant in custody");
-      });
+function tableHeaders($: CheerioAPI) {
+  return $("thead th")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should have FACT link", () => {
-        expect(crownWarnedListEn.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-        expect(crownWarnedListEn.factLinkText).toContain("Find contact details");
-        expect(crownWarnedListEn.factAdditionalText).toContain("England and Wales");
-      });
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
+
+describe("crown-warned-list template", () => {
+  describe("Locale consistency", () => {
+    it("should have the same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    describe("Welsh locale", () => {
-      it("should have all required keys", () => {
-        const requiredKeys = [
-          "title",
-          "pageTitle",
-          "factLinkUrl",
-          "factLinkText",
-          "factAdditionalText",
-          "lastUpdated",
-          "version",
-          "preStatementPrefix",
-          "preStatementSuffix2",
-          "preStatementSuffix3",
-          "preStatementSuffix4",
-          "fixedFor",
-          "caseRef",
-          "defendant",
-          "prosecutingAuthority",
-          "linkedCases",
-          "listingNotes",
-          "toBeAllocated",
-          "searchCases",
-          "reportingRestrictions",
-          "reportingRestrictionsTitle",
-          "reportingRestrictionsBodyIntro",
-          "reportingRestrictionsWarning",
-          "reportingRestrictionsBodySpecific",
-          "reportingRestrictionsBodyHowever",
-          "reportingRestrictionsBodyContact",
-          "reportingRestrictionsContactCourt",
-          "reportingRestrictionsContactHmcts",
-          "courtHouseDetails",
-          "backToTop",
-          "dataSource",
-          "errorTitle",
-          "errorMessage",
-          "error403Title",
-          "error403Message"
-        ];
-
-        requiredKeys.forEach((key) => {
-          expect(crownWarnedListCy).toHaveProperty(key);
-        });
-      });
-
-      it("should have correct static text values", () => {
-        expect(crownWarnedListCy.title).toBe("Rhestr Rybuddiol y Goron");
-        expect(crownWarnedListCy.pageTitle).toBe("Rhestr Rybuddiol y Goron ar gyfer");
-        expect(crownWarnedListCy.lastUpdated).toBe("Diweddarwyd ddiwethaf");
-        expect(crownWarnedListCy.version).toBe("Fersiwn");
-        expect(crownWarnedListCy.searchCases).toBe("Chwilio Achosion");
-        expect(crownWarnedListCy.toBeAllocated).toBe("I'w ddyrannu");
-      });
-
-      it("should have correct table header labels", () => {
-        expect(crownWarnedListCy.fixedFor).toBe("Wedi'i bennu ar gyfer");
-        expect(crownWarnedListCy.caseRef).toBe("Cyfeirnod Achos");
-        expect(crownWarnedListCy.defendant).toBe("Enw(au) Diffynyddion");
-        expect(crownWarnedListCy.prosecutingAuthority).toBe("Awdurdod Erlyn");
-        expect(crownWarnedListCy.linkedCases).toBe("Achosion Cysylltiedig");
-        expect(crownWarnedListCy.listingNotes).toBe("Nodiadau Rhestru");
-      });
-    });
-
-    describe("Locale consistency", () => {
-      it("should have same structure in English and Welsh", () => {
-        expect(Object.keys(crownWarnedListEn).sort()).toEqual(Object.keys(crownWarnedListCy).sort());
-      });
-
-      it("should have same types for each key", () => {
-        Object.keys(crownWarnedListEn).forEach((key) => {
-          const enType = typeof crownWarnedListEn[key as keyof typeof crownWarnedListEn];
-          const cyType = typeof crownWarnedListCy[key as keyof typeof crownWarnedListCy];
-          expect(enType).toBe(cyType);
-        });
-      });
+    it("should use https FACT link URLs", () => {
+      expect(en.factLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.factLinkUrl).toMatch(/^https:\/\//);
     });
   });
 
-  describe("Template rendering", () => {
-    const baseData = {
-      t: crownWarnedListEn,
-      header: {
-        locationName: "Birmingham Crown Court",
-        addressLines: ["The Priory Courts", "33 Bull Street", "Birmingham", "B4 6DS"],
-        dateRange: "15 January 2026 to 19 January 2026",
-        lastUpdated: "14 January 2026 at 12:00pm",
-        weekCommencing: "13 January 2026",
-        version: "1.0"
-      },
-      openJustice: {
-        venueName: "Birmingham Crown Court",
-        email: "",
-        phone: "0121 681 3400"
-      },
-      dataSource: "CPP",
-      groupedCategories: []
-    };
+  describe("Page header", () => {
+    it("should render the heading with the page title and location name", () => {
+      const { $ } = renderList([]);
 
-    describe("Header section", () => {
-      it("should render page title with location name", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Crown Warned List for");
-        expect(html).toContain("Birmingham Crown Court");
-      });
-
-      it("should render address lines", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("The Priory Courts");
-        expect(html).toContain("33 Bull Street");
-        expect(html).toContain("Birmingham");
-        expect(html).toContain("B4 6DS");
-      });
-
-      it("should render date range", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("15 January 2026 to 19 January 2026");
-      });
-
-      it("should render last updated date", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Last updated");
-        expect(html).toContain("14 January 2026 at 12:00pm");
-      });
-
-      it("should render version when present", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Version");
-        expect(html).toContain("1.0");
-      });
-
-      it("should not render version when empty", () => {
-        const data = {
-          ...baseData,
-          header: { ...baseData.header, version: "" }
-        };
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).not.toContain("Version");
-      });
-
-      it("should render FACT link", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Find contact details and other information about courts and tribunals");
-        expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
-      });
+      const heading = $("h1#page-heading").text();
+      expect(heading).toContain(en.pageTitle);
+      expect(heading).toContain("Birmingham Crown Court");
     });
 
-    describe("Pre-statement section", () => {
-      it("should render week commencing statement when present", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("The undermentioned cases are warned for the hearing period of week commencing");
-        expect(html).toContain("13 January 2026");
-      });
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderList([]);
 
-      it("should render pre-statement suffix paragraphs", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Listing Officer immediately");
-        expect(html).toContain("Crown Prosecution Service unless otherwise stated");
-        expect(html).toContain("*denotes a defendant in custody");
-      });
-
-      it("should not render pre-statement when weekCommencing is empty", () => {
-        const data = {
-          ...baseData,
-          header: { ...baseData.header, weekCommencing: "" }
-        };
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).not.toContain("The undermentioned cases are warned");
-      });
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
     });
 
-    describe("Reporting restrictions section", () => {
-      it("should render reporting restrictions section", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Restrictions on publishing or writing about these cases");
-        expect(html).toContain("govuk-warning-text");
-        expect(html).toContain("Warning");
-        expect(html).toContain("contempt of court");
-      });
+    it("should render the date range and last-updated line", () => {
+      const { $ } = renderList([]);
 
-      it("should render reporting restrictions contact information", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("the court directly");
-        expect(html).toContain("HM Courts and Tribunals Service on 0330 808 4407");
-      });
-
-      it("should render reporting restrictions as list items", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("govuk-list govuk-list--bullet");
-      });
+      const bodyText = $(".govuk-body").text();
+      expect(bodyText).toContain("15 January 2026 to 19 January 2026");
+      expect(bodyText).toContain(en.lastUpdated);
+      expect(bodyText).toContain("14 January 2026 at 12:00pm");
     });
 
-    describe("Search section", () => {
-      it("should render search input", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Search Cases");
-        expect(html).toContain('id="case-search-input"');
-        expect(html).toContain('type="text"');
-      });
+    it("should render each header address line as its own paragraph", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, addressLines: ["Line 1", "Line 2", "Line 3", "B4 6DS"] } });
+
+      const paragraphs = $("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      for (const line of ["Line 1", "Line 2", "Line 3", "B4 6DS"]) {
+        expect(paragraphs).toContain(line);
+      }
     });
 
-    describe("Empty categories", () => {
-      it("should render with no categories", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain('id="court-lists-container"');
-        expect(html).toContain("govuk-accordion");
-      });
+    it("should render the version paragraph only when a version is provided", () => {
+      const withVersion = renderList([], { header: { ...baseData().header, version: "1.0" } }).$;
+      const versionLine = withVersion("p.govuk-body").filter((_, el) => withVersion(el).text().includes(en.version));
+      expect(versionLine.text()).toContain("1.0");
+
+      const withoutVersion = renderList([], { header: { ...baseData().header, version: "" } }).$;
+      const emptyVersionLine = withoutVersion("p.govuk-body").filter((_, el) => withoutVersion(el).text().trim().startsWith(en.version));
+      expect(emptyVersionLine).toHaveLength(0);
+    });
+  });
+
+  describe("Pre-statement", () => {
+    it("should render the week-commencing pre-statement when a week is provided", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, weekCommencing: "13 January 2026" } });
+
+      const bodyText = $(".govuk-body").text();
+      expect(bodyText).toContain(en.preStatementPrefix);
+      expect(bodyText).toContain("13 January 2026");
+      expect(bodyText).toContain(en.preStatementSuffix2);
+      expect(bodyText).toContain(en.preStatementSuffix3);
+      expect(bodyText).toContain(en.preStatementSuffix4);
     });
 
-    describe("Category grouping", () => {
-      it("should render single category with cases", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith, Jane Doe",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "Trial estimate 3 days",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
+    it("should not render the pre-statement when weekCommencing is empty", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, weekCommencing: "" } });
 
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("For Trial");
-        expect(html).toContain("govuk-accordion__section");
-      });
+      const preStatement = $("p.govuk-body").filter((_, el) => $(el).text().includes(en.preStatementPrefix));
+      expect(preStatement).toHaveLength(0);
+    });
+  });
 
-      it("should render TO_BE_ALLOCATED as 'To be allocated'", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "TO_BE_ALLOCATED",
-              cases: [
-                {
-                  fixedFor: "",
-                  caseNumber: "T20267891",
-                  defendants: "Alice Brown",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
+  describe("Reporting restrictions guidance", () => {
+    it("should render the guidance section with title, warning, contacts and bullet list", () => {
+      const { $ } = renderList([]);
 
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("To be allocated");
-        expect(html).not.toContain("TO_BE_ALLOCATED");
-      });
+      const section = $(".restriction-list-section");
+      expect(section).toHaveLength(1);
+      expect(section.find("h3").text()).toContain(en.reportingRestrictionsTitle);
+      expect(section.find(".govuk-warning-text__text").text()).toContain(en.reportingRestrictionsWarning);
 
-      it("should render multiple categories", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            },
-            {
-              category: "For Sentence",
-              cases: [
-                {
-                  fixedFor: "16/01/2026",
-                  caseNumber: "T20267891",
-                  defendants: "Jane Doe",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
+      const bullets = section
+        .find("ul.govuk-list.govuk-list--bullet li")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(bullets).toContain(en.reportingRestrictionsContactCourt);
+      expect(bullets).toContain(en.reportingRestrictionsContactHmcts);
+    });
+  });
 
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("For Trial");
-        expect(html).toContain("For Sentence");
-      });
+  describe("Search", () => {
+    it("should render the case search heading and text input", () => {
+      const { $ } = renderList([]);
+
+      expect($("h2").filter((_, el) => $(el).text().includes(en.searchCases))).toHaveLength(1);
+      const input = $("input#case-search-input");
+      expect(input).toHaveLength(1);
+      expect(input.attr("type")).toBe("text");
+    });
+  });
+
+  describe("Accordion and categories", () => {
+    it("should render the accordion container with no sections when there are no categories", () => {
+      const { $ } = renderList([]);
+
+      const accordion = $("#accordion-warned-list.govuk-accordion");
+      expect(accordion).toHaveLength(1);
+      expect(accordion.attr("data-module")).toBe("govuk-accordion");
+      expect($(".govuk-accordion__section")).toHaveLength(0);
     });
 
-    describe("Case table rendering", () => {
-      it("should render table headers", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: []
-            }
-          ]
-        };
+    it("should render an expanded section per category using the category name as heading", () => {
+      const { $ } = renderList([buildCategory({ category: "For Trial", cases: [] }), buildCategory({ category: "For Sentence", cases: [] })]);
 
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("Fixed For");
-        expect(html).toContain("Case Reference");
-        expect(html).toContain("Defendant Name(s)");
-        expect(html).toContain("Prosecuting Authority");
-        expect(html).toContain("Linked Cases");
-        expect(html).toContain("Listing Notes");
-      });
-
-      it("should render sortable table", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: []
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain('data-module="moj-sortable-table"');
-        expect(html).toContain('aria-sort="none"');
-      });
-
-      it("should render case with all data", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith, Jane Doe",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "T20267891, T20267892",
-                  listingNotes: "Trial estimate 3 days",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("15/01/2026");
-        expect(html).toContain("T20267890");
-        expect(html).toContain("John Smith, Jane Doe");
-        expect(html).toContain("Crown Prosecution Service");
-        expect(html).toContain("T20267891, T20267892");
-        expect(html).toContain("Trial estimate 3 days");
-      });
-
-      it("should render custody indicator when defendant is in custody", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: true
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain('<span aria-hidden="true">*</span>');
-        expect(html).toContain("John Smith");
-      });
-
-      it("should not render custody indicator when defendant is not in custody", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).not.toContain('<span aria-hidden="true">*</span>John Smith');
-      });
-
-      it("should handle empty fields gracefully", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "",
-                  caseNumber: "T20267890",
-                  defendants: "",
-                  prosecutingAuthority: "",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("T20267890");
-      });
-
-      it("should render multiple cases in one category", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                },
-                {
-                  fixedFor: "16/01/2026",
-                  caseNumber: "T20267891",
-                  defendants: "Jane Doe",
-                  prosecutingAuthority: "Crown Prosecution Service",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: true
-                },
-                {
-                  fixedFor: "17/01/2026",
-                  caseNumber: "T20267892",
-                  defendants: "Bob Brown",
-                  prosecutingAuthority: "CPS",
-                  linkedCases: "T20267890",
-                  listingNotes: "Linked to Smith trial",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("T20267890");
-        expect(html).toContain("John Smith");
-        expect(html).toContain("T20267891");
-        expect(html).toContain("Jane Doe");
-        expect(html).toContain("T20267892");
-        expect(html).toContain("Bob Brown");
-        expect(html).toContain("Linked to Smith trial");
-      });
+      const sectionHeadings = $(".govuk-accordion__section-button")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(sectionHeadings).toEqual(["For Trial", "For Sentence"]);
+      expect($(".govuk-accordion__section--expanded")).toHaveLength(2);
     });
 
-    describe("Footer section", () => {
-      it("should render data source", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Data Source");
-        expect(html).toContain("CPP");
-      });
+    it("should render the TO_BE_ALLOCATED category using the localised label", () => {
+      const { $ } = renderList([buildCategory({ category: "TO_BE_ALLOCATED", cases: [] })]);
 
-      it("should render back to top link", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("Back to top");
-        expect(html).toContain('href="#top"');
-      });
+      const heading = $(".govuk-accordion__section-button").text().trim();
+      expect(heading).toBe(en.toBeAllocated);
+      expect(heading).not.toContain("TO_BE_ALLOCATED");
+    });
+  });
+
+  describe("Case table", () => {
+    it("should render the sortable table with all column headers", () => {
+      const { $ } = renderList([buildCategory({ cases: [] })]);
+
+      const table = $("table[data-module='moj-sortable-table']");
+      expect(table).toHaveLength(1);
+      expect($("th[aria-sort='none']")).toHaveLength(6);
+
+      const headers = tableHeaders($);
+      expect(headers).toContain(en.fixedFor);
+      expect(headers).toContain(en.caseRef);
+      expect(headers).toContain(en.defendant);
+      expect(headers).toContain(en.prosecutingAuthority);
+      expect(headers).toContain(en.linkedCases);
+      expect(headers).toContain(en.listingNotes);
     });
 
-    describe("Welsh rendering", () => {
-      it("should render with Welsh locale", () => {
-        const welshData = {
-          ...baseData,
-          t: crownWarnedListCy
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", welshData);
-        expect(html).toContain("Rhestr Rybuddiol y Goron ar gyfer");
-        expect(html).toContain("Diweddarwyd ddiwethaf");
-        expect(html).toContain("Fersiwn");
-        expect(html).toContain("Chwilio Achosion");
-      });
-
-      it("should render Welsh table headers", () => {
-        const welshData = {
-          ...baseData,
-          t: crownWarnedListCy,
-          groupedCategories: [
-            {
-              category: "Ar gyfer Treial",
-              cases: [
-                {
-                  fixedFor: "15/01/2026",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Gwasanaeth Erlyn y Goron",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
+    it("should place each case field in its correct column", () => {
+      const { $ } = renderList([
+        buildCategory({
+          cases: [
+            buildCase({
+              fixedFor: "15/01/2026",
+              caseNumber: "T20267890",
+              defendants: "John Smith, Jane Doe",
+              prosecutingAuthority: "Crown Prosecution Service",
+              linkedCases: "T20267891, T20267892",
+              listingNotes: "Trial estimate 3 days"
+            })
           ]
-        };
+        })
+      ]);
 
-        const { html } = render(env, "crown-warned-list.njk", welshData);
-        expect(html).toContain("Wedi&#39;i bennu ar gyfer");
-        expect(html).toContain("Cyfeirnod Achos");
-        expect(html).toContain("Enw(au) Diffynyddion");
-        expect(html).toContain("Awdurdod Erlyn");
-        expect(html).toContain("Achosion Cysylltiedig");
-        expect(html).toContain("Nodiadau Rhestru");
-      });
-
-      it("should render Welsh pre-statement when present", () => {
-        const welshData = {
-          ...baseData,
-          t: crownWarnedListCy
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", welshData);
-        expect(html).toContain("Mae&#39;r achosion a grybwyllir isod");
-      });
-
-      it("should render Welsh TO_BE_ALLOCATED label", () => {
-        const welshData = {
-          ...baseData,
-          t: crownWarnedListCy,
-          groupedCategories: [
-            {
-              category: "TO_BE_ALLOCATED",
-              cases: [
-                {
-                  fixedFor: "",
-                  caseNumber: "T20267890",
-                  defendants: "John Smith",
-                  prosecutingAuthority: "Gwasanaeth Erlyn y Goron",
-                  linkedCases: "",
-                  listingNotes: "",
-                  isInCustody: false
-                }
-              ]
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", welshData);
-        expect(html).toContain("I&#39;w ddyrannu");
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.fixedFor]).toBe("15/01/2026");
+      expect(cells[COLUMN.caseRef]).toBe("T20267890");
+      expect(cells[COLUMN.defendant]).toBe("John Smith, Jane Doe");
+      expect(cells[COLUMN.prosecutor]).toBe("Crown Prosecution Service");
+      expect(cells[COLUMN.linkedCases]).toBe("T20267891, T20267892");
+      expect(cells[COLUMN.listingNotes]).toBe("Trial estimate 3 days");
     });
 
-    describe("Accordion component", () => {
-      it("should render accordion container", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain('class="govuk-accordion"');
-        expect(html).toContain('data-module="govuk-accordion"');
-        expect(html).toContain('id="accordion-warned-list"');
-      });
+    it("should render the custody indicator in the defendant column only when in custody", () => {
+      const inCustody = renderList([buildCategory({ cases: [buildCase({ defendants: "John Smith", isInCustody: true })] })]).$;
+      const custodyCell = inCustody("tbody.govuk-table__body tr").first().find("td").eq(COLUMN.defendant);
+      expect(custodyCell.find("span[aria-hidden='true']")).toHaveLength(1);
+      expect(custodyCell.text().trim()).toBe("*John Smith");
 
-      it("should render accordion sections as expanded", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: []
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("govuk-accordion__section--expanded");
-      });
-
-      it("should render accordion section header", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: []
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("govuk-accordion__section-header");
-        expect(html).toContain("govuk-accordion__section-heading");
-        expect(html).toContain("govuk-accordion__section-button");
-      });
-
-      it("should render accordion section content", () => {
-        const data = {
-          ...baseData,
-          groupedCategories: [
-            {
-              category: "For Trial",
-              cases: []
-            }
-          ]
-        };
-
-        const { html } = render(env, "crown-warned-list.njk", data);
-        expect(html).toContain("govuk-accordion__section-content");
-      });
+      const notInCustody = renderList([buildCategory({ cases: [buildCase({ defendants: "John Smith", isInCustody: false })] })]).$;
+      const plainCell = notInCustody("tbody.govuk-table__body tr").first().find("td").eq(COLUMN.defendant);
+      expect(plainCell.find("span[aria-hidden='true']")).toHaveLength(0);
+      expect(plainCell.text().trim()).toBe("John Smith");
     });
 
-    describe("Custom styles", () => {
-      it("should include custom CSS in head block", () => {
-        const { html } = render(env, "crown-warned-list.njk", baseData);
-        expect(html).toContain("govuk-accordion__controls");
-        expect(html).toContain("no-wrap");
-        expect(html).toContain("white-space: nowrap");
-        expect(html).toContain("restriction-list-section");
-        expect(html).toContain("overflow-table");
-      });
+    it("should render a case row when optional fields are empty", () => {
+      const { $ } = renderList([
+        buildCategory({
+          cases: [buildCase({ fixedFor: "", caseNumber: "T20267890", defendants: "", prosecutingAuthority: "", linkedCases: "", listingNotes: "" })]
+        })
+      ]);
+
+      const cells = firstDataRowCells($);
+      expect($("tbody.govuk-table__body tr")).toHaveLength(1);
+      expect(cells[COLUMN.caseRef]).toBe("T20267890");
+      expect(cells[COLUMN.defendant]).toBe("");
+    });
+
+    it("should render one row per case within a category", () => {
+      const { $ } = renderList([
+        buildCategory({
+          cases: [
+            buildCase({ caseNumber: "T20267890", defendants: "John Smith", isInCustody: false }),
+            buildCase({ caseNumber: "T20267891", defendants: "Jane Doe", isInCustody: true }),
+            buildCase({ caseNumber: "T20267892", defendants: "Bob Brown", listingNotes: "Linked to Smith trial" })
+          ]
+        })
+      ]);
+
+      const caseRefs = $("tbody.govuk-table__body tr")
+        .map((_, row) => $(row).find("td").eq(COLUMN.caseRef).text().trim())
+        .get();
+      expect(caseRefs).toEqual(["T20267890", "T20267891", "T20267892"]);
+
+      const defendants = $("tbody.govuk-table__body tr")
+        .map((_, row) => $(row).find("td").eq(COLUMN.defendant).text().trim())
+        .get();
+      expect(defendants).toEqual(["John Smith", "*Jane Doe", "Bob Brown"]);
+    });
+
+    it("should render a table per category across multiple categories", () => {
+      const { $ } = renderList([
+        buildCategory({ category: "For Trial", cases: [buildCase({ caseNumber: "T20267890" })] }),
+        buildCategory({ category: "For Sentence", cases: [buildCase({ caseNumber: "T20267891" })] })
+      ]);
+
+      expect($("table")).toHaveLength(2);
+      const allRefs = $("tbody.govuk-table__body tr")
+        .map((_, row) => $(row).find("td").eq(COLUMN.caseRef).text().trim())
+        .get();
+      expect(allRefs).toEqual(["T20267890", "T20267891"]);
+    });
+  });
+
+  describe("Footer", () => {
+    it("should render the data source", () => {
+      const { $ } = renderList([], { dataSource: "Crown Data Platform" });
+
+      const footer = $("p.govuk-body-s");
+      expect(footer.text()).toContain(en.dataSource);
+      expect(footer.text()).toContain("Crown Data Platform");
+    });
+
+    it("should render a back-to-top link", () => {
+      const { $ } = renderList([]);
+
+      const backToTop = $(".back-to-top a[href='#top']");
+      expect(backToTop.text()).toContain(en.backToTop);
+    });
+  });
+
+  describe("Custom styles", () => {
+    it("should render the head style block with the custom selectors", () => {
+      const { $ } = renderList([]);
+
+      const styles = $("style").text();
+      expect(styles).toContain("restriction-list-section");
+      expect(styles).toContain("overflow-table");
+      expect(styles).toContain("no-wrap");
+    });
+  });
+
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, table headers, labels and pre-statement", () => {
+      const { $ } = renderList(
+        [buildCategory({ category: "TO_BE_ALLOCATED", cases: [buildCase({ prosecutingAuthority: "Gwasanaeth Erlyn y Goron" })] })],
+        {},
+        cy
+      );
+
+      expect($("h1#page-heading").text()).toContain(cy.pageTitle);
+      expect($(".govuk-body").text()).toContain(cy.lastUpdated);
+      expect($(".govuk-body").text()).toContain(cy.preStatementPrefix);
+      expect($("h2").filter((_, el) => $(el).text().includes(cy.searchCases))).toHaveLength(1);
+
+      const headers = tableHeaders($);
+      expect(headers).toContain(cy.fixedFor);
+      expect(headers).toContain(cy.caseRef);
+      expect(headers).toContain(cy.defendant);
+      expect(headers).toContain(cy.prosecutingAuthority);
+      expect(headers).toContain(cy.linkedCases);
+      expect(headers).toContain(cy.listingNotes);
+
+      expect($(".govuk-accordion__section-button").text().trim()).toBe(cy.toBeAllocated);
+      expect($(".back-to-top a").text()).toContain(cy.backToTop);
     });
   });
 });

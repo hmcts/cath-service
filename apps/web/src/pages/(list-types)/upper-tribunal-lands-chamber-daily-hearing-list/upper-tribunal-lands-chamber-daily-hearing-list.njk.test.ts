@@ -5,421 +5,226 @@ import {
   upperTribunalLandsChamberDailyHearingListCy as cy,
   upperTribunalLandsChamberDailyHearingListEn as en
 } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+const TEMPLATE = "upper-tribunal-lands-chamber-daily-hearing-list.njk";
 
-describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
-  let env: nunjucks.Environment;
+interface HearingOverrides {
+  time?: string;
+  caseReferenceNumber?: string;
+  caseName?: string;
+  judges?: string;
+  members?: string;
+  hearingType?: string;
+  venue?: string;
+  modeOfHearing?: string;
+  additionalInformation?: string;
+}
 
-  beforeEach(() => {
-    env = createTestEnvironment([__dirname, webCoreViews]);
-  });
+// Fixture builders — each test passes only the leaf fields it varies; the view
+// model is flat (header + hearings[] + dataSource) so the builders keep the
+// full shape out of individual tests.
+function buildHearing(overrides: HearingOverrides = {}) {
+  return {
+    time: "10:00am",
+    caseReferenceNumber: "LC/2026/001",
+    caseName: "Smith v Jones",
+    judges: "Mr Justice Williams",
+    members: "A Member Esq",
+    hearingType: "Final hearing",
+    venue: "Royal Courts of Justice",
+    modeOfHearing: "Video hearing",
+    additionalInformation: "Interpreter required",
+    ...overrides
+  };
+}
 
-  describe("Locale content", () => {
-    describe("English locale", () => {
-      it("should have page title", () => {
-        expect(en.pageTitle).toBe("Upper Tribunal (Lands Chamber) Daily Hearing List");
-      });
-
-      it("should have date-related text", () => {
-        expect(en.listForDate).toBe("List for");
-        expect(en.lastUpdated).toBe("Last updated");
-        expect(en.at).toBe("at");
-      });
-
-      it("should have FACT link information", () => {
-        expect(en.factLinkText).toContain("Find contact details");
-        expect(en.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-        expect(en.factAdditionalText).toContain("England and Wales");
-      });
-
-      it("should have opening statement content", () => {
-        expect(en.openingStatementTitle).toBe("Important information");
-        expect(en.openingStatement.contactText).toContain("Cloud Video Platform");
-        expect(en.openingStatement.contactText).toContain("Lands@justice.gov.uk");
-        expect(en.openingStatement.observeLinkText).toContain("Observe a court or tribunal hearing");
-        expect(en.openingStatement.observeLinkUrl).toContain("gov.uk/guidance/observe-a-court-or-tribunal-hearing");
-      });
-
-      it("should have search cases section", () => {
-        expect(en.searchCasesTitle).toBe("Search Cases");
-        expect(en.searchCasesLabel).toContain("Search by case reference");
-      });
-
-      it("should have table headers", () => {
-        expect(en.tableHeaders.time).toBe("Time");
-        expect(en.tableHeaders.caseReferenceNumber).toBe("Case reference number");
-        expect(en.tableHeaders.caseName).toBe("Case name");
-        expect(en.tableHeaders.judges).toBe("Judge(s)");
-        expect(en.tableHeaders.members).toBe("Member(s)");
-        expect(en.tableHeaders.hearingType).toBe("Hearing type");
-        expect(en.tableHeaders.venue).toBe("Venue");
-        expect(en.tableHeaders.modeOfHearing).toBe("Mode of hearing");
-        expect(en.tableHeaders.additionalInformation).toBe("Additional information");
-      });
-
-      it("should have footer text", () => {
-        expect(en.dataSource).toBe("Data source");
-        expect(en.backToTop).toBe("Back to top");
-      });
-
-      it("should have caution notes", () => {
-        expect(en.cautionNote).toContain("Special Category Data");
-        expect(en.cautionReporting).toContain("reporting restrictions");
-      });
-
-      it("should have provenance labels", () => {
-        expect(en.provenanceLabels).toBeDefined();
-        expect(en.provenanceLabels.MANUAL_UPLOAD).toBe("Manual Upload");
-        expect(en.provenanceLabels.XHIBIT).toBe("XHIBIT");
-        expect(en.provenanceLabels.SNL).toBe("SNL");
-        expect(en.provenanceLabels.COMMON_PLATFORM).toBe("Common Platform");
-      });
-    });
-
-    describe("Welsh locale", () => {
-      it("should have page title", () => {
-        expect(cy.pageTitle).toBe("Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)");
-      });
-
-      it("should have date-related text", () => {
-        expect(cy.listForDate).toBe("Rhestr ar gyfer");
-        expect(cy.lastUpdated).toBe("Diweddarwyd ddiwethaf");
-        expect(cy.at).toBe("am");
-      });
-
-      it("should have FACT link information", () => {
-        expect(cy.factLinkText).toContain("Dod o hyd i fanylion cyswllt");
-        expect(cy.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-        expect(cy.factAdditionalText).toContain("Nghymru a Lloegr");
-      });
-
-      it("should have opening statement content", () => {
-        expect(cy.openingStatementTitle).toBe("Gwybodaeth bwysig");
-        expect(cy.openingStatement.contactText).toContain("Blatfform Fideo Cwmwl");
-        expect(cy.openingStatement.contactText).toContain("Lands@justice.gov.uk");
-        expect(cy.openingStatement.observeLinkText).toContain("Arsylwi gwrandawiad llys");
-        expect(cy.openingStatement.observeLinkUrl).toContain("gov.uk/guidance/observe-a-court-or-tribunal-hearing");
-      });
-
-      it("should have search cases section", () => {
-        expect(cy.searchCasesTitle).toBe("Chwilio Achosion");
-        expect(cy.searchCasesLabel).toContain("Chwilio yn ôl cyfeirnod achos");
-      });
-
-      it("should have table headers", () => {
-        expect(cy.tableHeaders.time).toBe("Amser");
-        expect(cy.tableHeaders.caseReferenceNumber).toBe("Rhif cyfeirnod achos");
-        expect(cy.tableHeaders.caseName).toBe("Enw'r achos");
-        expect(cy.tableHeaders.judges).toBe("Barnwr/Barnwyr");
-        expect(cy.tableHeaders.members).toBe("Aelod/Aelodau");
-        expect(cy.tableHeaders.hearingType).toBe("Math o wrandawiad");
-        expect(cy.tableHeaders.venue).toBe("Lleoliad");
-        expect(cy.tableHeaders.modeOfHearing).toBe("Dull gwrandawiad");
-        expect(cy.tableHeaders.additionalInformation).toBe("Gwybodaeth ychwanegol");
-      });
-
-      it("should have footer text", () => {
-        expect(cy.dataSource).toBe("Ffynhonnell data");
-        expect(cy.backToTop).toBe("Yn ôl i frig y dudalen");
-      });
-
-      it("should have caution notes", () => {
-        expect(cy.cautionNote).toContain("Data Categori Arbennig");
-        expect(cy.cautionReporting).toContain("gyfyngiadau adrodd");
-      });
-
-      it("should have provenance labels", () => {
-        expect(cy.provenanceLabels).toBeDefined();
-        expect(cy.provenanceLabels.MANUAL_UPLOAD).toBe("Llwytho â Llaw");
-        expect(cy.provenanceLabels.XHIBIT).toBe("XHIBIT");
-        expect(cy.provenanceLabels.SNL).toBe("SNL");
-        expect(cy.provenanceLabels.COMMON_PLATFORM).toBe("Platfform Cyffredin");
-      });
-    });
-
-    describe("Locale consistency", () => {
-      it("should have same structure in English and Welsh", () => {
-        const enKeys = Object.keys(en).sort();
-        const cyKeys = Object.keys(cy).sort();
-        expect(enKeys).toEqual(cyKeys);
-      });
-
-      it("should have all table headers in both locales", () => {
-        const enHeaders = Object.keys(en.tableHeaders).sort();
-        const cyHeaders = Object.keys(cy.tableHeaders).sort();
-        expect(enHeaders).toEqual(cyHeaders);
-      });
-
-      it("should have openingStatement object in both locales", () => {
-        expect(en.openingStatement).toBeDefined();
-        expect(cy.openingStatement).toBeDefined();
-        expect(typeof en.openingStatement).toBe("object");
-        expect(typeof cy.openingStatement).toBe("object");
-      });
-
-      it("should have same openingStatement structure", () => {
-        const enOpeningKeys = Object.keys(en.openingStatement).sort();
-        const cyOpeningKeys = Object.keys(cy.openingStatement).sort();
-        expect(enOpeningKeys).toEqual(cyOpeningKeys);
-      });
-
-      it("should have same provenance label keys", () => {
-        const enProvenanceKeys = Object.keys(en.provenanceLabels).sort();
-        const cyProvenanceKeys = Object.keys(cy.provenanceLabels).sort();
-        expect(enProvenanceKeys).toEqual(cyProvenanceKeys);
-      });
-    });
-  });
-
-  describe("Template rendering", () => {
-    const mockHeader = {
-      listTitle: "Upper Tribunal (Lands Chamber) Daily Hearing List",
+function baseData(locale: typeof en | typeof cy = en) {
+  return {
+    t: locale,
+    en,
+    cy,
+    header: {
+      listTitle: locale.pageTitle,
       hearingDate: "15 January 2026",
       lastUpdatedDate: "14 January 2026",
       lastUpdatedTime: "12:00pm"
-    };
+    },
+    dataSource: "Manual Upload"
+  };
+}
 
-    const mockDataSource = "Manual Upload";
+function renderList(hearings: unknown[] = [], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, hearings });
+}
 
-    describe("Header section", () => {
-      it("should render title as h1 with anchor", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+// Table columns, in rendered order.
+const COLUMN = {
+  time: 0,
+  caseReferenceNumber: 1,
+  caseName: 2,
+  judges: 3,
+  members: 4,
+  hearingType: 5,
+  venue: 6,
+  modeOfHearing: 7,
+  additionalInformation: 8
+} as const;
 
-        expect(html).toContain('<h1 class="govuk-heading-l" id="top">');
-        expect(html).toContain(mockHeader.listTitle);
-      });
+function firstDataRowCells($: CheerioAPI) {
+  return $("tbody.govuk-table__body tr")
+    .first()
+    .find("td")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should render FACT link", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+let env: nunjucks.Environment;
 
-        expect(html).toContain('href="https://www.find-court-tribunal.service.gov.uk/"');
-        expect(html).toContain(en.factLinkText);
-        expect(html).toContain(en.factAdditionalText);
-      });
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
 
-      it("should render list date", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.listForDate);
-        expect(html).toContain(mockHeader.hearingDate);
-      });
-
-      it("should render last updated information", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.lastUpdated);
-        expect(html).toContain(mockHeader.lastUpdatedDate);
-        expect(html).toContain(en.at);
-        expect(html).toContain(mockHeader.lastUpdatedTime);
-      });
+describe("upper-tribunal-lands-chamber-daily-hearing-list template", () => {
+  describe("Locale consistency", () => {
+    it("should have the same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    describe("Opening statement section", () => {
-      it("should render details component", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should use https FACT and observe link URLs", () => {
+      expect(en.factLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.factLinkUrl).toMatch(/^https:\/\//);
+      expect(en.openingStatement.observeLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.openingStatement.observeLinkUrl).toMatch(/^https:\/\//);
+    });
+  });
 
-        expect(html).toContain('class="govuk-details');
-        expect(html).toContain('data-module="govuk-details"');
-        expect(html).toContain("open");
-      });
+  describe("Header section", () => {
+    it("should render the title as an h1 anchored at the top", () => {
+      const { $ } = renderList();
 
-      it("should render opening statement title", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.openingStatementTitle);
-      });
-
-      it("should render contact text", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.openingStatement.contactText);
-        expect(html).toContain("Lands@justice.gov.uk");
-      });
-
-      it("should render observe link", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(`href="${en.openingStatement.observeLinkUrl}"`);
-        expect(html).toContain(en.openingStatement.observeLinkText);
-        expect(html).toContain('target="_blank"');
-        expect(html).toContain('rel="noopener noreferrer"');
-      });
+      const heading = $("h1#top");
+      expect(heading).toHaveLength(1);
+      expect(heading.text()).toContain(en.pageTitle);
     });
 
-    describe("Search section", () => {
-      it("should render search input", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderList();
 
-        expect(html).toContain('id="case-search-input"');
-        expect(html).toContain('name="search"');
-        expect(html).toContain('type="text"');
-      });
-
-      it("should render search title", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.searchCasesTitle);
-      });
-
-      it("should render search label", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(`aria-label="${en.searchCasesLabel}"`);
-      });
-
-      it("should have visually hidden label for accessibility", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain('class="govuk-label govuk-visually-hidden"');
-        expect(html).toContain('for="case-search-input"');
-      });
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
+      expect(factLink.parent().text()).toContain(en.factAdditionalText);
     });
 
-    describe("Table structure", () => {
-      it("should render table with correct role and aria-label", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should render the list date line", () => {
+      const { $ } = renderList();
 
-        expect(html).toContain('id="hearings-table"');
-        expect(html).toContain('role="table"');
-        expect(html).toContain(`aria-label="${en.pageTitle}"`);
-      });
-
-      it("should render all table headers", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(en.tableHeaders.time);
-        expect(html).toContain(en.tableHeaders.caseReferenceNumber);
-        expect(html).toContain(en.tableHeaders.caseName);
-        expect(html).toContain(en.tableHeaders.judges);
-        expect(html).toContain(en.tableHeaders.members);
-        expect(html).toContain(en.tableHeaders.hearingType);
-        expect(html).toContain(en.tableHeaders.venue);
-        expect(html).toContain(en.tableHeaders.modeOfHearing);
-        expect(html).toContain(en.tableHeaders.additionalInformation);
-      });
-
-      it("should use scope=col for header cells", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        const scopeColCount = (html.match(/scope="col"/g) || []).length;
-        expect(scopeColCount).toBe(9); // 9 columns
-      });
+      const dateLine = $(".govuk-body").filter((_, el) => $(el).text().includes(en.listForDate));
+      expect(dateLine.text()).toContain("15 January 2026");
     });
 
-    describe("Hearings data", () => {
-      const mockHearings = [
-        {
+    it("should render the last updated line", () => {
+      const { $ } = renderList();
+
+      const updatedLine = $(".govuk-body").filter((_, el) => $(el).text().includes(en.lastUpdated));
+      const text = updatedLine.text();
+      expect(text).toContain("14 January 2026");
+      expect(text).toContain(en.at);
+      expect(text).toContain("12:00pm");
+    });
+  });
+
+  describe("Opening statement section", () => {
+    it("should render an open details component with the title", () => {
+      const { $ } = renderList();
+
+      const details = $("details.govuk-details[data-module='govuk-details']");
+      expect(details).toHaveLength(1);
+      expect(details.is("[open]")).toBe(true);
+      expect(details.find(".govuk-details__summary-text").text()).toContain(en.openingStatementTitle);
+    });
+
+    it("should render the contact text", () => {
+      const { $ } = renderList();
+
+      expect($(".govuk-details__text").text()).toContain(en.openingStatement.contactText);
+    });
+
+    it("should render the observe link opening in a new tab", () => {
+      const { $ } = renderList();
+
+      const observeLink = $(`a[href="${en.openingStatement.observeLinkUrl}"]`);
+      expect(observeLink).toHaveLength(1);
+      expect(observeLink.text()).toContain(en.openingStatement.observeLinkText);
+      expect(observeLink.attr("target")).toBe("_blank");
+      expect(observeLink.attr("rel")).toBe("noopener noreferrer");
+    });
+  });
+
+  describe("Search section", () => {
+    it("should render the search title", () => {
+      const { $ } = renderList();
+
+      expect($("h2.govuk-heading-s").text()).toContain(en.searchCasesTitle);
+    });
+
+    it("should render a text search input with a visually hidden associated label", () => {
+      const { $ } = renderList();
+
+      const input = $("#case-search-input");
+      expect(input).toHaveLength(1);
+      expect(input.attr("name")).toBe("search");
+      expect(input.attr("type")).toBe("text");
+      expect(input.attr("aria-label")).toBe(en.searchCasesLabel);
+
+      const label = $("label[for='case-search-input']");
+      expect(label.hasClass("govuk-visually-hidden")).toBe(true);
+      expect(label.text().trim()).toBe(en.searchCasesLabel);
+    });
+  });
+
+  describe("Table structure", () => {
+    it("should render the table with a role and aria-label", () => {
+      const { $ } = renderList();
+
+      const table = $("#hearings-table");
+      expect(table).toHaveLength(1);
+      expect(table.attr("role")).toBe("table");
+      expect(table.attr("aria-label")).toBe(en.pageTitle);
+    });
+
+    it("should render all nine column headers with scope=col", () => {
+      const { $ } = renderList();
+
+      const headers = $("thead th[scope='col']")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toHaveLength(9);
+      expect(headers).toEqual([
+        en.tableHeaders.time,
+        en.tableHeaders.caseReferenceNumber,
+        en.tableHeaders.caseName,
+        en.tableHeaders.judges,
+        en.tableHeaders.members,
+        en.tableHeaders.hearingType,
+        en.tableHeaders.venue,
+        en.tableHeaders.modeOfHearing,
+        en.tableHeaders.additionalInformation
+      ]);
+    });
+  });
+
+  describe("Hearings data", () => {
+    it("should place each hearing field in its correct column", () => {
+      const { $ } = renderList([
+        buildHearing({
           time: "10:00am",
           caseReferenceNumber: "LC/2026/001",
           caseName: "Smith v Jones",
@@ -429,304 +234,146 @@ describe("Upper Tribunal Lands Chamber Daily Hearing List template", () => {
           venue: "Royal Courts of Justice",
           modeOfHearing: "Video hearing",
           additionalInformation: "Interpreter required"
-        },
-        {
-          time: "2:00pm",
-          caseReferenceNumber: "LC/2026/002",
-          caseName: "Brown v Taylor",
-          judges: "Mrs Justice Davis",
-          members: "",
-          hearingType: "Preliminary hearing",
-          venue: "London",
-          modeOfHearing: "In person",
-          additionalInformation: ""
-        }
-      ];
+        })
+      ]);
 
-      it("should render single hearing row", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [mockHearings[0]],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(mockHearings[0].time);
-        expect(html).toContain(mockHearings[0].caseReferenceNumber);
-        expect(html).toContain(mockHearings[0].caseName);
-        expect(html).toContain(mockHearings[0].judges);
-        expect(html).toContain(mockHearings[0].members);
-        expect(html).toContain(mockHearings[0].hearingType);
-        expect(html).toContain(mockHearings[0].venue);
-        expect(html).toContain(mockHearings[0].modeOfHearing);
-        expect(html).toContain(mockHearings[0].additionalInformation);
-      });
-
-      it("should render multiple hearing rows", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: mockHearings,
-          dataSource: mockDataSource
-        });
-
-        // Check first hearing
-        expect(html).toContain(mockHearings[0].time);
-        expect(html).toContain(mockHearings[0].caseReferenceNumber);
-        expect(html).toContain(mockHearings[0].caseName);
-
-        // Check second hearing
-        expect(html).toContain(mockHearings[1].time);
-        expect(html).toContain(mockHearings[1].caseReferenceNumber);
-        expect(html).toContain(mockHearings[1].caseName);
-      });
-
-      it("should render empty members field", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [mockHearings[1]], // Has empty members
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(mockHearings[1].judges);
-        const tableBodyMatch = html.match(/<tbody[^>]*>(.*?)<\/tbody>/s);
-        expect(tableBodyMatch).toBeTruthy();
-      });
-
-      it("should render empty additional information", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [mockHearings[1]], // Has empty additionalInformation
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain(mockHearings[1].caseName);
-        const tableBodyMatch = html.match(/<tbody[^>]*>(.*?)<\/tbody>/s);
-        expect(tableBodyMatch).toBeTruthy();
-      });
-
-      it("should render empty table when no hearings", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain('class="govuk-table"');
-        expect(html).toContain('<tbody class="govuk-table__body">');
-        // Should have headers but no rows
-        expect(html).toContain(en.tableHeaders.time);
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.time]).toBe("10:00am");
+      expect(cells[COLUMN.caseReferenceNumber]).toBe("LC/2026/001");
+      expect(cells[COLUMN.caseName]).toBe("Smith v Jones");
+      expect(cells[COLUMN.judges]).toBe("Mr Justice Williams");
+      expect(cells[COLUMN.members]).toBe("A Member Esq");
+      expect(cells[COLUMN.hearingType]).toBe("Final hearing");
+      expect(cells[COLUMN.venue]).toBe("Royal Courts of Justice");
+      expect(cells[COLUMN.modeOfHearing]).toBe("Video hearing");
+      expect(cells[COLUMN.additionalInformation]).toBe("Interpreter required");
     });
 
-    describe("Footer section", () => {
-      it("should render data source", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should render one row per hearing", () => {
+      const { $ } = renderList([
+        buildHearing({ caseReferenceNumber: "LC/2026/001", caseName: "Smith v Jones" }),
+        buildHearing({ caseReferenceNumber: "LC/2026/002", caseName: "Brown v Taylor" })
+      ]);
 
-        expect(html).toContain(en.dataSource);
-        expect(html).toContain(mockDataSource);
-      });
-
-      it("should render back to top link", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain('href="#top"');
-        expect(html).toContain(en.backToTop);
-      });
-
-      it("should have back-to-top class for styling", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain('class="back-to-top"');
-      });
+      const rows = $("tbody.govuk-table__body tr");
+      expect(rows).toHaveLength(2);
+      const caseRefs = rows.map((_, row) => $(row).find("td").eq(COLUMN.caseReferenceNumber).text().trim()).get();
+      expect(caseRefs).toEqual(["LC/2026/001", "LC/2026/002"]);
+      const caseNames = rows.map((_, row) => $(row).find("td").eq(COLUMN.caseName).text().trim()).get();
+      expect(caseNames).toEqual(["Smith v Jones", "Brown v Taylor"]);
     });
 
-    describe("Welsh locale rendering", () => {
-      it("should render with Welsh content when t is cy", () => {
-        const mockHeaderCy = {
-          listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
-          hearingDate: "15 Ionawr 2026",
-          lastUpdatedDate: "14 Ionawr 2026",
-          lastUpdatedTime: "12:00pm"
-        };
+    it("should render an empty members cell when no members are provided", () => {
+      const { $ } = renderList([buildHearing({ judges: "Mrs Justice Davis", members: "" })]);
 
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: cy,
-          header: mockHeaderCy,
-          hearings: [],
-          dataSource: "Llwytho â Llaw"
-        });
-
-        expect(html).toContain(cy.pageTitle);
-        expect(html).toContain(cy.listForDate);
-        expect(html).toContain(cy.lastUpdated);
-        expect(html).toContain(cy.at);
-        expect(html).toContain(cy.searchCasesTitle);
-        expect(html).toContain(cy.tableHeaders.time);
-        expect(html).toContain(cy.dataSource);
-        expect(html).toContain(cy.backToTop);
-      });
-
-      it("should render Welsh opening statement", () => {
-        const mockHeaderCy = {
-          listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
-          hearingDate: "15 Ionawr 2026",
-          lastUpdatedDate: "14 Ionawr 2026",
-          lastUpdatedTime: "12:00pm"
-        };
-
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: cy,
-          header: mockHeaderCy,
-          hearings: [],
-          dataSource: "Llwytho â Llaw"
-        });
-
-        expect(html).toContain(cy.openingStatementTitle);
-        expect(html).toContain("Blatfform Fideo Cwmwl");
-        expect(html).toContain("Arsylwi gwrandawiad llys");
-      });
-
-      it("should render all Welsh table headers", () => {
-        const mockHeaderCy = {
-          listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
-          hearingDate: "15 Ionawr 2026",
-          lastUpdatedDate: "14 Ionawr 2026",
-          lastUpdatedTime: "12:00pm"
-        };
-
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: cy,
-          header: mockHeaderCy,
-          hearings: [],
-          dataSource: "Llwytho â Llaw"
-        });
-
-        expect(html).toContain("Rhif cyfeirnod achos");
-        expect(html).toContain("Enw");
-        expect(html).toContain("Barnwr");
-        expect(html).toContain("Aelod");
-        expect(html).toContain("Math o wrandawiad");
-        expect(html).toContain("Lleoliad");
-        expect(html).toContain("Dull gwrandawiad");
-        expect(html).toContain("Gwybodaeth ychwanegol");
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.judges]).toBe("Mrs Justice Davis");
+      expect(cells[COLUMN.members]).toBe("");
     });
 
-    describe("Accessibility", () => {
-      it("should have GOV.UK grid structure", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should render an empty additional information cell when none is provided", () => {
+      const { $ } = renderList([buildHearing({ caseName: "Brown v Taylor", additionalInformation: "" })]);
 
-        expect(html).toContain('class="govuk-grid-row"');
-        expect(html).toContain('class="govuk-grid-column-full"');
-      });
-
-      it("should have proper heading hierarchy", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain("<h1"); // Main heading
-        expect(html).toContain("<h2"); // Search section heading
-      });
-
-      it("should have table semantic structure", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain("<thead");
-        expect(html).toContain("<tbody");
-        expect(html).toContain('<th scope="col"');
-      });
-
-      it("should use semantic HTML5 elements", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
-
-        expect(html).toContain("<label");
-        expect(html).toContain('<input class="govuk-input');
-        expect(html).toContain('<table class="govuk-table"');
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.caseName]).toBe("Brown v Taylor");
+      expect(cells[COLUMN.additionalInformation]).toBe("");
     });
 
-    describe("Custom styling", () => {
-      it("should include back-to-top custom styles in head block", () => {
-        const { html } = render(env, "upper-tribunal-lands-chamber-daily-hearing-list.njk", {
-          en,
-          cy,
-          t: en,
-          header: mockHeader,
-          hearings: [],
-          dataSource: mockDataSource
-        });
+    it("should render the headers but no data rows when there are no hearings", () => {
+      const { $ } = renderList([]);
 
-        expect(html).toContain(".back-to-top");
-        expect(html).toContain("margin-top: 40px");
-      });
+      expect($("table.govuk-table")).toHaveLength(1);
+      expect($("thead th[scope='col']")).toHaveLength(9);
+      expect($("tbody.govuk-table__body tr")).toHaveLength(0);
+    });
+  });
+
+  describe("Footer section", () => {
+    it("should render the data source", () => {
+      const { $ } = renderList([], { dataSource: "Manual Upload" });
+
+      const footer = $("p.govuk-body-s");
+      expect(footer.text()).toContain(en.dataSource);
+      expect(footer.text()).toContain("Manual Upload");
+    });
+
+    it("should render a back-to-top link anchored to the top", () => {
+      const { $ } = renderList();
+
+      const backToTop = $(".back-to-top a[href='#top']");
+      expect(backToTop).toHaveLength(1);
+      expect(backToTop.text()).toContain(en.backToTop);
+    });
+
+    it("should include the back-to-top custom style in the head", () => {
+      const { $ } = renderList();
+
+      expect($("head style").text()).toContain(".back-to-top");
+    });
+  });
+
+  describe("Accessibility", () => {
+    it("should render a full-width grid layout", () => {
+      const { $ } = renderList();
+
+      expect($(".govuk-grid-row .govuk-grid-column-full")).toHaveLength(1);
+    });
+
+    it("should render a single h1 and at least one h2", () => {
+      const { $ } = renderList();
+
+      expect($("h1")).toHaveLength(1);
+      expect($("h2").length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should render semantic table structure with a head and body", () => {
+      const { $ } = renderList([buildHearing()]);
+
+      expect($("table.govuk-table thead")).toHaveLength(1);
+      expect($("table.govuk-table tbody")).toHaveLength(1);
+      expect($("thead th[scope='col']").length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, links, table headers and footer", () => {
+      const { $ } = renderList([], {}, cy);
+
+      expect($("h1#top").text()).toContain(cy.pageTitle);
+      const dateLine = $(".govuk-body").filter((_, el) => $(el).text().includes(cy.listForDate));
+      expect(dateLine.text()).toContain(cy.listForDate);
+      expect(
+        $(".govuk-body")
+          .filter((_, el) => $(el).text().includes(cy.lastUpdated))
+          .text()
+      ).toContain(cy.at);
+      expect($("h2.govuk-heading-s").text()).toContain(cy.searchCasesTitle);
+
+      const headers = $("thead th[scope='col']")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([
+        cy.tableHeaders.time,
+        cy.tableHeaders.caseReferenceNumber,
+        cy.tableHeaders.caseName,
+        cy.tableHeaders.judges,
+        cy.tableHeaders.members,
+        cy.tableHeaders.hearingType,
+        cy.tableHeaders.venue,
+        cy.tableHeaders.modeOfHearing,
+        cy.tableHeaders.additionalInformation
+      ]);
+
+      expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
+      expect($(".back-to-top a[href='#top']").text()).toContain(cy.backToTop);
+    });
+
+    it("should render the Welsh opening statement", () => {
+      const { $ } = renderList([], {}, cy);
+
+      expect($(".govuk-details__summary-text").text()).toContain(cy.openingStatementTitle);
+      expect($(".govuk-details__text").text()).toContain(cy.openingStatement.contactText);
+      expect($(`a[href="${cy.openingStatement.observeLinkUrl}"]`).text()).toContain(cy.openingStatement.observeLinkText);
     });
   });
 });

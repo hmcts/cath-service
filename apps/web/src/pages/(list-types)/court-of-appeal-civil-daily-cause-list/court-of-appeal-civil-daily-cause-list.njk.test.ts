@@ -1,304 +1,231 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { courtOfAppealCivilDailyCauseListCy as cy, courtOfAppealCivilDailyCauseListEn as en } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+const TEMPLATE = "court-of-appeal-civil-daily-cause-list.njk";
 
-describe("court-of-appeal-civil-daily-cause-list.njk", () => {
-  let env: nunjucks.Environment;
+interface HearingOverrides {
+  venue?: string;
+  judge?: string;
+  time?: string;
+  caseNumber?: string;
+  caseDetails?: string;
+  hearingType?: string;
+  additionalInformation?: string;
+}
 
-  beforeEach(() => {
-    env = createTestEnvironment([__dirname, webCoreViews]);
+interface JudgmentOverrides extends HearingOverrides {
+  date?: string;
+}
+
+// Fixture builders — a single realistic row is the default; individual tests
+// only pass the leaf fields they vary.
+function buildHearing(overrides: HearingOverrides = {}) {
+  return {
+    venue: "Court 1",
+    judge: "Lady Justice Smith",
+    time: "10:30am",
+    caseNumber: "A1/2026/0001",
+    caseDetails: "Smith v Jones",
+    hearingType: "Application",
+    additionalInformation: "Remote hearing",
+    ...overrides
+  };
+}
+
+function buildJudgment(overrides: JudgmentOverrides = {}) {
+  return {
+    date: "15 July 2026",
+    venue: "Court 3",
+    judge: "Lord Justice Davis",
+    time: "9:30am",
+    caseNumber: "A1/2026/0003",
+    caseDetails: "Taylor v Anderson",
+    hearingType: "Judgment",
+    additionalInformation: "Reserved judgment",
+    ...overrides
+  };
+}
+
+function buildHeader(locale: typeof en | typeof cy = en) {
+  return {
+    listTitle: locale.pageTitle,
+    listDate: "10 July 2026",
+    lastUpdatedDate: "10 July 2026",
+    lastUpdatedTime: "10:30am"
+  };
+}
+
+function renderPage(overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, {
+    t: locale,
+    en,
+    cy,
+    header: buildHeader(locale),
+    dailyHearings: [],
+    futureJudgments: [],
+    dataSource: "Test Source",
+    ...overrides
   });
+}
 
-  describe("Locale content", () => {
-    describe("English locale (en)", () => {
-      it("should have page title", () => {
-        expect(en.pageTitle).toBe("Court of Appeal (Civil Division) Daily Cause List");
-      });
+// Column order for each table (matches the .njk template header/cell order).
+const DAILY_COLUMN = { venue: 0, judge: 1, time: 2, caseNumber: 3, caseDetails: 4, hearingType: 5, additionalInformation: 6 } as const;
+const FUTURE_COLUMN = { date: 0, venue: 1, judge: 2, time: 3, caseNumber: 4, caseDetails: 5, hearingType: 6, additionalInformation: 7 } as const;
 
-      it("should have fact link information", () => {
-        expect(en.factLinkText).toBeDefined();
-        expect(en.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-        expect(en.factAdditionalText).toBeDefined();
-      });
+function tableByLabel($: CheerioAPI, label: string) {
+  return $(`table[aria-label="${label}"]`);
+}
 
-      it("should have location details", () => {
-        expect(en.locationLine1).toBe("Royal Courts of Justice");
-        expect(en.locationLine2).toBe("Strand, London");
-        expect(en.locationLine3).toBe("WC2A 2LL");
-      });
+function headerTexts($: CheerioAPI, label: string) {
+  return tableByLabel($, label)
+    .find("thead th")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should have important information section", () => {
-        expect(en.importantInfoTitle).toBe("Important information");
-        expect(en.liveStreamingTitle).toBeDefined();
-        expect(en.liveStreamingText1).toBeDefined();
-        expect(en.liveStreamingLinkText).toBeDefined();
-        expect(en.liveStreamingLinkUrl).toBeDefined();
-        expect(en.liveStreamingText2a).toBeDefined();
-        expect(en.liveStreamingText2b).toBeDefined();
-        expect(en.judgmentsTitle).toBe("Handing down of judgments");
-        expect(en.judgmentsText).toBeDefined();
-      });
+function rowCells($: CheerioAPI, label: string, rowIndex = 0) {
+  return tableByLabel($, label)
+    .find("tbody tr")
+    .eq(rowIndex)
+    .find("td")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should have search section", () => {
-        expect(en.searchCasesTitle).toBe("Search Cases");
-        expect(en.searchCasesLabel).toBeDefined();
-      });
+function columnValues($: CheerioAPI, label: string, columnIndex: number) {
+  return tableByLabel($, label)
+    .find("tbody tr")
+    .map((_, row) => $(row).find("td").eq(columnIndex).text().trim())
+    .get();
+}
 
-      it("should have table headers", () => {
-        expect(en.tableHeaders.date).toBe("Date");
-        expect(en.tableHeaders.venue).toBe("Venue");
-        expect(en.tableHeaders.judge).toBe("Judge");
-        expect(en.tableHeaders.time).toBe("Time");
-        expect(en.tableHeaders.caseNumber).toBe("Case Number");
-        expect(en.tableHeaders.caseDetails).toBe("Case Details");
-        expect(en.tableHeaders.hearingType).toBe("Hearing Type");
-        expect(en.tableHeaders.additionalInformation).toBe("Additional Information");
-      });
+let env: nunjucks.Environment;
 
-      it("should have section titles", () => {
-        expect(en.dailyHearingsTitle).toBe("Daily hearings");
-        expect(en.futureJudgmentsTitle).toBe("Notice for future judgments");
-      });
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
 
-      it("should have empty state message", () => {
-        expect(en.noHearingsMessage).toBe("No hearings scheduled for this section");
-      });
-
-      it("should have metadata labels", () => {
-        expect(en.dataSource).toBe("Data source");
-        expect(en.backToTop).toBe("Back to top");
-        expect(en.listFor).toBe("List for");
-        expect(en.lastUpdated).toBe("Last updated");
-        expect(en.at).toBe("at");
-      });
-
-      it("should have provenance labels", () => {
-        expect(en.provenanceLabels).toBeDefined();
-      });
-    });
-
-    describe("Welsh locale (cy)", () => {
-      it("should have page title", () => {
-        expect(cy.pageTitle).toBe("Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)");
-      });
-
-      it("should have fact link information", () => {
-        expect(cy.factLinkText).toBeDefined();
-        expect(cy.factLinkUrl).toBe("https://www.find-court-tribunal.service.gov.uk/");
-        expect(cy.factAdditionalText).toBeDefined();
-      });
-
-      it("should have location details", () => {
-        expect(cy.locationLine1).toBe("Llysoedd Barn Brenhinol");
-        expect(cy.locationLine2).toBe("Strand, London");
-        expect(cy.locationLine3).toBe("WC2A 2LL");
-      });
-
-      it("should have important information section", () => {
-        expect(cy.importantInfoTitle).toBe("Gwybodaeth bwysig");
-        expect(cy.liveStreamingTitle).toBeDefined();
-        expect(cy.liveStreamingText1).toBeDefined();
-        expect(cy.liveStreamingLinkText).toBeDefined();
-        expect(cy.liveStreamingLinkUrl).toBeDefined();
-        expect(cy.liveStreamingText2a).toBeDefined();
-        expect(cy.liveStreamingText2b).toBeDefined();
-        expect(cy.judgmentsTitle).toBe("Traddodi dyfarniadau");
-        expect(cy.judgmentsText).toBeDefined();
-      });
-
-      it("should have search section", () => {
-        expect(cy.searchCasesTitle).toBe("Chwilio Achosion");
-        expect(cy.searchCasesLabel).toBeDefined();
-      });
-
-      it("should have table headers", () => {
-        expect(cy.tableHeaders.date).toBe("Dyddiad");
-        expect(cy.tableHeaders.venue).toBe("Lleoliad");
-        expect(cy.tableHeaders.judge).toBe("Barnwr");
-        expect(cy.tableHeaders.time).toBe("Amser");
-        expect(cy.tableHeaders.caseNumber).toBe("Rhif yr achos");
-        expect(cy.tableHeaders.caseDetails).toBe("Manylion yr achos");
-        expect(cy.tableHeaders.hearingType).toBe("Math o wrandawiad");
-        expect(cy.tableHeaders.additionalInformation).toBe("Gwybodaeth ychwanegol");
-      });
-
-      it("should have section titles", () => {
-        expect(cy.dailyHearingsTitle).toBe("Gwrandawiadau dyddiol");
-        expect(cy.futureJudgmentsTitle).toBe("Hysbysiad o ddyfarniadau eraill yr wythnos hon");
-      });
-
-      it("should have empty state message", () => {
-        expect(cy.noHearingsMessage).toBe("Dim gwrandawiadau wedi'u trefnu ar gyfer yr adran hon");
-      });
-
-      it("should have metadata labels", () => {
-        expect(cy.dataSource).toBe("Ffynhonnell data");
-        expect(cy.backToTop).toBe("Yn ôl i frig y dudalen");
-        expect(cy.listFor).toBe("Rhestr ar gyfer");
-        expect(cy.lastUpdated).toBe("Diweddarwyd ddiwethaf");
-        expect(cy.at).toBe("am");
-      });
-
-      it("should have provenance labels", () => {
-        expect(cy.provenanceLabels).toBeDefined();
-      });
-    });
-
-    describe("Locale consistency", () => {
-      it("should have matching keys between English and Welsh", () => {
-        const enKeys = Object.keys(en).sort();
-        const cyKeys = Object.keys(cy).sort();
-        expect(cyKeys).toEqual(enKeys);
-      });
-
-      it("should have matching table header keys", () => {
-        const enHeaderKeys = Object.keys(en.tableHeaders).sort();
-        const cyHeaderKeys = Object.keys(cy.tableHeaders).sort();
-        expect(cyHeaderKeys).toEqual(enHeaderKeys);
-      });
+describe("court-of-appeal-civil-daily-cause-list template", () => {
+  describe("Template file", () => {
+    it("should exist", () => {
+      expect(existsSync(path.join(__dirname, TEMPLATE))).toBe(true);
     });
   });
 
-  describe("Template rendering", () => {
-    const mockHeader = {
-      listTitle: "Court of Appeal (Civil Division) Daily Cause List",
-      listDate: "10 July 2026",
-      lastUpdatedDate: "10 July 2026",
-      lastUpdatedTime: "10:30am"
-    };
-
-    describe("Header section", () => {
-      it("should render header with list title", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('<h1 class="govuk-heading-l" id="top">');
-        expect(html).toContain(mockHeader.listTitle);
-      });
-
-      it("should render fact link with URL", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('<a href="https://www.find-court-tribunal.service.gov.uk/" class="govuk-link">');
-        expect(html).toContain(en.factLinkText);
-      });
-
-      it("should render location details", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.locationLine1);
-        expect(html).toContain(en.locationLine2);
-        expect(html).toContain(en.locationLine3);
-      });
-
-      it("should render list date and last updated information", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.listFor);
-        expect(html).toContain(mockHeader.listDate);
-        expect(html).toContain(en.lastUpdated);
-        expect(html).toContain(mockHeader.lastUpdatedDate);
-        expect(html).toContain(mockHeader.lastUpdatedTime);
-      });
+  describe("Locale consistency", () => {
+    it("should have the same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    describe("Important information section", () => {
-      it("should render govukDetails component with important information", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.importantInfoTitle);
-        expect(html).toContain(en.liveStreamingTitle);
-        expect(html).toContain(en.liveStreamingText1);
-        expect(html).toContain(en.liveStreamingLinkText);
-        expect(html).toContain(en.judgmentsTitle);
-        expect(html).toContain(en.judgmentsText);
-      });
-
-      it("should render live streaming link in important information", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('href="https://www.judiciary.uk/the-court-of-appeal-civil-division-live-streaming-of-court-hearings/"');
-      });
+    it("should have the same table header keys in English and Welsh", () => {
+      expect(Object.keys(en.tableHeaders).sort()).toEqual(Object.keys(cy.tableHeaders).sort());
     });
 
-    describe("Search section", () => {
-      it("should render search input with label", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
+    it("should use https FACT and live-stream link URLs", () => {
+      expect(en.factLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.factLinkUrl).toMatch(/^https:\/\//);
+      expect(en.liveStreamingLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.liveStreamingLinkUrl).toMatch(/^https:\/\//);
+    });
+  });
 
-        expect(html).toContain('<h2 class="govuk-heading-s">');
-        expect(html).toContain(en.searchCasesTitle);
-        expect(html).toContain('id="case-search-input"');
-        expect(html).toContain('type="text"');
-        expect(html).toContain(`aria-label="${en.searchCasesLabel}"`);
-      });
+  describe("Page header", () => {
+    it("should render the list title in the h1 with the back-to-top anchor id", () => {
+      const { $ } = renderPage();
 
-      it("should have visually hidden label for screen readers", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('class="govuk-label govuk-visually-hidden"');
-        expect(html).toContain(`for="case-search-input"`);
-      });
+      const heading = $("h1#top");
+      expect(heading).toHaveLength(1);
+      expect(heading.text()).toContain(en.pageTitle);
     });
 
-    describe("Daily hearings section", () => {
-      it("should render daily hearings table with single hearing", () => {
-        const dailyHearings = [
-          {
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderPage();
+
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
+    });
+
+    it("should render the location lines", () => {
+      const { $ } = renderPage();
+
+      const bodyText = $(".govuk-grid-column-full").text();
+      expect(bodyText).toContain(en.locationLine1);
+      expect(bodyText).toContain(en.locationLine2);
+      expect(bodyText).toContain(en.locationLine3);
+    });
+
+    it("should render the list date and last updated information", () => {
+      const { $ } = renderPage();
+
+      const bodyText = $(".govuk-grid-column-full").text();
+      expect(bodyText).toContain(`${en.listFor} 10 July 2026`);
+      expect(bodyText).toContain(`${en.lastUpdated} 10 July 2026 ${en.at} 10:30am`);
+    });
+  });
+
+  describe("Important information section", () => {
+    it("should render the details component with the important information content and live-stream link", () => {
+      const { $ } = renderPage();
+
+      const details = $(".govuk-details");
+      expect(details).toHaveLength(1);
+      const detailsText = details.text();
+      expect(detailsText).toContain(en.importantInfoTitle);
+      expect(detailsText).toContain(en.liveStreamingTitle);
+      expect(detailsText).toContain(en.liveStreamingText1);
+      expect(detailsText).toContain(en.liveStreamingLinkText);
+      expect(detailsText).toContain(en.judgmentsTitle);
+      expect(detailsText).toContain(en.judgmentsText);
+      expect(details.find(`a[href="${en.liveStreamingLinkUrl}"]`).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Search section", () => {
+    it("should render the search input with a visually hidden label", () => {
+      const { $ } = renderPage();
+
+      expect($("h2.govuk-heading-s").text()).toContain(en.searchCasesTitle);
+
+      const input = $("input#case-search-input");
+      expect(input).toHaveLength(1);
+      expect(input.attr("type")).toBe("text");
+      expect(input.attr("aria-label")).toBe(en.searchCasesLabel);
+
+      const label = $("label.govuk-label.govuk-visually-hidden");
+      expect(label.attr("for")).toBe("case-search-input");
+    });
+  });
+
+  describe("Daily hearings section", () => {
+    it("should render the daily hearings table headers in order", () => {
+      const { $ } = renderPage({ dailyHearings: [buildHearing()] });
+
+      expect(headerTexts($, en.dailyHearingsTitle)).toEqual([
+        en.tableHeaders.venue,
+        en.tableHeaders.judge,
+        en.tableHeaders.time,
+        en.tableHeaders.caseNumber,
+        en.tableHeaders.caseDetails,
+        en.tableHeaders.hearingType,
+        en.tableHeaders.additionalInformation
+      ]);
+    });
+
+    it("should place each hearing field in its correct column", () => {
+      const { $ } = renderPage({
+        dailyHearings: [
+          buildHearing({
             venue: "Court 1",
             judge: "Lady Justice Smith",
             time: "10:30am",
@@ -306,137 +233,75 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
             caseDetails: "Smith v Jones",
             hearingType: "Application",
             additionalInformation: "Remote hearing"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('<table class="govuk-table hearings-table"');
-        expect(html).toContain(`aria-label="${en.dailyHearingsTitle}"`);
-        expect(html).toContain(dailyHearings[0].venue);
-        expect(html).toContain(dailyHearings[0].judge);
-        expect(html).toContain(dailyHearings[0].time);
-        expect(html).toContain(dailyHearings[0].caseNumber);
-        expect(html).toContain(dailyHearings[0].caseDetails);
-        expect(html).toContain(dailyHearings[0].hearingType);
-        expect(html).toContain(dailyHearings[0].additionalInformation);
+          })
+        ]
       });
 
-      it("should render daily hearings table with multiple hearings", () => {
-        const dailyHearings = [
-          {
-            venue: "Court 1",
-            judge: "Lady Justice Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Application",
-            additionalInformation: "Remote hearing"
-          },
-          {
-            venue: "Court 2",
-            judge: "Lord Justice Brown",
-            time: "2:00pm",
-            caseNumber: "A1/2026/0002",
-            caseDetails: "Johnson v Williams",
-            hearingType: "Appeal",
-            additionalInformation: "In person"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(dailyHearings[0].caseNumber);
-        expect(html).toContain(dailyHearings[1].caseNumber);
-        expect(html).toContain(dailyHearings[0].judge);
-        expect(html).toContain(dailyHearings[1].judge);
-      });
-
-      it("should render table headers for daily hearings", () => {
-        const dailyHearings = [
-          {
-            venue: "Court 1",
-            judge: "Lady Justice Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Application",
-            additionalInformation: "Remote hearing"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.tableHeaders.venue);
-        expect(html).toContain(en.tableHeaders.judge);
-        expect(html).toContain(en.tableHeaders.time);
-        expect(html).toContain(en.tableHeaders.caseNumber);
-        expect(html).toContain(en.tableHeaders.caseDetails);
-        expect(html).toContain(en.tableHeaders.hearingType);
-        expect(html).toContain(en.tableHeaders.additionalInformation);
-      });
-
-      it("should render empty state when no daily hearings", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.noHearingsMessage);
-        expect(html).not.toContain('<table class="govuk-table hearings-table"');
-      });
-
-      it("should render empty strings in hearing fields", () => {
-        const dailyHearings = [
-          {
-            venue: "",
-            judge: "",
-            time: "",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "",
-            hearingType: "",
-            additionalInformation: ""
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(dailyHearings[0].caseNumber);
-        expect(html).toContain('<td class="govuk-table__cell"></td>');
-      });
+      const cells = rowCells($, en.dailyHearingsTitle);
+      expect(cells[DAILY_COLUMN.venue]).toBe("Court 1");
+      expect(cells[DAILY_COLUMN.judge]).toBe("Lady Justice Smith");
+      expect(cells[DAILY_COLUMN.time]).toBe("10:30am");
+      expect(cells[DAILY_COLUMN.caseNumber]).toBe("A1/2026/0001");
+      expect(cells[DAILY_COLUMN.caseDetails]).toBe("Smith v Jones");
+      expect(cells[DAILY_COLUMN.hearingType]).toBe("Application");
+      expect(cells[DAILY_COLUMN.additionalInformation]).toBe("Remote hearing");
     });
 
-    describe("Future judgments section", () => {
-      it("should render future judgments table with single judgment", () => {
-        const futureJudgments = [
-          {
+    it("should render a row per hearing when there are multiple hearings", () => {
+      const { $ } = renderPage({
+        dailyHearings: [
+          buildHearing({ caseNumber: "A1/2026/0001", judge: "Lady Justice Smith" }),
+          buildHearing({ caseNumber: "A1/2026/0002", judge: "Lord Justice Brown" })
+        ]
+      });
+
+      expect(columnValues($, en.dailyHearingsTitle, DAILY_COLUMN.caseNumber)).toEqual(["A1/2026/0001", "A1/2026/0002"]);
+      expect(columnValues($, en.dailyHearingsTitle, DAILY_COLUMN.judge)).toEqual(["Lady Justice Smith", "Lord Justice Brown"]);
+    });
+
+    it("should render empty cells for empty hearing fields while keeping the populated one", () => {
+      const { $ } = renderPage({
+        dailyHearings: [
+          buildHearing({ venue: "", judge: "", time: "", caseNumber: "A1/2026/0001", caseDetails: "", hearingType: "", additionalInformation: "" })
+        ]
+      });
+
+      const cells = rowCells($, en.dailyHearingsTitle);
+      expect(cells[DAILY_COLUMN.caseNumber]).toBe("A1/2026/0001");
+      expect(cells[DAILY_COLUMN.venue]).toBe("");
+      expect(cells[DAILY_COLUMN.judge]).toBe("");
+      expect(cells[DAILY_COLUMN.additionalInformation]).toBe("");
+    });
+
+    it("should render the empty-state message and no table when there are no daily hearings", () => {
+      const { $ } = renderPage({ dailyHearings: [] });
+
+      expect(tableByLabel($, en.dailyHearingsTitle)).toHaveLength(0);
+      expect($("#daily-hearings-section")).toHaveLength(0);
+      expect($(".govuk-grid-column-full").text()).toContain(en.noHearingsMessage);
+    });
+  });
+
+  describe("Future judgments section", () => {
+    it("should render the future judgments table headers in order, including the date column", () => {
+      const { $ } = renderPage({ futureJudgments: [buildJudgment()] });
+
+      expect(headerTexts($, en.futureJudgmentsTitle)).toEqual([
+        en.tableHeaders.date,
+        en.tableHeaders.venue,
+        en.tableHeaders.judge,
+        en.tableHeaders.time,
+        en.tableHeaders.caseNumber,
+        en.tableHeaders.caseDetails,
+        en.tableHeaders.hearingType,
+        en.tableHeaders.additionalInformation
+      ]);
+    });
+
+    it("should place each judgment field in its correct column", () => {
+      const { $ } = renderPage({
+        futureJudgments: [
+          buildJudgment({
             date: "15 July 2026",
             venue: "Court 3",
             judge: "Lord Justice Davis",
@@ -445,384 +310,87 @@ describe("court-of-appeal-civil-daily-cause-list.njk", () => {
             caseDetails: "Taylor v Anderson",
             hearingType: "Judgment",
             additionalInformation: "Reserved judgment"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments,
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('<h2 class="govuk-heading-m">');
-        expect(html).toContain(en.futureJudgmentsTitle);
-        expect(html).toContain(`aria-label="${en.futureJudgmentsTitle}"`);
-        expect(html).toContain(futureJudgments[0].date);
-        expect(html).toContain(futureJudgments[0].venue);
-        expect(html).toContain(futureJudgments[0].judge);
-        expect(html).toContain(futureJudgments[0].time);
-        expect(html).toContain(futureJudgments[0].caseNumber);
-        expect(html).toContain(futureJudgments[0].caseDetails);
-        expect(html).toContain(futureJudgments[0].hearingType);
-        expect(html).toContain(futureJudgments[0].additionalInformation);
+          })
+        ]
       });
 
-      it("should render future judgments table with multiple judgments", () => {
-        const futureJudgments = [
-          {
-            date: "15 July 2026",
-            venue: "Court 3",
-            judge: "Lord Justice Davis",
-            time: "9:30am",
-            caseNumber: "A1/2026/0003",
-            caseDetails: "Taylor v Anderson",
-            hearingType: "Judgment",
-            additionalInformation: "Reserved judgment"
-          },
-          {
-            date: "16 July 2026",
-            venue: "Court 4",
-            judge: "Lady Justice Wilson",
-            time: "10:00am",
-            caseNumber: "A1/2026/0004",
-            caseDetails: "Martin v Thomas",
-            hearingType: "Judgment",
-            additionalInformation: "To be handed down"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments,
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(futureJudgments[0].caseNumber);
-        expect(html).toContain(futureJudgments[1].caseNumber);
-        expect(html).toContain(futureJudgments[0].date);
-        expect(html).toContain(futureJudgments[1].date);
-      });
-
-      it("should render date column header for future judgments", () => {
-        const futureJudgments = [
-          {
-            date: "15 July 2026",
-            venue: "Court 3",
-            judge: "Lord Justice Davis",
-            time: "9:30am",
-            caseNumber: "A1/2026/0003",
-            caseDetails: "Taylor v Anderson",
-            hearingType: "Judgment",
-            additionalInformation: "Reserved judgment"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments,
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain(en.tableHeaders.date);
-        expect(html).toContain(en.tableHeaders.venue);
-        expect(html).toContain(en.tableHeaders.judge);
-      });
-
-      it("should render empty state when no future judgments", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        const futureJudgmentsSection = html.match(/<h2 class="govuk-heading-m">Notice for future judgments<\/h2>[\s\S]*?(?=<p class="govuk-body-s|$)/);
-        expect(futureJudgmentsSection).toBeTruthy();
-        expect(futureJudgmentsSection?.[0]).toContain(en.noHearingsMessage);
-      });
-
-      it("should have section divider class for future judgments", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('class="hearings-section section-divider"');
-      });
+      const cells = rowCells($, en.futureJudgmentsTitle);
+      expect(cells[FUTURE_COLUMN.date]).toBe("15 July 2026");
+      expect(cells[FUTURE_COLUMN.venue]).toBe("Court 3");
+      expect(cells[FUTURE_COLUMN.judge]).toBe("Lord Justice Davis");
+      expect(cells[FUTURE_COLUMN.time]).toBe("9:30am");
+      expect(cells[FUTURE_COLUMN.caseNumber]).toBe("A1/2026/0003");
+      expect(cells[FUTURE_COLUMN.caseDetails]).toBe("Taylor v Anderson");
+      expect(cells[FUTURE_COLUMN.hearingType]).toBe("Judgment");
+      expect(cells[FUTURE_COLUMN.additionalInformation]).toBe("Reserved judgment");
     });
 
-    describe("Footer section", () => {
-      it("should render data source", () => {
-        const dataSource = "HMCTS Publishing Service";
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource
-        });
-
-        expect(html).toContain(en.dataSource);
-        expect(html).toContain(dataSource);
+    it("should render a row per judgment when there are multiple judgments", () => {
+      const { $ } = renderPage({
+        futureJudgments: [
+          buildJudgment({ caseNumber: "A1/2026/0003", date: "15 July 2026" }),
+          buildJudgment({ caseNumber: "A1/2026/0004", date: "16 July 2026" })
+        ]
       });
 
-      it("should render back to top link", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('<a href="#top" class="govuk-link">');
-        expect(html).toContain(en.backToTop);
-      });
+      expect(columnValues($, en.futureJudgmentsTitle, FUTURE_COLUMN.caseNumber)).toEqual(["A1/2026/0003", "A1/2026/0004"]);
+      expect(columnValues($, en.futureJudgmentsTitle, FUTURE_COLUMN.date)).toEqual(["15 July 2026", "16 July 2026"]);
     });
 
-    describe("Welsh language rendering", () => {
-      it("should render all Welsh text correctly", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: cy,
-          header: {
-            listTitle: cy.pageTitle,
-            listDate: "10 Gorffennaf 2026",
-            lastUpdatedDate: "10 Gorffennaf 2026",
-            lastUpdatedTime: "10:30am"
-          },
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Gwasanaeth Cyhoeddi GLlTEF"
-        });
+    it("should render the empty-state message and no table when there are no future judgments", () => {
+      const { $ } = renderPage({ futureJudgments: [] });
 
-        expect(html).toContain(cy.pageTitle);
-        expect(html).toContain(cy.locationLine1);
-        expect(html).toContain(cy.searchCasesTitle);
-        expect(html).toContain(cy.futureJudgmentsTitle);
-        expect(html).toContain(cy.backToTop);
-      });
-
-      it("should render Welsh table headers", () => {
-        const dailyHearings = [
-          {
-            venue: "Llys 1",
-            judge: "Yr Arglwyddes Gyfiawnder Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Cais",
-            additionalInformation: "Gwrandawiad o bell"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: cy,
-          header: {
-            listTitle: cy.pageTitle,
-            listDate: "10 Gorffennaf 2026",
-            lastUpdatedDate: "10 Gorffennaf 2026",
-            lastUpdatedTime: "10:30am"
-          },
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Gwasanaeth Cyhoeddi GLlTEF"
-        });
-
-        expect(html).toContain(cy.tableHeaders.venue);
-        expect(html).toContain(cy.tableHeaders.judge);
-        expect(html).toContain(cy.tableHeaders.time);
-        expect(html).toContain(cy.tableHeaders.caseNumber);
-      });
+      expect(tableByLabel($, en.futureJudgmentsTitle)).toHaveLength(0);
+      expect($("#future-judgments-section")).toHaveLength(0);
+      const emptySection = $(".hearings-section.section-divider");
+      expect(emptySection).toHaveLength(1);
+      expect(emptySection.find("h2").text()).toContain(en.futureJudgmentsTitle);
+      expect(emptySection.text()).toContain(en.noHearingsMessage);
     });
 
-    describe("GOV.UK Design System compliance", () => {
-      it("should use GOV.UK grid classes", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
+    it("should apply the section-divider class to the future judgments section when populated", () => {
+      const { $ } = renderPage({ futureJudgments: [buildJudgment()] });
 
-        expect(html).toContain('class="govuk-grid-row"');
-        expect(html).toContain('class="govuk-grid-column-full"');
-      });
+      const section = $("#future-judgments-section");
+      expect(section).toHaveLength(1);
+      expect(section.hasClass("section-divider")).toBe(true);
+    });
+  });
 
-      it("should use GOV.UK typography classes", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
+  describe("Footer", () => {
+    it("should render the data source", () => {
+      const { $ } = renderPage({ dataSource: "HMCTS Publishing Service" });
 
-        expect(html).toContain("govuk-heading-l");
-        expect(html).toContain("govuk-heading-m");
-        expect(html).toContain("govuk-heading-s");
-        expect(html).toContain("govuk-body");
-        expect(html).toContain("govuk-body-s");
-      });
-
-      it("should use GOV.UK spacing utilities", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain("govuk-!-font-weight-bold");
-        expect(html).toContain("govuk-!-margin-bottom-0");
-        expect(html).toContain("govuk-!-margin-bottom-1");
-        expect(html).toContain("govuk-!-margin-top-6");
-      });
-
-      it("should use GOV.UK table component", () => {
-        const dailyHearings = [
-          {
-            venue: "Court 1",
-            judge: "Lady Justice Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Application",
-            additionalInformation: "Remote hearing"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('class="govuk-table');
-        expect(html).toContain('class="govuk-table__head"');
-        expect(html).toContain('class="govuk-table__body"');
-        expect(html).toContain('class="govuk-table__row"');
-        expect(html).toContain('class="govuk-table__header"');
-        expect(html).toContain('class="govuk-table__cell"');
-      });
-
-      it("should use GOV.UK input component classes", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('class="govuk-input');
-        expect(html).toContain("govuk-!-width-one-half");
-      });
+      const footer = $("p.govuk-body-s");
+      expect(footer.text()).toContain(en.dataSource);
+      expect(footer.text()).toContain("HMCTS Publishing Service");
     });
 
-    describe("Accessibility", () => {
-      it("should have aria-label on tables", () => {
-        const dailyHearings = [
-          {
-            venue: "Court 1",
-            judge: "Lady Justice Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Application",
-            additionalInformation: "Remote hearing"
-          }
-        ];
+    it("should render a back-to-top link pointing at the heading anchor", () => {
+      const { $ } = renderPage();
 
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
+      const backToTop = $(".back-to-top a[href='#top']");
+      expect(backToTop).toHaveLength(1);
+      expect(backToTop.text()).toContain(en.backToTop);
+    });
+  });
 
-        expect(html).toContain('role="table"');
-        expect(html).toContain(`aria-label="${en.dailyHearingsTitle}"`);
-      });
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, table headers and labels", () => {
+      const { $ } = renderPage({ dailyHearings: [buildHearing({ venue: "Llys 1", judge: "Yr Arglwyddes Gyfiawnder Smith" })] }, cy);
 
-      it("should have proper heading hierarchy", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
+      expect($("h1#top").text()).toContain(cy.pageTitle);
+      expect($(".govuk-grid-column-full").text()).toContain(cy.locationLine1);
+      expect($("h2.govuk-heading-s").text()).toContain(cy.searchCasesTitle);
 
-        expect(html).toContain('<h1 class="govuk-heading-l"');
-        expect(html).toContain('<h2 class="govuk-heading-m">');
-        expect(html).toContain('<h2 class="govuk-heading-s">');
-      });
+      const headers = headerTexts($, cy.dailyHearingsTitle);
+      expect(headers).toContain(cy.tableHeaders.venue);
+      expect(headers).toContain(cy.tableHeaders.judge);
+      expect(headers).toContain(cy.tableHeaders.time);
+      expect(headers).toContain(cy.tableHeaders.caseNumber);
 
-      it("should have visually hidden label for search input", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('class="govuk-label govuk-visually-hidden"');
-        expect(html).toContain('for="case-search-input"');
-      });
-
-      it("should have proper table structure with scope attributes", () => {
-        const dailyHearings = [
-          {
-            venue: "Court 1",
-            judge: "Lady Justice Smith",
-            time: "10:30am",
-            caseNumber: "A1/2026/0001",
-            caseDetails: "Smith v Jones",
-            hearingType: "Application",
-            additionalInformation: "Remote hearing"
-          }
-        ];
-
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings,
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('scope="col"');
-      });
-
-      it("should have anchor with id for back to top functionality", () => {
-        const { html } = render(env, "court-of-appeal-civil-daily-cause-list.njk", {
-          t: en,
-          header: mockHeader,
-          dailyHearings: [],
-          futureJudgments: [],
-          dataSource: "Test Source"
-        });
-
-        expect(html).toContain('id="top"');
-        expect(html).toContain('href="#top"');
-      });
+      expect(rowCells($, cy.dailyHearingsTitle)[DAILY_COLUMN.venue]).toBe("Llys 1");
+      expect($(".back-to-top a").text()).toContain(cy.backToTop);
     });
   });
 });

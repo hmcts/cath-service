@@ -1,1057 +1,611 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { magistratesPublicListCy, magistratesPublicListEn } from "@hmcts/magistrates-public-list";
+import { magistratesPublicListCy as cy, magistratesPublicListEn as en } from "@hmcts/magistrates-public-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+const TEMPLATE = "magistrates-public-list.njk";
 
-describe("magistrates-public-list.njk", () => {
-  let env: nunjucks.Environment;
+interface CaseOverrides {
+  caseUrn?: string;
+  defendant?: string;
+  prosecutingAuthority?: string;
+  offences?: string[];
+  reportingRestriction?: boolean;
+}
 
-  beforeEach(() => {
-    env = createTestEnvironment([__dirname, webCoreViews]);
-  });
+interface ApplicationOverrides {
+  applicationReference?: string;
+  defendant?: string;
+  prosecutingAuthority?: string;
+  offences?: string[];
+}
 
-  describe("Locale content", () => {
-    describe("English locale", () => {
-      it("should have all required keys", () => {
-        const requiredKeys = [
-          "title",
-          "header",
-          "listDate",
-          "listUpdated",
-          "factLinkText",
-          "factLinkUrl",
-          "factAdditionalText",
-          "restrictionInformationHeading",
-          "restrictionInformationP1",
-          "restrictionInformationBoldText",
-          "restrictionInformationP2",
-          "restrictionInformationP3",
-          "restrictionInformationP4",
-          "restrictionBulletPoint1",
-          "restrictionBulletPoint2",
-          "sittingAt",
-          "urn",
-          "name",
-          "hearingType",
-          "prosecutingAuthority",
-          "reportingRestrictions",
-          "reportingRestrictionText",
-          "offenceDetails",
-          "searchCases",
-          "dataSource",
-          "errorTitle",
-          "errorMessage",
-          "error403Title",
-          "error403Message"
-        ];
+// Fixture builders — each layer defaults to a realistic minimal shape and only
+// the varied leaf fields are passed per test, keeping the deep view-model tree
+// (courtLists → courtHouse → courtRoom → session → sitting → hearing →
+// case/application) out of individual tests.
+function buildCase(overrides: CaseOverrides = {}) {
+  return {
+    caseUrn: "12AA3456789",
+    defendant: "John Smith",
+    prosecutingAuthority: "CPS",
+    offences: [],
+    reportingRestriction: false,
+    ...overrides
+  };
+}
 
-        requiredKeys.forEach((key) => {
-          expect(magistratesPublicListEn).toHaveProperty(key);
-        });
-      });
+function buildApplication(overrides: ApplicationOverrides = {}) {
+  return {
+    applicationReference: "APP-2026-001",
+    defendant: "David Brown",
+    prosecutingAuthority: "Local Authority",
+    offences: [],
+    ...overrides
+  };
+}
 
-      it("should have correct static text values", () => {
-        expect(magistratesPublicListEn.title).toBe("Magistrates Public List");
-        expect(magistratesPublicListEn.header).toBe("Magistrates Public List for");
-        expect(magistratesPublicListEn.listDate).toBe("List for");
-        expect(magistratesPublicListEn.listUpdated).toBe("Last updated DATE at");
-        expect(magistratesPublicListEn.searchCases).toBe("Search Cases");
-      });
+function buildHearing({
+  hearingType = "Trial",
+  cases = [buildCase()],
+  applications
+}: {
+  hearingType?: string;
+  cases?: unknown[];
+  applications?: unknown[];
+} = {}) {
+  return { hearingType, case: cases, ...(applications ? { application: applications } : {}) };
+}
 
-      it("should have correct table header labels", () => {
-        expect(magistratesPublicListEn.sittingAt).toBe("Sitting at");
-        expect(magistratesPublicListEn.urn).toBe("URN");
-        expect(magistratesPublicListEn.name).toBe("Name");
-        expect(magistratesPublicListEn.hearingType).toBe("Hearing Type");
-        expect(magistratesPublicListEn.prosecutingAuthority).toBe("Prosecuting Authority");
-      });
+function buildSitting({ time = "10:00am", hearing }: { time?: string; hearing?: unknown[] } = {}) {
+  return { time, hearing: hearing ?? [buildHearing()] };
+}
 
-      it("should have restriction information text", () => {
-        expect(magistratesPublicListEn.restrictionInformationHeading).toBe("Restrictions on publishing or writing about these cases");
-        expect(magistratesPublicListEn.restrictionInformationP1).toContain("You must check if any reporting restrictions apply");
-        expect(magistratesPublicListEn.restrictionInformationBoldText).toContain("contempt of court");
-      });
-    });
+function buildSession({
+  courtRoomName = "Court 1",
+  formattedJudiciaries = "",
+  sittings
+}: {
+  courtRoomName?: string;
+  formattedJudiciaries?: string;
+  sittings?: unknown[];
+} = {}) {
+  return {
+    courtRoomName,
+    session: [{ formattedJudiciaries, sittings: sittings ?? [buildSitting()] }]
+  };
+}
 
-    describe("Welsh locale", () => {
-      it("should have all required keys", () => {
-        const requiredKeys = [
-          "title",
-          "header",
-          "listDate",
-          "listUpdated",
-          "factLinkText",
-          "factLinkUrl",
-          "factAdditionalText",
-          "restrictionInformationHeading",
-          "restrictionInformationP1",
-          "restrictionInformationBoldText",
-          "restrictionInformationP2",
-          "restrictionInformationP3",
-          "restrictionInformationP4",
-          "restrictionBulletPoint1",
-          "restrictionBulletPoint2",
-          "sittingAt",
-          "urn",
-          "name",
-          "hearingType",
-          "prosecutingAuthority",
-          "reportingRestrictions",
-          "reportingRestrictionText",
-          "offenceDetails",
-          "searchCases",
-          "dataSource",
-          "errorTitle",
-          "errorMessage",
-          "error403Title",
-          "error403Message"
-        ];
+function buildCourtHouse({ courtRoom = [buildSession()] }: { courtRoom?: unknown[] } = {}) {
+  return { courtHouse: { courtRoom } };
+}
 
-        requiredKeys.forEach((key) => {
-          expect(magistratesPublicListCy).toHaveProperty(key);
-        });
-      });
+function baseData(locale: typeof en | typeof cy = en) {
+  return {
+    t: locale,
+    header: {
+      locationName: "Westminster Magistrates Court",
+      contentDate: "15 January 2026",
+      publishedDate: "14 January 2026",
+      publishedTime: "12:00pm",
+      venueAddress: [] as string[]
+    },
+    dataSource: "Manual Upload"
+  };
+}
 
-      it("should have correct static text values", () => {
-        expect(magistratesPublicListCy.title).toBe("Rhestr Gyhoeddus y Llys Ynadon");
-        expect(magistratesPublicListCy.header).toBe("Rhestr Gyhoeddus y Llys Ynadon ar gyfer");
-        expect(magistratesPublicListCy.listDate).toBe("Rhestr ar gyfer");
-        expect(magistratesPublicListCy.listUpdated).toBe("Diweddarwyd diwethaf DATE am");
-        expect(magistratesPublicListCy.searchCases).toBe("Chwilio Achosion");
-      });
+function renderList(courtLists: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, listData: { courtLists } });
+}
 
-      it("should have correct table header labels", () => {
-        expect(magistratesPublicListCy.sittingAt).toBe("Yn eistedd yn");
-        expect(magistratesPublicListCy.urn).toBe("URN");
-        expect(magistratesPublicListCy.name).toBe("Enw");
-        expect(magistratesPublicListCy.hearingType).toBe("Math o Wrandawiad");
-        expect(magistratesPublicListCy.prosecutingAuthority).toBe("Yr Awdurdod sy'n Erlyn");
-      });
-    });
+// The rendered cases table columns, in order.
+const COLUMN = { sittingAt: 0, urn: 1, name: 2, hearingType: 3, prosecutor: 4 } as const;
 
-    describe("Locale consistency", () => {
-      it("should have same structure in English and Welsh", () => {
-        expect(Object.keys(magistratesPublicListEn).sort()).toEqual(Object.keys(magistratesPublicListCy).sort());
-      });
+function firstDataRowCells($: CheerioAPI) {
+  return $("tbody.govuk-table__body tr")
+    .first()
+    .find("td")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
 
-      it("should have same types for each key", () => {
-        Object.keys(magistratesPublicListEn).forEach((key) => {
-          const enType = typeof magistratesPublicListEn[key as keyof typeof magistratesPublicListEn];
-          const cyType = typeof magistratesPublicListCy[key as keyof typeof magistratesPublicListCy];
-          expect(enType).toBe(cyType);
-        });
-      });
+// Data rows carry the full five columns; the conditional offence-details and
+// reporting-restriction rows use colspans, so filtering on five cells isolates
+// the case/application rows.
+function dataRowsColumn($: CheerioAPI, col: number) {
+  return $("tbody.govuk-table__body tr")
+    .filter((_, row) => $(row).find("td").length === 5)
+    .map((_, row) => $(row).find("td").eq(col).text().trim())
+    .get();
+}
+
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
+
+describe("magistrates-public-list template", () => {
+  describe("Template file", () => {
+    it("should exist", () => {
+      expect(existsSync(path.join(__dirname, TEMPLATE))).toBe(true);
     });
   });
 
-  describe("Template rendering", () => {
-    const baseData = {
-      t: magistratesPublicListEn,
-      header: {
-        locationName: "Westminster Magistrates Court",
-        contentDate: "15 January 2026",
-        publishedDate: "14 January 2026",
-        publishedTime: "12:00pm",
-        venueAddress: []
-      },
-      dataSource: "Manual Upload",
-      listData: {
-        courtLists: []
+  describe("Locale consistency", () => {
+    it("should have the same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should use https FACT link URLs", () => {
+      expect(en.factLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.factLinkUrl).toMatch(/^https:\/\//);
+    });
+  });
+
+  describe("Page header", () => {
+    it("should render the heading with the page header text and location name", () => {
+      const { $ } = renderList([]);
+
+      const heading = $("h2.govuk-heading-l").first().text();
+      expect(heading).toContain(en.header);
+      expect(heading).toContain("Westminster Magistrates Court");
+    });
+
+    it("should render the content date", () => {
+      const { $ } = renderList([]);
+
+      const listDate = $("p.govuk-body.govuk-\\!-font-weight-bold").text();
+      expect(listDate).toContain(en.listDate);
+      expect(listDate).toContain("15 January 2026");
+    });
+
+    it("should render the published date and time", () => {
+      const { $ } = renderList([]);
+
+      const publishedLine = $("p.govuk-body").filter((_, el) => $(el).text().includes("14 January 2026"));
+      expect(publishedLine.text()).toContain("14 January 2026");
+      expect(publishedLine.text()).toContain("12:00pm");
+    });
+
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderList([]);
+
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
+    });
+
+    it("should render the venue address lines only when present", () => {
+      const withAddress = renderList([], {
+        header: { ...baseData().header, venueAddress: ["181 Marylebone Road", "London", "NW1 5BR"] }
+      }).$;
+      const addressPara = withAddress("p.govuk-body").filter((_, el) => withAddress(el).text().includes("181 Marylebone Road"));
+      expect(addressPara).toHaveLength(1);
+      for (const line of ["181 Marylebone Road", "London", "NW1 5BR"]) {
+        expect(addressPara.text()).toContain(line);
       }
-    };
 
-    describe("Header section", () => {
-      it("should render page title with location name", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("Magistrates Public List for");
-        expect(html).toContain("Westminster Magistrates Court");
-      });
+      const withoutAddress = renderList([]).$;
+      expect(withoutAddress("p.govuk-body").filter((_, el) => withoutAddress(el).text().includes("Marylebone"))).toHaveLength(0);
+    });
+  });
 
-      it("should render content date", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("List for");
-        expect(html).toContain("15 January 2026");
-      });
+  describe("Restriction information section", () => {
+    it("should render the restriction heading", () => {
+      const { $ } = renderList([]);
 
-      it("should render published date and time", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("14 January 2026");
-        expect(html).toContain("12:00pm");
-      });
-
-      it("should render FACT link", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("Find contact details and other information about courts and tribunals");
-        expect(html).toContain("https://www.find-court-tribunal.service.gov.uk/");
-      });
-
-      it("should render venue address when present", () => {
-        const data = {
-          ...baseData,
-          header: {
-            ...baseData.header,
-            venueAddress: ["181 Marylebone Road", "London", "NW1 5BR"]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("181 Marylebone Road");
-        expect(html).toContain("London");
-        expect(html).toContain("NW1 5BR");
-      });
-
-      it("should not render venue address section when empty", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).not.toContain("181 Marylebone Road");
-      });
+      expect($(".restriction-list-section h3").text()).toContain(en.restrictionInformationHeading);
     });
 
-    describe("Restriction information section", () => {
-      it("should render restriction heading", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("Restrictions on publishing or writing about these cases");
-      });
+    it("should render the warning text", () => {
+      const { $ } = renderList([]);
 
-      it("should render warning text", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("govuk-warning-text");
-        expect(html).toContain("contempt of court");
-      });
-
-      it("should render restriction information paragraphs", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("You must check if any reporting restrictions apply");
-        expect(html).toContain("Specific restrictions ordered by the court");
-        expect(html).toContain("restrictions are not always listed");
-      });
-
-      it("should render restriction bullet points", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("the court directly");
-        expect(html).toContain("HM Courts and Tribunals Service on 0330 808 4407");
-      });
+      const warning = $(".restriction-list-section .govuk-warning-text__text");
+      expect(warning).toHaveLength(1);
+      expect(warning.text()).toContain(en.restrictionInformationBoldText);
     });
 
-    describe("Search section", () => {
-      it("should render search input", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("Search Cases");
-        expect(html).toContain('id="case-search-input"');
-        expect(html).toContain('type="text"');
-      });
+    it("should render the restriction information paragraphs", () => {
+      const { $ } = renderList([]);
+
+      const sectionText = $(".restriction-list-section").text();
+      expect(sectionText).toContain(en.restrictionInformationP1);
+      expect(sectionText).toContain(en.restrictionInformationP2);
+      expect(sectionText).toContain(en.restrictionInformationP3);
+      expect(sectionText).toContain(en.restrictionInformationP4);
     });
 
-    describe("Empty court lists", () => {
-      it("should render with no court lists", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain('id="court-lists-container"');
-      });
+    it("should render the restriction bullet points", () => {
+      const { $ } = renderList([]);
+
+      const bullets = $(".restriction-list-section ul.govuk-list--bullet li")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(bullets).toEqual([en.restrictionBulletPoint1, en.restrictionBulletPoint2]);
+    });
+  });
+
+  describe("Search section", () => {
+    it("should render the search input and heading", () => {
+      const { $ } = renderList([]);
+
+      expect($("h2.govuk-heading-m").text()).toContain(en.searchCases);
+      const input = $("#case-search-input");
+      expect(input).toHaveLength(1);
+      expect(input.attr("type")).toBe("text");
+    });
+  });
+
+  describe("Empty court lists", () => {
+    it("should render an empty court-lists container when there are no court lists", () => {
+      const { $ } = renderList([]);
+
+      expect($("#court-lists-container")).toHaveLength(1);
+      expect($("#court-lists-container").children()).toHaveLength(0);
+    });
+  });
+
+  describe("Court rooms and sessions", () => {
+    it("should render the court room with the judiciary in the section heading", () => {
+      const { $ } = renderList([
+        buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Court 1", formattedJudiciaries: "District Judge Smith", sittings: [] })] })
+      ]);
+
+      const heading = $(".govuk-accordion__section-button").text();
+      expect(heading).toContain("Court 1");
+      expect(heading).toContain("District Judge Smith");
+      expect($(".govuk-accordion").length).toBeGreaterThanOrEqual(1);
     });
 
-    describe("Court rooms and sessions", () => {
-      it("should render court room with judiciary", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "District Judge Smith",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
+    it("should render the court room without a judiciary segment when none is provided", () => {
+      const { $ } = renderList([buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Court 2", formattedJudiciaries: "", sittings: [] })] })]);
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("Court 1");
-        expect(html).toContain("District Judge Smith");
-        expect(html).toContain("govuk-accordion");
-      });
+      const heading = $(".govuk-accordion__section-button").text().replace(/\s+/g, " ").trim();
+      expect(heading).toBe("Court 2");
+    });
+  });
 
-      it("should render court room without judiciary", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 2",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: []
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
+  describe("Cases table", () => {
+    it("should render the table headers in order", () => {
+      const { $ } = renderList([buildCourtHouse()]);
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("Court 2");
-        expect(html).not.toContain(": District Judge");
-      });
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([en.sittingAt, en.urn, en.name, en.hearingType, en.prosecutingAuthority]);
     });
 
-    describe("Cases table", () => {
-      it("should render table headers", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
+    it("should place a fully populated case in its correct columns with offence and restriction rows", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    buildHearing({
+                      hearingType: "Trial",
+                      cases: [
+                        buildCase({
+                          caseUrn: "12AA3456789",
+                          defendant: "John Smith",
+                          prosecutingAuthority: "Crown Prosecution Service",
+                          offences: ["Theft", "Assault"],
+                          reportingRestriction: true
+                        })
                       ]
-                    }
+                    })
                   ]
-                }
-              }
-            ]
-          }
-        };
+                })
+              ]
+            })
+          ]
+        })
+      ]);
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("Sitting at");
-        expect(html).toContain("URN");
-        expect(html).toContain("Name");
-        expect(html).toContain("Hearing Type");
-        expect(html).toContain("Prosecuting Authority");
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.sittingAt]).toBe("10:00am");
+      expect(cells[COLUMN.urn]).toBe("12AA3456789");
+      expect(cells[COLUMN.name]).toBe("John Smith");
+      expect(cells[COLUMN.hearingType]).toBe("Trial");
+      expect(cells[COLUMN.prosecutor]).toBe("Crown Prosecution Service");
 
-      it("should render case with all data", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "Crown Prosecution Service",
-                                      offences: ["Theft", "Assault"],
-                                      reportingRestriction: true
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
+      const offenceRow = $("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.offenceDetails));
+      expect(offenceRow).toHaveLength(1);
+      expect(offenceRow.text()).toContain("Theft");
+      expect(offenceRow.text()).toContain("Assault");
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("10:00am");
-        expect(html).toContain("12AA3456789");
-        expect(html).toContain("John Smith");
-        expect(html).toContain("Trial");
-        expect(html).toContain("Crown Prosecution Service");
-        expect(html).toContain("Offence Details");
-        expect(html).toContain("Theft");
-        expect(html).toContain("Assault");
-        expect(html).toContain("Reporting Restrictions");
-        expect(html).toContain("Press/Publication restrictions apply to this case");
-      });
-
-      it("should render case without offences", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Plea Hearing",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "Jane Doe",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("Jane Doe");
-        expect(html).not.toContain("Offence Details");
-      });
-
-      it("should render case without reporting restrictions", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "CPS",
-                                      offences: ["Theft"],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("John Smith");
-        expect(html).not.toContain("Press/Publication restrictions apply to this case");
-      });
-
-      it("should not add border when case has offences", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "CPS",
-                                      offences: ["Theft"],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("no-border-bottom");
-      });
+      const restrictionRow = $("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.reportingRestrictions));
+      expect(restrictionRow).toHaveLength(1);
+      expect(restrictionRow.text()).toContain(en.reportingRestrictionText);
     });
 
-    describe("Applications", () => {
-      it("should render application with all data", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "2:00pm",
-                              hearing: [
-                                {
-                                  hearingType: "Application",
-                                  application: [
-                                    {
-                                      applicationReference: "APP-2026-001",
-                                      defendant: "David Brown",
-                                      prosecutingAuthority: "Local Authority",
-                                      offences: ["Public Order Offence"]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
+    it("should not render an offence-details row when the case has no offences", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({ hearing: [buildHearing({ hearingType: "Plea Hearing", cases: [buildCase({ defendant: "Jane Doe", offences: [] })] })] })
+              ]
+            })
+          ]
+        })
+      ]);
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("2:00pm");
-        expect(html).toContain("APP-2026-001");
-        expect(html).toContain("David Brown");
-        expect(html).toContain("Local Authority");
-        expect(html).toContain("Public Order Offence");
-      });
-
-      it("should render application without offences", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "2:00pm",
-                              hearing: [
-                                {
-                                  hearingType: "Application",
-                                  application: [
-                                    {
-                                      applicationReference: "APP-2026-002",
-                                      defendant: "Sarah Green",
-                                      prosecutingAuthority: "CPS",
-                                      offences: []
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("APP-2026-002");
-        expect(html).toContain("Sarah Green");
-        expect(html).not.toContain("Public Order Offence");
-      });
-
-      it("should render empty hearing type cell for applications", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "2:00pm",
-                              hearing: [
-                                {
-                                  hearingType: "",
-                                  application: [
-                                    {
-                                      applicationReference: "APP-2026-001",
-                                      defendant: "Test Name",
-                                      prosecutingAuthority: "CPS",
-                                      offences: []
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("APP-2026-001");
-        const hearingTypeMatches = html.match(/<td class="govuk-table__cell[^"]*">\s*<\/td>/g);
-        expect(hearingTypeMatches).toBeTruthy();
-      });
+      expect(firstDataRowCells($)[COLUMN.name]).toBe("Jane Doe");
+      expect($("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.offenceDetails))).toHaveLength(0);
     });
 
-    describe("Multiple items", () => {
-      it("should render multiple cases in one sitting", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    },
-                                    {
-                                      caseUrn: "12BB9876543",
-                                      defendant: "Jane Doe",
-                                      prosecutingAuthority: "Local Authority",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
+    it("should not render a restriction row when the case has no reporting restriction", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [buildSitting({ hearing: [buildHearing({ cases: [buildCase({ offences: ["Theft"], reportingRestriction: false })] })] })]
+            })
+          ]
+        })
+      ]);
 
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("12AA3456789");
-        expect(html).toContain("John Smith");
-        expect(html).toContain("12BB9876543");
-        expect(html).toContain("Jane Doe");
-      });
-
-      it("should render multiple sittings", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "Morning Case",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              time: "2:00pm",
-                              hearing: [
-                                {
-                                  hearingType: "Sentencing",
-                                  case: [
-                                    {
-                                      caseUrn: "12BB9876543",
-                                      defendant: "Afternoon Case",
-                                      prosecutingAuthority: "Local Authority",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("10:00am");
-        expect(html).toContain("Morning Case");
-        expect(html).toContain("2:00pm");
-        expect(html).toContain("Afternoon Case");
-      });
-
-      it("should render multiple court rooms", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "District Judge A",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Trial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "Court One Case",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      courtRoomName: "Court 2",
-                      session: [
-                        {
-                          formattedJudiciaries: "District Judge B",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Sentencing",
-                                  case: [
-                                    {
-                                      caseUrn: "12BB9876543",
-                                      defendant: "Court Two Case",
-                                      prosecutingAuthority: "Local Authority",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("Court 1");
-        expect(html).toContain("District Judge A");
-        expect(html).toContain("Court One Case");
-        expect(html).toContain("Court 2");
-        expect(html).toContain("District Judge B");
-        expect(html).toContain("Court Two Case");
-      });
-
-      it("should render cases and applications together", () => {
-        const data = {
-          ...baseData,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Court 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Mixed",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "Case Defendant",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ],
-                                  application: [
-                                    {
-                                      applicationReference: "APP-2026-001",
-                                      defendant: "Application Defendant",
-                                      prosecutingAuthority: "Local Authority",
-                                      offences: []
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", data);
-        expect(html).toContain("12AA3456789");
-        expect(html).toContain("Case Defendant");
-        expect(html).toContain("APP-2026-001");
-        expect(html).toContain("Application Defendant");
-      });
+      expect($("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.reportingRestrictionText))).toHaveLength(0);
     });
 
-    describe("Footer section", () => {
-      it("should render data source", () => {
-        const { html } = render(env, "magistrates-public-list.njk", baseData);
-        expect(html).toContain("Data Source");
-        expect(html).toContain("Manual Upload");
-      });
+    it("should add the no-border class to the case row when it has following detail rows", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [buildSitting({ hearing: [buildHearing({ cases: [buildCase({ offences: ["Theft"] })] })] })]
+            })
+          ]
+        })
+      ]);
+
+      const firstRowCells = $("tbody.govuk-table__body tr").first().find("td");
+      expect(firstRowCells.first().hasClass("no-border-bottom")).toBe(true);
+    });
+  });
+
+  describe("Applications", () => {
+    it("should place a fully populated application in its correct columns with an offence row", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  time: "2:00pm",
+                  hearing: [
+                    buildHearing({
+                      hearingType: "Application",
+                      cases: [],
+                      applications: [
+                        buildApplication({
+                          applicationReference: "APP-2026-001",
+                          defendant: "David Brown",
+                          prosecutingAuthority: "Local Authority",
+                          offences: ["Public Order Offence"]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.sittingAt]).toBe("2:00pm");
+      expect(cells[COLUMN.urn]).toBe("APP-2026-001");
+      expect(cells[COLUMN.name]).toBe("David Brown");
+      expect(cells[COLUMN.prosecutor]).toBe("Local Authority");
+
+      const offenceRow = $("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.offenceDetails));
+      expect(offenceRow).toHaveLength(1);
+      expect(offenceRow.text()).toContain("Public Order Offence");
     });
 
-    describe("Welsh rendering", () => {
-      it("should render with Welsh locale", () => {
-        const welshData = {
-          ...baseData,
-          t: magistratesPublicListCy
-        };
-
-        const { html } = render(env, "magistrates-public-list.njk", welshData);
-        expect(html).toContain("Rhestr Gyhoeddus y Llys Ynadon ar gyfer");
-        expect(html).toContain("Rhestr ar gyfer");
-        expect(html).toContain("Diweddarwyd diwethaf");
-        expect(html).toContain("Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn");
-        expect(html).toContain("Chwilio Achosion");
-      });
-
-      it("should render Welsh table headers", () => {
-        const welshData = {
-          ...baseData,
-          t: magistratesPublicListCy,
-          listData: {
-            courtLists: [
-              {
-                courtHouse: {
-                  courtRoom: [
-                    {
-                      courtRoomName: "Llys 1",
-                      session: [
-                        {
-                          formattedJudiciaries: "",
-                          sittings: [
-                            {
-                              time: "10:00am",
-                              hearing: [
-                                {
-                                  hearingType: "Treial",
-                                  case: [
-                                    {
-                                      caseUrn: "12AA3456789",
-                                      defendant: "John Smith",
-                                      prosecutingAuthority: "CPS",
-                                      offences: [],
-                                      reportingRestriction: false
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+    it("should not render an offence-details row when the application has no offences", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  time: "2:00pm",
+                  hearing: [
+                    buildHearing({
+                      hearingType: "Application",
+                      cases: [],
+                      applications: [buildApplication({ applicationReference: "APP-2026-002", defendant: "Sarah Green", offences: [] })]
+                    })
                   ]
-                }
-              }
-            ]
-          }
-        };
+                })
+              ]
+            })
+          ]
+        })
+      ]);
 
-        const { html } = render(env, "magistrates-public-list.njk", welshData);
-        expect(html).toContain("Yn eistedd yn");
-        expect(html).toContain("URN");
-        expect(html).toContain("Enw");
-        expect(html).toContain("Math o Wrandawiad");
-        expect(html).toContain("Yr Awdurdod sy&#39;n Erlyn");
-      });
+      expect(firstDataRowCells($)[COLUMN.urn]).toBe("APP-2026-002");
+      expect($("tbody.govuk-table__body tr").filter((_, r) => $(r).text().includes(en.offenceDetails))).toHaveLength(0);
+    });
 
-      it("should render Welsh restriction information", () => {
-        const welshData = {
-          ...baseData,
-          t: magistratesPublicListCy
-        };
+    it("should render an empty hearing-type cell for applications", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  time: "2:00pm",
+                  hearing: [
+                    buildHearing({
+                      hearingType: "",
+                      cases: [],
+                      applications: [buildApplication({ applicationReference: "APP-2026-001", defendant: "Test Name" })]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
 
-        const { html } = render(env, "magistrates-public-list.njk", welshData);
-        expect(html).toContain("Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn");
-        expect(html).toContain("Rhaid i chi wirio");
-        expect(html).toContain("dirmyg llys");
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.urn]).toBe("APP-2026-001");
+      expect(cells[COLUMN.hearingType]).toBe("");
+    });
+  });
+
+  describe("Multiple items", () => {
+    it("should render a row per case within a single sitting", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    buildHearing({
+                      cases: [
+                        buildCase({ caseUrn: "12AA3456789", defendant: "John Smith" }),
+                        buildCase({ caseUrn: "12BB9876543", defendant: "Jane Doe", prosecutingAuthority: "Local Authority" })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(dataRowsColumn($, COLUMN.urn)).toEqual(["12AA3456789", "12BB9876543"]);
+      expect(dataRowsColumn($, COLUMN.name)).toEqual(["John Smith", "Jane Doe"]);
+    });
+
+    it("should render a row per sitting", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({ time: "10:00am", hearing: [buildHearing({ cases: [buildCase({ caseUrn: "12AA3456789", defendant: "Morning Case" })] })] }),
+                buildSitting({
+                  time: "2:00pm",
+                  hearing: [buildHearing({ hearingType: "Sentencing", cases: [buildCase({ caseUrn: "12BB9876543", defendant: "Afternoon Case" })] })]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(dataRowsColumn($, COLUMN.sittingAt)).toEqual(["10:00am", "2:00pm"]);
+      expect(dataRowsColumn($, COLUMN.name)).toEqual(["Morning Case", "Afternoon Case"]);
+    });
+
+    it("should render one accordion section and table per court room", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              courtRoomName: "Court 1",
+              formattedJudiciaries: "District Judge A",
+              sittings: [buildSitting({ hearing: [buildHearing({ cases: [buildCase({ caseUrn: "12AA3456789", defendant: "Court One Case" })] })] })]
+            }),
+            buildSession({
+              courtRoomName: "Court 2",
+              formattedJudiciaries: "District Judge B",
+              sittings: [
+                buildSitting({
+                  hearing: [buildHearing({ hearingType: "Sentencing", cases: [buildCase({ caseUrn: "12BB9876543", defendant: "Court Two Case" })] })]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect($(".govuk-accordion__section")).toHaveLength(2);
+      expect($("table")).toHaveLength(2);
+      const headings = $(".govuk-accordion__section-button")
+        .map((_, el) => $(el).text().replace(/\s+/g, " ").trim())
+        .get();
+      expect(headings).toEqual(["Court 1: District Judge A", "Court 2: District Judge B"]);
+      expect(dataRowsColumn($, COLUMN.name)).toEqual(["Court One Case", "Court Two Case"]);
+    });
+
+    it("should render both case and application rows within one hearing", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtRoom: [
+            buildSession({
+              sittings: [
+                buildSitting({
+                  hearing: [
+                    buildHearing({
+                      hearingType: "Mixed",
+                      cases: [buildCase({ caseUrn: "12AA3456789", defendant: "Case Defendant" })],
+                      applications: [buildApplication({ applicationReference: "APP-2026-001", defendant: "Application Defendant" })]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]);
+
+      expect(dataRowsColumn($, COLUMN.urn)).toEqual(["12AA3456789", "APP-2026-001"]);
+      expect(dataRowsColumn($, COLUMN.name)).toEqual(["Case Defendant", "Application Defendant"]);
+    });
+  });
+
+  describe("Footer", () => {
+    it("should render the data source", () => {
+      const { $ } = renderList([], { dataSource: "Manual Upload" });
+
+      const footer = $("p.govuk-body").filter((_, el) => $(el).text().includes(en.dataSource));
+      expect(footer.text()).toContain(en.dataSource);
+      expect(footer.text()).toContain("Manual Upload");
+    });
+  });
+
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, labels and restriction information", () => {
+      const { $ } = renderList([], {}, cy);
+
+      expect($("h2.govuk-heading-l").first().text()).toContain(cy.header);
+      expect($("p.govuk-body.govuk-\\!-font-weight-bold").text()).toContain(cy.listDate);
+      expect($("h2.govuk-heading-m").text()).toContain(cy.searchCases);
+      const sectionText = $(".restriction-list-section").text();
+      expect(sectionText).toContain(cy.restrictionInformationHeading);
+      expect(sectionText).toContain(cy.restrictionInformationP1);
+      expect(sectionText).toContain(cy.restrictionInformationBoldText);
+    });
+
+    it("should render Welsh table headers in order", () => {
+      const { $ } = renderList([buildCourtHouse()], {}, cy);
+
+      const headers = $("thead th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([cy.sittingAt, cy.urn, cy.name, cy.hearingType, cy.prosecutingAuthority]);
     });
   });
 });

@@ -3,476 +3,292 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { fttTaxChamberWeeklyHearingListCy as cy, fttTaxChamberWeeklyHearingListEn as en } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+const TEMPLATE = "ftt-tax-chamber-weekly-hearing-list.njk";
 
-describe("ftt-tax-chamber-weekly-hearing-list template", () => {
-  describe("Template file", () => {
-    it("should exist", () => {
-      const templatePath = path.join(__dirname, "ftt-tax-chamber-weekly-hearing-list.njk");
-      expect(existsSync(templatePath)).toBe(true);
-    });
-  });
+interface HearingOverrides {
+  date?: string;
+  hearingTime?: string;
+  caseName?: string;
+  caseReferenceNumber?: string;
+  judges?: string;
+  members?: string;
+  venuePlatform?: string;
+}
 
-  describe("Locale content", () => {
-    describe("English locale", () => {
-      it("should have all required properties", () => {
-        expect(en.pageTitle).toBe("First-tier Tribunal (Tax Chamber) Weekly Hearing List");
-        expect(en.listForWeekCommencing).toBe("List for week commencing");
-        expect(en.lastUpdated).toBe("Last updated");
-        expect(en.at).toBe("at");
-        expect(en.factLinkText).toBeDefined();
-        expect(en.factLinkUrl).toBeDefined();
-        expect(en.factAdditionalText).toBeDefined();
-        expect(en.importantInformationTitle).toBe("Important information");
-        expect(en.searchCasesTitle).toBe("Search Cases");
-        expect(en.searchCasesLabel).toBeDefined();
-        expect(en.dataSource).toBe("Data source");
-        expect(en.backToTop).toBe("Back to top");
-      });
+// Fixture builders — each test passes only the varied leaf fields; the full
+// header/hearing/data-source view-model tree is defaulted here.
+function buildHearing(overrides: HearingOverrides = {}) {
+  return {
+    date: "01/01/2024",
+    hearingTime: "10:00am",
+    caseName: "Appellant v HMRC",
+    caseReferenceNumber: "TC/2024/001",
+    judges: "Judge Johnson",
+    members: "Member A, Member B",
+    venuePlatform: "Video hearing",
+    ...overrides
+  };
+}
 
-      it("should have important information paragraphs array", () => {
-        expect(Array.isArray(en.importantInformationParagraphs)).toBe(true);
-        expect(en.importantInformationParagraphs.length).toBeGreaterThan(0);
-      });
-
-      it("should have table headers", () => {
-        expect(en.tableHeaders.date).toBe("Date");
-        expect(en.tableHeaders.hearingTime).toBe("Hearing time");
-        expect(en.tableHeaders.caseName).toBe("Case name");
-        expect(en.tableHeaders.caseReferenceNumber).toBe("Case reference number");
-        expect(en.tableHeaders.judges).toBe("Judge(s)");
-        expect(en.tableHeaders.members).toBe("Member(s)");
-        expect(en.tableHeaders.venuePlatform).toBe("Venue/Platform");
-      });
-    });
-
-    describe("Welsh locale", () => {
-      it("should have all required properties", () => {
-        expect(cy.pageTitle).toBe("First-tier Tribunal (Tax Chamber) Weekly Hearing List");
-        expect(cy.listForWeekCommencing).toBe("List for week commencing");
-        expect(cy.lastUpdated).toBe("Last updated");
-        expect(cy.at).toBe("at");
-        expect(cy.factLinkText).toBeDefined();
-        expect(cy.factLinkUrl).toBeDefined();
-        expect(cy.factAdditionalText).toBeDefined();
-        expect(cy.importantInformationTitle).toBe("Important information");
-        expect(cy.searchCasesTitle).toBe("Search Cases");
-        expect(cy.searchCasesLabel).toBeDefined();
-        expect(cy.dataSource).toBe("Data source");
-        expect(cy.backToTop).toBe("Back to top");
-      });
-
-      it("should have important information paragraphs array", () => {
-        expect(Array.isArray(cy.importantInformationParagraphs)).toBe(true);
-        expect(cy.importantInformationParagraphs.length).toBeGreaterThan(0);
-      });
-
-      it("should have table headers", () => {
-        expect(cy.tableHeaders.date).toBe("Date");
-        expect(cy.tableHeaders.hearingTime).toBe("Hearing time");
-        expect(cy.tableHeaders.caseName).toBe("Case name");
-        expect(cy.tableHeaders.caseReferenceNumber).toBe("Case reference number");
-        expect(cy.tableHeaders.judges).toBe("Judge(s)");
-        expect(cy.tableHeaders.members).toBe("Member(s)");
-        expect(cy.tableHeaders.venuePlatform).toBe("Venue/Platform");
-      });
-    });
-
-    describe("Locale consistency", () => {
-      it("should have same structure in English and Welsh", () => {
-        expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
-      });
-
-      it("should have same number of table headers", () => {
-        expect(Object.keys(en.tableHeaders).length).toBe(Object.keys(cy.tableHeaders).length);
-      });
-
-      it("should have same number of important information paragraphs", () => {
-        expect(en.importantInformationParagraphs.length).toBe(cy.importantInformationParagraphs.length);
-      });
-    });
-  });
-
-  describe("Template rendering", () => {
-    let env: nunjucks.Environment;
-
-    const setupNunjucks = () => {
-      return createTestEnvironment([__dirname, webCoreViews], {
-        trimBlocks: true,
-        lstripBlocks: true
-      });
-    };
-
-    const createMockHeader = () => ({
+function baseData(locale: typeof en | typeof cy = en) {
+  return {
+    t: locale,
+    en,
+    cy,
+    header: {
       listTitle: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
       weekCommencingDate: "Monday 1 January 2024",
       lastUpdatedDate: "1 January 2024",
       lastUpdatedTime: "10:30am"
+    },
+    dataSource: "TAX"
+  };
+}
+
+function renderList(hearings: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, hearings });
+}
+
+// The rendered hearings table columns, in order.
+const COLUMN = { date: 0, hearingTime: 1, caseName: 2, caseReferenceNumber: 3, judges: 4, members: 5, venuePlatform: 6 } as const;
+
+function firstDataRowCells($: CheerioAPI) {
+  return $("tbody.govuk-table__body tr")
+    .first()
+    .find("td")
+    .map((_, el) => $(el).text().trim())
+    .get();
+}
+
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews], { trimBlocks: true, lstripBlocks: true });
+});
+
+describe("ftt-tax-chamber-weekly-hearing-list template", () => {
+  describe("Template file", () => {
+    it("should exist", () => {
+      expect(existsSync(path.join(__dirname, TEMPLATE))).toBe(true);
+    });
+  });
+
+  describe("Locale consistency", () => {
+    it("should have the same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
-    const createMockHearing = (overrides = {}) => ({
-      date: "01/01/2024",
-      hearingTime: "10:00am",
-      caseReferenceNumber: "TC/2024/001",
-      caseName: "Appellant v HMRC",
-      venuePlatform: "Video hearing",
-      judges: "Judge Johnson",
-      members: "Member A, Member B",
-      ...overrides
+    it("should use https FACT and guidance link URLs", () => {
+      expect(en.factLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.factLinkUrl).toMatch(/^https:\/\//);
+      expect(en.importantInformationLinkUrl).toMatch(/^https:\/\//);
+      expect(cy.importantInformationLinkUrl).toMatch(/^https:\/\//);
+    });
+  });
+
+  describe("Page header", () => {
+    it("should render the heading with the list title", () => {
+      const { $ } = renderList([buildHearing()]);
+
+      expect($("h1#top").text().trim()).toBe(baseData().header.listTitle);
     });
 
-    describe("with English locale", () => {
-      it("should render template with all data", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing(), createMockHearing({ caseReferenceNumber: "TC/2024/002" })];
-        const dataSource = "TAX";
+    it("should render the week commencing and last updated lines", () => {
+      const { $ } = renderList([buildHearing()]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
-
-        expect(html).toContain(header.listTitle);
-        expect(html).toContain(header.weekCommencingDate);
-        expect(html).toContain(header.lastUpdatedDate);
-        expect(html).toContain(header.lastUpdatedTime);
-        expect(html).toContain(hearings[0].caseReferenceNumber);
-        expect(html).toContain(hearings[1].caseReferenceNumber);
-        expect(html).toContain(dataSource);
-      });
-
-      it("should render header section correctly", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain('<h1 class="govuk-heading-l"');
-        expect(html).toContain(en.listForWeekCommencing);
-        expect(html).toContain(en.lastUpdated);
-        expect(html).toContain(en.at);
-      });
-
-      it("should render FACT link section", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain(en.factLinkText);
-        expect(html).toContain(en.factLinkUrl);
-        expect(html).toContain(en.factAdditionalText);
-      });
-
-      it("should render important information details component", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("govuk-details");
-        expect(html).toContain(en.importantInformationTitle);
-        expect(html).toContain(en.importantInformationLinkText);
-        // Check each paragraph exists (accounting for HTML entity encoding)
-        expect(html).toContain("Open justice is a fundamental principle");
-        expect(html).toContain("Members of the public and the media");
-        expect(html).toContain("The subject line for the email should contain");
-        expect(html).toContain("The judge may refuse a request");
-      });
-
-      it("should render search input", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain(en.searchCasesTitle);
-        expect(html).toContain('id="case-search-input"');
-        expect(html).toContain('type="text"');
-      });
-
-      it("should render table with all headers", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain('<table class="govuk-table"');
-        expect(html).toContain(en.tableHeaders.date);
-        expect(html).toContain(en.tableHeaders.hearingTime);
-        expect(html).toContain(en.tableHeaders.caseName);
-        expect(html).toContain(en.tableHeaders.caseReferenceNumber);
-        expect(html).toContain(en.tableHeaders.judges);
-        expect(html).toContain(en.tableHeaders.members);
-        expect(html).toContain(en.tableHeaders.venuePlatform);
-      });
-
-      it("should render back to top link", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain(en.backToTop);
-        expect(html).toContain('href="#top"');
-      });
-
-      it("should render data source", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-        const dataSource = "TAX";
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource });
-
-        expect(html).toContain(en.dataSource);
-        expect(html).toContain(dataSource);
-      });
+      const bodyText = $(".govuk-body").text();
+      expect(bodyText).toContain(`${en.listForWeekCommencing} Monday 1 January 2024`);
+      expect(bodyText).toContain(`${en.lastUpdated} 1 January 2024 ${en.at} 10:30am`);
     });
 
-    describe("with Welsh locale", () => {
-      it("should render template with Welsh translations", () => {
-        env = setupNunjucks();
-        const header = {
-          listTitle: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
-          weekCommencingDate: "Dydd Llun 1 Ionawr 2024",
-          lastUpdatedDate: "1 Ionawr 2024",
-          lastUpdatedTime: "10:30yb"
-        };
-        const hearings = [createMockHearing()];
+    it("should render the FACT link with the configured text and URL", () => {
+      const { $ } = renderList([buildHearing()]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain(cy.listForWeekCommencing);
-        expect(html).toContain(cy.lastUpdated);
-        expect(html).toContain(cy.importantInformationTitle);
-        expect(html).toContain(cy.searchCasesTitle);
-        expect(html).toContain(cy.backToTop);
-      });
-
-      it("should render Welsh table headers", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: cy, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain(cy.tableHeaders.date);
-        expect(html).toContain(cy.tableHeaders.hearingTime);
-        expect(html).toContain(cy.tableHeaders.caseName);
-        expect(html).toContain(cy.tableHeaders.caseReferenceNumber);
-        expect(html).toContain(cy.tableHeaders.judges);
-        expect(html).toContain(cy.tableHeaders.members);
-        expect(html).toContain(cy.tableHeaders.venuePlatform);
-      });
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
+      expect($(".govuk-body").text()).toContain(en.factAdditionalText);
     });
 
-    describe("hearing data variations", () => {
-      it("should render with empty hearings array", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings: unknown[] = [];
+    it("should render the important information details with every paragraph and guidance link", () => {
+      const { $ } = renderList([buildHearing()]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+      const details = $("details.govuk-details");
+      expect(details).toHaveLength(1);
+      expect(details.find(".govuk-details__summary-text").text().trim()).toBe(en.importantInformationTitle);
 
-        expect(html).toContain('<tbody class="govuk-table__body">');
-        expect(html).not.toContain("TC/2024/001");
-      });
+      const paragraphs = details
+        .find(".govuk-details__text p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      for (const paragraph of en.importantInformationParagraphs) {
+        expect(paragraphs).toContain(paragraph);
+      }
 
-      it("should render with single hearing", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+      const guidanceLink = details.find(`a[href="${en.importantInformationLinkUrl}"]`);
+      expect(guidanceLink).toHaveLength(1);
+      expect(guidanceLink.text().trim()).toBe(en.importantInformationLinkText);
+    });
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+    it("should render the case search input with its heading and hidden label", () => {
+      const { $ } = renderList([buildHearing()]);
 
-        expect(html).toContain(hearings[0].caseReferenceNumber);
-        expect(html).toContain(hearings[0].caseName);
-        expect(html).toContain(hearings[0].date);
-      });
+      expect($("h2.govuk-heading-s").text()).toContain(en.searchCasesTitle);
+      const label = $('label[for="case-search-input"]');
+      expect(label).toHaveLength(1);
+      expect(label.hasClass("govuk-visually-hidden")).toBe(true);
+      expect(label.text().trim()).toBe(en.searchCasesLabel);
 
-      it("should render with multiple hearings", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [
-          createMockHearing({ caseReferenceNumber: "TC/2024/001" }),
-          createMockHearing({ caseReferenceNumber: "TC/2024/002" }),
-          createMockHearing({ caseReferenceNumber: "TC/2024/003" })
-        ];
+      const input = $("input#case-search-input");
+      expect(input).toHaveLength(1);
+      expect(input.attr("type")).toBe("text");
+      expect(input.hasClass("govuk-input")).toBe(true);
+      expect(input.attr("aria-label")).toBe(en.searchCasesLabel);
+    });
+  });
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+  describe("Hearings table", () => {
+    it("should render all column headers in order", () => {
+      const { $ } = renderList([buildHearing()]);
 
-        expect(html).toContain("TC/2024/001");
-        expect(html).toContain("TC/2024/002");
-        expect(html).toContain("TC/2024/003");
-      });
+      const headers = $("thead.govuk-table__head th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toEqual([
+        en.tableHeaders.date,
+        en.tableHeaders.hearingTime,
+        en.tableHeaders.caseName,
+        en.tableHeaders.caseReferenceNumber,
+        en.tableHeaders.judges,
+        en.tableHeaders.members,
+        en.tableHeaders.venuePlatform
+      ]);
+    });
 
-      it("should render all hearing fields correctly", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearing = createMockHearing({
+    it("should have a table with an accessible name and column scopes", () => {
+      const { $ } = renderList([buildHearing()]);
+
+      const table = $("table.govuk-table");
+      expect(table.attr("role")).toBe("table");
+      expect(table.attr("aria-label")).toBe(baseData().header.listTitle);
+      expect($("thead.govuk-table__head th[scope='col']")).toHaveLength(7);
+    });
+
+    it("should place each hearing field in its correct column", () => {
+      const { $ } = renderList([
+        buildHearing({
           date: "15/03/2024",
           hearingTime: "2:30pm",
-          caseReferenceNumber: "TC/2024/999",
           caseName: "Jones v HMRC",
-          venuePlatform: "Court Room 5",
+          caseReferenceNumber: "TC/2024/999",
           judges: "Judge Smith, Judge Williams",
-          members: "Member X, Member Y, Member Z"
-        });
-        const hearings = [hearing];
+          members: "Member X, Member Y, Member Z",
+          venuePlatform: "Court Room 5"
+        })
+      ]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("15/03/2024");
-        expect(html).toContain("2:30pm");
-        expect(html).toContain("TC/2024/999");
-        expect(html).toContain("Jones v HMRC");
-        expect(html).toContain("Court Room 5");
-        expect(html).toContain("Judge Smith, Judge Williams");
-        expect(html).toContain("Member X, Member Y, Member Z");
-      });
-
-      it("should render with empty string fields", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearing = createMockHearing({
-          judges: "",
-          members: ""
-        });
-        const hearings = [hearing];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain('<tbody class="govuk-table__body">');
-        expect(html).toContain(hearing.caseReferenceNumber);
-      });
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.date]).toBe("15/03/2024");
+      expect(cells[COLUMN.hearingTime]).toBe("2:30pm");
+      expect(cells[COLUMN.caseName]).toBe("Jones v HMRC");
+      expect(cells[COLUMN.caseReferenceNumber]).toBe("TC/2024/999");
+      expect(cells[COLUMN.judges]).toBe("Judge Smith, Judge Williams");
+      expect(cells[COLUMN.members]).toBe("Member X, Member Y, Member Z");
+      expect(cells[COLUMN.venuePlatform]).toBe("Court Room 5");
     });
 
-    describe("accessibility attributes", () => {
-      it("should have proper ARIA labels", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+    it("should render no data rows when the hearings array is empty", () => {
+      const { $ } = renderList([]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain('role="table"');
-        expect(html).toContain("aria-label");
-      });
-
-      it("should have visually hidden label for search input", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("govuk-visually-hidden");
-        expect(html).toContain(en.searchCasesLabel);
-      });
-
-      it("should have proper table structure with scope attributes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain('<thead class="govuk-table__head">');
-        expect(html).toContain('scope="col"');
-        expect(html).toContain("<th");
-      });
+      expect($("tbody.govuk-table__body tr")).toHaveLength(0);
     });
 
-    describe("GOV.UK Design System compliance", () => {
-      it("should use govuk-grid-row and govuk-grid-column classes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+    it("should render a single hearing as one row", () => {
+      const { $ } = renderList([buildHearing({ caseReferenceNumber: "TC/2024/123", caseName: "Solo v HMRC" })]);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+      expect($("tbody.govuk-table__body tr")).toHaveLength(1);
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.caseReferenceNumber]).toBe("TC/2024/123");
+      expect(cells[COLUMN.caseName]).toBe("Solo v HMRC");
+    });
 
-        expect(html).toContain("govuk-grid-row");
-        expect(html).toContain("govuk-grid-column-full");
-      });
+    it("should render a row per hearing for multiple hearings", () => {
+      const { $ } = renderList([
+        buildHearing({ caseReferenceNumber: "TC/2024/001" }),
+        buildHearing({ caseReferenceNumber: "TC/2024/002" }),
+        buildHearing({ caseReferenceNumber: "TC/2024/003" })
+      ]);
 
-      it("should use govuk-heading classes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+      const caseRefs = $("tbody.govuk-table__body tr")
+        .map((_, row) => $(row).find("td").eq(COLUMN.caseReferenceNumber).text().trim())
+        .get();
+      expect(caseRefs).toEqual(["TC/2024/001", "TC/2024/002", "TC/2024/003"]);
+    });
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+    it("should render empty judge and member cells without dropping the row", () => {
+      const { $ } = renderList([buildHearing({ caseReferenceNumber: "TC/2024/777", judges: "", members: "" })]);
 
-        expect(html).toContain("govuk-heading-l");
-        expect(html).toContain("govuk-heading-s");
-      });
+      expect($("tbody.govuk-table__body tr")).toHaveLength(1);
+      const cells = firstDataRowCells($);
+      expect(cells[COLUMN.caseReferenceNumber]).toBe("TC/2024/777");
+      expect(cells[COLUMN.judges]).toBe("");
+      expect(cells[COLUMN.members]).toBe("");
+    });
+  });
 
-      it("should use govuk-body classes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+  describe("Footer", () => {
+    it("should render the data source", () => {
+      const { $ } = renderList([buildHearing()], { dataSource: "Tax Data Platform" });
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+      const footer = $("p.govuk-body-s");
+      expect(footer.text()).toContain(en.dataSource);
+      expect(footer.text()).toContain("Tax Data Platform");
+    });
 
-        expect(html).toContain("govuk-body");
-      });
+    it("should render a back-to-top link", () => {
+      const { $ } = renderList([buildHearing()]);
 
-      it("should use govuk-link class", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+      const backToTop = $('a[href="#top"]');
+      expect(backToTop.text()).toContain(en.backToTop);
+    });
+  });
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
+  describe("Welsh rendering", () => {
+    it("should render Welsh headings, table headers and labels", () => {
+      const { $ } = renderList(
+        [buildHearing()],
+        {
+          header: {
+            listTitle: cy.pageTitle,
+            weekCommencingDate: "Dydd Llun 1 Ionawr 2024",
+            lastUpdatedDate: "1 Ionawr 2024",
+            lastUpdatedTime: "10:30yb"
+          }
+        },
+        cy
+      );
 
-        expect(html).toContain("govuk-link");
-      });
+      expect($(".govuk-body").text()).toContain(cy.listForWeekCommencing);
+      expect($(".govuk-body").text()).toContain(cy.lastUpdated);
+      expect($("details.govuk-details .govuk-details__summary-text").text().trim()).toBe(cy.importantInformationTitle);
+      expect($("h2.govuk-heading-s").text()).toContain(cy.searchCasesTitle);
 
-      it("should use govuk-details component classes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
+      const headers = $("thead.govuk-table__head th")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headers).toContain(cy.tableHeaders.date);
+      expect(headers).toContain(cy.tableHeaders.caseName);
+      expect(headers).toContain(cy.tableHeaders.venuePlatform);
 
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("govuk-details");
-        expect(html).toContain("govuk-details__summary");
-        expect(html).toContain("govuk-details__text");
-      });
-
-      it("should use govuk-input class", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("govuk-input");
-      });
-
-      it("should use govuk-table classes", () => {
-        env = setupNunjucks();
-        const header = createMockHeader();
-        const hearings = [createMockHearing()];
-
-        const { html } = render(env, "ftt-tax-chamber-weekly-hearing-list.njk", { t: en, en, cy, header, hearings, dataSource: "TAX" });
-
-        expect(html).toContain("govuk-table");
-        expect(html).toContain("govuk-table__head");
-        expect(html).toContain("govuk-table__body");
-        expect(html).toContain("govuk-table__row");
-        expect(html).toContain("govuk-table__header");
-        expect(html).toContain("govuk-table__cell");
-      });
+      expect($('a[href="#top"]').text()).toContain(cy.backToTop);
     });
   });
 });
