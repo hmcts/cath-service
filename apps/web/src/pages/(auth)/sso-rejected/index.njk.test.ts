@@ -36,7 +36,7 @@ describe("sso-rejected template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const link = $(`a[href="${SERVICE_NOW_HREF}"]`);
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text()).toContain(en.linkText);
     });
   });
@@ -57,7 +57,7 @@ describe("sso-rejected template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const link = $(`a[href="${SERVICE_NOW_HREF}"]`);
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text()).toContain(cy.linkText);
     });
   });

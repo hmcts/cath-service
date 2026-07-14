@@ -98,7 +98,7 @@ describe("view-list-types template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("table").length).toBe(0);
+      expect($("table")).toHaveLength(0);
       expect($("p.govuk-body").text()).toContain(en.noListTypesText);
     });
 

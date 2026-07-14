@@ -57,8 +57,8 @@ describe("confirm-bulk-unsubscribe template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($('input[name="confirm"][value="yes"]').length).toBe(1);
-      expect($('input[name="confirm"][value="no"]').length).toBe(1);
+      expect($('input[name="confirm"][value="yes"]')).toHaveLength(1);
+      expect($('input[name="confirm"][value="no"]')).toHaveLength(1);
       expect($(".govuk-button").text()).toContain(en.continueButton);
     });
 

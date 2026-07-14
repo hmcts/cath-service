@@ -40,7 +40,7 @@ describe("case-reference-search template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("#caseReference").length).toBe(1);
+      expect($("#caseReference")).toHaveLength(1);
       expect($('input[name="caseReference"]').attr("value") ?? "").toBe("");
       expect($("button.govuk-button").text().trim()).toBe(en.continueButton);
       assertNoErrors($);
@@ -52,7 +52,7 @@ describe("case-reference-search template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const backLink = $('a[href="/add-email-subscription"]');
-      expect(backLink.length).toBe(1);
+      expect(backLink).toHaveLength(1);
       expect(backLink.text().trim()).toBe(en.back);
     });
 

@@ -56,7 +56,7 @@ describe("add-email-subscription template", () => {
 
       expect($("button").text()).toContain(en.continueButton);
       const back = $('a[href="/subscription-management"]');
-      expect(back.length).toBe(1);
+      expect(back).toHaveLength(1);
       expect(back.text().trim()).toBe(en.back);
     });
 

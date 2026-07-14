@@ -60,8 +60,8 @@ describe("cookie-policy template", () => {
       const form = $('form[action="/cookie-policy"]');
       expect(form.attr("method")).toBe("POST");
       expect($('input[name="_csrf"]').attr("value")).toBe("test-csrf");
-      expect($('input[name="analytics"]').length).toBe(2);
-      expect($('input[name="performance"]').length).toBe(2);
+      expect($('input[name="analytics"]')).toHaveLength(2);
+      expect($('input[name="performance"]')).toHaveLength(2);
       expect($("button").text()).toContain(en.changeSettings.saveButton);
     });
   });
@@ -93,7 +93,7 @@ describe("cookie-policy template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const banner = $(".govuk-notification-banner");
-      expect(banner.length).toBe(1);
+      expect(banner).toHaveLength(1);
       expect(banner.text()).toContain(en.successMessage);
     });
 
@@ -102,7 +102,7 @@ describe("cookie-policy template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(".govuk-notification-banner").length).toBe(0);
+      expect($(".govuk-notification-banner")).toHaveLength(0);
     });
   });
 

@@ -167,7 +167,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       const expectedParagraphs = listContent.importantInfoText.split("\n\n").length;
       const paragraphs = $("details.govuk-details .govuk-body");
       // The template appends one extra paragraph for the more-info link.
-      expect(paragraphs.length).toBe(expectedParagraphs + 1);
+      expect(paragraphs).toHaveLength(expectedParagraphs + 1);
     });
 
     it("should render the more-info link with text and URL at the end of the details", () => {

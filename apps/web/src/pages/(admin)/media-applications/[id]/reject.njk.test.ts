@@ -89,7 +89,7 @@ describe("reject template", () => {
         .get();
       expect(keys).toContain(en.reasonsHeading);
       const reasonItems = $(".govuk-summary-list__value ol.govuk-list--number li");
-      expect(reasonItems.length).toBe(2);
+      expect(reasonItems).toHaveLength(2);
     });
 
     it("should render the proof of ID row with a view link", () => {
@@ -98,7 +98,7 @@ describe("reject template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const proofLink = $(`a[href="/media-applications/${mockApplication.id}/proof-of-id"]`);
-      expect(proofLink.length).toBe(1);
+      expect(proofLink).toHaveLength(1);
       expect(proofLink.text()).toContain(en.viewLinkText);
     });
 
@@ -108,7 +108,7 @@ describe("reject template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const details = $("details.govuk-details");
-      expect(details.length).toBe(1);
+      expect(details).toHaveLength(1);
       expect(details.find(".govuk-details__summary-text").text()).toContain(en.emailPreview.summaryText);
       expect(details.text()).toContain(mockApplication.name);
       expect(details.text()).toContain(en.emailPreview.rejectionMessage);

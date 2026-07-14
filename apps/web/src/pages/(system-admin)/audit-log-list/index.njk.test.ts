@@ -87,12 +87,12 @@ describe("audit-log-list template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("#email").length).toBe(1);
-      expect($("#userId").length).toBe(1);
+      expect($("#email")).toHaveLength(1);
+      expect($("#userId")).toHaveLength(1);
       expect($("label[for='email']").text()).toContain(en.filters.emailLabel);
       expect($("label[for='userId']").text()).toContain(en.filters.userIdLabel);
-      expect($("input[name='day']").length).toBe(1);
-      expect($("input[name='actions']").length).toBe(1);
+      expect($("input[name='day']")).toHaveLength(1);
+      expect($("input[name='actions']")).toHaveLength(1);
     });
 
     it("should render a table of logs with view links", () => {
@@ -104,10 +104,10 @@ describe("audit-log-list template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("table.govuk-table tbody tr").length).toBe(2);
+      expect($("table.govuk-table tbody tr")).toHaveLength(2);
       expect($("th").text()).toContain(en.tableHeaders.timestamp);
       expect($("table").text()).toContain("user1@example.com");
-      expect($('a[href="/audit-log-detail?id=log-1"]').length).toBe(1);
+      expect($('a[href="/audit-log-detail?id=log-1"]')).toHaveLength(1);
       expect($('a[href="/audit-log-detail?id=log-1"]').text()).toContain(en.viewLink);
     });
 
@@ -116,7 +116,7 @@ describe("audit-log-list template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("table.govuk-table").length).toBe(0);
+      expect($("table.govuk-table")).toHaveLength(0);
       expect($(".govuk-body").text()).toContain(en.noResults);
     });
 
@@ -125,7 +125,7 @@ describe("audit-log-list template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("nav.govuk-pagination").length).toBe(1);
+      expect($("nav.govuk-pagination")).toHaveLength(1);
       expect($(".govuk-pagination__prev a").attr("href")).toContain("page=1");
       expect($(".govuk-pagination__next a").attr("href")).toContain("page=3");
     });

@@ -70,8 +70,8 @@ describe("non-strategic-upload-summary template", () => {
       expect(values).toContain("example-list.xlsx");
       expect(values).toContain("14 July 2026 to 21 July 2026");
 
-      expect($('.govuk-summary-list__actions a[href="/non-strategic-upload#court"]').length).toBe(1);
-      expect($('.govuk-summary-list__actions a[href="/non-strategic-upload#displayFrom-day"]').length).toBe(1);
+      expect($('.govuk-summary-list__actions a[href="/non-strategic-upload#court"]')).toHaveLength(1);
+      expect($('.govuk-summary-list__actions a[href="/non-strategic-upload#displayFrom-day"]')).toHaveLength(1);
       expect($(".govuk-summary-list__actions a").first().text()).toContain(en.change);
     });
 
@@ -80,7 +80,7 @@ describe("non-strategic-upload-summary template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("form[method='post']").length).toBe(1);
+      expect($("form[method='post']")).toHaveLength(1);
       expect($("form button.govuk-button").text()).toContain(en.confirmButton);
     });
 

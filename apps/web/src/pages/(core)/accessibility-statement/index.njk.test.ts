@@ -138,7 +138,7 @@ describe("accessibility-statement template", () => {
     });
 
     it("should have same number of accessibility features", () => {
-      expect(en.sections.intro.features.length).toBe(cy.sections.intro.features.length);
+      expect(en.sections.intro.features).toHaveLength(cy.sections.intro.features.length);
     });
   });
 });

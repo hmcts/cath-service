@@ -28,7 +28,7 @@ describe("session-expired template", () => {
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
       const panel = $(".govuk-panel--confirmation");
-      expect(panel.length).toBe(1);
+      expect(panel).toHaveLength(1);
       expect(panel.find("h1").text()).toContain(en.heading);
     });
 
@@ -56,7 +56,7 @@ describe("session-expired template", () => {
       const { $ } = render(env, "(auth)/session-expired/index.njk", data);
 
       const link = $('.govuk-grid-row a[href="/sign-in"]');
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text()).toContain(en.signInAgainLink);
     });
   });

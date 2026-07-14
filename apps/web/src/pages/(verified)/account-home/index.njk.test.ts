@@ -48,9 +48,9 @@ describe("account-home template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($('a[href="/search"]').length).toBe(1);
-      expect($('a[href="/summary-of-publications?locationId=9"]').length).toBe(1);
-      expect($('a[href="/subscription-management"]').length).toBe(1);
+      expect($('a[href="/search"]')).toHaveLength(1);
+      expect($('a[href="/summary-of-publications?locationId=9"]')).toHaveLength(1);
+      expect($('a[href="/subscription-management"]')).toHaveLength(1);
     });
   });
 

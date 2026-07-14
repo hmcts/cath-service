@@ -47,7 +47,7 @@ describe("list-search-config-success template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const link = $('a[href="/manage-list-types"]');
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text().trim()).toBe(en.returnLink);
     });
   });

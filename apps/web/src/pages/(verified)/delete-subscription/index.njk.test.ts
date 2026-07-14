@@ -34,7 +34,7 @@ describe("delete-subscription template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const radios = $('input[name="unsubscribe-confirm"]');
-      expect(radios.length).toBe(2);
+      expect(radios).toHaveLength(2);
       expect(radios.eq(0).attr("value")).toBe("yes");
       expect(radios.eq(1).attr("value")).toBe("no");
       const body = $("body").text();

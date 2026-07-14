@@ -36,7 +36,7 @@ describe("crime-rejected template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       const link = $(`a[href="/sign-in"]:contains("${en.returnToSignIn}")`);
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text()).toContain(en.returnToSignIn);
     });
   });

@@ -23,7 +23,7 @@ describe("password-reset-success template", () => {
       const { $ } = render(env, "(auth)/password-reset-success/index.njk", data);
 
       const panel = $(".govuk-panel--confirmation");
-      expect(panel.length).toBe(1);
+      expect(panel).toHaveLength(1);
       expect(panel.find("h1").text()).toContain(en.title);
     });
 
@@ -33,7 +33,7 @@ describe("password-reset-success template", () => {
       const { $ } = render(env, "(auth)/password-reset-success/index.njk", data);
 
       const link = $('.govuk-body a[href="/sign-in"]');
-      expect(link.length).toBe(1);
+      expect(link).toHaveLength(1);
       expect(link.text()).toContain(en.signInLink);
     });
   });

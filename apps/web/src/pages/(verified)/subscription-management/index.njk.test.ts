@@ -91,7 +91,7 @@ describe("subscription-management template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($(".govuk-body").text()).toContain(en.noSubscriptions);
-      expect($("#all-case-subscriptions-table").length).toBe(0);
+      expect($("#all-case-subscriptions-table")).toHaveLength(0);
     });
   });
 

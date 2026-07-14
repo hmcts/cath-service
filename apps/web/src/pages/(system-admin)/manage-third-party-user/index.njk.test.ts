@@ -81,8 +81,8 @@ describe("manage-third-party-user template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(`a[href="/manage-third-party-subscriptions?id=${mockUser.id}&lng=cy"]`).length).toBe(1);
-      expect($(`a[href="/delete-third-party-user?id=${mockUser.id}&lng=cy"]`).length).toBe(1);
+      expect($(`a[href="/manage-third-party-subscriptions?id=${mockUser.id}&lng=cy"]`)).toHaveLength(1);
+      expect($(`a[href="/delete-third-party-user?id=${mockUser.id}&lng=cy"]`)).toHaveLength(1);
     });
   });
 
@@ -93,8 +93,8 @@ describe("manage-third-party-user template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(en.pageTitle);
-      expect($(".govuk-summary-list").length).toBe(0);
-      expect($("a.govuk-button").length).toBe(0);
+      expect($(".govuk-summary-list")).toHaveLength(0);
+      expect($("a.govuk-button")).toHaveLength(0);
     });
   });
 });
