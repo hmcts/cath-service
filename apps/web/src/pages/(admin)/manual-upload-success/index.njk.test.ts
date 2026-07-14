@@ -65,6 +65,33 @@ describe("manual-upload-success template", () => {
     });
   });
 
+  describe("Content standards", () => {
+    it("should have page titles following the GOV.UK title convention", () => {
+      expect(en.pageTitle.endsWith("GOV.UK")).toBe(true);
+      expect(cy.pageTitle.endsWith("GOV.UK")).toBe(true);
+      expect(en.pageTitle).toContain("Court and tribunal hearings");
+      expect(cy.pageTitle).toContain("Gwrandawiadau llys a thribiwnlys");
+      expect(en.pageTitle).toContain("Manual upload");
+      expect(cy.pageTitle).toContain("Uwchlwytho â llaw");
+    });
+
+    it("should have action-oriented, non-generic link text", () => {
+      expect(en.uploadAnotherLink).toMatch(/upload/i);
+      expect(en.removeFileLink).toMatch(/remove/i);
+      expect(en.homeLink).toMatch(/home/i);
+      expect(en.uploadAnotherLink).not.toBe("Click here");
+      expect(en.removeFileLink).not.toBe("Click here");
+      expect(en.homeLink).not.toBe("Click here");
+    });
+
+    it("should have positive success messaging", () => {
+      expect(en.title).toContain("successful");
+      expect(en.uploadedMessage).toContain("uploaded");
+      expect(cy.title).toContain("llwyddo");
+      expect(cy.uploadedMessage).toContain("huwchlwytho");
+    });
+  });
+
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());

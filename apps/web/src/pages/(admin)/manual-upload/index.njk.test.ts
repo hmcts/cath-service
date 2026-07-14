@@ -245,6 +245,26 @@ describe("manual-upload template", () => {
     });
   });
 
+  describe("Content standards", () => {
+    it("should have the exact English validation messages", () => {
+      expect(en.errorMessages.fileRequired).toBe("Please provide a file");
+      expect(en.errorMessages.fileType).toBe("Please upload a valid file format");
+      expect(en.errorMessages.fileSize).toBe("File too large, please upload file smaller than 2MB");
+      expect(en.errorMessages.courtRequired).toBe("Please enter and select a valid court");
+      expect(en.errorMessages.courtTooShort).toBe("Court name must be three characters or more");
+      expect(en.errorMessages.listTypeRequired).toBe("Please select a list type");
+      expect(en.errorMessages.hearingStartDateRequired).toBe("Please enter a valid hearing start date");
+      expect(en.errorMessages.hearingStartDateInvalid).toBe("Please enter a valid hearing start date");
+      expect(en.errorMessages.sensitivityRequired).toBe("Please select a sensitivity");
+      expect(en.errorMessages.languageRequired).toBe("Select a language");
+      expect(en.errorMessages.displayFromRequired).toBe("Please enter a valid display file from date");
+      expect(en.errorMessages.displayFromInvalid).toBe("Please enter a valid display file from date");
+      expect(en.errorMessages.displayToRequired).toBe("Please enter a valid display file to date");
+      expect(en.errorMessages.displayToInvalid).toBe("Please enter a valid display file to date");
+      expect(en.errorMessages.displayToBeforeFrom).toBe("Display to date must be after display from date");
+    });
+  });
+
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
