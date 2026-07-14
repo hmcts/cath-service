@@ -632,6 +632,26 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [26]
   },
   {
+    name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+    englishFriendlyName: "Magistrates Adult Court List - Daily",
+    welshFriendlyName: "Rhestr Llys Ynadon Oedolion - Dyddiol",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
+  },
+  {
+    name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
+    englishFriendlyName: "Magistrates Adult Court List - Future",
+    welshFriendlyName: "Rhestr Llys Ynadon Oedolion – Dyfodol",
+    provenance: "CRIME_IDAM",
+    urlPath: "magistrates-adult-court-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Classified",
+    subJurisdictionIds: [7]
+  },
+  {
     name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY",
     englishFriendlyName: "Magistrates Public Adult Court List - Daily",
     welshFriendlyName: "Rhestr Achosion Cyhoeddus Llys Ynadon (Oedolion) - Dyddiol",
