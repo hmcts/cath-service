@@ -135,8 +135,13 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
 
 ## Acceptance Criteria Verification
 [List EVERY acceptance criterion extracted from ticket.md — do not summarise or omit any.
-Mark each '- [x]' if met or '- [ ]' if not met, with a short note and, where possible, a
-file:line reference to the code or test that satisfies it.]
+Mark each using exactly three states:
+  - '- [x]' fully met
+  - '- [~]' partially met (state what is done and what is missing)
+  - '- [ ]' not met
+Every met or partially met criterion MUST cite at least one file:line reference to the code or
+test that satisfies it. If a criterion is met but no such reference exists, mark it '- [ ]' and
+record 'no evidence'.]
 - [ ] Criterion 1: [Status and notes — file:line]
 - [ ] Criterion 2: [Status and notes — file:line]
 ...
@@ -155,10 +160,12 @@ Overall Assessment MUST be at least NEEDS CHANGES, and each such workspace MUST 
 HIGH PRIORITY Issues (or CRITICAL if coverage is far below). This verdict is advisory — it does
 not block the developer from committing.
 
-Acceptance Criteria rule: if any acceptance criterion is NOT met (any '- [ ]' in the Acceptance
-Criteria Verification section), the Overall Assessment MUST be at least NEEDS CHANGES, and each
-unmet criterion MUST be listed under CRITICAL Issues — an unmet criterion is an unimplemented
-requirement. This verdict is advisory — it does not block the developer from committing.
+Acceptance Criteria rule: if any acceptance criterion is not fully met (any '- [ ]' or '- [~]'
+in the Acceptance Criteria Verification section), the Overall Assessment MUST be at least NEEDS
+CHANGES. Each not-met ('- [ ]') criterion MUST be listed under CRITICAL Issues — an unmet
+criterion is an unimplemented requirement. Each partially met ('- [~]') criterion MUST be listed
+under HIGH PRIORITY Issues with the missing part described. This verdict is advisory — it does
+not block the developer from committing.
 
 ---
 
@@ -187,7 +194,8 @@ ACTION: Read the review report and present key findings to the user
    - Number of critical issues
    - Number of high priority issues
    - Number of suggestions
-   - Acceptance criteria status (N/M criteria met, with any unmet criteria named)
+   - Acceptance criteria status (N met / P partial / U unmet of M, with any partial or unmet
+     criteria named)
 
 3. Show the full review report location
 ```
@@ -203,7 +211,7 @@ Code review complete for issue #$ARGUMENT!
 📊 Review Summary:
 [Display counts of critical/high priority/suggestions]
 
-Acceptance Criteria: [N/M met — name any unmet criteria]
+Acceptance Criteria: [N met / P partial / U unmet of M — name any partial or unmet criteria]
 
 Overall Assessment: [APPROVED/NEEDS CHANGES/MAJOR REVISIONS REQUIRED]
 

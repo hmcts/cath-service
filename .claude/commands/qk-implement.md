@@ -77,11 +77,15 @@ Work through each task in the Testing Tasks section of tasks.md:
 4. Verify acceptance criteria:
    - Re-read docs/tickets/$ARGUMENT/ticket.md and extract every acceptance criterion from the
      Description (look for an 'Acceptance Criteria'/'AC' section or checklist items)
-   - For each criterion, state whether the implemented code satisfies it (met / not met /
-     partially met) with a one-line justification
-   - Report this as an 'Acceptance Criteria' checklist in your final summary, e.g.
-     "- [x] <criterion> — <justification>" for met and "- [ ]" for not met
-   - Do NOT block on unmet criteria — just report them accurately
+   - For each criterion, state whether the implemented code satisfies it and justify it in one
+     line with a file:line reference to the code or test that satisfies it (record 'no evidence'
+     if none exists)
+   - Report this as an 'Acceptance Criteria' checklist in your final summary using exactly three
+     states:
+     - "- [x] <criterion> — <justification> (file:line)" for fully met
+     - "- [~] <criterion> — <what's done> / <what's missing> (file:line)" for partially met
+     - "- [ ] <criterion> — <justification>" for not met
+   - Do NOT block on unmet or partially met criteria — just report them accurately
 
 **IMPORTANT NOTES:**
 - Follow the @CLAUDE.md guidelines (use libs/ for features, not apps/)
@@ -132,7 +136,7 @@ Implementation of issue #$ARGUMENT complete!
 ✅ All testing tasks completed
 ✅ Tests passing
 ✅ Application verified
-[Acceptance criteria: N/N met — any unmet criteria are detailed in the agent summary above]
+[Acceptance criteria: N met / P partial / U unmet of M — any partial or unmet criteria are detailed in the agent summary above]
 
 Task tracking: docs/tickets/$ARGUMENT/tasks.md
 
