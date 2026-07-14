@@ -167,5 +167,17 @@ describe("list-type-validator", () => {
 
       expect(result.isValid).toBe(true);
     });
+
+    it("should validate MAGISTRATES_ADULT_COURT_LIST_DAILY using the magistrates-adult-court-list package alias", async () => {
+      const result = await validateListTypeJson("57", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate MAGISTRATES_ADULT_COURT_LIST_FUTURE using the magistrates-adult-court-list package alias", async () => {
+      const result = await validateListTypeJson("58", { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
   });
 });
