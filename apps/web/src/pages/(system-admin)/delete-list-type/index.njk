@@ -15,7 +15,13 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ title }}</h1>
+    {% if hasArtefacts %}
+      <p class="govuk-body">
+        <a href="/remove-list-search" class="govuk-link govuk-body">{{ removeArtefactsLinkText }}</a>
+      </p>
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
 
     {{ govukSummaryList({
       rows: [
@@ -29,6 +35,7 @@
     <form method="post" novalidate>
       {{ govukRadios({
         name: "confirmDelete",
+        classes: "govuk-radios--inline",
         fieldset: {
           legend: {
             text: confirmDeleteLabel,
@@ -57,9 +64,6 @@
         text: confirmButton
       }) }}
 
-      <p class="govuk-body">
-        <a href="/view-list-types" class="govuk-link">{{ cancelLink }}</a>
-      </p>
     </form>
 
   </div>

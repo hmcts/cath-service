@@ -1,0 +1,20 @@
+export const en = {
+  title: "Enter list type details",
+  nameLabel: "Name",
+  friendlyNameLabel: "Friendly name",
+  welshFriendlyNameLabel: "Welsh friendly name",
+  shortenedFriendlyNameLabel: "Shortened friendly name",
+  urlLabel: "URL",
+  caseNumberJsonFieldNameLabel: "Case number JSON field name",
+  caseNameJsonFieldNameLabel: "Case name JSON field name",
+  defaultSensitivityLabel: "Default sensitivity",
+  defaultSensitivityHint: "Select the default sensitivity level",
+  allowedProvenanceLabel: "Allowed provenance",
+  allowedProvenanceHint: "Select all that apply",
+  isNonStrategicLabel: "Is non-strategic?",
+  yesOption: "Yes",
+  noOption: "No",
+  continueButton: "Continue",
+  errorSummaryTitle: "There is a problem",
+  duplicateNameError: "A list type with this name already exists"
+};

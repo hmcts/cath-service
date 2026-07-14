@@ -25,8 +25,8 @@ describe("system-admin-dashboard template", () => {
       expect(en.title).toBe("System Admin Dashboard");
     });
 
-    it("should have 11 tiles", () => {
-      expect(en.tiles).toHaveLength(11);
+    it("should have 10 tiles", () => {
+      expect(en.tiles).toHaveLength(10);
     });
 
     it("should have tiles with required properties", () => {
@@ -50,7 +50,12 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[6].title).toBe("Bulk Create Media Accounts");
       expect(en.tiles[7].title).toBe("Audit Log Viewer");
       expect(en.tiles[8].title).toBe("Manage List Types");
-      expect(en.tiles[9].title).toBe("Configure List Type");
+      expect(en.tiles[9].title).toBe("Manage Jurisdiction Data");
+    });
+
+    it("should not contain Configure List Type tile", () => {
+      const configTile = en.tiles.find((t) => t.title === "Configure List Type");
+      expect(configTile).toBeUndefined();
     });
 
     it("should have correct href for each tile", () => {
@@ -63,7 +68,7 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[6].href).toBe("/bulk-media-accounts");
       expect(en.tiles[7].href).toBe("/audit-log-list");
       expect(en.tiles[8].href).toBe("/manage-list-types");
-      expect(en.tiles[9].href).toBe("/configure-list-type-enter-details");
+      expect(en.tiles[9].href).toBe("/jurisdiction-data");
     });
 
     it("should have descriptions for all tiles", () => {
@@ -75,8 +80,8 @@ describe("system-admin-dashboard template", () => {
       expect(en.tiles[5].description).toBe("Discover content uploaded to all locations");
       expect(en.tiles[6].description).toBe("Upload a CSV file for bulk creation of media accounts");
       expect(en.tiles[7].description).toBe("View audit logs on system admin actions");
-      expect(en.tiles[8].description).toBe("View, create and update list type configuration");
-      expect(en.tiles[9].description).toBe("Add and manage list type configurations");
+      expect(en.tiles[8].description).toBe("View, create, update and delete list type configuration");
+      expect(en.tiles[9].description).toBe("View, create, update and remove jurisdictions and sub-jurisdictions");
     });
   });
 });

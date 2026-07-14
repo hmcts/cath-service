@@ -124,6 +124,22 @@ export function validateListTypeDetails(data: ListTypeDetailsInput) {
   const isNonStrategicError = validateIsNonStrategic(data.isNonStrategic);
   if (isNonStrategicError) errors.push(isNonStrategicError);
 
+  if (data.caseNumberJsonFieldName && data.caseNumberJsonFieldName.length > 255) {
+    errors.push({
+      field: "caseNumberJsonFieldName",
+      message: "Case number JSON field name must be 255 characters or less",
+      href: "#caseNumberJsonFieldName"
+    });
+  }
+
+  if (data.caseNameJsonFieldName && data.caseNameJsonFieldName.length > 255) {
+    errors.push({
+      field: "caseNameJsonFieldName",
+      message: "Case name JSON field name must be 255 characters or less",
+      href: "#caseNameJsonFieldName"
+    });
+  }
+
   return errors;
 }
 
@@ -147,6 +163,8 @@ export interface ListTypeDetailsInput {
   welshFriendlyName: string;
   shortenedFriendlyName: string;
   url: string;
+  caseNumberJsonFieldName?: string | null;
+  caseNameJsonFieldName?: string | null;
   defaultSensitivity: string;
   allowedProvenance: string[];
   isNonStrategic: boolean | undefined | null;

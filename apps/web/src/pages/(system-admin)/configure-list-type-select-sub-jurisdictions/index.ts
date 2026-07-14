@@ -9,7 +9,7 @@ const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type-enter-details");
+    return res.redirect("/manage-list-types");
   }
 
   const language = req.query.lng === "cy" ? "cy" : "en";
@@ -34,7 +34,7 @@ const postHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type-enter-details");
+    return res.redirect("/manage-list-types");
   }
 
   let subJurisdictionIds: number[] = [];

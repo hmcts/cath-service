@@ -19,9 +19,10 @@
   <div class="govuk-grid-column-two-thirds">
     <h2 class="govuk-heading-m">{{ t.configureListType.success.description }}</h2>
 
-    <p class="govuk-body">
-      <a href="/system-admin-dashboard" class="govuk-link">{{ t.configureListType.success.returnLink }}</a>
-    </p>
+    <ul class="govuk-list">
+      <li><a href="/manage-list-types" class="govuk-link">{{ t.configureListType.success.manageListTypesLink }}</a></li>
+      <li><a href="/system-admin-dashboard" class="govuk-link">{{ t.configureListType.success.returnLink }}</a></li>
+    </ul>
   </div>
 </div>
 {% endblock %}

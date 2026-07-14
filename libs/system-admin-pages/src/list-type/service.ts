@@ -14,6 +14,8 @@ export async function saveListType(data: SaveListTypeData, existingId?: number) 
       welshFriendlyName: data.welshFriendlyName,
       shortenedFriendlyName: data.shortenedFriendlyName,
       url: data.url,
+      caseNumberJsonFieldName: data.caseNumberJsonFieldName,
+      caseNameJsonFieldName: data.caseNameJsonFieldName,
       defaultSensitivity: data.defaultSensitivity,
       allowedProvenance: data.allowedProvenance,
       isNonStrategic: data.isNonStrategic,
@@ -27,6 +29,8 @@ export async function saveListType(data: SaveListTypeData, existingId?: number) 
     welshFriendlyName: data.welshFriendlyName,
     shortenedFriendlyName: data.shortenedFriendlyName,
     url: data.url,
+    caseNumberJsonFieldName: data.caseNumberJsonFieldName,
+    caseNameJsonFieldName: data.caseNameJsonFieldName,
     defaultSensitivity: data.defaultSensitivity,
     allowedProvenance: data.allowedProvenance,
     isNonStrategic: data.isNonStrategic,
@@ -40,6 +44,8 @@ interface SaveListTypeData {
   welshFriendlyName: string;
   shortenedFriendlyName: string;
   url: string;
+  caseNumberJsonFieldName?: string | null;
+  caseNameJsonFieldName?: string | null;
   defaultSensitivity: string;
   allowedProvenance: string[];
   isNonStrategic: boolean;
