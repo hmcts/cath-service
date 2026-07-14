@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createPartyDetails, extractPddaSittingsSummary, formatContentDate, formatPublicationDateTime, formatTime } from "./crown-utilities.js";
+import {
+  createPartyDetails,
+  extractPddaSittingsSummary,
+  formatContentDate,
+  formatCrownLastUpdated,
+  formatPublicationDateTime,
+  formatTime
+} from "./crown-utilities.js";
 
 describe("createPartyDetails", () => {
   it("should return individual full name with title, forenames, middle name, and surname", () => {
@@ -62,13 +69,34 @@ describe("formatTime", () => {
 describe("formatContentDate", () => {
   it("should format date in English", () => {
     const result = formatContentDate(new Date("2025-03-15"), "en");
-    expect(result).toContain("March");
-    expect(result).toContain("2025");
+    expect(result).toBe("15 March 2025");
   });
 
-  it("should format date in Welsh", () => {
-    const result = formatContentDate(new Date("2025-03-15"), "cy");
-    expect(result).toContain("2025");
+  it("should format single-digit day without leading zero in English", () => {
+    const result = formatContentDate(new Date("2025-03-05"), "en");
+    expect(result).toBe("5 March 2025");
+  });
+
+  it("should format single-digit day without leading zero in Welsh", () => {
+    const result = formatContentDate(new Date("2025-01-05"), "cy");
+    expect(result).toBe("5 Ionawr 2025");
+  });
+});
+
+describe("formatCrownLastUpdated", () => {
+  it("should format ISO datetime with two-digit day", () => {
+    const result = formatCrownLastUpdated("2025-11-12T09:00:00.000Z", "en");
+    expect(result).toBe("12 November 2025 at 9am");
+  });
+
+  it("should format single-digit day without leading zero", () => {
+    const result = formatCrownLastUpdated("2025-11-03T09:00:00.000Z", "en");
+    expect(result).toBe("3 November 2025 at 9am");
+  });
+
+  it("should retain leading zero for single-digit minutes", () => {
+    const result = formatCrownLastUpdated("2025-11-03T09:05:00.000Z", "en");
+    expect(result).toBe("3 November 2025 at 9:05am");
   });
 });
 

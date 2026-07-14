@@ -83,7 +83,7 @@ describe("renderCrownWarnedListData", () => {
       locale: "en"
     });
 
-    expect(result.header.weekCommencing).toBe("03 November 2025");
+    expect(result.header.weekCommencing).toBe("3 November 2025");
   });
 
   it("should return empty groupedCategories when no court lists", async () => {

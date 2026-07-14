@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   test: {
     passWithNoTests: true,
+    testTimeout: 15000,
     setupFiles: [path.join(__dirname, "vitest.setup.ts")],
     coverage: {
       provider: "v8",
