@@ -5,5 +5,6 @@ export const en = {
   noOption: "No",
   continueButton: "Continue",
   errorSummaryTitle: "There is a problem",
-  noSelectionError: "Please select one option"
+  noSelectionError: "Please select one option",
+  deleteArtefactsLinkText: "Click here to delete the location"
 };

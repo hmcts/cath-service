@@ -7,12 +7,12 @@ vi.mock("@hmcts/auth", () => ({
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
-vi.mock("@hmcts/system-admin-pages", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@hmcts/system-admin-pages")>();
-  return { ...actual, deleteJurisdictionData: vi.fn() };
-});
+vi.mock("@hmcts/system-admin-pages", () => ({
+  deleteJurisdictionData: vi.fn(),
+  findLocationsByRegionId: vi.fn()
+}));
 
-import { deleteJurisdictionData } from "@hmcts/system-admin-pages";
+import { deleteJurisdictionData, findLocationsByRegionId } from "@hmcts/system-admin-pages";
 
 describe("region-data-delete page", () => {
   let req: Partial<Request>;
@@ -98,6 +98,27 @@ describe("region-data-delete page", () => {
         expect.objectContaining({
           radioError: { text: "Please select one option" },
           errors: [{ text: "Please select one option", href: "#confirmation" }]
+        })
+      );
+    });
+
+    it("should re-render with errors and linked locations when delete fails due to dependencies", async () => {
+      // Arrange
+      req.body = { confirmation: "yes" };
+      vi.mocked(deleteJurisdictionData).mockResolvedValue([{ text: "Cannot delete", href: "#" }]);
+      vi.mocked(findLocationsByRegionId).mockResolvedValue([{ locationId: 3, name: "Oxford Combined Court Centre" } as any]);
+
+      // Act
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect(findLocationsByRegionId).toHaveBeenCalledWith(5);
+      expect(res.render).toHaveBeenCalledWith(
+        "region-data-delete/index",
+        expect.objectContaining({
+          errors: [{ text: "Cannot delete", href: "#" }],
+          linkedLocations: [{ locationId: 3, name: "Oxford Combined Court Centre" }]
         })
       );
     });

@@ -22,6 +22,14 @@
       }) }}
     {% endif %}
 
+    {% if linkedLocations and linkedLocations.length %}
+      {% for location in linkedLocations %}
+        <p class="govuk-body">
+          <a href="/delete-court?locationId={{ location.locationId }}" class="govuk-link govuk-body">{{ t.deleteArtefactsLinkText }}</a>
+        </p>
+      {% endfor %}
+    {% endif %}
+
     <h1 class="govuk-heading-l">{{ titlePrefix }} {{ record.name }}?</h1>
 
     <form method="post" novalidate>
