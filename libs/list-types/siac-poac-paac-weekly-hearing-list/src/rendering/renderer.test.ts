@@ -30,12 +30,12 @@ describe("renderSiacPoacPaacData", () => {
 
     // Assert
     expect(result.header.listTitle).toBe("Special Immigration Appeals Commission Weekly Hearing List");
-    expect(result.header.weekCommencingDate).toBe("02 January 2025");
-    expect(result.header.lastUpdatedDate).toBe("01 January 2025");
+    expect(result.header.weekCommencingDate).toBe("2 January 2025");
+    expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
 
     expect(result.hearings).toHaveLength(1);
-    expect(result.hearings[0].date).toBe("02 January 2025");
+    expect(result.hearings[0].date).toBe("2 January 2025");
     expect(result.hearings[0].time).toBe("10:00am");
     expect(result.hearings[0].appellant).toBe("A Vs B");
     expect(result.hearings[0].caseReferenceNumber).toBe("SC/00001/2025");
@@ -80,8 +80,8 @@ describe("renderSiacPoacPaacData", () => {
 
     // Assert
     expect(result.hearings).toHaveLength(2);
-    expect(result.hearings[0].date).toBe("02 January 2025");
-    expect(result.hearings[1].date).toBe("03 January 2025");
+    expect(result.hearings[0].date).toBe("2 January 2025");
+    expect(result.hearings[1].date).toBe("3 January 2025");
   });
 
   it("should format date with zero-padded day correctly", () => {
@@ -110,7 +110,7 @@ describe("renderSiacPoacPaacData", () => {
     const result = renderSiacPoacPaacData(hearingList, options);
 
     // Assert
-    expect(result.hearings[0].date).toBe("01 January 2025");
+    expect(result.hearings[0].date).toBe("1 January 2025");
   });
 
   it("should format lastUpdated with time", () => {

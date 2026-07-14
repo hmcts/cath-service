@@ -253,7 +253,7 @@ function formatAddress(address?: { line?: string[]; town?: string; county?: stri
 
 function formatDate(date: Date, locale: string): string {
   return date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", {
-    day: "2-digit",
+    day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Europe/London"
@@ -264,7 +264,7 @@ function formatDateAndTime(isoDateTime: string, locale: string): { date: string;
   const date = new Date(isoDateTime);
   return {
     date: date.toLocaleDateString(locale === "cy" ? "cy-GB" : "en-GB", {
-      day: "2-digit",
+      day: "numeric",
       month: "long",
       year: "numeric",
       timeZone: "Europe/London"

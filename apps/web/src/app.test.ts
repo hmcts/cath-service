@@ -92,6 +92,14 @@ vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list
   moduleRoot: "/mock/utaac"
 }));
 
+vi.mock("@hmcts/magistrates-adult-court-list/config", () => ({
+  moduleRoot: "/mock/magistrates-adult-court-list"
+}));
+
+vi.mock("@hmcts/magistrates-public-adult-court-list/config", () => ({
+  moduleRoot: "/mock/magistrates-public-adult-court-list"
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   moduleRoot: "/mock/civil-family",
   pageRoutes: { path: "/mock/civil-family/pages" }
