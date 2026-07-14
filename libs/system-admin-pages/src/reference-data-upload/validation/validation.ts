@@ -242,7 +242,7 @@ export async function validateLocationData(data: ParsedLocationData[]): Promise<
 
       errors.push({
         text: `Sub-jurisdiction "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")})`,
-        html: `Sub-jurisdiction "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")}). <a href="/jurisdiction-data" class="govuk-link">Click here to manage jurisdiction data</a>`,
+        html: `Sub-jurisdiction "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")}). <a href="/jurisdiction-data" class="govuk-link">Manage jurisdiction data</a>`,
         href: "#file"
       });
     }
