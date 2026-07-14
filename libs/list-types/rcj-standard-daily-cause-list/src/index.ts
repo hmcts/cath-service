@@ -9,3 +9,4 @@ export { en as rcjStandardDailyCauseListEn } from "./locales/en.js";
 export * from "./models/types.js";
 export * from "./pdf/pdf-generator.js";
 export * from "./rendering/renderer.js";
+export { validateRcjStandardDailyCauseList } from "./validation/json-validator.js";

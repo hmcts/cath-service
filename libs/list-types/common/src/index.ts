@@ -61,7 +61,7 @@ export {
   type Party,
   type PddaCitizenName
 } from "./rendering/crown-utilities.js";
-export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
+export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { normaliseHearings } from "./rendering/hearing-normalisation.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";

@@ -16,6 +16,8 @@ import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmc
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
+import { generateMagistratesAdultCourtListPdf, type MagistratesAdultCourtListData } from "@hmcts/magistrates-adult-court-list";
+import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdultCourtListData } from "@hmcts/magistrates-public-adult-court-list";
 import { generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
@@ -282,6 +284,20 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
     generatePhtWeeklyHearingListPdf({
       ...p,
       jsonData: p.jsonData as PhtHearingList
+    }),
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesPublicAdultCourtListPdf({
+      ...p,
+      jsonData: p.jsonData as MagistratesPublicAdultCourtListData,
+      listTitle: "Magistrates Public Adult Court List - Daily"
+    }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesPublicAdultCourtListPdf({
+      ...p,
+      jsonData: p.jsonData as MagistratesPublicAdultCourtListData,
+      listTitle: "Magistrates Public Adult Court List - Future"
     })
 };
 

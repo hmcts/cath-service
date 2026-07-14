@@ -84,8 +84,8 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-8'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
           CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
           MAX_THINKING_TOKENS: '1024'
@@ -155,8 +155,8 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-8'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
           CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
           MAX_THINKING_TOKENS: '1024'
@@ -242,8 +242,8 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-8'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
           CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
           MAX_THINKING_TOKENS: '1024'
@@ -329,6 +329,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      id-token: write
     steps:
       - name: Generate GitHub App Token
         id: app-token
@@ -383,11 +384,24 @@ jobs:
               body: `❌ Template \`${{ steps.parse.outputs.template }}\` not found.\n\nAvailable templates: ${templates}\n\nUsage: \`@spec [template-name]\``
             });
 
+      - name: Configure AWS credentials
+        if: steps.parse.outputs.valid == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
+          aws-region: eu-west-1
+
       - name: Run Claude Code for spec generation
         if: steps.parse.outputs.valid == 'true'
         uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-8'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
+          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
+          MAX_THINKING_TOKENS: '1024'
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
+          use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
           prompt: |
             Generate a technical specification for this GitHub issue using the specified template.
@@ -474,8 +488,8 @@ jobs:
         id: claude-analysis
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-8'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
           CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
           MAX_THINKING_TOKENS: '1024'
