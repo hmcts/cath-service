@@ -12,6 +12,14 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "sjp-public-list.njk";
 
+// The fixture "generated at" timestamp, plus the date/time strings derived the
+// same way the template's `date` / `time12` filters format them. Deriving the
+// expected values (rather than hardcoding e.g. "3:30 pm") keeps the assertions
+// independent of the machine timezone the tests run in.
+const GENERATED_AT = new Date("2026-07-10T14:30:00Z");
+const EXPECTED_DATE = GENERATED_AT.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const EXPECTED_TIME = GENERATED_AT.toLocaleTimeString("en-GB", { hour: "numeric", minute: "2-digit", hour12: true });
+
 interface CaseOverrides {
   name?: string;
   postcode?: string | null;
@@ -39,7 +47,7 @@ function baseData(locale: typeof en | typeof cy = en, overrides: Record<string, 
     ...locale.common,
     en,
     cy,
-    list: { artefactId: "test-artefact-123", generatedAt: new Date("2026-07-10T14:30:00Z") },
+    list: { artefactId: "test-artefact-123", generatedAt: GENERATED_AT },
     cases: [],
     casesRows: [],
     totalCases: 0,
@@ -159,9 +167,9 @@ describe("sjp-public-list template", () => {
 
       const text = summaryText($, en.common.generatedOn);
       expect(text).toContain(en.common.generatedOn);
-      expect(text).toContain("10 July 2026");
+      expect(text).toContain(EXPECTED_DATE);
       expect(text).toContain(en.common.at);
-      expect(text).toContain("3:30 pm");
+      expect(text).toContain(EXPECTED_TIME);
     });
   });
 
