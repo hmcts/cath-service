@@ -15,13 +15,6 @@ import {
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { SJP_PRESS_LIST_PDF_STYLES } from "./pdf-styles.js";
 
-const PROVENANCE_LABELS: Record<string, string> = {
-  MANUAL_UPLOAD: "Manual Upload",
-  XHIBIT: "XHIBIT",
-  SNL: "SNL",
-  COMMON_PLATFORM: "Common Platform"
-};
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -48,7 +41,6 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
 
     const t = translations.common as Record<string, string>;
     const listTitle = (translations[options.listTypeName] as Record<string, string>)?.title || "";
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
     const published = formatLastUpdatedDateTime(options.jsonData.document.publicationDate, options.locale);
 
     const formattedCases = cases.map((c) => ({
@@ -63,7 +55,6 @@ export async function generateSjpPressListPdf(options: PdfGenerationOptions): Pr
       publishedDateTime: `${published.date} ${t.at} ${published.time}`,
       cases: formattedCases,
       t,
-      dataSource: provenanceLabel,
       pdfStyles: PDF_BASE_STYLES + SJP_PRESS_LIST_PDF_STYLES
     });
 
