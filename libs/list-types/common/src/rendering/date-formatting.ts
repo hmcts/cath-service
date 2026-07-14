@@ -21,16 +21,30 @@ export function formatLastUpdatedDateTime(isoDateTime: string, locale: string): 
   const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
 
   const date = dt.toFormat("dd MMMM yyyy");
-
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  const time = `${hour12}${minuteStr}${period}`;
+  const time = formatTo12Hour(dt.hour, dt.minute);
 
   return { date, time };
+}
+
+/**
+ * Formats an "HH:MM" time string to a compact 12-hour format
+ * Examples: "09:00" -> "9am", "10:05" -> "10:05am", "14:30" -> "2:30pm"
+ */
+export function formatHHMMTime(time: string): string {
+  const [hoursStr, minutesStr] = time.split(":");
+  const hours = Number.parseInt(hoursStr, 10);
+  const minutes = Number.parseInt(minutesStr ?? "0", 10);
+
+  if (Number.isNaN(hours)) return time;
+
+  return formatTo12Hour(hours, minutes);
+}
+
+function formatTo12Hour(hours: number, minutes: number): string {
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
+  return `${hour12}${minuteStr}${period}`;
 }
 
 /**

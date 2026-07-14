@@ -153,10 +153,9 @@ describe("generateUtaacDailyHearingListPdf", () => {
 
     expect(renderUtaacDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "Upper Tribunal (Administrative Appeals Chamber)",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List"
+      listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)"
     });
   });
 });

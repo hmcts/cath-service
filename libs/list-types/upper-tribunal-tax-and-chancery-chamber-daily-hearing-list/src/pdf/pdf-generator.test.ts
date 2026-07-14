@@ -153,10 +153,9 @@ describe("generateUtccDailyHearingListPdf", () => {
 
     expect(renderUtccDailyHearingListData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "Upper Tribunal Tax and Chancery Chamber",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List"
+      listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri"
     });
   });
 });

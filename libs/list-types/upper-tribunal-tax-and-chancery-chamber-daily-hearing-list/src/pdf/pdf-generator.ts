@@ -8,13 +8,13 @@ import { renderUtccDailyHearingListData } from "../rendering/renderer.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const generateUtccDailyHearingListPdf = createUtDailyHearingListPdfGenerator<UtccHearingList>(
-  "Upper Tribunal Tax and Chancery Chamber",
-  "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
-  renderUtccDailyHearingListData,
-  () => import("../locales/en.js"),
-  () => import("../locales/cy.js"),
-  __dirname,
-  PROVENANCE_LABELS,
-  generatePdfFromHtml
-);
+export function generateUtccDailyHearingListPdf(options: Parameters<ReturnType<typeof createUtDailyHearingListPdfGenerator<UtccHearingList>>>[0]) {
+  return createUtDailyHearingListPdfGenerator<UtccHearingList>(
+    renderUtccDailyHearingListData,
+    () => import("../locales/en.js"),
+    () => import("../locales/cy.js"),
+    __dirname,
+    PROVENANCE_LABELS,
+    generatePdfFromHtml
+  )(options);
+}

@@ -58,6 +58,8 @@
       "@hmcts/london-administrative-court-daily-cause-list": ["libs/list-types/london-administrative-court-daily-cause-list/src"],
       "@hmcts/court-of-appeal-civil-daily-cause-list": ["libs/list-types/court-of-appeal-civil-daily-cause-list/src"],
       "@hmcts/administrative-court-daily-cause-list": ["libs/list-types/administrative-court-daily-cause-list/src"],
+      "@hmcts/magistrates-public-adult-court-list": ["libs/list-types/magistrates-public-adult-court-list/src"],
+      "@hmcts/magistrates-public-adult-court-list/config": ["libs/list-types/magistrates-public-adult-court-list/src/config"],
       "@hmcts/magistrates-public-list": ["libs/list-types/magistrates-public-list/src"],
       "@hmcts/crown-daily-list": ["libs/list-types/crown-daily-list/src"],
       "@hmcts/crown-firm-list": ["libs/list-types/crown-firm-list/src"],
@@ -95,7 +97,9 @@
       "@hmcts/sscs-daily-hearing-list/config": ["libs/list-types/sscs-daily-hearing-list/src/config"],
       "@hmcts/azure-blob": ["libs/azure-blob/src"],
       "@hmcts/magistrates-standard-list": ["libs/list-types/magistrates-standard-list/src"],
-      "@hmcts/magistrates-standard-list/config": ["libs/list-types/magistrates-standard-list/src/config"]
+      "@hmcts/magistrates-standard-list/config": ["libs/list-types/magistrates-standard-list/src/config"],
+      "@hmcts/magistrates-adult-court-list": ["libs/list-types/magistrates-adult-court-list/src"],
+      "@hmcts/magistrates-adult-court-list/config": ["libs/list-types/magistrates-adult-court-list/src/config"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
