@@ -18,6 +18,22 @@
   margin-left: auto !important;
 }
 
+// "Version" table header with an information icon, vertically centred on the
+// same line — mirrors the legacy CaTH subscription preview layout.
+.app-version-header {
+  display: flex;
+  align-items: center;
+}
+
+.app-version-header__info {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-version-header__icon {
+  color: #1d70b8;
+}
+
 // Fixed diagonal "AI version" ribbon shown on every page so this
 // AI-generated build can be told apart from the existing service during
 // comparison. Non-interactive and hidden from assistive technology.
