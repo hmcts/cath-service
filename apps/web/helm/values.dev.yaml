@@ -7,7 +7,7 @@ nodejs:
   applicationPort: 8080
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
+  image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-stg'

@@ -7,7 +7,7 @@ nodejs:
   applicationPort: 8080
   aadIdentityName: cath
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
+  image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
     ENVIRONMENT: '{{ .Values.global.environment }}'
@@ -27,7 +27,7 @@ nodejs:
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    cath-ss-kv:
+    cath:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
