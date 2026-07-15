@@ -20,6 +20,13 @@
   max-width: 30em;
 }
 
+// Match the pre-enhancement input width to the enhanced autocomplete widget
+// (max-width: 30em above) so there is no layout shift when JS mounts the
+// accessible-autocomplete widget on DOMContentLoaded.
+.govuk-input[data-autocomplete="true"] {
+  max-width: 30em;
+}
+
 // Lighter background for alternating rows
 .autocomplete__option--odd {
   background-color: #f8f8f8;
