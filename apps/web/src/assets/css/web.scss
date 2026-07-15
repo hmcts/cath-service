@@ -18,6 +18,34 @@
   margin-left: auto !important;
 }
 
+// A <button> styled to look like a link, used for in-table actions (Remove /
+// Change). Unlike govuk-body it has no bottom margin, so table rows keep the
+// standard cell height instead of being inflated by the action button.
+.app-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #1d70b8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.app-link-button:hover {
+  color: #003078;
+}
+
+.app-link-button:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+  text-decoration: none;
+}
+
 // "Version" table header with an information icon, vertically centred on the
 // same line — mirrors the legacy CaTH subscription preview layout.
 .app-version-header {
