@@ -2,7 +2,7 @@
 description: Watch PR for issues and fix them based on the plan
 argument-hint: <branch-name>
 allowed-tools:
-  - Task
+  - Agent
   - TodoWrite
   - Bash
   - Read
@@ -17,14 +17,16 @@ allowed-tools:
 ## Initialize Progress Tracking
 Use TodoWrite to create this checklist:
 ```
-- [ ] Find PR and check for feedback
+- [ ] Find PR
+- [ ] Wait for CI checks to complete
+- [ ] Gather all feedback
 - [ ] Switch to branch (if fixes needed)
 - [ ] Fix identified issues
 - [ ] Verify fixes
 ```
 
 ## PHASE 1: Find PR and Check Feedback
-*Mark "Find PR and check for feedback" as in_progress*
+*Mark "Find PR" as in_progress*
 
 ### Step 1.1: Find PR for Branch
 
@@ -37,31 +39,62 @@ EXECUTE:
 3. Store PR number and extract issue number from title (format: "#123" or "issue 123")
 4. Store issue number to locate docs/tickets/<issue-number>/ files
 ```
+*Mark "Find PR" as completed*
 
-### Step 1.2: Gather All Feedback
+### Step 1.2: Wait for CI Checks to Complete
+*Mark "Wait for CI checks to complete" as in_progress*
+
+Do NOT take a single snapshot — CI checks are usually still in progress when a PR is opened. Block until every check reaches a terminal state, then act on the settled result. `gh pr checks --watch` polls until all checks finish and exits non-zero if any fail.
+
+```bash
+EXECUTE:
+# Block until all checks complete. --watch re-polls every --interval seconds;
+# it exits 0 when all pass, 8 when there are no checks at all, and non-zero
+# (e.g. 1) when one or more checks fail.
+gh pr checks <PR_NUMBER> --watch --interval 30
+CHECKS_EXIT=$?
+
+if [ "$CHECKS_EXIT" -eq 8 ]; then
+  echo "ℹ️  No CI checks are configured on PR #<PR_NUMBER>. Proceeding to review feedback only."
+  CHECKS_FAILED=false
+elif [ "$CHECKS_EXIT" -eq 0 ]; then
+  echo "✅ All CI checks passed for PR #<PR_NUMBER>."
+  CHECKS_FAILED=false
+else
+  echo "❌ One or more CI checks failed for PR #<PR_NUMBER>."
+  # Capture which checks failed for the fixing phase
+  gh pr checks <PR_NUMBER> | grep -iv -E '\bpass(ed)?\b' || true
+  CHECKS_FAILED=true
+fi
+```
+*Mark "Wait for CI checks to complete" as completed*
+
+### Step 1.3: Gather All Feedback
+*Mark "Gather all feedback" as in_progress*
 
 ```
 EXECUTE:
-1. Fetch PR review comments:
+1. Fetch PR review comments (checks are now in a terminal state):
    gh pr view <PR_NUMBER> --json reviews,comments,statusCheckRollup
    
 2. Collect:
    - Review comments (inline code comments)
    - PR comments (general discussion)
-   - Failed CI checks
+   - Failed CI checks (from CHECKS_FAILED / Step 1.2 output)
    - Review status (CHANGES_REQUESTED, APPROVED, etc.)
    
-3. If no feedback/issues found:
+3. If CHECKS_FAILED is false AND there are no review comments requesting changes:
    - Output: "✅ No issues found in PR #<PR_NUMBER>. All checks passing!"
    - STOP HERE - do not continue to fixing phase
    
 4. Otherwise, continue to check pod logs and fixing phase
 ```
+*Mark "Gather all feedback" as completed*
 
-### Step 1.3: Check Pod Logs for CI/CD Failures [ISOLATED AGENT]
+### Step 1.4: Check Pod Logs for CI/CD Failures [ISOLATED AGENT]
 
 ```
-IF CI/CD CHECKS FAILED:
+IF CHECKS_FAILED is true AND the failure is a deployment/environment check (not a unit-test or lint failure):
   AGENT: infrastructure-engineer
   TASK: Diagnose CI/CD failures by checking pod logs
   
@@ -95,7 +128,6 @@ IF CI/CD CHECKS FAILED:
   WAIT FOR AGENT TO COMPLETE
   INCLUDE POD DIAGNOSTIC SUMMARY IN FEEDBACK
 ```
-*Mark "Find PR and check for feedback" as completed*
 
 ## PHASE 2: Switch to Branch and Fix Issues
 *Mark "Switch to branch (if fixes needed)" as in_progress*
@@ -234,6 +266,30 @@ EXECUTE:
    
    Ready for re-review."
 ```
+
+### Step 3.3: Re-watch CI After Pushing Fixes
+
+Pushing in Step 3.2 triggers a fresh CI run. Do NOT stop here — keep watching until CI settles green, so ongoing check failures introduced (or not fixed) by the last push are caught in the same session.
+
+```bash
+EXECUTE:
+# Give GitHub a moment to register the new checks, then block on them again.
+sleep 15
+gh pr checks <PR_NUMBER> --watch --interval 30
+RECHECK_EXIT=$?
+
+if [ "$RECHECK_EXIT" -eq 0 ] || [ "$RECHECK_EXIT" -eq 8 ]; then
+  echo "✅ CI is green after fixes for PR #<PR_NUMBER>."
+  # Fall through to "Output to User" — done.
+else
+  echo "❌ CI still failing after fixes for PR #<PR_NUMBER>."
+  # LOOP BACK: return to Step 1.3 (Gather All Feedback) and repeat the
+  # gather → fix → push → re-watch cycle against the new failures.
+fi
+```
+
+**Loop control:** repeat the Phase 1.3 → Phase 3 cycle until CI is green (exit 0/8), with a safety cap of **3 fix attempts**. If still failing after 3 attempts, STOP and report the remaining failures to the user rather than looping indefinitely — a persistent failure usually needs human judgement.
+
 *Mark "Verify fixes" as completed*
 
 ## Output to User
@@ -241,14 +297,25 @@ EXECUTE:
 Display the following message:
 
 ```
-PR #<PR_NUMBER> issues fixed for branch $ARGUMENT (issue #<ISSUE_NUMBER>)!
+PR #<PR_NUMBER> watched to completion for branch $ARGUMENT (issue #<ISSUE_NUMBER>)!
 
 ✅ All review comments addressed
-✅ CI failures resolved
+✅ CI checks green (watched to terminal state)
 ✅ Tests passing with >80% coverage
 ✅ Changes pushed and PR updated
 
 ---
 
 The PR is ready for re-review. Use /qk-watch $ARGUMENT again if more feedback comes in.
+```
+
+If the safety cap was hit, display instead:
+
+```
+⚠️  PR #<PR_NUMBER> still has failing CI after 3 fix attempts.
+
+Remaining failures:
+<list failing checks>
+
+This needs a human look — the same checks keep failing after automated fixes.
 ```
