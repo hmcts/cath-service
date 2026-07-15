@@ -31,29 +31,38 @@ Verify the GitHub issue exists and is ready for work.
 AGENT: general-purpose
 DESCRIPTION: Verify GitHub issue #$ARGUMENT exists
 PROMPT:
-"Check if GitHub issue #$ARGUMENT exists and is open before a worktree is created.
+"Check if GitHub issue #$ARGUMENT exists, is open, and is refined enough to build before a worktree is created.
 
 **Step 1: Fetch issue from GitHub**
 
 \`\`\`bash
-gh issue view \"$ARGUMENT\" --json number,title,state,labels
+gh issue view \"$ARGUMENT\" --json number,title,body,labels,comments,state
 \`\`\`
 
 **Step 2: Verify issue**
 
-If issue not found or command fails:
-  Return exactly: 'RESULT: FAIL — ❌ Issue #$ARGUMENT not found in GitHub. Verify the issue number and try again.'
-
-If issue state is 'closed' (CLOSED):
-  Return exactly: 'RESULT: FAIL — ❌ Issue #$ARGUMENT is closed. Reopen it before starting work.'
+If ANY of these are true, the issue is NOT ready — return FAIL:
+- Issue not found or command fails
+- Issue state is 'closed' (CLOSED)
+- Has 'needs-clarification', 'question', or 'blocked' label
+- Comments contain an unanswered question (check the last comment)
+- No clear acceptance criteria in the body
+- Issue body uses 'TBD', 'TODO', or similar placeholders
 
 **Step 3: Return result**
 
-If open:
+If NOT ready:
+  Return exactly: 'RESULT: FAIL — ❌ Issue #$ARGUMENT not ready for a worktree:
+- [list specific reasons found]
+
+Refine the issue on GitHub before starting work.'
+
+If ready:
   Return exactly: 'RESULT: PASS — ✅ GitHub Issue #$ARGUMENT verified:
 - Title: [title]
 - State: [state]
-- Labels: [labels or 'none']'"
+- Labels: [labels or 'none']
+- Acceptance criteria: [count] found'"
 
 WAIT FOR AGENT
 ```
