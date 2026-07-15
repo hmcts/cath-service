@@ -19,20 +19,26 @@ describe("index page", () => {
 
       expect(res.render).toHaveBeenCalledWith("index", {
         en: expect.objectContaining({
+          introMessage: "You can use this service to get information about:",
           hearingsList: expect.arrayContaining([
-            expect.stringContaining("civil and family courts"),
+            expect.stringContaining("Civil and Family Courts in England and Wales"),
             expect.stringContaining("First Tier and Upper Tribunals"),
             expect.stringContaining("Royal Courts of Justice"),
+            expect.stringContaining("Crown Courts in England and Wales"),
+            expect.stringContaining("Magistrates' Courts in England and Wales"),
             expect.stringContaining("Single Justice Procedure")
           ]),
           additionalInfo: "More courts and tribunals will become available over time.",
           continueButton: "Continue"
         }),
         cy: expect.objectContaining({
+          introMessage: "Gallwch ddefnyddio'r gwasanaeth hwn i gael gwybodaeth am:",
           hearingsList: expect.arrayContaining([
-            expect.stringContaining("Lysoedd Sifil a Theulu"),
+            expect.stringContaining("Llysoedd Sifil a'r Llysoedd Teulu"),
             expect.stringContaining("Tribiwnlys Haen Gyntaf"),
             expect.stringContaining("Llys Barn Brenhinol"),
+            expect.stringContaining("Llys y Goron"),
+            expect.stringContaining("Llysoedd Ynadon"),
             expect.stringContaining("Gweithdrefn Un Ynad")
           ]),
           additionalInfo: "Bydd mwy o lysoedd a thribiwnlysoedd ar gael gydag amser.",
@@ -41,12 +47,12 @@ describe("index page", () => {
       });
     });
 
-    it("should provide exactly 4 hearings in the list", async () => {
+    it("should provide exactly 6 hearings in the list", async () => {
       await GET(req as Request, res as Response);
 
       const callArgs = (res.render as any).mock.calls[0][1];
-      expect(callArgs.en.hearingsList).toHaveLength(4);
-      expect(callArgs.cy.hearingsList).toHaveLength(4);
+      expect(callArgs.en.hearingsList).toHaveLength(6);
+      expect(callArgs.cy.hearingsList).toHaveLength(6);
     });
 
     it("should be an async function", () => {

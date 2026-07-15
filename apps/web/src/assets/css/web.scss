@@ -18,12 +18,30 @@
   margin-left: auto !important;
 }
 
-.app-language-toggle {
-  margin-left: 0.5rem !important;
+// Lay the phase banner out as a single row: the "beta" tag and feedback message
+// on the left, and the Cymraeg / English language toggle pushed to the right,
+// matching the legacy CaTH service.
+.govuk-phase-banner__content {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
 }
 
-.govuk-phase-banner__content > span {
-  width: 100%;
+.govuk-phase-banner__text {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.app-phase-banner__feedback {
+  flex: 1 1 auto;
+}
+
+.app-phase-banner__language {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .govuk-phase-banner {
