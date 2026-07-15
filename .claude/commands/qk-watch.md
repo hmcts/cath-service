@@ -71,7 +71,7 @@ gh pr checks "$PR_NUMBER" --watch --interval 30
 CHECKS_EXIT=$?
 
 if [ "$CHECKS_EXIT" -eq 8 ]; then
-  echo "ℹ️  No CI checks are configured on PR #$PR_NUMBER. Proceeding to review feedback only."
+  echo "ℹ️  No CI checks are configured on PR #$PR_NUMBER. Nothing for qk-watch to fix."
   CHECKS_FAILED=false
 elif [ "$CHECKS_EXIT" -eq 0 ]; then
   echo "✅ All CI checks passed for PR #$PR_NUMBER."
@@ -88,7 +88,7 @@ fi
 ### Step 1.3: Gather All Feedback
 *Mark "Gather all feedback" as in_progress*
 
-`gh pr view --json reviews,comments` covers general/summary comments but NOT the PR's aggregate review decision or line-level (inline) review comments — both can carry requested changes. Fetch all three so the "clean" early-exit cannot skip real feedback.
+Gather failing CI checks plus **human** review feedback. Exclude bot comments (e.g. CodeRabbit) — those are the developer's to triage, not for auto-fixing. Also skip resolved and outdated threads: the raw `pulls/<n>/comments` REST endpoint returns every inline comment ever posted, so counting those makes the command loop forever "fixing" things that no longer apply. Use GraphQL `reviewThreads` so we can filter on `isResolved` / `isOutdated` / author type.
 
 ```bash
 EXECUTE:
@@ -96,25 +96,47 @@ EXECUTE:
 gh pr view "$PR_NUMBER" --json reviewDecision,reviews,comments,statusCheckRollup > /tmp/qk-watch-pr.json
 REVIEW_DECISION=$(jq -r '.reviewDecision // empty' /tmp/qk-watch-pr.json)
 
-# Inline (line-level) review comments live on a separate REST endpoint
-REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
-gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" > /tmp/qk-watch-inline.json
-INLINE_COUNT=$(jq 'length' /tmp/qk-watch-inline.json)
+# Inline review THREADS via GraphQL so we can see isResolved / isOutdated / author type.
+REPO_OWNER=$(gh repo view --json owner --jq '.owner.login')
+REPO_NAME=$(gh repo view --json name --jq '.name')
+gh api graphql -f query='
+  query($owner:String!, $name:String!, $number:Int!) {
+    repository(owner:$owner, name:$name) {
+      pullRequest(number:$number) {
+        reviewThreads(first:100) {
+          nodes {
+            isResolved
+            isOutdated
+            comments(first:1) {
+              nodes { path line author { login __typename } body }
+            }
+          }
+        }
+      }
+    }
+  }' -F owner="$REPO_OWNER" -F name="$REPO_NAME" -F number="$PR_NUMBER" > /tmp/qk-watch-threads.json
 
-echo "Review decision: ${REVIEW_DECISION:-none} | inline review comments: $INLINE_COUNT"
+# Actionable = unresolved, not outdated, and authored by a human (not a Bot).
+jq '[.data.repository.pullRequest.reviewThreads.nodes[]
+     | select(.isResolved == false and .isOutdated == false)
+     | .comments.nodes[0]
+     | select(.author.__typename != "Bot")]' /tmp/qk-watch-threads.json > /tmp/qk-watch-actionable.json
+ACTIONABLE_COUNT=$(jq 'length' /tmp/qk-watch-actionable.json)
+
+echo "Review decision: ${REVIEW_DECISION:-none} | actionable human review threads: $ACTIONABLE_COUNT | CI failed: $CHECKS_FAILED"
 ```
 
 Collect for the fixing phase:
-- Aggregate review decision (`REVIEW_DECISION` — e.g. `CHANGES_REQUESTED`, `APPROVED`, `REVIEW_REQUIRED`)
-- Inline review comments (`/tmp/qk-watch-inline.json` — file/line-specific feedback)
-- Summary review bodies and top-level PR comments (`/tmp/qk-watch-pr.json`)
 - Failed CI checks (from `CHECKS_FAILED` / Step 1.2)
+- Actionable human review threads ONLY (`/tmp/qk-watch-actionable.json` — unresolved, current, non-bot)
+- Aggregate review decision (`REVIEW_DECISION`) and summary/top-level comments (`/tmp/qk-watch-pr.json`), excluding bot authors
+
+Do NOT act on bot comments (CodeRabbit etc.), resolved threads, or outdated comments — leave those for the developer.
 
 **Early exit — only when genuinely clean:**
 - STOP with "✅ No issues found in PR #$PR_NUMBER. All checks passing!" ONLY IF all of:
   - `CHECKS_FAILED` is false, AND
-  - `REVIEW_DECISION` is not `CHANGES_REQUESTED`, AND
-  - `INLINE_COUNT` is 0 (no unresolved inline comments requesting changes)
+  - `ACTIONABLE_COUNT` is 0
 - Otherwise continue to the pod-log check and fixing phase.
 *Mark "Gather all feedback" as completed*
 
@@ -197,25 +219,24 @@ git pull origin "$ARGUMENT"
 
 ```
 AGENT: full-stack-engineer
-TASK: Address all PR feedback and fix identified issues
+TASK: Fix failing CI checks and address actionable human review feedback
 INPUT:
   - docs/tickets/<ISSUE_NUMBER>/ticket.md
   - docs/tickets/<ISSUE_NUMBER>/plan.md
-  - PR review comments and feedback
-  - Failed CI check details
-  - Pod diagnostic summary (if CI/CD failed)
+  - Failed CI check details (from Step 1.2)
+  - Actionable human review threads: /tmp/qk-watch-actionable.json
+  - Pod diagnostic summary (if a deployment check failed)
 
 PROMPT FOR AGENT:
-"Fix all issues identified in PR #<PR_NUMBER> for issue #<ISSUE_NUMBER>:
+"Fix the failing CI checks and address the actionable HUMAN review feedback on PR #<PR_NUMBER> for issue #<ISSUE_NUMBER>. Do NOT act on bot comments (e.g. CodeRabbit), resolved threads, or outdated comments — those are the developer's to triage.
 
 **STEP 1: Review Context**
 1. Read docs/tickets/<ISSUE_NUMBER>/ticket.md for original requirements
 2. Read docs/tickets/<ISSUE_NUMBER>/plan.md for the technical approach
-3. Review all PR feedback collected:
-   - Review comments (file:line specific feedback)
-   - General PR comments
-   - Failed CI checks
-   - Pod diagnostic summary (if CI/CD failed)
+3. Review the collected work items:
+   - Failed CI checks (from Step 1.2)
+   - Actionable human review threads (/tmp/qk-watch-actionable.json — file:line specific, unresolved, non-bot)
+   - Pod diagnostic summary (if a deployment check failed)
 
 **STEP 2: Categorize Issues**
 Group feedback into:
