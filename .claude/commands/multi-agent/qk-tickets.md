@@ -12,7 +12,7 @@ Query requirements.db for approved tickets ready to work on.
 
 ## Usage
 
-```
+```text
 /qk-tickets
 ```
 
@@ -26,7 +26,7 @@ Queries requirements.db for tickets with status='approved' and displays them gro
 
 Query requirements.db and display approved tickets:
 
-```
+```text
 AGENT: general-purpose
 DESCRIPTION: List available approved tickets
 PROMPT:
@@ -57,14 +57,23 @@ ORDER BY
   r.issue_number ASC;
 \`\`\`
 
-**Step 3: For each ticket, get requirement_link relationships**
+**Step 3: For each ticket, get requirement_link relationships (both directions)**
 
-For each ticket found, query ALL link types:
+Links are directional in the table, but a ticket is affected by links pointing *at* it as much as links it owns. Query BOTH directions so, e.g., `#312` shows that `#315 depends_on` it instead of `Links: None`. Render each row from the current ticket's perspective — outgoing links use `rl.type` as-is; incoming links should be shown as the inverse (e.g. an incoming `depends_on` means "blocks", an incoming `blocks` means "depends_on"; `related_to` is symmetric).
 
-SELECT rl.type, rl.target_id, r2.ref, r2.title, r2.status, r2.issue_number
+Outgoing links (this ticket → other):
+
+SELECT 'outgoing' AS direction, rl.type, r2.ref, r2.title, r2.status, r2.issue_number
 FROM requirement_link rl
 JOIN requirement r2 ON r2.id = rl.target_id
 WHERE rl.source_id = [ticket.id];
+
+Incoming links (other → this ticket):
+
+SELECT 'incoming' AS direction, rl.type, r1.ref, r1.title, r1.status, r1.issue_number
+FROM requirement_link rl
+JOIN requirement r1 ON r1.id = rl.source_id
+WHERE rl.target_id = [ticket.id];
 
 **Step 4: Display results grouped by story points**
 

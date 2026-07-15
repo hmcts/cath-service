@@ -30,14 +30,30 @@ Use TodoWrite to create this checklist:
 
 ### Step 1.1: Find PR for Branch
 
-```
+```bash
 EXECUTE:
-1. Find the PR for branch $ARGUMENT:
-   gh pr list --head $ARGUMENT --json number,title,url,state
-   
-2. If no PR found, output error: "No PR found for branch $ARGUMENT. Create a PR first."
-3. Store PR number and extract issue number from title (format: "#123" or "issue 123")
-4. Store issue number to locate docs/tickets/<issue-number>/ files
+# 1. Find the PR for branch $ARGUMENT
+PR_JSON=$(gh pr list --head "$ARGUMENT" --json number,title,url,state)
+PR_NUMBER=$(echo "$PR_JSON" | jq -r '.[0].number // empty')
+
+# 2. Fail closed if no PR exists
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ No PR found for branch $ARGUMENT. Create a PR first."
+  exit 1
+fi
+
+# 3. Extract the issue number from the PR title (formats: "#123" or "issue 123")
+PR_TITLE=$(echo "$PR_JSON" | jq -r '.[0].title')
+ISSUE_NUMBER=$(echo "$PR_TITLE" | grep -oiE '(#|issue )[0-9]+' | grep -oE '[0-9]+' | head -1)
+
+# 4. Fail closed if the issue number cannot be determined — the fixer agent
+#    needs docs/tickets/<issue>/ context and must not run without it
+if [ -z "$ISSUE_NUMBER" ]; then
+  echo "❌ Could not extract an issue number from PR title: \"$PR_TITLE\"."
+  echo "   Expected a '#123' or 'issue 123' reference. Fix the PR title and retry."
+  exit 1
+fi
+echo "PR #$PR_NUMBER → issue #$ISSUE_NUMBER (docs/tickets/$ISSUE_NUMBER/)"
 ```
 *Mark "Find PR" as completed*
 
@@ -51,19 +67,19 @@ EXECUTE:
 # Block until all checks complete. --watch re-polls every --interval seconds;
 # it exits 0 when all pass, 8 when there are no checks at all, and non-zero
 # (e.g. 1) when one or more checks fail.
-gh pr checks <PR_NUMBER> --watch --interval 30
+gh pr checks "$PR_NUMBER" --watch --interval 30
 CHECKS_EXIT=$?
 
 if [ "$CHECKS_EXIT" -eq 8 ]; then
-  echo "ℹ️  No CI checks are configured on PR #<PR_NUMBER>. Proceeding to review feedback only."
+  echo "ℹ️  No CI checks are configured on PR #$PR_NUMBER. Proceeding to review feedback only."
   CHECKS_FAILED=false
 elif [ "$CHECKS_EXIT" -eq 0 ]; then
-  echo "✅ All CI checks passed for PR #<PR_NUMBER>."
+  echo "✅ All CI checks passed for PR #$PR_NUMBER."
   CHECKS_FAILED=false
 else
-  echo "❌ One or more CI checks failed for PR #<PR_NUMBER>."
+  echo "❌ One or more CI checks failed for PR #$PR_NUMBER."
   # Capture which checks failed for the fixing phase
-  gh pr checks <PR_NUMBER> | grep -iv -E '\bpass(ed)?\b' || true
+  gh pr checks "$PR_NUMBER" | grep -iv -E '\bpass(ed)?\b' || true
   CHECKS_FAILED=true
 fi
 ```
@@ -72,23 +88,34 @@ fi
 ### Step 1.3: Gather All Feedback
 *Mark "Gather all feedback" as in_progress*
 
-```
+`gh pr view --json reviews,comments` covers general/summary comments but NOT the PR's aggregate review decision or line-level (inline) review comments — both can carry requested changes. Fetch all three so the "clean" early-exit cannot skip real feedback.
+
+```bash
 EXECUTE:
-1. Fetch PR review comments (checks are now in a terminal state):
-   gh pr view <PR_NUMBER> --json reviews,comments,statusCheckRollup
-   
-2. Collect:
-   - Review comments (inline code comments)
-   - PR comments (general discussion)
-   - Failed CI checks (from CHECKS_FAILED / Step 1.2 output)
-   - Review status (CHANGES_REQUESTED, APPROVED, etc.)
-   
-3. If CHECKS_FAILED is false AND there are no review comments requesting changes:
-   - Output: "✅ No issues found in PR #<PR_NUMBER>. All checks passing!"
-   - STOP HERE - do not continue to fixing phase
-   
-4. Otherwise, continue to check pod logs and fixing phase
+# Aggregate review decision + summary reviews + top-level comments
+gh pr view "$PR_NUMBER" --json reviewDecision,reviews,comments,statusCheckRollup > /tmp/qk-watch-pr.json
+REVIEW_DECISION=$(jq -r '.reviewDecision // empty' /tmp/qk-watch-pr.json)
+
+# Inline (line-level) review comments live on a separate REST endpoint
+REPO=$(gh repo view --json nameWithOwner --jq '.nameWithOwner')
+gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" > /tmp/qk-watch-inline.json
+INLINE_COUNT=$(jq 'length' /tmp/qk-watch-inline.json)
+
+echo "Review decision: ${REVIEW_DECISION:-none} | inline review comments: $INLINE_COUNT"
 ```
+
+Collect for the fixing phase:
+- Aggregate review decision (`REVIEW_DECISION` — e.g. `CHANGES_REQUESTED`, `APPROVED`, `REVIEW_REQUIRED`)
+- Inline review comments (`/tmp/qk-watch-inline.json` — file/line-specific feedback)
+- Summary review bodies and top-level PR comments (`/tmp/qk-watch-pr.json`)
+- Failed CI checks (from `CHECKS_FAILED` / Step 1.2)
+
+**Early exit — only when genuinely clean:**
+- STOP with "✅ No issues found in PR #$PR_NUMBER. All checks passing!" ONLY IF all of:
+  - `CHECKS_FAILED` is false, AND
+  - `REVIEW_DECISION` is not `CHANGES_REQUESTED`, AND
+  - `INLINE_COUNT` is 0 (no unresolved inline comments requesting changes)
+- Otherwise continue to the pod-log check and fixing phase.
 *Mark "Gather all feedback" as completed*
 
 ### Step 1.4: Check Pod Logs for CI/CD Failures [ISOLATED AGENT]
@@ -148,16 +175,20 @@ if [ -n "$WORKTREE_PATH" ]; then
   cd "$WORKTREE_PATH"
 else
   # Normal branch — check out in the current repo
-  # Fail fast if there are uncommitted changes that would block the checkout
-  if [ -n "$(git status --porcelain)" ]; then
-    echo "❌ Uncommitted changes detected. Commit or stash before switching."
-    exit 1
-  fi
-  git checkout $ARGUMENT
+  git checkout "$ARGUMENT"
 fi
 
-# 2. Pull latest for the branch (safe in either location)
-git pull origin $ARGUMENT
+# 2. Guard against a dirty tree in EITHER location. Phase 3 stages everything
+#    with `git add -A`, so pre-existing uncommitted changes would be swept into
+#    the fix commit. Stashing is unsafe in linked worktrees, so abort instead.
+if [ -n "$(git status --porcelain)" ]; then
+  echo "❌ Uncommitted changes in $(pwd). Commit, discard, or move them before running qk-watch —"
+  echo "   the fix phase stages all changes and would otherwise commit unrelated work."
+  exit 1
+fi
+
+# 3. Pull latest for the branch (safe now that the tree is clean)
+git pull origin "$ARGUMENT"
 ```
 *Mark "Switch to branch (if fixes needed)" as completed*
 *Mark "Fix identified issues" as in_progress*
@@ -213,7 +244,17 @@ If linting failed:
 **STEP 5: Verify All Fixes**
 1. Run full test suite: yarn test:coverage
 2. Run E2E tests: yarn test:e2e
-3. Verify app still boots: yarn dev
+3. Verify app still boots — `yarn dev` is a long-running foreground server, so
+   run it BOUNDED in the background and always terminate it (never block on it):
+   \`\`\`bash
+   yarn dev > /tmp/qk-watch-dev.log 2>&1 &
+   DEV_PID=$!
+   # Give it up to 30s to boot, then tear it down regardless
+   sleep 30
+   kill "$DEV_PID" 2>/dev/null; wait "$DEV_PID" 2>/dev/null || true
+   # Treat a crash/stack trace in the log as a boot failure
+   grep -iE 'error|exception|EADDRINUSE|cannot find module' /tmp/qk-watch-dev.log && echo "⚠️ boot issues" || echo "✅ booted"
+   \`\`\`
 4. Ensure all originally passing tests still pass
 
 **IMPORTANT:**
@@ -231,17 +272,23 @@ WAIT FOR AGENT TO COMPLETE
 
 ### Step 3.1: Final Verification
 
-```
+```bash
 EXECUTE VERIFICATION:
 1. Run linting: yarn lint
 2. Run tests with coverage: yarn test:coverage
 3. Verify >80% coverage maintained
 4. Run E2E tests: yarn test:e2e (if they exist)
-5. Check app boots: yarn dev (verify 10 seconds, then stop)
+5. Check the app boots — bound and always terminate the dev server; never
+   leave it running or block the step on it:
+   yarn dev > /tmp/qk-watch-dev.log 2>&1 &
+   DEV_PID=$!
+   sleep 30
+   kill "$DEV_PID" 2>/dev/null; wait "$DEV_PID" 2>/dev/null || true
+   grep -iE 'error|exception|EADDRINUSE|cannot find module' /tmp/qk-watch-dev.log && echo "⚠️ boot issues" || echo "✅ booted"
 
 IF ANY FAILURES:
   - Use full-stack-engineer agent to fix
-  - Repeat until all pass
+  - Repeat until all pass (subject to the 3-attempt cap in Step 3.3)
 ```
 
 ### Step 3.2: Commit and Push
@@ -259,7 +306,7 @@ EXECUTE:
 3. Push to current branch: git push
 
 4. Add comment to PR:
-   gh pr comment <PR_NUMBER> --body "🤖 Addressed review feedback:
+   gh pr comment "$PR_NUMBER" --body "🤖 Addressed review feedback:
    - Fixed review comments
    - Resolved CI failures  
    - Maintained >80% test coverage
@@ -275,14 +322,14 @@ Pushing in Step 3.2 triggers a fresh CI run. Do NOT stop here — keep watching 
 EXECUTE:
 # Give GitHub a moment to register the new checks, then block on them again.
 sleep 15
-gh pr checks <PR_NUMBER> --watch --interval 30
+gh pr checks "$PR_NUMBER" --watch --interval 30
 RECHECK_EXIT=$?
 
 if [ "$RECHECK_EXIT" -eq 0 ] || [ "$RECHECK_EXIT" -eq 8 ]; then
-  echo "✅ CI is green after fixes for PR #<PR_NUMBER>."
+  echo "✅ CI is green after fixes for PR #$PR_NUMBER."
   # Fall through to "Output to User" — done.
 else
-  echo "❌ CI still failing after fixes for PR #<PR_NUMBER>."
+  echo "❌ CI still failing after fixes for PR #$PR_NUMBER."
   # LOOP BACK: return to Step 1.3 (Gather All Feedback) and repeat the
   # gather → fix → push → re-watch cycle against the new failures.
 fi

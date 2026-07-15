@@ -10,6 +10,19 @@ allowed-tools:
 
 # Create Worktree: Issue $ARGUMENT
 
+## Step 0: Validate Argument
+
+`$ARGUMENT` is substituted literally into every `gh`, git, and path command below, so it must be validated before use to prevent shell injection and malformed branch names.
+
+```bash
+EXECUTE:
+# Reject anything that is not a plain issue number
+if ! [[ "$ARGUMENT" =~ ^[0-9]+$ ]]; then
+  echo "❌ Invalid issue number: '$ARGUMENT'. Provide a numeric GitHub issue number, e.g. /qk-worktree 312"
+  exit 1
+fi
+```
+
 ## Step 1: Verify GitHub Issue [AGENT]
 
 Verify the GitHub issue exists and is ready for work.
@@ -18,25 +31,26 @@ Verify the GitHub issue exists and is ready for work.
 AGENT: general-purpose
 DESCRIPTION: Verify GitHub issue #$ARGUMENT exists
 PROMPT:
-"Check if GitHub issue #$ARGUMENT exists and display basic information.
+"Check if GitHub issue #$ARGUMENT exists and is open before a worktree is created.
 
 **Step 1: Fetch issue from GitHub**
 
 \`\`\`bash
-gh issue view $ARGUMENT --json number,title,state,labels
+gh issue view \"$ARGUMENT\" --json number,title,state,labels
 \`\`\`
 
 **Step 2: Verify issue**
 
 If issue not found or command fails:
-  Return: '❌ Issue #$ARGUMENT not found in GitHub. Verify the issue number and try again.'
+  Return exactly: 'RESULT: FAIL — ❌ Issue #$ARGUMENT not found in GitHub. Verify the issue number and try again.'
 
-If issue state is 'closed':
-  Return: '⚠️  Issue #$ARGUMENT is closed. Consider if this should be reopened before starting work.'
+If issue state is 'closed' (CLOSED):
+  Return exactly: 'RESULT: FAIL — ❌ Issue #$ARGUMENT is closed. Reopen it before starting work.'
 
-**Step 3: Display issue info**
+**Step 3: Return result**
 
-Return: '✅ GitHub Issue #$ARGUMENT verified:
+If open:
+  Return exactly: 'RESULT: PASS — ✅ GitHub Issue #$ARGUMENT verified:
 - Title: [title]
 - State: [state]
 - Labels: [labels or 'none']'"
@@ -44,34 +58,53 @@ Return: '✅ GitHub Issue #$ARGUMENT verified:
 WAIT FOR AGENT
 ```
 
+**Gate:** If the agent's result starts with `RESULT: FAIL`, STOP — display the message and do not create a worktree. Only continue to Step 2 when the result starts with `RESULT: PASS`.
+
 ## Step 2: Create Worktree Directory
 
 Create isolated git worktree with branch and dev container support.
 
 ```bash
+EXECUTE:
+# Stop immediately if any git operation fails — never fall through to a success message
+set -e
+
+BRANCH="vibe-$ARGUMENT"
+WORKTREE=".claude/worktrees/$BRANCH"
+
 # Check if worktree already exists
-if [ -d ".claude/worktrees/vibe-$ARGUMENT" ]; then
+if [ -d "$WORKTREE" ]; then
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "✅ Worktree already exists"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  cd .claude/worktrees/vibe-$ARGUMENT && git status
+  # Verify the existing directory really is a worktree on the expected branch
+  ACTUAL_BRANCH=$(git -C "$WORKTREE" rev-parse --abbrev-ref HEAD)
+  if [ "$ACTUAL_BRANCH" != "$BRANCH" ]; then
+    echo "❌ $WORKTREE exists but is on branch '$ACTUAL_BRANCH', not '$BRANCH'. Resolve manually."
+    exit 1
+  fi
+  git -C "$WORKTREE" status
 else
   # Check if branch exists
-  if git show-ref --verify --quiet refs/heads/vibe-$ARGUMENT; then
-    echo "Branch vibe-$ARGUMENT exists locally, creating worktree..."
-    git worktree add .claude/worktrees/vibe-$ARGUMENT vibe-$ARGUMENT
-  elif git ls-remote --heads origin vibe-$ARGUMENT | grep -q vibe-$ARGUMENT; then
-    echo "Branch vibe-$ARGUMENT exists remotely, fetching and creating worktree..."
-    git fetch origin vibe-$ARGUMENT:vibe-$ARGUMENT
-    git worktree add .claude/worktrees/vibe-$ARGUMENT vibe-$ARGUMENT
+  if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+    echo "Branch $BRANCH exists locally, creating worktree..."
+    git worktree add "$WORKTREE" "$BRANCH"
+  elif git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+    echo "Branch $BRANCH exists remotely, fetching and creating worktree..."
+    git fetch origin "$BRANCH:$BRANCH"
+    git worktree add "$WORKTREE" "$BRANCH"
   else
-    echo "Branch vibe-$ARGUMENT doesn't exist, creating new branch and worktree..."
-    git worktree add -b vibe-$ARGUMENT .claude/worktrees/vibe-$ARGUMENT master
+    echo "Branch $BRANCH doesn't exist, creating new branch and worktree..."
+    git worktree add -b "$BRANCH" "$WORKTREE" master
   fi
-  
-  cd .claude/worktrees/vibe-$ARGUMENT
-  git status
-  cd -
+
+  git -C "$WORKTREE" status
+fi
+
+# Confirm the worktree is registered before declaring success
+if ! git worktree list --porcelain | grep -qF "worktree $(cd "$WORKTREE" && pwd)"; then
+  echo "❌ Worktree $WORKTREE was not created successfully."
+  exit 1
 fi
 
 echo ""
@@ -79,18 +112,18 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "✅ WORKTREE READY"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "Location: .claude/worktrees/vibe-$ARGUMENT"
-echo "Branch:   vibe-$ARGUMENT"
+echo "Location: $WORKTREE"
+echo "Branch:   $BRANCH"
 echo ""
 echo "Next steps:"
-echo "  1. cd .claude/worktrees/vibe-$ARGUMENT"
+echo "  1. cd $WORKTREE"
 echo "  2. Use /qk-plan $ARGUMENT to create plan"
 echo "  3. Use /qk-implement $ARGUMENT to build feature"
 echo "  4. Use /qk-review $ARGUMENT before creating PR"
 echo ""
 echo "💡 To test changes:"
-echo "   Run 'yarn dev' from main repo"
-echo "   Your worktree branch changes will be active"
+echo "   cd $WORKTREE && yarn dev"
+echo "   Run dev from inside the worktree so it serves the branch's code."
 echo ""
 ```
 
@@ -120,12 +153,19 @@ echo ""
 
 ## Cleanup
 
-When done with a worktree:
+When done with a worktree, remove it from the main repository:
 
 ```bash
-# From main repository
+# From main repository — the plain remove refuses to run if there are
+# uncommitted changes, protecting unfinished work.
 git worktree remove .claude/worktrees/vibe-$ARGUMENT
+```
 
-# Or with force if there are uncommitted changes
+⚠️ **Only use `-f` after confirming there is nothing to keep.** `git worktree remove -f` discards uncommitted changes permanently. Check the status first, and push or stash anything worth keeping:
+
+```bash
+# Verify the worktree is clean before forcing removal
+git -C .claude/worktrees/vibe-$ARGUMENT status --short
+# If — and only if — the output is empty (or you have confirmed the changes are disposable):
 git worktree remove -f .claude/worktrees/vibe-$ARGUMENT
 ```

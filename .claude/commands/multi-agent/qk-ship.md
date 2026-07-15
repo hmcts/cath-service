@@ -41,9 +41,19 @@ Use TodoWrite to create workflow checklist:
 
 *Mark "Verify ticket status" as in_progress*
 
+`$ARGUMENT` is substituted literally into the `gh`, git, branch, and PR commands throughout this workflow, so validate it before anything else to prevent shell injection and malformed branch names.
+
+```bash
+EXECUTE:
+if ! [[ "$ARGUMENT" =~ ^[0-9]+$ ]]; then
+  echo "❌ Invalid issue number: '$ARGUMENT'. Provide a numeric GitHub issue number, e.g. /qk-ship 312"
+  exit 1
+fi
+```
+
 Verify the GitHub issue has been properly refined and is ready for implementation.
 
-```
+```text
 AGENT: general-purpose
 DESCRIPTION: Verify ticket #$ARGUMENT refinement status
 PROMPT:
@@ -52,7 +62,7 @@ PROMPT:
 **Step 1: Fetch issue from GitHub**
 
 \`\`\`bash
-gh issue view $ARGUMENT --json number,title,body,labels,comments
+gh issue view \"$ARGUMENT\" --json number,title,body,labels,comments,state
 \`\`\`
 
 **Step 2: Check refinement indicators**
@@ -78,6 +88,7 @@ Review the issue for:
 **Step 3: Decision logic**
 
 If ANY of these are true, STOP with warning:
+- Issue state is 'closed' (CLOSED) — do not implement a closed issue
 - Has 'needs-clarification' or 'question' or 'blocked' label
 - Comments contain unanswered questions (check timestamps)
 - No clear acceptance criteria found
@@ -876,6 +887,10 @@ Options:
 
 ```bash
 EXECUTE:
+# Stop on the first failed command so a failed commit/push/create can never be
+# followed by a misleading success message
+set -e
+
 # Commit changes (exclude the .devcontainer symlink created in Step 1)
 echo "Committing changes..."
 git add . -- ':!.devcontainer'
@@ -885,11 +900,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 # Push to remote
 echo "Pushing to remote..."
-git push -u origin vibe-$ARGUMENT
+git push -u origin "vibe-$ARGUMENT"
 
-# Create PR
+# Create PR and capture its URL directly from gh (fails the step if creation fails)
 echo "Creating pull request..."
-gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+PR_URL=$(gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 
 ## Implementation Summary
 - Implemented all acceptance criteria
@@ -897,12 +912,16 @@ gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 - Security review completed
 - Code quality checks passed
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+🤖 Generated with [Claude Code](https://claude.com/claude-code)")
 
-# Get PR number
-PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
+# Resolve and verify the PR number before reporting success
+PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR creation did not return a PR number. Aborting."
+  exit 1
+fi
 echo ""
-echo "✅ PR #$PR_NUMBER created"
+echo "✅ PR #$PR_NUMBER created: $PR_URL"
 echo ""
 ```
 
@@ -912,6 +931,10 @@ echo ""
 
 ```bash
 EXECUTE:
+# Stop on the first failed command so a failed commit/push/create can never be
+# followed by a misleading success message
+set -e
+
 # Commit changes (exclude the .devcontainer symlink created in Step 1)
 echo "Committing changes..."
 git add . -- ':!.devcontainer'
@@ -921,11 +944,11 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 # Push to remote
 echo "Pushing to remote..."
-git push -u origin vibe-$ARGUMENT
+git push -u origin "vibe-$ARGUMENT"
 
-# Create PR
+# Create PR and capture its URL directly from gh (fails the step if creation fails)
 echo "Creating pull request..."
-gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+PR_URL=$(gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 
 ## Implementation Summary
 - Implemented all acceptance criteria
@@ -933,13 +956,17 @@ gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 - Security review completed
 - Code quality checks passed
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+🤖 Generated with [Claude Code](https://claude.com/claude-code)")
 
-# Get PR number
-PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
+# Resolve and verify the PR number before reporting success
+PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR creation did not return a PR number. Aborting."
+  exit 1
+fi
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ PR #$PR_NUMBER created successfully"
+echo "✅ PR #$PR_NUMBER created successfully: $PR_URL"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "CI/CD checks will run automatically."
