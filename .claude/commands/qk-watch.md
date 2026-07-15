@@ -316,7 +316,7 @@ IF ANY FAILURES:
 
 ```
 EXECUTE:
-1. Stage changes (exclude the .devcontainer symlink used by worktrees): git add -A -- ':!.devcontainer'
+1. Stage changes: git add -A
 2. Create commit with references:
    git commit -m "Fix PR feedback for #$ARGUMENT
    

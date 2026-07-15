@@ -144,16 +144,10 @@ else
     git worktree add -b vibe-$ARGUMENT .claude/worktrees/vibe-$ARGUMENT master
   fi
   
-  # Create .devcontainer symlink for isolated dev container testing
-  cd .claude/worktrees/vibe-$ARGUMENT
-  ln -s ../../../.devcontainer .devcontainer
-  echo "✅ Created .devcontainer symlink for isolated container testing"
-  
   git status
 fi
 
 echo "✅ Worktree ready at .claude/worktrees/vibe-$ARGUMENT"
-echo "💡 To test in isolated dev container: code .claude/worktrees/vibe-$ARGUMENT && reopen in container"
 ```
 
 *Mark "Create worktree for issue" as completed*
@@ -891,9 +885,9 @@ EXECUTE:
 # followed by a misleading success message
 set -e
 
-# Commit changes (exclude the .devcontainer symlink created in Step 1)
+# Commit changes
 echo "Committing changes..."
-git add . -- ':!.devcontainer'
+git add .
 git commit -m "feat: implement issue #$ARGUMENT
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -935,9 +929,9 @@ EXECUTE:
 # followed by a misleading success message
 set -e
 
-# Commit changes (exclude the .devcontainer symlink created in Step 1)
+# Commit changes
 echo "Committing changes..."
-git add . -- ':!.devcontainer'
+git add .
 git commit -m "feat: implement issue #$ARGUMENT
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -990,8 +984,8 @@ echo "1. Review changes:"
 echo "   git status"
 echo "   git diff"
 echo ""
-echo "2. Commit (exclude the .devcontainer symlink created in Step 1):"
-echo "   git add . -- ':!.devcontainer'"
+echo "2. Commit:"
+echo "   git add ."
 echo "   git commit -m \"feat: implement issue #$ARGUMENT\""
 echo ""
 echo "3. Push and create PR:"
@@ -1089,8 +1083,8 @@ gh pr checks $PR_NUMBER
 echo "❌ CI/CD checks failed. Analyzing..."
 gh pr checks $PR_NUMBER --required
 
-# After fixing (exclude the .devcontainer symlink created in Step 1):
-git add . -- ':!.devcontainer'
+# After fixing:
+git add .
 git commit -m "fix: resolve E2E test selector issue"
 git push origin vibe-$ARGUMENT
 
