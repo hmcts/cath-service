@@ -37,7 +37,7 @@ Use TodoWrite to create workflow checklist:
 ## PHASE 0: VERIFICATION & WORKTREE SETUP
 ## ═══════════════════════════════════════
 
-## Step 0a: Check Ticket Refinement [AGENT]
+## Step 0: Check Ticket Refinement [AGENT]
 
 *Mark "Verify ticket status" as in_progress*
 
@@ -101,53 +101,6 @@ If ready:
   - Labels: [labels]
   - Acceptance criteria: [count] found
   - No outstanding questions'"
-
-WAIT FOR AGENT
-```
-
-## Step 0b: Verify Ticket and Mark In Progress [AGENT]
-
-Check requirements.db to ensure ticket is available, then mark it as in_progress.
-
-```
-AGENT: general-purpose
-DESCRIPTION: Verify and claim ticket #$ARGUMENT
-PROMPT:
-"Verify ticket #$ARGUMENT is available and mark it in_progress.
-
-Database: requirements/requirements.db
-
-**Step 1: Query ticket status**
-
-\`\`\`bash
-sqlite3 requirements/requirements.db \"SELECT r.id, r.ref, r.title, r.status, r.issue_number FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
-\`\`\`
-
-**Step 2: Verify status**
-
-If status is 'in_progress':
-  - STOP with error: '❌ Ticket #$ARGUMENT is already in progress. Choose another ticket from /qk-tickets.'
-  
-If status is not 'approved':
-  - STOP with error: '❌ Ticket #$ARGUMENT has status=[status]. Only approved tickets can be shipped. Use /qk-tickets to see available tickets.'
-
-If ticket not found:
-  - STOP with error: '❌ Ticket #$ARGUMENT not found in requirements.db. Verify issue number or use /qk-tickets.'
-
-**Step 3: Mark as in_progress**
-
-If status is 'approved':
-  \`\`\`bash
-  sqlite3 requirements/requirements.db \"UPDATE requirement SET status = 'in_progress', updated_at = datetime('now'), updated_by = 'claude-agent' WHERE issue_number = $ARGUMENT;\"
-  \`\`\`
-
-**Step 4: Verify update**
-
-\`\`\`bash
-sqlite3 requirements/requirements.db \"SELECT r.ref, r.title, r.status FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
-\`\`\`
-
-Return: '✅ Ticket #$ARGUMENT ([ref]) marked as in_progress and ready to work on'"
 
 WAIT FOR AGENT
 ```
@@ -923,12 +876,12 @@ Options:
 
 ```bash
 EXECUTE:
-# Commit changes
+# Commit changes (exclude the .devcontainer symlink created in Step 1)
 echo "Committing changes..."
-git add .
+git add . -- ':!.devcontainer'
 git commit -m "feat: implement issue #$ARGUMENT
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 # Push to remote
 echo "Pushing to remote..."
@@ -944,7 +897,7 @@ gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 - Security review completed
 - Code quality checks passed
 
-🤖 Generated with Claude Code"
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 
 # Get PR number
 PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
@@ -959,12 +912,12 @@ echo ""
 
 ```bash
 EXECUTE:
-# Commit changes
+# Commit changes (exclude the .devcontainer symlink created in Step 1)
 echo "Committing changes..."
-git add .
+git add . -- ':!.devcontainer'
 git commit -m "feat: implement issue #$ARGUMENT
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 # Push to remote
 echo "Pushing to remote..."
@@ -980,7 +933,7 @@ gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
 - Security review completed
 - Code quality checks passed
 
-🤖 Generated with Claude Code"
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 
 # Get PR number
 PR_NUMBER=$(gh pr list --head vibe-$ARGUMENT --json number --jq '.[0].number')
@@ -1010,8 +963,8 @@ echo "1. Review changes:"
 echo "   git status"
 echo "   git diff"
 echo ""
-echo "2. Commit:"
-echo "   git add ."
+echo "2. Commit (exclude the .devcontainer symlink created in Step 1):"
+echo "   git add . -- ':!.devcontainer'"
 echo "   git commit -m \"feat: implement issue #$ARGUMENT\""
 echo ""
 echo "3. Push and create PR:"
@@ -1109,8 +1062,8 @@ gh pr checks $PR_NUMBER
 echo "❌ CI/CD checks failed. Analyzing..."
 gh pr checks $PR_NUMBER --required
 
-# After fixing:
-git add .
+# After fixing (exclude the .devcontainer symlink created in Step 1):
+git add . -- ':!.devcontainer'
 git commit -m "fix: resolve E2E test selector issue"
 git push origin vibe-$ARGUMENT
 

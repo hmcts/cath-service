@@ -100,14 +100,32 @@ IF CI/CD CHECKS FAILED:
 ## PHASE 2: Switch to Branch and Fix Issues
 *Mark "Switch to branch (if fixes needed)" as in_progress*
 
-### Step 2.1: Switch to Branch
+### Step 2.1: Switch to Branch or Worktree
 
-```
+The branch may be checked out in a linked worktree (as created by `/qk-ship` or `/worktree-create`) or only exist as a normal branch. Detect which and move into the correct working directory — `git checkout` fails if the branch is already checked out in a worktree.
+
+```bash
 EXECUTE:
-1. Check for uncommitted changes: git status --porcelain
-2. If uncommitted changes exist, error: "Uncommitted changes detected. Commit or stash before switching."
-3. Switch to branch: git checkout $ARGUMENT
-4. Pull latest: git pull origin $ARGUMENT
+# 1. Detect if the branch is already checked out in a linked worktree
+WORKTREE_PATH=$(git worktree list --porcelain \
+  | awk -v b="refs/heads/$ARGUMENT" '/^worktree /{p=$2} $0=="branch "b{print p}')
+
+if [ -n "$WORKTREE_PATH" ]; then
+  # Branch lives in a worktree — work there, do not checkout in the main repo
+  echo "Branch $ARGUMENT is checked out in worktree: $WORKTREE_PATH"
+  cd "$WORKTREE_PATH"
+else
+  # Normal branch — check out in the current repo
+  # Fail fast if there are uncommitted changes that would block the checkout
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "❌ Uncommitted changes detected. Commit or stash before switching."
+    exit 1
+  fi
+  git checkout $ARGUMENT
+fi
+
+# 2. Pull latest for the branch (safe in either location)
+git pull origin $ARGUMENT
 ```
 *Mark "Switch to branch (if fixes needed)" as completed*
 *Mark "Fix identified issues" as in_progress*
@@ -198,13 +216,13 @@ IF ANY FAILURES:
 
 ```
 EXECUTE:
-1. Stage changes: git add -A
+1. Stage changes (exclude the .devcontainer symlink used by worktrees): git add -A -- ':!.devcontainer'
 2. Create commit with references:
    git commit -m "Fix PR feedback for #$ARGUMENT
    
    Addresses review comments and CI failures
    
-   Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+   Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
    
 3. Push to current branch: git push
 

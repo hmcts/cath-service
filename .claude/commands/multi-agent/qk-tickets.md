@@ -79,14 +79,12 @@ Format output showing variety of ticket sizes:
 #312 (REQ-0042) [8 pts] - Add email notification system
   Priority: HIGH | Granularity: story
   Links: None
-  → /worktree-create 312
 
 #320 (REQ-0050) [13 pts] - Admin dashboard with analytics
   Priority: MEDIUM | Granularity: epic
   Links:
     • blocks #325 (REQ-0055) [approved]
   ⚠️  Blocks other tickets
-  → /worktree-create 320
 
 🟡 MEDIUM (3-5 points)
 ─────────────────────
@@ -95,34 +93,29 @@ Format output showing variety of ticket sizes:
   Links:
     • depends_on #312 (REQ-0042) [approved]
   ⚠️  Depends on #312
-  → /worktree-create 315
 
 #325 (REQ-0055) [3 pts] - Enhance notification templates
   Priority: MEDIUM | Granularity: story
   Links:
     • related_to #312 (REQ-0042) [approved]
   ⚠️  Related to #312
-  → /worktree-create 325
 
 🟢 SMALL (1-2 points)
 ─────────────────────
 #330 (REQ-0060) [2 pts] - Fix email validation bug
   Priority: HIGH | Granularity: task
   Links: None
-  → /worktree-create 330
 
 #335 (REQ-0065) [1 pt] - Update Welsh translations
   Priority: MEDIUM | Granularity: task
   Links: None
-  → /worktree-create 335
 
 ⚪ NOT ESTIMATED
 ─────────────────────
 #340 (REQ-0070) - Add search functionality
   Priority: LOW | Granularity: story
   Links: None
-  ℹ️  Needs estimation - review issue on GitHub first
-  → /ticket-check 340
+  ℹ️  Needs estimation - review and estimate on GitHub before starting work
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Summary:
