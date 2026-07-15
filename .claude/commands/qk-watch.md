@@ -102,7 +102,7 @@ IF CI/CD CHECKS FAILED:
 
 ### Step 2.1: Switch to Branch or Worktree
 
-The branch may be checked out in a linked worktree (as created by `/qk-ship` or `/worktree-create`) or only exist as a normal branch. Detect which and move into the correct working directory — `git checkout` fails if the branch is already checked out in a worktree.
+The branch may be checked out in a linked worktree (as created by `/qk-ship` or `/qk-worktree`) or only exist as a normal branch. Detect which and move into the correct working directory — `git checkout` fails if the branch is already checked out in a worktree.
 
 ```bash
 EXECUTE:
