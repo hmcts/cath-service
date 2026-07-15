@@ -175,7 +175,7 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload-summary/index",
         expect.objectContaining({
-          heading: "File upload summary",
+          heading: "File Upload Summary",
           confirmButton: "Confirm"
         })
       );

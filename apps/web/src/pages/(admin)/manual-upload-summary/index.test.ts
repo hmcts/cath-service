@@ -181,7 +181,7 @@ describe("manual-upload-summary page", () => {
         "manual-upload-summary/index",
         expect.objectContaining({
           pageTitle: "Manual upload - File upload summary - Court and tribunal hearings - GOV.UK",
-          heading: "File upload summary",
+          heading: "File Upload Summary",
           subHeading: "Check upload details",
           courtName: "Court name",
           file: "File",
