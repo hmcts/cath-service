@@ -1,6 +1,6 @@
+import type { CauseListData, Hearing } from "@hmcts/daily-cause-list-common";
 import { describe, expect, it } from "vitest";
-import type { CauseListData, Hearing } from "../models/types.js";
-import { extractEtCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./et-summary-builder.js";
+import { extractEtCaseSummary } from "./et-summary-builder.js";
 
 function buildData(cases: Hearing[]): CauseListData {
   return {
@@ -28,6 +28,7 @@ describe("extractEtCaseSummary", () => {
         hearingType: "Preliminary Hearing",
         case: [
           {
+            caseName: "",
             caseNumber: "1234567/2025",
             party: [
               { partyRole: "APPLICANT_PETITIONER", individualDetails: { individualForenames: "John", individualSurname: "Smith" } },
@@ -58,6 +59,7 @@ describe("extractEtCaseSummary", () => {
         hearingType: "Final Hearing",
         case: [
           {
+            caseName: "",
             caseNumber: "9999/2025",
             party: [
               {
@@ -84,7 +86,7 @@ describe("extractEtCaseSummary", () => {
 
   it("should return empty strings for missing claimant, respondent, case reference and hearing type", () => {
     // Arrange
-    const data = buildData([{ case: [{ party: [] }] }]);
+    const data = buildData([{ case: [{ caseName: "", caseNumber: "", party: [] }] }]);
 
     // Act
     const result = extractEtCaseSummary(data);
@@ -101,8 +103,8 @@ describe("extractEtCaseSummary", () => {
   it("should extract one summary per case across multiple hearings", () => {
     // Arrange
     const data = buildData([
-      { hearingType: "Hearing A", case: [{ caseNumber: "AAA" }] },
-      { hearingType: "Hearing B", case: [{ caseNumber: "BBB" }] }
+      { hearingType: "Hearing A", case: [{ caseName: "", caseNumber: "AAA" }] },
+      { hearingType: "Hearing B", case: [{ caseName: "", caseNumber: "BBB" }] }
     ]);
 
     // Act
@@ -124,39 +126,5 @@ describe("extractEtCaseSummary", () => {
 
     // Assert
     expect(result).toHaveLength(0);
-  });
-});
-
-describe("formatCaseSummaryForEmail (ET re-export)", () => {
-  it("should format the ET fields for email", () => {
-    // Arrange
-    const summaries = [
-      [
-        { label: "Claimant", value: "John Smith" },
-        { label: "Respondent", value: "Acme Ltd" },
-        { label: "Case reference", value: "1234567/2025" },
-        { label: "Hearing type", value: "Preliminary Hearing" }
-      ]
-    ];
-
-    // Act
-    const result = formatCaseSummaryForEmail(summaries);
-
-    // Assert
-    expect(result).toContain("Claimant - John Smith");
-    expect(result).toContain("Respondent - Acme Ltd");
-    expect(result).toContain("Case reference - 1234567/2025");
-    expect(result).toContain("Hearing type - Preliminary Hearing");
-  });
-
-  it("should handle an empty case list", () => {
-    // Act / Assert
-    expect(formatCaseSummaryForEmail([])).toBe("No cases scheduled.");
-  });
-});
-
-describe("SPECIAL_CATEGORY_DATA_WARNING (ET re-export)", () => {
-  it("should be re-exported for consumers", () => {
-    expect(SPECIAL_CATEGORY_DATA_WARNING).toContain("Special Category Data");
   });
 });

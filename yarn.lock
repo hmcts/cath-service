@@ -1657,6 +1657,7 @@ __metadata:
   resolution: "@hmcts/et-daily-list@workspace:libs/list-types/et-daily-list"
   dependencies:
     "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/et-list-common": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
@@ -1678,6 +1679,7 @@ __metadata:
   resolution: "@hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list"
   dependencies:
     "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/et-list-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.2"
@@ -1689,6 +1691,21 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/et-list-common@workspace:*, @hmcts/et-list-common@workspace:libs/list-types/et-list-common":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-list-common@workspace:libs/list-types/et-list-common"
+  dependencies:
+    "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
   languageName: unknown
   linkType: soft
 
