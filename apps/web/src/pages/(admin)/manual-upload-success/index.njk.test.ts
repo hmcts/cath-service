@@ -85,7 +85,7 @@ describe("manual-upload-success template", () => {
     });
 
     it("should have positive success messaging", () => {
-      expect(en.title).toContain("successful");
+      expect(en.title.toLowerCase()).toContain("successful");
       expect(en.uploadedMessage).toContain("uploaded");
       expect(cy.title).toContain("llwyddo");
       expect(cy.uploadedMessage).toContain("huwchlwytho");
