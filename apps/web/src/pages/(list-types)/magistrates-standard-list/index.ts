@@ -21,6 +21,6 @@ export const GET = createListTypeHandler<MagistratesStandardList>({
       contentDate: artefact.contentDate
     });
     const dataSource = resolveDataSource(artefact.provenance);
-    res.render("magistrates-standard-list", { en, cy, t, title: t.title, header, listData, dataSource });
+    res.render("magistrates-standard-list", { en, cy, t, pageTitle: t.title, header, listData, dataSource });
   }
 });

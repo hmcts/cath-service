@@ -1,5 +1,6 @@
 export const cy = {
-  locationsTitle: "Blob Explorer Locations",
+  title: "Blob Explorer Locations",
+  header: "Blob Explorer Locations",
   locationsDescription: "Choose a location to see all publications associated with it.",
   locationsTableHeadingLocation: "Location",
   locationsTableHeadingPublications: "Number of publications per venue",
