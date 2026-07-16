@@ -17,6 +17,7 @@ export const cy = {
   hearingDurationMinute: "munud",
   hearingDurationMinutes: "munud",
   searchCases: "Chwilio Achosion",
+  linkToTop: "Yn ôl i'r brig",
   tableHeaders: ["Amser Cychwyn", "Hyd", "Cyfeirnod yr Achos", "Hawlydd", "Atebydd", "Math o wrandawiad", "Sianel y Gwrandawiad"],
   openJustice1:
     "Mae cyfiawnder agored yn egwyddor hanfodol yn system y llysoedd a’r tribiwnlysoedd, a bydd hyn yn parhau wrth i ni ddefnyddio mwy ar dechnoleg sain a fideo.",

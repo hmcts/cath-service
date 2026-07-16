@@ -1,7 +1,6 @@
 export const en = {
-  // Title overridden with the listLookup.json friendly name (upstream locale title drops "Press")
-  title: "Employment Tribunals Fortnightly Press List",
-  pageTitle: "Employment Tribunals Fortnightly Press List for",
+  title: "Employment Tribunals Fortnightly List",
+  pageTitle: "Employment Tribunals Fortnightly List for",
   factLink: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText1: "Find contact details and other information about courts and tribunals",
   factLinkText2: " in England and Wales, and some non-devolved tribunals in Scotland.",
@@ -17,6 +16,7 @@ export const en = {
   hearingDurationMinute: "min",
   hearingDurationMinutes: "mins",
   searchCases: "Search Cases",
+  linkToTop: "Back to top",
   rep: "Rep",
   noRep: "No Representative",
   tableHeaders: ["Start Time", "Duration", "Case Number", "Claimant", "Respondent", "Hearing Type", "Hearing Platform"],

@@ -1,7 +1,6 @@
 export const cy = {
-  // Title overridden with the listLookup.json welshFriendlyName (upstream locale title is a Daily copy-paste bug)
-  title: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
-  pageTitle: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth ar gyfer",
+  title: "Rhestr Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
+  pageTitle: "Rhestr Pob Pythefnos y Tribiwnlysoedd Cyflogaeth ar gyfer",
   factLink: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText1: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
   factLinkText2: " a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
@@ -17,6 +16,7 @@ export const cy = {
   hearingDurationMinute: "munud",
   hearingDurationMinutes: "munud",
   searchCases: "Chwilio Achosion",
+  linkToTop: "Yn ôl i'r brig",
   rep: "Cynrychiolydd",
   noRep: "Dim Cynrychiolydd",
   tableHeaders: ["Amser Cychwyn", "Hyd", "Cyfeirnod yr Achos", "Hawlydd", "Atebydd", "Math o wrandawiad", "Sianel y Gwrandawiad"],

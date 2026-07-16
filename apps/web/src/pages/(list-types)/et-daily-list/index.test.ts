@@ -1,4 +1,4 @@
-import { renderCauseListData, validateEtDailyList } from "@hmcts/et-daily-list";
+import { renderEtDailyList, validateEtDailyList } from "@hmcts/et-daily-list";
 import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -101,15 +101,15 @@ describe("et-daily-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateEtDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCauseListData).mockResolvedValue({
-      header: { locationName: "Leeds ET", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+    vi.mocked(renderEtDailyList).mockResolvedValue({
+      header: { regionName: "North East", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
       openJustice: { venueName: "Leeds ET", email: "et@example.com", phone: "123" },
       listData: { courtLists: [] }
     } as any);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderEtDailyList).toHaveBeenCalledWith(mockJsonData, {
       locationId: "1",
       contentDate: mockArtefact.contentDate,
       locale: "en"
@@ -129,15 +129,15 @@ describe("et-daily-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateEtDailyList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCauseListData).mockResolvedValue({
-      header: { locationName: "Leeds ET", addressLines: [], contentDate: "13 Ionawr 2025", lastUpdated: "13 Ionawr 2025" },
+    vi.mocked(renderEtDailyList).mockResolvedValue({
+      header: { regionName: "Gogledd Ddwyrain", addressLines: [], contentDate: "13 Ionawr 2025", lastUpdated: "13 Ionawr 2025" },
       openJustice: { venueName: "Leeds ET", email: "et@example.com", phone: "123" },
       listData: { courtLists: [] }
     } as any);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "cy" }));
+    expect(renderEtDailyList).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "cy" }));
     expect(res.render).toHaveBeenCalledWith("et-daily-list", expect.any(Object));
   });
 

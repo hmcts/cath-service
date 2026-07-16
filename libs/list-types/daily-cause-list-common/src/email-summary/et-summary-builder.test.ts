@@ -44,11 +44,42 @@ describe("extractEtCaseSummary", () => {
     // Assert
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual([
-      { label: "Claimant", value: "John Smith" },
+      { label: "Claimant", value: "J. Smith" },
       { label: "Respondent", value: "Acme Ltd" },
       { label: "Case reference", value: "1234567/2025" },
       { label: "Hearing type", value: "Preliminary Hearing" }
     ]);
+  });
+
+  it("should format individual party names as initials with title", () => {
+    // Arrange
+    const data = buildData([
+      {
+        hearingType: "Final Hearing",
+        case: [
+          {
+            caseNumber: "9999/2025",
+            party: [
+              {
+                partyRole: "APPLICANT_PETITIONER",
+                individualDetails: { individualForenames: "Claimant", individualSurname: "surname" }
+              },
+              {
+                partyRole: "RESPONDENT",
+                individualDetails: { title: "Capt.", individualForenames: "Test forename", individualSurname: "Test Surname" }
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    // Act
+    const result = extractEtCaseSummary(data);
+
+    // Assert
+    expect(result[0].find((f) => f.label === "Claimant")?.value).toBe("C. surname");
+    expect(result[0].find((f) => f.label === "Respondent")?.value).toBe("Capt. T. Test Surname");
   });
 
   it("should return empty strings for missing claimant, respondent, case reference and hearing type", () => {

@@ -1,4 +1,4 @@
-import { renderCauseListData, validateEtFortnightlyPressList } from "@hmcts/et-fortnightly-list";
+import { renderEtFortnightlyList, validateEtFortnightlyPressList } from "@hmcts/et-fortnightly-list";
 import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -92,10 +92,10 @@ describe("et-fortnightly-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateEtFortnightlyPressList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCauseListData).mockResolvedValue({
-      header: { locationName: "Leeds ET", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
+    vi.mocked(renderEtFortnightlyList).mockResolvedValue({
+      header: { regionName: "Midlands", addressLines: [], contentDate: "13 January 2025", lastUpdated: "13 January 2025" },
       openJustice: { venueName: "Leeds ET", email: "et@example.com", phone: "123" },
-      listData: { courtLists: [] }
+      courts: []
     } as any);
 
     await GET(req as Request, res as Response);
@@ -104,6 +104,7 @@ describe("et-fortnightly-list controller", () => {
     expect(renderCall[0]).toBe("et-fortnightly-list");
     expect(renderCall[1]).toMatchObject({ dataSource: "Manual Upload" });
     expect(renderCall[1]).toHaveProperty("t");
+    expect(renderCall[1]).toHaveProperty("courts");
   });
 
   it("should render the list in Welsh", async () => {
@@ -112,15 +113,15 @@ describe("et-fortnightly-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
     vi.mocked(validateEtFortnightlyPressList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCauseListData).mockResolvedValue({
-      header: { locationName: "Leeds ET", addressLines: [], contentDate: "13 Ionawr 2025", lastUpdated: "13 Ionawr 2025" },
+    vi.mocked(renderEtFortnightlyList).mockResolvedValue({
+      header: { regionName: "Midlands", addressLines: [], contentDate: "13 Ionawr 2025", lastUpdated: "13 Ionawr 2025" },
       openJustice: { venueName: "Leeds ET", email: "et@example.com", phone: "123" },
-      listData: { courtLists: [] }
+      courts: []
     } as any);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCauseListData).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "cy" }));
+    expect(renderEtFortnightlyList).toHaveBeenCalledWith(mockJsonData, expect.objectContaining({ locale: "cy" }));
     expect(res.render).toHaveBeenCalledWith("et-fortnightly-list", expect.any(Object));
   });
 

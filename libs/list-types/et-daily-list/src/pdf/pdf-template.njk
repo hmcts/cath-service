@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <title>{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</title>
   <style>{{ pdfStyles | safe }}</style>
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+    <h1>{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</h1>
 
     <p><a href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}</p>
 
@@ -49,23 +49,23 @@
       {% endif %}
 
       {% for courtRoom in courtHouse.courtRoom %}
-        {% for session in courtRoom.session %}
-          <div class="court-room-section">
-            <div class="section-heading">{{ courtRoom.courtRoomName }}</div>
+        <div class="court-room-section">
+          <div class="section-heading">{{ courtRoom.courtRoomName }}</div>
 
-            <table>
-              <thead>
-                <tr>
-                  <th class="no-wrap">{{ t.tableHeaders[0] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[1] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[2] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[3] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[4] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[5] }}</th>
-                  <th class="no-wrap">{{ t.tableHeaders[6] }}</th>
-                </tr>
-              </thead>
-              <tbody>
+          <table>
+            <thead>
+              <tr>
+                <th class="no-wrap">{{ t.tableHeaders[0] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[1] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[2] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[3] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[4] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[5] }}</th>
+                <th class="no-wrap">{{ t.tableHeaders[6] }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for session in courtRoom.session %}
                 {% for sitting in session.sittings %}
                   {% set durationText = '' %}
                   {% if sitting.durationAsHours > 0 %}
@@ -90,8 +90,8 @@
                     {% for case in hearing.case %}
                       <tr>
                         <td class="no-wrap">{{ sitting.time }}</td>
-                        <td class="no-wrap">{{ durationText }}</td>
-                        <td class="no-wrap">{{ case.caseNumber }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                        <td class="no-wrap">{{ durationText }}{% if case.caseSequenceIndicator %}{% if durationText | length %} {% endif %}[{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                        <td class="no-wrap">{{ case.caseNumber }}</td>
                         <td>{{ case.applicant }}</td>
                         <td>{{ case.respondent }}</td>
                         <td class="no-wrap">{{ hearing.hearingType }}</td>
@@ -100,10 +100,10 @@
                     {% endfor %}
                   {% endfor %}
                 {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% endfor %}
     </div>
   {% endfor %}

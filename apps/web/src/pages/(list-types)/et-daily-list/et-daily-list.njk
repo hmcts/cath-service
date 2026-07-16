@@ -4,7 +4,7 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h1 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h1>
+    <h1 class="govuk-heading-l" id="top">{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</h1>
 
     <p class="govuk-body">
       <a class="govuk-link" href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}
@@ -37,7 +37,7 @@
     </details>
 
     <div class="govuk-form-group govuk-!-margin-top-6">
-      <label class="govuk-label govuk-heading-m" for="case-search-input">{{ t.searchCases }}</label>
+      <h2 class="govuk-label-wrapper"><label class="govuk-label govuk-label--s" for="case-search-input">{{ t.searchCases }}</label></h2>
       <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
     </div>
 
@@ -66,29 +66,29 @@
 
       <div class="govuk-accordion" data-module="govuk-accordion">
         {% for courtRoom in courtHouse.courtRoom %}
-          {% for session in courtRoom.session %}
-            <div class="govuk-accordion__section govuk-accordion__section--expanded">
-              <div class="govuk-accordion__section-header">
-                <h2 class="govuk-accordion__section-heading">
-                  <span class="govuk-accordion__section-button">
-                    {{ courtRoom.courtRoomName }}
-                  </span>
-                </h2>
-              </div>
-              <div class="govuk-accordion__section-content">
-                <table class="govuk-table hearings-table" data-module="moj-sortable-table">
-                  <thead class="govuk-table__head">
-                    <tr class="govuk-table__row">
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[0] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[1] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[2] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[3] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[4] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[5] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[6] }}</th>
-                    </tr>
-                  </thead>
-                  <tbody class="govuk-table__body">
+          <div class="govuk-accordion__section govuk-accordion__section--expanded">
+            <div class="govuk-accordion__section-header">
+              <h2 class="govuk-accordion__section-heading">
+                <span class="govuk-accordion__section-button">
+                  {{ courtRoom.courtRoomName }}
+                </span>
+              </h2>
+            </div>
+            <div class="govuk-accordion__section-content">
+              <table class="govuk-table hearings-table" data-module="moj-sortable-table">
+                <thead class="govuk-table__head">
+                  <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[0] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[1] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[2] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[3] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[4] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[5] }}</th>
+                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[6] }}</th>
+                  </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                  {% for session in courtRoom.session %}
                     {% for sitting in session.sittings %}
                       {% set durationText = '' %}
                       {% if sitting.durationAsHours > 0 %}
@@ -113,8 +113,8 @@
                         {% for case in hearing.case %}
                           <tr class="govuk-table__row">
                             <td class="govuk-table__cell no-wrap">{{ sitting.time }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ durationText }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                            <td class="govuk-table__cell no-wrap">{{ durationText }}{% if case.caseSequenceIndicator %}{% if durationText | length %} {% endif %}[{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                            <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
                             <td class="govuk-table__cell">{{ case.applicant }}</td>
                             <td class="govuk-table__cell">{{ case.respondent }}</td>
                             <td class="govuk-table__cell no-wrap">{{ hearing.hearingType }}</td>
@@ -123,11 +123,11 @@
                         {% endfor %}
                       {% endfor %}
                     {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-          {% endfor %}
+          </div>
         {% endfor %}
       </div>
     {% endfor %}
@@ -135,6 +135,10 @@
 
     <p class="govuk-body govuk-!-margin-top-6">
       {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+    <p class="govuk-body">
+      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
     </p>
 
   </div>

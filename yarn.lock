@@ -1657,8 +1657,11 @@ __metadata:
   resolution: "@hmcts/et-daily-list@workspace:libs/list-types/et-daily-list"
   dependencies:
     "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
     "@types/luxon": "npm:3.7.2"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"

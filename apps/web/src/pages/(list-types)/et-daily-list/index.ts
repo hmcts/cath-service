@@ -1,4 +1,4 @@
-import { type CauseListData, etDailyListCy as cy, etDailyListEn as en, renderCauseListData, validateEtDailyList } from "@hmcts/et-daily-list";
+import { type CauseListData, etDailyListCy as cy, etDailyListEn as en, renderEtDailyList, validateEtDailyList } from "@hmcts/et-daily-list";
 import { createCauseListRender, createListTypeHandler } from "../list-type-handler.js";
 
 export const GET = createListTypeHandler<CauseListData>({
@@ -7,5 +7,5 @@ export const GET = createListTypeHandler<CauseListData>({
   validate: validateEtDailyList,
   logPrefix: "et-daily-list",
   checkAccess: true,
-  render: createCauseListRender(renderCauseListData, "et-daily-list", en, cy)
+  render: createCauseListRender(renderEtDailyList, "et-daily-list", en, cy)
 });

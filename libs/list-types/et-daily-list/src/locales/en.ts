@@ -17,6 +17,7 @@ export const en = {
   hearingDurationMinute: "min",
   hearingDurationMinutes: "mins",
   searchCases: "Search Cases",
+  linkToTop: "Back to top",
   tableHeaders: ["Start Time", "Duration", "Case Number", "Claimant", "Respondent", "Hearing Type", "Hearing Platform"],
   openJustice1:
     "Open justice is a fundamental principle in our courts and tribunals system, and will continue to be as we increase the use of audio and video technology.",

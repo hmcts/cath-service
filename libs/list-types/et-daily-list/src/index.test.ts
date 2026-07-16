@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import * as exports from "./index.js";
 
 describe("index exports", () => {
-  it("should export renderCauseListData function", () => {
-    expect(exports.renderCauseListData).toBeDefined();
-    expect(typeof exports.renderCauseListData).toBe("function");
+  it("should export renderEtDailyList function", () => {
+    expect(exports.renderEtDailyList).toBeDefined();
+    expect(typeof exports.renderEtDailyList).toBe("function");
   });
 
   it("should export validateEtDailyList function", () => {

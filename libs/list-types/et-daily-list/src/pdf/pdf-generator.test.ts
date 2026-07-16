@@ -1,11 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGenerateDailyCauseListPdf } = vi.hoisted(() => ({
-  mockGenerateDailyCauseListPdf: vi.fn()
+const { mockSavePdfToStorage, mockCreatePdfErrorResult, mockConfigureNunjucks, mockLoadTranslations } = vi.hoisted(() => ({
+  mockSavePdfToStorage: vi.fn(),
+  mockCreatePdfErrorResult: vi.fn(),
+  mockConfigureNunjucks: vi.fn(),
+  mockLoadTranslations: vi.fn()
 }));
 
-vi.mock("@hmcts/daily-cause-list-common", () => ({
-  generateDailyCauseListPdf: mockGenerateDailyCauseListPdf
+vi.mock("@hmcts/list-types-common", () => ({
+  savePdfToStorage: mockSavePdfToStorage,
+  createPdfErrorResult: mockCreatePdfErrorResult,
+  configureNunjucks: mockConfigureNunjucks,
+  loadTranslations: mockLoadTranslations,
+  PDF_BASE_STYLES: "/* base styles */",
+  PDF_CIVIL_FAMILY_STYLES: "/* civil family styles */"
+}));
+
+vi.mock("@hmcts/pdf-generation", () => ({
+  generatePdfFromHtml: vi.fn()
 }));
 
 vi.mock("@hmcts/publication", () => ({
@@ -15,7 +27,24 @@ vi.mock("@hmcts/publication", () => ({
   }
 }));
 
+vi.mock("../rendering/renderer.js", () => ({
+  renderEtDailyList: vi.fn()
+}));
+
+import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { renderEtDailyList } from "../rendering/renderer.js";
 import { generateEtDailyListPdf } from "./pdf-generator.js";
+
+const mockRenderedData = {
+  header: {
+    regionName: "North East",
+    addressLines: ["The Court House", "Leeds", "LS1 2ES"],
+    contentDate: "01 January 2025",
+    lastUpdated: "12 November 2025 at 9am"
+  },
+  openJustice: { venueName: "Leeds Employment Tribunal", email: "leedset@justice.gov.uk", phone: "0113 245 9741" },
+  listData: { courtLists: [] }
+};
 
 const mockCauseListData = {
   document: { publicationDate: "2025-11-12T09:00:00.000Z" },
@@ -24,20 +53,35 @@ const mockCauseListData = {
     venueContact: { venueTelephone: "0113 245 9741", venueEmail: "leedset@justice.gov.uk" }
   },
   courtLists: []
-};
+} as any;
 
 describe("generateEtDailyListPdf", () => {
+  const mockNunjucksEnv = {
+    render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGenerateDailyCauseListPdf.mockResolvedValue({
+    vi.mocked(renderEtDailyList).mockResolvedValue(mockRenderedData as any);
+    mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
+    mockLoadTranslations.mockResolvedValue({ title: "Employment Tribunals Daily List" });
+    mockSavePdfToStorage.mockResolvedValue({
       success: true,
-      pdfPath: "/storage/temp/uploads/et-daily-123.pdf",
+      pdfPath: "et-daily-123.pdf",
       sizeBytes: 1024,
       exceedsMaxSize: false
     });
+    mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
+      success: false,
+      error: `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`
+    }));
   });
 
-  it("should delegate to the shared cause list PDF generator and return its result", async () => {
+  it("should render the ET template with the region name and save the PDF", async () => {
+    // Arrange
+    const pdfBuffer = Buffer.from("PDF content");
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer, sizeBytes: 1024 });
+
     // Act
     const result = await generateEtDailyListPdf({
       artefactId: "et-daily-123",
@@ -49,11 +93,17 @@ describe("generateEtDailyListPdf", () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(result.pdfPath).toContain("et-daily-123.pdf");
-    expect(mockGenerateDailyCauseListPdf).toHaveBeenCalledTimes(1);
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith(
+      "pdf-template.njk",
+      expect.objectContaining({ header: expect.objectContaining({ regionName: "North East" }) })
+    );
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("et-daily-123", pdfBuffer, 1024);
   });
 
   it("should map the provenance to its display label", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
     // Act
     await generateEtDailyListPdf({
       artefactId: "provenance-test",
@@ -65,15 +115,13 @@ describe("generateEtDailyListPdf", () => {
     });
 
     // Assert
-    expect(mockGenerateDailyCauseListPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ provenanceLabel: "Manual Upload" }),
-      expect.any(String),
-      expect.any(Function),
-      expect.any(Function)
-    );
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
   });
 
   it("should pass an empty provenance label when provenance is absent", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
     // Act
     await generateEtDailyListPdf({
       artefactId: "no-provenance",
@@ -84,36 +132,30 @@ describe("generateEtDailyListPdf", () => {
     });
 
     // Assert
-    expect(mockGenerateDailyCauseListPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ provenanceLabel: "" }),
-      expect.any(String),
-      expect.any(Function),
-      expect.any(Function)
-    );
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "" }));
   });
 
-  it("should forward the original options and locale to the shared generator", async () => {
+  it("should forward the render options including locale and locationId", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+    const contentDate = new Date("2025-06-15");
+
     // Act
     await generateEtDailyListPdf({
       artefactId: "render-options",
-      contentDate: new Date("2025-06-15"),
+      contentDate,
       locale: "cy",
       locationId: "999",
       jsonData: mockCauseListData
     });
 
     // Assert
-    expect(mockGenerateDailyCauseListPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ artefactId: "render-options", locale: "cy", locationId: "999", jsonData: mockCauseListData }),
-      expect.any(String),
-      expect.any(Function),
-      expect.any(Function)
-    );
+    expect(renderEtDailyList).toHaveBeenCalledWith(mockCauseListData, { contentDate, locale: "cy", locationId: "999" });
   });
 
-  it("should propagate a failure result from the shared generator", async () => {
+  it("should propagate a failure result from the PDF generator", async () => {
     // Arrange
-    mockGenerateDailyCauseListPdf.mockResolvedValue({ success: false, error: "Puppeteer crashed" });
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: false, error: "Puppeteer crashed" });
 
     // Act
     const result = await generateEtDailyListPdf({
@@ -127,5 +169,23 @@ describe("generateEtDailyListPdf", () => {
     // Assert
     expect(result.success).toBe(false);
     expect(result.error).toBe("Puppeteer crashed");
+  });
+
+  it("should handle renderer errors gracefully", async () => {
+    // Arrange
+    vi.mocked(renderEtDailyList).mockRejectedValue(new Error("Renderer failed"));
+
+    // Act
+    const result = await generateEtDailyListPdf({
+      artefactId: "renderer-error",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockCauseListData
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Failed to generate PDF: Renderer failed");
   });
 });

@@ -2,10 +2,11 @@ import {
   type CauseListData,
   etFortnightlyListCy as cy,
   etFortnightlyListEn as en,
-  renderCauseListData,
+  renderEtFortnightlyList,
   validateEtFortnightlyPressList
 } from "@hmcts/et-fortnightly-list";
-import { createCauseListRender, createListTypeHandler } from "../list-type-handler.js";
+import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { createListTypeHandler } from "../list-type-handler.js";
 
 export const GET = createListTypeHandler<CauseListData>({
   en,
@@ -13,5 +14,14 @@ export const GET = createListTypeHandler<CauseListData>({
   validate: validateEtFortnightlyPressList,
   logPrefix: "et-fortnightly-list",
   checkAccess: true,
-  render: createCauseListRender(renderCauseListData, "et-fortnightly-list", en, cy)
+  render: async ({ artefact, jsonData, locale, res }) => {
+    const t = locale === "cy" ? cy : en;
+    const { header, openJustice, courts } = await renderEtFortnightlyList(jsonData, {
+      locationId: artefact.locationId,
+      contentDate: artefact.contentDate,
+      locale
+    });
+    const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
+    res.render("et-fortnightly-list", { en, cy, t, pageTitle: t.title, header, openJustice, courts, dataSource });
+  }
 });
