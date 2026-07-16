@@ -11,46 +11,30 @@ describe("file-storage", () => {
   });
 
   describe("saveUploadedFile", () => {
-    it("should upload blob and return file extension for CSV", async () => {
+    it("should upload blob with artefactId as name (no extension)", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("test-artefact-123", "hearing-list.csv", Buffer.from("a,b,c"));
+      await saveUploadedFile("test-artefact-123", "hearing-list.csv", Buffer.from("a,b,c"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123.csv", Buffer.from("a,b,c"));
-      expect(result).toBe(".csv");
+      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123", Buffer.from("a,b,c"));
     });
 
-    it("should upload blob and return file extension for PDF", async () => {
+    it("should upload blob with artefactId as name regardless of original file extension", async () => {
       // Arrange
       const { uploadBlob } = await import("@hmcts/azure-blob");
       vi.mocked(uploadBlob).mockResolvedValue(undefined);
       const { saveUploadedFile } = await import("./file-storage.js");
 
       // Act
-      const result = await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
+      await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
       // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-456.pdf", Buffer.from("pdf-content"));
-      expect(result).toBe(".pdf");
-    });
-
-    it("should upload blob and return file extension for Excel", async () => {
-      // Arrange
-      const { uploadBlob } = await import("@hmcts/azure-blob");
-      vi.mocked(uploadBlob).mockResolvedValue(undefined);
-      const { saveUploadedFile } = await import("./file-storage.js");
-
-      // Act
-      const result = await saveUploadedFile("artefact-789", "report.xlsx", Buffer.from("xlsx-content"));
-
-      // Assert
-      expect(uploadBlob).toHaveBeenCalledWith("artefact-789.xlsx", Buffer.from("xlsx-content"));
-      expect(result).toBe(".xlsx");
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-456", Buffer.from("pdf-content"));
     });
 
     it("should propagate uploadBlob errors", async () => {
