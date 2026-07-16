@@ -19,12 +19,103 @@
   margin-left: auto !important;
 }
 
-.app-language-toggle {
-  margin-left: 0.5rem !important;
+// A <button> styled to look like a link, used for in-table actions (Remove /
+// Change). Unlike govuk-body it has no bottom margin, so table rows keep the
+// standard cell height instead of being inflated by the action button.
+.app-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #1d70b8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
 }
 
-.govuk-phase-banner__content > span {
+.app-link-button:hover {
+  color: #003078;
+}
+
+.app-link-button:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+  text-decoration: none;
+}
+
+// "Version" table header with an information icon, vertically centred on the
+// same line — mirrors the legacy CaTH subscription preview layout.
+.app-version-header {
+  display: flex;
+  align-items: center;
+}
+
+.app-version-header__info {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-version-header__icon {
+  color: #1d70b8;
+}
+
+// Fixed diagonal "AI version" ribbon shown on every page so this
+// AI-generated build can be told apart from the existing service during
+// comparison. Non-interactive and hidden from assistive technology.
+.app-watermark {
+  position: fixed;
+  top: 24px;
+  right: -48px;
+  z-index: 9999;
+  transform: rotate(45deg);
+  width: 200px;
+  padding: 4px 0;
+  background: #d4351c;
+  color: #ffffff;
+  text-align: center;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+@media print {
+  .app-watermark {
+    display: none;
+  }
+}
+
+// Lay the phase banner out as a single row: the "beta" tag and feedback message
+// on the left, and the Cymraeg / English language toggle pushed to the right,
+// matching the legacy CaTH service.
+.govuk-phase-banner__content {
+  display: flex;
+  align-items: baseline;
   width: 100%;
+}
+
+.govuk-phase-banner__text {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.app-phase-banner__feedback {
+  flex: 1 1 auto;
+}
+
+.app-phase-banner__language {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .govuk-phase-banner {

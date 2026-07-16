@@ -1,7 +1,7 @@
 export const cy = {
   title: "Tanysgrifiad wedi'i gadarnhau",
-  panelTitle: "Tanysgrifiad wedi'i gadarnhau",
-  panelTitlePlural: "Tanysgrifiadau wedi'u cadarnhau",
+  panelTitle: "Cadarnhad tanysgrifiad",
+  panelTitlePlural: "Cadarnhad tanysgrifiad",
   continueText: "I barhau, gallwch fynd i",
   yourAccountLink: "eich cyfrif",
   inOrderTo: "er mwyn",
