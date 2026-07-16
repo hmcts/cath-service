@@ -25,9 +25,6 @@ describe("reference-data-upload template", () => {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText,
         errorSummaryTitle: en.errorSummaryTitle
@@ -44,9 +41,6 @@ describe("reference-data-upload template", () => {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText
       };
@@ -58,39 +52,11 @@ describe("reference-data-upload template", () => {
       expect(downloadLink.text()).toBe(en.downloadLinkText);
     });
 
-    it("should render action buttons with correct links", () => {
-      const data = {
-        pageTitle: en.pageTitle,
-        warningText: en.warningText,
-        downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
-        fileUploadLabel: en.fileUploadLabel,
-        continueButtonText: en.continueButtonText
-      };
-
-      const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
-
-      const jurisdictionBtn = $('a[href="/add-jurisdiction"]');
-      expect(jurisdictionBtn.text().trim()).toBe(en.addJurisdictionLinkText);
-      expect(jurisdictionBtn.hasClass("govuk-button--secondary")).toBe(true);
-
-      const subJurisdictionBtn = $('a[href="/add-sub-jurisdiction"]');
-      expect(subJurisdictionBtn.text().trim()).toBe(en.addSubJurisdictionLinkText);
-
-      const regionBtn = $('a[href="/add-region"]');
-      expect(regionBtn.text().trim()).toBe(en.addRegionLinkText);
-    });
-
     it("should render file upload form with correct attributes", () => {
       const data = {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText
       };
@@ -115,9 +81,6 @@ describe("reference-data-upload template", () => {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText,
         errors: null
@@ -133,9 +96,6 @@ describe("reference-data-upload template", () => {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText,
         errorSummaryTitle: en.errorSummaryTitle,
@@ -153,9 +113,6 @@ describe("reference-data-upload template", () => {
         pageTitle: en.pageTitle,
         warningText: en.warningText,
         downloadLinkText: en.downloadLinkText,
-        addJurisdictionLinkText: en.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: en.addSubJurisdictionLinkText,
-        addRegionLinkText: en.addRegionLinkText,
         fileUploadLabel: en.fileUploadLabel,
         continueButtonText: en.continueButtonText,
         errorSummaryTitle: en.errorSummaryTitle,
@@ -178,9 +135,6 @@ describe("reference-data-upload template", () => {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
         downloadLinkText: cy.downloadLinkText,
-        addJurisdictionLinkText: cy.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: cy.addSubJurisdictionLinkText,
-        addRegionLinkText: cy.addRegionLinkText,
         fileUploadLabel: cy.fileUploadLabel,
         continueButtonText: cy.continueButtonText
       };
@@ -196,9 +150,6 @@ describe("reference-data-upload template", () => {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
         downloadLinkText: cy.downloadLinkText,
-        addJurisdictionLinkText: cy.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: cy.addSubJurisdictionLinkText,
-        addRegionLinkText: cy.addRegionLinkText,
         fileUploadLabel: cy.fileUploadLabel,
         continueButtonText: cy.continueButtonText
       };
@@ -207,9 +158,21 @@ describe("reference-data-upload template", () => {
 
       const submitButton = $("button[type='submit']");
       expect(submitButton.text().trim()).toBe(cy.continueButtonText);
+    });
 
-      const jurisdictionBtn = $('a[href="/add-jurisdiction"]');
-      expect(jurisdictionBtn.text().trim()).toBe(cy.addJurisdictionLinkText);
+    it("should render the download link in Welsh", () => {
+      const data = {
+        pageTitle: cy.pageTitle,
+        warningText: cy.warningText,
+        downloadLinkText: cy.downloadLinkText,
+        fileUploadLabel: cy.fileUploadLabel,
+        continueButtonText: cy.continueButtonText
+      };
+
+      const { $ } = render(env, "(system-admin)/reference-data-upload/index.njk", data);
+
+      const downloadLink = $('a[href="/reference-data-download"]');
+      expect(downloadLink.text()).toBe(cy.downloadLinkText);
     });
 
     it("should render Welsh error messages", () => {
@@ -217,9 +180,6 @@ describe("reference-data-upload template", () => {
         pageTitle: cy.pageTitle,
         warningText: cy.warningText,
         downloadLinkText: cy.downloadLinkText,
-        addJurisdictionLinkText: cy.addJurisdictionLinkText,
-        addSubJurisdictionLinkText: cy.addSubJurisdictionLinkText,
-        addRegionLinkText: cy.addRegionLinkText,
         fileUploadLabel: cy.fileUploadLabel,
         continueButtonText: cy.continueButtonText,
         errorSummaryTitle: cy.errorSummaryTitle,
