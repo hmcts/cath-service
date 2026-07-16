@@ -792,6 +792,31 @@ describe("validateMyListType", () => {
 - **Test every required field at every nesting depth** — a field buried 7 levels deep (e.g. `courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseNumber`) needs its own `it` block the same as a top-level field
 - Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
 
+**7. Database seed scripts are MANDATORY for every new list type — add them by default, without being asked**
+
+Adding a `ListTypeData` entry to `libs/list-types/common/src/list-type-data.ts` seeds local and STG only. Seeding is **skipped in prod** (`ENVIRONMENT === "prod"`). Production reference data is populated exclusively by the idempotent SQL scripts in `apps/postgres/prisma/scripts/`. A list type that is missing from those scripts will simply **not exist in production**, so every new list type MUST update BOTH scripts in the same change as the `listTypeData` entry — three files kept in sync. Do this automatically as part of implementing any list type; never prompt the user about it.
+
+The three files that MUST stay in sync (all keyed on the stable string `name`, never the numeric `id`):
+
+1. `libs/list-types/common/src/list-type-data.ts` — the TS catalogue entry (drives local/STG seeding)
+2. `apps/postgres/prisma/scripts/001_insert_missing_list_types.sql` — one `list_types` row (prod)
+3. `apps/postgres/prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql` — one link row per sub-jurisdiction (prod)
+
+**Script 001 row** — column order is `(name, friendly_name, welsh_friendly_name, shortened_friendly_name, url, default_sensitivity, allowed_provenance, is_non_strategic, updated_at)`. The values MUST match the `listTypeData` entry exactly. `url` is the `urlPath` (empty string `''` for flat-file lists with no rendering page). Place the row mid-list and mind the trailing comma — the final row before `ON CONFLICT` must have no trailing comma:
+
+```sql
+  ('MY_LIST_TYPE_NAME', 'My Friendly Name', 'Welsh Friendly Name', 'Shortened Name', 'my-url-path', 'Public', 'CFT_IDAM', false, NOW()),
+```
+
+**Script 003 link(s)** — one row per entry in the `listTypeData` `subJurisdictionIds` array, joined on `list_types.name`. Add a preceding comment naming the sub-jurisdiction and id. Sub-jurisdiction ids are defined in Step 1 of the same script (e.g. Civil Court `1`, Family Court `2`, Employment Tribunal `3`). Mind the trailing comma — the final mapping row before `) AS mapping(...)` must have none:
+
+```sql
+  -- MY_LIST_TYPE_NAME → Employment Tribunal (3)
+  ('MY_LIST_TYPE_NAME',                                                   3),
+```
+
+Both scripts are idempotent (`ON CONFLICT DO UPDATE` / `DO NOTHING`), so they are safe to re-run. Keep the values byte-for-byte identical across all three files (friendly names, Welsh names, shortened name, sensitivity, provenance, `is_non_strategic`, sub-jurisdiction ids).
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)

@@ -72,6 +72,10 @@ FROM (VALUES
   -- CIVIL_AND_FAMILY_DAILY_CAUSE_LIST → Civil Court (1), Family Court (2)
   ('CIVIL_AND_FAMILY_DAILY_CAUSE_LIST',                                   1),
   ('CIVIL_AND_FAMILY_DAILY_CAUSE_LIST',                                   2),
+  -- ET_DAILY_LIST → Employment Tribunal (3)
+  ('ET_DAILY_LIST',                                                       3),
+  -- ET_FORTNIGHTLY_PRESS_LIST → Employment Tribunal (3)
+  ('ET_FORTNIGHTLY_PRESS_LIST',                                           3),
   -- CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST → Care Standards Tribunal (9)
   ('CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST',                         9),
   -- CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST → Civil Court (1)
