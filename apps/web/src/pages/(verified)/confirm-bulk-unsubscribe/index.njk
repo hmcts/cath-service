@@ -26,7 +26,7 @@
         <tr class="govuk-table__row">
           <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
           <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
-          <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDateAdded }}</th>
+          <th scope="col" class="govuk-table__header govuk-!-text-align-right" style="width: 160px;">{{ tableHeaderDateAdded }}</th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
@@ -34,7 +34,7 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ subscription.caseName }}</td>
             <td class="govuk-table__cell">{{ subscription.caseNumber }}</td>
-            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell govuk-!-text-align-right">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -49,14 +49,14 @@
       <thead class="govuk-table__head">
         <tr class="govuk-table__row">
           <th scope="col" class="govuk-table__header">{{ tableHeaderCourtName }}</th>
-          <th scope="col" class="govuk-table__header" style="width: 160px;">{{ tableHeaderDateAdded }}</th>
+          <th scope="col" class="govuk-table__header govuk-!-text-align-right" style="width: 160px;">{{ tableHeaderDateAdded }}</th>
         </tr>
       </thead>
       <tbody class="govuk-table__body">
         {% for subscription in courtSubscriptions %}
           <tr class="govuk-table__row">
             <td class="govuk-table__cell">{{ subscription.courtOrTribunalName }}</td>
-            <td class="govuk-table__cell">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
+            <td class="govuk-table__cell govuk-!-text-align-right">{{ subscription.dateAdded | date('D MMMM YYYY') }}</td>
           </tr>
         {% endfor %}
       </tbody>

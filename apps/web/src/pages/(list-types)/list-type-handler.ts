@@ -187,7 +187,7 @@ export function createWeeklyHearingListRender<T>(
       listTitle: t.pageTitle as string
     });
     const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
-    res.render(template, { en, cy, t, title: header.listTitle, header, hearings, dataSource });
+    res.render(template, { en, cy, t, pageTitle: header.listTitle, header, hearings, dataSource });
   };
 }
 
@@ -231,7 +231,7 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render(template, { en, cy, title: t.title, header, openJustice, listData, dataSource, t });
+    res.render(template, { en, cy, pageTitle: t.title, header, openJustice, listData, dataSource, t });
   };
 }
 
@@ -285,7 +285,7 @@ export function createMultiListGuardAndRender<T>(opts: MultiListHandlerOptions<T
       en,
       cy,
       t,
-      title: header.listTitle,
+      pageTitle: header.listTitle,
       header,
       hearings,
       dataSource,

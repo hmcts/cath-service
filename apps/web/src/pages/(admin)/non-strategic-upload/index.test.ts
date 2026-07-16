@@ -144,7 +144,7 @@ describe("non-strategic-upload page", () => {
         "non-strategic-upload/index",
         expect.objectContaining({
           title: "Upload Excel file",
-          pageTitle: "Upload - Upload Excel file",
+          pageTitle: "Upload excel file - Excel file upload",
           warningTitle: "Warning",
           continueButton: "Continue",
           locale: "en"

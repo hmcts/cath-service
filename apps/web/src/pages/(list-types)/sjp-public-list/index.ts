@@ -1,10 +1,16 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
-import { sjpPublicListCy, sjpPublicListEn } from "@hmcts/sjp-public-list";
+import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
 import type { Request, Response } from "express";
 import type { ParsedQs } from "qs";
 
-const cy = sjpPublicListCy;
-const en = sjpPublicListEn;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..", "..");
+const STORAGE_DIR = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 /**
  * Parses query parameter as string array, filtering out non-string values
@@ -77,11 +83,17 @@ export const GET = async (req: Request, res: Response) => {
     { text: caseItem.prosecutor || "" }
   ]);
 
+  const isVerifiedUser = req.user?.role === "VERIFIED";
+  const pdfExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.pdf`));
+  const excelExists = await fileExists(path.join(STORAGE_DIR, `${artefactId}.xlsx`));
+  const downloadDisclaimerUrl = isVerifiedUser && (pdfExists || excelExists) ? `${req.path}/list-download-disclaimer?artefactId=${artefactId}` : null;
+
   res.render("sjp-public-list", {
-    ...t.common,
-    title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
     en,
     cy,
+    t,
+    title: req.path.includes("delta") ? t.SJP_DELTA_PUBLIC_LIST.title : t.SJP_PUBLIC_LIST.title,
+    ...t.common,
     locale,
     list,
     cases,
@@ -98,6 +110,7 @@ export const GET = async (req: Request, res: Response) => {
     },
     sortBy,
     sortOrder,
+    downloadDisclaimerUrl,
     showFilter
   });
 };
@@ -109,3 +122,12 @@ export const POST = async (req: Request, res: Response) => {
   appendArrayToParams(queryParams, "prosecutor", req.body.prosecutor);
   res.redirect(`${req.path}?${queryParams.toString()}`);
 };
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}

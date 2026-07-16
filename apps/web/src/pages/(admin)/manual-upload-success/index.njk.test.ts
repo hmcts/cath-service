@@ -22,7 +22,7 @@ describe("manual-upload-success template", () => {
     });
 
     it("should have success title", () => {
-      expect(en.title).toBe("File upload successful");
+      expect(en.title).toBe("File Upload Successful");
     });
 
     it("should have uploaded message", () => {
@@ -146,7 +146,7 @@ describe("manual-upload-success template", () => {
 
   describe("Success messaging", () => {
     it("should have positive success message in English", () => {
-      expect(en.title).toContain("successful");
+      expect(en.title).toContain("Successful");
       expect(en.uploadedMessage).toContain("uploaded");
     });
 

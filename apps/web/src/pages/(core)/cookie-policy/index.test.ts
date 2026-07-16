@@ -52,6 +52,7 @@ describe("Cookie Policy Page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        pageTitle: "Cookie policy",
         cookiePreferences: {},
         categories: mockResponse.locals?.cookieConfig?.categories,
         saved: false
@@ -69,6 +70,7 @@ describe("Cookie Policy Page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        pageTitle: "Cookie policy",
         cookiePreferences: mockPreferences,
         categories: mockResponse.locals?.cookieConfig?.categories,
         saved: false
@@ -84,6 +86,7 @@ describe("Cookie Policy Page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        pageTitle: "Cookie policy",
         cookiePreferences: {},
         categories: mockResponse.locals?.cookieConfig?.categories,
         saved: true
@@ -99,6 +102,7 @@ describe("Cookie Policy Page", () => {
       expect(mockResponse.render).toHaveBeenCalledWith("cookie-policy/index", {
         en: expect.any(Object),
         cy: expect.any(Object),
+        pageTitle: "Cookie policy",
         cookiePreferences: {},
         categories: mockResponse.locals?.cookieConfig?.categories,
         saved: false
