@@ -10,6 +10,8 @@
   <div class="header-section">
     <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
 
+    <p><a href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}</p>
+
     <div class="address">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
@@ -25,10 +27,8 @@
     <p>{{ t.openJustice1 }}</p>
     <p>{{ t.openJustice2 }}</p>
     <p>{{ t.openJustice3 }}</p>
-    <p>
-      {{ t.openJustice4 }}
-      {% if openJustice.email %} {{ openJustice.email }}{% endif %}{% if openJustice.phone %} {{ openJustice.phone }}{% endif %}
-    </p>
+    <p>{{ t.openJustice4 }}</p>
+    <p>{{ openJustice.venueName }}, {{ openJustice.email }}, {{ openJustice.phone }}</p>
     <p>{{ t.openJustice5 }}</p>
     <p>{{ t.openJustice6 }}</p>
   </div>
@@ -36,8 +36,8 @@
   {% for courtList in listData.courtLists %}
     {% set courtHouse = courtList.courtHouse %}
     <div class="court-section">
+      <h2>{{ t.venue }} {{ courtHouse.courtHouseName }}</h2>
       {% if courtHouse.courtHouseAddress %}
-        <h2>{{ courtHouse.courtHouseName }}</h2>
         <div class="address">
           {% for line in courtHouse.courtHouseAddress.line %}
             {% if line | length %}{{ line }}<br>{% endif %}

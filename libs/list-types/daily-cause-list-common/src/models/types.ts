@@ -65,7 +65,7 @@ export interface CauseListData {
   };
   venue: {
     venueName: string;
-    venueAddress: {
+    venueAddress?: {
       line: string[];
       town?: string;
       county?: string;

@@ -2,6 +2,9 @@ export const cy = {
   // Title overridden with the listLookup.json welshFriendlyName (upstream locale title is a Daily copy-paste bug)
   title: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
   pageTitle: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth ar gyfer",
+  factLink: "https://www.find-court-tribunal.service.gov.uk/",
+  factLinkText1: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
+  factLinkText2: " a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   listFor: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   importantInformation: "Gwybodaeth bwysig",

@@ -7,6 +7,10 @@
     <h1 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h1>
 
     <p class="govuk-body">
+      <a class="govuk-link" href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}
+    </p>
+
+    <p class="govuk-body">
       {% for line in header.addressLines %}
         {{ line }}{% if not loop.last %}<br>{% endif %}
       {% endfor %}
@@ -25,10 +29,8 @@
         <p class="govuk-body">{{ t.openJustice1 }}</p>
         <p class="govuk-body">{{ t.openJustice2 }}</p>
         <p class="govuk-body">{{ t.openJustice3 }}</p>
-        <p class="govuk-body">
-          {{ t.openJustice4 }}
-          {% if openJustice.email %} {{ openJustice.email }}{% endif %}{% if openJustice.phone %} {{ openJustice.phone }}{% endif %}
-        </p>
+        <p class="govuk-body">{{ t.openJustice4 }}</p>
+        <p class="govuk-body">{{ openJustice.venueName }}, {{ openJustice.email }}, {{ openJustice.phone }}</p>
         <p class="govuk-body">{{ t.openJustice5 }}</p>
         <p class="govuk-body">{{ t.openJustice6 }}</p>
       </div>
@@ -42,9 +44,9 @@
     <div id="court-lists-container">
     {% for courtList in listData.courtLists %}
       {% set courtHouse = courtList.courtHouse %}
-      {% if courtHouse.courtHouseAddress %}
-        <div class="govuk-!-margin-bottom-6">
-          <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
+      <div class="govuk-!-margin-bottom-6">
+        <h2 class="govuk-heading-l">{{ t.venue }} {{ courtHouse.courtHouseName }}</h2>
+        {% if courtHouse.courtHouseAddress %}
           {% for line in courtHouse.courtHouseAddress.line %}
             {% if line | length %}
               <p class="govuk-body">{{ line }}</p>
@@ -59,8 +61,8 @@
           {% if courtHouse.courtHouseAddress.postCode | length %}
             <p class="govuk-body">{{ courtHouse.courtHouseAddress.postCode }}</p>
           {% endif %}
-        </div>
-      {% endif %}
+        {% endif %}
+      </div>
 
       <div class="govuk-accordion" data-module="govuk-accordion">
         {% for courtRoom in courtHouse.courtRoom %}
@@ -74,16 +76,16 @@
                 </h2>
               </div>
               <div class="govuk-accordion__section-content">
-                <table class="govuk-table hearings-table">
+                <table class="govuk-table hearings-table" data-module="moj-sortable-table">
                   <thead class="govuk-table__head">
                     <tr class="govuk-table__row">
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[0] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[1] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[2] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[3] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[4] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[5] }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.tableHeaders[6] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[0] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[1] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[2] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[3] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[4] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[5] }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[6] }}</th>
                     </tr>
                   </thead>
                   <tbody class="govuk-table__body">

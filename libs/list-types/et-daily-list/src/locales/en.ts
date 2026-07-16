@@ -2,6 +2,9 @@ export const en = {
   // Title overridden with the listLookup.json friendly name (upstream locale title is unreliable)
   title: "Employment Tribunals Daily List",
   pageTitle: "Employment Tribunals Daily List for",
+  factLink: "https://www.find-court-tribunal.service.gov.uk/",
+  factLinkText1: "Find contact details and other information about courts and tribunals",
+  factLinkText2: " in England and Wales, and some non-devolved tribunals in Scotland.",
   listFor: "List for",
   lastUpdated: "Last updated",
   importantInformation: "Important information",
