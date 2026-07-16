@@ -8,14 +8,18 @@ import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPd
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
 import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
 import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/crown-warned-list";
+import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
+import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
+import { generateMagistratesAdultCourtListPdf, type MagistratesAdultCourtListData } from "@hmcts/magistrates-adult-court-list";
+import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdultCourtListData } from "@hmcts/magistrates-public-adult-court-list";
 import { generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
@@ -23,6 +27,8 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
+import { generateSjpPressListPdf } from "@hmcts/sjp-press-list";
+import { generateSjpPublicListPdf } from "@hmcts/sjp-public-list";
 import { generateSscsDailyHearingListPdf, importantInformationByListType, type SscsDailyHearingList } from "@hmcts/sscs-daily-hearing-list";
 import { generateUtaacDailyHearingListPdf, type UtaacHearingList } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
 import { generateUtlcDailyHearingListPdf, type UtlcHearingList } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
@@ -47,7 +53,7 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
-  listTypeName?: string;
+  listTypeName: string;
   contentDate: Date;
   locale: string;
   locationId: string;
@@ -79,6 +85,10 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeName: p.listTypeName ?? "" });
+
+const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, jsonData: p.jsonData as SjpJson });
+
+const sjpPressGenerator: PdfGenerator = (p) => generateSjpPressListPdf({ ...p, jsonData: p.jsonData as SjpJson });
 
 const SSCS_FRIENDLY_NAMES: Record<string, { en: string; cy: string }> = {
   SSCS_MIDLANDS_DAILY_HEARING_LIST: {
@@ -166,6 +176,10 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  SJP_PUBLIC_LIST: sjpPublicGenerator,
+  SJP_DELTA_PUBLIC_LIST: sjpPublicGenerator,
+  SJP_PRESS_LIST: sjpPressGenerator,
+  SJP_DELTA_PRESS_LIST: sjpPressGenerator,
   CROWN_DAILY_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
   CROWN_FIRM_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
   CROWN_WARNED_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
@@ -276,10 +290,48 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   UT_LANDS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtlcDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtlcHearingList }),
   UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtaacDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtaacHearingList }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListPdf({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
-  MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListPdf({ ...p, jsonData: p.jsonData as MagistratesPublicListData })
+  MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListPdf({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesPublicAdultCourtListPdf({
+      ...p,
+      jsonData: p.jsonData as MagistratesPublicAdultCourtListData,
+      listTitle: "Magistrates Public Adult Court List - Daily"
+    }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesPublicAdultCourtListPdf({
+      ...p,
+      jsonData: p.jsonData as MagistratesPublicAdultCourtListData,
+      listTitle: "Magistrates Public Adult Court List - Future"
+    })
 };
 
-export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
+type ExcelGenerator = (json: SjpJson) => Promise<Buffer>;
+
+const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
+  SJP_PUBLIC_LIST: generateSjpPublicListExcel,
+  SJP_DELTA_PUBLIC_LIST: generateSjpPublicListExcel,
+  SJP_PRESS_LIST: generateSjpPressListExcel,
+  SJP_DELTA_PRESS_LIST: generateSjpPressListExcel
+};
+
+export async function generatePublicationExcel(artefactId: string, listTypeId: number, jsonData: unknown, logPrefix = "[Publication]"): Promise<void> {
+  try {
+    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+    const generator = listType ? EXCEL_GENERATOR_REGISTRY[listType.name] : undefined;
+    if (!generator) {
+      return;
+    }
+
+    const buffer = await generator(jsonData as SjpJson);
+    await saveExcelFile(artefactId, buffer);
+  } catch (error) {
+    console.error(`${logPrefix} Excel generation error:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "listTypeName">): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
   try {
@@ -493,6 +545,8 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     result.pdfPath = pdfResult.pdfPath;
     result.pdfSizeBytes = pdfResult.sizeBytes;
     result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+
+    await generatePublicationExcel(artefactId, listTypeId, jsonData, logPrefix);
   }
 
   if (!skipNotifications) {

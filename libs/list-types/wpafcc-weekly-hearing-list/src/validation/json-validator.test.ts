@@ -1,42 +1,86 @@
 import { describe, expect, it } from "vitest";
 import { validateWpafccWeeklyHearingList } from "./json-validator.js";
 
+const VALID_DATA = [
+  {
+    date: "01/01/2025",
+    hearingTime: "10:30am",
+    caseReferenceNumber: "12345",
+    caseName: "A Vs B",
+    panel: "Firstname Surname",
+    modeOfHearing: "Oral Hearing",
+    venue: "This is the venue of the hearing",
+    additionalInformation: "This is additional information"
+  }
+];
+
 describe("validateWpafccWeeklyHearingList", () => {
-  it("should return isValid true for valid data", () => {
-    // Arrange
-    const validData = [
-      {
-        date: "01/01/2025",
-        hearingTime: "10:30am",
-        caseReferenceNumber: "12345",
-        caseName: "A Vs B",
-        panel: "Firstname Surname",
-        modeOfHearing: "Oral Hearing",
-        venue: "This is the venue of the hearing",
-        additionalInformation: "This is additional information"
-      }
-    ];
-
-    // Act
-    const result = validateWpafccWeeklyHearingList(validData);
-
-    // Assert
+  it("should return valid when all required fields are present", () => {
+    const result = validateWpafccWeeklyHearingList(VALID_DATA);
     expect(result.isValid).toBe(true);
-    expect(result.errors).toEqual([]);
+    expect(result.errors).toHaveLength(0);
   });
 
-  it("should return isValid false when required fields are missing", () => {
-    // Arrange
-    const invalidData = [
-      {
-        date: "01/01/2025"
-      }
-    ];
+  it("should return invalid when date is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].date;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
 
-    // Act
-    const result = validateWpafccWeeklyHearingList(invalidData);
+  it("should return invalid when hearingTime is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].hearingTime;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
 
-    // Assert
+  it("should return invalid when caseReferenceNumber is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseReferenceNumber;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when caseName is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].caseName;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when panel is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].panel;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when modeOfHearing is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].modeOfHearing;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when venue is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].venue;
+    const result = validateWpafccWeeklyHearingList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when additionalInformation is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].additionalInformation;
+    const result = validateWpafccWeeklyHearingList(data);
     expect(result.isValid).toBe(false);
     expect(result.errors.length).toBeGreaterThan(0);
   });
