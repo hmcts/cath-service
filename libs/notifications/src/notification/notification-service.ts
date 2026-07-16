@@ -21,6 +21,8 @@ import {
 import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
 import { extractCaseSummary as extractCrownFirmSummary, formatCaseSummaryForEmail as formatCrownFirmSummaryForEmail } from "@hmcts/crown-firm-list";
 import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEmail as formatCrownWarnedSummaryForEmail } from "@hmcts/crown-warned-list";
+import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
+import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
 import {
   extractCaseSummary as extractFttLrtSummary,
@@ -121,6 +123,14 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
     extract: extractCivilFamilySummary as SummaryExtractor,
     format: formatCivilFamilySummaryForEmail
+  },
+  ET_DAILY_LIST: {
+    extract: extractEtDailySummary as SummaryExtractor,
+    format: formatEtDailySummaryForEmail
+  },
+  ET_FORTNIGHTLY_PRESS_LIST: {
+    extract: extractEtFortnightlySummary as SummaryExtractor,
+    format: formatEtFortnightlySummaryForEmail
   },
   CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCivilSummary as SummaryExtractor,
