@@ -11,7 +11,15 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 describe("generateReferenceDataCsv", () => {
-  it("should generate CSV with all location data", async () => {
+  it("should query only active (non-deleted) locations", async () => {
+    vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+
+    await generateReferenceDataCsv();
+
+    expect(prisma.location.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { deletedAt: null } }));
+  });
+
+  it("should generate CSV with active location data", async () => {
     const mockLocations = [
       {
         locationId: 1,
@@ -20,7 +28,8 @@ describe("generateReferenceDataCsv", () => {
         email: "test@example.com",
         contactNo: "01234567890",
         locationSubJurisdictions: [{ subJurisdiction: { name: "Civil Court" } }],
-        locationRegions: [{ region: { name: "London" } }]
+        locationRegions: [{ region: { name: "London" } }],
+        locationReferences: [{ provenance: "SNL", provenanceLocationId: "snl-001", provenanceLocationType: "VENUE" }]
       }
     ];
 
@@ -30,10 +39,16 @@ describe("generateReferenceDataCsv", () => {
 
     expect(result).toContain("LOCATION_ID");
     expect(result).toContain("LOCATION_NAME");
+    expect(result).toContain("PROVENANCE");
+    expect(result).toContain("PROVENANCE_LOCATION_ID");
+    expect(result).toContain("PROVENANCE_LOCATION_TYPE");
     expect(result).toContain("Test Court");
     expect(result).toContain("Llys Prawf");
     expect(result).toContain("Civil Court");
     expect(result).toContain("London");
+    expect(result).toContain("SNL");
+    expect(result).toContain("snl-001");
+    expect(result).toContain("VENUE");
   });
 
   it("should handle multiple sub-jurisdictions and regions", async () => {
@@ -45,7 +60,11 @@ describe("generateReferenceDataCsv", () => {
         email: "test@example.com",
         contactNo: "01234567890",
         locationSubJurisdictions: [{ subJurisdiction: { name: "Civil Court" } }, { subJurisdiction: { name: "Family Court" } }],
-        locationRegions: [{ region: { name: "London" } }, { region: { name: "Midlands" } }]
+        locationRegions: [{ region: { name: "London" } }, { region: { name: "Midlands" } }],
+        locationReferences: [
+          { provenance: "SNL", provenanceLocationId: "snl-001", provenanceLocationType: "VENUE" },
+          { provenance: "PDDA", provenanceLocationId: "pdda-001", provenanceLocationType: "VENUE" }
+        ]
       }
     ];
 
@@ -55,6 +74,8 @@ describe("generateReferenceDataCsv", () => {
 
     expect(result).toContain("Civil Court;Family Court");
     expect(result).toContain("London;Midlands");
+    expect(result).toContain("SNL;PDDA");
+    expect(result).toContain("snl-001;pdda-001");
   });
 
   it("should handle empty email and contact number", async () => {
@@ -66,7 +87,8 @@ describe("generateReferenceDataCsv", () => {
         email: null,
         contactNo: null,
         locationSubJurisdictions: [{ subJurisdiction: { name: "Civil Court" } }],
-        locationRegions: [{ region: { name: "London" } }]
+        locationRegions: [{ region: { name: "London" } }],
+        locationReferences: []
       }
     ];
 

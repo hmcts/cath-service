@@ -4,27 +4,52 @@ import Papa from "papaparse";
 export async function generateReferenceDataCsv(): Promise<string> {
   try {
     const locations = await prisma.location.findMany({
-      include: {
+      where: { deletedAt: null },
+      orderBy: {
+        locationId: "asc"
+      },
+      select: {
+        locationId: true,
+        name: true,
+        welshName: true,
+        email: true,
+        contactNo: true,
         locationRegions: {
-          include: {
-            region: true
+          select: {
+            region: {
+              select: {
+                name: true
+              }
+            }
           }
         },
         locationSubJurisdictions: {
-          include: {
-            subJurisdiction: true
+          select: {
+            subJurisdiction: {
+              select: {
+                name: true
+              }
+            }
+          }
+        },
+        locationReferences: {
+          select: {
+            provenance: true,
+            provenanceLocationId: true,
+            provenanceLocationType: true
           }
         }
-      },
-      orderBy: {
-        locationId: "asc"
       }
     });
 
-    const csvData = locations.map((location: any) => {
-      const subJurisdictionNames = location.locationSubJurisdictions.map((lsj: any) => lsj.subJurisdiction.name).join(";");
+    const csvData = locations.map((location) => {
+      const subJurisdictionNames = location.locationSubJurisdictions.map((lsj) => lsj.subJurisdiction.name).join(";");
 
-      const regionNames = location.locationRegions.map((lr: any) => lr.region.name).join(";");
+      const regionNames = location.locationRegions.map((lr) => lr.region.name).join(";");
+
+      const provenances = location.locationReferences.map((lr) => lr.provenance).join(";");
+      const provenanceLocationIds = location.locationReferences.map((lr) => lr.provenanceLocationId).join(";");
+      const provenanceLocationTypes = location.locationReferences.map((lr) => lr.provenanceLocationType).join(";");
 
       return {
         LOCATION_ID: location.locationId,
@@ -33,7 +58,10 @@ export async function generateReferenceDataCsv(): Promise<string> {
         EMAIL: location.email || "",
         CONTACT_NO: location.contactNo || "",
         SUB_JURISDICTION_NAME: subJurisdictionNames,
-        REGION_NAME: regionNames
+        REGION_NAME: regionNames,
+        PROVENANCE: provenances,
+        PROVENANCE_LOCATION_ID: provenanceLocationIds,
+        PROVENANCE_LOCATION_TYPE: provenanceLocationTypes
       };
     });
 

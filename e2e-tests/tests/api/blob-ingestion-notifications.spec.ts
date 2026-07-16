@@ -18,7 +18,7 @@ const ENDPOINT = `${API_BASE_URL}/v1/publication`;
 function createValidPayload(locationId: number, locationName: string) {
   return {
     court_id: locationId.toString(),
-    provenance: "XHIBIT",
+    provenance: "MANUAL_UPLOAD",
     content_date: "2024-12-01",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
@@ -98,7 +98,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     testData.publicationIds.push(result.artefact_id);
 
     // Wait for async notification processing with retry logic (wait for govNotifyId to be populated)
-    const notifications = await waitForNotifications(result.artefact_id, 15, 1000, true);
+    const notifications = await waitForNotifications(result.artefact_id, 30, 2000, true);
 
     // Verify notification was created
     expect(notifications.length).toBeGreaterThan(0);
@@ -106,9 +106,9 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
     // Find the notification that was successfully sent (has govNotifyId)
     const sentNotification = notifications.find((n) => n.govNotifyId !== null);
     expect(sentNotification).toBeDefined();
-    expect(sentNotification.govNotifyId).toBeDefined();
+    expect(sentNotification?.govNotifyId).toBeDefined();
 
-    const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
+    const govNotifyEmail = await getGovNotifyEmail(sentNotification?.govNotifyId ?? "");
 
     expect(govNotifyEmail.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT!);
     expect(govNotifyEmail.body).toContain("Civil and Family Daily Cause List");

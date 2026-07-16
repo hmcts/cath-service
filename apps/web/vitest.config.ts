@@ -4,8 +4,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    clearMocks: true,
     coverage: {
       provider: "v8",
+      reporter: ["lcov", "text"],
+      reportsDirectory: "coverage",
       exclude: [
         "**/node_modules/**",
         "**/dist/**",
@@ -14,7 +17,8 @@ export default defineConfig({
         "**/vite.build.ts",
         "**/vitest.config.ts",
         "**/server.ts",
-        "**/src/assets/**"
+        "**/src/assets/css/**",
+        "**/src/assets/vite-config/**"
       ]
     }
   }

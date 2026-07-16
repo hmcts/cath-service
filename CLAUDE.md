@@ -15,6 +15,10 @@ yarn test:coverage              # Generate coverage report
 yarn lint:fix                    # Run Biome linter
 yarn format                     # Format code with Biome
 
+# Git Hooks (installed automatically via postinstall)
+# Pre-commit hook runs Biome --write on all staged files and re-stages fixes.
+# To skip the hook for a single commit: LEFTHOOK=0 git commit ...
+
 # Database Operations
 yarn db:migrate                 # Apply migrations  
 yarn db:migrate:dev             # Auto apply migrations, add new migrations if necessary
@@ -94,12 +98,14 @@ The web and API applications use explicit imports to register modules, enabling 
 
 1. **Create module structure**:
 ```bash
-mkdir -p libs/my-feature/src/pages      # Page controllers and templates
-mkdir -p libs/my-feature/src/routes     # API routes (optional)
-mkdir -p libs/my-feature/src/locales    # Shared translation files (optional)
-mkdir -p libs/my-feature/src/views      # Shared templates (optional)
-mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
-mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
+mkdir -p libs/my-feature/src/routes           # API routes (optional)
+mkdir -p libs/my-feature/src/locales          # Shared translation files (optional)
+mkdir -p libs/my-feature/src/views            # Shared templates (optional)
+mkdir -p libs/my-feature/src/assets/css       # Module styles (optional)
+mkdir -p libs/my-feature/src/assets/js        # Module scripts (optional)
+
+# Pages live in apps, not libs
+mkdir -p apps/web/src/pages/my-feature-page   # Page controllers, templates, and content
 ```
 
 2. **Create src/config.ts for module configuration**:
@@ -110,20 +116,30 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Module configuration for app registration
-export const pageRoutes = { path: path.join(__dirname, "pages") };
-export const apiRoutes = { path: path.join(__dirname, "routes") };
-export const prismaSchemas = path.join(__dirname, "../prisma");
+// Module configuration for asset bundling and template discovery
+export const moduleRoot = __dirname;
 export const assets = path.join(__dirname, "assets/");
+export const apiRoutes = { path: path.join(__dirname, "routes") }; // Only if you have API routes
 ```
 
 **Create src/index.ts for business logic exports**:
 ```typescript
-// Business logic exports
+// Business logic exports only
 export * from "./my-feature/service.js";
+
+// Only export page content if it's truly shared/reusable across multiple pages
+// Most page content should be co-located with controllers in apps/web/src/pages/
+// Example of shared content export (like accessibility-statement, cookie-policy):
+// export { cy as sharedPageCy } from "./locales/shared-page/cy.js";
+// export { en as sharedPageEn } from "./locales/shared-page/en.js";
 ```
 
-**IMPORTANT**: Config exports (pageRoutes, apiRoutes, prismaSchemas, assets) must be in a separate `config.ts` file to avoid circular dependencies during Prisma client generation. Apps import config using the `/config` path (e.g., `@hmcts/my-feature/config`).
+**IMPORTANT - Content Location Strategy**: 
+- **Pages (controllers, templates, content)** live in `apps/web/src/pages/`
+- **Co-locate cy.ts/en.ts with controllers** - this is the default pattern for page-specific content
+- **Export from libs only for shared content** - when the same content is reused by multiple pages (e.g., accessibility-statement, cookie-policy)
+- **Config exports** (moduleRoot, assets, apiRoutes) are in `config.ts` for asset bundling and template discovery
+- **Apps import config** using the `/config` path (e.g., `@hmcts/my-feature/config`)
 
 3. **Package.json requirements**:
 ```json
@@ -142,22 +158,18 @@ export * from "./my-feature/service.js";
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
-  },
-  "peerDependencies": {
-    "express": "^5.2.0"
   }
 }
 ```
 
-**Note**: The `build:nunjucks` script is required if your module contains Nunjucks templates in the `pages/` directory.
+**Note**: Page templates (.njk files) are now in `apps/web/src/pages/` and are handled by the web app's build process, not the lib's build.
 
 3. **Create tsconfig.json**:
 ```json
@@ -189,25 +201,31 @@ export * from "./my-feature/service.js";
 
 ```typescript
 // apps/web/src/app.ts
-import { pageRoutes as myFeaturePages } from "@hmcts/my-feature/config";
+import { moduleRoot as myFeatureModuleRoot } from "@hmcts/my-feature/config";
 
-app.use(await createGovukFrontend(app, [myFeaturePages.path], { /* options */ }));
-app.use(await createSimpleRouter(myFeaturePages));
+// Add module to modulePaths for Nunjucks template discovery
+const modulePaths = [
+  __dirname,
+  webCoreModuleRoot,
+  myFeatureModuleRoot,
+  // ... other modules
+];
+
+await configureGovuk(app, modulePaths, { /* options */ });
+
+// Pages are auto-discovered from apps/web/src/pages/ - no manual registration needed
+// Just create your page at apps/web/src/pages/my-feature-page/index.ts
 
 // apps/web/vite.config.ts
 import { assets as myFeatureAssets } from "@hmcts/my-feature/config";
 const baseConfig = createBaseViteConfig([
   path.join(__dirname, "src"),
-  myFeatureAssets
+  myFeatureAssets  // Only if your lib has assets
 ]);
 
-// apps/api/src/app.ts
+// apps/api/src/app.ts (only if you have API routes)
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
-
-// apps/postgres/src/schema-discovery.ts
-import { prismaSchemas as myFeatureSchemas } from "@hmcts/my-feature/config";
-const schemaPaths = [myFeatureSchemas, /* other schemas */];
 ```
 
 ### Module Structure
@@ -216,21 +234,17 @@ const schemaPaths = [myFeatureSchemas, /* other schemas */];
 libs/my-feature/
 ├── package.json
 ├── tsconfig.json
-├── prisma/                     # Prisma schema (optional)
-│   └── schema.prisma           # Prisma schema file
 └── src/
-    ├── routes/                 # API routes (auto-discovered)
-    │   └── my-api.ts           # API route file (if needed)
-    ├── pages/                  # Page routes (auto-discovered)
-    │   └── my-page/            # /my-page/ page
-    │       ├── cy.ts           # Page Welsh content
-    │       ├── en.ts           # Page English content
-    │       ├── index.ts        # Controller with GET/POST exports
-    │       ├── index.test.ts   # Unit tests for controller
-    │       └── index.njk       # Nunjucks template
+    ├── config.ts               # Module configuration (moduleRoot, assets)
+    ├── index.ts                # Business logic exports only
+    ├── routes/                 # API routes (optional, auto-discovered)
+    │   └── my-api.ts           # API route file
     ├── locales/                # Shared i18n translations (optional)
-    │   ├── en.ts               # English translations
-    │   └── cy.ts               # Welsh translations
+    │   ├── shared-page/        # Only if content is reused across pages
+    │   │   ├── en.ts           # Shared English content
+    │   │   └── cy.ts           # Shared Welsh content
+    │   ├── en.ts               # Common English translations
+    │   └── cy.ts               # Common Welsh translations
     ├── views/                  # Shared templates (optional)
     │   └── partials/
     └── assets/                 # Module assets (optional)
@@ -238,20 +252,121 @@ libs/my-feature/
         │   └── module.scss
         └── js/
             └── module.ts
+
+apps/web/src/pages/
+├── (auth)/                     # Route group (no URL prefix)
+│   └── login/
+│       ├── index.ts            # Controller
+│       ├── index.njk           # Template
+│       ├── cy.ts               # Welsh content (co-located)
+│       ├── en.ts               # English content (co-located)
+│       └── index.test.ts       # Tests
+├── (core)/                     # Route group (no URL prefix)
+│   └── accessibility-statement/
+│       ├── index.ts            # Controller (imports from lib if shared)
+│       └── index.njk           # Template
+├── my-feature-page/            # Regular route (/my-feature-page)
+│   ├── index.ts                # Controller
+│   ├── index.njk               # Nunjucks template
+│   ├── cy.ts                   # Welsh content (co-located - default pattern)
+│   ├── en.ts                   # English content (co-located - default pattern)
+│   └── index.test.ts           # Unit tests
+└── admin/                      # Regular directory (/admin/*)
+    └── dashboard/              # /admin/dashboard
+        ├── index.ts
+        ├── index.njk
+        ├── cy.ts               # Co-located content
+        └── en.ts               # Co-located content
 ```
 
-**NOTE**: Pages are registered through explicit imports in `apps/web/src/app.ts`. Routes are created based on file names within the `pages/` directory. For example, `my-page.ts` becomes `/my-page`. To create nested routes, use subdirectories (e.g., `pages/admin/my-page.ts` becomes `/admin/my-page`).
+**Architecture Notes**:
+- **Route Groups**: Directories with parentheses like `(auth)` organize code without affecting URLs
+- **Regular Directories**: Directories like `admin/` create URL prefixes (`/admin/*`)
+- **Content Co-location (Default)**: cy.ts/en.ts live alongside controllers in `apps/web/src/pages/` for page-specific content
+- **Shared Content (Exception)**: Only export cy.ts/en.ts from libs when content is reused across multiple pages
+- **Auto-Discovery**: All pages in `apps/web/src/pages/` are automatically registered
+- **Example**: `apps/web/src/pages/my-feature-page/index.ts` becomes `/my-feature-page`
+- **Nested Routes**: Use subdirectories (e.g., `admin/dashboard/` becomes `/admin/dashboard`)
+
+## Database Schema Management
+
+All Prisma schemas are centralized in **`libs/postgres-prisma/prisma/schema/`** with one file per feature domain.
+
+### Schema Organization
+
+```
+libs/postgres-prisma/
+├── prisma.config.ts            # Points to prisma/schema directory
+└── prisma/
+    └── schema/                 # All .prisma files live here
+        ├── base.prisma         # Datasource and generator config
+        ├── audit-log.prisma    # Audit log models
+        ├── location.prisma     # Location models
+        ├── subscription.prisma # Subscription models
+        └── ...                 # One file per domain
+```
+
+### Adding a New Schema File
+
+1. **Create feature schema file** in `libs/postgres-prisma/prisma/schema/`:
+
+```prisma
+// libs/postgres-prisma/prisma/schema/my-feature.prisma
+
+model MyFeature {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("my_feature")
+}
+```
+
+2. **Run Prisma generate** to update the client:
+
+```bash
+yarn db:generate
+```
+
+### Schema Naming Conventions
+
+- **File names**: kebab-case (`audit-log.prisma`, `list-search-config.prisma`)
+- **Models**: PascalCase (`User`, `CaseDocument`)
+- **Tables**: singular snake_case via `@@map("user")`
+- **Fields**: camelCase in code, snake_case in DB via `@map`
+
+### Using the Prisma Client
+
+```typescript
+import { prisma } from "@hmcts/postgres-prisma";
+
+// All models from all schema files are available
+const user = await prisma.user.findUnique({ where: { id } });
+const location = await prisma.location.findMany();
+```
+
+### Important Notes
+
+- **Never create `prisma/` directories in feature modules** - all schemas go in `libs/postgres-prisma/prisma/schema/`
+- **Prisma automatically merges** all `.prisma` files in the schema directory
+- **One schema per domain** keeps models organized and maintainable
+- **Migrations apply to all schemas** - run `yarn db:migrate:dev` from the root
 
 ### Page Controller Pattern
 
+**Default Pattern: Co-located Content** (use this for most pages)
 ```typescript
-// libs/[module]/src/pages/[page-name].ts
+// apps/web/src/pages/my-page/index.ts
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 export const GET = async (_req: Request, res: Response) => {
-  res.render("my-page", { en, cy });
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  
+  res.render("my-page/index", { en, cy, t });
 };
 
 export const POST = async (req: Request, res: Response) => {
@@ -259,10 +374,52 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
+**Content files co-located with controller**:
+```typescript
+// apps/web/src/pages/my-page/cy.ts
+export const cy = {
+  title: "Teitl y Dudalen",
+  heading: "Pennawd"
+};
+
+// apps/web/src/pages/my-page/en.ts
+export const en = {
+  title: "Page Title",
+  heading: "Heading"
+};
+```
+
+**Alternative Pattern: Shared Content from Libs** (only for reusable pages)
+```typescript
+// apps/web/src/pages/(core)/accessibility-statement/index.ts
+import type { Request, Response } from "express";
+import { accessibilityStatementCy, accessibilityStatementEn } from "@hmcts/web-core";
+
+export const GET = async (_req: Request, res: Response) => {
+  res.render("accessibility-statement/index", {
+    en: accessibilityStatementEn,
+    cy: accessibilityStatementCy
+  });
+};
+```
+
+**When content is shared across pages, export from lib**:
+```typescript
+// libs/web-core/src/locales/accessibility-statement/cy.ts
+export const cy = { title: "Datganiad Hygyrchedd", /* ... */ };
+
+// libs/web-core/src/locales/accessibility-statement/en.ts
+export const en = { title: "Accessibility Statement", /* ... */ };
+
+// libs/web-core/src/index.ts
+export { cy as accessibilityStatementCy } from "./locales/accessibility-statement/cy.js";
+export { en as accessibilityStatementEn } from "./locales/accessibility-statement/en.js";
+```
+
 ### Nunjucks Template Pattern
 
 ```html
-<!-- libs/[my-module]/src/pages/[page-name].njk -->
+<!-- apps/web/src/pages/my-page/index.njk -->
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
@@ -347,6 +504,293 @@ export function authenticate() {
   };
 }
 ```
+
+## List Type Implementation
+
+The `list_type` table uses an autoincrement `id` column. These IDs are assigned at insert time and **differ between environments** (local, STG, production). Any code that compares against a numeric `listTypeId` will break on environments where the seed order differs.
+
+### Rule: Always use `listTypeName`, never `listTypeId`
+
+The `name` column is `@unique` and stable across all environments. Use it for all list type guards and routing logic.
+
+**Wrong — breaks on STG/production:**
+```typescript
+const MY_LIST_TYPE_ID = 42;
+
+if (artefact.listTypeId !== MY_LIST_TYPE_ID) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+**Correct — works everywhere:**
+```typescript
+const SUPPORTED_LIST_TYPE = "MY_LIST_TYPE_NAME";
+
+if (artefact.listTypeName !== SUPPORTED_LIST_TYPE) {
+  res.status(400).render("errors/common", { ... });
+  return;
+}
+```
+
+### `listTypeName` is only populated by `getArtefactById`
+
+`getArtefactsByLocation` and `getArtefactsByIds` do NOT perform the `listType` join. Only `getArtefactById` returns `ArtefactWithListType` (with `listTypeName` guaranteed non-null). When you need `listTypeName`, ensure the artefact comes from `getArtefactById`.
+
+```typescript
+// ArtefactWithListType guarantees listTypeName is a string
+import type { ArtefactWithListType } from "@hmcts/publication";
+```
+
+### Court names and other list-type-specific strings must come from locale files
+
+Do not hardcode display strings (court names, page titles, etc.) in controllers. Hardcoded English strings will not change when the locale switches to Welsh.
+
+**Wrong:**
+```typescript
+courtName: "Upper Tribunal (Immigration and Asylum) Chamber"
+```
+
+**Correct — add to both `en.ts` and `cy.ts` in the lib's locale files:**
+```typescript
+// libs/my-list-type/src/locales/en.ts
+export const en = {
+  courtName: "Upper Tribunal (Immigration and Asylum) Chamber",
+  ...
+};
+
+// libs/my-list-type/src/locales/cy.ts
+export const cy = {
+  courtName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber']",
+  ...
+};
+
+// controller
+const t = locale === "cy" ? cy : en;
+courtName: t.courtName as string
+```
+
+### Multi-list-type handlers
+
+When a single controller handles several list types (e.g. RCJ, administrative court), use `createMultiListGuardAndRender` with a string-keyed `LIST_TYPE_CONFIG`. Do not include an `id`→`name` mapping — the guard reads `artefact.listTypeName` directly.
+
+```typescript
+const LIST_TYPE_CONFIG: ListTypeConfig = {
+  MY_LIST_TYPE_A: { en: en.pageTitleA, cy: cy.pageTitleA, template: "template-a" },
+  MY_LIST_TYPE_B: { en: en.pageTitleB, cy: cy.pageTitleB, template: "template-b" }
+};
+
+const { guardArtefact, render } = createMultiListGuardAndRender({
+  en, cy,
+  listTypeConfig: LIST_TYPE_CONFIG,
+  renderFn,
+  resolveTemplate: (c) => c.template
+});
+```
+
+### Test fixtures must not rely on specific numeric IDs
+
+Use `listTypeId: 999` (or any arbitrary value) in test artefact fixtures to prove the logic is ID-independent. The `listTypeName` field drives all routing.
+
+```typescript
+const mockArtefact = {
+  listTypeId: 999,               // arbitrary — must not affect behaviour
+  listTypeName: "MY_LIST_TYPE",  // this is what matters
+  ...
+};
+```
+
+### Implementing a new list type — checklist
+
+Every new list type MUST follow these rules. Never use `ListType.id` (numeric) anywhere.
+
+**1. PDF generator — use `listTypeName`, not `listTypeId`**
+
+The PDF generator interface must accept `listTypeName: string`, not a numeric ID:
+
+```typescript
+// libs/my-list-type/src/pdf/pdf-generator.ts
+interface PdfGenerationOptions extends BasePdfGenerationOptions<MyHearingList> {
+  contentDate: Date;
+  listTypeName: string;   // ✅ string name, never a numeric ID
+}
+
+const LIST_TITLE_MAP: Record<string, string> = {
+  MY_LIST_TYPE_NAME: "My List Type Display Title"
+};
+
+export async function generateMyListTypePdf(options: PdfGenerationOptions) {
+  const listTitle = LIST_TITLE_MAP[options.listTypeName] || "Default Title";
+  // ...
+}
+```
+
+**2. Register the PDF generator by name in `service.ts`**
+
+Add to `PDF_GENERATOR_REGISTRY` in `libs/publication/src/processing/service.ts` using the string `listTypeName` as key:
+
+```typescript
+const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
+  // ...existing entries...
+  MY_LIST_TYPE_NAME: (p) => generateMyListTypePdf({ ...p, jsonData: p.jsonData as MyHearingList }),
+};
+```
+
+**3. Register the Excel converter by name**
+
+Use `registerConverterByName` — never reference a numeric ID:
+
+```typescript
+// libs/my-list-type/src/conversion/my-config.ts
+registerConverterByName("MY_LIST_TYPE_NAME", createConverter(MY_EXCEL_CONFIG));
+```
+
+**4. Prisma queries — filter by name, never by id**
+
+When querying artefacts for a specific list type, use the `listType` relation filter:
+
+```typescript
+// ✅ Correct — stable across environments
+await prisma.artefact.findMany({
+  where: { listType: { name: { in: ["MY_LIST_TYPE_NAME"] } } }
+});
+
+// ❌ Wrong — numeric ID differs per environment
+await prisma.artefact.findMany({
+  where: { listTypeId: { in: [42] } }
+});
+```
+
+**5. Never reference `ListType.id` in code comments or JSDoc**
+
+Comments that mention numeric IDs (e.g. `// listTypeId: 42`) will rot as environments diverge. Use the stable name instead:
+
+```typescript
+// ✅ Correct
+/** Used by: MY_LIST_TYPE_NAME */
+
+// ❌ Wrong
+/** Used by list type ID 42 */
+```
+
+**6. Schema validation is MANDATORY for every new list type**
+
+Every list type that accepts JSON uploads MUST have:
+
+- A JSON schema file at `libs/list-types/<name>/src/schemas/<name>.json`
+- A `validate*` wrapper at `libs/list-types/<name>/src/validation/json-validator.ts`
+- The wrapper exported from `libs/list-types/<name>/src/index.ts`
+- A test file at `libs/list-types/<name>/src/validation/json-validator.test.ts`
+
+A CI guard test at `libs/list-types/common/src/validation/guard.test.ts` **will fail** if any package ships a schema without a `validate*` export. Fix the guard failure before merging.
+
+**Validator wrapper pattern** (use `createJsonValidator` from `@hmcts/list-types-common`):
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.ts
+import { createJsonValidator, type ValidationResult } from "@hmcts/list-types-common";
+import { schemaPath } from "../config.js";
+
+export function validateMyListType(jsonData: unknown): ValidationResult {
+  return createJsonValidator(schemaPath)(jsonData);
+}
+```
+
+Export from `index.ts`:
+
+```typescript
+export { validateMyListType } from "./validation/json-validator.js";
+```
+
+**Test file pattern** — real schema execution, no mocks, one `it` per required field at every nesting level:
+
+```typescript
+// libs/list-types/my-list-type/src/validation/json-validator.test.ts
+import { describe, expect, it } from "vitest";
+import { validateMyListType } from "./json-validator.js";
+
+// Fully-hydrated fixture — satisfies ALL required arrays at EVERY nesting level.
+// Read the schema before writing this; missing a nested required field will cause
+// the valid-data test to fail with a confusing schema error.
+const VALID_DATA = [
+  {
+    topLevelField: "value",
+    nestedObject: {
+      requiredNestedField: "value",
+      deeplyNested: [
+        {
+          deepField: "value"
+        }
+      ]
+    }
+  }
+];
+
+describe("validateMyListType", () => {
+  it("should return valid when all required fields are present", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  // One test per required field — top-level and nested.
+  // Use JSON.parse(JSON.stringify()) deep clone so each test is fully isolated.
+
+  it("should return invalid when topLevelField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].topLevelField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when requiredNestedField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].nestedObject.requiredNestedField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when deepField is missing", () => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data[0].nestedObject.deeplyNested[0].deepField;
+
+    // Act
+    const result = validateMyListType(data);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+});
+```
+
+**Rules:**
+- Never mock `@hmcts/publication` or `@hmcts/list-types-common` in validator tests — call the real function against the real schema
+- The valid fixture (`VALID_DATA`) must satisfy ALL `required` arrays at EVERY nesting level of the schema — read the entire schema before writing the fixture, including deeply nested `required` arrays inside `items` and `properties`
+- Most schemas use `"type": "array"` at the root; fixtures are arrays of objects. Some use `"type": "object"` — check the schema root before writing the fixture
+- **One `it` block per required field** — do not use a single `[{}]` fixture that removes all fields at once; that does not prove each field is individually enforced
+- **Always use `JSON.parse(JSON.stringify(VALID_DATA))` for deep cloning** — never use spread (`{ ...VALID_DATA[0] }`) which only shallow-copies and leaves nested objects shared between tests
+- **Test every required field at every nesting depth** — a field buried 7 levels deep (e.g. `courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseNumber`) needs its own `it` block the same as a top-level field
+- Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
 
 ## Testing Strategy
 
@@ -531,6 +975,8 @@ yarn test:e2e:all               # Run all E2E tests (including @nightly)
 12. **Don't create generic files like utils.ts** - Be specific (e.g., object-properties.ts, date-formatting.ts)
 13. **Don't export functions in order to test them** - Only export functions that are intended to be used outside the module
 14. **Don't add comments unless they are meaningful** - If necessary, explain why something is done, not what is done
+15. **Don't hardcode `listTypeId` numeric values** - `ListType.id` is autoincrement and differs per environment. Always use `artefact.listTypeName` (the stable `@unique` string column). See [List Type Implementation](#list-type-implementation) below.
+16. **Don't add a list type schema without a validator and tests** - Every `src/schemas/*.json` file requires a `src/validation/json-validator.ts` wrapper and a `src/validation/json-validator.test.ts`. The CI guard test in `libs/list-types/common` will fail if you don't. See [List Type Implementation](#list-type-implementation) item 6.
 
 ## Debugging Tips
 

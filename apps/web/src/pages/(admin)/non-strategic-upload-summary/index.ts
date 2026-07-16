@@ -1,0 +1,251 @@
+import { randomUUID } from "node:crypto";
+import "@hmcts/administrative-court-daily-cause-list"; // Register admin court converters (20-23)
+import "@hmcts/sscs-daily-hearing-list"; // Register SSCS converters (28-35)
+import { getNonStrategicUpload, LANGUAGE_LABELS, SENSITIVITY_LABELS, saveUploadedFile } from "@hmcts/admin-pages";
+import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { cy } from "./cy.js";
+import { en } from "./en.js";
+import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
+import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
+import { getLocationById } from "@hmcts/location";
+import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateSourceArtefactId } from "@hmcts/publication";
+import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
+import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
+import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
+import type { Request, RequestHandler, Response } from "express";
+
+async function resolveUploadDisplayNames(uploadData: { locationId: string; listType?: string }, locale: string) {
+  const location = await getLocationById(Number.parseInt(uploadData.locationId, 10));
+  const courtName = location ? (locale === "cy" ? location.welshName : location.name) : uploadData.locationId;
+
+  const listTypeId = uploadData.listType ? Number.parseInt(uploadData.listType, 10) : null;
+  const listType = listTypeId ? await findListTypeById(listTypeId) : null;
+  const listTypeName = listType
+    ? (locale === "cy" ? listType.welshFriendlyName : listType.shortenedFriendlyName || listType.friendlyName) || listType.name || uploadData.listType
+    : uploadData.listType;
+
+  return { courtName, listTypeName };
+}
+
+const getHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const uploadId = req.query.uploadId as string;
+
+  if (!uploadId) {
+    return res.status(400).send("Missing uploadId");
+  }
+
+  const uploadData = await getNonStrategicUpload(uploadId);
+
+  if (!uploadData) {
+    return res.status(404).send("Upload not found");
+  }
+
+  const locale = req.query.lng === "cy" ? "cy" : "en";
+  const { courtName, listTypeName } = await resolveUploadDisplayNames(uploadData, locale);
+
+  res.render("non-strategic-upload-summary/index", {
+    pageTitle: lang.pageTitle,
+    heading: lang.heading,
+    subHeading: lang.subHeading,
+    courtName: lang.courtName,
+    file: lang.file,
+    listType: lang.listType,
+    hearingStartDate: lang.hearingStartDate,
+    sensitivity: lang.sensitivity,
+    language: lang.language,
+    displayFileDates: lang.displayFileDates,
+    change: lang.change,
+    confirmButton: lang.confirmButton,
+    data: {
+      courtName,
+      file: uploadData.fileName,
+      listType: listTypeName,
+      hearingStartDate: formatDate(uploadData.hearingStartDate),
+      sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
+      language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
+      displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
+    }
+  });
+};
+
+const postHandler = async (req: Request, res: Response) => {
+  const lang = req.query.lng === "cy" ? cy : en;
+  const uploadId = req.query.uploadId as string;
+
+  if (!uploadId) {
+    return res.status(400).send("Missing uploadId");
+  }
+
+  try {
+    // Retrieve upload data from Redis
+    const uploadData = await getNonStrategicUpload(uploadId);
+
+    if (!uploadData) {
+      return res.status(404).send("Upload not found");
+    }
+
+    // Parse date inputs to Date objects
+    const contentDate = parseDate(uploadData.hearingStartDate);
+    const displayFrom = parseDate(uploadData.displayFrom);
+    const displayTo = parseDate(uploadData.displayTo);
+
+    if (!contentDate || !displayFrom || !displayTo) {
+      throw new Error("Invalid date format");
+    }
+
+    // Non-strategic publications should always have isFlatFile set to false
+    const listTypeId = Number.parseInt(uploadData.listType, 10);
+    const isFlatFile = false;
+
+    // Determine if the uploaded file needs conversion (Excel files need conversion to JSON)
+    const isExcelFile = !uploadData.fileName?.endsWith(".json");
+
+    // Store metadata in database (creates new or updates existing)
+    const { artefactId, isUpdate } = await createArtefact({
+      artefactId: randomUUID(),
+      type: "LIST",
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
+      displayFrom,
+      displayTo,
+      lastReceivedDate: new Date(),
+      isFlatFile,
+      provenance: Provenance.MANUAL_UPLOAD,
+      noMatch: false
+    });
+
+    // If this is a non-strategic list and it's an Excel file,
+    // convert it to JSON (validation already done on upload page)
+    const selectedListType = await findListTypeById(listTypeId);
+    let jsonData: unknown;
+
+    if (isExcelFile && selectedListType?.isNonStrategic) {
+      const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
+
+      const listTypeName = selectedListType.name;
+
+      if (listTypeName && hasConverterForListTypeName(listTypeName)) {
+        jsonData = await convertExcelForListTypeName(listTypeName, uploadData.file);
+        // Store converted JSON in blob — original Excel is not stored (no value after conversion)
+        await saveUploadedFile(artefactId, artefactId, Buffer.from(JSON.stringify(jsonData)));
+        // Track the original uploaded Excel file name, not the synthetic JSON blob name
+        await updateSourceArtefactId(artefactId, uploadData.fileName);
+
+        // Extract and store artefact search data from converted JSON
+        try {
+          await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
+        } catch (error) {
+          console.error("[Non-Strategic Upload] Failed to extract artefact search data from converted Excel", {
+            artefactId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+    } else {
+      await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+      await updateSourceArtefactId(artefactId, uploadData.fileName);
+      try {
+        jsonData = JSON.parse(uploadData.file.toString("utf8"));
+      } catch {
+        // Not valid JSON
+      }
+    }
+
+    // Generate PDF and send notifications in the background so the admin is not
+    // blocked on Chromium PDF rendering + subscriber emails (which was causing
+    // request timeouts / 502s). The artefact metadata, blob file and search data
+    // are already persisted synchronously above, so the upload is complete from
+    // the user's perspective before this runs.
+    processPublication({
+      artefactId,
+      locationId: uploadData.locationId,
+      listTypeId,
+      contentDate,
+      locale: uploadData.language === "WELSH" ? "cy" : "en",
+      jsonData,
+      provenance: Provenance.MANUAL_UPLOAD,
+      sensitivity: uploadData.sensitivity,
+      language: uploadData.language,
+      displayFrom,
+      displayTo,
+      isUpdate,
+      logPrefix: "[Non-Strategic Upload]"
+    }).catch((error) => {
+      console.error("[Non-Strategic Upload] Background publication processing failed:", {
+        artefactId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    });
+
+    // Clear session data
+    delete req.session.nonStrategicUploadForm;
+    delete req.session.nonStrategicUploadSubmitted;
+
+    // Set success flag for success page validation
+    req.session.nonStrategicUploadConfirmed = true;
+
+    await saveSession(req.session);
+
+    // Get location and list type for audit log
+    const location = await getLocationById(Number(uploadData.locationId));
+    const listType = await findListTypeById(listTypeId);
+
+    // Set audit log flag
+    req.auditMetadata = {
+      shouldLog: true,
+      action: AuditLogAction.NON_STRATEGIC_UPLOAD,
+      entityInfo: `Court: ${location?.name || uploadData.locationId}, List Type: ${listType?.friendlyName || listTypeId}, File: ${uploadData.fileName}`
+    };
+
+    // Redirect to success page with language parameter
+    const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+    res.redirect(`/non-strategic-upload-success${lng}`);
+  } catch (error) {
+    console.error("Upload processing error:", error);
+
+    // Keep session data and render error on the same page
+    const uploadData = await getNonStrategicUpload(uploadId);
+    if (!uploadData) {
+      return res.status(500).send("Error processing upload");
+    }
+
+    const locale = req.query.lng === "cy" ? "cy" : "en";
+    const { courtName, listTypeName } = await resolveUploadDisplayNames(uploadData, locale);
+
+    // Extract error message from error object
+    const errorMessage = error instanceof Error ? error.message : "We could not process your upload. Please try again.";
+
+    return res.render("non-strategic-upload-summary/index", {
+      pageTitle: lang.pageTitle,
+      heading: lang.heading,
+      subHeading: lang.subHeading,
+      courtName: lang.courtName,
+      file: lang.file,
+      listType: lang.listType,
+      hearingStartDate: lang.hearingStartDate,
+      sensitivity: lang.sensitivity,
+      language: lang.language,
+      displayFileDates: lang.displayFileDates,
+      change: lang.change,
+      confirmButton: lang.confirmButton,
+      data: {
+        courtName,
+        file: uploadData.fileName,
+        listType: listTypeName,
+        hearingStartDate: formatDate(uploadData.hearingStartDate),
+        sensitivity: SENSITIVITY_LABELS[uploadData.sensitivity] || uploadData.sensitivity,
+        language: LANGUAGE_LABELS[uploadData.language] || uploadData.language,
+        displayFileDates: formatDateRange(uploadData.displayFrom, uploadData.displayTo)
+      },
+      errors: [{ text: errorMessage, href: "#" }]
+    });
+  }
+};
+
+export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
+export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

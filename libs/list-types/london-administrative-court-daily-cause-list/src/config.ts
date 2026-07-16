@@ -5,7 +5,5 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const moduleRoot = __dirname;
-export const pageRoutes = {
-  path: path.join(__dirname, "pages")
-};
 export const assets = path.join(__dirname, "assets/");
+export const schemaPath = path.join(__dirname, "schemas/london-administrative-court-daily-cause-list.json");

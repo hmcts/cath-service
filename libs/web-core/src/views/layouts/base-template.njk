@@ -12,14 +12,20 @@
 {% block bodyStart %}
   {% include "components/body-start-analytics.njk" %}
   {% include "components/cookie-banner.njk" %}
+  <div class="app-watermark" aria-hidden="true">AI version</div>
 {% endblock %}
 
 {% block pageTitle %}
   {% include "components/page-title.njk" %}
 {% endblock %}
 
-{% block header %}
+{# Override the inner header blocks (not `header`) so govuk-frontend v6 still
+   wraps them in the <header> landmark via its govuk-template__header element. #}
+{% block govukHeader %}
   {% include "components/site-header.njk" %}
+{% endblock %}
+
+{% block govukServiceNavigation %}
   {% include "components/service-navigation.njk" %}
 {% endblock %}
 
@@ -45,7 +51,9 @@
   {% endblock %}
 {% endblock %}
 
-{% block footer %}
+{# Override `govukFooter` (not `footer`) so govuk-frontend v6 still wraps it in
+   the <footer> landmark via its govuk-template__footer element. #}
+{% block govukFooter %}
   {% include "components/site-footer.njk" %}
 {% endblock %}
 

@@ -18,12 +18,13 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "exceljs": "4.4.0"
   },
   "devDependencies": {
     "@types/node": "24.10.4",
-    "typescript": "5.9.3",
-    "vitest": "4.1.7"
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
   }
 }

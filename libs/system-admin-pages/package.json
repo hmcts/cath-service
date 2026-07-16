@@ -10,13 +10,10 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
-    },
-    "./src/assets/css/dashboard.scss": "./src/assets/css/dashboard.scss"
+    }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks && yarn build:assets",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "build:assets": "mkdir -p dist/assets && cp -r src/assets/* dist/assets/",
+    "build": "tsc",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -34,12 +31,16 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
-    "papaparse": "5.5.3"
+    "@launchdarkly/node-server-sdk": "^9.7.0",
+    "papaparse": "5.5.4"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
     "@types/express-session": "1.19.0",
-    "@types/papaparse": "5.5.2"
+    "@types/multer": "^2.1.0",
+    "@types/papaparse": "5.5.2",
+    "typescript": "6.0.3"
   }
 }

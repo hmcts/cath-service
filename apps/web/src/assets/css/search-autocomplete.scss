@@ -1,0 +1,56 @@
+@import "accessible-autocomplete/dist/accessible-autocomplete.min.css";
+
+// Override autocomplete fonts to use GOV.UK GDS Transport
+.autocomplete__wrapper,
+.autocomplete__hint,
+.autocomplete__input,
+.autocomplete__option {
+  font-family: GDS Transport, arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Narrower input box
+.autocomplete__wrapper {
+  max-width: 30em;
+}
+
+.autocomplete__hint,
+.autocomplete__input {
+  max-width: 30em;
+}
+
+// Match the pre-enhancement input width to the enhanced autocomplete widget so
+// there is no layout shift when JS mounts the accessible-autocomplete widget on
+// DOMContentLoaded. The widget's width is set by .autocomplete__wrapper's
+// max-width: 30em, which resolves against its 16px font (30 * 16 = 480px). We
+// cannot reuse 30em here because .govuk-input has a 19px font (30em = 570px),
+// which would produce a 570px -> 480px flicker. Use the equivalent pixel value
+// so both states render at exactly the same width regardless of font-size.
+.govuk-input[data-autocomplete="true"] {
+  max-width: 480px;
+}
+
+// Lighter background for alternating rows
+.autocomplete__option--odd {
+  background-color: #f8f8f8;
+}
+
+// Remove borders between items
+.autocomplete__option {
+  border: 0;
+}
+
+// Error styling - red border on input when error class is present (GOV.UK standard 2px border)
+.autocomplete__input.govuk-input--error {
+  border-color: #d4351c;
+}
+
+@media print {
+  .autocomplete__wrapper,
+  .autocomplete__hint,
+  .autocomplete__input,
+  .autocomplete__option {
+    font-family: sans-serif;
+  }
+}

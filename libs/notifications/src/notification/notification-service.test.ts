@@ -1,44 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "./notification-service.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    stat: vi.fn().mockRejectedValue(new Error("ENOENT: no such file or directory")),
-    readFile: vi.fn()
-  }
+vi.mock("@hmcts/azure-blob", () => ({
+  downloadBlob: vi.fn().mockResolvedValue(null),
+  CONTAINER: { ARTEFACT: "artefact", PUBLICATIONS: "publications" }
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   extractCaseSummary: vi.fn().mockReturnValue([{ caseReference: "123", parties: "Smith v Jones" }]),
   formatCaseSummaryForEmail: vi.fn().mockReturnValue("Case 123 - Smith v Jones")
 }));
-
-vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
-  extractCaseSummary: vi.fn().mockReturnValue([]),
-  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
-}));
-
-vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
-  extractCaseSummary: vi.fn().mockReturnValue([]),
-  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
-}));
-
-vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
-  extractCaseSummary: vi.fn().mockReturnValue([]),
-  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
-}));
-
-vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
-  extractCaseSummary: vi.fn().mockReturnValue([]),
-  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
-}));
-
-vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
-  extractCaseSummary: vi.fn().mockReturnValue([]),
-  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
-}));
-
-vi.mock("@hmcts/list-types-common", () => ({}));
 
 vi.mock("../govnotify/govnotify-client.js", () => ({
   sendEmail: vi.fn().mockResolvedValue({
@@ -53,11 +24,7 @@ vi.mock("../govnotify/template-config.js", () => ({
     ListType: "Daily Cause List",
     content_date: "1 January 2025",
     start_page_link: "https://example.com",
-    subscription_page_link: "https://example.com",
-    display_case_num: "no",
-    case_num: "",
-    display_case_urn: "no",
-    case_urn: ""
+    subscription_page_link: "https://example.com"
   }),
   buildEnhancedTemplateParameters: vi.fn().mockReturnValue({
     locations: "Test Court",
@@ -66,11 +33,7 @@ vi.mock("../govnotify/template-config.js", () => ({
     start_page_link: "https://example.com",
     subscription_page_link: "https://example.com",
     display_summary: "yes",
-    summary_of_cases: "Case 123 - Smith v Jones",
-    display_case_num: "no",
-    case_num: "",
-    display_case_urn: "no",
-    case_urn: ""
+    summary_of_cases: "Case 123 - Smith v Jones"
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
   isSjpListType: vi.fn().mockReturnValue(false)
@@ -272,6 +235,56 @@ describe("sendListTypePublicationNotifications", () => {
     await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true } });
 
     expect(buildTemplateParameters).toHaveBeenCalledWith(expect.objectContaining({ caseValue: "AB-123" }));
+  });
+
+  it("should download PDF from publications container and attach to email when pdfFilePath is set and PDF is under 2MB", async () => {
+    // Arrange
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+
+    vi.mocked(buildEnhancedTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Civil And Family Daily Cause List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com",
+      display_summary: "yes",
+      summary_of_cases: "Case 123 - Smith v Jones"
+    });
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+    vi.mocked(downloadBlob).mockResolvedValue(Buffer.from("pdf content"));
+
+    // Act
+    await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+    // Assert
+    expect(downloadBlob).toHaveBeenCalledWith("artefact-1.pdf", "publications");
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ pdfBuffer: expect.any(Buffer) }));
+  });
+
+  it("should send email without PDF buffer when PDF blob is not found", async () => {
+    // Arrange
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+    vi.mocked(downloadBlob).mockResolvedValue(null);
+
+    // Act
+    const result = await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+    // Assert
+    expect(result.sent).toBe(1);
   });
 });
 

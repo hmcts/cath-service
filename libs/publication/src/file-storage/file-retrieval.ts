@@ -1,65 +1,50 @@
-import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
+import { prisma } from "@hmcts/postgres-prisma";
 import { getContentTypeFromExtension } from "./content-type.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Navigate to monorepo root (from libs/publication/src/file-storage/)
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
-const STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-
-export async function findFileByArtefactId(artefactId: string): Promise<{ buffer: Buffer; extension: string } | null> {
-  try {
-    const resolvedBase = path.resolve(STORAGE_BASE);
-
-    // List all files in storage directory
-    const files = await fs.readdir(STORAGE_BASE);
-
-    // Find file that starts with artefactId
-    const matchingFile = files.find((file) => file.startsWith(artefactId));
-
-    if (!matchingFile) {
-      return null;
-    }
-
-    const filePath = path.join(STORAGE_BASE, matchingFile);
-    const resolvedPath = path.resolve(filePath);
-
-    // Secure containment check to prevent path traversal attacks
-    const normalizedBase = resolvedBase.endsWith(path.sep) ? resolvedBase : resolvedBase + path.sep;
-    const relativePath = path.relative(resolvedBase, resolvedPath);
-
-    // Verify path is within base directory (prevent prefix attacks and directory traversal)
-    if (!resolvedPath.startsWith(normalizedBase) || relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
-      return null;
-    }
-
-    const buffer = await fs.readFile(filePath);
-    const extension = path.extname(matchingFile);
-
-    return { buffer, extension };
-  } catch {
-    return null;
-  }
-}
-
-export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
-  const result = await findFileByArtefactId(artefactId);
-  return result ? result.buffer : null;
+export async function getSourceArtefactId(artefactId: string): Promise<string> {
+  const artefact = await prisma.artefact.findUnique({
+    where: { artefactId },
+    select: { sourceArtefactId: true }
+  });
+  return artefact?.sourceArtefactId ?? `${artefactId}.pdf`;
 }
 
 export async function getFileExtension(artefactId: string): Promise<string> {
-  const result = await findFileByArtefactId(artefactId);
-  return result ? result.extension : ".pdf";
+  const sourceArtefactId = await getSourceArtefactId(artefactId);
+  return path.extname(sourceArtefactId) || ".pdf";
+}
+
+export async function getFileBuffer(artefactId: string): Promise<Buffer | null> {
+  // New blobs are stored without an extension (just the artefactId).
+  const buffer = await downloadBlob(artefactId, CONTAINER.ARTEFACT);
+  if (buffer) return buffer;
+
+  // Backward-compat: older blobs were stored with the extension appended.
+  const sourceArtefactId = await getSourceArtefactId(artefactId);
+  const extension = path.extname(sourceArtefactId) || ".pdf";
+  const legacyBuffer = await downloadBlob(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
+  if (legacyBuffer) return legacyBuffer;
+
+  // Non-strategic Excel uploads stored the original Excel filename in source_artefact_id
+  // but the converted blob was always .json — fall back to .json if legacy extension missed.
+  if (extension !== ".json") {
+    return downloadBlob(`${artefactId}.json`, CONTAINER.ARTEFACT);
+  }
+  return null;
+}
+
+export async function getPublicationJson(artefactId: string): Promise<unknown | null> {
+  const buffer = await getFileBuffer(artefactId);
+  if (!buffer) return null;
+  return JSON.parse(buffer.toString("utf-8"));
 }
 
 export function getContentType(fileExtension: string | null | undefined): string {
   return getContentTypeFromExtension(fileExtension);
 }
 
-export function getFileName(artefactId: string, fileExtension: string | null | undefined): string {
-  const extension = fileExtension || ".pdf";
-  return `${artefactId}${extension}`;
+export function getFileName(sourceArtefactId: string): string {
+  return sourceArtefactId;
 }

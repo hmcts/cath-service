@@ -1,9 +1,9 @@
-import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../../utils/axe-helper.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { generateTestEmail, prefixName } from "../../utils/test-prefix.js";
-import { createTestArtefact, createTestLocation, createTestSubscription, createTestUser } from "../../utils/test-support-api.js";
+import { createTestArtefact, createTestLocation, createTestSubscription, createTestUser, getListTypeByName } from "../../utils/test-support-api.js";
 
 // Helper to validate required environment variables
 function validateEnvVars() {
@@ -159,7 +159,7 @@ test.describe
       await expect(page.locator("h1")).toHaveText("Are you sure you want to delete this court?");
 
       // Step 10: Test accessibility
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const accessibilityScanResults = await axeCheck(page).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Step 11: Confirm deletion
@@ -187,7 +187,7 @@ test.describe
       await expect(page.locator('a:has-text("Dileu llys arall")')).toBeVisible();
 
       // Step 15: Test accessibility on success page
-      const successAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      const successAccessibility = await axeCheck(page).analyze();
       expect(successAccessibility.violations).toEqual([]);
     });
 
@@ -216,9 +216,10 @@ test.describe
       });
 
       // Create an active artefact for this court
+      const civilAndFamilyListType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
       await createTestArtefact({
         locationId: courtLocationId.toString(),
-        listTypeId: 1,
+        listTypeId: civilAndFamilyListType.id,
         contentDate: new Date().toISOString(),
         sensitivity: "PUBLIC",
         language: "ENGLISH",

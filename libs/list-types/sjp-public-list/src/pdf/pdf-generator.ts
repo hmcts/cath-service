@@ -14,13 +14,6 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 
-const PROVENANCE_LABELS: Record<string, string> = {
-  MANUAL_UPLOAD: "Manual Upload",
-  XHIBIT: "XHIBIT",
-  SNL: "SNL",
-  COMMON_PLATFORM: "Common Platform"
-};
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -39,14 +32,13 @@ export async function generateSjpPublicListPdf(options: PdfGenerationOptions): P
 
     const translations = await loadTranslations(
       options.locale,
-      () => import("../pages/en.js"),
-      () => import("../pages/cy.js")
+      () => import("../sjp-public-list/en.js"),
+      () => import("../sjp-public-list/cy.js")
     );
 
     const listTypeTranslations = translations[options.listTypeName] as Record<string, string>;
     const t = translations.common as Record<string, string>;
     const pdfTitle = listTypeTranslations?.pdfTitle || "";
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
     const published = formatLastUpdatedDateTime(options.jsonData.document.publicationDate, options.locale);
 
     const env = configureNunjucks(__dirname);
@@ -56,7 +48,6 @@ export async function generateSjpPublicListPdf(options: PdfGenerationOptions): P
       publishedDateTime: `${published.date} ${t.at} ${published.time}`,
       cases,
       t: translations.common as Record<string, string>,
-      dataSource: provenanceLabel,
       pdfStyles: PDF_BASE_STYLES
     });
 

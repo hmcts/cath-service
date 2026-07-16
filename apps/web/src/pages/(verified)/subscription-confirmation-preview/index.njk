@@ -1,0 +1,214 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block pageTitle %}
+  {% if errors %}Error: {% endif %}{{ title }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/subscription-add-list-language"
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l">{{ heading }}</h1>
+
+    {% if locationRows | length == 0 and confirmedCaseSubscriptions | length == 0 %}
+      {{ govukErrorSummary({
+        titleText: errors.titleText,
+        errorList: errors.errorList
+      }) }}
+      <form action="/add-email-subscription" method="get">
+        {{ govukButton({
+          text: addSubscriptionsButton
+        }) }}
+      </form>
+    {% elif locationRows | length == 0 %}
+
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+            <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for sub in confirmedCaseSubscriptions %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ sub.caseName }}</td>
+              <td class="govuk-table__cell">{{ sub.caseNumber }}</td>
+              <td class="govuk-table__cell govuk-!-text-align-right">
+                <form method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="remove-case-subscription">
+                  <input type="hidden" name="caseIndex" value="{{ loop.index0 }}">
+                  <button type="submit" class="app-link-button">
+                    {{ removeLink }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p class="govuk-body">
+        <a href="/add-email-subscription" class="govuk-link">{{ addAnotherLink }}</a>
+      </p>
+
+      <form method="post" novalidate>
+        <input type="hidden" name="action" value="confirm">
+        {{ govukButton({
+          text: confirmButton,
+          type: "submit"
+        }) }}
+      </form>
+
+    {% else %}
+
+      {% if errors %}
+        {{ govukErrorSummary({
+          titleText: errors.titleText,
+          errorList: errors.errorList
+        }) }}
+      {% endif %}
+
+      {% if confirmedCaseSubscriptions | length > 0 %}
+        <table class="govuk-table">
+          <thead class="govuk-table__head">
+            <tr class="govuk-table__row">
+              <th scope="col" class="govuk-table__header">{{ tableHeaderCaseName }}</th>
+              <th scope="col" class="govuk-table__header">{{ tableHeaderReferenceNumber }}</th>
+              <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+            </tr>
+          </thead>
+          <tbody class="govuk-table__body">
+            {% for sub in confirmedCaseSubscriptions %}
+              <tr class="govuk-table__row">
+                <td class="govuk-table__cell">{{ sub.caseName }}</td>
+                <td class="govuk-table__cell">{{ sub.caseNumber }}</td>
+                <td class="govuk-table__cell govuk-!-text-align-right">
+                  <form method="post" style="display: inline;">
+                    <input type="hidden" name="action" value="remove-case-subscription">
+                    <input type="hidden" name="caseIndex" value="{{ loop.index0 }}">
+                    <button type="submit" class="app-link-button">
+                      {{ removeLink }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ tableHeaderCourt }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for location in locationRows %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ location.name }}</td>
+              <td class="govuk-table__cell govuk-!-text-align-right">
+                <form method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="remove-location">
+                  <input type="hidden" name="locationId" value="{{ location.locationId }}">
+                  <button type="submit" class="app-link-button">
+                    {{ removeLink }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">{{ tableHeaderListType }}</th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          {% for listType in listTypes %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ listType.name }}</td>
+              <td class="govuk-table__cell govuk-!-text-align-right">
+                <form method="post" style="display: inline;">
+                  <input type="hidden" name="action" value="remove-list-type">
+                  <input type="hidden" name="listTypeId" value="{{ listType.listTypeId }}">
+                  <button type="submit" class="app-link-button">
+                    {{ removeLink }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="govuk-table">
+        <thead class="govuk-table__head">
+          <tr class="govuk-table__row">
+            <th scope="col" class="govuk-table__header">
+              <div class="app-version-header">
+                <span class="govuk-!-padding-right-1">{{ tableHeaderVersion }}</span>
+                <span class="app-version-header__info" role="region" aria-label="information">
+                  <svg class="app-version-header__icon" fill="currentColor" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25" height="25" width="25">
+                    <path d="M13.7,18.5h-2.4v-2.4h2.4V18.5z M12.5,13.7c-0.7,0-1.2-0.5-1.2-1.2V7.7c0-0.7,0.5-1.2,1.2-1.2s1.2,0.5,1.2,1.2v4.8C13.7,13.2,13.2,13.7,12.5,13.7z M12.5,0.5c-6.6,0-12,5.4-12,12s5.4,12,12,12s12-5.4,12-12S19.1,0.5,12.5,0.5z" />
+                    <title>{{ versionTooltip }}</title>
+                  </svg>
+                </span>
+              </div>
+            </th>
+            <th scope="col" class="govuk-table__header govuk-!-text-align-right">{{ tableHeaderActions }}</th>
+          </tr>
+        </thead>
+        <tbody class="govuk-table__body">
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ languageDisplay }}</td>
+            <td class="govuk-table__cell govuk-!-text-align-right">
+              <form method="post" style="display: inline;">
+                <input type="hidden" name="action" value="change-version">
+                <button type="submit" class="app-link-button">
+                  {{ changeVersionLink }}
+                </button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="govuk-body">
+        {% if listTypes | length == 0 %}
+          <a id="select-list-types-link" href="/subscription-add-list" class="govuk-link">{{ selectListTypesLink }}</a>
+        {% else %}
+          <a href="/add-email-subscription" class="govuk-link">{{ addAnotherLink }}</a>
+        {% endif %}
+      </p>
+
+      <form method="post" novalidate>
+        <input type="hidden" name="action" value="confirm">
+        {{ govukButton({
+          text: confirmButton,
+          type: "submit"
+        }) }}
+      </form>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

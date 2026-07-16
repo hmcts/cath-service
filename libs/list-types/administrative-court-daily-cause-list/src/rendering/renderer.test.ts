@@ -27,7 +27,7 @@ describe("renderAdminCourt", () => {
   it("should render hearing list with English locale", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Birmingham Administrative Court Daily Cause List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -45,7 +45,7 @@ describe("renderAdminCourt", () => {
   it("should render hearing list with Welsh locale", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "cy",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Rhestr Achosion Dyddiol Llys Gweinyddol Birmingham",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -59,7 +59,7 @@ describe("renderAdminCourt", () => {
   it("should normalize time format from dot to colon", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -72,7 +72,7 @@ describe("renderAdminCourt", () => {
   it("should handle empty additional information", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -84,7 +84,7 @@ describe("renderAdminCourt", () => {
   it("should preserve all hearing data", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -103,7 +103,7 @@ describe("renderAdminCourt", () => {
   it("should format last updated with time", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T14:30:00Z"
@@ -115,7 +115,7 @@ describe("renderAdminCourt", () => {
   it("should format last updated without minutes when on the hour", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T14:00:00Z"
@@ -139,7 +139,7 @@ describe("renderAdminCourt", () => {
 
     const result = renderAdminCourt(hearingsWithUndefined, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 0, 15),
       lastReceivedDate: "2025-01-15T09:30:00Z"
@@ -151,7 +151,7 @@ describe("renderAdminCourt", () => {
   it("should format dates correctly for different months", () => {
     const result = renderAdminCourt(mockHearings, {
       locale: "en",
-      listTypeId: 20,
+      listTypeName: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Test List",
       contentDate: new Date(2025, 11, 25),
       lastReceivedDate: "2025-12-25T09:30:00Z"
@@ -161,13 +161,18 @@ describe("renderAdminCourt", () => {
     expect(result.header.lastUpdatedDate).toContain("25 December 2025");
   });
 
-  it("should handle all supported list type IDs", () => {
-    const listTypeIds = [20, 21, 22, 23];
+  it("should handle all supported list type names", () => {
+    const listTypeNames = [
+      "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    ];
 
-    for (const listTypeId of listTypeIds) {
+    for (const listTypeName of listTypeNames) {
       const result = renderAdminCourt(mockHearings, {
         locale: "en",
-        listTypeId,
+        listTypeName,
         listTitle: "Test List",
         contentDate: new Date(2025, 0, 15),
         lastReceivedDate: "2025-01-15T09:30:00Z"

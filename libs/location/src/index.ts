@@ -7,7 +7,6 @@ export {
   type RegionItem,
   type SubJurisdictionItem
 } from "./filtering/service.js";
-export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { locationData } from "./location-data.js";
 export {
   createLocationMetadata,
@@ -15,6 +14,13 @@ export {
   getLocationMetadataByLocationId,
   updateLocationMetadata
 } from "./repository/location-metadata-service.js";
+export {
+  LOCATION_REFERENCE_PROVENANCES,
+  LOCATION_REFERENCE_TYPES,
+  type LocationReferenceProvenance,
+  type LocationReferenceType
+} from "./repository/location-reference-model.js";
+export { getLocationByProvenanceLocationId } from "./repository/location-reference-queries.js";
 export type {
   CreateLocationMetadataInput,
   Jurisdiction,
@@ -30,6 +36,7 @@ export {
   getAllRegions,
   getAllSubJurisdictions,
   getLocationById,
+  getLocationsByIds,
   getLocationWithDetails,
   getSubJurisdictionsByJurisdiction,
   hasActiveArtefacts,
@@ -38,4 +45,3 @@ export {
 } from "./repository/queries.js";
 export { getLocationsGroupedByLetter, type Location, searchLocations } from "./repository/service.js";
 export { seedLocationData } from "./seed-data.js";
-export { seedListTypes } from "./seed-list-types.js";

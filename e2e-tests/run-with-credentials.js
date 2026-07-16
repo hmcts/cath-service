@@ -13,10 +13,11 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env file in the parent directory
 config({ path: path.resolve(__dirname, '../.env') });
 
-const VAULT_NAME = 'cath-stg';
+const VAULT_NAME = 'cath-bootstrap-stg-kv';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
 
 const SECRET_MAPPINGS = {
+  // E2E test credentials
   'sso-test-system-admin-account-user': 'SSO_TEST_SYSTEM_ADMIN_EMAIL',
   'sso-test-system-admin-account-pwd': 'SSO_TEST_SYSTEM_ADMIN_PASSWORD',
   'sso-test-admin-local-account-user': 'SSO_TEST_LOCAL_ADMIN_EMAIL',
@@ -29,9 +30,22 @@ const SECRET_MAPPINGS = {
   'cft-valid-test-account-password': 'CFT_VALID_TEST_ACCOUNT_PASSWORD',
   'cft-invalid-test-account': 'CFT_INVALID_TEST_ACCOUNT',
   'cft-invalid-test-account-password': 'CFT_INVALID_TEST_ACCOUNT_PASSWORD',
+  'crime-valid-test-account': 'CRIME_IDAM_VALID_TEST_ACCOUNT',
+  'crime-valid-test-account-password': 'CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD',
+  'gov-uk-notify-test-api-key': 'GOVUK_NOTIFY_API_KEY',
+  // App secrets required at startup
+  'session-secret': 'SESSION_SECRET',
+  'sso-client-id': 'SSO_CLIENT_ID',
+  'sso-client-secret': 'SSO_CLIENT_SECRET',
+  'sso-issuer-url': 'SSO_ISSUER_URL',
+  'sso-sg-system-admin': 'SSO_SYSTEM_ADMIN_GROUP_ID',
+  'sso-sg-admin-ctsc': 'SSO_INTERNAL_ADMIN_CTSC_GROUP_ID',
+  'sso-sg-admin-local': 'SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID',
+  'cft-idam-client-secret': 'CFT_IDAM_CLIENT_SECRET',
   'app-tenant': 'AZURE_TENANT_ID',
   'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
   'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
+  'app-pip-data-management-scope': 'APP_PIP_DATA_MANAGEMENT_SCOPE',
 };
 
 async function loadCredentialsFromAzure() {
@@ -97,28 +111,8 @@ async function loadCredentialsFromAzure() {
   }
 }
 
-function checkExistingCredentials() {
-  // Check if all required credentials are already set as environment variables
-  const requiredEnvVars = Object.values(SECRET_MAPPINGS);
-  const missingVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-
-  if (missingVars.length === 0) {
-    console.log('✅ All required credentials already set in environment');
-    console.log('');
-    console.log('SSO Credentials:');
-    console.log(`  - System Admin: ${process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL}`);
-    console.log(`  - Local Admin: ${process.env.SSO_TEST_LOCAL_ADMIN_EMAIL}`);
-    console.log(`  - CTSC Admin: ${process.env.SSO_TEST_CTSC_ADMIN_EMAIL}`);
-    console.log(`  - No Roles User: ${process.env.SSO_TEST_NO_ROLES_EMAIL}`);
-    console.log('');
-    console.log('CFT IDAM Credentials:');
-    console.log(`  - Valid Account: ${process.env.CFT_VALID_TEST_ACCOUNT}`);
-    console.log(`  - Invalid Account: ${process.env.CFT_INVALID_TEST_ACCOUNT}`);
-    console.log('');
-    return true;
-  }
-
-  return false;
+function credentialsAlreadyInEnvironment() {
+  return Object.values(SECRET_MAPPINGS).every((envVar) => !!process.env[envVar]);
 }
 
 async function runPlaywright() {
@@ -127,9 +121,10 @@ async function runPlaywright() {
   console.log(process.env.CI === 'true' ? 'ℹ️  Running in CI' : 'ℹ️  Running locally');
   console.log('');
 
-  // Check if credentials are already set (e.g., from GitHub Actions secrets)
-  if (!checkExistingCredentials()) {
-    // Load credentials from Azure Key Vault (works both locally and in CI via workload identity)
+  if (credentialsAlreadyInEnvironment()) {
+    console.log('✅ Test credentials already present in environment, skipping Key Vault fetch');
+    console.log('');
+  } else {
     try {
       const credentials = await loadCredentialsFromAzure();
 

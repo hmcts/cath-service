@@ -1,35 +1,43 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { saveExcelFile } from "./file-storage-service.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    mkdir: vi.fn().mockResolvedValue(undefined),
-    writeFile: vi.fn().mockResolvedValue(undefined)
-  }
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { PUBLICATIONS: "publications", ARTEFACT: "artefact" },
+  uploadBlob: vi.fn().mockResolvedValue(undefined)
 }));
 
+import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
+
 describe("saveExcelFile", () => {
-  afterEach(() => {
+  beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should create the storage directory and write the file", async () => {
+  it("should upload the file to blob storage with correct blob name", async () => {
+    // Arrange
     const buffer = Buffer.from("test data");
 
+    // Act
     await saveExcelFile("test-artefact-123", buffer);
 
-    expect(fs.mkdir).toHaveBeenCalledWith(expect.stringContaining(path.join("storage", "temp", "uploads")), { recursive: true });
-    expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-artefact-123.xlsx"), buffer);
+    // Assert
+    expect(uploadBlob).toHaveBeenCalledWith(
+      "test-artefact-123.xlsx",
+      buffer,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      CONTAINER.PUBLICATIONS
+    );
   });
 
-  it("should save file with correct .xlsx extension", async () => {
+  it("should upload file with correct .xlsx extension", async () => {
+    // Arrange
     const buffer = Buffer.from("excel content");
 
+    // Act
     await saveExcelFile("my-artefact", buffer);
 
-    const writePath = vi.mocked(fs.writeFile).mock.calls[0][0] as string;
-    expect(writePath).toMatch(/my-artefact\.xlsx$/);
+    // Assert
+    const blobName = vi.mocked(uploadBlob).mock.calls[0][0];
+    expect(blobName).toMatch(/my-artefact\.xlsx$/);
   });
 });

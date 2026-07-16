@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Landing Page", () => {
   test("user can view landing page and navigate to view options", async ({ page }) => {
@@ -13,11 +13,13 @@ test.describe("Landing Page", () => {
 
     // Verify key content - bullet points describing available courts
     const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
-    await expect(bulletList).toHaveCount(4);
-    await expect(bulletList.nth(0)).toContainText("civil and family courts");
+    await expect(bulletList).toHaveCount(6);
+    await expect(bulletList.nth(0)).toContainText("Civil and Family Courts in England and Wales");
     await expect(bulletList.nth(1)).toContainText("First Tier and Upper Tribunals");
     await expect(bulletList.nth(2)).toContainText("Royal Courts of Justice");
-    await expect(bulletList.nth(3)).toContainText("Single Justice Procedure");
+    await expect(bulletList.nth(3)).toContainText("Crown Courts in England and Wales");
+    await expect(bulletList.nth(4)).toContainText("Magistrates' Courts in England and Wales");
+    await expect(bulletList.nth(5)).toContainText("Single Justice Procedure");
 
     // Verify sign-in link for professionals (in the body text, not the nav)
     const signInLink = page.getByRole("link", { name: "sign in", exact: true });
@@ -37,7 +39,7 @@ test.describe("Landing Page", () => {
     await expect(niLink).toHaveAttribute("href", "https://www.justice-ni.gov.uk/topics/courts-and-tribunals");
 
     // Accessibility check
-    const accessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityResults = await axeCheck(page).analyze();
     expect(accessibilityResults.violations).toEqual([]);
 
     // Keyboard navigation - tab to Continue button and activate
@@ -67,10 +69,13 @@ test.describe("Landing Page", () => {
 
     // Verify Welsh bullet points
     const bulletList = page.locator("ul.govuk-list--bullet").first().locator("li");
-    await expect(bulletList.nth(0)).toContainText("Lysoedd Sifil a Theulu");
+    await expect(bulletList).toHaveCount(6);
+    await expect(bulletList.nth(0)).toContainText("Llysoedd Sifil a'r Llysoedd Teulu");
     await expect(bulletList.nth(1)).toContainText("Tribiwnlys Haen Gyntaf");
     await expect(bulletList.nth(2)).toContainText("Llys Barn Brenhinol");
-    await expect(bulletList.nth(3)).toContainText("Gweithdrefn Un Ynad");
+    await expect(bulletList.nth(3)).toContainText("Llys y Goron");
+    await expect(bulletList.nth(4)).toContainText("Llysoedd Ynadon");
+    await expect(bulletList.nth(5)).toContainText("Gweithdrefn Un Ynad");
 
     // Verify Welsh sign-in link (in the body text, not the nav)
     const signInLink = page.getByRole("link", { name: "mewngofnodi", exact: true });
@@ -92,7 +97,7 @@ test.describe("Landing Page", () => {
     await expect(niLink).toBeVisible();
 
     // Accessibility check in Welsh
-    const accessibilityResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityResults = await axeCheck(page).analyze();
     expect(accessibilityResults.violations).toEqual([]);
 
     // Navigate using Welsh continue button

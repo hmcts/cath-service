@@ -3,9 +3,11 @@ import { locationData } from "./location-data.js";
 import { seedListTypes } from "./seed-list-types.js";
 
 async function shouldSeed(): Promise<boolean> {
-  // Only seed in local development, not in CI or production
-  if (process.env.NODE_ENV === "production") {
-    console.log("Skipping seed: NODE_ENV is production");
+  // Skip seeding in production only — STG and other non-prod environments should be seeded.
+  // Use ENVIRONMENT (set via Helm to the cluster environment name e.g. "stg", "prod")
+  // rather than NODE_ENV, which is always "production" for any deployed Node.js server.
+  if (process.env.ENVIRONMENT === "prod") {
+    console.log("Skipping seed: ENVIRONMENT is prod");
     return false;
   }
 
@@ -17,10 +19,11 @@ async function shouldSeed(): Promise<boolean> {
   // Check if tables are empty
   const regionCount = await prisma.region.count();
   const jurisdictionCount = await prisma.jurisdiction.count();
+  const subJurisdictionCount = await prisma.subJurisdiction.count();
   const locationCount = await prisma.location.count();
 
-  // Only seed if all tables are empty
-  const isEmpty = regionCount === 0 && jurisdictionCount === 0 && locationCount === 0;
+  // Only seed if all tables are empty — checking subJurisdiction prevents partial state issues
+  const isEmpty = regionCount === 0 && jurisdictionCount === 0 && subJurisdictionCount === 0 && locationCount === 0;
 
   if (!isEmpty) {
     console.log("Skipping seed: Tables already contain data");
@@ -35,7 +38,57 @@ export async function seedLocationData() {
 
   const needsSeeding = await shouldSeed();
   if (!needsSeeding) {
-    // Seed list types even for existing DBs to pick up new entries added since initial seed
+    // Upsert all reference data even for existing DBs to pick up new entries added since initial seed
+    for (const region of locationData.regions) {
+      await prisma.region.upsert({
+        where: { regionId: region.regionId },
+        create: { regionId: region.regionId, name: region.name, welshName: region.welshName },
+        update: { name: region.name, welshName: region.welshName }
+      });
+    }
+
+    for (const jurisdiction of locationData.jurisdictions) {
+      await prisma.jurisdiction.upsert({
+        where: { jurisdictionId: jurisdiction.jurisdictionId },
+        create: { jurisdictionId: jurisdiction.jurisdictionId, name: jurisdiction.name, welshName: jurisdiction.welshName },
+        update: { name: jurisdiction.name, welshName: jurisdiction.welshName }
+      });
+    }
+
+    for (const subJurisdiction of locationData.subJurisdictions) {
+      await prisma.subJurisdiction.upsert({
+        where: { subJurisdictionId: subJurisdiction.subJurisdictionId },
+        create: {
+          subJurisdictionId: subJurisdiction.subJurisdictionId,
+          name: subJurisdiction.name,
+          welshName: subJurisdiction.welshName,
+          jurisdictionId: subJurisdiction.jurisdictionId
+        },
+        update: {
+          name: subJurisdiction.name,
+          welshName: subJurisdiction.welshName,
+          jurisdictionId: subJurisdiction.jurisdictionId
+        }
+      });
+    }
+
+    for (const location of locationData.locations) {
+      await prisma.location.upsert({
+        where: { locationId: location.locationId },
+        create: {
+          locationId: location.locationId,
+          name: location.name,
+          welshName: location.welshName,
+          email: null,
+          contactNo: null
+        },
+        update: {
+          name: location.name,
+          welshName: location.welshName
+        }
+      });
+    }
+
     await seedListTypes();
     return;
   }
@@ -146,6 +199,19 @@ export async function seedLocationData() {
         }))
       });
     }
+
+    await prisma.locationReference.deleteMany({
+      where: { locationId: location.locationId }
+    });
+
+    await prisma.locationReference.create({
+      data: {
+        locationId: location.locationId,
+        provenance: "SNL",
+        provenanceLocationId: String(location.locationId + 100),
+        provenanceLocationType: location.provenanceLocationType ?? "VENUE"
+      }
+    });
   }
   console.log(`Seeded ${locationData.locations.length} locations`);
 

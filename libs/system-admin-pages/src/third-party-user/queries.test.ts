@@ -1,12 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createThirdPartyUser,
-  deleteThirdPartyUser,
-  findAllThirdPartyUsers,
-  findThirdPartyUserById,
-  getHighestSensitivity,
-  updateThirdPartySubscriptions
-} from "./queries.js";
+import { createThirdPartyUser, deleteThirdPartyUser, findAllThirdPartyUsers, findThirdPartyUserById, updateThirdPartySubscriptions } from "./queries.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
@@ -43,7 +36,19 @@ describe("findAllThirdPartyUsers", () => {
     expect(result).toEqual(mockUsers);
     expect(prisma.legacyThirdPartyUser.findMany).toHaveBeenCalledWith({
       orderBy: { createdDate: "desc" },
-      include: { subscriptions: true }
+      select: {
+        id: true,
+        name: true,
+        createdDate: true,
+        subscriptions: {
+          select: {
+            id: true,
+            userId: true,
+            listTypeId: true,
+            createdDate: true
+          }
+        }
+      }
     });
   });
 });
@@ -62,7 +67,19 @@ describe("findThirdPartyUserById", () => {
     expect(result).toEqual(mockUser);
     expect(prisma.legacyThirdPartyUser.findUnique).toHaveBeenCalledWith({
       where: { id: "1" },
-      include: { subscriptions: true }
+      select: {
+        id: true,
+        name: true,
+        createdDate: true,
+        subscriptions: {
+          select: {
+            id: true,
+            userId: true,
+            listTypeId: true,
+            createdDate: true
+          }
+        }
+      }
     });
   });
 });
@@ -119,10 +136,7 @@ describe("updateThirdPartySubscriptions", () => {
     });
     vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
 
-    const subscriptions = [
-      { listTypeId: 1, channel: "API", sensitivity: "PUBLIC" },
-      { listTypeId: 2, channel: "API", sensitivity: "PRIVATE" }
-    ];
+    const subscriptions = [{ listTypeId: 1 }, { listTypeId: 2 }];
 
     await updateThirdPartySubscriptions("user-1", subscriptions);
 
@@ -143,30 +157,5 @@ describe("updateThirdPartySubscriptions", () => {
     await updateThirdPartySubscriptions("user-1", []);
 
     expect(prisma.$transaction).toHaveBeenCalled();
-  });
-});
-
-describe("getHighestSensitivity", () => {
-  it("should return unselected for empty array", async () => {
-    const result = await getHighestSensitivity([]);
-    expect(result).toBe("unselected");
-  });
-
-  it("should return CLASSIFIED when present", async () => {
-    const subscriptions = [{ sensitivity: "PUBLIC" }, { sensitivity: "CLASSIFIED" }, { sensitivity: "PRIVATE" }];
-    const result = await getHighestSensitivity(subscriptions);
-    expect(result).toBe("CLASSIFIED");
-  });
-
-  it("should return PRIVATE when CLASSIFIED is not present", async () => {
-    const subscriptions = [{ sensitivity: "PUBLIC" }, { sensitivity: "PRIVATE" }];
-    const result = await getHighestSensitivity(subscriptions);
-    expect(result).toBe("PRIVATE");
-  });
-
-  it("should return PUBLIC when only PUBLIC is present", async () => {
-    const subscriptions = [{ sensitivity: "PUBLIC" }];
-    const result = await getHighestSensitivity(subscriptions);
-    expect(result).toBe("PUBLIC");
   });
 });

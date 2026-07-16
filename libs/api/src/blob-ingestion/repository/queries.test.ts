@@ -24,7 +24,7 @@ describe("queries", async () => {
       const log: IngestionLog = {
         id: "test-id",
         timestamp: new Date("2025-01-25T10:00:00Z"),
-        sourceSystem: "XHIBIT",
+        sourceSystem: "PDDA",
         courtId: "123",
         status: "SUCCESS",
         artefactId: "artefact-123"
@@ -59,7 +59,7 @@ describe("queries", async () => {
       const log: IngestionLog = {
         id: "test-id",
         timestamp: new Date("2025-01-25T10:00:00Z"),
-        sourceSystem: "XHIBIT",
+        sourceSystem: "PDDA",
         courtId: "123",
         status: "VALIDATION_ERROR",
         errorMessage: "court_id is required"
@@ -100,7 +100,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-15T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "SUCCESS",
           errorMessage: null,
@@ -130,6 +130,15 @@ describe("queries", async () => {
         },
         orderBy: {
           timestamp: "desc"
+        },
+        select: {
+          id: true,
+          timestamp: true,
+          sourceSystem: true,
+          courtId: true,
+          status: true,
+          errorMessage: true,
+          artefactId: true
         }
       });
 
@@ -145,7 +154,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-25T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "VALIDATION_ERROR",
           errorMessage: "Invalid JSON",
@@ -166,7 +175,16 @@ describe("queries", async () => {
         orderBy: {
           timestamp: "desc"
         },
-        take: 10
+        take: 10,
+        select: {
+          id: true,
+          timestamp: true,
+          sourceSystem: true,
+          courtId: true,
+          status: true,
+          errorMessage: true,
+          artefactId: true
+        }
       });
 
       expect(result).toHaveLength(1);
@@ -178,7 +196,7 @@ describe("queries", async () => {
         {
           id: "log-1",
           timestamp: new Date("2025-01-25T10:00:00Z"),
-          sourceSystem: "XHIBIT",
+          sourceSystem: "PDDA",
           courtId: "123",
           status: "SYSTEM_ERROR",
           errorMessage: "Database connection failed",
@@ -199,7 +217,16 @@ describe("queries", async () => {
         orderBy: {
           timestamp: "desc"
         },
-        take: 5
+        take: 5,
+        select: {
+          id: true,
+          timestamp: true,
+          sourceSystem: true,
+          courtId: true,
+          status: true,
+          errorMessage: true,
+          artefactId: true
+        }
       });
     });
   });

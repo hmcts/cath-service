@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 test.describe("Cookie Management", () => {
   test.beforeEach(async ({ context }) => {
@@ -29,10 +29,9 @@ test.describe("Cookie Management", () => {
 
     // STEP 2: Test "View cookies" link navigation
     await viewCookiesLink.click();
-    await expect(page).toHaveURL("/cookie-preferences");
-    await expect(page.locator("h1")).toHaveText("Cookie preferences");
+    await expect(page).toHaveURL("/cookie-policy");
 
-    // Cookie banner should not be visible on the cookies page itself
+    // Cookie banner should not be visible on the cookie policy page itself
     await expect(cookieBanner).not.toBeVisible();
 
     // STEP 3: Go back and test accepting cookies
@@ -53,6 +52,14 @@ test.describe("Cookie Management", () => {
     console.log(`[Cookie] After accept: cookie value = ${policyValue}`);
     // Cookie manager sets "on"/"off" strings; server POST sets true/false booleans
     expect(policyValue).toMatch(/"analytics":(?:"on"|true)/);
+
+    // Verify the accepted confirmation message is shown and the reject panel is not
+    await expect(page.locator(".cookie-banner-accept-message")).toBeVisible();
+    await expect(page.locator(".cookie-banner-reject-message")).not.toBeVisible();
+
+    // Accessibility scan with confirmation message visible
+    const bannerAcceptResults = await axeCheck(page).analyze();
+    expect(bannerAcceptResults.violations).toEqual([]);
 
     // Navigate away and back - banner should stay hidden
     await page.goto("/cookie-preferences");
@@ -80,6 +87,10 @@ test.describe("Cookie Management", () => {
     // Cookie manager sets "off"; server POST sets false
     expect(policyValue).toMatch(/"analytics":(?:"off"|false)/);
 
+    // Verify the rejected confirmation message is shown and the accept panel is not
+    await expect(page.locator(".cookie-banner-reject-message")).toBeVisible();
+    await expect(page.locator(".cookie-banner-accept-message")).not.toBeVisible();
+
     // Banner should stay hidden after navigation
     await page.goto("/cookie-preferences");
     await page.goto("/");
@@ -104,6 +115,10 @@ test.describe("Cookie Management", () => {
     policyValue = decodeURIComponent(cookiePolicy!.value);
     console.log(`[Cookie] After JS accept: cookie value = ${policyValue}`);
     expect(policyValue).toMatch(/"analytics":(?:true|"on")/);
+
+    // Verify the accepted confirmation message is shown via JS class path
+    await expect(page.locator(".cookie-banner-accept-message")).toBeVisible();
+    await expect(page.locator(".cookie-banner-reject-message")).not.toBeVisible();
   });
 
   test("cookie preferences page journey - form, save, persistence, Welsh, and accessibility", async ({ page }) => {
@@ -221,7 +236,7 @@ test.describe("Cookie Management", () => {
     // STEP 6: Run accessibility scan
     await page.goto("/cookie-preferences");
     await page.waitForLoadState("load");
-    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

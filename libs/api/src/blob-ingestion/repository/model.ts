@@ -15,7 +15,10 @@ export interface BlobIngestionRequest {
   display_from: string;
   display_to: string;
   hearing_list: unknown;
+  source_artefact_id?: string;
 }
+
+export type FlatFileIngestionRequest = Omit<BlobIngestionRequest, "hearing_list">;
 
 export interface BlobIngestionResponse {
   success: boolean;
@@ -35,6 +38,7 @@ export interface BlobValidationResult {
   errors: ValidationError[];
   locationExists: boolean;
   listTypeId?: number;
+  resolvedLocationId?: string;
 }
 
 export interface IngestionLog {

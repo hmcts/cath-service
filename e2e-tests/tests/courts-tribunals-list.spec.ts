@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 
 // Shared test locations for the entire test suite
@@ -50,10 +50,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(backLink).toBeVisible();
 
       // Run accessibility checks on initial page load
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
       if (accessibilityScanResults.violations.length > 0) {
         console.log("Accessibility violations found:");
@@ -132,7 +129,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Find and click the Welsh language toggle
-      const languageToggle = page.locator(".app-language-toggle a");
+      const languageToggle = page.locator(".app-phase-banner__language");
       await expect(languageToggle).toBeVisible();
       await expect(languageToggle).toContainText("Cymraeg");
 
@@ -157,10 +154,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(backLink).toBeVisible();
 
       // Run accessibility checks in Welsh
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });
@@ -169,7 +163,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list?lng=cy");
 
       // Verify we're in Welsh mode
-      const languageToggle = page.locator(".app-language-toggle a");
+      const languageToggle = page.locator(".app-phase-banner__language");
       await expect(languageToggle).toContainText("English");
 
       // Switch back to English
@@ -222,10 +216,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list");
 
       // Initial accessibility check
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
       expect(accessibilityScanResults.violations).toEqual([]);
 
       // Click on a location
@@ -419,10 +410,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
       // Run accessibility checks with filters
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .disableRules(["target-size", "link-name"])
-        .analyze();
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 
       expect(accessibilityScanResults.violations).toEqual([]);
     });

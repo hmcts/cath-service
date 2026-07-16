@@ -403,6 +403,10 @@ test.describe("Subscription Notifications", () => {
   // (createUniqueTestLocation uses prefixName, so global teardown will clean it up)
 
   test("notification delivery to single and multiple subscribers", async ({ request }) => {
+    // PDF generation via Puppeteer can take 40-60+ seconds on cold start in CI.
+    // Notifications are only sent after PDF generation completes, so we need a longer timeout.
+    test.setTimeout(120_000);
+
     // PART 1: Test single subscriber notification with email content verification
     const testUser1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
     testData.userIds.push(testUser1.userId);
@@ -425,8 +429,9 @@ test.describe("Subscription Notifications", () => {
     expect(result.artefact_id).toBeDefined();
     testData.publicationIds.push(result.artefact_id);
 
-    // Wait for notification to reach terminal status (processPublication is fire-and-forget after 201)
-    const notifications = await waitForNotifications(result.artefact_id, 30, 1000, false, true);
+    // Wait for notification to reach terminal status (processPublication is fire-and-forget after 201).
+    // Puppeteer PDF generation must complete before notifications are sent, so allow up to 90 seconds.
+    const notifications = await waitForNotifications(result.artefact_id, 90, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     // Verify notification was processed (Sent when Notify is configured, Failed otherwise)
@@ -490,7 +495,7 @@ test.describe("Subscription Notifications", () => {
     testData.publicationIds.push(result2.artefact_id);
 
     // Wait for notifications to reach terminal status
-    const notifications2 = await waitForNotifications(result2.artefact_id, 30, 1000, false, true);
+    const notifications2 = await waitForNotifications(result2.artefact_id, 60, 1000, false, true);
 
     // Verify notifications were processed for both subscribers (Sent or Failed depending on Notify config)
     const processedNotifications = notifications2.filter((n) => n.status === "Sent" || n.status === "Failed");

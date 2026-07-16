@@ -1,17 +1,17 @@
 ---
-paths: libs/**/src/routes/**/*.ts, apps/api/**/*.ts, libs/**/prisma/*.prisma
+paths: [apps/api/src/routes/**/*.ts, libs/**/src/routes/**/*.ts, apps/api/**/*.ts, libs/postgres-prisma/prisma/schema/*.prisma]
 ---
 
 # Backend Development Rules
 
 ## API Route Pattern
 
-Routes live in `src/routes/` directories of `libs` and export named HTTP method functions. Routes are auto-discovered by `createSimpleRouter`.
+API routes live primarily in `apps/api/src/routes/`. Feature-specific or test routes can optionally live in `libs/*/src/routes/` and are registered via config exports. All routes export named HTTP method functions and are auto-discovered by `createSimpleRouter`.
 
 ### Route Structure
 
 ```typescript
-// libs/[module]/src/routes/[resource].ts
+// apps/api/src/routes/[resource].ts
 import type { Request, Response } from "express";
 
 // GET /api/resource
@@ -32,17 +32,32 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
+**Optional: Feature-specific routes in libs** (registered via config):
+```typescript
+// libs/test-support/src/routes/test-support/health.ts
+export const GET = async (req: Request, res: Response) => {
+  res.json({ status: "ok" });
+};
+
+// libs/test-support/src/config.ts
+export const apiRoutes = { path: path.join(__dirname, "routes") };
+
+// Registered in apps/api/src/app.ts:
+// const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+// app.use(await createSimpleRouter(testSupportRoutes));
+```
+
 ### Dynamic Routes
 
 Use bracket notation for URL parameters:
 
 ```
-routes/users/[id].ts     → /api/users/:id
-routes/cases/[caseId].ts → /api/cases/:caseId
+apps/api/src/routes/users/[id].ts     → /api/users/:id
+apps/api/src/routes/cases/[caseId].ts → /api/cases/:caseId
 ```
 
 ```typescript
-// routes/users/[id].ts
+// apps/api/src/routes/users/[id].ts
 export const GET = async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = await userService.findById(id);
@@ -134,7 +149,9 @@ export async function findUserWithCases(userId: string) {
 }
 ```
 
-### Prisma Schema Conventions
+### Prisma Best Practices
+
+#### 1. Schema conventions
 
 ```prisma
 model User {
@@ -158,29 +175,231 @@ model User {
 - Field names: camelCase in code, snake_case in DB via `@map`
 - Add `@@index` for frequently queried fields
 
-### Query Optimization
+#### 2. Use `select` Instead of `include`
+
+`select` is more efficient and explicit about what data you need:
 
 ```typescript
-// Select only required fields
-const users = await prisma.user.findMany({
-  select: {
-    id: true,
-    email: true,
-    firstName: true
+// ❌ BAD: include fetches ALL fields from related models
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  include: {
+    cases: true,
+    subscriptions: true
   }
 });
 
-// Pagination
-const cases = await prisma.case.findMany({
-  skip: (page - 1) * pageSize,
-  take: pageSize,
-  orderBy: { createdAt: "desc" }
+// ✅ GOOD: select only the fields you need
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  select: {
+    id: true,
+    email: true,
+    firstName: true,
+    cases: {
+      select: {
+        id: true,
+        title: true,
+        status: true
+      }
+    },
+    subscriptions: {
+      select: {
+        id: true,
+        searchType: true
+      }
+    }
+  }
 });
+```
 
-// Avoid N+1 with includes
-const usersWithCases = await prisma.user.findMany({
-  include: { cases: true }
+#### 3. Filter, Sort, and Search at the Database Level
+
+**NEVER** fetch all records and filter in JavaScript. Use Prisma's `where`, `orderBy`, and search operators:
+
+```typescript
+// ❌ BAD: Filtering in JavaScript after fetching all records
+const allUsers = await prisma.user.findMany();
+const activeUsers = allUsers.filter(u => u.status === "ACTIVE");
+const sorted = activeUsers.sort((a, b) => a.name.localeCompare(b.name));
+
+// ✅ GOOD: Filter and sort at database level
+const users = await prisma.user.findMany({
+  where: {
+    status: "ACTIVE",
+    deletedAt: null,
+    name: {
+      contains: searchTerm,
+      mode: "insensitive"
+    }
+  },
+  orderBy: {
+    name: "asc"
+  }
 });
+```
+
+#### 4. Avoid N+1 Queries
+
+```typescript
+// ❌ BAD: N+1 query - one query for locations, then one per location for regions
+const locations = await prisma.location.findMany();
+for (const location of locations) {
+  location.regions = await prisma.locationRegion.findMany({
+    where: { locationId: location.locationId }
+  });
+}
+
+// ✅ GOOD: Single query with nested select
+const locations = await prisma.location.findMany({
+  select: {
+    locationId: true,
+    name: true,
+    welshName: true,
+    locationRegions: {
+      select: {
+        region: {
+          select: {
+            regionId: true,
+            name: true,
+            welshName: true
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+#### 5. Pagination Pattern
+
+Use for list endpoints that return collections to the client:
+
+```typescript
+export async function getLocationsPaginated(page: number, pageSize: number) {
+  const [locations, total] = await prisma.$transaction([
+    prisma.location.findMany({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      where: { deletedAt: null },
+      orderBy: { name: "asc" },
+      select: {
+        locationId: true,
+        name: true,
+        welshName: true
+      }
+    }),
+    prisma.location.count({
+      where: { deletedAt: null }
+    })
+  ]);
+
+  return {
+    data: locations,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize)
+    }
+  };
+}
+```
+
+#### 6. Use Enums in Prisma Schema
+
+Define enums for fields with fixed set of values:
+
+```prisma
+// ✅ GOOD: Using enum for searchType
+enum SearchType {
+  CASE_ID
+  CASE_URN
+  LOCATION_ID
+}
+
+model Subscription {
+  id         String     @id @default(cuid())
+  searchType SearchType @map("search_type")
+  searchValue String    @map("search_value")
+  
+  @@map("subscription")
+}
+```
+
+```typescript
+// TypeScript usage with enum
+import { SearchType } from "@prisma/client";
+
+const subscription = await prisma.subscription.create({
+  data: {
+    searchType: SearchType.LOCATION_ID,
+    searchValue: locationId.toString()
+  }
+});
+```
+
+**Don't use string literals for fields that should be enums:**
+
+```typescript
+// ❌ BAD: Magic strings
+searchType: "LOCATION_ID"
+
+// ✅ GOOD: Enum
+searchType: SearchType.LOCATION_ID
+```
+
+#### 7. Combine Filtering with Conditional Logic
+
+Build dynamic `where` clauses for optional filters:
+
+```typescript
+export async function searchLocations(options: {
+  search?: string;
+  language: "en" | "cy";
+  regions?: number[];
+  subJurisdictions?: number[];
+}) {
+  const searchField = options.language === "cy" ? "welshName" : "name";
+  
+  return prisma.location.findMany({
+    where: {
+      deletedAt: null,
+      ...(options.search && {
+        [searchField]: {
+          contains: options.search,
+          mode: "insensitive"
+        }
+      }),
+      ...(options.regions && options.regions.length > 0 && {
+        locationRegions: {
+          some: {
+            regionId: {
+              in: options.regions
+            }
+          }
+        }
+      }),
+      ...(options.subJurisdictions && options.subJurisdictions.length > 0 && {
+        locationSubJurisdictions: {
+          some: {
+            subJurisdictionId: {
+              in: options.subJurisdictions
+            }
+          }
+        }
+      })
+    },
+    orderBy: {
+      [searchField]: "asc"
+    },
+    select: {
+      locationId: true,
+      name: true,
+      welshName: true
+    }
+  });
+}
 ```
 
 ## Transaction Management
@@ -413,19 +632,35 @@ res.status(400).json({
 
 ## File Organization
 
+**Primary API routes (apps/api):**
+```
+apps/api/src/routes/
+├── users.ts                    # /api/users
+├── users.test.ts
+├── users/
+│   ├── [id].ts                 # /api/users/:id
+│   └── [id].test.ts
+├── locations.ts                # /api/locations
+└── v1/
+    └── publication.ts          # /api/v1/publication
+```
+
+**Feature-specific routes (optional in libs):**
+```
+libs/test-support/
+└── src/
+    ├── config.ts               # Exports apiRoutes config
+    └── routes/
+        └── test-support/       # /api/test-support/*
+            ├── health.ts
+            └── users.ts
+```
+
+**Domain logic (libs):**
 ```
 libs/my-module/
-├── prisma/
-│   └── schema.prisma           # Database schema
 └── src/
-    ├── config.ts               # Module configuration (apiRoutes, etc.)
     ├── index.ts                # Business logic exports
-    ├── routes/                 # API route handlers
-    │   ├── resource.ts         # /api/resource
-    │   ├── resource.test.ts
-    │   └── resource/
-    │       ├── [id].ts         # /api/resource/:id
-    │       └── [id].test.ts
     └── resource/               # Domain logic
         ├── resource-service.ts
         ├── resource-service.test.ts
@@ -436,11 +671,12 @@ libs/my-module/
 ## Testing API Routes
 
 ```typescript
-// routes/users.test.ts
+// apps/api/src/routes/users.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET, POST } from "./users.js";
+import { findAllUsers, createUser } from "@hmcts/user-management";
 
-vi.mock("../user/user-service.js", () => ({
+vi.mock("@hmcts/user-management", () => ({
   findAllUsers: vi.fn(),
   createUser: vi.fn()
 }));
@@ -495,7 +731,7 @@ describe("POST /api/users", () => {
 
 ### Database Anti-Patterns
 
-- ❌ N+1 queries (use `include` or batch queries)
+- ❌ N+1 queries (use nested `select` or batch queries)
 - ❌ Selecting all fields when only a few needed
 - ❌ Missing indexes on frequently queried fields
 - ❌ Raw SQL when Prisma can handle it

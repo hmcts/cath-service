@@ -1,0 +1,75 @@
+name: One-Shot - Fix Test Postgres Deposed State
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/one-shot.fix-test-postgres-state.yml'
+
+jobs:
+  fix-test-postgres-state:
+    name: Fix Test Postgres Deposed State
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Terraform
+        run: |
+          wget -qO /tmp/terraform.zip https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_linux_amd64.zip
+          unzip -o /tmp/terraform.zip -d /usr/local/bin/
+          terraform version
+
+      - name: Azure Login (Test)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Fix Test Postgres Deposed State
+        working-directory: infrastructure
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          terraform init \
+            -backend-config="resource_group_name=jenkins-state-test" \
+            -backend-config="storage_account_name=sdsstatetest" \
+            -backend-config="container_name=tfstate-test" \
+            -backend-config="key=cath-service/test/terraform.tfstate" \
+            -backend-config="access_key=${STORAGE_KEY}"
+
+          # The state has two issues:
+          # 1. A deposed object for the old server (cath-test-test in cath-test-data-test)
+          #    that Terraform is trying to destroy but the SP lacks permission.
+          # 2. The current binding points to the triple-named server (cath-test-test-test
+          #    in cath-test-test-data-test) which must be replaced with the correct name.
+          #
+          # Fix: remove all postgres-related resources from state so Terraform can
+          # re-import and manage them cleanly against the correctly-named server.
+
+          for resource in \
+            "module.postgresql.azurerm_postgresql_flexible_server.pgsql_server" \
+            "module.postgresql.azurerm_postgresql_flexible_server_database.pg_databases[\"cath\"]" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_adadmin" \
+            "module.postgresql.azurerm_postgresql_flexible_server_active_directory_administrator.pgsql_principal_admin[0]" \
+            "module.postgresql.azurerm_resource_group.rg[0]" \
+            "module.postgresql.random_password.password" \
+            "module.postgresql.terraform_data.trigger_password_reset"; do
+            terraform state rm "$resource" \
+              && echo "Removed $resource from test state" \
+              || echo "WARNING: $resource not found in test state (may already be removed)"
+          done

@@ -19,31 +19,23 @@ const __dirname = path.dirname(__filename);
 
 interface PdfGenerationOptions extends BasePdfGenerationOptions<AdministrativeCourtHearingList> {
   contentDate: Date;
-  listTypeId: number;
+  listTypeName: string;
 }
 
-const LIST_TYPE_KEY_MAP: Record<number, string> = {
-  20: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  21: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  22: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  23: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
-};
-
-const LIST_TITLE_MAP: Record<number, string> = {
-  20: "Birmingham Administrative Court Daily Cause List",
-  21: "Leeds Administrative Court Daily Cause List",
-  22: "Bristol and Cardiff Administrative Court Daily Cause List",
-  23: "Manchester Administrative Court Daily Cause List"
+const LIST_TITLE_MAP: Record<string, string> = {
+  BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Birmingham Administrative Court Daily Cause List",
+  LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Leeds Administrative Court Daily Cause List",
+  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Bristol and Cardiff Administrative Court Daily Cause List",
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Manchester Administrative Court Daily Cause List"
 };
 
 export async function generateAdministrativeCourtDailyCauseListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
-    const listTitle = LIST_TITLE_MAP[options.listTypeId] || "Administrative Court Daily Cause List";
-    const listTypeKey = LIST_TYPE_KEY_MAP[options.listTypeId] || "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
+    const listTitle = LIST_TITLE_MAP[options.listTypeName] || "Administrative Court Daily Cause List";
 
     const renderedData = renderAdminCourt(options.jsonData, {
       locale: options.locale,
-      listTypeId: options.listTypeId,
+      listTypeName: options.listTypeName,
       listTitle,
       contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
@@ -51,13 +43,13 @@ export async function generateAdministrativeCourtDailyCauseListPdf(options: PdfG
 
     const translations = await loadTranslations(
       options.locale,
-      () => import("../pages/en.js"),
-      () => import("../pages/cy.js")
+      () => import("../locales/en.js"),
+      () => import("../locales/cy.js")
     );
 
     const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
-    const courtTranslations = translations[listTypeKey as keyof typeof translations] as Record<string, string>;
+    const courtTranslations = translations[options.listTypeName as keyof typeof translations] as Record<string, string>;
 
     const env = configureNunjucks(__dirname);
     const html = env.render("pdf-template.njk", {

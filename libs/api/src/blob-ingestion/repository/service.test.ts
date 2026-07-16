@@ -1,19 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BlobIngestionRequest } from "./model.js";
-import { processBlobIngestion } from "./service.js";
+import type { BlobIngestionRequest, FlatFileIngestionRequest } from "./model.js";
+import { processBlobIngestion, processFlatFileBlobIngestion } from "./service.js";
 
 // Mock the dependencies
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(),
   extractAndStoreArtefactSearch: vi.fn(),
   processPublication: vi.fn(),
+  updateSourceArtefactId: vi.fn(),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
-    XHIBIT: "XHIBIT",
-    LIBRA: "LIBRA",
-    SJP: "SJP",
     SNL: "SNL",
-    COMMON_PLATFORM: "COMMON_PLATFORM"
+    COMMON_PLATFORM: "COMMON_PLATFORM",
+    CP_CATH: "CP_CATH",
+    PDDA: "PDDA"
   }
 }));
 
@@ -22,7 +22,8 @@ vi.mock("./queries.js", () => ({
 }));
 
 vi.mock("../validation.js", () => ({
-  validateBlobRequest: vi.fn()
+  validateBlobRequest: vi.fn(),
+  validateFlatFileRequest: vi.fn()
 }));
 
 vi.mock("../file-storage.js", () => ({
@@ -30,7 +31,7 @@ vi.mock("../file-storage.js", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, extractAndStoreArtefactSearch, processPublication } = await import("@hmcts/publication");
+  const { createArtefact, extractAndStoreArtefactSearch, processPublication, updateSourceArtefactId } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
@@ -39,11 +40,13 @@ describe("processBlobIngestion", async () => {
     vi.clearAllMocks();
     vi.mocked(processPublication).mockResolvedValue({});
     vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
+    vi.mocked(saveUploadedFile).mockResolvedValue(undefined);
+    vi.mocked(updateSourceArtefactId).mockResolvedValue(undefined);
   });
 
   const validRequest: BlobIngestionRequest = {
     court_id: "123",
-    provenance: "XHIBIT",
+    provenance: "MANUAL_UPLOAD",
     content_date: "2025-01-25",
     list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     sensitivity: "PUBLIC",
@@ -61,7 +64,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -71,10 +74,11 @@ describe("processBlobIngestion", async () => {
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", null);
     expect(createIngestionLog).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "SUCCESS",
-        sourceSystem: "XHIBIT",
+        sourceSystem: "MANUAL_UPLOAD",
         courtId: "123"
       })
     );
@@ -88,7 +92,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const result = await processBlobIngestion(validRequest, 1000);
 
@@ -101,6 +105,27 @@ describe("processBlobIngestion", async () => {
       })
     );
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", null);
+  });
+
+  it("should use source_artefact_id from request when provided", async () => {
+    // Arrange
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
+    const requestWithSourceId: BlobIngestionRequest = { ...validRequest, source_artefact_id: "civil-daily-cause-list.json" };
+
+    // Act
+    const result = await processBlobIngestion(requestWithSourceId, 1000);
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("test-artefact-id", "civil-daily-cause-list.json");
   });
 
   it("should return validation errors when request is invalid", async () => {
@@ -156,7 +181,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion({ ...validRequest, provenance: "LIBRA" }, 1000);
 
@@ -175,7 +200,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -196,7 +221,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -296,7 +321,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -310,9 +335,64 @@ describe("processBlobIngestion", async () => {
       contentDate: expect.any(Date),
       locale: "en",
       jsonData: expect.anything(),
-      provenance: "XHIBIT",
+      provenance: "MANUAL_UPLOAD",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: expect.any(Date),
+      displayTo: expect.any(Date),
+      isUpdate: false,
       logPrefix: "[blob-ingestion]"
     });
+  });
+
+  it("should use resolvedLocationId when provenance is external", async () => {
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8,
+      resolvedLocationId: "456"
+    });
+
+    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+
+    const externalRequest = { ...validRequest, provenance: "SNL", court_id: "snl-ext-id" };
+    await processBlobIngestion(externalRequest, 1000);
+
+    expect(createArtefact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "456"
+      })
+    );
+
+    // Wait for async processing
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(processPublication).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "456"
+      })
+    );
+  });
+
+  it("should fall back to court_id when resolvedLocationId is undefined", async () => {
+    vi.mocked(validateBlobRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: false,
+      listTypeId: 8,
+      resolvedLocationId: undefined
+    });
+
+    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+
+    await processBlobIngestion(validRequest, 1000);
+
+    expect(createArtefact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locationId: "123"
+      })
+    );
   });
 
   it("should not call processPublication when noMatch is true", async () => {
@@ -323,7 +403,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     await processBlobIngestion(validRequest, 1000);
 
@@ -343,7 +423,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
     vi.mocked(processPublication).mockRejectedValue(new Error("Processing failed"));
 
     const result = await processBlobIngestion(validRequest, 1000);
@@ -372,7 +452,7 @@ describe("processBlobIngestion", async () => {
       listTypeId: 8
     });
 
-    vi.mocked(createArtefact).mockResolvedValue("test-artefact-id");
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
 
     const welshRequest = { ...validRequest, language: "WELSH" };
     await processBlobIngestion(welshRequest, 1000);
@@ -385,5 +465,273 @@ describe("processBlobIngestion", async () => {
         locale: "cy"
       })
     );
+  });
+});
+
+describe("processFlatFileBlobIngestion", async () => {
+  const { createArtefact, processPublication, updateSourceArtefactId } = await import("@hmcts/publication");
+  const { createIngestionLog } = await import("./queries.js");
+  const { validateFlatFileRequest } = await import("../validation.js");
+  const { saveUploadedFile } = await import("../file-storage.js");
+
+  const validRequest: FlatFileIngestionRequest = {
+    court_id: "123",
+    provenance: "MANUAL_UPLOAD",
+    content_date: "2025-01-25",
+    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    display_from: "2025-01-25T09:00:00Z",
+    display_to: "2025-01-25T17:00:00Z"
+  };
+
+  const fileBuffer = Buffer.from("%PDF-1.4");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(processPublication).mockResolvedValue({});
+    vi.mocked(saveUploadedFile).mockResolvedValue(undefined);
+    vi.mocked(updateSourceArtefactId).mockResolvedValue(undefined);
+  });
+
+  it("should successfully ingest a flat file with location match", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    const result = await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(result.artefact_id).toBe("flat-artefact-id");
+    expect(result.no_match).toBe(false);
+    expect(result.message).toBe("Flat file ingested successfully");
+  });
+
+  it("should set isFlatFile to true on created artefact", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(createArtefact).toHaveBeenCalledWith(expect.objectContaining({ isFlatFile: true }));
+  });
+
+  it("should store the file buffer directly to blob storage", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert: blob stored using artefactId only (no extension)
+    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "flat-artefact-id", fileBuffer);
+  });
+
+  it("should store source_artefact_id in database when provided", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+    const requestWithSourceId: FlatFileIngestionRequest = { ...validRequest, source_artefact_id: "civil-daily.pdf" };
+
+    // Act
+    await processFlatFileBlobIngestion(requestWithSourceId, fileBuffer, fileBuffer.length);
+
+    // Assert: blob name is always artefactId; source_artefact_id is stored in the DB
+    expect(saveUploadedFile).toHaveBeenCalledWith("flat-artefact-id", "flat-artefact-id", fileBuffer);
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", "civil-daily.pdf");
+  });
+
+  it("should store null in source_artefact_id column when not provided", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", null);
+  });
+
+  it("should return no_match=true and 'location not found' message when location absent", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: false,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    const result = await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(result.no_match).toBe(true);
+    expect(result.message).toBe("Flat file ingested but location not found in reference data");
+    expect(createArtefact).toHaveBeenCalledWith(expect.objectContaining({ noMatch: true }));
+  });
+
+  it("should not call processPublication when noMatch is true", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: false,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Assert
+    expect(processPublication).not.toHaveBeenCalled();
+  });
+
+  it("should return validation errors when request is invalid", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: false,
+      errors: [{ field: "list_type", message: "list_type is required" }],
+      locationExists: false
+    });
+
+    // Act
+    const result = await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Validation failed");
+    expect(result.errors).toHaveLength(1);
+    expect(createArtefact).not.toHaveBeenCalled();
+    expect(createIngestionLog).toHaveBeenCalledWith(expect.objectContaining({ status: "VALIDATION_ERROR" }));
+  });
+
+  it("should return system error when list type ID is missing after validation", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: null as any
+    });
+
+    // Act
+    const result = await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Internal server error during ingestion");
+    expect(createIngestionLog).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "SYSTEM_ERROR", errorMessage: "List type ID not found after validation" })
+    );
+  });
+
+  it("should handle system errors during artefact creation", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockRejectedValue(new Error("Database error"));
+
+    // Act
+    const result = await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("Internal server error during ingestion");
+    expect(createIngestionLog).toHaveBeenCalledWith(expect.objectContaining({ status: "SYSTEM_ERROR", errorMessage: "Database error" }));
+  });
+
+  it("should use Welsh locale when language is WELSH", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+    const welshRequest = { ...validRequest, language: "WELSH" };
+
+    // Act
+    await processFlatFileBlobIngestion(welshRequest, fileBuffer, fileBuffer.length);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Assert
+    expect(processPublication).toHaveBeenCalledWith(expect.objectContaining({ locale: "cy" }));
+  });
+
+  it("should use resolvedLocationId when provenance is external", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8,
+      resolvedLocationId: "456"
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+    const externalRequest = { ...validRequest, provenance: "SNL", court_id: "snl-ext-id" };
+
+    // Act
+    await processFlatFileBlobIngestion(externalRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(createArtefact).toHaveBeenCalledWith(expect.objectContaining({ locationId: "456" }));
+  });
+
+  it("should log successful ingestion", async () => {
+    // Arrange
+    vi.mocked(validateFlatFileRequest).mockResolvedValue({
+      isValid: true,
+      errors: [],
+      locationExists: true,
+      listTypeId: 8
+    });
+    vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
+
+    // Act
+    await processFlatFileBlobIngestion(validRequest, fileBuffer, fileBuffer.length);
+
+    // Assert
+    expect(createIngestionLog).toHaveBeenCalledWith(expect.objectContaining({ status: "SUCCESS", artefactId: "flat-artefact-id", courtId: "123" }));
   });
 });

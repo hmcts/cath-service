@@ -5,7 +5,7 @@ name: cath-web
 annotations:
   team: cath
 home: https://github.com/hmcts/cath-service
-version: 0.0.1
+version: 0.0.3
 dependencies:
   - name: nodejs
     version: 3.2.0

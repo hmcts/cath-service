@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
 
 // Shared test location for the entire test suite
@@ -58,10 +58,7 @@ test.describe("Search Page", () => {
     await expect(continueButton).toBeFocused();
 
     // Accessibility check
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Navigate to A-Z list
@@ -76,10 +73,7 @@ test.describe("Search Page", () => {
     await expect(azHeading).toBeVisible();
 
     // Accessibility check on A-Z list page
-    const azAccessibilityResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const azAccessibilityResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(azAccessibilityResults.violations).toEqual([]);
   });
 
@@ -114,10 +108,7 @@ test.describe("Search Page", () => {
     await expect(autocompleteInput).toHaveClass(/govuk-input--error/);
 
     // Accessibility check with error state
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
@@ -125,7 +116,7 @@ test.describe("Search Page", () => {
     await page.goto("/search");
 
     // Switch to Welsh
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
     await languageToggle.click();
@@ -170,10 +161,7 @@ test.describe("Search Page", () => {
     await expect(languageToggle).toContainText("English");
 
     // Accessibility check in Welsh
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
@@ -189,10 +177,7 @@ test.describe("Search Page", () => {
     await expect(continueButton).toBeVisible();
 
     // Accessibility check
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 });

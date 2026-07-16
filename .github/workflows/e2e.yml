@@ -15,6 +15,7 @@ permissions:
   checks: write
   pull-requests: write
   actions: read
+  id-token: write
 
 jobs:
   e2e:
@@ -48,64 +49,84 @@ jobs:
           --health-retries 5
           --health-start-period 10s
 
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite:latest
+        ports:
+          - 10000:10000
+
     env:
       # Application configuration
       BASE_URL: https://localhost:8080
       PORT: 8080
-      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
 
       # Database Configuration (using service containers)
       DATABASE_URL: postgresql://hmcts@localhost:5432/postgres
       REDIS_URL: redis://localhost:6379
 
-      # SSO Configuration (using existing GitHub Secrets)
-      SSO_CLIENT_ID: ${{ secrets.SSO_CLIENT_ID }}
-      SSO_CLIENT_SECRET: ${{ secrets.SSO_CLIENT_SECRET }}
-      SSO_IDENTITY_METADATA: ${{ secrets.SSO_ISSUER_URL }}
-      SSO_SYSTEM_ADMIN_GROUP_ID: ${{ secrets.SSO_SG_SYSTEM_ADMIN }}
-      SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_CTSC }}
-      SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: ${{ secrets.SSO_SG_ADMIN_LOCAL }}
-      SSO_ALLOW_HTTP_REDIRECT: false
+      # Azure Blob Storage (Azurite emulator for CI)
+      AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true"
 
-      # Test user credentials (using existing GitHub Secrets)
-      SSO_TEST_SYSTEM_ADMIN_EMAIL: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_USER }}
-      SSO_TEST_SYSTEM_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_SYSTEM_ADMIN_ACCOUNT_PWD }}
-      SSO_TEST_LOCAL_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_USER }}
-      SSO_TEST_LOCAL_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_LOCAL_ACCOUNT_PWD }}
-      SSO_TEST_CTSC_ADMIN_EMAIL: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_USER }}
-      SSO_TEST_CTSC_ADMIN_PASSWORD: ${{ secrets.SSO_TEST_ADMIN_ACCOUNT_CTSC_PWD }}
-      SSO_TEST_NO_ROLES_EMAIL: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_USER }}
-      SSO_TEST_NO_ROLES_PASSWORD: ${{ secrets.SSO_TEST_NO_ROLES_ACCOUNT_PWD }}
+      # SSO Configuration
+      SSO_ALLOW_HTTP_REDIRECT: false
 
       # CFT IDAM Configuration
       ENABLE_CFT_IDAM: true
       CFT_IDAM_URL: https://idam-web-public.aat.platform.hmcts.net
-      CFT_IDAM_CLIENT_SECRET: ${{ secrets.CFT_IDAM_CLIENT_SECRET }}
-
-      # CFT IDAM Test Credentials
-      CFT_VALID_TEST_ACCOUNT: ${{ secrets.CFT_VALID_TEST_ACCOUNT }}
-      CFT_VALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_VALID_TEST_ACCOUNT_PASSWORD }}
-      CFT_INVALID_TEST_ACCOUNT: ${{ secrets.CFT_INVALID_TEST_ACCOUNT }}
-      CFT_INVALID_TEST_ACCOUNT_PASSWORD: ${{ secrets.CFT_INVALID_TEST_ACCOUNT_PASSWORD }}
-
-      # API Authentication Configuration (for blob ingestion endpoint)
-      AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-      AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
-      AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
-      APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
 
       # Azure B2C Configuration (mocked in CI until delete endpoint is deployed)
       MOCK_AZURE_B2C: "true"
       MEDIA_FORGOT_PASSWORD_LINK: "https://localhost:8080/forgot-password"
 
-      # GOV.UK Notify Configuration (for notification E2E tests)
-      GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
-      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION }}
-      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ${{ secrets.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY }}
+      # GOV.UK Notify template IDs (non-secret)
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Load credentials and app secrets from bootstrap Key Vault
+        run: |
+          KV="cath-bootstrap-stg-kv"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          # E2E test credentials
+          echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_LOCAL_ADMIN_PASSWORD=$(fetch sso-test-admin-local-account-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_EMAIL=$(fetch sso-test-admin-account-ctsc-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_CTSC_ADMIN_PASSWORD=$(fetch sso-test-admin-account-ctsc-pwd)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_EMAIL=$(fetch sso-test-no-roles-account-user)" >> $GITHUB_ENV
+          echo "SSO_TEST_NO_ROLES_PASSWORD=$(fetch sso-test-no-roles-account-pwd)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT=$(fetch cft-valid-test-account)" >> $GITHUB_ENV
+          echo "CFT_VALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-valid-test-account-password)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT=$(fetch cft-invalid-test-account)" >> $GITHUB_ENV
+          echo "CFT_INVALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-invalid-test-account-password)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
+          echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
+          echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+
+          # App secrets required at startup
+          echo "SESSION_SECRET=$(fetch session-secret)" >> $GITHUB_ENV
+          echo "SSO_CLIENT_ID=$(fetch sso-client-id)" >> $GITHUB_ENV
+          echo "SSO_CLIENT_SECRET=$(fetch sso-client-secret)" >> $GITHUB_ENV
+          echo "SSO_ISSUER_URL=$(fetch sso-issuer-url)" >> $GITHUB_ENV
+          echo "SSO_SYSTEM_ADMIN_GROUP_ID=$(fetch sso-sg-system-admin)" >> $GITHUB_ENV
+          echo "SSO_INTERNAL_ADMIN_CTSC_GROUP_ID=$(fetch sso-sg-admin-ctsc)" >> $GITHUB_ENV
+          echo "SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID=$(fetch sso-sg-admin-local)" >> $GITHUB_ENV
+          echo "CFT_IDAM_CLIENT_SECRET=$(fetch cft-idam-client-secret)" >> $GITHUB_ENV
+          echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
+          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
+          echo "APP_PIP_DATA_MANAGEMENT_SCOPE=$(fetch app-pip-data-management-scope)" >> $GITHUB_ENV
 
       - name: Enable Corepack
         run: corepack enable
@@ -113,7 +134,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '24.13.1'
+          node-version: '24.17.0'
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v5
@@ -134,11 +155,6 @@ jobs:
 
       - name: Wait for PostgreSQL service to be ready
         run: timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U hmcts; do sleep 1; done'
-
-      - name: Collate Prisma schema
-        run: |
-          echo "Collating Prisma schema from all modules..."
-          yarn tsx libs/postgres-prisma/src/collate-schema.ts
 
       - name: Generate Prisma client
         run: yarn db:generate
@@ -206,15 +222,16 @@ jobs:
       # Publish test results to PR checks
       - name: Test Report
         id: test-report
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: E2E Test Results
           path: e2e-tests/junit-results.xml
           reporter: java-junit
           fail-on-error: false
+          fail-on-empty: false
 
-      # Upload artifacts on failure for debugging   
+      # Upload artifacts on failure for debugging
       - name: Upload Playwright test results
         uses: actions/upload-artifact@v6
         if: always() && steps.e2e-tests.outcome == 'failure'

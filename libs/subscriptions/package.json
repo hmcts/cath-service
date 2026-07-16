@@ -6,10 +6,6 @@
     ".": {
       "production": "./dist/index.js",
       "default": "./src/index.ts"
-    },
-    "./config": {
-      "production": "./dist/config.js",
-      "default": "./src/config.ts"
     }
   },
   "scripts": {
@@ -27,5 +23,8 @@
   },
   "peerDependencies": {
     "express": "^5.2.0"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
   }
 }

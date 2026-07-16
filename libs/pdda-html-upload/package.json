@@ -1,0 +1,35 @@
+{
+  "name": "@hmcts/pdda-html-upload",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1085.0",
+    "@aws-sdk/node-http-handler": "3.374.0",
+    "multer": "2.0.2"
+  },
+  "peerDependencies": {
+    "express": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/multer": "2.0.0",
+    "@types/node": "22.13.10",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

@@ -113,10 +113,12 @@ apps/
         └── routes/            # API endpoints
 
 libs/
+└── postgres-prisma
+    ├── prisma
+        ├── schema             # Prisma schemas
 └── [feature]/
     ├── package.json           # Module metadata and scripts
     ├── tsconfig.json          # TypeScript configuration
-    ├── prisma/                # Prisma schema (optional)
     └── src/
         ├── config.ts          # Module configuration exports
         ├── index.ts           # Business logic exports
@@ -145,7 +147,7 @@ The web and API applications use explicit imports to register modules, enabling 
 
 To avoid circular dependencies during Prisma client generation, module configuration MUST be separated from business logic exports:
 
-- **`src/config.ts`** - Module configuration exports (pageRoutes, apiRoutes, prismaSchemas, assets)
+- **`src/config.ts`** - Module configuration exports (pageRoutes, apiRoutes, assets)
 - **`src/index.ts`** - Business logic exports only (services, utilities, types)
 
 **Module configuration structure:**
@@ -164,9 +166,6 @@ export const moduleRoot = __dirname;  // Commonly needed for path resolution
 
 // Optional - only if module has API routes
 export const apiRoutes = { path: path.join(__dirname, "routes") };
-
-// Optional - only if module has Prisma schema
-export const prismaSchemas = path.join(__dirname, "../prisma");
 
 // Optional - custom exports for specific needs (e.g., file upload routes)
 export const fileUploadRoutes = ["/manual-upload", "/non-strategic-upload"];
@@ -215,13 +214,32 @@ const baseConfig = createBaseViteConfig([
 // apps/api/src/app.ts
 import { apiRoutes as myFeatureRoutes } from "@hmcts/my-feature/config";
 app.use(await createSimpleRouter(myFeatureRoutes));
-
-// apps/postgres/src/schema-discovery.ts
-import { prismaSchemas as myFeatureSchemas } from "@hmcts/my-feature/config";
-const schemaPaths = [myFeatureSchemas, /* other schemas */];
 ```
 
 **NOTE**: By default all pages and routes are mounted at root level. To namespace routes, create subdirectories under `pages/`. E.g. `pages/admin/` for `/admin/*` routes.
+
+### Database Schema Management
+
+All Prisma schemas are centralized in `libs/postgres-prisma/prisma/schema/` with one file per feature domain.
+
+**Schema Organization:**
+```
+libs/postgres-prisma/
+├── prisma.config.ts            # Points to prisma/schema directory
+└── prisma/
+    └── schema/                 # All .prisma files live here
+        ├── base.prisma         # Datasource and generator config
+        ├── audit-log.prisma    # Audit log models
+        ├── location.prisma     # Location models
+        └── ...                 # One file per domain
+```
+
+**Adding a New Schema:**
+1. Create `libs/postgres-prisma/prisma/schema/{feature-name}.prisma` (kebab-case)
+2. Run `yarn db:generate` to update the Prisma client
+3. All models are available via `import { prisma } from "@hmcts/postgres-prisma"`
+
+**Never create `prisma/` directories in feature modules** - all schemas are centralized in `@hmcts/postgres-prisma`.
 
 ### Implementation Patterns
 
@@ -229,20 +247,19 @@ const schemaPaths = [myFeatureSchemas, /* other schemas */];
 
 **Page Controller with Middleware Chain (protected routes):**
 ```typescript
-// libs/admin-pages/src/pages/admin-dashboard/index.ts
+// apps/web/src/pages/admin/dashboard/index.ts
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { adminDashboardCy as cy, adminDashboardEn as en } from "@hmcts/admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import cy from "./cy.js";
-import en from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  // Select language at controller level
-  const lang = req.query.lng === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
 
-  res.render("admin-dashboard/index", {
-    pageTitle: lang.pageTitle,
-    heading: lang.heading,
-    // Spread language-specific content as flat props
+  res.render("admin-dashboard", {
+    pageTitle: t.pageTitle,
+    heading: t.heading,
+    en, cy, t
   });
 };
 
@@ -253,41 +270,64 @@ export const GET: RequestHandler[] = [
 ];
 ```
 
+**Content files in libs (exported from index.ts):**
+```typescript
+// libs/admin-pages/src/admin-dashboard/cy.ts
+export const cy = {
+  pageTitle: "Dangosfwrdd gweinyddol",
+  heading: "Croeso i'r dangosfwrdd gweinyddol"
+};
+
+// libs/admin-pages/src/admin-dashboard/en.ts
+export const en = {
+  pageTitle: "Admin Dashboard",
+  heading: "Welcome to the admin dashboard"
+};
+
+// libs/admin-pages/src/index.ts
+export { cy as adminDashboardCy } from "./admin-dashboard/cy.js";
+export { en as adminDashboardEn } from "./admin-dashboard/en.js";
+```
+
 **Page Controller with POST and validation:**
 ```typescript
-// libs/admin-pages/src/pages/create-user/index.ts
+// apps/web/src/pages/admin/create-user/index.ts
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { createUserCy as cy, createUserEn as en } from "@hmcts/admin-pages";
+import { createUser } from "@hmcts/admin-pages";
 import type { Request, RequestHandler, Response } from "express";
-import { createUser } from "../../user/service.js";
-import cy from "./cy.js";
-import en from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
-  res.render("create-user/index", {
-    pageTitle: lang.pageTitle,
-    nameLabel: lang.nameLabel,
-    emailLabel: lang.emailLabel,
-    continueButtonText: lang.continueButton
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
+  
+  res.render("create-user", {
+    pageTitle: t.pageTitle,
+    nameLabel: t.nameLabel,
+    emailLabel: t.emailLabel,
+    continueButtonText: t.continueButton,
+    en, cy, t
   });
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const lang = req.query.lng === "cy" ? cy : en;
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cy : en;
   const { name, email } = req.body;
 
   if (!name || !email) {
-    return res.render("create-user/index", {
-      pageTitle: lang.pageTitle,
-      errors: [{ text: lang.errorRequired, href: "#name" }],
-      errorSummaryTitle: lang.errorSummaryTitle,
-      data: req.body
+    return res.render("create-user", {
+      pageTitle: t.pageTitle,
+      errors: [{ text: t.errorRequired, href: "#name" }],
+      errorSummaryTitle: t.errorSummaryTitle,
+      data: req.body,
+      en, cy, t
     });
   }
 
   await createUser({ name, email });
 
-  const lng = req.query.lng === "cy" ? "?lng=cy" : "";
+  const lng = locale === "cy" ? "?lng=cy" : "";
   res.redirect(`/user-created${lng}`);
 };
 
@@ -304,14 +344,15 @@ export const POST: RequestHandler[] = [
 
 **Public page (no middleware):**
 ```typescript
-// libs/public-pages/src/pages/search/index.ts
+// apps/web/src/pages/search/index.ts
+import { searchCy as cy, searchEn as en } from "@hmcts/public-pages";
 import type { Request, Response } from "express";
-import cy from "./cy.js";
-import en from "./en.js";
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
-  res.render("search/index", { en, cy, locale });
+  const t = locale === "cy" ? cy : en;
+  
+  res.render("search", { en, cy, t });
 };
 
 export const POST = async (req: Request, res: Response) => {
@@ -321,10 +362,10 @@ export const POST = async (req: Request, res: Response) => {
 };
 ```
 
-**Translation files (colocated with page):**
+**Translation files (in libs, exported from index.ts):**
 ```typescript
-// libs/admin-pages/src/pages/admin-dashboard/en.ts
-export default {
+// libs/admin-pages/src/admin-dashboard/en.ts
+export const en = {
   pageTitle: "Admin Dashboard",
   heading: "Welcome to the admin dashboard",
   continueButton: "Continue",
@@ -332,14 +373,18 @@ export default {
   errorSummaryTitle: "There is a problem"
 };
 
-// libs/admin-pages/src/pages/admin-dashboard/cy.ts
-export default {
+// libs/admin-pages/src/admin-dashboard/cy.ts
+export const cy = {
   pageTitle: "Dangosfwrdd Gweinyddol",
   heading: "Croeso i'r dangosfwrdd gweinyddol",
   continueButton: "Parhau",
   errorRequired: "Rhowch werth",
   errorSummaryTitle: "Mae problem"
 };
+
+// libs/admin-pages/src/index.ts
+export { cy as adminDashboardCy } from "./admin-dashboard/cy.js";
+export { en as adminDashboardEn } from "./admin-dashboard/en.js";
 ```
 
 **Business logic in services (not controllers):**
@@ -445,7 +490,7 @@ Nunjucks templates need to be copied to `dist/` for production. Use a build scri
 
 #### Accessible Form Pattern
 ```html
-<!-- libs/user-management/src/pages/create-user/index.njk -->
+<!-- apps/web/src/pages/admin/create-user/index.njk -->
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}

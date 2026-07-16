@@ -1,0 +1,112 @@
+import cookieManager from "@hmcts/cookie-manager";
+import { initAll } from "govuk-frontend";
+import { initBackToTop } from "./back-to-top.js";
+import { initFilterPanel } from "./filter-panel.js";
+import { initListTypeSensitivity } from "./list-type-sensitivity.js";
+import { initSearchAutocomplete } from "./search-autocomplete.js";
+import { initSortableTable } from "./sortable-table.js";
+import "./session-timeout.js";
+import { initSjpFilterSearch } from "./sjp-filter-search.js";
+import { initTableSearch } from "./table-search.js";
+
+initAll();
+
+// Initialize custom components
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await initSearchAutocomplete().catch((error) => {
+      console.error("Error initializing search autocomplete:", error);
+    });
+    initFilterPanel();
+    initBackToTop();
+    initListTypeSensitivity();
+    initTableSearch();
+    initSortableTable();
+    initSjpFilterSearch();
+  });
+} else {
+  void initSearchAutocomplete().catch((error) => {
+    console.error("Error initializing search autocomplete:", error);
+  });
+  initFilterPanel();
+  initBackToTop();
+  initListTypeSensitivity();
+  initTableSearch();
+  initSortableTable();
+  initSjpFilterSearch();
+}
+
+const config = {
+  userPreferences: {
+    cookieName: "cookie_policy"
+  },
+  cookieBanner: {
+    class: "govuk-cookie-banner",
+    actions: [
+      {
+        name: "accept",
+        buttonClass: "js-cookie-banner-accept",
+        confirmationClass: "cookie-banner-accept-message",
+        consent: true
+      },
+      {
+        name: "reject",
+        buttonClass: "js-cookie-banner-reject",
+        confirmationClass: "cookie-banner-reject-message",
+        consent: false
+      },
+      {
+        name: "hide",
+        buttonClass: "js-cookie-banner-hide"
+      }
+    ]
+  },
+  preferencesForm: {
+    class: "cookie-preferences-form"
+  },
+  cookieManifest: [
+    {
+      categoryName: "essential",
+      optional: false,
+      matchBy: "exact",
+      cookies: ["connect.sid", "_csrf", "cookie_policy", "cookies_preferences_set", "locale"]
+    },
+    {
+      categoryName: "analytics",
+      optional: true,
+      cookies: ["_ga", "_gid", "dtCookie", "dtSa", "rxVisitor", "rxvt"]
+    },
+    {
+      categoryName: "preferences",
+      optional: true,
+      cookies: ["language"]
+    }
+  ]
+};
+
+cookieManager.on("CookieBannerAction", (eventData: any) => {
+  const action = typeof eventData === "string" ? eventData : eventData.action;
+
+  // The HMCTS cookie manager will handle showing the confirmation message
+  // and the hide button will remove the banner entirely
+  if (action === "hide") {
+    const banner = document.querySelector(".govuk-cookie-banner");
+    if (banner) {
+      banner.remove();
+    }
+  }
+});
+
+cookieManager.init(config);
+
+// When navigating back to this page via bfcache the cookie manager does not
+// re-initialise, so the confirmation panel can remain visible even though the
+// user has already made a choice. Hide the banner if a preference is already set.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && document.cookie.includes("cookie_policy")) {
+    const banner = document.querySelector<HTMLElement>(".govuk-cookie-banner");
+    if (banner) {
+      banner.hidden = true;
+    }
+  }
+});

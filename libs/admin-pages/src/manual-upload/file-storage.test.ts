@@ -1,65 +1,50 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { saveUploadedFile } from "./file-storage.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const TEST_ARTEFACT_ID = "test-artefact-123";
-const TEST_FILE_NAME = "test-hearing-list.csv";
-const TEST_FILE_EXTENSION = ".csv";
-const TEST_FILE_CONTENT = Buffer.from("Test,File,Content\n1,2,3");
-// Match the same path calculation as the implementation (from libs/admin-pages/src/manual-upload/)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
-const TEST_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-const TEST_FILE_PATH = path.join(TEST_STORAGE_BASE, `${TEST_ARTEFACT_ID}${TEST_FILE_EXTENSION}`);
+vi.mock("@hmcts/azure-blob", () => ({
+  uploadBlob: vi.fn()
+}));
 
 describe("file-storage", () => {
-  beforeEach(async () => {
-    // Clean up any existing test files
-    try {
-      await fs.rm(TEST_FILE_PATH, { force: true });
-    } catch {
-      // Ignore if doesn't exist
-    }
-  });
-
-  afterEach(async () => {
-    // Clean up test files after each test
-    try {
-      await fs.rm(TEST_FILE_PATH, { force: true });
-    } catch {
-      // Ignore if doesn't exist
-    }
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
   });
 
   describe("saveUploadedFile", () => {
-    it("should save file with artefactId as filename", async () => {
-      await saveUploadedFile(TEST_ARTEFACT_ID, TEST_FILE_NAME, TEST_FILE_CONTENT);
+    it("should upload blob with artefactId as name (no extension)", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
+      const { saveUploadedFile } = await import("./file-storage.js");
 
-      const fileExists = await fs
-        .access(TEST_FILE_PATH)
-        .then(() => true)
-        .catch(() => false);
-      expect(fileExists).toBe(true);
+      // Act
+      await saveUploadedFile("test-artefact-123", "hearing-list.csv", Buffer.from("a,b,c"));
 
-      const savedContent = await fs.readFile(TEST_FILE_PATH);
-      expect(savedContent.toString()).toBe(TEST_FILE_CONTENT.toString());
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("test-artefact-123", Buffer.from("a,b,c"));
     });
 
-    it("should extract file extension from original filename", async () => {
-      await saveUploadedFile(TEST_ARTEFACT_ID, "document.pdf", TEST_FILE_CONTENT);
+    it("should upload blob with artefactId as name regardless of original file extension", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockResolvedValue(undefined);
+      const { saveUploadedFile } = await import("./file-storage.js");
 
-      const pdfPath = path.join(TEST_STORAGE_BASE, `${TEST_ARTEFACT_ID}.pdf`);
-      const fileExists = await fs
-        .access(pdfPath)
-        .then(() => true)
-        .catch(() => false);
-      expect(fileExists).toBe(true);
+      // Act
+      await saveUploadedFile("artefact-456", "document.pdf", Buffer.from("pdf-content"));
 
-      // Cleanup
-      await fs.rm(pdfPath, { force: true });
+      // Assert
+      expect(uploadBlob).toHaveBeenCalledWith("artefact-456", Buffer.from("pdf-content"));
+    });
+
+    it("should propagate uploadBlob errors", async () => {
+      // Arrange
+      const { uploadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(uploadBlob).mockRejectedValue(new Error("Upload failed"));
+      const { saveUploadedFile } = await import("./file-storage.js");
+
+      // Act & Assert
+      await expect(saveUploadedFile("test", "file.csv", Buffer.from("data"))).rejects.toThrow("Upload failed");
     });
   });
 });

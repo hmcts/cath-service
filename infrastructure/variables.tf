@@ -1,5 +1,5 @@
 variable "env" {
-  description = "Environment name (e.g., stg, prod)"
+  description = "Environment name (e.g., demo, test, ithc, stg)"
   type        = string
 }
 
@@ -68,8 +68,38 @@ variable "ci_service_principal_object_id" {
   default     = null
 }
 
+variable "e2e_oidc_object_id" {
+  description = "Azure AD object ID for the GitHub Actions OIDC app registration (AZURE_CLIENT_ID) used by e2e test workflows"
+  type        = string
+  default     = "9a5a8d6f-c926-46e3-89d4-ed3472ea0edc"
+}
+
 variable "builtFrom" {
   description = "GitHub repository URL for tagging (auto-set in CI)"
   type        = string
   default     = null
+}
+
+variable "sa_account_tier" {
+  description = "Storage account tier"
+  type        = string
+  default     = "Standard"
+}
+
+variable "sa_account_kind" {
+  description = "Storage account kind"
+  type        = string
+  default     = "StorageV2"
+}
+
+variable "sa_account_replication_type" {
+  description = "Storage account replication type"
+  type        = string
+  default     = "RAGRS"
+}
+
+variable "sa_access_tier" {
+  description = "Storage account access tier"
+  type        = string
+  default     = "Cool"
 }

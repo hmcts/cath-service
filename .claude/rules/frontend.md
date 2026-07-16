@@ -1,5 +1,5 @@
 ---
-paths: libs/**/src/pages/**/*.ts, libs/**/src/pages/**/*.njk, apps/web/**/*.ts
+paths: [apps/web/src/pages/**/*.ts, apps/web/src/pages/**/*.njk, libs/**/src/**/*-page/*.ts]
 ---
 
 # Frontend Development Rules
@@ -97,26 +97,44 @@ Components are reusable parts of the user interface.
 
 ## Page Controller Pattern
 
-Controllers live in the `src/pages/` folder of modules in `libs/` with `GET` and `POST` exports. Routes are auto-generated from file names.
+Page controllers live in `apps/web/src/pages/` with `GET` and `POST` exports. They import content from libs. Routes are auto-generated from directory structure.
 
 ### Controller Structure
 
 ```typescript
-// libs/[module]/src/pages/[page-name].ts
+// apps/web/src/pages/my-page/index.ts
 import type { Request, Response } from "express";
-import { en } from "./en.js";
-import { cy } from "./cy.js";
+import { myPageCy as cy, myPageEn as en } from "@hmcts/my-feature";
 
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
 
-  res.render("page-name", { en, cy, t });
+  res.render("my-page", { en, cy, t });
 };
 
 export const POST = async (req: Request, res: Response) => {
   // Validate → Service call → Redirect or Re-render with errors
 };
+```
+
+**Content files in libs** (exported from index.ts):
+```typescript
+// libs/my-feature/src/my-page/cy.ts
+export const cy = {
+  title: "Teitl y Dudalen",
+  heading: "Pennawd"
+};
+
+// libs/my-feature/src/my-page/en.ts
+export const en = {
+  title: "Page Title",
+  heading: "Heading"
+};
+
+// libs/my-feature/src/index.ts
+export { cy as myPageCy } from "./my-page/cy.js";
+export { en as myPageEn } from "./my-page/en.js";
 ```
 
 ### Middleware Arrays
@@ -140,12 +158,14 @@ export const GET: RequestHandler[] = [
 
 ### Controller Rules
 
+- **Controllers live in apps/web/src/pages/** - NOT in libs
+- **Content lives in libs** - import from `@hmcts/[module]` packages
 - **No business logic in controllers** - delegate to service functions
 - **Always provide both `en` and `cy`** - every page must support Welsh
 - **Select translation with locale** - use `const t = locale === "cy" ? cy : en`
 - **Preserve user data on errors** - pass `data: req.body` back to template
 - **Use redirects after successful POST** - prevent duplicate submissions
-- **Template name must match file name** - `my-page.ts` renders `my-page.njk`
+- **Template name matches directory** - `my-page/index.ts` renders `my-page` template
 
 ## Nunjucks Template Pattern
 
@@ -212,7 +232,7 @@ export const GET: RequestHandler[] = [
 ### Translation File Pattern
 
 ```typescript
-// libs/[module]/src/pages/en.ts
+// libs/[module]/src/[page-name]/en.ts
 export const en = {
   title: "Page Title",
   emailLabel: "Email address",
@@ -222,7 +242,7 @@ export const en = {
   contactMessage: (name: string) => `Contact ${name} for help`
 };
 
-// libs/[module]/src/pages/cy.ts
+// libs/[module]/src/[page-name]/cy.ts
 export const cy = {
   title: "Teitl y Dudalen",
   emailLabel: "Cyfeiriad e-bost",
@@ -230,6 +250,10 @@ export const cy = {
   errorSummaryTitle: "Mae problem",
   contactMessage: (name: string) => `Cysylltwch â ${name} am help`
 };
+
+// libs/[module]/src/index.ts
+export { cy as pageNameCy } from "./page-name/cy.js";
+export { en as pageNameEn } from "./page-name/en.js";
 ```
 
 ### Welsh Translation Rules
@@ -434,26 +458,42 @@ const sessionData = (req.session as MyModuleSession).myModule;
 ## File Organization
 
 ```
-libs/my-module/src/pages/
-├── form-step-one.ts       # Controller
-├── form-step-one.njk      # Template
-├── form-step-one.test.ts  # Tests
-├── en.ts                  # English translations
-├── cy.ts                  # Welsh translations
-├── form-step-two.ts
-├── form-step-two.njk
-└── admin/                 # Nested route: /admin/*
-    ├── dashboard.ts
-    └── dashboard.njk
+apps/web/src/pages/
+├── form-step-one/
+│   ├── index.ts           # Controller
+│   ├── index.njk          # Template
+│   └── index.test.ts      # Controller tests
+├── form-step-two/
+│   ├── index.ts
+│   ├── index.njk
+│   └── index.test.ts
+├── (auth)/                # Route group (no URL prefix)
+│   └── login/
+│       ├── index.ts
+│       └── index.njk
+└── admin/                 # Regular directory (/admin/*)
+    └── dashboard/
+        ├── index.ts
+        └── index.njk
+
+libs/my-module/src/
+├── index.ts               # Exports content
+├── form-step-one/
+│   ├── cy.ts              # Welsh content
+│   └── en.ts              # English content
+└── form-step-two/
+    ├── cy.ts
+    └── en.ts
 ```
 
 ## Anti-Patterns to Avoid
 
 ### Controller Anti-Patterns
 
+- ❌ Controllers in libs (they belong in apps/web/src/pages/)
 - ❌ Business logic in controllers
 - ❌ Missing Welsh translations
-- ❌ Hardcoded strings in templates
+- ❌ Hardcoded strings in templates or controllers
 - ❌ Not preserving form data on errors
 - ❌ Multiple form fields asking different questions per page
 

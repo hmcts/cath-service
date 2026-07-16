@@ -2,13 +2,13 @@ import type { Express } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock all dependencies before importing createApp
-vi.mock("@hmcts/cloud-native-platform", () => ({
+vi.mock("@hmcts-cft/cloud-native-platform", () => ({
   getPropertiesVolumeSecrets: vi.fn().mockResolvedValue({}),
   healthcheck: vi.fn(() => vi.fn()),
   monitoringMiddleware: vi.fn(() => vi.fn())
 }));
 
-vi.mock("@hmcts/simple-router", () => ({
+vi.mock("@hmcts-cft/simple-router", () => ({
   createSimpleRouter: vi.fn(() => Promise.resolve(vi.fn()))
 }));
 
@@ -24,6 +24,13 @@ vi.mock("@hmcts/web-core", () => ({
   errorHandler: vi.fn(() => vi.fn()),
   expressSessionRedis: vi.fn(() => vi.fn()),
   notFoundHandler: vi.fn(() => vi.fn())
+}));
+
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: { findUnique: vi.fn() },
+    artefact: { findUnique: vi.fn(), findMany: vi.fn() }
+  }
 }));
 
 vi.mock("redis", () => ({
@@ -73,9 +80,37 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list/config", () => ({
   pageRoutes: { path: "/mock/care-standards-tribunal/pages" }
 }));
 
+vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utcc"
+}));
+
+vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utlc"
+}));
+
+vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/utaac"
+}));
+
+vi.mock("@hmcts/magistrates-adult-court-list/config", () => ({
+  moduleRoot: "/mock/magistrates-adult-court-list"
+}));
+
+vi.mock("@hmcts/magistrates-public-adult-court-list/config", () => ({
+  moduleRoot: "/mock/magistrates-public-adult-court-list"
+}));
+
 vi.mock("@hmcts/civil-and-family-daily-cause-list/config", () => ({
   moduleRoot: "/mock/civil-family",
   pageRoutes: { path: "/mock/civil-family/pages" }
+}));
+
+vi.mock("@hmcts/civil-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/civil-daily-cause-list"
+}));
+
+vi.mock("@hmcts/family-daily-cause-list/config", () => ({
+  moduleRoot: "/mock/family-daily-cause-list"
 }));
 
 vi.mock("@hmcts/rcj-standard-daily-cause-list/config", () => ({
@@ -106,42 +141,32 @@ vi.mock("@hmcts/location/config", () => ({
   apiRoutes: { path: "/mock/location/routes" }
 }));
 
-vi.mock("@hmcts/public-pages/config", () => ({
-  apiRoutes: { path: "/mock/public-pages/routes" },
-  fileUploadRoutes: ["/create-media-account"],
-  moduleRoot: "/mock/public-pages",
-  pageRoutes: { path: "/mock/public-pages/pages" }
-}));
-
-vi.mock("@hmcts/system-admin-pages/config", () => ({
-  apiRoutes: { path: "/mock/system-admin/api" },
-  fileUploadRoutes: ["/reference-data-upload"],
-  moduleRoot: "/mock/system-admin",
-  pageRoutes: { path: "/mock/system-admin/pages" }
-}));
-
-vi.mock("@hmcts/verified-pages/config", () => ({
-  moduleRoot: "/mock/verified-pages",
-  pageRoutes: { path: "/mock/verified-pages/pages" }
-}));
-
-vi.mock("@hmcts/web-core/config", () => ({
-  pageRoutes: { path: "/mock/web-core/pages" },
-  moduleRoot: "/mock/web-core"
-}));
-
 vi.mock("@hmcts/sjp-press-list/config", () => ({
-  pageRoutes: { path: "/mock/sjp-press-list/pages", prefix: "/sjp-press-list" },
-  deltaPageRoutes: { path: "/mock/sjp-press-list/pages-delta", prefix: "/sjp-delta-press-list" },
-  moduleRoot: "/mock/sjp-press-list",
-  assets: "/mock/sjp-press-list/assets"
+  moduleRoot: "/mock/sjp-press-list"
 }));
 
 vi.mock("@hmcts/sjp-public-list/config", () => ({
-  pageRoutes: { path: "/mock/sjp-public-list/pages", prefix: "/sjp-public-list" },
-  deltaPageRoutes: { path: "/mock/sjp-public-list/pages-delta", prefix: "/sjp-delta-public-list" },
-  moduleRoot: "/mock/sjp-public-list",
-  assets: "/mock/sjp-public-list/assets"
+  moduleRoot: "/mock/sjp-public-list"
+}));
+
+vi.mock("@hmcts/sscs-daily-hearing-list/config", () => ({
+  moduleRoot: "/mock/sscs-daily-hearing-list"
+}));
+
+vi.mock("@hmcts/public-pages/config", () => ({
+  fileUploadRoutes: ["/create-media-account"],
+  moduleRoot: "/mock/public-pages",
+  apiRoutes: { path: "/mock/public-pages/routes" }
+}));
+
+vi.mock("@hmcts/system-admin-pages/config", () => ({
+  fileUploadRoutes: ["/reference-data-upload"],
+  moduleRoot: "/mock/system-admin",
+  pages: { path: "/mock/system-admin/pages" }
+}));
+
+vi.mock("@hmcts/web-core/config", () => ({
+  moduleRoot: "/mock/web-core"
 }));
 
 describe("Web Application", () => {
@@ -165,7 +190,7 @@ describe("Web Application", () => {
     });
 
     it("should configure properties volume", async () => {
-      const { getPropertiesVolumeSecrets } = await import("@hmcts/cloud-native-platform");
+      const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
       expect(getPropertiesVolumeSecrets).toHaveBeenCalled();
     });
 
@@ -175,12 +200,12 @@ describe("Web Application", () => {
     });
 
     it("should configure healthcheck middleware", async () => {
-      const { healthcheck } = await import("@hmcts/cloud-native-platform");
+      const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
     });
 
     it("should configure monitoring middleware", async () => {
-      const { monitoringMiddleware } = await import("@hmcts/cloud-native-platform");
+      const { monitoringMiddleware } = await import("@hmcts-cft/cloud-native-platform");
       expect(monitoringMiddleware).toHaveBeenCalled();
     });
 
@@ -210,6 +235,7 @@ describe("Web Application", () => {
         app,
         expect.objectContaining({
           preferencesPath: "/cookie-preferences",
+          policyPath: "/cookie-policy",
           categories: expect.objectContaining({
             essential: expect.arrayContaining(["connect.sid"]),
             analytics: expect.any(Array),
@@ -219,20 +245,20 @@ describe("Web Application", () => {
       );
     });
 
-    it("should register web core page routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalled();
-    });
+    it("should register page routes from apps/web/src/pages", async () => {
+      const { createSimpleRouter } = await import("@hmcts-cft/simple-router");
 
-    it("should register public pages routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
-      expect(createSimpleRouter).toHaveBeenCalledTimes(20);
-    });
-
-    it("should register system-admin page routes", async () => {
-      const { createSimpleRouter } = await import("@hmcts/simple-router");
+      // Verify createSimpleRouter was called with the pages directory
       const calls = vi.mocked(createSimpleRouter).mock.calls;
-      expect(calls.length).toBeGreaterThanOrEqual(18);
+      const pageRouterCall = calls.find((call) => {
+        const arg = call[0];
+        return arg && typeof arg === "object" && "path" in arg && typeof arg.path === "string" && arg.path.includes("pages");
+      });
+
+      expect(pageRouterCall).toBeDefined();
+      expect(pageRouterCall?.[0]).toMatchObject({
+        path: expect.stringContaining("pages")
+      });
     });
 
     it("should configure error handlers at the end", async () => {

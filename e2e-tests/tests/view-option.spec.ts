@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { axeCheck } from "../utils/axe-helper.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
@@ -41,10 +41,7 @@ test.describe("View Option Page", () => {
     await expect(errorLink).toHaveAttribute("href", "#viewOption");
 
     // Accessibility check with error state
-    let accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 3: Select court/tribunal option and navigate
@@ -52,25 +49,19 @@ test.describe("View Option Page", () => {
     await expect(courtTribunalRadio).toBeChecked();
 
     // Accessibility check before navigation
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     await continueButton.click();
     await expect(page).toHaveURL("/search");
 
     // Accessibility check on search page
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 4: Test Welsh language support
     await page.goto("/view-option");
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
     await languageToggle.click();
@@ -98,10 +89,7 @@ test.describe("View Option Page", () => {
     await expect(languageToggle).toContainText("English");
 
     // Accessibility check in Welsh with error state
-    accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .disableRules(["target-size", "link-name"])
-      .analyze();
+    accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Switch back to English

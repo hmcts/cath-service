@@ -66,8 +66,26 @@ Work through each task in the Testing Tasks section of tasks.md:
 
 **STEP 5: Final Verification**
 1. Verify all tasks in docs/tickets/$ARGUMENT/tasks.md are marked [x]
-2. Ensure >80% test coverage on new code
-3. Verify all tests are passing
+2. Verify all tests are passing
+3. Measure coverage on new code:
+   - Run: yarn test:coverage
+   - For each workspace you added or changed code in, read its 'Coverage summary' block in the
+     output and take the percentage from the 'Statements :' line (e.g. "Statements : 87% (…)")
+   - Report, in your final summary, each such workspace and its statement coverage %, and
+     clearly list any that are below 80%
+   - Do NOT block on this — just report the numbers accurately
+4. Verify acceptance criteria:
+   - Re-read docs/tickets/$ARGUMENT/ticket.md and extract every acceptance criterion from the
+     Description (look for an 'Acceptance Criteria'/'AC' section or checklist items)
+   - For each criterion, state whether the implemented code satisfies it and justify it in one
+     line with a file:line reference to the code or test that satisfies it (record 'no evidence'
+     if none exists)
+   - Report this as an 'Acceptance Criteria' checklist in your final summary using exactly three
+     states:
+     - "- [x] <criterion> — <justification> (file:line)" for fully met
+     - "- [~] <criterion> — <what's done> / <what's missing> (file:line)" for partially met
+     - "- [ ] <criterion> — <justification>" for not met
+   - Do NOT block on unmet or partially met criteria — just report them accurately
 
 **IMPORTANT NOTES:**
 - Follow the @CLAUDE.md guidelines (use libs/ for features, not apps/)
@@ -95,6 +113,15 @@ IF ANY FAILURES:
   - Use full-stack-engineer agent to fix issues
   - Re-run failed tests
   - Repeat until all tests pass
+
+5. Review the coverage figures the agent reported for each changed workspace.
+   IF any changed workspace is below 80% statement coverage:
+     - Tell the user which workspace(s) are below 80% and their current %
+     - Ask the user whether they want additional unit tests written to reach 80%
+     - IF the user says yes: spawn the full-stack-engineer agent to add co-located .test.ts
+       tests (AAA pattern per .claude/rules/testing.md) for the uncovered lines, then re-run
+       yarn test:coverage and report the new figures
+     - IF the user says no: proceed, noting the coverage gap in the final output
 ```
 *Mark "Run tests and verify" as completed*
 
@@ -109,6 +136,7 @@ Implementation of issue #$ARGUMENT complete!
 ✅ All testing tasks completed
 ✅ Tests passing
 ✅ Application verified
+[Acceptance criteria: N met / P partial / U unmet of M — any partial or unmet criteria are detailed in the agent summary above]
 
 Task tracking: docs/tickets/$ARGUMENT/tasks.md
 

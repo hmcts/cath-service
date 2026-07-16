@@ -1,0 +1,98 @@
+name: One-Shot - Break Terraform State Locks
+
+on:
+  workflow_dispatch:
+
+jobs:
+  break-locks-stg:
+    name: Break STG State Lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (STG)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_STG }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Break STG State Lock
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatestg \
+            --resource-group jenkins-state-stg \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob lease break \
+            --account-name sdsstatestg \
+            --container-name tfstate-stg \
+            --blob-name "cath-service/stg/terraform.tfstate" \
+            --account-key "$STORAGE_KEY" \
+          && echo "STG lock broken successfully" \
+          || echo "WARNING: No lock to break on stg"
+
+  break-locks-test:
+    name: Break Test State Lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (Test)
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+
+      - name: Break Test State Lock
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstatetest \
+            --resource-group jenkins-state-test \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob lease break \
+            --account-name sdsstatetest \
+            --container-name tfstate-test \
+            --blob-name "cath-service/test/terraform.tfstate" \
+            --account-key "$STORAGE_KEY" \
+          && echo "Test lock broken successfully" \
+          || echo "WARNING: No lock to break on test"
+
+  break-locks-ithc:
+    name: Break ITHC State Lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login (ITHC)
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}' | python3 -c "
+          import sys, json, subprocess
+          creds = json.load(sys.stdin)
+          subprocess.run([
+            'az', 'login', '--service-principal',
+            '--username', creds['clientId'],
+            '--password', creds['clientSecret'],
+            '--tenant', creds['tenantId']
+          ], check=True)
+          subprocess.run(['az', 'account', 'set', '--subscription', creds['subscriptionId']], check=True)
+          "
+
+      - name: Break ITHC State Lock
+        run: |
+          STORAGE_KEY=$(az storage account keys list \
+            --account-name sdsstateithc \
+            --resource-group jenkins-state-ithc \
+            --query "[0].value" \
+            --output tsv)
+
+          az storage blob lease break \
+            --account-name sdsstateithc \
+            --container-name tfstate-ithc \
+            --blob-name "cath-service/ithc/terraform.tfstate" \
+            --account-key "$STORAGE_KEY" \
+          && echo "ITHC lock broken successfully" \
+          || echo "WARNING: No lock to break on ithc"

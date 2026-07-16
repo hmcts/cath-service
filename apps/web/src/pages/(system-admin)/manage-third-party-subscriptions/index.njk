@@ -1,0 +1,53 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+
+      {% if listTypes and listTypes.length > 0 %}
+        {% set checkboxItems = [] %}
+        {% for listType in listTypes %}
+          {% set isChecked = currentListTypeIds and (listType.id in currentListTypeIds) %}
+          {% set listTypeName = listType.welshFriendlyName if locale == 'cy' else listType.friendlyName %}
+          {% set checkboxItems = (checkboxItems.push({
+            value: listType.id,
+            text: listTypeName,
+            checked: isChecked
+          }), checkboxItems) %}
+        {% endfor %}
+
+        {{ govukCheckboxes({
+          name: "listTypes",
+          fieldset: {
+            legend: {
+              text: listTypesLabel,
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: checkboxItems
+        }) }}
+      {% endif %}
+
+      {{ govukButton({
+        text: saveButtonText
+      }) }}
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Express, NextFunction, Request, Response } from "express";
@@ -7,7 +7,7 @@ import type { AssetOptions } from "../../assets/assets.js";
 import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
-import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, time12Filter, timeFilter } from "./filters/index.js";
+import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, selectAttrFilter, time12Filter, timeFilter } from "./filters/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,6 +56,7 @@ function addFilters(env: nunjucks.Environment): void {
   env.addFilter("currency", currencyFilter);
   env.addFilter("kebabCase", kebabCaseFilter);
   env.addFilter("govukErrorSummary", govukErrorSummaryFilter);
+  env.addFilter("selectattr", selectAttrFilter);
 }
 
 function addGlobals(env: nunjucks.Environment, globals: Record<string, unknown> = {}): void {
@@ -65,6 +66,17 @@ function addGlobals(env: nunjucks.Environment, globals: Record<string, unknown> 
   Object.entries(globals).forEach(([key, value]) => {
     env.addGlobal(key, value);
   });
+}
+
+function collectViewPaths(dir: string): string[] {
+  const subdirs = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
+  const routeGroups = subdirs.filter((e) => /^\(.+\)$/.test(e.name));
+  const regularDirs = subdirs.filter((e) => !/^\(.+\)$/.test(e.name));
+
+  const groupPaths = routeGroups.flatMap((e) => collectViewPaths(path.join(dir, e.name)));
+  const nestedPaths = regularDirs.flatMap((e) => collectViewPaths(path.join(dir, e.name)));
+
+  return [dir, ...groupPaths, ...nestedPaths];
 }
 
 function mergeConfigs(paths: string[]): {
@@ -77,8 +89,9 @@ function mergeConfigs(paths: string[]): {
   for (const modulePath of paths) {
     const actualModulePath = process.env.NODE_ENV !== "production" ? modulePath : modulePath.replace("/src", "/dist");
 
-    if (existsSync(path.join(actualModulePath, "pages"))) {
-      mergedViewPaths.push(`${actualModulePath}/pages`);
+    const pagesPath = path.join(actualModulePath, "pages");
+    if (existsSync(pagesPath)) {
+      mergedViewPaths.push(...collectViewPaths(pagesPath));
     }
     if (existsSync(path.join(actualModulePath, "views"))) {
       mergedViewPaths.push(`${actualModulePath}/views`);

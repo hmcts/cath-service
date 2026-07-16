@@ -1,46 +1,49 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "./session.js"; // Session type augmentation
 import "@hmcts/web-core"; // Import for Express type augmentation
-import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot, pageRoutes as adminRoutes } from "@hmcts/admin-pages/config";
-import { moduleRoot as adminCourtModuleRoot, pageRoutes as adminCourtRoutes } from "@hmcts/administrative-court-daily-cause-list/config";
-import { moduleRoot as authModuleRoot, pageRoutes as authRoutes } from "@hmcts/auth/config";
-import {
-  moduleRoot as careStandardsTribunalModuleRoot,
-  pageRoutes as careStandardsTribunalRoutes
-} from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
-import { moduleRoot as civilFamilyCauseListModuleRoot, pageRoutes as civilFamilyCauseListRoutes } from "@hmcts/civil-and-family-daily-cause-list/config";
-import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts/cloud-native-platform";
-import { moduleRoot as civilAppealModuleRoot, pageRoutes as civilAppealRoutes } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot } from "@hmcts/admin-pages/config";
+import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-daily-cause-list/config";
+import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
+import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
+import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
+import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
+import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
+import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
+import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-list/config";
+import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
+import { moduleRoot as fttLrtModuleRoot } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list/config";
+import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
+import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
+import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-hearing-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
-import { moduleRoot as londonAdminModuleRoot, pageRoutes as londonAdminRoutes } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
+import { moduleRoot as magistratesAdultCourtListModuleRoot } from "@hmcts/magistrates-adult-court-list/config";
+import { moduleRoot as magistratesPublicAdultCourtListModuleRoot } from "@hmcts/magistrates-public-adult-court-list/config";
+import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
+import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
-  moduleRoot as publicPagesModuleRoot,
-  pageRoutes as publicPagesRoutes
+  moduleRoot as publicPagesModuleRoot
 } from "@hmcts/public-pages/config";
-import { moduleRoot as rcjStandardModuleRoot, pageRoutes as rcjStandardRoutes } from "@hmcts/rcj-standard-daily-cause-list/config";
-import { createSimpleRouter } from "@hmcts/simple-router";
+import { moduleRoot as rcjStandardModuleRoot } from "@hmcts/rcj-standard-daily-cause-list/config";
+import { moduleRoot as siacPoacPaacModuleRoot } from "@hmcts/siac-poac-paac-weekly-hearing-list/config";
+import { moduleRoot as sjpPressListModuleRoot } from "@hmcts/sjp-press-list/config";
+import { moduleRoot as sjpPublicListModuleRoot } from "@hmcts/sjp-public-list/config";
+import { moduleRoot as sscsDailyHearingListModuleRoot } from "@hmcts/sscs-daily-hearing-list/config";
 import {
-  deltaPageRoutes as sjpDeltaPressListRoutes,
-  assets as sjpPressListAssets,
-  moduleRoot as sjpPressListModuleRoot,
-  pageRoutes as sjpPressListRoutes
-} from "@hmcts/sjp-press-list/config";
-import {
-  deltaPageRoutes as sjpDeltaPublicListRoutes,
-  assets as sjpPublicListAssets,
-  moduleRoot as sjpPublicListModuleRoot,
-  pageRoutes as sjpPublicListRoutes
-} from "@hmcts/sjp-public-list/config";
-import {
-  apiRoutes as systemAdminApiRoutes,
   fileUploadRoutes as systemAdminFileUploadRoutes,
   moduleRoot as systemAdminModuleRoot,
-  pageRoutes as systemAdminPageRoutes
+  pages as systemAdminPages
 } from "@hmcts/system-admin-pages/config";
-import { moduleRoot as verifiedPagesModuleRoot, pageRoutes as verifiedPagesRoutes } from "@hmcts/verified-pages/config";
+import { moduleRoot as utaacModuleRoot } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list/config";
+import { moduleRoot as utlcModuleRoot } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list/config";
+import { moduleRoot as utccModuleRoot } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list/config";
+import { moduleRoot as utiacJrModuleRoot } from "@hmcts/utiac-jr-daily-hearing-list/config";
+import { moduleRoot as utiacStatutoryAppealModuleRoot } from "@hmcts/utiac-statutory-appeal-daily-hearing-list/config";
 import {
   configureCookieManager,
   configureGovuk,
@@ -51,7 +54,10 @@ import {
   expressSessionRedis,
   notFoundHandler
 } from "@hmcts/web-core";
-import { pageRoutes, moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
+import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
+import { moduleRoot as wpafccWeeklyHearingListModuleRoot } from "@hmcts/wpafcc-weekly-hearing-list/config";
+import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts-cft/cloud-native-platform";
+import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import cookieParser from "cookie-parser";
 import type { Express } from "express";
 import express from "express";
@@ -63,22 +69,13 @@ const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "value
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", "REDIS_URL"] });
+  await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
   const { default: config } = await import("config");
 
-  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
-  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
-  const {
-    authNavigationMiddleware,
-    b2cCallbackHandler,
-    b2cCallbackPostHandler,
-    b2cForgotPasswordHandler,
-    cftCallbackHandler,
-    configurePassport,
-    crimeCallbackHandler,
-    sessionTimeoutMiddleware,
-    ssoCallbackHandler
-  } = await import("@hmcts/auth");
+  // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
+  // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
+  // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
+  const { authNavigationMiddleware, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
@@ -109,7 +106,7 @@ export async function createApp(): Promise<Express> {
   app.locals.redisClient = redisClient;
 
   // Initialize Passport for Azure AD authentication
-  configurePassport(app);
+  await configurePassport(app);
 
   const modulePaths = [
     __dirname,
@@ -118,18 +115,36 @@ export async function createApp(): Promise<Express> {
     authModuleRoot,
     listTypesCommonModuleRoot,
     careStandardsTribunalModuleRoot,
+    sscsDailyHearingListModuleRoot,
+    siacPoacPaacModuleRoot,
+    fttTaxChamberModuleRoot,
+    fttLrtModuleRoot,
+    fttRptModuleRoot,
+    utccModuleRoot,
+    utlcModuleRoot,
+    utaacModuleRoot,
     civilFamilyCauseListModuleRoot,
+    civilDailyCauseListModuleRoot,
+    familyDailyCauseListModuleRoot,
     sjpPressListModuleRoot,
     sjpPublicListModuleRoot,
-    sjpPublicListAssets,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     adminCourtModuleRoot,
+    magistratesPublicAdultCourtListModuleRoot,
+    magistratesPublicListModuleRoot,
+    magistratesStandardListModuleRoot,
+    magistratesAdultCourtListModuleRoot,
+    crownDailyListModuleRoot,
+    crownFirmListModuleRoot,
+    crownWarnedListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
-    verifiedPagesModuleRoot,
-    sjpPressListAssets
+    grcWeeklyHearingListModuleRoot,
+    wpafccWeeklyHearingListModuleRoot,
+    utiacStatutoryAppealModuleRoot,
+    utiacJrModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
@@ -144,6 +159,7 @@ export async function createApp(): Promise<Express> {
 
   await configureCookieManager(app, {
     preferencesPath: "/cookie-preferences",
+    policyPath: "/cookie-policy",
     categories: {
       essential: ["connect.sid"],
       analytics: ["_ga", "_gid"],
@@ -158,78 +174,35 @@ export async function createApp(): Promise<Express> {
   // Session timeout tracking for authenticated users
   app.use(sessionTimeoutMiddleware);
 
-  // Restore pending subscriptions from Redis when user logs back in
   // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
   // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
   const { restorePendingSubscriptionsMiddleware } = await import("@hmcts/subscriptions");
   app.use(restorePendingSubscriptionsMiddleware());
 
-  // Manual route registration for SSO callback (maintains /sso/return URL for external SSO config)
-  app.get("/sso/return", ssoCallbackHandler);
-
-  // Manual route registration for CFT callback (maintains /cft-login/return URL for external CFT IDAM config)
-  app.get("/cft-login/return", cftCallbackHandler);
-
-  // Manual route registration for Crime IDAM callback (maintains /crime-login/return URL for external Crime IDAM config)
-  app.get("/crime-login/return", crimeCallbackHandler);
-
-  // Manual route registration for B2C callback (maintains /login/return URL for Azure B2C config)
-  // Supports both GET (response_mode=query) and POST (response_mode=form_post)
-  app.get("/login/return", b2cCallbackHandler);
-  app.post("/login/return", b2cCallbackPostHandler);
-
-  // Manual route registration for B2C password reset
-  app.get("/b2c-forgot-password", b2cForgotPasswordHandler);
-
-  // Register location autocomplete routes (no prefix - frontend expects /locations)
-  app.use(await createSimpleRouter(locationApiRoutes));
-
-  // Register API routes for public pages (flat file download)
-  app.use(await createSimpleRouter({ ...publicPagesApiRoutes, prefix: "/api" }));
-
-  // Register API routes for system admin (file serving)
-  app.use(await createSimpleRouter(systemAdminApiRoutes));
-
-  // Register list type routes first to ensure proper route matching
-  app.use(await createSimpleRouter(civilFamilyCauseListRoutes));
-  app.use(await createSimpleRouter(careStandardsTribunalRoutes));
-  app.use(await createSimpleRouter(sjpPressListRoutes));
-  app.use(await createSimpleRouter(sjpDeltaPressListRoutes));
-  app.use(await createSimpleRouter(sjpPublicListRoutes));
-  app.use(await createSimpleRouter(sjpDeltaPublicListRoutes));
-  app.use(await createSimpleRouter(rcjStandardRoutes));
-  app.use(await createSimpleRouter(londonAdminRoutes));
-  app.use(await createSimpleRouter(civilAppealRoutes));
-  app.use(await createSimpleRouter(adminCourtRoutes));
-
-  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, pageRoutes));
-  app.use(await createSimpleRouter(authRoutes, pageRoutes));
-
-  // Register file upload middleware for public pages
-  for (const route of publicPagesFileUploadRoutes) {
-    app.post(route, createFileUploadMiddleware("idProof"));
-  }
-  app.use(await createSimpleRouter(publicPagesRoutes, pageRoutes));
-  app.use(await createSimpleRouter(verifiedPagesRoutes, pageRoutes));
-
-  // Register audit log middleware to capture all system admin actions
-  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
-  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
+  // Audit log middleware must be registered before the page router so it can intercept
+  // all system admin and admin POST actions. Dynamic import for the same Key Vault reason.
   const { auditLogMiddleware } = await import("@hmcts/system-admin-pages");
   app.use(auditLogMiddleware());
 
-  // Register file upload middleware for system admin pages
+  // File upload middleware must be registered before the page router so req.file is
+  // available when route handlers process the request.
+  for (const route of publicPagesFileUploadRoutes) {
+    app.post(route, createFileUploadMiddleware("idProof"));
+  }
   const fileUploadMiddleware = createFileUploadMiddleware();
   for (const route of systemAdminFileUploadRoutes) {
     app.post(route, fileUploadMiddleware);
   }
-  app.use(await createSimpleRouter(systemAdminPageRoutes, pageRoutes));
-
-  // Register file upload middleware for admin pages
   for (const route of adminFileUploadRoutes) {
     app.post(route, fileUploadMiddleware);
   }
-  app.use(await createSimpleRouter(adminRoutes, pageRoutes));
+
+  // API routes served from the web app (location autocomplete, flat-file downloads, etc.)
+  app.use(await createSimpleRouter(locationApiRoutes));
+  app.use(await createSimpleRouter(publicPagesApiRoutes));
+
+  // Register all pages from apps/web/src/pages (includes route groups and admin)
+  app.use(await createSimpleRouter({ path: `${__dirname}/pages` }, systemAdminPages));
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
@@ -245,11 +218,6 @@ export async function createApp(): Promise<Express> {
 }
 
 const getRedisClient = async (config: { get: (key: string) => any }) => {
-  // process.env.REDIS_URL is set by getPropertiesVolumeSecrets before this is called.
-  // We cannot use config.get("redis.url") because the config module is a singleton that
-  // caches env vars at initialization time. Static imports in this module (e.g. @hmcts/auth)
-  // cause `config` to load before getPropertiesVolumeSecrets runs, so it caches the
-  // default localhost URL. Reading from process.env directly avoids this stale cache issue.
   const url = process.env.REDIS_URL ?? config.get("redis.url");
   const redisClient = createClient({ url });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));

@@ -1,0 +1,35 @@
+import { type CookiePreferences, cookiePolicyCy, cookiePolicyEn, parseCookiePolicy, setCookieBannerSeen, setCookiePolicy } from "@hmcts/web-core";
+import type { Request, Response } from "express";
+
+export const GET = async (req: Request, res: Response) => {
+  const cookiePolicy = parseCookiePolicy(req.cookies?.cookie_policy);
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cookiePolicyCy : cookiePolicyEn;
+
+  res.render("cookie-policy/index", {
+    en: cookiePolicyEn,
+    cy: cookiePolicyCy,
+    pageTitle: t.title,
+    cookiePreferences: cookiePolicy,
+    categories: res.locals.cookieConfig?.categories,
+    saved: req.query.saved === "true"
+  });
+};
+
+export const POST = async (req: Request, res: Response) => {
+  const preferences: CookiePreferences = {};
+  const categories = res.locals.cookieConfig?.categories || {};
+
+  for (const category of Object.keys(categories)) {
+    if (category === "essential") continue; // Skip essential cookies
+    const isEnabled = req.body?.[category] === "on" || req.body?.[category] === true;
+    preferences[category] = isEnabled;
+  }
+
+  setCookiePolicy(res, preferences);
+  setCookieBannerSeen(res);
+
+  const locale = res.locals.locale;
+  const redirectUrl = locale && locale !== "en" ? `/cookie-policy?lng=${locale}&saved=true` : "/cookie-policy?saved=true";
+  res.redirect(redirectUrl);
+};

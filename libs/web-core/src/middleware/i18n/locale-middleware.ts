@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Translations } from "./translation-loader.js";
+import "passport";
 
 declare module "express-session" {
   interface SessionData {
@@ -64,7 +65,7 @@ export function translationMiddleware(translations: Translations) {
     const locale = res.locals.locale || "en";
     const otherLocale = locale === "en" ? "cy" : "en";
 
-    const currentTranslations = translations[locale] || translations.en || {};
+    const { pageTitle: _pageTitle, title: _title, ...currentTranslations } = translations[locale] || translations.en || {};
 
     Object.assign(res.locals, currentTranslations);
 

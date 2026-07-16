@@ -1,0 +1,186 @@
+@use "govuk-frontend/dist/govuk/index";
+@use "./search-autocomplete.scss";
+@use "./filter-panel.scss";
+@use "./back-to-top.scss";
+@use "./button-as-link.scss";
+@use "./admin-pages.scss" as admin;
+@use "./dashboard.scss";
+@use "./user-management.scss";
+@use "./verified-pages.scss" as verified;
+@use "./session-timeout.scss";
+@use "./list-types/magistrates-adult-court-list.scss";
+@use "./list-types/magistrates-public-list.scss";
+@use "./list-types/magistrates-standard-list.scss";
+@use "./list-types/sjp-filters.scss";
+@use "./list-types/sjp-public-list.scss";
+
+.govuk-service-navigation__navigation-end {
+  margin-left: auto !important;
+}
+
+// A <button> styled to look like a link, used for in-table actions (Remove /
+// Change). Unlike govuk-body it has no bottom margin, so table rows keep the
+// standard cell height instead of being inflated by the action button.
+.app-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #1d70b8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.app-link-button:hover {
+  color: #003078;
+}
+
+.app-link-button:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+  text-decoration: none;
+}
+
+// "Version" table header with an information icon, vertically centred on the
+// same line — mirrors the legacy CaTH subscription preview layout.
+.app-version-header {
+  display: flex;
+  align-items: center;
+}
+
+.app-version-header__info {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-version-header__icon {
+  color: #1d70b8;
+}
+
+// Fixed diagonal "AI version" ribbon shown on every page so this
+// AI-generated build can be told apart from the existing service during
+// comparison. Non-interactive and hidden from assistive technology.
+.app-watermark {
+  position: fixed;
+  top: 24px;
+  right: -48px;
+  z-index: 9999;
+  transform: rotate(45deg);
+  width: 200px;
+  padding: 4px 0;
+  background: #d4351c;
+  color: #ffffff;
+  text-align: center;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+@media print {
+  .app-watermark {
+    display: none;
+  }
+}
+
+// Lay the phase banner out as a single row: the "beta" tag and feedback message
+// on the left, and the Cymraeg / English language toggle pushed to the right,
+// matching the legacy CaTH service.
+.govuk-phase-banner__content {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+}
+
+.govuk-phase-banner__text {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.app-phase-banner__feedback {
+  flex: 1 1 auto;
+}
+
+.app-phase-banner__language {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.govuk-phase-banner {
+  border-bottom-color: #8eb8dc;
+}
+
+// Match OG CaTH footer size: govuk-frontend v6 bumped the footer from
+// size 16 to 19 as part of the GDS rebrand. Restore size 16 (16px at all
+// breakpoints) so the footer matches the legacy service.
+//
+// The GDS rebrand also lightens the footer text/link colour. Restore the
+// legacy near-black text colour (#0b0c0c) for the footer and its links.
+.govuk-footer {
+  @include index.govuk-font-size($size: 16);
+  color: index.$govuk-text-colour;
+}
+
+// The rebrand styles footer links via :link/:visited/:hover pseudo-class
+// selectors (blue), which out-specify a plain `.govuk-footer__link` rule.
+// Match those pseudo-classes to force the legacy black link colour, while
+// leaving the :focus state (black on yellow) untouched for accessibility.
+.govuk-footer__link {
+  &:link,
+  &:visited,
+  &:hover,
+  &:active {
+    color: index.$govuk-text-colour;
+  }
+}
+
+.govuk-footer__copyright-logo {
+  margin-bottom: 12px !important;
+  padding: 4px 0 !important;
+}
+
+.govuk-footer__copyright .govuk-footer__link:not(.govuk-footer__copyright-logo) {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  display: inline-block !important;
+}
+
+.govuk-footer__licence-logo {
+  display: inline-block !important;
+  vertical-align: top;
+  margin-right: 0.5em;
+}
+
+.govuk-footer__licence-description {
+  display: inline !important;
+}
+
+// GOV.UK Frontend v6 positions the warning icon with `position: absolute` and
+// `margin-top: -7px`, which only aligns to the first line when text wraps.
+// Override to flexbox so the icon is centred on the full text block.
+.govuk-warning-text {
+  display: flex;
+  align-items: center;
+}
+
+.govuk-warning-text__icon {
+  position: static;
+  margin-top: 0;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.govuk-warning-text__text {
+  padding-left: 0;
+}

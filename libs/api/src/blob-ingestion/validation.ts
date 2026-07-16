@@ -1,24 +1,23 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
-import { getLocationById } from "@hmcts/location";
+import { getLocationById, getLocationByProvenanceLocationId } from "@hmcts/location";
 import { Language, Sensitivity } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
-import type { BlobIngestionRequest, BlobValidationResult, ValidationError } from "./repository/model.js";
+import type { BlobIngestionRequest, BlobValidationResult, FlatFileIngestionRequest, ValidationError } from "./repository/model.js";
 
 const MAX_BLOB_SIZE = 100 * 1024 * 1024; // 100MB default
-const ALLOWED_PROVENANCES = ["XHIBIT", "MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM"];
+const ALLOWED_PROVENANCES = ["MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
+const EXTERNAL_PROVENANCES = ["SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
 
-export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
+async function validateCommonFields(request: FlatFileIngestionRequest, payloadSize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
 
-  // Size validation
-  if (rawBodySize > MAX_BLOB_SIZE) {
+  if (payloadSize > MAX_BLOB_SIZE) {
     errors.push({
       field: "body",
       message: `Payload too large. Maximum size is ${MAX_BLOB_SIZE / 1024 / 1024}MB`
     });
   }
 
-  // Required fields
   if (!request.court_id) {
     errors.push({ field: "court_id", message: "court_id is required" });
   }
@@ -45,8 +44,8 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     errors.push({ field: "list_type", message: "list_type is required" });
   }
 
-  // Map list type name to ID for internal validation
   let listTypeId: string | undefined;
+  let listTypeLocationType: string | undefined;
   const listTypes = await findAllListTypes();
   if (request.list_type) {
     const listType = listTypes.find((lt) => lt.name === request.list_type);
@@ -57,6 +56,7 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
       });
     } else {
       listTypeId = listType.id.toString();
+      listTypeLocationType = listType.locationType ?? undefined;
     }
   }
 
@@ -96,12 +96,10 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     });
   }
 
-  // Date comparison validation - only if both dates are valid
   if (request.display_from && request.display_to) {
     const fromDate = new Date(request.display_from);
     const toDate = new Date(request.display_to);
 
-    // Only compare if both dates are valid
     if (!Number.isNaN(fromDate.getTime()) && !Number.isNaN(toDate.getTime())) {
       if (toDate < fromDate) {
         errors.push({
@@ -112,25 +110,50 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
     }
   }
 
+  let locationExists = false;
+  let resolvedLocationId: string | undefined;
+
+  if (request.court_id) {
+    if (EXTERNAL_PROVENANCES.includes(request.provenance)) {
+      const location = await getLocationByProvenanceLocationId(request.provenance, request.court_id, listTypeLocationType);
+      locationExists = !!location;
+      if (location) {
+        resolvedLocationId = location.locationId.toString();
+      }
+    } else {
+      const locationId = Number.parseInt(request.court_id, 10);
+      if (Number.isNaN(locationId)) {
+        errors.push({ field: "court_id", message: "court_id must be a valid number" });
+      } else {
+        const location = await getLocationById(locationId);
+        locationExists = !!location;
+        if (location) {
+          resolvedLocationId = locationId.toString();
+        }
+      }
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    locationExists,
+    listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined,
+    resolvedLocationId
+  };
+}
+
+export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
+  const result = await validateCommonFields(request, rawBodySize);
+  const errors = [...result.errors];
+
   if (!request.hearing_list) {
     errors.push({ field: "hearing_list", message: "hearing_list is required" });
   }
 
-  // Location validation - check if location exists in master reference data
-  let locationExists = false;
-  if (request.court_id) {
-    const locationId = Number.parseInt(request.court_id, 10);
-    if (Number.isNaN(locationId)) {
-      errors.push({ field: "court_id", message: "court_id must be a valid number" });
-    } else {
-      const location = await getLocationById(locationId);
-      locationExists = !!location;
-      // Note: We don't add an error if location doesn't exist
-      // This is handled by setting no_match=true
-    }
-  }
+  const listTypes = await findAllListTypes();
+  const listTypeId = result.listTypeId;
 
-  // JSON schema validation for hearing_list
   if (listTypeId && request.hearing_list && errors.length === 0) {
     try {
       const listTypesInfo = listTypes.map((lt) => ({
@@ -138,7 +161,7 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
         name: lt.name,
         friendlyName: lt.friendlyName
       }));
-      const validationResult = await validateListTypeJson(listTypeId, request.hearing_list, listTypesInfo);
+      const validationResult = await validateListTypeJson(listTypeId.toString(), request.hearing_list, listTypesInfo);
 
       if (!validationResult.isValid) {
         for (const error of validationResult.errors) {
@@ -157,11 +180,14 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
   }
 
   return {
+    ...result,
     isValid: errors.length === 0,
-    errors,
-    locationExists,
-    listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined
+    errors
   };
+}
+
+export async function validateFlatFileRequest(request: FlatFileIngestionRequest, fileSize: number): Promise<BlobValidationResult> {
+  return validateCommonFields(request, fileSize);
 }
 
 function isValidISODate(dateString: string): boolean {

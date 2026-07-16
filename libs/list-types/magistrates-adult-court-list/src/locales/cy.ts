@@ -1,0 +1,48 @@
+export const cy = {
+  titleDaily: "Rhestr Llys Ynadon Oedolion - Dyddiol",
+  titleFuture: "Rhestr Llys Ynadon Oedolion – Dyfodol",
+  title: "Rhestr Llys Ynadon Oedolion",
+  pageTitle: "Rhestr Safonol y Llys Ynadon ar gyfer",
+  header: "Rhestr Safonol y Llys Ynadon ar gyfer",
+  listDate: "Rhestr ar gyfer",
+  listUpdated: "Diweddarwyd diwethaf DATE am",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  restrictionInformationHeading: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn.",
+  restrictionInformationP1:
+    "Rhaid i chi wirio a oes unrhyw gyfyngiadau riportio yn berthnasol cyn cyhoeddi manylion am unrhyw un o'r achosion a restrir yma, naill ai'n ysgrifenedig, mewn darllediad neu ar y rhyngrwyd, gan gynnwys y cyfryngau cymdeithasol.",
+  restrictionInformationBoldText:
+    "Byddwch yn euog o ddirmyg llys os byddwch yn cyhoeddi unrhyw wybodaeth sydd wedi'i diogelu gan gyfyngiad riportio. Gallwch gael dirwy, eich dedfrydu i garchar, neu'r ddau.",
+  restrictionInformationP2: "Bydd cyfyngiadau penodol a orchmynnir gan y llys yn cael eu crybwyll ar yr achosion a restrir yma.",
+  restrictionInformationP3:
+    "Fodd bynnag, nid yw'r cyfyngiadau bob amser yn cael eu rhestru. Mae rhai yn berthnasol yn awtomatig. Er enghraifft, anhysbysrwydd a roddir i ddioddefwyr rhai troseddau rhywiol.",
+  restrictionInformationP4: "I ganfod pa gyfyngiadau riportio sy'n berthnasol ar achos penodol, cysylltwch â'r:",
+  restrictionBulletPoint1: "llys yn uniongyrchol",
+  restrictionBulletPoint2: "Gwasanaeth Llysoedd a Thribiwnlysoedd EM ar 0330 808 4407",
+  blockStart: "Amser Cychwyn y Bloc",
+  defendantName: "Enw'r Diffynnydd",
+  dateOfBirth: "Dyddiad Geni",
+  address: "Cyfeiriad",
+  age: "Oedran",
+  informant: "Hysbysydd",
+  caseNumber: "Cyfeirnod yr Achos",
+  offenceCode: "Cod y Drosedd",
+  offenceTitle: "Teitl y Drosedd",
+  offenceSummary: "Crynodeb o'r Drosedd",
+  sittingAt: "Yn eistedd yn",
+  courtroom: "Ystafell llys",
+  ljaLabel: "LJA",
+  sessionStart: "Amser Cychwyn y Sesiwn",
+  listingTime: "Amser rhestru",
+  searchCases: "Chwilio Achosion",
+  dataSource: "Ffynhonnell y Data",
+  errorTitle: "Cyhoeddiad ddim ar gael",
+  errorMessage:
+    "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
+  error403Title: "Mynediad wedi'i Wrthod",
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+};
+
+export const cyDaily = { ...cy, title: cy.titleDaily };
+export const cyFuture = { ...cy, title: cy.titleFuture };

@@ -5,8 +5,18 @@ export async function findAllThirdPartyUsers() {
     orderBy: {
       createdDate: "desc"
     },
-    include: {
-      subscriptions: true
+    select: {
+      id: true,
+      name: true,
+      createdDate: true,
+      subscriptions: {
+        select: {
+          id: true,
+          userId: true,
+          listTypeId: true,
+          createdDate: true
+        }
+      }
     }
   });
 }
@@ -14,9 +24,26 @@ export async function findAllThirdPartyUsers() {
 export async function findThirdPartyUserById(id: string) {
   return prisma.legacyThirdPartyUser.findUnique({
     where: { id },
-    include: {
-      subscriptions: true
+    select: {
+      id: true,
+      name: true,
+      createdDate: true,
+      subscriptions: {
+        select: {
+          id: true,
+          userId: true,
+          listTypeId: true,
+          createdDate: true
+        }
+      }
     }
+  });
+}
+
+export async function findThirdPartyUserByName(name: string) {
+  return prisma.legacyThirdPartyUser.findFirst({
+    where: { name: { equals: name.trim(), mode: "insensitive" } },
+    select: { id: true, name: true }
   });
 }
 
@@ -34,7 +61,7 @@ export async function deleteThirdPartyUser(id: string) {
   });
 }
 
-export async function updateThirdPartySubscriptions(userId: string, subscriptions: Array<{ listTypeId: number; channel: string; sensitivity: string }>) {
+export async function updateThirdPartySubscriptions(userId: string, subscriptions: Array<{ listTypeId: number }>) {
   return prisma.$transaction(async (tx) => {
     await tx.legacyThirdPartySubscription.deleteMany({
       where: { userId }
@@ -42,28 +69,8 @@ export async function updateThirdPartySubscriptions(userId: string, subscription
 
     if (subscriptions.length > 0) {
       await tx.legacyThirdPartySubscription.createMany({
-        data: subscriptions.map((sub) => ({
-          userId,
-          listTypeId: sub.listTypeId,
-          channel: sub.channel,
-          sensitivity: sub.sensitivity
-        }))
+        data: subscriptions.map((sub) => ({ userId, listTypeId: sub.listTypeId }))
       });
     }
   });
-}
-
-export function getHighestSensitivity(subscriptions: Array<{ sensitivity: string }>): string {
-  if (subscriptions.length === 0) {
-    return "unselected";
-  }
-
-  const priorities = { CLASSIFIED: 3, PRIVATE: 2, PUBLIC: 1 };
-  const highest = subscriptions.reduce((max, sub) => {
-    const priority = priorities[sub.sensitivity as keyof typeof priorities] || 0;
-    const maxPriority = priorities[max as keyof typeof priorities] || 0;
-    return priority > maxPriority ? sub.sensitivity : max;
-  }, subscriptions[0].sensitivity);
-
-  return highest;
 }

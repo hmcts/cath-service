@@ -51,43 +51,56 @@ The project uses Yarn Workspaces with Turborepo for efficient monorepo managemen
 cath-service/
 ├── apps/                       # Deployable applications
 │   ├── api/                    # REST API service
+│   │   └── src/routes/         # API routes
 │   ├── web/                    # Web frontend application
 │   │   └── src/
-│   │       └── modules.ts      # Module auto-discovery system
-│   └── postgres/               # Database schema and migrations
-├── libs/                       # Reusable packages (auto-discovered)
-│   ├── cloud-native-platform/  # Azure integration & monitoring
-│   ├── express-govuk-starter/  # GOV.UK Design System integration
-│   ├── simple-router/          # File-based routing system
-│   └── [feature-modules]/      # Feature modules with pages/
+│   │       └── pages/          # All page controllers and templates
+│   │           ├── (auth)/     # Route group (no URL prefix)
+│   │           ├── (core)/     # Route group (no URL prefix)
+│   │           ├── (list-types)/ # Route group (no URL prefix)
+│   │           ├── (public)/   # Route group (no URL prefix)
+│   │           ├── (verified)/ # Route group (no URL prefix)
+│   │           ├── admin/      # Regular dir (/admin/* URLs)
+│   │           └── system-admin/ # Regular dir (/system-admin/* URLs)
+│   └── postgres/               # Database migrations
+├── libs/                       # Reusable packages
+│   └── [feature-modules]/      # Feature modules (business logic)
 │       └── src/
-│           ├── pages/          # Page routes (auto-registered)
-│           ├── locales/        # Translations (auto-loaded)
-│           ├── views/          # Templates (auto-registered)
-│           └── assets/         # Module assets (auto-compiled)
+│           ├── index.ts        # Business logic + content exports
+│           ├── config.ts       # Module configuration (moduleRoot, assets)
+│           ├── [page-name]/    # Page content (cy.ts, en.ts)
+│           ├── locales/        # Shared translations
+│           ├── views/          # Shared templates
+│           └── assets/         # Module assets
 ├── e2e-tests/                  # Playwright E2E tests
 └── docs/                       # Documentation
 ```
 
-### Module Auto-Discovery System
+### Page Architecture
 
-The web application features an intelligent module discovery system that automatically integrates feature modules:
+The application uses a **separation of concerns** architecture:
 
-1. **Discovery Process** (`apps/web/src/modules.ts`):
-   - Scans all directories under `libs/*/src`
-   - Identifies modules containing a `pages/` directory
-   - Returns paths for automatic registration
+1. **Controllers and Templates** (`apps/web/src/pages/`):
+   - Page controllers (index.ts) handle HTTP requests/responses
+   - Nunjucks templates (index.njk) define page structure
+   - Unit tests (index.test.ts) test controller logic
+   - Auto-discovered and registered by Simple Router
 
-2. **Automatic Integration**:
-   - **Routes**: Pages in `module/src/pages/` are automatically registered with Simple Router
-   - **Views**: Templates in `module/src/pages/` and `module/src/views/` are added to Nunjucks paths
-   - **Locales**: Translation files in `module/src/locales/` are automatically loaded
-   - **Assets**: CSS and JS files in `module/src/assets/` are compiled and served
+2. **Content and Business Logic** (`libs/*/src/`):
+   - Welsh (cy.ts) and English (en.ts) content files
+   - Business logic, services, and data access
+   - Exported from lib's index.ts for use in apps
 
-3. **Zero Configuration**:
-   - No manual registration required
-   - Simply create the module structure and it's automatically discovered
-   - Modules must be added to root `tsconfig.json` paths for TypeScript resolution
+3. **Route Groups**:
+   - Directories with parentheses `(auth)` organize pages without URL prefixes
+   - Example: `apps/web/src/pages/(auth)/login/` → `/login` (not `/auth/login`)
+   - Regular directories create URL prefixes: `apps/web/src/pages/admin/dashboard/` → `/admin/dashboard`
+
+4. **Module Registration**:
+   - Pages are auto-discovered from `apps/web/src/pages/` directory
+   - Single `createSimpleRouter({ path: './pages' })` handles all routes
+   - Libs provide moduleRoot for Nunjucks template path registration
+   - Lib assets are registered in Vite config for bundling
 
 ## Core Components
 
@@ -112,16 +125,16 @@ The web application features an intelligent module discovery system that automat
 - Progressive enhancement
 
 **Architecture Decisions**:
-- File-based routing using Simple Router
-- Page-specific content in controllers
-- Shared content in locale files
-- Co-located page templates and controllers
-- Module auto-discovery for seamless integration
-- Automatic asset compilation for modules
+- File-based routing using Simple Router with route groups
+- Pages (controllers & templates) live in apps, not libs
+- Content (cy.ts/en.ts) stays in libs and is imported by controllers
+- Business logic in libs, presentation logic in apps
+- Route groups using parentheses for organization without URL prefixes
+- Single router registration handles all app pages
 
 ### 2. REST API (`apps/api`)
 
-**Purpose**: Backend API service for data operations
+**Purpose**: Backend API service for data operations.
 
 **Key Technologies**:
 - Express 5.x
@@ -144,22 +157,19 @@ The web application features an intelligent module discovery system that automat
 └── [resource]/     # Additional resources
 ```
 
-### 3. Database Layer (`apps/postgres`)
+### 3. Database Layer (`libs/postgres-prisma`)
 
 **Purpose**: Data persistence and schema management
 
-**Database Schema**:
-- **User**: Authentication and user management
-- **Case**: Case management system
-- **Document**: File attachments
-- **CaseNote**: Audit trail
-- **UserSession**: Session persistence
+**Database Schema** (centralized in `libs/postgres-prisma/prisma/schema/`):
+- One `.prisma` file per domain (e.g., `location.prisma`, `subscription.prisma`, `audit-log.prisma`)
+- All schemas automatically merged by Prisma
 
 **Key Features**:
 - Prisma ORM with type-safe queries
 - Snake_case database naming convention
 - CamelCase TypeScript interface mapping
-- Automatic migrations
+- Automatic migrations (managed via `apps/postgres`)
 - Database connection pooling
 
 ### 4. Session Store (Redis)
@@ -174,7 +184,7 @@ The web application features an intelligent module discovery system that automat
 
 ## Shared Libraries
 
-### Cloud Native Platform (`libs/cloud-native-platform`)
+### Cloud Native Platform (`@hmcts-cft/cloud-native-platform`)
 
 **Purpose**: Azure cloud integration and monitoring
 
@@ -253,7 +263,7 @@ app.use(healthcheck()); // /health, /health/readiness, /health/liveness
 - **Error Handling**: User-friendly error pages
 - **Filters**: Date, currency, time formatting
 
-### Simple Router (`libs/simple-router`)
+### Simple Router (`@hmcts-cft/simple-router`)
 
 **Purpose**: File-based routing system
 

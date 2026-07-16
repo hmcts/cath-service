@@ -10,11 +10,14 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
+    },
+    "./flat-file/flat-file-service": {
+      "production": "./dist/flat-file/flat-file-service.js",
+      "default": "./src/flat-file/flat-file-service.ts"
     }
   },
   "scripts": {
-    "build": "tsc --build && yarn build:nunjucks && yarn build:routes",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
+    "build": "tsc --build && yarn build:routes",
     "build:routes": "mkdir -p dist/routes && cd src && find routes -name '*.ts' ! -name '*.test.ts' ! -name '*.spec.ts' -type f -exec sh -c 'mkdir -p ../dist/$(dirname {}) && cp {} ../dist/{}' \\; 2>/dev/null || true",
     "dev": "tsc --watch",
     "test": "vitest run",
@@ -27,10 +30,16 @@
     "express": "^5.2.0"
   },
   "dependencies": {
+    "@hmcts/azure-blob": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
-    "@hmcts/web-core": "workspace:*"
+    "@hmcts/web-core": "workspace:*",
+    "express-session": "^1.19.0"
+  },
+  "devDependencies": {
+    "@types/express-session": "^1.19.0",
+    "typescript": "6.0.3"
   }
 }

@@ -407,6 +407,7 @@ interface UploadFlatFileInput {
   artefactId: string;
   content: Buffer | Uint8Array;
   extension?: string;
+  sourceArtefactId?: string;
 }
 
 interface UploadFlatFileResponse {
@@ -420,7 +421,8 @@ export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<Up
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
@@ -457,17 +459,12 @@ export async function listFlatFiles(artefactId: string): Promise<FlatFileListRes
 
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
-  const url = `${WEB_BASE_URL}/test-support/flat-files`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ artefactId: input.artefactId, content: base64Content, extension: input.extension || ".pdf" })
+  return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
+    artefactId: input.artefactId,
+    content: base64Content,
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Web flat file upload failed: ${response.status} ${error}`);
-  }
-  return response.json();
 }
 
 export async function getLatestArtefactByLocationAndListType(locationId: number, listTypeId: number) {
@@ -485,17 +482,7 @@ export async function getLatestArtefactByLocationAndListType(locationId: number,
 }
 
 export async function deleteTestFlatFileFromWeb(artefactId: string): Promise<{ deleted: boolean }> {
-  const url = `${WEB_BASE_URL}/test-support/flat-files`;
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ artefactId })
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Web flat file delete failed: ${response.status} ${error}`);
-  }
-  return response.json();
+  return callTestSupportApi<{ deleted: boolean }>("DELETE", "/test-support/flat-files", { artefactId });
 }
 
 export async function createOrGetListType(input: CreateListTypeInput): Promise<ListTypeRecord> {
@@ -534,4 +521,48 @@ export async function createOrGetListType(input: CreateListTypeInput): Promise<L
   const created = (await getListTypeByName(input.name)) as ListTypeRecord;
   // Map 'id' to 'listTypeId' for backwards compatibility
   return { ...created, listTypeId: created.id };
+}
+
+// Third Party Users
+interface CreateThirdPartyUserInput {
+  name: string;
+}
+
+interface ThirdPartyUserRecord {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface ThirdPartyUserWithSubscriptions extends ThirdPartyUserRecord {
+  subscriptions: Array<{
+    id: string;
+    listType: string;
+    sensitivity: string;
+  }>;
+}
+
+export async function createTestThirdPartyUser(data: CreateThirdPartyUserInput): Promise<ThirdPartyUserRecord> {
+  return callTestSupportApi<ThirdPartyUserRecord>("POST", "/test-support/third-party-users", data);
+}
+
+export async function getTestThirdPartyUsers(): Promise<ThirdPartyUserRecord[]> {
+  return callTestSupportApi<ThirdPartyUserRecord[]>("GET", "/test-support/third-party-users");
+}
+
+export async function getTestThirdPartyUser(id: string): Promise<ThirdPartyUserWithSubscriptions> {
+  return callTestSupportApi<ThirdPartyUserWithSubscriptions>("GET", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUser(id: string): Promise<void> {
+  return callTestSupportApi<void>("DELETE", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUsers(ids: string[]): Promise<{ deleted: number }> {
+  return callTestSupportApi<{ deleted: number }>("DELETE", "/test-support/third-party-users", { ids });
+}
+
+export async function findTestThirdPartyUserByName(name: string): Promise<ThirdPartyUserRecord | null> {
+  const users = await getTestThirdPartyUsers();
+  return (users.find((u) => u.name === name) as ThirdPartyUserRecord) || null;
 }

@@ -1,6 +1,6 @@
 # Local Development Helm Values
 # This file is used when LOCAL_DEV=true is set in .env (local development only)
-# It references the cath Key Vault with -dev suffixed SSO secrets
+# It references the cath-ss-kv-stg Key Vault (VAULT_URI_SUFFIX=stg in .env)
 # For pipeline deployments, see values.yaml
 
 nodejs:
@@ -10,6 +10,7 @@ nodejs:
   image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-stg'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
@@ -21,8 +22,7 @@ nodejs:
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
-    # Local development uses cath Key Vault with -dev suffixed SSO secrets
-    cath:
+    cath-ss-kv:
       secrets:
         # SSO secrets for local development
         - name: sso-client-id-dev
@@ -30,7 +30,7 @@ nodejs:
         - name: sso-client-secret-dev
           alias: SSO_CLIENT_SECRET
         - name: sso-issuer-url
-          alias: SSO_IDENTITY_METADATA
+          alias: SSO_ISSUER_URL
         - name: sso-sg-system-admin
           alias: SSO_SYSTEM_ADMIN_GROUP_ID
         - name: sso-sg-admin-ctsc
@@ -57,3 +57,8 @@ nodejs:
           alias: B2C_CLIENT_ID
         - name: auto-pip-stg-pip-frontend-stg-pwd
           alias: B2C_CLIENT_SECRET
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE

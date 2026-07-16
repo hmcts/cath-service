@@ -23,8 +23,17 @@ export function convertListTypeNameToKebabCase(name: string): string {
  * Used when a list type shares the same JSON schema as another list type.
  */
 const PACKAGE_ALIASES: Record<string, string> = {
+  "magistrates-adult-court-list-daily": "magistrates-adult-court-list",
+  "magistrates-adult-court-list-future": "magistrates-adult-court-list",
   "sjp-delta-press-list": "sjp-press-list",
-  "sjp-delta-public-list": "sjp-public-list"
+  "sjp-delta-public-list": "sjp-public-list",
+  "utiac-jr-london-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-leeds-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-manchester-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-birmingham-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "utiac-jr-cardiff-daily-hearing-list": "utiac-jr-daily-hearing-list",
+  "magistrates-public-adult-court-list-daily": "magistrates-public-adult-court-list",
+  "magistrates-public-adult-court-list-future": "magistrates-public-adult-court-list"
 };
 
 /**
@@ -67,7 +76,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
         isValid: false,
         errors: [
           {
-            message: `No validation function found for ${listType.friendlyName}. JSON schemas are not available for this list type.`
+            message: `No JSON schema available for ${listType.friendlyName}. This list type does not support JSON uploads.`
           }
         ],
         schemaVersion: "unknown"
