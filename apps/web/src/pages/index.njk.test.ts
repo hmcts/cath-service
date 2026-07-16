@@ -17,17 +17,23 @@ describe("index template", () => {
   });
 
   describe("English locale", () => {
-    it("should have hearings list with 4 items", () => {
+    it("should have intro message text", () => {
+      expect(en.introMessage).toBe("You can use this service to get information about:");
+    });
+
+    it("should have hearings list with 6 items", () => {
       expect(en.hearingsList).toBeDefined();
       expect(Array.isArray(en.hearingsList)).toBe(true);
-      expect(en.hearingsList.length).toBe(4);
+      expect(en.hearingsList.length).toBe(6);
     });
 
     it("should have hearings list content", () => {
-      expect(en.hearingsList[0]).toContain("civil and family courts");
+      expect(en.hearingsList[0]).toContain("Civil and Family Courts in England and Wales");
       expect(en.hearingsList[1]).toContain("First Tier and Upper Tribunals");
       expect(en.hearingsList[2]).toContain("Royal Courts of Justice");
-      expect(en.hearingsList[3]).toContain("Single Justice Procedure");
+      expect(en.hearingsList[3]).toContain("Crown Courts in England and Wales");
+      expect(en.hearingsList[4]).toContain("Magistrates' Courts in England and Wales");
+      expect(en.hearingsList[5]).toContain("Single Justice Procedure");
     });
 
     it("should have additional info text", () => {
@@ -50,17 +56,23 @@ describe("index template", () => {
   });
 
   describe("Welsh locale", () => {
-    it("should have hearings list with 4 items", () => {
+    it("should have intro message text", () => {
+      expect(cy.introMessage).toBe("Gallwch ddefnyddio'r gwasanaeth hwn i gael gwybodaeth am:");
+    });
+
+    it("should have hearings list with 6 items", () => {
       expect(cy.hearingsList).toBeDefined();
       expect(Array.isArray(cy.hearingsList)).toBe(true);
-      expect(cy.hearingsList.length).toBe(4);
+      expect(cy.hearingsList.length).toBe(6);
     });
 
     it("should have hearings list content", () => {
-      expect(cy.hearingsList[0]).toContain("Lysoedd Sifil a Theulu");
+      expect(cy.hearingsList[0]).toContain("Llysoedd Sifil a'r Llysoedd Teulu");
       expect(cy.hearingsList[1]).toContain("Tribiwnlys Haen Gyntaf");
       expect(cy.hearingsList[2]).toContain("Llys Barn Brenhinol");
-      expect(cy.hearingsList[3]).toContain("Gweithdrefn Un Ynad");
+      expect(cy.hearingsList[3]).toContain("Llys y Goron");
+      expect(cy.hearingsList[4]).toContain("Llysoedd Ynadon");
+      expect(cy.hearingsList[5]).toContain("Gweithdrefn Un Ynad");
     });
 
     it("should have additional info text", () => {
@@ -92,7 +104,16 @@ describe("index template", () => {
     });
 
     it("should have all required properties", () => {
-      const requiredProperties = ["hearingsList", "additionalInfo", "signInText", "signInLink", "welshAvailableText", "welshAvailableLink", "continueButton"];
+      const requiredProperties = [
+        "introMessage",
+        "hearingsList",
+        "additionalInfo",
+        "signInText",
+        "signInLink",
+        "welshAvailableText",
+        "welshAvailableLink",
+        "continueButton"
+      ];
 
       requiredProperties.forEach((prop) => {
         expect(en).toHaveProperty(prop);

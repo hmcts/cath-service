@@ -181,7 +181,7 @@ describe("manual-upload-summary page", () => {
         "manual-upload-summary/index",
         expect.objectContaining({
           pageTitle: "Manual upload - File upload summary - Court and tribunal hearings - GOV.UK",
-          heading: "File upload summary",
+          heading: "File Upload Summary",
           subHeading: "Check upload details",
           courtName: "Court name",
           file: "File",
@@ -721,13 +721,19 @@ describe("manual-upload-summary page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
     });
 
-    it("should render error page when processPublication fails", async () => {
+    it("should still redirect to success when background publication processing fails", async () => {
+      // PDF generation + notifications run in the background (fire-and-forget), so a
+      // failure there must NOT block or fail the upload — the artefact is already
+      // persisted. The handler should redirect to the success page regardless.
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
       vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
       vi.mocked(processPublication).mockRejectedValueOnce(new Error("Publication service down"));
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-      const session = {};
+      const session = {
+        save: vi.fn((callback) => callback())
+      };
 
       const req = {
         query: { uploadId: "test-upload-id" },
@@ -741,13 +747,56 @@ describe("manual-upload-summary page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.render).toHaveBeenCalledWith(
-        "manual-upload-summary/index",
-        expect.objectContaining({
-          errors: [{ text: "We could not process your upload. Please try again.", href: "#" }]
-        })
+      // Redirected to success even though the background processing rejected
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+      expect(res.render).not.toHaveBeenCalled();
+
+      // Flush the microtask queue so the background .catch runs and logs
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[Manual Upload] Background publication processing failed:",
+        expect.objectContaining({ artefactId: "test-artefact-id-123" })
       );
-      expect(res.redirect).not.toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should log a stringified reason when background publication rejects with a non-Error value", async () => {
+      // The background .catch stringifies non-Error rejection reasons via String(error).
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(processPublication).mockRejectedValueOnce("string failure reason");
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const session = {
+        save: vi.fn((callback) => callback())
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+
+      // Flush the microtask queue so the background .catch runs and logs
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[Manual Upload] Background publication processing failed:",
+        expect.objectContaining({ artefactId: "test-artefact-id-123", error: "string failure reason" })
+      );
+
+      consoleErrorSpy.mockRestore();
     });
 
     it("should redirect to Welsh success page when lng=cy", async () => {

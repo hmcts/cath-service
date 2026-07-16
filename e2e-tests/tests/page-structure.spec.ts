@@ -32,8 +32,8 @@ test.describe("Page Structure", () => {
     await expect(feedbackLink).toBeVisible();
     await expect(feedbackLink).toContainText("feedback");
 
-    // Welsh toggle in service navigation
-    const languageToggle = page.locator('.govuk-service-navigation a:has-text("Cymraeg")');
+    // Welsh toggle in phase banner
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toHaveText("Cymraeg");
 
@@ -117,8 +117,8 @@ test.describe("Page Structure", () => {
     const serviceNameLink = page.locator(".govuk-service-navigation__service-name a");
     await expect(serviceNameLink).toHaveText("Court and tribunal hearings");
 
-    // Switch to Welsh via service navigation toggle
-    const languageToggle = page.locator('.govuk-service-navigation a:has-text("Cymraeg")');
+    // Switch to Welsh via phase banner toggle
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await languageToggle.click();
 
@@ -131,8 +131,9 @@ test.describe("Page Structure", () => {
     await expect(signInLink).toHaveText("Mewngofnodi");
 
     // Verify English toggle is available
-    const englishToggle = page.locator('.govuk-service-navigation a:has-text("English")');
+    const englishToggle = page.locator(".app-phase-banner__language");
     await expect(englishToggle).toBeVisible();
+    await expect(englishToggle).toHaveText("English");
 
     // Verify footer links are in Welsh
     const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]');
