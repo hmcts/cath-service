@@ -47,6 +47,7 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment:
       name: ${{ inputs.environment }}
     outputs:
@@ -83,6 +84,37 @@ jobs:
             '${{ inputs.short-sha }}' \
             '${{ inputs.timestamp }}' \
             "${APPLICATION_NAME}"
+
+      - name: Set up Helm (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Azure Login (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_SDS_DEV }}
+
+      - name: Get AKS credentials (cleanup)
+        if: inputs.environment == 'dev'
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ss-dev-00-rg
+          cluster-name: ss-dev-00-aks
+          admin: 'true'
+
+      - name: Clear stuck Helm release
+        if: inputs.environment == 'dev'
+        run: |
+          STATUS=$(helm status "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
+          if [[ "$STATUS" == "pending-install" || "$STATUS" == "pending-upgrade" || "$STATUS" == "pending-rollback" ]]; then
+            echo "Release ${{ env.RELEASE_NAME }} is stuck in status: $STATUS. Uninstalling..."
+            helm uninstall "${{ env.RELEASE_NAME }}" -n "${{ env.TEAM_NAME }}" --wait=false || true
+          else
+            echo "Release status: ${STATUS:-not found}. No cleanup needed."
+          fi
 
       - name: Deploy to DEV
         if: inputs.environment == 'dev'

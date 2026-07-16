@@ -128,8 +128,12 @@ const postHandler = async (req: Request, res: Response) => {
       }
     }
 
-    // Generate PDF and send notifications using common processor
-    await processPublication({
+    // Generate PDF and send notifications in the background so the admin is not
+    // blocked on Chromium PDF rendering + subscriber emails (which was causing
+    // request timeouts / 502s). The artefact metadata, blob file and search data
+    // are already persisted synchronously above, so the upload is complete from
+    // the user's perspective before this runs.
+    processPublication({
       artefactId,
       locationId: uploadData.locationId,
       listTypeId,
@@ -143,6 +147,11 @@ const postHandler = async (req: Request, res: Response) => {
       displayTo,
       isUpdate,
       logPrefix: "[Manual Upload]"
+    }).catch((error) => {
+      console.error("[Manual Upload] Background publication processing failed:", {
+        artefactId,
+        error: error instanceof Error ? error.message : String(error)
+      });
     });
 
     // Clear session data
