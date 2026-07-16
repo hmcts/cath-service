@@ -4,8 +4,9 @@ const mockUploadData = vi.fn();
 const mockDownload = vi.fn();
 const mockDelete = vi.fn();
 const mockCreateIfNotExists = vi.fn();
+const mockGetProperties = vi.fn();
 const mockGetBlockBlobClient = vi.fn(() => ({ uploadData: mockUploadData }));
-const mockGetBlobClient = vi.fn(() => ({ download: mockDownload, delete: mockDelete }));
+const mockGetBlobClient = vi.fn(() => ({ download: mockDownload, delete: mockDelete, getProperties: mockGetProperties }));
 const mockGetContainerClient = vi.fn(() => ({
   createIfNotExists: mockCreateIfNotExists,
   getBlockBlobClient: mockGetBlockBlobClient,
@@ -177,6 +178,47 @@ describe("blob-client", () => {
 
       // Act & Assert
       await expect(downloadBlob("abc123.pdf")).rejects.toThrow("Server error");
+    });
+  });
+
+  describe("getBlobProperties", () => {
+    it("should return size when blob exists", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      mockGetProperties.mockResolvedValue({ contentLength: 12345 });
+      const { getBlobProperties } = await import("./blob-client.js");
+
+      // Act
+      const result = await getBlobProperties("abc123.pdf");
+
+      // Assert
+      expect(result).toEqual({ size: 12345 });
+      expect(mockGetBlobClient).toHaveBeenCalledWith("abc123.pdf");
+    });
+
+    it("should return null when blob is not found (404)", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      const notFoundError = Object.assign(new Error("BlobNotFound"), { statusCode: 404 });
+      mockGetProperties.mockRejectedValue(notFoundError);
+      const { getBlobProperties } = await import("./blob-client.js");
+
+      // Act
+      const result = await getBlobProperties("missing.pdf");
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it("should propagate non-404 errors", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      const serverError = Object.assign(new Error("Server error"), { statusCode: 500 });
+      mockGetProperties.mockRejectedValue(serverError);
+      const { getBlobProperties } = await import("./blob-client.js");
+
+      // Act & Assert
+      await expect(getBlobProperties("abc123.pdf")).rejects.toThrow("Server error");
     });
   });
 

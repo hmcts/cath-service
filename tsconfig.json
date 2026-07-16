@@ -86,6 +86,7 @@
       "@hmcts/pdda-html-upload": ["libs/pdda-html-upload/src"],
       "@hmcts/list-search-config": ["libs/list-search-config/src"],
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
+      "@hmcts/excel-generation": ["libs/excel-generation/src"],
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
