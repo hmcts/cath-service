@@ -84,7 +84,8 @@ describe("upsertLocations", () => {
       }),
       update: expect.objectContaining({
         name: "Test Court",
-        welshName: "Llys Prawf"
+        welshName: "Llys Prawf",
+        deletedAt: null
       })
     });
 
@@ -107,6 +108,28 @@ describe("upsertLocations", () => {
         }
       ]
     });
+  });
+
+  it("should clear deletedAt when upserting a previously soft-deleted location", async () => {
+    const mockTx = {
+      subJurisdiction: { findMany: vi.fn().mockResolvedValue([]) },
+      region: { findMany: vi.fn().mockResolvedValue([]) },
+      location: { upsert: vi.fn().mockResolvedValue({}) },
+      locationSubJurisdiction: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) },
+      locationRegion: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) },
+      locationReference: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) }
+    };
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(mockTx));
+
+    await upsertLocations([{ ...mockData[0], locationReferences: [] }]);
+
+    // Assert
+    expect(mockTx.location.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({ deletedAt: null })
+      })
+    );
   });
 
   it("should not call locationReference.createMany when locationReferences is empty", async () => {

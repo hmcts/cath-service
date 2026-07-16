@@ -65,7 +65,8 @@ export async function upsertLocations(data: ParsedLocationData[]): Promise<void>
           name: row.locationName,
           welshName: row.welshLocationName,
           email: row.email || null,
-          contactNo: row.contactNo || null
+          contactNo: row.contactNo || null,
+          deletedAt: null
         }
       });
 
