@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     passWithNoTests: true,
     testTimeout: 15000,
+    hookTimeout: 15000,
     setupFiles: [path.join(__dirname, "vitest.setup.ts")],
     coverage: {
       provider: "v8",
