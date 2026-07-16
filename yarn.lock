@@ -1652,6 +1652,44 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/et-daily-list@workspace:*, @hmcts/et-daily-list@workspace:libs/list-types/et-daily-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-daily-list@workspace:libs/list-types/et-daily-list"
+  dependencies:
+    "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/et-fortnightly-list@workspace:*, @hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list"
+  dependencies:
+    "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/family-daily-cause-list@workspace:*, @hmcts/family-daily-cause-list@workspace:libs/list-types/family-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/family-daily-cause-list@workspace:libs/list-types/family-daily-cause-list"
@@ -2008,6 +2046,8 @@ __metadata:
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
     "@hmcts/crown-warned-list": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
@@ -2372,6 +2412,8 @@ __metadata:
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
