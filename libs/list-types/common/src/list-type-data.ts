@@ -82,6 +82,16 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1, 2]
   },
   {
+    name: "PCOL_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Possession Claim Online Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Hawliadau Meddiant Ar-lein",
+    provenance: "CFT_IDAM",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "PCOL Daily Cause List",
+    subJurisdictionIds: [1]
+  },
+  {
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
