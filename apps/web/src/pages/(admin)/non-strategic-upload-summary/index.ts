@@ -9,7 +9,7 @@ import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST con
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import { getLocationById } from "@hmcts/location";
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateArtefactFileExtension } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateSourceArtefactId } from "@hmcts/publication";
 import { AuditLogAction, findListTypeById } from "@hmcts/system-admin-pages";
 import { formatDate, formatDateRange, parseDate, saveSession } from "@hmcts/web-core";
 import "@hmcts/rcj-standard-daily-cause-list"; // Register RCJ standard converters (10-17)
@@ -119,10 +119,6 @@ const postHandler = async (req: Request, res: Response) => {
       noMatch: false
     });
 
-    // Save file to blob storage with artefactId as blob name (will overwrite if exists)
-    const fileExtension = await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
-    await updateArtefactFileExtension(artefactId, fileExtension);
-
     // If this is a non-strategic list and it's an Excel file,
     // convert it to JSON (validation already done on upload page)
     const selectedListType = await findListTypeById(listTypeId);
@@ -135,8 +131,10 @@ const postHandler = async (req: Request, res: Response) => {
 
       if (listTypeName && hasConverterForListTypeName(listTypeName)) {
         jsonData = await convertExcelForListTypeName(listTypeName, uploadData.file);
-        const convertedExtension = await saveUploadedFile(artefactId, `${artefactId}.json`, Buffer.from(JSON.stringify(jsonData)));
-        await updateArtefactFileExtension(artefactId, convertedExtension);
+        // Store converted JSON in blob — original Excel is not stored (no value after conversion)
+        await saveUploadedFile(artefactId, artefactId, Buffer.from(JSON.stringify(jsonData)));
+        // Track the original uploaded Excel file name, not the synthetic JSON blob name
+        await updateSourceArtefactId(artefactId, uploadData.fileName);
 
         // Extract and store artefact search data from converted JSON
         try {
@@ -149,7 +147,8 @@ const postHandler = async (req: Request, res: Response) => {
         }
       }
     } else {
-      // Parse JSON data for JSON files
+      await saveUploadedFile(artefactId, uploadData.fileName, uploadData.file);
+      await updateSourceArtefactId(artefactId, uploadData.fileName);
       try {
         jsonData = JSON.parse(uploadData.file.toString("utf8"));
       } catch {

@@ -407,6 +407,7 @@ interface UploadFlatFileInput {
   artefactId: string;
   content: Buffer | Uint8Array;
   extension?: string;
+  sourceArtefactId?: string;
 }
 
 interface UploadFlatFileResponse {
@@ -420,7 +421,8 @@ export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<Up
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
@@ -445,7 +447,8 @@ export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promi
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 

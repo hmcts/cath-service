@@ -93,7 +93,7 @@ vi.mock("@hmcts/admin-pages", async () => {
 vi.mock("@hmcts/publication", () => ({
   createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
   processPublication: vi.fn(() => Promise.resolve({})),
-  updateArtefactFileExtension: vi.fn(() => Promise.resolve()),
+  updateSourceArtefactId: vi.fn(() => Promise.resolve()),
   extractAndStoreArtefactSearch: vi.fn(() => Promise.resolve()),
   Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
   Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },
@@ -101,7 +101,7 @@ vi.mock("@hmcts/publication", () => ({
 }));
 
 import { getNonStrategicUpload, saveUploadedFile } from "@hmcts/admin-pages";
-import { createArtefact, extractAndStoreArtefactSearch, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, processPublication, updateSourceArtefactId } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
 describe("non-strategic-upload-summary page", () => {
@@ -372,6 +372,7 @@ describe("non-strategic-upload-summary page", () => {
           provenance: "MANUAL_UPLOAD"
         })
       );
+      // Non-Excel JSON path: file saved directly to blob storage
       expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "test.xlsx", mockUploadData.file);
       expect(processPublication).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -616,6 +617,11 @@ describe("non-strategic-upload-summary page", () => {
       await callHandler(POST, req, res);
 
       expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("artefact-id-123", 7, { cases: [] });
+      // Excel is NOT saved to blob — only the converted JSON is (blob name has no extension)
+      expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "artefact-id-123", expect.any(Buffer));
+      expect(saveUploadedFile).not.toHaveBeenCalledWith("artefact-id-123", "test.xlsx", expect.anything());
+      // source_artefact_id stores the original Excel file name, not the synthetic JSON blob name
+      expect(updateSourceArtefactId).toHaveBeenCalledWith("artefact-id-123", "test.xlsx");
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
     });
 

@@ -1,5 +1,5 @@
-import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
+import { getLatestSjpArtefacts, getPublicationJson } from "@hmcts/publication";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
 
@@ -43,26 +43,11 @@ export interface SjpSearchFilters {
 }
 
 async function readSjpJson(artefactId: string): Promise<SjpJson> {
-  const buffer = await downloadBlob(`${artefactId}.json`, CONTAINER.ARTEFACT);
-  if (!buffer) {
+  const data = await getPublicationJson(artefactId);
+  if (!data) {
     throw new Error(`SJP JSON not found in blob storage for artefact ${artefactId}`);
   }
-  return JSON.parse(buffer.toString("utf-8"));
-}
-
-const SJP_LIST_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"];
-
-async function getLatestSjpArtefacts() {
-  const listTypes = await prisma.listType.findMany({
-    where: { name: { in: SJP_LIST_NAMES } },
-    select: { id: true }
-  });
-  const listTypeIds = listTypes.map((lt) => lt.id);
-  return prisma.artefact.findMany({
-    where: { listTypeId: { in: listTypeIds } },
-    orderBy: { lastReceivedDate: "desc" },
-    take: 10
-  });
+  return data as SjpJson;
 }
 
 /**
