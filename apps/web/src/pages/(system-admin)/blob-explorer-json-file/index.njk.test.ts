@@ -47,7 +47,7 @@ describe("blob-explorer-json-file template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(en.jsonFileTitle);
+      expect($("h1").text()).toContain(en.header);
       expect($("h2").text()).toContain(en.jsonFileMetadataHeading);
       expect($("button").text()).toContain(en.jsonFileResubmitButton);
 
@@ -105,7 +105,7 @@ describe("blob-explorer-json-file template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(cy.jsonFileTitle);
+      expect($("h1").text()).toContain(cy.header);
       expect($("h2").text()).toContain(cy.jsonFileMetadataHeading);
       expect($(".govuk-table").text()).toContain(cy.metadataArtefactId);
       assertNoErrors($);

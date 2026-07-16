@@ -27,7 +27,7 @@ describe("accessibility-statement template", () => {
 
   describe("Template rendering", () => {
     it("should render the English heading and section headings", () => {
-      const data = { ...en };
+      const data = { ...en, en, cy, locale: "en" };
 
       const { $ } = render(env, TEMPLATE, data);
 
@@ -92,7 +92,7 @@ describe("accessibility-statement template", () => {
     });
 
     it("should render Welsh heading and content", () => {
-      const data = { ...cy };
+      const data = { ...cy, en, cy, locale: "cy" };
 
       const { $ } = render(env, TEMPLATE, data);
 

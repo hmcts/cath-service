@@ -27,12 +27,14 @@ describe("bulk-unsubscribe-success template", () => {
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(en.successHeading);
     });
 
-    it("should render the intro text", () => {
+    it("should render the intro text with the account link", () => {
       const data = { ...en };
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("p.govuk-body").text()).toContain(en.successIntro);
+      expect($("p.govuk-body").text()).toContain(en.successIntroBefore);
+      expect($("p.govuk-body").text()).toContain(en.successIntroAfter);
+      expect($(`p.govuk-body a[href="${en.linkAccountHome}"]`).text()).toContain(en.successAccountLink);
     });
 
     it("should render the three next-step links with correct hrefs", () => {
@@ -53,7 +55,7 @@ describe("bulk-unsubscribe-success template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($(".govuk-panel--confirmation .govuk-panel__title").text()).toContain(cy.successHeading);
-      expect($("p.govuk-body").text()).toContain(cy.successIntro);
+      expect($("p.govuk-body").text()).toContain(cy.successIntroBefore);
       expect($(`a[href="${cy.linkAddSubscription}"]`).text()).toContain(cy.successLinkAddSubscription);
       expect($(`a[href="${cy.linkManageSubscriptions}"]`).text()).toContain(cy.successLinkManageSubscriptions);
       expect($(`a[href="${cy.linkFindCourt}"]`).text()).toContain(cy.successLinkFindCourt);

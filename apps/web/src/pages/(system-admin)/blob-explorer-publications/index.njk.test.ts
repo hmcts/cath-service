@@ -33,7 +33,7 @@ describe("blob-explorer-publications template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(en.publicationsTitle);
+      expect($("h1").text()).toContain(en.header);
       expect($("p.govuk-body").first().text()).toContain(en.publicationsDescription);
     });
 
@@ -89,7 +89,7 @@ describe("blob-explorer-publications template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(cy.publicationsTitle);
+      expect($("h1").text()).toContain(cy.header);
       expect($("p.govuk-body").first().text()).toContain(cy.publicationsDescription);
     });
   });

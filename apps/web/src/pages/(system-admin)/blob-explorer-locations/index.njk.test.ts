@@ -29,7 +29,7 @@ describe("blob-explorer-locations template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(en.locationsTitle);
+      expect($("h1").text()).toContain(en.header);
       expect($("p.govuk-body").first().text()).toContain(en.locationsDescription);
     });
 
@@ -73,7 +73,7 @@ describe("blob-explorer-locations template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1").text()).toContain(cy.locationsTitle);
+      expect($("h1").text()).toContain(cy.header);
       expect($("p.govuk-body").first().text()).toContain(cy.locationsDescription);
     });
   });

@@ -41,7 +41,7 @@ describe("blob-explorer-confirm-resubmission template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1.govuk-heading-xl").text().trim()).toBe(en.confirmTitle);
+      expect($("h1.govuk-heading-xl").text().trim()).toBe(en.header);
     });
 
     it("should render the metadata table with values", () => {
@@ -97,7 +97,7 @@ describe("blob-explorer-confirm-resubmission template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.confirmTitle);
+      expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.header);
       expect($("button[type='submit']").text().trim()).toBe(cy.confirmButton);
     });
 

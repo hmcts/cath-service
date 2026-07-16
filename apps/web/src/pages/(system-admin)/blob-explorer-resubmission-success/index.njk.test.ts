@@ -26,7 +26,7 @@ describe("blob-explorer-resubmission-success template", () => {
 
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
-      expect(panel.find(".govuk-panel__title").text()).toContain(en.successTitle);
+      expect(panel.find(".govuk-panel__title").text()).toContain(en.header);
       expect(panel.find(".govuk-panel__body").text()).toContain(en.successBanner);
     });
 
@@ -58,7 +58,7 @@ describe("blob-explorer-resubmission-success template", () => {
 
       const panel = $(".govuk-panel--confirmation");
       expect(panel).toHaveLength(1);
-      expect(panel.find(".govuk-panel__title").text()).toContain(cy.successTitle);
+      expect(panel.find(".govuk-panel__title").text()).toContain(cy.header);
       expect(panel.find(".govuk-panel__body").text()).toContain(cy.successBanner);
     });
 

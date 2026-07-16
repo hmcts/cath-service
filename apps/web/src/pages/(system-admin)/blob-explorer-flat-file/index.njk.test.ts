@@ -41,7 +41,7 @@ describe("blob-explorer-flat-file template", () => {
 
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      expect($("h1.govuk-heading-xl").text().trim()).toBe(en.flatFileTitle);
+      expect($("h1.govuk-heading-xl").text().trim()).toBe(en.header);
     });
 
     it("should render the metadata heading and re-submit button", () => {
@@ -101,7 +101,7 @@ describe("blob-explorer-flat-file template", () => {
 
       const { $ } = render(env, "(system-admin)/blob-explorer-flat-file/index.njk", data);
 
-      expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.flatFileTitle);
+      expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.header);
       expect($("h2.govuk-heading-m").text()).toContain(cy.flatFileMetadataHeading);
       expect($("form[method='post'] button").text()).toContain(cy.flatFileResubmitButton);
     });
