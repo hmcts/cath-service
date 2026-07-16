@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { deleteJurisdictionData, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
+import { deleteJurisdictionData, findLocationsByRegionId, type JurisdictionDataSession } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -61,13 +61,15 @@ const postHandler = async (req: Request, res: Response) => {
   const deleteErrors = await deleteJurisdictionData(id, "Region", user);
 
   if (deleteErrors.length > 0) {
+    const linkedLocations = await findLocationsByRegionId(id);
     return res.render("region-data-delete/index", {
       en,
       cy,
       t,
       record: { name: session.jurisdictionData.name },
       radioError: undefined,
-      errors: deleteErrors
+      errors: deleteErrors,
+      linkedLocations
     });
   }
 

@@ -1,8 +1,11 @@
 export const en = {
+  introMessage: "You can use this service to get information about:",
   hearingsList: [
-    "Hearings from most civil and family courts in the South East and South West regions",
+    "Hearings in Civil and Family Courts in England and Wales",
     "Hearings in First Tier and Upper Tribunals (excluding Employment Tribunals)",
-    "Hearings in the Royal Courts of Justice and Rolls Building",
+    "Hearings in the Royal Courts of Justice and the Rolls Building",
+    "Hearings in Crown Courts in England and Wales",
+    "Hearings in Magistrates' Courts in England and Wales",
     "Single Justice Procedure cases, including TV licensing and minor traffic offences such as speeding"
   ],
   additionalInfo: "More courts and tribunals will become available over time.",

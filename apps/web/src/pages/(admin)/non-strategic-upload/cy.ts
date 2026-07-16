@@ -1,6 +1,6 @@
 export const cy = {
   title: "Llwytho â llaw",
-  pageTitle: "Llwytho - Llwytho â llaw",
+  pageTitle: "Llwytho ffeil excel - Llwytho ffeil Excel",
   warningTitle: "Rhybudd",
   warningMessage: "Cyn llwytho rhaid i chi sicrhau bod y ffeil yn addas i'w chyhoeddi e.e. bod data personol wedi'i olygu yn ystod cynhyrchu'r ffeil hon.",
   fileUploadLabel: "Llwytho ffeil Excel (.xlsx) â llaw, uchafswm maint 2MB",

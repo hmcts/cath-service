@@ -5,5 +5,6 @@ export const cy = {
   noOption: "Nac ydw",
   continueButton: "Parhau",
   errorSummaryTitle: "Mae problem",
-  noSelectionError: "Dewiswch un opsiwn"
+  noSelectionError: "Dewiswch un opsiwn",
+  deleteArtefactsLinkText: "[WELSH TRANSLATION REQUIRED: 'Click here to delete the location']"
 };

@@ -43,8 +43,13 @@ export const cy = {
     },
     {
       title: "Rheoli Mathau Rhestr",
-      description: "Gweld, creu, diweddaru a dileu ffurfweddiad math rhestr",
+      description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
       href: "/manage-list-types"
+    },
+    {
+      title: "Ffurfweddu Math Rhestr",
+      description: "Ychwanegu a rheoli ffurfweddiadau math rhestr",
+      href: "/configure-list-type-enter-details"
     },
     {
       title: "Rheoli Data Awdurdodaeth",

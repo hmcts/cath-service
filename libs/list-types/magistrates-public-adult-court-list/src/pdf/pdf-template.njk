@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+  <style>
+    .warning-row {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .warning-icon {
+      display: inline-block;
+      background-color: #0b0c0c;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 10px;
+      text-align: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .warning-text {
+      font-weight: 700;
+    }
+    .session-meta {
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.heading }} {{ header.locationName }}</h1>
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+    <p class="bold header-date">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.listUpdated }} {{ header.publishedDate }} {{ t.at }} {{ header.publishedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.restrictionInformationHeading }}</h3>
+    <p>{{ t.restrictionInformationP1 }}</p>
+    <div class="warning-row">
+      <span class="warning-icon" aria-hidden="true">!</span>
+      <span class="warning-text">{{ t.restrictionInformationBoldText }}</span>
+    </div>
+    <p>{{ t.restrictionInformationP2 }}</p>
+    <p>{{ t.restrictionInformationP3 }}</p>
+    <p>{{ t.restrictionInformationP4 }}</p>
+    <ul>
+      <li>{{ t.restrictionBulletPoint1 }}</li>
+      <li>{{ t.restrictionBulletPoint2 }}</li>
+    </ul>
+  </div>
+
+  {% for session in listData %}
+    <div class="court-section">
+      <h2>{{ session.courtName }}</h2>
+      <p class="session-meta"><strong>{{ t.sittingAt }} {{ t.courtRoom }} {{ session.courtRoom }}</strong></p>
+      <p class="session-meta">{{ t.lja }} {{ session.lja }}</p>
+      <p class="session-meta">{{ t.sessionStart }} {{ session.sessionStartTime }}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>{{ t.listingTime }}</th>
+            <th>{{ t.defendantName }}</th>
+            <th>{{ t.caseNumber }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in session.cases %}
+            <tr>
+              <td>{{ row.blockStartTime }}</td>
+              <td>{{ row.defendantName }}</td>
+              <td>{{ row.caseNumber }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+      <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

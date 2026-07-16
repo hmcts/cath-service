@@ -205,6 +205,14 @@ export async function deleteLocationJurisdictions(locationId: number): Promise<v
   });
 }
 
+export async function findLocationsByRegionId(regionId: number) {
+  return prisma.location.findMany({
+    where: { deletedAt: null, locationRegions: { some: { regionId } } },
+    select: { locationId: true, name: true },
+    orderBy: { name: "asc" }
+  });
+}
+
 export type DependencyType = "sub-jurisdictions" | "locations" | "list-types" | null;
 
 export async function getDependencyType(id: number, type: JurisdictionDataType): Promise<DependencyType> {

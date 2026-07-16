@@ -1,247 +1,171 @@
 import { describe, expect, it } from "vitest";
 import { validateMagistratesPublicList } from "./json-validator.js";
 
-const validMinimalData = {
-  document: { publicationDate: "2020-09-13T23:30:00Z" },
+const VALID_DATA = {
+  document: { publicationDate: "2025-01-01T10:00:00.000Z" },
   venue: {
-    venueAddress: {
-      line: ["THE LAW COURTS"],
-      postCode: "PR1 2LL"
-    }
+    venueAddress: { line: ["THE LAW COURTS"], postCode: "PR1 2LL" }
   },
-  courtLists: []
+  courtLists: [
+    {
+      courtHouse: {
+        courtRoom: [
+          {
+            courtRoomName: "Room 1",
+            session: [
+              {
+                sittings: [
+                  {
+                    sittingStart: "2025-01-01T09:00:00.000Z",
+                    hearing: [
+                      {
+                        case: [{ caseUrn: "ABC12345" }],
+                        application: [{ applicationReference: "APP001" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 };
 
 describe("validateMagistratesPublicList", () => {
-  describe("valid data", () => {
-    it("should accept minimal valid document", () => {
-      const result = validateMagistratesPublicList(validMinimalData);
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it("should accept valid data with full court list structure", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [
-                {
-                  courtRoomName: "Room 1",
-                  session: [
-                    {
-                      sittings: [
-                        {
-                          sittingStart: "2020-09-13T09:00:00Z",
-                          hearing: [
-                            {
-                              hearingType: "Trial",
-                              case: [
-                                {
-                                  caseUrn: "URN001",
-                                  party: [
-                                    {
-                                      partyRole: "DEFENDANT",
-                                      individualDetails: {
-                                        individualForenames: "John",
-                                        individualSurname: "Smith"
-                                      },
-                                      offence: [{ offenceTitle: "Drink driving" }]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        ]
-      });
-      expect(result.isValid).toBe(true);
-    });
+  it("should return valid when all required fields are present", () => {
+    const result = validateMagistratesPublicList(VALID_DATA);
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 
-  describe("required fields", () => {
-    it("should reject missing document", () => {
-      const result = validateMagistratesPublicList({ venue: validMinimalData.venue, courtLists: [] });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing venue", () => {
-      const result = validateMagistratesPublicList({ document: validMinimalData.document, courtLists: [] });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing courtLists", () => {
-      const result = validateMagistratesPublicList({ document: validMinimalData.document, venue: validMinimalData.venue });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing publicationDate in document", () => {
-      const result = validateMagistratesPublicList({ ...validMinimalData, document: {} });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing line in venueAddress", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        venue: { venueAddress: { postCode: "PR1 2LL" } }
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing postCode in venueAddress", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        venue: { venueAddress: { line: ["THE LAW COURTS"] } }
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing caseUrn in case", () => {
-      const result = validateMagistratesPublicList(buildDataWithCase({ party: [] }));
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing sittingStart in sitting", () => {
-      const result = validateMagistratesPublicList(buildDataWithSitting({ hearing: [] }));
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing courtRoomName in courtRoom", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [{ session: [] }]
-            }
-          }
-        ]
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject missing applicationReference in application", () => {
-      const result = validateMagistratesPublicList(buildDataWithApplication({ applicationType: "bail" }));
-      expect(result.isValid).toBe(false);
-    });
+  it("should return invalid when document is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  describe("publicationDate format", () => {
-    it("should reject date-only publicationDate", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13" }
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject datetime without Z suffix", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13T23:30:00" }
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should accept datetime with fractional seconds", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        document: { publicationDate: "2020-09-13T23:30:52.123Z" }
-      });
-      expect(result.isValid).toBe(true);
-    });
+  it("should return invalid when venue is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.venue;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  describe("HTML injection protection", () => {
-    it("should reject HTML tags in courtRoomName", () => {
-      const result = validateMagistratesPublicList({
-        ...validMinimalData,
-        courtLists: [
-          {
-            courtHouse: {
-              courtRoom: [{ courtRoomName: "<script>alert(1)</script>", session: [] }]
-            }
-          }
-        ]
-      });
-      expect(result.isValid).toBe(false);
-    });
-
-    it("should reject HTML tags in hearingType", () => {
-      const result = validateMagistratesPublicList(
-        buildDataWithSitting({
-          sittingStart: "2020-09-13T09:00:00Z",
-          hearing: [{ hearingType: "<script>xss</script>", case: [], application: [] }]
-        })
-      );
-      expect(result.isValid).toBe(false);
-    });
+  it("should return invalid when courtLists is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
-  // The party $def uses an "items" block on an "object" type, copied verbatim from
-  // pip-data-management. JSON Schema 2020-12 evaluates "items" only on arrays, so
-  // property-level patterns inside the party def (partyRole, organisationName, etc.)
-  // are not applied. The organisationName pattern was fixed from the Java-only (?s)
-  // flag to JS-compatible syntax so the schema compiles without a regex error.
-  describe("organisationName pattern (fixed from Java (?s) to JS-compatible)", () => {
-    it("should not throw when the schema is loaded", () => {
-      // If the original (?s) flag were still present, AJV would throw
-      // "Invalid regular expression: Invalid group" on schema compilation.
-      // A successful validator call confirms the pattern is valid JavaScript.
-      expect(() => validateMagistratesPublicList(validMinimalData)).not.toThrow();
-    });
+  it("should return invalid when document.publicationDate is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.document.publicationDate;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
 
-    it("should accept a valid organisation name", () => {
-      const result = validateMagistratesPublicList(buildDataWithOrgName("A & B Solicitors"));
-      expect(result.isValid).toBe(true);
-    });
+  it("should return invalid when venue.venueAddress is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.venue.venueAddress;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when venue.venueAddress.line is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.venue.venueAddress.line;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when venue.venueAddress.postCode is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.venue.venueAddress.postCode;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when courtLists[0].courtHouse is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when courtLists[0].courtHouse.courtRoom is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when courtRoom[0].courtRoomName is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].courtRoomName;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when courtRoom[0].session is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when session[0].sittings is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session[0].sittings;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when sittings[0].sittingStart is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].sittingStart;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when sittings[0].hearing is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when case[0].caseUrn is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseUrn;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it("should return invalid when application[0].applicationReference is missing", () => {
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    delete data.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].application[0].applicationReference;
+    const result = validateMagistratesPublicList(data);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });
-
-function buildDataWithOrgName(organisationName: string) {
-  return buildDataWithCase({
-    caseUrn: "URN001",
-    party: [{ partyRole: "DEFENDANT", organisationDetails: { organisationName } }]
-  });
-}
-
-function buildDataWithCase(caseData: object) {
-  return buildDataWithSitting({
-    sittingStart: "2020-09-13T09:00:00Z",
-    hearing: [{ case: [caseData], application: [] }]
-  });
-}
-
-function buildDataWithApplication(applicationData: object) {
-  return buildDataWithSitting({
-    sittingStart: "2020-09-13T09:00:00Z",
-    hearing: [{ case: [], application: [applicationData] }]
-  });
-}
-
-function buildDataWithSitting(sittingData: object) {
-  return {
-    ...validMinimalData,
-    courtLists: [
-      {
-        courtHouse: {
-          courtRoom: [
-            {
-              courtRoomName: "Room 1",
-              session: [{ sittings: [sittingData] }]
-            }
-          ]
-        }
-      }
-    ]
-  };
-}

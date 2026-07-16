@@ -94,7 +94,7 @@ function formatLongDate(dateStr: string | undefined, locale: string): string {
   const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
   const dt = DateTime.fromISO(dateStr);
   if (!dt.isValid) return dateStr;
-  return dt.toJSDate().toLocaleDateString(localeCode, { day: "2-digit", month: "long", year: "numeric" });
+  return dt.toJSDate().toLocaleDateString(localeCode, { day: "numeric", month: "long", year: "numeric" });
 }
 
 function toStartOfWeek(date: Date): Date {
