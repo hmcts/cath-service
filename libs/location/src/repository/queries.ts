@@ -267,12 +267,9 @@ export async function hasActiveArtefacts(locationId: number): Promise<boolean> {
 }
 
 export async function softDeleteLocation(locationId: number): Promise<void> {
-  await prisma.location.update({
-    where: {
-      locationId
-    },
-    data: {
-      deletedAt: new Date()
-    }
-  });
+  await prisma.$transaction([
+    prisma.locationSubJurisdiction.deleteMany({ where: { locationId } }),
+    prisma.locationRegion.deleteMany({ where: { locationId } }),
+    prisma.location.update({ where: { locationId }, data: { deletedAt: new Date() } })
+  ]);
 }

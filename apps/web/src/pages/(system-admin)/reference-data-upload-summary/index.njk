@@ -20,7 +20,11 @@
             <ul class="govuk-list govuk-error-summary__list">
               {% for error in errors %}
                 <li>
-                  <a href="{{ error.href }}">{{ error.text }}</a>
+                  {% if error.html %}
+                    {{ error.html | safe }}
+                  {% else %}
+                    <a href="{{ error.href }}">{{ error.text }}</a>
+                  {% endif %}
                 </li>
               {% endfor %}
             </ul>

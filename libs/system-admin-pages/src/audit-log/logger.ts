@@ -7,12 +7,17 @@ export enum AuditLogAction {
   BLOB_EXPLORER_RESUBMISSION = "Blob explorer resubmission",
   CREATE_THIRD_PARTY_USER = "Create third party user",
   DELETE_COURT = "Delete court",
+  DELETE_JURISDICTION = "Delete jurisdiction",
+  DELETE_LOCATION_JURISDICTION = "Delete location jurisdiction",
+  DELETE_REGION = "Delete region",
+  DELETE_SUB_JURISDICTION = "Delete sub-jurisdiction",
   DELETE_THIRD_PARTY_USER = "Delete third party user",
   DELETE_USER = "Delete user",
   MANUAL_UPLOAD = "Manual upload",
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
+  UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
   UPDATE_THIRD_PARTY_OAUTH_CONFIG = "Update third party OAuth config",
   UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
 }

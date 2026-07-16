@@ -1,0 +1,70 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    {% set summaryRows = [
+      {
+        key: { text: nameLabel },
+        value: { text: record.name }
+      },
+      {
+        key: { text: typeLabel },
+        value: { text: record.type }
+      }
+    ] %}
+    {% if record.parentJurisdictionName %}
+      {% set summaryRows = summaryRows.concat([{
+        key: { text: parentJurisdictionLabel },
+        value: { text: record.parentJurisdictionName }
+      }]) %}
+    {% endif %}
+    {{ govukSummaryList({ rows: summaryRows }) }}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukRadios({
+        name: "confirmation",
+        fieldset: {
+          legend: {
+            text: title,
+            isPageHeading: false,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        items: [
+          { value: "yes", text: yesOption },
+          { value: "no", text: noOption }
+        ],
+        errorMessage: radioError
+      }) }}
+
+      {{ govukButton({
+        text: continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

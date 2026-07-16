@@ -9,9 +9,9 @@ model Region {
 }
 
 model Jurisdiction {
-  jurisdictionId  Int    @id @map("jurisdiction_id")
-  name            String @unique
-  welshName       String @unique @map("welsh_name")
+  jurisdictionId Int    @id @map("jurisdiction_id")
+  name           String @unique
+  welshName      String @unique @map("welsh_name")
 
   subJurisdictions SubJurisdiction[]
 
@@ -129,3 +129,4 @@ model LocationMetadata {
 
   @@map("location_metadata")
 }
+

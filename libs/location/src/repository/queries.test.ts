@@ -24,7 +24,14 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     },
     artefact: {
       count: vi.fn()
-    }
+    },
+    locationSubJurisdiction: {
+      deleteMany: vi.fn()
+    },
+    locationRegion: {
+      deleteMany: vi.fn()
+    },
+    $transaction: vi.fn((ops) => Promise.all(ops))
   }
 }));
 
@@ -511,12 +518,16 @@ describe("hasActiveArtefacts", () => {
 });
 
 describe("softDeleteLocation", () => {
-  it("should update location with deletedAt timestamp", async () => {
+  it("should soft-delete location and remove junction rows in a transaction", async () => {
+    vi.mocked(prisma.locationSubJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+    vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 1 } as any);
     vi.mocked(prisma.location.update).mockResolvedValue({} as any);
 
     const { softDeleteLocation } = await import("./queries.js");
     await softDeleteLocation(1);
 
+    expect(prisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { locationId: 1 } });
+    expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({ where: { locationId: 1 } });
     expect(prisma.location.update).toHaveBeenCalledWith({
       where: { locationId: 1 },
       data: { deletedAt: expect.any(Date) }
