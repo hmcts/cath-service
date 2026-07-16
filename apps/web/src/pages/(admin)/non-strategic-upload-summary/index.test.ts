@@ -388,6 +388,57 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
     });
 
+    it("should still redirect to success when background publication processing fails", async () => {
+      // PDF generation + notifications run in the background (fire-and-forget), so a
+      // failure there must NOT block or fail the upload — the artefact is already
+      // persisted. The handler should redirect to the success page regardless.
+      const mockUploadData = {
+        file: Buffer.from("test file content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(processPublication).mockRejectedValueOnce(new Error("Publication service down"));
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Redirected to success even though the background processing rejected
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+      expect(res.render).not.toHaveBeenCalled();
+
+      // Flush the microtask queue so the background .catch runs and logs
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[Non-Strategic Upload] Background publication processing failed:",
+        expect.objectContaining({ artefactId: "artefact-id-123" })
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should call processPublication with Welsh locale when language is WELSH", async () => {
       const mockUploadData = {
         file: Buffer.from("test file content"),

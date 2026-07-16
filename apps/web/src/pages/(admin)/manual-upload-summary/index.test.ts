@@ -762,6 +762,43 @@ describe("manual-upload-summary page", () => {
       consoleErrorSpy.mockRestore();
     });
 
+    it("should log a stringified reason when background publication rejects with a non-Error value", async () => {
+      // The background .catch stringifies non-Error rejection reasons via String(error).
+      vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id-123", isUpdate: false });
+      vi.mocked(processPublication).mockRejectedValueOnce("string failure reason");
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const session = {
+        save: vi.fn((callback) => callback())
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/manual-upload-success");
+
+      // Flush the microtask queue so the background .catch runs and logs
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[Manual Upload] Background publication processing failed:",
+        expect.objectContaining({ artefactId: "test-artefact-id-123", error: "string failure reason" })
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should redirect to Welsh success page when lng=cy", async () => {
       vi.mocked(getManualUpload).mockResolvedValue(mockUploadData);
       vi.mocked(saveUploadedFile).mockResolvedValue(".pdf");
