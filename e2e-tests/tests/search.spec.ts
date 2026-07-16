@@ -116,7 +116,7 @@ test.describe("Search Page", () => {
     await page.goto("/search");
 
     // Switch to Welsh
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
     await languageToggle.click();
