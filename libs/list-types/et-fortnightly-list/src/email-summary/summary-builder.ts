@@ -1,1 +1,1 @@
-export { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/et-daily-list";
+export { extractEtCaseSummary as extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./et-summary-builder.js";

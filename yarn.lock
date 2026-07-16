@@ -1661,7 +1661,6 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@hmcts/publication": "workspace:*"
     "@types/luxon": "npm:3.7.2"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
@@ -1679,7 +1678,6 @@ __metadata:
   resolution: "@hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list"
   dependencies:
     "@hmcts/daily-cause-list-common": "workspace:*"
-    "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.2"

@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@hmcts/daily-cause-list-common": "workspace:*",
-    "@hmcts/et-daily-list": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "luxon": "3.7.2",
