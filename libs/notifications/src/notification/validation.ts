@@ -18,6 +18,7 @@ export interface PublicationEvent {
   publicationDate: Date;
   listTypeId?: number;
   pdfFilePath?: string;
+  excelPath?: string;
   jsonData?: unknown;
 }
 

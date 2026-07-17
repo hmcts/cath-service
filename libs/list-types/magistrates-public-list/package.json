@@ -27,6 +27,7 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
+    "exceljs": "4.4.0",
     "nunjucks": "3.2.4"
   },
   "devDependencies": {

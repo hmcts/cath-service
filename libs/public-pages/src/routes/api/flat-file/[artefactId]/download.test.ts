@@ -21,7 +21,8 @@ describe("Flat File Download Route", () => {
     statusSpy = vi.fn().mockReturnValue({ json: jsonSpy, send: sendSpy });
 
     mockRequest = {
-      params: {}
+      params: {},
+      query: {}
     };
 
     mockResponse = {
@@ -292,6 +293,84 @@ describe("Flat File Download Route", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       expect(getFileForDownload).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Excel download (format=excel)", () => {
+    const testUuid = "550e8400-e29b-41d4-a716-446655440000";
+    const mockExcelBuffer = Buffer.from("xlsx content");
+    const mockExcelResult = {
+      success: true,
+      fileBuffer: mockExcelBuffer,
+      contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      fileName: `${testUuid}.xlsx`
+    };
+
+    beforeEach(() => {
+      mockRequest.params = { artefactId: testUuid };
+      mockRequest.query = { format: "excel" };
+    });
+
+    it("should call getExcelForDownload when format=excel", async () => {
+      const { getExcelForDownload, getFileForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue(mockExcelResult);
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(getExcelForDownload).toHaveBeenCalledWith(testUuid);
+      expect(getFileForDownload).not.toHaveBeenCalled();
+    });
+
+    it("should return 404 when excel file not found", async () => {
+      const { getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue({ error: "FILE_NOT_FOUND" });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "File not found in storage" });
+    });
+
+    it("should return 404 when artefact not found for excel", async () => {
+      const { getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue({ error: "NOT_FOUND" });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(statusSpy).toHaveBeenCalledWith(404);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "Artefact not found" });
+    });
+
+    it("should return 410 when excel artefact has expired", async () => {
+      const { getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue({ error: "EXPIRED" });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(statusSpy).toHaveBeenCalledWith(410);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "File has expired" });
+    });
+
+    it("should send excel file with correct headers on success", async () => {
+      const { getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue(mockExcelResult);
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(setHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      expect(setHeaderSpy).toHaveBeenCalledWith("Content-Disposition", `attachment; filename="${testUuid}.xlsx"`);
+      expect(sendSpy).toHaveBeenCalledWith(mockExcelBuffer);
+    });
+
+    it("should default to pdf behaviour when format is an unknown value", async () => {
+      mockRequest.query = { format: "unknown_format" };
+      const { getFileForDownload, getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getFileForDownload).mockResolvedValue({ error: "NOT_FOUND" });
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      expect(getFileForDownload).toHaveBeenCalledWith(testUuid, undefined);
+      expect(getExcelForDownload).not.toHaveBeenCalled();
     });
   });
 });

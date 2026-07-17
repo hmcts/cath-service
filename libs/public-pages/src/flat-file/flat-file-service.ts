@@ -1,4 +1,5 @@
 import path from "node:path";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import type { UserProfile } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Artefact } from "@hmcts/publication";
@@ -13,6 +14,8 @@ import {
   resolveListType
 } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
+
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 type GuardError = { error: "NOT_FLAT_FILE" | "EXPIRED" | "ACCESS_DENIED" };
 
@@ -73,6 +76,37 @@ export async function getFileForDownload(artefactId: string, user: UserProfile |
   };
 }
 
+export async function getExcelForDownload(artefactId: string) {
+  const artefact = await getArtefactById(artefactId);
+
+  if (!artefact) {
+    return { error: "NOT_FOUND" as const };
+  }
+
+  const now = new Date();
+  if (now < artefact.displayFrom || now > artefact.displayTo) {
+    return { error: "EXPIRED" as const };
+  }
+
+  if (!artefact.excelPath) {
+    return { error: "FILE_NOT_FOUND" as const };
+  }
+
+  const fileBuffer = await downloadBlob(artefact.excelPath, CONTAINER.PUBLICATIONS);
+
+  if (!fileBuffer) {
+    return { error: "FILE_NOT_FOUND" as const };
+  }
+
+  return {
+    success: true,
+    fileBuffer,
+    contentType: XLSX_CONTENT_TYPE,
+    fileName: `${artefactId}.xlsx`
+  };
+}
+
 type FlatFileResult = Awaited<ReturnType<typeof getFlatFileForDisplay>>;
 type DownloadFileResult = Awaited<ReturnType<typeof getFileForDownload>>;
-export type { FlatFileResult, DownloadFileResult };
+type ExcelDownloadResult = Awaited<ReturnType<typeof getExcelForDownload>>;
+export type { FlatFileResult, DownloadFileResult, ExcelDownloadResult };

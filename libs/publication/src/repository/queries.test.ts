@@ -610,6 +610,7 @@ describe("deleteArtefacts", () => {
     // Publications blob
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440000.pdf", "publications");
     expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.pdf", "publications");
+    expect(deleteBlob).toHaveBeenCalledWith("550e8400-e29b-41d4-a716-446655440001.xlsx", "publications");
   });
 
   it("should delete both new-style and legacy blobs for flat file names", async () => {
@@ -748,6 +749,7 @@ describe("getArtefactById", () => {
         language: true,
         displayFrom: true,
         displayTo: true,
+        excelPath: true,
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
@@ -791,6 +793,7 @@ describe("getArtefactById", () => {
         language: true,
         displayFrom: true,
         displayTo: true,
+        excelPath: true,
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,

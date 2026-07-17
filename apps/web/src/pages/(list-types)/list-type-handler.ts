@@ -231,7 +231,10 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render(template, { en, cy, pageTitle: t.title, header, openJustice, listData, dataSource, t });
+    const artefactId = artefact.artefactId;
+    const pdfDownloadUrl = `/api/flat-file/${artefactId}/download`;
+    const excelDownloadUrl = listTypeHasExcel(artefact.listTypeName) ? `/api/flat-file/${artefactId}/download?format=excel` : undefined;
+    res.render(template, { en, cy, title: t.title, header, openJustice, listData, dataSource, t, artefactId, pdfDownloadUrl, excelDownloadUrl });
   };
 }
 

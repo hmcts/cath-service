@@ -20,8 +20,8 @@ import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
 import { generateMagistratesAdultCourtListPdf, type MagistratesAdultCourtListData } from "@hmcts/magistrates-adult-court-list";
 import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdultCourtListData } from "@hmcts/magistrates-public-adult-court-list";
-import { generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
-import { generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
+import { generateMagistratesPublicListExcel, generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
+import { generateMagistratesStandardListExcel, generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { generatePhtWeeklyHearingListPdf, type PhtHearingList } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
@@ -45,6 +45,7 @@ import {
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+import { updateArtefactExcelPath } from "../repository/queries.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -69,6 +70,7 @@ interface GeneratePdfResult {
   pdfPath?: string;
   sizeBytes?: number;
   exceedsMaxSize?: boolean;
+  listTypeName?: string;
 }
 
 interface PdfResult {
@@ -313,31 +315,79 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
     })
 };
 
-type ExcelGenerator = (json: SjpJson) => Promise<Buffer>;
+interface GenerateExcelParams {
+  artefactId: string;
+  listTypeName: string;
+  contentDate: Date;
+  locale: string;
+  locationId: string;
+  jsonData: unknown;
+  logPrefix?: string;
+}
+
+interface ExcelGenerationResult {
+  hasExcel?: boolean;
+  error?: string;
+}
+
+type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGenerationResult>;
 
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
-  SJP_PUBLIC_LIST: generateSjpPublicListExcel,
-  SJP_DELTA_PUBLIC_LIST: generateSjpPublicListExcel,
-  SJP_PRESS_LIST: generateSjpPressListExcel,
-  SJP_DELTA_PRESS_LIST: generateSjpPressListExcel
+  MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
+  MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  SJP_PUBLIC_LIST: async (p) => {
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    await saveExcelFile(p.artefactId, buffer);
+    return { success: true, excelPath: `${p.artefactId}.xlsx` };
+  },
+  SJP_DELTA_PUBLIC_LIST: async (p) => {
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    await saveExcelFile(p.artefactId, buffer);
+    return { success: true, excelPath: `${p.artefactId}.xlsx` };
+  },
+  SJP_PRESS_LIST: async (p) => {
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    await saveExcelFile(p.artefactId, buffer);
+    return { success: true, excelPath: `${p.artefactId}.xlsx` };
+  },
+  SJP_DELTA_PRESS_LIST: async (p) => {
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    await saveExcelFile(p.artefactId, buffer);
+    return { success: true, excelPath: `${p.artefactId}.xlsx` };
+  }
 };
 
-export async function generatePublicationExcel(artefactId: string, listTypeId: number, jsonData: unknown, logPrefix = "[Publication]"): Promise<void> {
+export function listTypeHasExcel(listTypeName: string | undefined): boolean {
+  return !!listTypeName && listTypeName in EXCEL_GENERATOR_REGISTRY;
+}
+
+export async function generatePublicationExcel(params: GenerateExcelParams): Promise<ExcelGenerationResult> {
+  const { listTypeName, artefactId, logPrefix = "[Publication]" } = params;
+
   try {
-    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
-    const generator = listType ? EXCEL_GENERATOR_REGISTRY[listType.name] : undefined;
+    const generator = listTypeName ? EXCEL_GENERATOR_REGISTRY[listTypeName] : undefined;
     if (!generator) {
-      return;
+      return {};
     }
 
-    const buffer = await generator(jsonData as SjpJson);
-    await saveExcelFile(artefactId, buffer);
+    const result = await generator(params);
+
+    if ("excelPath" in result && result.excelPath) {
+      return { hasExcel: true };
+    }
+
+    if (result.error) {
+      console.warn(`${logPrefix} Excel generation failed:`, { artefactId, error: result.error });
+    }
+
+    return {};
   } catch (error) {
     console.error(`${logPrefix} Excel generation error:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
+    return {};
   }
 }
 
-export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "listTypeName">): Promise<GeneratePdfResult> {
+export async function generatePublicationPdf(params: GeneratePdfParams): Promise<GeneratePdfResult> {
   const { listTypeId, artefactId, logPrefix = "[Publication]" } = params;
 
   try {
@@ -345,7 +395,7 @@ export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "li
     const listTypeName = listType?.name ?? "";
     const generator = listTypeName ? PDF_GENERATOR_REGISTRY[listTypeName] : undefined;
     if (!generator) {
-      return {};
+      return { listTypeName };
     }
 
     const pdfResult = await generator({ ...params, listTypeName });
@@ -354,12 +404,13 @@ export async function generatePublicationPdf(params: Omit<GeneratePdfParams, "li
       return {
         pdfPath: pdfResult.pdfPath,
         sizeBytes: pdfResult.sizeBytes,
-        exceedsMaxSize: pdfResult.exceedsMaxSize
+        exceedsMaxSize: pdfResult.exceedsMaxSize,
+        listTypeName
       };
     }
 
     console.warn(`${logPrefix} PDF generation failed:`, { artefactId, error: pdfResult.error });
-    return {};
+    return { listTypeName };
   } catch (error) {
     console.error(`${logPrefix} PDF generation error:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
     return {};
@@ -373,6 +424,7 @@ interface SendNotificationsParams {
   contentDate: Date;
   jsonData?: unknown;
   pdfFilePath?: string;
+  excelPath?: string;
   locale?: string;
   logPrefix?: string;
 }
@@ -386,7 +438,7 @@ interface SendNotificationsResult {
 }
 
 export async function sendPublicationNotificationsForArtefact(params: SendNotificationsParams): Promise<SendNotificationsResult> {
-  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, locale, logPrefix = "[Publication]" } = params;
+  const { artefactId, locationId, listTypeId, contentDate, jsonData, pdfFilePath, excelPath, locale, logPrefix = "[Publication]" } = params;
 
   try {
     const locationIdNum = Number.parseInt(locationId, 10);
@@ -422,7 +474,8 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       publicationDate: contentDate,
       listTypeId,
       jsonData,
-      pdfFilePath
+      pdfFilePath,
+      excelPath
     });
 
     if (result.errors.length > 0) {
@@ -446,7 +499,8 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
             listTypeId,
             language,
             jsonData,
-            pdfFilePath
+            pdfFilePath,
+            excelPath
           },
           result.notifiedUserIds
         );
@@ -499,6 +553,7 @@ interface ProcessPublicationResult {
   pdfPath?: string;
   pdfSizeBytes?: number;
   pdfExceedsMaxSize?: boolean;
+  excelPath?: string;
   notificationsSent?: number;
   notificationsFailed?: number;
 }
@@ -552,7 +607,19 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     result.pdfSizeBytes = pdfResult.sizeBytes;
     result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
 
-    await generatePublicationExcel(artefactId, listTypeId, jsonData, logPrefix);
+    const excelResult = await generatePublicationExcel({
+      artefactId,
+      listTypeName: pdfResult.listTypeName ?? "",
+      contentDate,
+      locale,
+      locationId,
+      jsonData,
+      logPrefix
+    });
+
+    if (excelResult.hasExcel) {
+      result.excelPath = `${artefactId}.xlsx`;
+    }
   }
 
   if (!skipNotifications) {
@@ -563,6 +630,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       contentDate,
       jsonData,
       pdfFilePath: result.pdfPath,
+      excelPath: result.excelPath,
       locale,
       logPrefix
     });
