@@ -175,6 +175,14 @@ export const locationData: {
       welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl",
       regions: [4],
       subJurisdictions: [8]
+    },
+    {
+      locationId: 25,
+      name: "Primary Health Tribunal",
+      welshName: "Tribiwnlys Iechyd Sylfaenol",
+      regions: [8],
+      subJurisdictions: [22],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [
