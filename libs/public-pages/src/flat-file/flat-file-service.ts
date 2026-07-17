@@ -1,7 +1,17 @@
+import path from "node:path";
 import type { UserProfile } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
 import type { Artefact } from "@hmcts/publication";
-import { canAccessPublicationData, getArtefactById, getContentType, getFileBuffer, getFileExtension, getFileName, resolveListType } from "@hmcts/publication";
+import {
+  canAccessPublicationData,
+  getArtefactById,
+  getContentType,
+  getFileBuffer,
+  getFileExtension,
+  getFileName,
+  getSourceArtefactId,
+  resolveListType
+} from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
 
 type GuardError = { error: "NOT_FLAT_FILE" | "EXPIRED" | "ACCESS_DENIED" };
@@ -25,14 +35,12 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
   const fileBuffer = await getFileBuffer(artefact.artefactId);
   if (!fileBuffer) return { error: "FILE_NOT_FOUND" as const };
 
-  const [location, listTypeInfo, fileExtension] = await Promise.all([
-    getLocationById(Number.parseInt(artefact.locationId, 10)),
-    findListTypeById(artefact.listTypeId),
-    getFileExtension(artefact.artefactId)
-  ]);
+  const [location, listTypeInfo] = await Promise.all([getLocationById(Number.parseInt(artefact.locationId, 10)), findListTypeById(artefact.listTypeId)]);
 
   const courtName = locale === "cy" ? location?.welshName || location?.name || "Unknown" : location?.name || "Unknown";
   const listTypeName = locale === "cy" ? listTypeInfo?.welshFriendlyName || "Unknown" : listTypeInfo?.friendlyName || "Unknown";
+
+  const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 
   return {
     success: true,
@@ -41,7 +49,7 @@ export async function getFlatFileForDisplay(artefactId: string, locationId: stri
     listTypeName,
     contentDate: artefact.contentDate,
     language: artefact.language,
-    fileExtension
+    sourceArtefactId
   };
 }
 
@@ -55,13 +63,13 @@ export async function getFileForDownload(artefactId: string, user: UserProfile |
   const fileBuffer = await getFileBuffer(artefact.artefactId);
   if (!fileBuffer) return { error: "FILE_NOT_FOUND" as const };
 
-  const fileExtension = await getFileExtension(artefact.artefactId);
+  const sourceArtefactId = await getSourceArtefactId(artefact.artefactId);
 
   return {
     success: true,
     fileBuffer,
-    contentType: getContentType(fileExtension),
-    fileName: getFileName(artefact.artefactId, fileExtension)
+    contentType: getContentType(path.extname(sourceArtefactId) || null),
+    fileName: getFileName(sourceArtefactId)
   };
 }
 

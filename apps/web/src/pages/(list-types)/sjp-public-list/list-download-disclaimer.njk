@@ -1,0 +1,43 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: t.errorTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ t.pageTitle }}</h1>
+
+    <p class="govuk-body">{{ t.disclaimerText }}</p>
+    <p class="govuk-body">{{ t.responsibility }}</p>
+
+    <form method="post" novalidate>
+      <input type="hidden" name="artefactId" value="{{ artefactId }}">
+
+      {{ govukCheckboxes({
+        name: "agreed",
+        items: [
+          {
+            value: "yes",
+            text: t.checkboxLabel
+          }
+        ],
+        errorMessage: { text: t.errorCheckbox } if errors else undefined
+      }) }}
+
+      {{ govukButton({
+        text: t.continueButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

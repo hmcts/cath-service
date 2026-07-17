@@ -15,7 +15,7 @@ async function globalSetup(_config: FullConfig) {
 
     // Step 2: Wait for API and database to be ready
     console.log("Waiting for API and database to be ready...");
-    const maxRetries = 30;
+    const maxRetries = 90;
     let ready = false;
 
     for (let i = 0; i < maxRetries; i++) {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BlobIngestionRequest } from "./repository/model.js";
-import { validateBlobRequest } from "./validation.js";
+import type { BlobIngestionRequest, FlatFileIngestionRequest } from "./repository/model.js";
+import { validateBlobRequest, validateFlatFileRequest } from "./validation.js";
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn(),
@@ -358,5 +358,177 @@ describe("validateBlobRequest", () => {
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.resolvedLocationId).toBe("123");
+  });
+});
+
+describe("validateFlatFileRequest", () => {
+  const validRequest: FlatFileIngestionRequest = {
+    court_id: "123",
+    provenance: "MANUAL_UPLOAD",
+    content_date: "2025-01-25",
+    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    display_from: "2025-01-25T09:00:00Z",
+    display_to: "2025-01-25T17:00:00Z"
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { getLocationById, getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationById).mockImplementation((id: number) => {
+      if (id === 123) {
+        return Promise.resolve({ locationId: 123, name: "Test Court", welshName: "Llys Prawf", regions: [], subJurisdictions: [] });
+      }
+      return Promise.resolve(undefined);
+    });
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
+  });
+
+  it("should validate a complete valid request without hearing_list", async () => {
+    // Arrange / Act
+    const result = await validateFlatFileRequest(validRequest, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.locationExists).toBe(true);
+  });
+
+  it("should not require hearing_list", async () => {
+    // Arrange: request has no hearing_list (flat file - it is never expected)
+    // Act
+    const result = await validateFlatFileRequest(validRequest, 1000);
+
+    // Assert
+    expect(result.errors.some((e) => e.field === "hearing_list")).toBe(false);
+  });
+
+  it("should reject request with missing court_id", async () => {
+    // Arrange
+    const request = { ...validRequest, court_id: "" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "court_id", message: "court_id is required" });
+  });
+
+  it("should reject request with missing provenance", async () => {
+    // Arrange
+    const request = { ...validRequest, provenance: "" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "provenance", message: "provenance is required" });
+  });
+
+  it("should reject request with invalid provenance", async () => {
+    // Arrange
+    const request = { ...validRequest, provenance: "INVALID" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({
+      field: "provenance",
+      message: "Invalid provenance. Allowed values: MANUAL_UPLOAD, SNL, COMMON_PLATFORM, CP_CATH, PDDA"
+    });
+  });
+
+  it("should reject request with missing list_type", async () => {
+    // Arrange
+    const request = { ...validRequest, list_type: "" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "list_type", message: "list_type is required" });
+  });
+
+  it("should reject request with missing sensitivity", async () => {
+    // Arrange
+    const request = { ...validRequest, sensitivity: "" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "sensitivity", message: "sensitivity is required" });
+  });
+
+  it("should reject request with missing language", async () => {
+    // Arrange
+    const request = { ...validRequest, language: "" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "language", message: "language is required" });
+  });
+
+  it("should reject request with display_to before display_from", async () => {
+    // Arrange
+    const request = { ...validRequest, display_from: "2025-01-25T17:00:00Z", display_to: "2025-01-25T09:00:00Z" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "display_to", message: "display_to must be after display_from" });
+  });
+
+  it("should reject request exceeding size limit", async () => {
+    // Act
+    const result = await validateFlatFileRequest(validRequest, 101 * 1024 * 1024);
+
+    // Assert
+    expect(result.isValid).toBe(false);
+    expect(result.errors).toContainEqual({ field: "body", message: "Payload too large. Maximum size is 100MB" });
+  });
+
+  it("should set locationExists=false when court_id not found", async () => {
+    // Arrange
+    const request = { ...validRequest, court_id: "999" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.locationExists).toBe(false);
+  });
+
+  it("should resolve external provenance location when provenance is SNL", async () => {
+    // Arrange
+    const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
+    vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue({
+      locationId: 456,
+      name: "SNL Court",
+      welshName: "Llys SNL",
+      regions: [],
+      subJurisdictions: []
+    });
+    const request = { ...validRequest, provenance: "SNL", court_id: "snl-456" };
+
+    // Act
+    const result = await validateFlatFileRequest(request, 1000);
+
+    // Assert
+    expect(result.locationExists).toBe(true);
+    expect(result.resolvedLocationId).toBe("456");
   });
 });

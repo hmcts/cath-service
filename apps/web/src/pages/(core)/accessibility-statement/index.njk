@@ -1,7 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 
 {% block page_content %}
-  <h1 class="govuk-heading-l">{{ title }}</h1>
+  <h1 class="govuk-heading-l">{{ cy.title if locale == "cy" else en.title }}</h1>
 
   <p class="govuk-body">{{ sections.intro.content }}<a href="{{ sections.intro.serviceUrlFull }}" class="govuk-link">{{ sections.intro.serviceUrl }}</a>.</p>
   <p class="govuk-body">{{ sections.intro.serviceDescription }}</p>

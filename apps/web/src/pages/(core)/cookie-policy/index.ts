@@ -3,10 +3,13 @@ import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
   const cookiePolicy = parseCookiePolicy(req.cookies?.cookie_policy);
+  const locale = res.locals.locale || "en";
+  const t = locale === "cy" ? cookiePolicyCy : cookiePolicyEn;
 
   res.render("cookie-policy/index", {
     en: cookiePolicyEn,
     cy: cookiePolicyCy,
+    pageTitle: t.title,
     cookiePreferences: cookiePolicy,
     categories: res.locals.cookieConfig?.categories,
     saved: req.query.saved === "true"

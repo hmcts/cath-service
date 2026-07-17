@@ -362,7 +362,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.locator("body")).toContainText("Smith v Jones");
 
     // Test Welsh translation
-    await page.locator(".app-language-toggle a").click();
+    await page.locator(".app-phase-banner__language").click();
     await page.waitForLoadState("networkidle");
 
     // Dismiss cookie banner if it reappears after language change
@@ -401,7 +401,7 @@ test.describe("Summary of Publications Page", () => {
     await page.waitForSelector("h1.govuk-heading-l");
 
     // Find and click the Welsh language toggle
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toContainText("Cymraeg");
 
@@ -446,7 +446,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(page.getByText(/mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau/i)).toBeVisible();
 
     // Verify language toggle still shows English option
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toContainText("English");
   });
 

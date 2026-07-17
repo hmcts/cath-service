@@ -2,9 +2,9 @@ export const cy = {
   title: "Dangosfwrdd Gweinyddwr y System",
   tiles: [
     {
-      title: "Uwchlwytho Data Cyfeirio",
-      description: "Uwchlwytho data cyfeirio lleoliad CSV",
-      href: "/upload-reference-data"
+      title: "Data Cyfeirio",
+      description: "Uwchlwytho data CSV, rheoli data awdurdodaeth a lleoliad",
+      href: "/reference-data"
     },
     {
       title: "Dileu llys",
@@ -42,11 +42,6 @@ export const cy = {
       href: "/audit-log-list"
     },
     {
-      title: "Rheoli Metadata Lleoliad",
-      description: "Gweld, diweddaru a dileu metadata lleoliad",
-      href: "/location-metadata-search"
-    },
-    {
       title: "Rheoli Mathau Rhestr",
       description: "Gweld, creu a diweddaru ffurfweddiad math rhestr",
       href: "/manage-list-types"
@@ -55,6 +50,11 @@ export const cy = {
       title: "Ffurfweddu Math Rhestr",
       description: "Ychwanegu a rheoli ffurfweddiadau math rhestr",
       href: "/configure-list-type-enter-details"
+    },
+    {
+      title: "Rheoli Data Awdurdodaeth",
+      description: "Gweld, creu, diweddaru a dileu awdurdodaethau ac is-awdurdodaethau",
+      href: "/jurisdiction-data"
     }
   ]
 };

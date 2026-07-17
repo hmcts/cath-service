@@ -16,6 +16,6 @@ export const GET = createListTypeHandler<CrownFirmListData>({
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render("crown-firm-list", { en, cy, title: t.title, header, openJustice, listData, groupedListData, dataSource, t });
+    res.render("crown-firm-list", { en, cy, pageTitle: t.title, header, openJustice, listData, groupedListData, dataSource, t });
   }
 });

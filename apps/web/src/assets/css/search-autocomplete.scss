@@ -20,6 +20,17 @@
   max-width: 30em;
 }
 
+// Match the pre-enhancement input width to the enhanced autocomplete widget so
+// there is no layout shift when JS mounts the accessible-autocomplete widget on
+// DOMContentLoaded. The widget's width is set by .autocomplete__wrapper's
+// max-width: 30em, which resolves against its 16px font (30 * 16 = 480px). We
+// cannot reuse 30em here because .govuk-input has a 19px font (30em = 570px),
+// which would produce a 570px -> 480px flicker. Use the equivalent pixel value
+// so both states render at exactly the same width regardless of font-size.
+.govuk-input[data-autocomplete="true"] {
+  max-width: 480px;
+}
+
 // Lighter background for alternating rows
 .autocomplete__option--odd {
   background-color: #f8f8f8;

@@ -1,8 +1,16 @@
 {% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/reference-data"
+  }) }}
+{% endblock %}
 
 {% block content %}
 <div class="govuk-grid-row">
@@ -31,18 +39,6 @@
     <p class="govuk-body">
       <a href="/reference-data-download" class="govuk-link">{{ downloadLinkText }}</a>
     </p>
-
-    <div class="govuk-button-group reference-data-upload__button-group">
-      <a href="/add-jurisdiction" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-        {{ addJurisdictionLinkText }}
-      </a>
-      <a href="/add-sub-jurisdiction" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-        {{ addSubJurisdictionLinkText }}
-      </a>
-      <a href="/add-region" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">
-        {{ addRegionLinkText }}
-      </a>
-    </div>
 
     <form method="post" enctype="multipart/form-data" novalidate>
 
