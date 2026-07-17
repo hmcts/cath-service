@@ -1917,6 +1917,7 @@ __metadata:
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/magistrates-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
+    "@hmcts/pht-weekly-hearing-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
@@ -1959,6 +1960,24 @@ __metadata:
     "@types/node": "npm:22.19.21"
     puppeteer: "npm:24.42.0"
     typescript: "npm:6.0.3"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/pht-weekly-hearing-list@workspace:*, @hmcts/pht-weekly-hearing-list@workspace:libs/list-types/pht-weekly-hearing-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/pht-weekly-hearing-list@workspace:libs/list-types/pht-weekly-hearing-list"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2037,6 +2056,7 @@ __metadata:
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/notifications": "workspace:*"
+    "@hmcts/pht-weekly-hearing-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
     "@hmcts/send-daily-hearing-list": "workspace:*"
@@ -2405,6 +2425,7 @@ __metadata:
     "@hmcts/magistrates-public-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
     "@hmcts/magistrates-standard-list": "workspace:*"
+    "@hmcts/pht-weekly-hearing-list": "workspace:*"
     "@hmcts/public-pages": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
