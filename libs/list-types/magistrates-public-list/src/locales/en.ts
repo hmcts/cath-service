@@ -31,5 +31,19 @@ export const en = {
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  downloadSection: "Download this list",
+  downloadAsPdf: "Download as a PDF",
+  downloadAsSpreadsheet: "Download as a spreadsheet (Excel)",
+  excelColumns: {
+    courtHouse: "Court House",
+    courtRoom: "Court Room",
+    sittingAt: "Sitting at",
+    urn: "URN",
+    name: "Name",
+    hearingType: "Hearing Type",
+    prosecutingAuthority: "Prosecuting Authority",
+    offenceDetails: "Offence Details",
+    reportingRestrictions: "Reporting Restrictions"
+  }
 };

@@ -105,12 +105,20 @@ export async function getArtefactById(artefactId: string): Promise<ArtefactWithL
       isFlatFile: true,
       provenance: true,
       supersededCount: true,
-      noMatch: true
+      noMatch: true,
+      excelPath: true
     }
   });
   if (!artefact) return null;
   const { listType, ...rest } = artefact;
   return { ...rest, listTypeName: listType?.name };
+}
+
+export async function updateArtefactExcelPath(artefactId: string, excelPath: string): Promise<void> {
+  await prisma.artefact.update({
+    where: { artefactId },
+    data: { excelPath }
+  });
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
@@ -184,6 +192,12 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
       // 404 is expected if no PDF was generated for this artefact
       if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
         console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
+    deleteBlob(`${artefact.artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
+      // 404 is expected if no Excel file was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete Excel blob for artefact ${artefact.artefactId}:`, error);
       }
     });
   }

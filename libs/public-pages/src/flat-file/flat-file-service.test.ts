@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.js";
+import { getExcelForDownload, getFileForDownload, getFlatFileForDisplay } from "./flat-file-service.js";
+
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { PUBLICATIONS: "publications", ARTEFACT: "artefact" },
+  downloadBlob: vi.fn()
+}));
 
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
@@ -28,6 +33,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
   })
 }));
 
+import { downloadBlob } from "@hmcts/azure-blob";
 import {
   canAccessPublicationData,
   getArtefactById,
@@ -314,6 +320,76 @@ describe("flat-file-service", () => {
       // Assert
       expect(result).toMatchObject({ success: true });
       expect(canAccessPublicationData).toHaveBeenCalledWith(verifiedUser, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
+  });
+
+  describe("getExcelForDownload", () => {
+    const artefactId = "c1baacc3-8280-43ae-8551-24080c0654f9";
+    const mockArtefact = {
+      artefactId,
+      locationId: "123",
+      listTypeId: 1,
+      contentDate: new Date("2024-01-15"),
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: new Date("2020-01-01"),
+      displayTo: new Date("2099-12-31"),
+      isFlatFile: false,
+      provenance: "MANUAL_UPLOAD",
+      noMatch: false,
+      excelPath: `${artefactId}.xlsx`
+    };
+
+    it("should return file buffer and xlsx metadata when excel file exists", async () => {
+      const mockBuffer = Buffer.from("xlsx content");
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(downloadBlob).mockResolvedValue(mockBuffer);
+
+      const result = await getExcelForDownload(artefactId);
+
+      expect(result).toEqual({
+        success: true,
+        fileBuffer: mockBuffer,
+        contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        fileName: `${artefactId}.xlsx`
+      });
+    });
+
+    it("should return NOT_FOUND when artefact does not exist", async () => {
+      vi.mocked(getArtefactById).mockResolvedValue(null);
+
+      const result = await getExcelForDownload(artefactId);
+
+      expect(result).toEqual({ error: "NOT_FOUND" });
+    });
+
+    it("should return EXPIRED when artefact is outside display window", async () => {
+      vi.mocked(getArtefactById).mockResolvedValue({
+        ...mockArtefact,
+        displayFrom: new Date("2020-01-01"),
+        displayTo: new Date("2020-12-31")
+      } as any);
+
+      const result = await getExcelForDownload(artefactId);
+
+      expect(result).toEqual({ error: "EXPIRED" });
+    });
+
+    it("should return FILE_NOT_FOUND when excelPath is null", async () => {
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, excelPath: null } as any);
+
+      const result = await getExcelForDownload(artefactId);
+
+      expect(result).toEqual({ error: "FILE_NOT_FOUND" });
+    });
+
+    it("should return FILE_NOT_FOUND when blob download returns null", async () => {
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+      vi.mocked(downloadBlob).mockResolvedValue(null);
+
+      const result = await getExcelForDownload(artefactId);
+
+      expect(result).toEqual({ error: "FILE_NOT_FOUND" });
     });
   });
 });

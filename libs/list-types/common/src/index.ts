@@ -28,6 +28,7 @@ export {
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
+export { sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export type {

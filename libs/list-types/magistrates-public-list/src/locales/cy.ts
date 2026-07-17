@@ -31,5 +31,19 @@ export const cy = {
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
+  downloadSection: "Llwytho'r rhestr hon",
+  downloadAsPdf: "Llwytho fel PDF",
+  downloadAsSpreadsheet: "Llwytho fel taenlen (Excel)",
+  excelColumns: {
+    courtHouse: "Llys",
+    courtRoom: "Ystafell Llys",
+    sittingAt: "Yn eistedd yn",
+    urn: "URN",
+    name: "Enw",
+    hearingType: "Math o Wrandawiad",
+    prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
+    offenceDetails: "Manylion yr Trosedd",
+    reportingRestrictions: "Cyfyngiadau Riportio"
+  }
 };
