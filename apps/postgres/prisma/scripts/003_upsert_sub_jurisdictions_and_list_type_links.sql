@@ -74,6 +74,8 @@ FROM (VALUES
   ('CIVIL_AND_FAMILY_DAILY_CAUSE_LIST',                                   2),
   -- CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST → Care Standards Tribunal (9)
   ('CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST',                         9),
+  -- MENTAL_HEALTH_TRIBUNAL_HEARING_LIST → Mental Health Tribunal (20)
+  ('MENTAL_HEALTH_TRIBUNAL_HEARING_LIST',                                 20),
   -- CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST → Civil Court (1)
   ('CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST',                                   1),
   -- COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST → Civil Court (1)
