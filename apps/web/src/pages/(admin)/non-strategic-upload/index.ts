@@ -9,7 +9,7 @@ import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
-import { Language, Sensitivity } from "@hmcts/publication";
+import { Language } from "@hmcts/publication";
 import { findListTypeById, findNonStrategicListTypes } from "@hmcts/system-admin-pages";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
@@ -25,7 +25,9 @@ async function getListTypesData() {
       text: listType.shortenedFriendlyName || listType.friendlyName || listType.name
     }))
   ];
-  const sensitivityMap = Object.fromEntries(nonStrategicListTypes.map((listType) => [listType.id.toString(), Sensitivity.PUBLIC]));
+  const sensitivityMap = Object.fromEntries(
+    nonStrategicListTypes.map((listType) => [listType.id.toString(), listType.defaultSensitivity?.toUpperCase() ?? ""])
+  );
   return { options, sensitivityMap };
 }
 

@@ -1,3 +1,4 @@
+import path from "node:path";
 import { getFlatFileForDisplay } from "@hmcts/public-pages";
 import { getParam } from "@hmcts/web-core";
 import type { Request, Response } from "express";
@@ -66,7 +67,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const downloadUrl = `/api/flat-file/${result.artefactId}/download`;
-  const fileExtension = result.fileExtension || ".pdf";
+  const fileExtension = path.extname(result.sourceArtefactId || "") || ".pdf";
   const isPdf = fileExtension.toLowerCase() === ".pdf";
 
   if (!isPdf) {

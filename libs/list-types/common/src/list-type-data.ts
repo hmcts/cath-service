@@ -642,6 +642,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [26]
   },
   {
+    name: "PHT_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Primary Health Tribunal Weekly Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Iechyd Sylfaenol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "pht-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: null,
+    shortenedFriendlyName: "PHT Weekly Hearing List",
+    subJurisdictionIds: [22]
+  },
+  {
     name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
     englishFriendlyName: "Magistrates Adult Court List - Daily",
     welshFriendlyName: "Rhestr Llys Ynadon Oedolion - Dyddiol",
@@ -680,5 +691,46 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
+  },
+  // High Court flat-file daily cause lists (manual upload)
+  {
+    name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Business & Property Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Busnes ac Eiddo",
+    provenance: "CFT_IDAM",
+    urlPath: "business-and-property-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Circuit Commercial Court Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Llys Masnachol Cylchdaith",
+    provenance: "CFT_IDAM",
+    urlPath: "circuit-commercial-court-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "HIGH_COURT_CIVIL_DAILY_CAUSE_LIST",
+    englishFriendlyName: "High Court Civil Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Sifil yr Uchel Lys",
+    provenance: "CFT_IDAM",
+    urlPath: "high-court-civil-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "HIGH_COURT_FAMILY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "High Court Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Teulu yr Uchel Lys",
+    provenance: "CFT_IDAM",
+    urlPath: "high-court-family-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [11]
   }
 ];

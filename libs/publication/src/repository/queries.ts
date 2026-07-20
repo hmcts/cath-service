@@ -1,3 +1,4 @@
+import path from "node:path";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
@@ -77,6 +78,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
       language: data.language,
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
+      lastReceivedDate: data.lastReceivedDate ?? new Date(),
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
       noMatch: data.noMatch ?? false
@@ -165,21 +167,18 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   const artefacts = await prisma.artefact.findMany({
     where: { artefactId: { in: artefactIds } },
-    select: { artefactId: true, fileExtension: true }
-  });
-
-  await prisma.artefact.deleteMany({
-    where: {
-      artefactId: {
-        in: artefactIds
-      }
-    }
+    select: { artefactId: true, sourceArtefactId: true }
   });
 
   for (const artefact of artefacts) {
-    const extension = artefact.fileExtension ?? ".pdf";
-    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
+    // New blobs are stored without an extension (just the artefactId).
+    deleteBlob(artefact.artefactId, CONTAINER.ARTEFACT).catch((error) => {
       console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    });
+    // Backward-compat: older blobs were stored with the extension appended — best-effort cleanup.
+    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
+    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
+      // Silently ignore — legacy blob may not exist for new artefacts.
     });
     deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
       // 404 is expected if no PDF was generated for this artefact
@@ -188,12 +187,20 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
       }
     });
   }
+
+  await prisma.artefact.deleteMany({
+    where: {
+      artefactId: {
+        in: artefactIds
+      }
+    }
+  });
 }
 
-export async function updateArtefactFileExtension(artefactId: string, fileExtension: string): Promise<void> {
+export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string | null): Promise<void> {
   await prisma.artefact.update({
     where: { artefactId },
-    data: { fileExtension }
+    data: { sourceArtefactId }
   });
 }
 

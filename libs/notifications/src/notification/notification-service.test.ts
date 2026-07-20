@@ -35,7 +35,8 @@ vi.mock("../govnotify/template-config.js", () => ({
     display_summary: "yes",
     summary_of_cases: "Case 123 - Smith v Jones"
   }),
-  getSubscriptionTemplateIdForListType: vi.fn().mockReturnValue("template-id-123")
+  getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
+  isSjpListType: vi.fn().mockReturnValue(false)
 }));
 
 vi.mock("./subscription-queries.js", () => ({

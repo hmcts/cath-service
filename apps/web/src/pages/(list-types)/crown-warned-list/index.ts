@@ -22,6 +22,6 @@ export const GET = createListTypeHandler<CrownWarnedListData>({
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render("crown-warned-list", { en, cy, title: t.title, header, openJustice, groupedCategories, dataSource, t });
+    res.render("crown-warned-list", { en, cy, pageTitle: t.title, header, openJustice, groupedCategories, dataSource, t });
   }
 });

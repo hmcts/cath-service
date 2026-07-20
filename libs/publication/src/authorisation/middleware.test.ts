@@ -252,7 +252,7 @@ describe("requirePublicationAccess", () => {
       email: "user@example.com",
       displayName: "Test User",
       role: "VERIFIED",
-      provenance: "B2C_IDAM"
+      provenance: "PI_AAD"
     };
 
     const req = createMockRequest({ id: "test-id" }, user) as Request;
@@ -521,7 +521,7 @@ describe("requirePublicationDataAccess", () => {
       email: "user@example.com",
       displayName: "Verified User",
       role: "VERIFIED",
-      provenance: "B2C_IDAM"
+      provenance: "PI_AAD"
     };
 
     const req = createMockRequest({ id: "test-id" }, user) as Request;

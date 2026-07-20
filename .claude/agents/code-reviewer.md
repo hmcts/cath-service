@@ -48,7 +48,7 @@ git log --oneline -5
 - **Templates** (`*.njk`): Accessibility, GOV.UK component usage, progressive enhancement
 - **Styles** (`*.scss`): Mobile-first responsive, BEM methodology, performance
 - **Database** (`schema.prisma`, migrations): Data integrity, performance, security
-- **Tests** (`*.test.ts`): Coverage, realistic scenarios, accessibility testing
+- **Tests** (`*.test.ts`): Coverage, realistic scenarios, accessibility testing, template variation tests
 
 ### 3. Review Output Format
 

@@ -795,6 +795,7 @@ describe("validateMyListType", () => {
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
+- **Template Tests**: Vitest with `@hmcts/test-support` render helpers (`*.njk.test.ts`)
 - **E2E Tests**: Playwright in `e2e-tests/`
 - **Accessibility Tests**: Axe-core with Playwright
 - **Test Scripts**: All packages must use `"test": "vitest run"`

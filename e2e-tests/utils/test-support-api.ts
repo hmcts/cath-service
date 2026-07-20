@@ -407,6 +407,7 @@ interface UploadFlatFileInput {
   artefactId: string;
   content: Buffer | Uint8Array;
   extension?: string;
+  sourceArtefactId?: string;
 }
 
 interface UploadFlatFileResponse {
@@ -420,7 +421,8 @@ export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<Up
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
@@ -440,12 +442,28 @@ export async function checkFlatFileExists(artefactId: string): Promise<FlatFileI
   return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
 }
 
+export interface FlatFileListItem {
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface FlatFileListResponse {
+  artefactId: string;
+  files: FlatFileListItem[];
+}
+
+export async function listFlatFiles(artefactId: string): Promise<FlatFileListResponse> {
+  return callTestSupportApi<FlatFileListResponse>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}&all=true`);
+}
+
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
