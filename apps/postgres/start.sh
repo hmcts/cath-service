@@ -83,7 +83,8 @@ echo "Running reference data scripts..."
 for script in prisma/scripts/001_insert_missing_list_types.sql \
               prisma/scripts/002_update_list_type_provenances.sql \
               prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql \
-              prisma/scripts/004_soft_delete_crime_daily_list.sql; do
+              prisma/scripts/004_soft_delete_crime_daily_list.sql \
+              prisma/scripts/005_insert_magistrates_adult_lists.sql; do
   echo "  Applying $script..."
   ../../node_modules/.bin/prisma db execute --file "$script" --config=./prisma.config.ts
 done
