@@ -1,6 +1,6 @@
 import { renderMagistratesStandardListData, validateMagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, listTypeHasExcel } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -21,7 +21,8 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     ...actual,
     getArtefactById: vi.fn(),
     getPublicationJson: vi.fn(),
-    canAccessPublicationData: vi.fn()
+    canAccessPublicationData: vi.fn(),
+    listTypeHasExcel: vi.fn()
   };
 });
 vi.mock("@hmcts/magistrates-standard-list");
@@ -379,12 +380,13 @@ describe("magistrates-standard-list controller", () => {
       );
     });
 
-    it("should not pass excelDownloadUrl when artefact has no excelPath", async () => {
+    it("should not pass excelDownloadUrl when list type does not have Excel", async () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
         locationId: "1",
         listTypeId: 28,
+        listTypeName: "SOME_OTHER_LIST",
         contentDate: new Date("2025-01-13"),
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -394,10 +396,10 @@ describe("magistrates-standard-list controller", () => {
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
         supersededCount: 0,
-        noMatch: false,
-        excelPath: null
+        noMatch: false
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(listTypeHasExcel).mockReturnValue(false);
       vi.mocked(getPublicationJson).mockResolvedValue({
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
         venue: {},
@@ -420,12 +422,13 @@ describe("magistrates-standard-list controller", () => {
       );
     });
 
-    it("should pass excelDownloadUrl when artefact has excelPath", async () => {
+    it("should pass excelDownloadUrl when list type has Excel", async () => {
       req.query = { artefactId: "test-id" };
       const mockArtefact = {
         artefactId: "test-id",
         locationId: "1",
         listTypeId: 28,
+        listTypeName: "MAGISTRATES_STANDARD_LIST",
         contentDate: new Date("2025-01-13"),
         sensitivity: "PUBLIC",
         language: "ENGLISH",
@@ -435,10 +438,10 @@ describe("magistrates-standard-list controller", () => {
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
         supersededCount: 0,
-        noMatch: false,
-        excelPath: "test-id.xlsx"
+        noMatch: false
       } as any;
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(listTypeHasExcel).mockReturnValue(true);
       vi.mocked(getPublicationJson).mockResolvedValue({
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
         venue: {},

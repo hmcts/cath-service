@@ -88,11 +88,7 @@ export async function getExcelForDownload(artefactId: string) {
     return { error: "EXPIRED" as const };
   }
 
-  if (!artefact.excelPath) {
-    return { error: "FILE_NOT_FOUND" as const };
-  }
-
-  const fileBuffer = await downloadBlob(artefact.excelPath, CONTAINER.PUBLICATIONS);
+  const fileBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
 
   if (!fileBuffer) {
     return { error: "FILE_NOT_FOUND" as const };

@@ -336,8 +336,7 @@ describe("flat-file-service", () => {
       displayTo: new Date("2099-12-31"),
       isFlatFile: false,
       provenance: "MANUAL_UPLOAD",
-      noMatch: false,
-      excelPath: `${artefactId}.xlsx`
+      noMatch: false
     };
 
     it("should return file buffer and xlsx metadata when excel file exists", async () => {
@@ -347,6 +346,7 @@ describe("flat-file-service", () => {
 
       const result = await getExcelForDownload(artefactId);
 
+      expect(downloadBlob).toHaveBeenCalledWith(`${artefactId}.xlsx`, "publications");
       expect(result).toEqual({
         success: true,
         fileBuffer: mockBuffer,
@@ -373,14 +373,6 @@ describe("flat-file-service", () => {
       const result = await getExcelForDownload(artefactId);
 
       expect(result).toEqual({ error: "EXPIRED" });
-    });
-
-    it("should return FILE_NOT_FOUND when excelPath is null", async () => {
-      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, excelPath: null } as any);
-
-      const result = await getExcelForDownload(artefactId);
-
-      expect(result).toEqual({ error: "FILE_NOT_FOUND" });
     });
 
     it("should return FILE_NOT_FOUND when blob download returns null", async () => {

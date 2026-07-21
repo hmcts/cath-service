@@ -1,6 +1,6 @@
 import { renderMagistratesPublicListData, validateMagistratesPublicList } from "@hmcts/magistrates-public-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, listTypeHasExcel } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -21,7 +21,8 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     ...actual,
     getArtefactById: vi.fn(),
     getPublicationJson: vi.fn(),
-    canAccessPublicationData: vi.fn()
+    canAccessPublicationData: vi.fn(),
+    listTypeHasExcel: vi.fn()
   };
 });
 vi.mock("@hmcts/magistrates-public-list");
@@ -51,7 +52,7 @@ describe("magistrates-public-list controller", () => {
     provenance: "MANUAL_UPLOAD",
     supersededCount: 0,
     noMatch: false,
-    excelPath: null
+    listTypeName: "MAGISTRATES_PUBLIC_LIST"
   };
 
   const mockJsonData = {
@@ -138,9 +139,10 @@ describe("magistrates-public-list controller", () => {
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
-    it("should render successfully when artefact has no excelPath", async () => {
+    it("should not pass excelDownloadUrl when list type does not have Excel", async () => {
       req.query = { artefactId: "test-id" };
-      vi.mocked(getArtefactById).mockResolvedValue({ ...baseArtefact, excelPath: null } as any);
+      vi.mocked(getArtefactById).mockResolvedValue(baseArtefact as any);
+      vi.mocked(listTypeHasExcel).mockReturnValue(false);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
 
       await GET(req as Request, res as Response);
@@ -153,9 +155,10 @@ describe("magistrates-public-list controller", () => {
       });
     });
 
-    it("should pass excelDownloadUrl when artefact has excelPath", async () => {
+    it("should pass excelDownloadUrl when list type has Excel", async () => {
       req.query = { artefactId: "test-id" };
-      vi.mocked(getArtefactById).mockResolvedValue({ ...baseArtefact, excelPath: "test-id.xlsx" } as any);
+      vi.mocked(getArtefactById).mockResolvedValue(baseArtefact as any);
+      vi.mocked(listTypeHasExcel).mockReturnValue(true);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
 
       await GET(req as Request, res as Response);

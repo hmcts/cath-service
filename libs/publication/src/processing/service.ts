@@ -45,7 +45,6 @@ import {
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
-import { updateArtefactExcelPath } from "../repository/queries.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -330,7 +329,13 @@ interface ExcelGenerationResult {
   error?: string;
 }
 
-type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGenerationResult>;
+interface ExcelGeneratorResult {
+  success: boolean;
+  excelPath?: string;
+  error?: string;
+}
+
+type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorResult>;
 
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
@@ -372,7 +377,7 @@ export async function generatePublicationExcel(params: GenerateExcelParams): Pro
 
     const result = await generator(params);
 
-    if ("excelPath" in result && result.excelPath) {
+    if (result.success && result.excelPath) {
       return { hasExcel: true };
     }
 

@@ -105,20 +105,12 @@ export async function getArtefactById(artefactId: string): Promise<ArtefactWithL
       isFlatFile: true,
       provenance: true,
       supersededCount: true,
-      noMatch: true,
-      excelPath: true
+      noMatch: true
     }
   });
   if (!artefact) return null;
   const { listType, ...rest } = artefact;
   return { ...rest, listTypeName: listType?.name };
-}
-
-export async function updateArtefactExcelPath(artefactId: string, excelPath: string): Promise<void> {
-  await prisma.artefact.update({
-    where: { artefactId },
-    data: { excelPath }
-  });
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
