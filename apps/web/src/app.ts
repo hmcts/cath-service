@@ -26,6 +26,7 @@ import { moduleRoot as magistratesAdultCourtListModuleRoot } from "@hmcts/magist
 import { moduleRoot as magistratesPublicAdultCourtListModuleRoot } from "@hmcts/magistrates-public-adult-court-list/config";
 import { moduleRoot as magistratesPublicListModuleRoot } from "@hmcts/magistrates-public-list/config";
 import { moduleRoot as magistratesStandardListModuleRoot } from "@hmcts/magistrates-standard-list/config";
+import { moduleRoot as phtWeeklyHearingListModuleRoot } from "@hmcts/pht-weekly-hearing-list/config";
 import {
   apiRoutes as publicPagesApiRoutes,
   fileUploadRoutes as publicPagesFileUploadRoutes,
@@ -148,7 +149,8 @@ export async function createApp(): Promise<Express> {
     grcWeeklyHearingListModuleRoot,
     wpafccWeeklyHearingListModuleRoot,
     utiacStatutoryAppealModuleRoot,
-    utiacJrModuleRoot
+    utiacJrModuleRoot,
+    phtWeeklyHearingListModuleRoot
   ];
 
   await configureGovuk(app, modulePaths, {
