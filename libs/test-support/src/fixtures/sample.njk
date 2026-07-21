@@ -1,0 +1,11 @@
+<h1>{{ heading }}</h1>
+{% if errors %}
+  <div class="govuk-error-summary">
+    <ul class="govuk-error-summary__list">
+      {% for error in errors %}
+        <li>{{ error.text }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+<p class="trimmed">{% if trimmed %}yes{% endif %}</p>

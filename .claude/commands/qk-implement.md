@@ -45,7 +45,7 @@ PROMPT FOR AGENT:
 **STEP 2: Execute Implementation Tasks**
 Work through each task in the Implementation Tasks section of tasks.md:
 1. Implement the task following the technical plan
-2. Write unit tests for new code (co-located .test.ts files)
+2. Write unit tests for new code (co-located .test.ts files), including template tests for new `.njk` files
 3. After completing each task, use the Edit tool to update docs/tickets/$ARGUMENT/tasks.md
    - Change '- [ ]' to '- [x]' for the completed task
 4. Continue until all Implementation Tasks are marked [x]

@@ -1,14 +1,32 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "(system-admin)/delete-court-confirm/index.njk";
+
+const buildData = (content: typeof en | typeof cy) => ({
+  ...content,
+  locationName: "Test Court",
+  locationType: "Court",
+  jurisdiction: "Civil",
+  region: "London"
+});
+
 describe("delete-court-confirm template", () => {
+  let env: nunjucks.Environment;
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
   describe("Template file", () => {
     it("should exist", () => {
       const templatePath = path.join(__dirname, "index.njk");
@@ -16,122 +34,167 @@ describe("delete-court-confirm template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required properties", () => {
-      expect(en).toHaveProperty("pageTitle");
-      expect(en).toHaveProperty("tableHeadings");
-      expect(en).toHaveProperty("radioLegend");
-      expect(en).toHaveProperty("radioYes");
-      expect(en).toHaveProperty("radioNo");
-      expect(en).toHaveProperty("continueButtonText");
-      expect(en).toHaveProperty("errorSummaryTitle");
-      expect(en).toHaveProperty("noRadioSelected");
-      expect(en).toHaveProperty("activeSubscriptions");
-      expect(en).toHaveProperty("activeArtefacts");
-      expect(en).toHaveProperty("locationNotFound");
+  describe("English content", () => {
+    it("should render the page heading", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(en.pageTitle);
     });
 
-    it("should have correct page title", () => {
-      expect(en.pageTitle).toBe("Are you sure you want to delete this court?");
+    it("should render the summary list with location details", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const keys = $(".govuk-summary-list__key")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      const values = $(".govuk-summary-list__value")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(keys).toContain(en.tableHeadings.courtName);
+      expect(keys).toContain(en.tableHeadings.locationType);
+      expect(keys).toContain(en.tableHeadings.jurisdiction);
+      expect(keys).toContain(en.tableHeadings.region);
+      expect(values).toContain("Test Court");
+      expect(values).toContain("Court");
+      expect(values).toContain("Civil");
+      expect(values).toContain("London");
     });
 
-    it("should have correct table headings", () => {
-      expect(en.tableHeadings).toHaveProperty("courtName");
-      expect(en.tableHeadings).toHaveProperty("locationType");
-      expect(en.tableHeadings).toHaveProperty("jurisdiction");
-      expect(en.tableHeadings).toHaveProperty("region");
+    it("should render the radio options and continue button", () => {
+      const data = buildData(en);
 
-      expect(en.tableHeadings.courtName).toBe("Court or tribunal name");
-      expect(en.tableHeadings.locationType).toBe("Location type");
-      expect(en.tableHeadings.jurisdiction).toBe("Jurisdiction");
-      expect(en.tableHeadings.region).toBe("Region");
+      const { $ } = render(env, TEMPLATE, data);
+
+      const radioValues = $("input[name='confirmDelete']")
+        .map((_, el) => $(el).attr("value"))
+        .get();
+      expect(radioValues).toEqual(["yes", "no"]);
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(en.radioYes);
+      expect(radioLabels).toContain(en.radioNo);
+      expect($(".govuk-fieldset__legend").text()).toContain(en.radioLegend);
+      expect($(".govuk-button").text()).toContain(en.continueButtonText);
     });
 
-    it("should have correct radio options", () => {
-      expect(en.radioLegend).toBe("Are you sure you want to delete this court?");
-      expect(en.radioYes).toBe("Yes");
-      expect(en.radioNo).toBe("No");
-    });
+    it("should not render an error summary when there are no errors", () => {
+      const data = buildData(en);
 
-    it("should have correct error messages", () => {
-      expect(en.errorSummaryTitle).toBe("There is a problem");
-      expect(en.noRadioSelected).toBe("Select yes or no to continue");
-      expect(en.activeSubscriptions).toBe("There are active subscriptions for the given location.");
-      expect(en.activeArtefacts).toBe("There are active artefacts for the given location.");
-      expect(en.locationNotFound).toBe("Court or tribunal not found in session");
-    });
+      const { $ } = render(env, TEMPLATE, data);
 
-    it("should have continue button text", () => {
-      expect(en.continueButtonText).toBe("Continue");
-    });
-
-    it("should have all table headings as non-empty strings", () => {
-      Object.values(en.tableHeadings).forEach((value) => {
-        expect(typeof value).toBe("string");
-        expect(value.length).toBeGreaterThan(0);
-      });
+      assertNoErrors($);
     });
   });
 
-  describe("Welsh locale", () => {
-    it("should have required properties", () => {
-      expect(cy).toHaveProperty("pageTitle");
-      expect(cy).toHaveProperty("tableHeadings");
-      expect(cy).toHaveProperty("radioLegend");
-      expect(cy).toHaveProperty("radioYes");
-      expect(cy).toHaveProperty("radioNo");
-      expect(cy).toHaveProperty("continueButtonText");
-      expect(cy).toHaveProperty("errorSummaryTitle");
-      expect(cy).toHaveProperty("noRadioSelected");
-      expect(cy).toHaveProperty("activeSubscriptions");
-      expect(cy).toHaveProperty("activeArtefacts");
-      expect(cy).toHaveProperty("locationNotFound");
+  describe("Welsh content", () => {
+    it("should render the Welsh page heading and headings", () => {
+      const data = buildData(cy);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(cy.pageTitle);
+      const keys = $(".govuk-summary-list__key")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(keys).toContain(cy.tableHeadings.courtName);
+      expect(keys).toContain(cy.tableHeadings.locationType);
+      expect(keys).toContain(cy.tableHeadings.jurisdiction);
+      expect(keys).toContain(cy.tableHeadings.region);
+      expect($(".govuk-button").text()).toContain(cy.continueButtonText);
     });
 
-    it("should have correct page title", () => {
-      expect(cy.pageTitle).toBe("Ydych chi'n siŵr eich bod eisiau dileu'r llys hwn?");
+    it("should render the Welsh radio options and legend", () => {
+      const data = buildData(cy);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(cy.radioYes);
+      expect(radioLabels).toContain(cy.radioNo);
+      expect($(".govuk-fieldset__legend").text()).toContain(cy.radioLegend);
     });
 
-    it("should have correct table headings", () => {
-      expect(cy.tableHeadings).toHaveProperty("courtName");
-      expect(cy.tableHeadings).toHaveProperty("locationType");
-      expect(cy.tableHeadings).toHaveProperty("jurisdiction");
-      expect(cy.tableHeadings).toHaveProperty("region");
+    it("should render Welsh error summaries for each validation message", () => {
+      const messages = [cy.noRadioSelected, cy.activeSubscriptions, cy.activeArtefacts, cy.locationNotFound];
 
-      expect(cy.tableHeadings.courtName).toBe("Enw'r llys neu'r tribiwnlys");
-      expect(cy.tableHeadings.locationType).toBe("Math o Lleoliad");
-      expect(cy.tableHeadings.jurisdiction).toBe("Awdurdodaeth");
-      expect(cy.tableHeadings.region).toBe("Rhanbarth");
+      for (const message of messages) {
+        const data = { ...buildData(cy), errors: [{ text: message }] };
+
+        const { $ } = render(env, TEMPLATE, data);
+
+        assertErrorSummary($, [message]);
+        expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
+      }
+    });
+  });
+
+  describe("Error states", () => {
+    it("should render the error summary with a radio validation error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.noRadioSelected, href: "#confirm-delete" }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.noRadioSelected]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
+      expect($(".govuk-error-message").text()).toContain(en.noRadioSelected);
     });
 
-    it("should have correct radio options", () => {
-      expect(cy.radioLegend).toBe("Ydych chi'n siŵr eich bod eisiau dileu'r llys hwn?");
-      expect(cy.radioYes).toBe("Ydw");
-      expect(cy.radioNo).toBe("Nac ydw");
+    it("should render the error summary with a location validation error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.activeSubscriptions }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.activeSubscriptions]);
     });
 
-    it("should have correct error messages", () => {
-      expect(cy.errorSummaryTitle).toBe("Mae yna broblem");
-      expect(cy.noRadioSelected).toBe("Dewiswch ydw neu nac ydw i barhau");
-      expect(cy.activeSubscriptions).toBe("Mae tanysgrifiadau gweithredol ar gyfer y lleoliad a roddir.");
-      expect(cy.activeArtefacts).toBe("Mae arteffactau gweithredol ar gyfer y lleoliad a roddir.");
-      expect(cy.locationNotFound).toBe("Heb ddod o hyd i'r llys neu'r tribiwnlys yn y sesiwn");
+    it("should render the error summary with an active artefacts error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.activeArtefacts }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.activeArtefacts]);
     });
 
-    it("should have continue button text", () => {
-      expect(cy.continueButtonText).toBe("Dewiswch opsiwn");
+    it("should render the error summary with a location not found error", () => {
+      const data = { ...buildData(en), errors: [{ text: en.locationNotFound }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.locationNotFound]);
+    });
+  });
+
+  describe("Locale consistency", () => {
+    it("should have same keys in English and Welsh", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+      expect(Object.keys(en.tableHeadings).sort()).toEqual(Object.keys(cy.tableHeadings).sort());
     });
 
-    it("should have all table headings as non-empty strings", () => {
-      Object.values(cy.tableHeadings).forEach((value) => {
-        expect(typeof value).toBe("string");
-        expect(value.length).toBeGreaterThan(0);
-      });
-    });
-
-    it("should have same structure as English locale", () => {
-      expect(Object.keys(cy).sort()).toEqual(Object.keys(en).sort());
-      expect(Object.keys(cy.tableHeadings).sort()).toEqual(Object.keys(en.tableHeadings).sort());
+    it("should have all required keys", () => {
+      const requiredKeys = [
+        "pageTitle",
+        "tableHeadings",
+        "radioLegend",
+        "radioYes",
+        "radioNo",
+        "continueButtonText",
+        "errorSummaryTitle",
+        "noRadioSelected",
+        "activeSubscriptions",
+        "activeArtefacts",
+        "locationNotFound"
+      ];
+      for (const key of requiredKeys) {
+        expect(en).toHaveProperty(key);
+        expect(cy).toHaveProperty(key);
+      }
     });
   });
 });
