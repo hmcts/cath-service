@@ -1,5 +1,5 @@
 import type { Artefact } from "@hmcts/publication";
-import { canAccessPublicationData, getArtefactById, getPublicationJson, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, type ListType, listTypeHasExcel, PROVENANCE_LABELS } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export type ValidationResult = { isValid: boolean; errors: unknown[] };

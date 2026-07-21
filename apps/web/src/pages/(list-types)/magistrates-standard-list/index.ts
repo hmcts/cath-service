@@ -5,6 +5,7 @@ import {
   renderMagistratesStandardListData,
   validateMagistratesStandardList
 } from "@hmcts/magistrates-standard-list";
+import { listTypeHasExcel } from "@hmcts/publication";
 import { createListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
 export const GET = createListTypeHandler<MagistratesStandardList>({

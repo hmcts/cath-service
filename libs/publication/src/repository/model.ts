@@ -14,7 +14,6 @@ export interface Artefact {
   provenance: string;
   supersededCount?: number;
   noMatch: boolean;
-  excelPath?: string | null;
 }
 
 // Only getArtefactById performs the listType join that populates listTypeName.
