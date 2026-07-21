@@ -37,51 +37,81 @@ Use TodoWrite to create workflow checklist:
 ## PHASE 0: VERIFICATION & WORKTREE SETUP
 ## ═══════════════════════════════════════
 
-## Step 0: Verify Ticket and Mark In Progress [AGENT]
+## Step 0: Check Ticket Refinement [AGENT]
 
 *Mark "Verify ticket status" as in_progress*
 
-Check requirements.db to ensure ticket is available, then mark it as in_progress.
+`$ARGUMENT` is substituted literally into the `gh`, git, branch, and PR commands throughout this workflow, so validate it before anything else to prevent shell injection and malformed branch names.
 
+```bash
+EXECUTE:
+if ! [[ "$ARGUMENT" =~ ^[0-9]+$ ]]; then
+  echo "❌ Invalid issue number: '$ARGUMENT'. Provide a numeric GitHub issue number, e.g. /qk-ship 312"
+  exit 1
+fi
 ```
+
+Verify the GitHub issue has been properly refined and is ready for implementation.
+
+```text
 AGENT: general-purpose
-DESCRIPTION: Verify and claim ticket #$ARGUMENT
+DESCRIPTION: Verify ticket #$ARGUMENT refinement status
 PROMPT:
-"Verify ticket #$ARGUMENT is available and mark it in_progress.
+"Check if GitHub issue #$ARGUMENT is properly refined and ready for implementation.
 
-Database: requirements/requirements.db
-
-**Step 1: Query ticket status**
+**Step 1: Fetch issue from GitHub**
 
 \`\`\`bash
-sqlite3 requirements/requirements.db \"SELECT r.id, r.ref, r.title, r.status, r.issue_number FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
+gh issue view \"$ARGUMENT\" --json number,title,body,labels,comments,state
 \`\`\`
 
-**Step 2: Verify status**
+**Step 2: Check refinement indicators**
 
-If status is 'in_progress':
-  - STOP with error: '❌ Ticket #$ARGUMENT is already in progress. Choose another ticket from /qk-tickets.'
+Review the issue for:
+
+1. **Labels check:**
+   - Has 'refinement-done' label OR
+   - Has 'ready-for-dev' label OR
+   - Explicitly marked as refined in title/body
+
+2. **Acceptance criteria check:**
+   - Issue body contains clear acceptance criteria section OR
+   - Acceptance criteria are clearly defined OR
+   - Requirements are specific and measurable
+
+3. **Outstanding questions check:**
+   - Look for unresolved questions in body/comments
+   - Check for labels like 'needs-clarification', 'question', 'blocked'
+   - Look for recent comments asking for clarification
+   - Check if last comment is unanswered question
+
+**Step 3: Decision logic**
+
+If ANY of these are true, STOP with warning:
+- Issue state is 'closed' (CLOSED) — do not implement a closed issue
+- Has 'needs-clarification' or 'question' or 'blocked' label
+- Comments contain unanswered questions (check timestamps)
+- No clear acceptance criteria found
+- Issue body says 'TBD', 'TODO', or similar placeholders
+
+If refinement looks good:
+- Display summary: title, labels, acceptance criteria count
+- Continue to next step
+
+**Step 4: Output**
+
+If NOT ready:
+  Return: '❌ Ticket #$ARGUMENT not ready for implementation:
+  - [List specific issues found]
   
-If status is not 'approved':
-  - STOP with error: '❌ Ticket #$ARGUMENT has status=[status]. Only approved tickets can be shipped. Use /qk-tickets to see available tickets.'
+  Recommendation: Review issue on GitHub and ensure refinement is complete.'
 
-If ticket not found:
-  - STOP with error: '❌ Ticket #$ARGUMENT not found in requirements.db. Verify issue number or use /qk-tickets.'
-
-**Step 3: Mark as in_progress**
-
-If status is 'approved':
-  \`\`\`bash
-  sqlite3 requirements/requirements.db \"UPDATE requirement SET status = 'in_progress', updated_at = datetime('now'), updated_by = 'claude-agent' WHERE issue_number = $ARGUMENT;\"
-  \`\`\`
-
-**Step 4: Verify update**
-
-\`\`\`bash
-sqlite3 requirements/requirements.db \"SELECT r.ref, r.title, r.status FROM requirement r WHERE r.issue_number = $ARGUMENT;\"
-\`\`\`
-
-Return: '✅ Ticket #$ARGUMENT ([ref]) marked as in_progress and ready to work on'"
+If ready:
+  Return: '✅ Ticket #$ARGUMENT refinement verified:
+  - Title: [title]
+  - Labels: [labels]
+  - Acceptance criteria: [count] found
+  - No outstanding questions'"
 
 WAIT FOR AGENT
 ```
@@ -114,16 +144,10 @@ else
     git worktree add -b vibe-$ARGUMENT .claude/worktrees/vibe-$ARGUMENT master
   fi
   
-  # Create .devcontainer symlink for isolated dev container testing
-  cd .claude/worktrees/vibe-$ARGUMENT
-  ln -s ../../../.devcontainer .devcontainer
-  echo "✅ Created .devcontainer symlink for isolated container testing"
-  
   git status
 fi
 
 echo "✅ Worktree ready at .claude/worktrees/vibe-$ARGUMENT"
-echo "💡 To test in isolated dev container: code .claude/worktrees/vibe-$ARGUMENT && reopen in container"
 ```
 
 *Mark "Create worktree for issue" as completed*
@@ -805,7 +829,9 @@ echo ""
 
 *Mark "Final guards" as completed*
 
-## Step 12: Summary
+## Step 12: Git Workflow and PR Creation
+
+### 12a: Review Changes
 
 ```bash
 EXECUTE:
@@ -822,7 +848,136 @@ echo "   • Tests ✅"
 echo "   • Security Review ✅"
 echo "   • Code Quality ✅"
 echo ""
-echo "📋 NEXT STEPS"
+
+# Show git status and diff summary
+git status
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 CHANGES SUMMARY"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+git diff --stat
+echo ""
+```
+
+### 12b: Ask Developer About PR Creation
+
+Use AskUserQuestion to ask if developer wants you to create the PR and monitor it:
+
+```
+QUESTION 1:
+Header: "PR Creation"
+Question: "Would you like me to commit these changes and create a pull request for issue #$ARGUMENT?"
+Options:
+  1. "Yes, create PR and monitor CI checks" - I'll commit, push, create PR, and monitor CI/CD checks until they pass
+  2. "Yes, create PR only" - I'll commit, push, and create the PR but won't monitor CI checks
+  3. "No, I'll handle it manually" - You can review and commit the changes yourself
+
+[WAIT FOR USER RESPONSE]
+```
+
+### 12c: Execute Based on User Choice
+
+**If "Yes, create PR and monitor CI checks":**
+
+```bash
+EXECUTE:
+# Stop on the first failed command so a failed commit/push/create can never be
+# followed by a misleading success message
+set -e
+
+# Commit changes
+echo "Committing changes..."
+git add .
+git commit -m "feat: implement issue #$ARGUMENT
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+
+# Push to remote
+echo "Pushing to remote..."
+git push -u origin "vibe-$ARGUMENT"
+
+# Create PR and capture its URL directly from gh (fails the step if creation fails)
+echo "Creating pull request..."
+PR_URL=$(gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+
+## Implementation Summary
+- Implemented all acceptance criteria
+- All tests passing
+- Security review completed
+- Code quality checks passed
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)")
+
+# Resolve and verify the PR number before reporting success
+PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR creation did not return a PR number. Aborting."
+  exit 1
+fi
+echo ""
+echo "✅ PR #$PR_NUMBER created: $PR_URL"
+echo ""
+```
+
+**Then proceed to CI/CD Monitoring (see Step 13)**
+
+**If "Yes, create PR only":**
+
+```bash
+EXECUTE:
+# Stop on the first failed command so a failed commit/push/create can never be
+# followed by a misleading success message
+set -e
+
+# Commit changes
+echo "Committing changes..."
+git add .
+git commit -m "feat: implement issue #$ARGUMENT
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+
+# Push to remote
+echo "Pushing to remote..."
+git push -u origin "vibe-$ARGUMENT"
+
+# Create PR and capture its URL directly from gh (fails the step if creation fails)
+echo "Creating pull request..."
+PR_URL=$(gh pr create --title "Issue #$ARGUMENT" --body "Closes #$ARGUMENT
+
+## Implementation Summary
+- Implemented all acceptance criteria
+- All tests passing
+- Security review completed
+- Code quality checks passed
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)")
+
+# Resolve and verify the PR number before reporting success
+PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
+if [ -z "$PR_NUMBER" ]; then
+  echo "❌ PR creation did not return a PR number. Aborting."
+  exit 1
+fi
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ PR #$PR_NUMBER created successfully: $PR_URL"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "CI/CD checks will run automatically."
+echo "If you need me to monitor and fix any failures, just ask:"
+echo "   'Can you watch PR #$PR_NUMBER?'"
+echo ""
+```
+
+**DONE - Workflow complete**
+
+**If "No, I'll handle it manually":**
+
+```bash
+EXECUTE:
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 MANUAL COMMIT INSTRUCTIONS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "1. Review changes:"
@@ -834,15 +989,14 @@ echo "   git add ."
 echo "   git commit -m \"feat: implement issue #$ARGUMENT\""
 echo ""
 echo "3. Push and create PR:"
-echo "   git push"
+echo "   git push -u origin vibe-$ARGUMENT"
 echo "   gh pr create --title \"Issue #$ARGUMENT\" --body \"Closes #$ARGUMENT\""
-echo ""
-echo "4. Optional - Monitor CI/CD:"
-echo "   Ask: 'Can you watch the CI checks?'"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 ```
+
+**DONE - Workflow complete**
 
 ## ═══════════════════════════════════════
 ## OPTIONAL STEP: CI/CD MONITORING
