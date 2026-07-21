@@ -139,7 +139,7 @@ describe("manage-list-types page", () => {
       const renderCall = (res.render as any).mock.calls[0];
       const listTypes = renderCall[1].listTypes;
 
-      expect(listTypes.length).toBe(mockDbListTypes.length);
+      expect(listTypes).toHaveLength(mockDbListTypes.length);
     });
   });
 });

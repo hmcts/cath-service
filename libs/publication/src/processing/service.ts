@@ -23,6 +23,7 @@ import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdult
 import { generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
+import { generatePhtWeeklyHearingListPdf, type PhtHearingList } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
@@ -291,6 +292,11 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtaacDailyHearingListPdf({ ...p, jsonData: p.jsonData as UtaacHearingList }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListPdf({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListPdf({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
+  PHT_WEEKLY_HEARING_LIST: (p) =>
+    generatePhtWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as PhtHearingList
+    }),
   MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
   MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListPdf({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
   MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>

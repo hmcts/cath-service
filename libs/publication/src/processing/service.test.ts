@@ -7,6 +7,10 @@ vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
 }));
 
+vi.mock("@hmcts/pht-weekly-hearing-list", () => ({
+  generatePhtWeeklyHearingListPdf: vi.fn()
+}));
+
 vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
   generateSscsDailyHearingListPdf: vi.fn(),
   importantInformationByListType: {
@@ -192,6 +196,7 @@ describe("publication-processor", async () => {
   );
   const { generateRcjStandardDailyCauseListPdf } = await import("@hmcts/rcj-standard-daily-cause-list");
   const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
+  const { generatePhtWeeklyHearingListPdf } = await import("@hmcts/pht-weekly-hearing-list");
   const { generateCivilDailyCauseListPdf } = await import("@hmcts/civil-daily-cause-list");
   const { generateFamilyDailyCauseListPdf } = await import("@hmcts/family-daily-cause-list");
   const { generateSiacPoacPaacWeeklyHearingListPdf } = await import("@hmcts/siac-poac-paac-weekly-hearing-list");
@@ -907,6 +912,16 @@ describe("publication-processor", async () => {
       const result = await generatePublicationPdf({ ...baseParams, listTypeId: 9999 });
 
       expect(result).toEqual({});
+    });
+
+    it("should generate PDF for PHT Weekly Hearing List", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "PHT_WEEKLY_HEARING_LIST", friendlyName: "PHT Weekly Hearing List" } as any);
+      vi.mocked(generatePhtWeeklyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/pht.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+
+      const result = await generatePublicationPdf({ ...baseParams, listTypeId: 60 });
+
+      expect(generatePhtWeeklyHearingListPdf).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-artefact-id" }));
+      expect(result).toEqual({ pdfPath: "/path/pht.pdf", sizeBytes: 1024, exceedsMaxSize: false });
     });
   });
 
