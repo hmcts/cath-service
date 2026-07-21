@@ -101,6 +101,16 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [9]
   },
+  {
+    name: "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST",
+    englishFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Dyddiol y Tribiwnlys Iechyd Meddwl",
+    provenance: "PI_AAD",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    subJurisdictionIds: [20]
+  },
   // RCJ Standard Format
   {
     name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
