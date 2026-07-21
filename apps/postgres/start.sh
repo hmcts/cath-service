@@ -79,15 +79,11 @@ SQL
 echo "Running database migrations..."
 ../../node_modules/.bin/prisma migrate deploy --config=./prisma.config.ts
 
-echo "Running reference data scripts..."
-for script in prisma/scripts/001_insert_missing_list_types.sql \
-              prisma/scripts/002_update_list_type_provenances.sql \
-              prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql \
-              prisma/scripts/004_soft_delete_crime_daily_list.sql \
-              prisma/scripts/005_insert_magistrates_adult_lists.sql; do
-  echo "  Applying $script..."
-  ../../node_modules/.bin/prisma db execute --file "$script" --config=./prisma.config.ts
-done
+echo "Generating Prisma client for seed..."
+../../node_modules/.bin/prisma generate --config=./prisma.config.ts
+
+echo "Seeding reference data from list-type-data.ts..."
+../../node_modules/.bin/tsx prisma/seed-deploy.ts
 
 echo "Migrations completed successfully"
 echo "Starting Prisma Studio on port 5556..."

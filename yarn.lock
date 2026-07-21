@@ -2055,11 +2055,13 @@ __metadata:
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@prisma/client": "npm:7.8.0"
     "@types/node": "npm:24.10.4"
     http-proxy: "npm:1.18.1"
     prisma: "npm:7.8.0"
+    tsx: "npm:4.22.4"
   languageName: unknown
   linkType: soft
 
