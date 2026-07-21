@@ -95,7 +95,7 @@ export const listTypeData: ListTypeData[] = [
     name: "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST",
     englishFriendlyName: "Mental Health Tribunal Daily Hearing List",
     welshFriendlyName: "Rhestr Wrandawiadau Dyddiol y Tribiwnlys Iechyd Meddwl",
-    provenance: "CFT_IDAM",
+    provenance: "PI_AAD",
     isNonStrategic: false,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "Mental Health Tribunal Daily Hearing List",

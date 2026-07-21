@@ -34,7 +34,7 @@ describe("listTypeData", () => {
       expect(defaultSensitivity).toBe("Public");
     });
 
-    it("should use the CFT_IDAM provenance", () => {
+    it("should use the PI_AAD provenance", () => {
       // Arrange
       const entry = listTypeData.find((lt) => lt.name === "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST");
 
@@ -42,7 +42,7 @@ describe("listTypeData", () => {
       const provenance = entry?.provenance;
 
       // Assert
-      expect(provenance).toBe("CFT_IDAM");
+      expect(provenance).toBe("PI_AAD");
     });
 
     it("should be linked to the Mental Health Tribunal sub-jurisdiction", () => {
