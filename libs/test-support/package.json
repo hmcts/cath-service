@@ -24,13 +24,17 @@
   },
   "dependencies": {
     "@hmcts/azure-blob": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*",
+    "cheerio": "1.2.0",
+    "nunjucks": "3.2.4"
   },
   "peerDependencies": {
     "@prisma/client": "*",
     "express": "^5.2.0"
   },
   "devDependencies": {
-    "typescript": "6.0.3"
+    "@types/nunjucks": "3.2.6",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   }
 }
