@@ -24,7 +24,6 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/daily-cause-list-common": "workspace:*",
     "@hmcts/et-list-common": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",

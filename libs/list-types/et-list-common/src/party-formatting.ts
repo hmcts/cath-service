@@ -1,4 +1,4 @@
-import type { CauseListCase, Party } from "@hmcts/daily-cause-list-common";
+import type { CauseListCase, Party } from "@hmcts/list-types-common";
 
 // ET lists show party names as initials (e.g. "Mr J. Smith") rather than full forenames,
 // mirroring pip-frontend's createIndividualDetails(..., initialised = true).

@@ -1,4 +1,4 @@
-import type { CauseListCase } from "@hmcts/daily-cause-list-common";
+import type { CauseListCase } from "@hmcts/list-types-common";
 import { describe, expect, it } from "vitest";
 import { extractEtParty, formatEtPartyName } from "./party-formatting.js";
 

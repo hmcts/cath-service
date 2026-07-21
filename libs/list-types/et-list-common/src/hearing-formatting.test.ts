@@ -1,39 +1,6 @@
-import type { Session, Sitting } from "@hmcts/daily-cause-list-common";
+import type { Session, Sitting } from "@hmcts/list-types-common";
 import { describe, expect, it } from "vitest";
-import {
-  calculateSittingDuration,
-  formatAddress,
-  formatContentDate,
-  formatPublicationDateTime,
-  formatTime,
-  resolveHearingChannel
-} from "./hearing-formatting.js";
-
-describe("formatTime", () => {
-  it("should format an on-the-hour time without minutes", () => {
-    expect(formatTime("2025-01-13T09:00:00.000Z")).toBe("9am");
-  });
-
-  it("should format an afternoon time with minutes", () => {
-    expect(formatTime("2025-01-13T14:30:00.000Z")).toBe("2:30pm");
-  });
-});
-
-describe("formatContentDate", () => {
-  it("should format the date in English", () => {
-    expect(formatContentDate(new Date("2025-01-13"), "en")).toBe("13 January 2025");
-  });
-
-  it("should format the date in Welsh", () => {
-    expect(formatContentDate(new Date("2025-01-13"), "cy")).toContain("2025");
-  });
-});
-
-describe("formatPublicationDateTime", () => {
-  it("should format the publication date and time", () => {
-    expect(formatPublicationDateTime("2025-01-13T09:30:00.000Z", "en")).toBe("13 January 2025 at 9:30am");
-  });
-});
+import { calculateSittingDuration, formatAddress, resolveHearingChannel } from "./hearing-formatting.js";
 
 describe("formatAddress", () => {
   it("should return an empty array when address is undefined", () => {

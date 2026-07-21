@@ -1,5 +1,8 @@
-import type { Session, Sitting } from "@hmcts/daily-cause-list-common";
-import { DateTime } from "luxon";
+import type { Session, Sitting } from "@hmcts/list-types-common";
+
+// Date/time formatters are shared across all cause lists — reuse the canonical
+// implementations from list-types-common rather than duplicating them here.
+export { formatContentDate, formatPublicationDateTime, formatTime } from "@hmcts/list-types-common";
 
 // Accepts both the venue address and the (more loosely typed) courthouse address shapes.
 interface AddressLike {
@@ -7,41 +10,6 @@ interface AddressLike {
   town?: string;
   county?: string;
   postCode?: string;
-}
-
-export function formatTime(isoDateTime: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London");
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  return `${hour12}${minuteStr}${period}`;
-}
-
-export function formatContentDate(date: Date, locale: string): string {
-  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  return date.toLocaleDateString(localeCode, {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-}
-
-export function formatPublicationDateTime(isoDateTime: string, locale: string): string {
-  const dt = DateTime.fromISO(isoDateTime).setZone("Europe/London").setLocale(locale);
-
-  const dateStr = dt.toFormat("d MMMM yyyy");
-
-  const hours = dt.hour;
-  const minutes = dt.minute;
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-
-  const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, "0")}` : "";
-  const timeStr = `${hour12}${minuteStr}${period}`;
-
-  return `${dateStr} at ${timeStr}`;
 }
 
 export function formatAddress(address: AddressLike | undefined): string[] {

@@ -1,4 +1,4 @@
-import type { CauseListData, Hearing } from "@hmcts/daily-cause-list-common";
+import type { CauseListData, Hearing } from "@hmcts/list-types-common";
 import { describe, expect, it } from "vitest";
 import { extractEtCaseSummary } from "./et-summary-builder.js";
 

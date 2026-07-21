@@ -1,5 +1,4 @@
-import type { CauseListData } from "@hmcts/daily-cause-list-common";
-import type { CaseSummary } from "@hmcts/list-types-common";
+import type { CaseSummary, CauseListData } from "@hmcts/list-types-common";
 import { extractEtParty } from "../party-formatting.js";
 
 // Employment Tribunal daily and fortnightly press lists share the same email summary fields:
