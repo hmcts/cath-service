@@ -45,7 +45,7 @@
       <div class="govuk-!-margin-bottom-6">
         <h2 class="govuk-heading-l">{{ t.venue }} {{ court.courtName }}</h2>
         {% for line in court.addressLines %}
-          <p class="govuk-body">{{ line }}</p>
+          <p class="govuk-body govuk-!-margin-bottom-2">{{ line }}</p>
         {% endfor %}
       </div>
 
@@ -63,13 +63,13 @@
               <table class="govuk-table hearings-table" data-module="moj-sortable-table">
                 <thead class="govuk-table__head">
                   <tr class="govuk-table__row">
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[0] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[1] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[2] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[3] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[4] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[5] }}</th>
-                    <th scope="col" class="govuk-table__header no-wrap" aria-sort="none">{{ t.tableHeaders[6] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[0] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[1] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[2] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[3] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[4] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[5] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[6] }}</th>
                   </tr>
                 </thead>
                 <tbody class="govuk-table__body">
