@@ -56,7 +56,6 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
-  listTypeName: string;
   contentDate: Date;
   locale: string;
   locationId: string;

@@ -147,12 +147,6 @@ vi.mock("@hmcts/magistrates-public-list", () => ({
   generateMagistratesPublicListExcel: vi.fn()
 }));
 
-vi.mock("@hmcts/excel-generation", () => ({
-  generateSjpPublicListExcel: vi.fn(),
-  generateSjpPressListExcel: vi.fn(),
-  saveExcelFile: vi.fn()
-}));
-
 vi.mock("@hmcts/magistrates-standard-list", () => ({
   generateMagistratesStandardListPdf: vi.fn(),
   generateMagistratesStandardListExcel: vi.fn()
@@ -1699,6 +1693,12 @@ describe("publication-processor", async () => {
   });
 
   describe("generatePublicationExcel", () => {
+    beforeEach(() => {
+      vi.mocked(generateSjpPublicListExcel).mockResolvedValue(Buffer.from("public-excel"));
+      vi.mocked(generateSjpPressListExcel).mockResolvedValue(Buffer.from("press-excel"));
+      vi.mocked(saveExcelFile).mockResolvedValue(undefined);
+    });
+
     it("should generate and save Excel for SJP_PUBLIC_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-1", listTypeName: "SJP_PUBLIC_LIST", jsonData: { courtLists: [] } });
 

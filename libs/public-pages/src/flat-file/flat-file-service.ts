@@ -1,6 +1,6 @@
 import path from "node:path";
-import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import type { UserProfile } from "@hmcts/auth";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import type { Artefact } from "@hmcts/publication";
 import {

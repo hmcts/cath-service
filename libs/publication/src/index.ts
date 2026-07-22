@@ -36,7 +36,6 @@ export {
   getLatestSjpArtefacts,
   getLocationsWithPublicationCount,
   type LocationWithPublicationCount,
-  updateArtefactFileExtension,
   updateSourceArtefactId
 } from "./repository/queries.js";
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
