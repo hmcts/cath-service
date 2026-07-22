@@ -147,6 +147,12 @@ vi.mock("@hmcts/magistrates-public-list", () => ({
   generateMagistratesPublicListExcel: vi.fn()
 }));
 
+vi.mock("@hmcts/excel-generation", () => ({
+  generateSjpPublicListExcel: vi.fn(),
+  generateSjpPressListExcel: vi.fn(),
+  saveExcelFile: vi.fn()
+}));
+
 vi.mock("@hmcts/magistrates-standard-list", () => ({
   generateMagistratesStandardListPdf: vi.fn(),
   generateMagistratesStandardListExcel: vi.fn()
@@ -1652,6 +1658,42 @@ describe("publication-processor", async () => {
 
       expect(result).toEqual({});
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Excel generation error:", { artefactId: "test-id", error: "Crash" });
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should return hasExcel for SJP_PUBLIC_LIST when generator succeeds", async () => {
+      const { generateSjpPublicListExcel, saveExcelFile } = await import("@hmcts/excel-generation");
+      vi.mocked(generateSjpPublicListExcel).mockResolvedValue(Buffer.from("xlsx"));
+      vi.mocked(saveExcelFile).mockResolvedValue(undefined);
+
+      const result = await generatePublicationExcel({
+        artefactId: "sjp-id",
+        listTypeName: "SJP_PUBLIC_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return empty result when SJP_PUBLIC_LIST adapter throws", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { generateSjpPublicListExcel } = await import("@hmcts/excel-generation");
+      vi.mocked(generateSjpPublicListExcel).mockRejectedValue(new Error("SJP crash"));
+
+      const result = await generatePublicationExcel({
+        artefactId: "sjp-id",
+        listTypeName: "SJP_PUBLIC_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(result).toEqual({});
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Excel generation error:", { artefactId: "sjp-id", error: "SJP crash" });
       consoleErrorSpy.mockRestore();
     });
   });

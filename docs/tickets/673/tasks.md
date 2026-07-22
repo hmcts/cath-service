@@ -2,18 +2,20 @@
 
 ## Database
 
-- [x] Add `excelPath String? @map("excel_path") @db.VarChar(500)` to the `Artefact` model in `libs/postgres-prisma/prisma/schema/base.prisma`
-- [x] Run `yarn db:migrate:dev` to create the migration file
-- [x] Run `yarn db:generate` to regenerate the Prisma client
+> **Not implemented — alternative approach taken.** The plan required an `excel_path` DB column so the download link would only appear for artefacts that have a blob. Instead, Excel availability is determined at runtime via `listTypeHasExcel(artefact.listTypeName)` (a registry membership check), and the blob key is derived as `${artefactId}.xlsx` — the same pattern used for PDFs, which also have no DB column. This means the Excel download link is shown for all artefacts of a supported list type, including older ones published before this feature deployed. Clicking the link for a pre-feature artefact returns a FILE_NOT_FOUND error from `getExcelForDownload`. This is an accepted trade-off given that all list types will eventually support Excel.
+
+- [ ] ~~Add `excelPath String? @map("excel_path") @db.VarChar(500)` to the `Artefact` model in `libs/postgres-prisma/prisma/schema/base.prisma`~~ — not implemented, see note above
+- [ ] ~~Run `yarn db:migrate:dev` to create the migration file~~ — not implemented
+- [ ] ~~Run `yarn db:generate` to regenerate the Prisma client~~ — not required (schema unchanged)
 
 ## Publication lib — model and queries
 
-- [x] Add `excelPath?: string | null` to the `Artefact` interface in `libs/publication/src/repository/model.ts`
-- [x] Add `excelPath?: string | null` to the `ArtefactWithListType` type in `libs/publication/src/repository/model.ts`
-- [x] Add `excelPath: true` to the `getArtefactById` select in `libs/publication/src/repository/queries.ts`
-- [x] Add `updateArtefactExcelPath(artefactId: string, excelPath: string): Promise<void>` to `libs/publication/src/repository/queries.ts`
+- [ ] ~~Add `excelPath?: string | null` to the `Artefact` interface in `libs/publication/src/repository/model.ts`~~ — not implemented, see Database note
+- [ ] ~~Add `excelPath?: string | null` to the `ArtefactWithListType` type in `libs/publication/src/repository/model.ts`~~ — not implemented
+- [ ] ~~Add `excelPath: true` to the `getArtefactById` select in `libs/publication/src/repository/queries.ts`~~ — not implemented
+- [ ] ~~Add `updateArtefactExcelPath(artefactId: string, excelPath: string): Promise<void>` to `libs/publication/src/repository/queries.ts`~~ — not implemented
 - [x] Extend `deleteArtefacts` in `libs/publication/src/repository/queries.ts` to delete `${artefactId}.xlsx` from `CONTAINER.PUBLICATIONS` (with 404 suppression matching the existing PDF deletion pattern)
-- [x] Export `updateArtefactExcelPath` from `libs/publication/src/index.ts`
+- [ ] ~~Export `updateArtefactExcelPath` from `libs/publication/src/index.ts`~~ — not implemented; `listTypeHasExcel` exported instead
 
 ## Publication lib — content type
 
@@ -56,29 +58,29 @@
 - [x] Add `EXCEL_GENERATOR_REGISTRY` in `libs/publication/src/processing/service.ts` with entries for `MAGISTRATES_PUBLIC_LIST` and `MAGISTRATES_STANDARD_LIST`
 - [x] Add `generatePublicationExcel(params)` function in `libs/publication/src/processing/service.ts` (mirrors `generatePublicationPdf`; non-fatal on error)
 - [x] Add `excelPath?` to `ProcessPublicationResult` interface in `libs/publication/src/processing/service.ts`
-- [x] Call `generatePublicationExcel` in `processPublication` after PDF generation, store result, call `updateArtefactExcelPath` if `excelPath` returned
+- [x] Call `generatePublicationExcel` in `processPublication` after PDF generation; derive `excelPath` as `${artefactId}.xlsx` when `hasExcel` is true (no DB write — see Database note above)
 - [x] Pass `excelPath: result.excelPath` to `sendPublicationNotificationsForArtefact` in `processPublication`
-- [x] Add unit tests in `libs/publication/src/processing/service.test.ts` covering: Excel generator called for `MAGISTRATES_PUBLIC_LIST`, Excel generator called for `MAGISTRATES_STANDARD_LIST`, `updateArtefactExcelPath` called when Excel generation succeeds, Excel generation failure does not prevent PDF path from being returned
+- [x] Add unit tests in `libs/publication/src/processing/service.test.ts` covering: Excel generator called for `MAGISTRATES_PUBLIC_LIST`, Excel generator called for `MAGISTRATES_STANDARD_LIST`, `excelPath` derived from `artefactId` when Excel generation succeeds, Excel generation failure does not prevent PDF path from being returned
 
 ## Download route
 
-- [x] Add `getExcelForDownload(artefactId: string)` to `libs/public-pages/src/flat-file/flat-file-service.ts` — checks `artefact.excelPath`, downloads blob from `CONTAINER.PUBLICATIONS`, returns buffer with xlsx content type
+- [x] Add `getExcelForDownload(artefactId: string)` to `libs/public-pages/src/flat-file/flat-file-service.ts` — looks up the artefact for display-window validation, then downloads `${artefactId}.xlsx` from `CONTAINER.PUBLICATIONS` directly (no `excelPath` DB column — see Database note above), returns buffer with xlsx content type
 - [x] Extend `libs/public-pages/src/routes/api/flat-file/[artefactId]/download.ts` to read `?format` query param, validate against allow-list `["pdf", "excel"]` (default `"pdf"`), and delegate to `getExcelForDownload` when `format=excel`
 - [x] Add unit tests in `libs/public-pages/src/routes/api/flat-file/[artefactId]/download.test.ts` covering: `format=excel` calls `getExcelForDownload`, missing `excelPath` returns 404, invalid `format` value defaults to pdf behaviour
 - [x] Add unit tests in `libs/public-pages/src/flat-file/flat-file-service.test.ts` covering `getExcelForDownload` success and `FILE_NOT_FOUND` case
 
 ## Rendered list pages — Excel download link
 
-Note: magistrates lists are rendered via `createListTypeHandler` / `createCauseListRender` in `apps/web/src/pages/(list-types)/list-type-handler.ts`. The `artefact` object (which will include `excelPath` once the DB migration is applied) is already passed to the render callback. The download link belongs on the rendered list page templates, not the flat-file viewer.
+Note: magistrates lists are rendered via `createListTypeHandler` / `createCauseListRender` in `apps/web/src/pages/(list-types)/list-type-handler.ts`. The download link belongs on the rendered list page templates, not the flat-file viewer.
 
-- [x] Update `createCauseListRender` in `apps/web/src/pages/(list-types)/list-type-handler.ts` to derive `excelDownloadUrl` from `artefact.excelPath` when present (`/api/flat-file/${artefact.artefactId}/download?format=excel`) and pass it to the template
+- [x] Update `createCauseListRender` in `apps/web/src/pages/(list-types)/list-type-handler.ts` to derive `excelDownloadUrl` via `listTypeHasExcel(artefact.listTypeName)` (not `artefact.excelPath` — see Database note above) and pass `/api/flat-file/${artefact.artefactId}/download?format=excel` to the template when true
 - [x] Add `downloadSection`, `downloadAsPdf`, `downloadAsSpreadsheet` keys to `libs/list-types/magistrates-public-list/src/locales/en.ts`
 - [x] Add matching Welsh keys to `libs/list-types/magistrates-public-list/src/locales/cy.ts`
 - [x] Add `downloadSection`, `downloadAsPdf`, `downloadAsSpreadsheet` keys to `libs/list-types/magistrates-standard-list/src/locales/en.ts`
 - [x] Add matching Welsh keys to `libs/list-types/magistrates-standard-list/src/locales/cy.ts`
 - [x] Update `apps/web/src/pages/(list-types)/magistrates-public-list/index.njk` to render a "Download this list" section (h2) with PDF link always present and Excel link conditionally shown when `excelDownloadUrl` is set
 - [x] Update `apps/web/src/pages/(list-types)/magistrates-standard-list/index.njk` similarly
-- [x] Update unit tests in `apps/web/src/pages/(list-types)/magistrates-public-list/index.test.ts` to cover: Excel link shown when `excelPath` present, Excel link absent when `excelPath` null
+- [x] Update unit tests in `apps/web/src/pages/(list-types)/magistrates-public-list/index.test.ts` to cover: Excel link shown when `listTypeHasExcel` returns true, Excel link absent when `listTypeHasExcel` returns false
 - [x] Update unit tests in `apps/web/src/pages/(list-types)/magistrates-standard-list/index.test.ts` similarly
 
 ## Notifications
