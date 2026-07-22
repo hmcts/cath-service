@@ -1,5 +1,5 @@
 import type { Artefact } from "@hmcts/publication";
-import { canAccessPublicationData, getArtefactById, getPublicationJson, type ListType, listTypeHasExcel, PROVENANCE_LABELS } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, listTypeHasExcel, PROVENANCE_LABELS, resolveListType } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export type ValidationResult = { isValid: boolean; errors: unknown[] };
@@ -234,7 +234,7 @@ export function createCauseListRender<T>(renderFn: CauseListRenderFn<T>, templat
     const artefactId = artefact.artefactId;
     const pdfDownloadUrl = `/api/flat-file/${artefactId}/download`;
     const excelDownloadUrl = listTypeHasExcel(artefact.listTypeName) ? `/api/flat-file/${artefactId}/download?format=excel` : undefined;
-    res.render(template, { en, cy, title: t.title, header, openJustice, listData, dataSource, t, artefactId, pdfDownloadUrl, excelDownloadUrl });
+    res.render(template, { en, cy, pageTitle: t.title, header, openJustice, listData, dataSource, t, artefactId, pdfDownloadUrl, excelDownloadUrl });
   };
 }
 
