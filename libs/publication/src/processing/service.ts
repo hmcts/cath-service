@@ -54,6 +54,7 @@ const LOCALE_TO_LANGUAGE: Record<string, string> = {
 interface GeneratePdfParams {
   artefactId: string;
   listTypeId: number;
+  listTypeName?: string;
   contentDate: Date;
   locale: string;
   locationId: string;
@@ -87,9 +88,9 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeName: p.listTypeName ?? "" });
 
-const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, jsonData: p.jsonData as SjpJson });
+const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, listTypeName: p.listTypeName ?? "", jsonData: p.jsonData as SjpJson });
 
-const sjpPressGenerator: PdfGenerator = (p) => generateSjpPressListPdf({ ...p, jsonData: p.jsonData as SjpJson });
+const sjpPressGenerator: PdfGenerator = (p) => generateSjpPressListPdf({ ...p, listTypeName: p.listTypeName ?? "", jsonData: p.jsonData as SjpJson });
 
 const SSCS_FRIENDLY_NAMES: Record<string, { en: string; cy: string }> = {
   SSCS_MIDLANDS_DAILY_HEARING_LIST: {
