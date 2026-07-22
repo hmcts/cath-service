@@ -97,6 +97,7 @@ This is the technical specification/plan including:
 2. **Implementation Details**
    - File structure and organization (following @CLAUDE.md guidelines - use libs/ for features)
    - Components/modules to create
+   - For any new rendered view/page, an equivalent Nunjucks template usually already exists in pip-frontend. Ask the user whether they want to use the `migrate-pip-pages` skill to copy and adapt it; if so, reference it in the plan. (It does not apply to flat-file / manual-upload list types or registration-only work — those have no template to migrate.)
    - API endpoints (if needed)
    - Database schema changes (if needed)
 
