@@ -94,12 +94,9 @@ using GOV.UK macros (e.g. `govukTable`, `govukAccordion`).
    its cell renders (e.g. a "Case Details" header over a `caseName` cell), and reporting
    restrictions are often a full-width `colspan` row *below* the case, not a column.
 2. **Locale content**: move each i18n key into `en`/`cy` (co-located `.ts` for simple pages,
-   the lib's `locales/{en,cy}.ts` for list types) with the **same key structure** in both.
-   Titles, column labels, court names, and static copy are content — never hardcode them in
-   markup, and they must switch with the language. Where a Welsh string is missing, use the
-   `[WELSH TRANSLATION REQUIRED: '...']` placeholder. Reconcile wording against the ticket
-   when pip-frontend and the ticket disagree (e.g. `hearingChannel` "Hearing Channel" vs
-   "Mode of hearing") — the ticket wins.
+   the lib's `locales/{en,cy}.ts` for list types), following CLAUDE.md's Welsh Language
+   Support conventions. The skill-specific point: when pip-frontend and the ticket disagree
+   on wording (e.g. `hearingChannel` "Hearing Channel" vs "Mode of hearing"), the ticket wins.
 
 ## Step 4 — Verify the port against the source
 
@@ -114,16 +111,11 @@ against, so the port is unverified.
 
 ## Step 5 — Template test
 
-Write the co-located template test (`index.njk.test.ts`, Vitest) — the standard pattern for
-a migrated template. Follow an existing one such as `(public)/search/index.njk.test.ts`. It
-has four `describe` blocks:
-
-- *Template file* — asserts `index.njk` (or `<name>.njk`) exists via `existsSync`.
-- *English locale* — asserts each key in `en` equals its expected string.
-- *Welsh locale* — the same assertions against `cy`.
-- *Locale consistency* — `Object.keys(en).sort()` equals `Object.keys(cy).sort()`, and every
-  required key is present in both. This catches the common bug where Welsh content drifts out
-  of sync with English.
+Write the co-located `<name>.njk.test.ts` following the "Nunjucks Template Testing" rule in
+`.claude/rules/testing.md` — that rule is authoritative for the pattern. The skill-specific
+point: because you copied a real page (Step 3) and verified it (Step 4), your structural
+assertions should mirror the *source's* structure — the column order and colspan rows you
+confirmed against pip-frontend, not what a sibling happened to have.
 
 Controller unit tests, list-type lib tests, and E2E journeys are part of the controller/lib
 work, not the template migration — out of scope here.
