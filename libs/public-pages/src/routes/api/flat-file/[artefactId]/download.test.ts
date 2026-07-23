@@ -317,7 +317,7 @@ describe("Flat File Download Route", () => {
 
       await GET(mockRequest as Request, mockResponse as Response);
 
-      expect(getExcelForDownload).toHaveBeenCalledWith(testUuid);
+      expect(getExcelForDownload).toHaveBeenCalledWith(testUuid, undefined);
       expect(getFileForDownload).not.toHaveBeenCalled();
     });
 
@@ -349,6 +349,19 @@ describe("Flat File Download Route", () => {
 
       expect(statusSpy).toHaveBeenCalledWith(410);
       expect(jsonSpy).toHaveBeenCalledWith({ error: "File has expired" });
+    });
+
+    it("should return 403 for ACCESS_DENIED error on excel download", async () => {
+      // Arrange
+      const { getExcelForDownload } = await import("../../../../flat-file/flat-file-service.js");
+      vi.mocked(getExcelForDownload).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(403);
+      expect(jsonSpy).toHaveBeenCalledWith({ error: "Access denied" });
     });
 
     it("should send excel file with correct headers on success", async () => {
