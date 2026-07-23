@@ -24,6 +24,7 @@
 - [ ] Root `tsconfig.json` — add `@hmcts/insolvency-and-companies-court-chd-daily-cause-list` path alias
 - [ ] `apps/web/package.json` — add `workspace:*` dependency
 - [ ] `apps/web/src/app.ts` — import `moduleRoot` and add to `modulePaths`
+- [ ] `apps/web/src/pages/(admin)/non-strategic-upload-summary/index.ts` — add bare side-effect import to register the converter (else upload conversion fails at runtime)
 - [ ] `apps/web/vite.config.ts` — add assets only if the lib ships assets
 - [ ] `libs/list-types/common/src/list-type-data.ts` — add `ListTypeData` entry (isNonStrategic, urlPath, Public, subJurisdictionIds [1])
 - [ ] `libs/publication/src/processing/service.ts` — import generator + add `PDF_GENERATOR_REGISTRY` entry
