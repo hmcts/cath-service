@@ -1526,7 +1526,10 @@ describe("publication-processor", async () => {
         expect.objectContaining({ artefactId: "test-artefact-id", listTypeName: "MAGISTRATES_PUBLIC_LIST" })
       );
       expect(result.excelPath).toBe("test-artefact-id.xlsx");
-      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ excelPath: "test-artefact-id.xlsx" }), expect.anything());
+      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(
+        expect.objectContaining({ publicationId: "test-artefact-id", pdfFilePath: "/path/to/mpl.pdf" }),
+        expect.anything()
+      );
     });
 
     it("should call Excel generator for MAGISTRATES_STANDARD_LIST and derive excelPath", async () => {
@@ -1549,7 +1552,10 @@ describe("publication-processor", async () => {
         expect.objectContaining({ artefactId: "test-artefact-id", listTypeName: "MAGISTRATES_STANDARD_LIST" })
       );
       expect(result.excelPath).toBe("test-artefact-id.xlsx");
-      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ excelPath: "test-artefact-id.xlsx" }), expect.anything());
+      expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(
+        expect.objectContaining({ publicationId: "test-artefact-id", pdfFilePath: "/path/to/msl.pdf" }),
+        expect.anything()
+      );
     });
 
     it("should not fail when Excel generation returns an error", async () => {
