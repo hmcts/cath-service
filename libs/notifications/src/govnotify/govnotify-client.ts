@@ -1,5 +1,5 @@
 import { NotifyClient } from "notifications-node-client";
-import { getApiKey, getTemplateId, type TemplateParameters } from "./template-config.js";
+import { getApiKey, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
@@ -34,6 +34,7 @@ export interface SendEmailParams {
   templateParameters: TemplateParameters;
   templateId?: string;
   pdfBuffer?: Buffer;
+  excelBuffer?: Buffer;
 }
 
 export interface SendEmailResult {
@@ -57,10 +58,14 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 
 async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResult> {
   const notifyClient = new NotifyClient(getApiKey());
-  const templateId = params.templateId || getTemplateId();
+  const templateId = params.templateId;
+
+  if (!templateId) {
+    throw new Error("Template ID is required");
+  }
 
   try {
-    // Build personalisation with optional PDF link
+    // Build personalisation with optional file links
     const personalisation: Record<string, unknown> = { ...params.templateParameters };
 
     // If PDF buffer is provided, upload to GOV.UK Notify document service
@@ -70,6 +75,18 @@ async function sendEmailInternal(params: SendEmailParams): Promise<SendEmailResu
         retentionPeriod: "1 week"
       });
       personalisation.link_to_file = linkToFile;
+      personalisation.pdf_link_to_file = linkToFile;
+      personalisation.pdf_link_text = "Download PDF version";
+    }
+
+    // If Excel buffer is provided, upload to GOV.UK Notify document service
+    if (params.excelBuffer) {
+      const excelLink = (notifyClient as any).prepareUpload(params.excelBuffer, {
+        confirmEmailBeforeDownload: false,
+        retentionPeriod: "1 week"
+      });
+      personalisation.excel_link_to_file = excelLink;
+      personalisation.excel_link_text = "Download Excel version";
     }
 
     const response = (await (notifyClient as any).sendEmail(templateId, params.emailAddress, {
