@@ -78,7 +78,7 @@ export async function getFileForDownload(artefactId: string, user: UserProfile |
 // No isFlatFile guard here. Excel files are generated from JSON publications
 // (isFlatFile: false). The guard in getFileForDownload is for flat-file artefacts only
 // and would incorrectly block every Excel download if added here.
-export async function getExcelForDownload(artefactId: string) {
+export async function getExcelForDownload(artefactId: string, user: UserProfile | undefined = undefined) {
   const artefact = await getArtefactById(artefactId);
 
   if (!artefact) {
@@ -88,6 +88,10 @@ export async function getExcelForDownload(artefactId: string) {
   const now = new Date();
   if (now < artefact.displayFrom || now > artefact.displayTo) {
     return { error: "EXPIRED" as const };
+  }
+
+  if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) {
+    return { error: "ACCESS_DENIED" as const };
   }
 
   const fileBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);

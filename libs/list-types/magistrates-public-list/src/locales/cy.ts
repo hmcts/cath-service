@@ -6,6 +6,7 @@ export const cy = {
   factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  warningText: "Rhybudd",
   restrictionInformationHeading: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn.",
   restrictionInformationP1:
     "Rhaid i chi wirio a oes unrhyw gyfyngiadau riportio yn berthnasol cyn cyhoeddi manylion am unrhyw un o'r achosion a restrir yma, naill ai'n ysgrifenedig, mewn darllediad neu ar y rhyngrwyd, gan gynnwys y cyfryngau cymdeithasol.",

@@ -383,5 +383,46 @@ describe("flat-file-service", () => {
 
       expect(result).toEqual({ error: "FILE_NOT_FOUND" });
     });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is CLASSIFIED", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" } as any);
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getExcelForDownload(artefactId, undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(undefined, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
+
+    it("should return ACCESS_DENIED when user is undefined and artefact is PRIVATE", async () => {
+      // Arrange
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "PRIVATE" } as any);
+      vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+      // Act
+      const result = await getExcelForDownload(artefactId, undefined);
+
+      // Assert
+      expect(result).toEqual({ error: "ACCESS_DENIED" });
+    });
+
+    it("should return file data when verified user requests a CLASSIFIED artefact", async () => {
+      // Arrange
+      const verifiedUser = { role: "VERIFIED", provenance: "MANUAL_UPLOAD" } as any;
+      const mockBuffer = Buffer.from("classified xlsx");
+      vi.mocked(getArtefactById).mockResolvedValue({ ...mockArtefact, sensitivity: "CLASSIFIED" } as any);
+      vi.mocked(canAccessPublicationData).mockReturnValue(true);
+      vi.mocked(downloadBlob).mockResolvedValue(mockBuffer);
+
+      // Act
+      const result = await getExcelForDownload(artefactId, verifiedUser);
+
+      // Assert
+      expect(result).toMatchObject({ success: true });
+      expect(canAccessPublicationData).toHaveBeenCalledWith(verifiedUser, expect.objectContaining({ sensitivity: "CLASSIFIED" }), expect.any(Object));
+    });
   });
 });

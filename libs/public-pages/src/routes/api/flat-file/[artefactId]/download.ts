@@ -29,9 +29,14 @@ export const GET = async (req: Request, res: Response) => {
   const format = resolveFormat(req.query.format);
 
   if (format === "excel") {
-    const result = await getExcelForDownload(artefactId);
+    const result = await getExcelForDownload(artefactId, req.user);
 
     if ("error" in result) {
+      if (result.error === "ACCESS_DENIED") {
+        res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+        return res.status(403).json({ error: "Access denied" });
+      }
+
       let statusCode = 404;
       let errorMessage = "File not found";
 

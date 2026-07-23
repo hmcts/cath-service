@@ -6,6 +6,7 @@ export const en = {
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
+  warningText: "Warning",
   restrictionInformationHeading: "Restrictions on publishing or writing about these cases",
   restrictionInformationP1:
     "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.",
