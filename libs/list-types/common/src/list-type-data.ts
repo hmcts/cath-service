@@ -82,6 +82,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1, 2]
   },
   {
+    name: "COP_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Court of Protection Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gwarchod",
+    provenance: "CFT_IDAM",
+    urlPath: "cop-daily-cause-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "COP Daily Cause List",
+    subJurisdictionIds: [2, 11]
+  },
+  {
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
