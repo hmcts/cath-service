@@ -158,6 +158,29 @@ describe("generateMagistratesPublicListExcel", () => {
     expect(result.success).toBe(true);
   });
 
+  it("should write one row per application with application reference, defendant, and prosecuting authority", async () => {
+    const dataWithApplication = makeRenderedData();
+    dataWithApplication.listData.courtLists[0]!.courtHouse.courtRoom[0]!.session[0]!.sittings[0]!.hearing[0]!.application = [
+      {
+        applicationReference: "APP-001",
+        defendant: "Jones, Mary",
+        prosecutingAuthority: "CPS North",
+        offences: ["Assault", "Breach of bail"]
+      }
+    ];
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(dataWithApplication as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("APP-001");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Jones, Mary");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("CPS North");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Assault, Breach of bail");
+  });
+
   it("should return failure result when an error occurs", async () => {
     vi.mocked(renderMagistratesPublicListData).mockRejectedValue(new Error("Render failed"));
 
