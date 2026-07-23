@@ -18,6 +18,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     listType: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn()
     },
@@ -102,6 +103,8 @@ describe("list-type-queries", () => {
           welshFriendlyName: true,
           shortenedFriendlyName: true,
           url: true,
+          caseNumberJsonFieldName: true,
+          caseNameJsonFieldName: true,
           defaultSensitivity: true,
           allowedProvenance: true,
           isNonStrategic: true,
@@ -133,27 +136,30 @@ describe("list-type-queries", () => {
   });
 
   describe("findListTypeByName", () => {
-    it("should return list type by name", async () => {
+    it("should return list type by name excluding soft-deleted records", async () => {
+      // Arrange
       const mockListType = { id: 1, name: "TEST_LIST" };
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue(mockListType as any);
+      vi.mocked(prisma.listType.findFirst).mockResolvedValue(mockListType as any);
 
+      // Act
       const result = await findListTypeByName("TEST_LIST");
 
-      expect(prisma.listType.findUnique).toHaveBeenCalledWith({
-        where: { name: "TEST_LIST" },
-        select: {
-          id: true,
-          name: true
-        }
+      // Assert
+      expect(prisma.listType.findFirst).toHaveBeenCalledWith({
+        where: { name: "TEST_LIST", deletedAt: null },
+        select: { id: true, name: true }
       });
       expect(result).toEqual(mockListType);
     });
 
     it("should return null if list type not found", async () => {
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+      // Arrange
+      vi.mocked(prisma.listType.findFirst).mockResolvedValue(null);
 
+      // Act
       const result = await findListTypeByName("NON_EXISTENT");
 
+      // Assert
       expect(result).toBeNull();
     });
   });
@@ -181,24 +187,30 @@ describe("list-type-queries", () => {
   });
 
   describe("createListType", () => {
-    it("should create a new list type with sub-jurisdictions", async () => {
-      const createData = {
-        name: "NEW_LIST",
-        friendlyName: "New List",
-        welshFriendlyName: "Rhestr Newydd",
-        shortenedFriendlyName: "New",
-        url: "/new-list",
-        defaultSensitivity: "Public",
-        allowedProvenance: ["CFT_IDAM", "PI_AAD"],
-        isNonStrategic: false,
-        subJurisdictionIds: [1, 2]
-      };
+    const createData = {
+      name: "NEW_LIST",
+      friendlyName: "New List",
+      welshFriendlyName: "Rhestr Newydd",
+      shortenedFriendlyName: "New",
+      url: "/new-list",
+      caseNumberJsonFieldName: "caseNo",
+      caseNameJsonFieldName: "caseName",
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM", "PI_AAD"],
+      isNonStrategic: false,
+      subJurisdictionIds: [1, 2]
+    };
 
+    it("should create a new list type when no soft-deleted record exists", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findFirst).mockResolvedValue(null);
       const mockCreatedListType = { id: 1, ...createData };
       vi.mocked(prisma.listType.create).mockResolvedValue(mockCreatedListType as any);
 
+      // Act
       const result = await createListType(createData);
 
+      // Assert
       expect(prisma.listType.create).toHaveBeenCalledWith({
         data: {
           name: "NEW_LIST",
@@ -206,6 +218,8 @@ describe("list-type-queries", () => {
           welshFriendlyName: "Rhestr Newydd",
           shortenedFriendlyName: "New",
           url: "/new-list",
+          caseNumberJsonFieldName: "caseNo",
+          caseNameJsonFieldName: "caseName",
           defaultSensitivity: "Public",
           allowedProvenance: "CFT_IDAM,PI_AAD",
           isNonStrategic: false,
@@ -215,6 +229,61 @@ describe("list-type-queries", () => {
         }
       });
       expect(result).toEqual(mockCreatedListType);
+    });
+
+    it("should restore a soft-deleted list type instead of creating a new one", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findFirst).mockResolvedValue({ id: 5 } as any);
+      const mockRestored = { id: 5, ...createData };
+      vi.mocked(prisma.listType.update).mockResolvedValue(mockRestored as any);
+
+      // Act
+      const result = await createListType(createData);
+
+      // Assert
+      expect(prisma.listType.create).not.toHaveBeenCalled();
+      expect(prisma.listType.update).toHaveBeenCalledWith({
+        where: { id: 5 },
+        data: expect.objectContaining({
+          deletedAt: null,
+          allowedProvenance: "CFT_IDAM,PI_AAD",
+          subJurisdictions: {
+            deleteMany: {},
+            create: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
+          }
+        })
+      });
+      expect(result).toEqual(mockRestored);
+    });
+
+    it("should create a list type with null JSON field names when not provided", async () => {
+      // Arrange
+      const dataWithoutJsonFields = {
+        name: "NEW_LIST",
+        friendlyName: "New List",
+        welshFriendlyName: "Rhestr Newydd",
+        shortenedFriendlyName: "New",
+        url: "/new-list",
+        defaultSensitivity: "Public",
+        allowedProvenance: ["CFT_IDAM"],
+        isNonStrategic: false,
+        subJurisdictionIds: []
+      };
+      vi.mocked(prisma.listType.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.listType.create).mockResolvedValue({ id: 1, ...dataWithoutJsonFields } as any);
+
+      // Act
+      await createListType(dataWithoutJsonFields);
+
+      // Assert
+      expect(prisma.listType.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            caseNumberJsonFieldName: null,
+            caseNameJsonFieldName: null
+          })
+        })
+      );
     });
   });
 
@@ -226,6 +295,8 @@ describe("list-type-queries", () => {
         welshFriendlyName: "Rhestr Diweddaredig",
         shortenedFriendlyName: "Updated",
         url: "/updated-list",
+        caseNumberJsonFieldName: "caseNo",
+        caseNameJsonFieldName: "caseName",
         defaultSensitivity: "Private",
         allowedProvenance: ["CFT_IDAM"],
         isNonStrategic: true,

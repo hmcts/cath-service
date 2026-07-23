@@ -6,6 +6,8 @@ export interface ListTypeFormData {
   welshFriendlyName: string;
   shortenedFriendlyName: string;
   url: string;
+  caseNumberJsonFieldName?: string | null;
+  caseNameJsonFieldName?: string | null;
   defaultSensitivity: string;
   allowedProvenance: string[];
   isNonStrategic: boolean | null;

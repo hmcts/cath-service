@@ -29,6 +29,7 @@ const getHandler = async (req: Request, res: Response) => {
 
   res.render("delete-list-type/index", {
     ...content,
+    id,
     listTypeName: listType.friendlyName || listType.name,
     data: {}
   });
@@ -58,37 +59,35 @@ const postHandler = async (req: Request, res: Response) => {
     });
   }
 
-  // Validation: check if user selected an option
   if (!confirmDelete) {
     return res.render("delete-list-type/index", {
       ...content,
+      id,
       listTypeName: listType.friendlyName || listType.name,
       errors: [{ text: content.errorConfirmationRequired, href: "#confirmDelete" }],
       data: { confirmDelete }
     });
   }
 
-  // If user selected "no", redirect back to view list types
   if (confirmDelete === "no") {
-    return res.redirect("/view-list-types");
+    return res.redirect(`/manage-list-type?id=${id}`);
   }
 
-  // If user selected "yes", check for artifacts
   const hasArtefacts = await hasArtefactsForListType(id);
 
   if (hasArtefacts) {
     return res.render("delete-list-type/index", {
       ...content,
+      id,
       listTypeName: listType.friendlyName || listType.name,
+      hasArtefacts: true,
       errors: [{ text: content.errorCannotDelete, href: "#confirmDelete" }],
       data: { confirmDelete }
     });
   }
 
-  // Perform soft delete
   await softDeleteListType(id);
 
-  // Redirect to success page
   const lng = req.query.lng === "cy" ? "?lng=cy" : "";
   res.redirect(`/delete-list-type-success${lng}`);
 };

@@ -30,8 +30,7 @@ test.describe
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-list" },
-        { title: "Manage List Types", href: "/manage-list-types" },
-        { title: "Configure List Type", href: "/configure-list-type-enter-details" }
+        { title: "Manage List Types", href: "/manage-list-types" }
       ];
 
       for (const { title, href } of tileData) {

@@ -47,6 +47,8 @@ describe("preview page", () => {
     welshFriendlyName: "Rhestr Prawf",
     shortenedFriendlyName: "Test",
     url: "/test",
+    caseNumberJsonFieldName: "caseNo",
+    caseNameJsonFieldName: "caseName",
     defaultSensitivity: "Public",
     allowedProvenance: ["CFT_IDAM"],
     isNonStrategic: false,
@@ -73,7 +75,8 @@ describe("preview page", () => {
         "configure-list-type-preview/index",
         expect.objectContaining({
           data: mockSessionData,
-          subJurisdictionsText: "England, Wales"
+          subJurisdictionsText: "England, Wales",
+          changeDetailsHref: "/add-list-type"
         })
       );
     });
@@ -99,7 +102,7 @@ describe("preview page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-types");
       expect(res.render).not.toHaveBeenCalled();
     });
 
@@ -126,7 +129,7 @@ describe("preview page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-types");
       expect(saveListType).not.toHaveBeenCalled();
     });
 
@@ -145,6 +148,8 @@ describe("preview page", () => {
           welshFriendlyName: "Rhestr Prawf",
           shortenedFriendlyName: "Test",
           url: "/test",
+          caseNumberJsonFieldName: "caseNo",
+          caseNameJsonFieldName: "caseName",
           defaultSensitivity: "Public",
           allowedProvenance: ["CFT_IDAM"],
           isNonStrategic: false,
