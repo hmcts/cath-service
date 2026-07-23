@@ -792,6 +792,18 @@ describe("validateMyListType", () => {
 - **Test every required field at every nesting depth** — a field buried 7 levels deep (e.g. `courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseNumber`) needs its own `it` block the same as a top-level field
 - Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
 
+**7. `list-type-data.ts` is the single source of truth — adding an entry is all you need. DO NOT add SQL scripts.**
+
+`libs/list-types/common/src/list-type-data.ts` is the single source of truth for list types. Adding (or updating) a `ListTypeData` entry there is sufficient — it is reflected on every environment automatically. Do **not** create SQL scripts under `apps/postgres/prisma/scripts/`; that directory has been removed and the old "three files in sync" workflow no longer applies.
+
+**How seeding works:** On deploy, `apps/postgres/start.sh` runs `prisma migrate deploy`, then `prisma generate`, then `tsx prisma/seed-deploy.ts`. That entry point calls `seedLocationData()` (`libs/location/src/seed-data.ts`), which upserts all reference data — regions, jurisdictions, sub-jurisdictions, locations — and then `seedListTypes()` (`libs/location/src/seed-list-types.ts`), which upserts every `listTypeData` entry and its `list_types_sub_jurisdictions` links. Locally, `yarn db:seed` runs `apps/postgres/prisma/seed.ts`, which delegates to the same `seedLocationData()`.
+
+**Removals are reconciled by soft-delete:** deleting an entry from `listTypeData` causes `seedListTypes()` to set `deletedAt = NOW()` on the matching `list_types` row on the next deploy (this replaced the old CRIME_DAILY_LIST soft-delete script). Re-adding an entry clears `deletedAt` again. List types whose names start with `TEST_` or `E2E_` are exempt from reconciliation so E2E fixtures are never soft-deleted.
+
+**Environments:** this seeds all lower environments (local and STG). There is currently **no prod deployment**; `ENVIRONMENT` is not injected into the postgres pod, so the `ENVIRONMENT === "prod"` guard in the seed functions is inert. When a prod pipeline is introduced, prod-specific seeding/guarding will be reintroduced then — do not pre-emptively add SQL scripts for it.
+
+Everything remains keyed on the stable string `name`, never the numeric `id`.
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</h1>
+
+    <p><a href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}</p>
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformation }}</h3>
+    <p>{{ t.openJustice1 }}</p>
+    <p>{{ t.openJustice2 }}</p>
+    <p>{{ t.openJustice3 }}</p>
+    <p>{{ t.openJustice4 }} {{ openJustice.venueName }}, {{ openJustice.email }}, {{ openJustice.phone }}</p>
+    <p>{{ t.openJustice5 }}</p>
+    <p>{{ t.openJustice6 }}</p>
+  </div>
+
+  {% for court in courts %}
+    <div class="court-section">
+      <h2>{{ t.venue }} {{ court.courtName }}</h2>
+      {% if court.addressLines | length %}
+        <div class="address">
+          {% for line in court.addressLines %}
+            {{ line }}{% if not loop.last %}<br>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% for day in court.days %}
+        <div class="court-room-section">
+          <div class="section-heading">{{ day.sittingDate }}</div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>{{ t.tableHeaders[0] }}</th>
+                <th>{{ t.tableHeaders[1] }}</th>
+                <th>{{ t.tableHeaders[2] }}</th>
+                <th>{{ t.tableHeaders[3] }}</th>
+                <th>{{ t.tableHeaders[4] }}</th>
+                <th>{{ t.tableHeaders[5] }}</th>
+                <th>{{ t.tableHeaders[6] }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in day.rows %}
+                {% set durationText = '' %}
+                {% if row.durationAsHours > 0 %}
+                  {% if row.durationAsHours > 1 %}
+                    {% set durationText = row.durationAsHours ~ ' ' ~ t.hearingDurationHours %}
+                  {% else %}
+                    {% set durationText = row.durationAsHours ~ ' ' ~ t.hearingDurationHour %}
+                  {% endif %}
+                {% endif %}
+                {% if row.durationAsMinutes > 0 %}
+                  {% if durationText | length %}
+                    {% set durationText = durationText ~ ' ' %}
+                  {% endif %}
+                  {% if row.durationAsMinutes > 1 %}
+                    {% set durationText = durationText ~ row.durationAsMinutes ~ ' ' ~ t.hearingDurationMinutes %}
+                  {% else %}
+                    {% set durationText = durationText ~ row.durationAsMinutes ~ ' ' ~ t.hearingDurationMinute %}
+                  {% endif %}
+                {% endif %}
+                <tr>
+                  <td class="no-wrap">{{ row.sittingTime }}</td>
+                  <td class="no-wrap">{{ durationText }}{% if row.caseSequenceIndicator %}{% if durationText | length %} {% endif %}[{{ row.caseSequenceIndicator }}]{% endif %}</td>
+                  <td class="no-wrap">{{ row.caseNumber }}</td>
+                  <td>
+                    {{ row.applicant }}<br>
+                    {{ t.rep }}: {% if row.applicantRepresentative %}{{ row.applicantRepresentative }}{% else %}{{ t.noRep }}{% endif %}
+                  </td>
+                  <td>
+                    {{ row.respondent }}<br>
+                    {{ t.rep }}: {% if row.respondentRepresentative %}{{ row.respondentRepresentative }}{% else %}{{ t.noRep }}{% endif %}
+                  </td>
+                  <td class="no-wrap">{{ row.hearingType }}</td>
+                  <td class="no-wrap">{{ row.hearingPlatform }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>
