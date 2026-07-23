@@ -463,6 +463,7 @@ apps/web/src/pages/
 │   ├── index.ts           # Controller
 │   ├── index.njk          # Template
 │   └── index.test.ts      # Controller tests
+│   └── index.njk.test.ts  # Template tests
 ├── form-step-two/
 │   ├── index.ts
 │   ├── index.njk

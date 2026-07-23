@@ -1,14 +1,24 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "(public)/sign-in/index.njk";
+
 describe("select-account template", () => {
+  let env: nunjucks.Environment;
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
   describe("Template file", () => {
     it("should exist", () => {
       const templatePath = path.join(__dirname, "index.njk");
@@ -16,73 +26,93 @@ describe("select-account template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required title", () => {
-      expect(en.title).toBe("How do you want to sign in?");
+  describe("Template rendering", () => {
+    it("should render the page heading and all account options in English", () => {
+      const data = { ...en };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(en.title);
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(en.hmctsLabel);
+      expect(radioLabels).toContain(en.commonPlatformLabel);
+      expect(radioLabels).toContain(en.cathLabel);
+      const radioValues = $("input[name='accountType']")
+        .map((_, el) => $(el).attr("value"))
+        .get();
+      expect(radioValues).toEqual(["hmcts", "common-platform", "cath"]);
+      assertNoErrors($);
     });
 
-    it("should have error summary title", () => {
-      expect(en.errorSummaryTitle).toBe("There is a problem");
+    it("should render the continue button and create-account link in English", () => {
+      const data = { ...en };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("button").text()).toContain(en.continueButton);
+      const createLink = $("a[href='/create-media-account']");
+      expect(createLink.text()).toContain(en.createAccountLink);
+      expect($("body").text()).toContain(en.createAccountText);
     });
 
-    it("should have error message", () => {
-      expect(en.errorMessage).toBe("Please select an option");
+    it("should render the page heading and account options in Welsh", () => {
+      const data = { ...cy };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(cy.title);
+      const radioLabels = $(".govuk-radios__label")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(radioLabels).toContain(cy.hmctsLabel);
+      expect(radioLabels).toContain(cy.commonPlatformLabel);
+      expect(radioLabels).toContain(cy.cathLabel);
+      expect($("button").text()).toContain(cy.continueButton);
+      const createLink = $("a[href='/create-media-account']");
+      expect(createLink.text()).toContain(cy.createAccountLink);
+      expect($("body").text()).toContain(cy.createAccountText);
+      assertNoErrors($);
     });
 
-    it("should have HMCTS account option", () => {
-      expect(en.hmctsLabel).toBe("With a MyHMCTS account");
+    it("should render the Welsh error summary when errors are present", () => {
+      const data = {
+        ...cy,
+        errors: [{ text: cy.errorMessage, href: "#accountType" }],
+        data: { accountType: undefined }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.errorMessage]);
+      expect($(".govuk-error-summary").text()).toContain(cy.errorSummaryTitle);
     });
 
-    it("should have Common Platform account option", () => {
-      expect(en.commonPlatformLabel).toBe("With a Common Platform account");
+    it("should render the error summary when errors are present", () => {
+      const data = {
+        ...en,
+        errors: [{ text: en.errorMessage, href: "#accountType" }],
+        data: { accountType: undefined }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.errorMessage]);
+      expect($(".govuk-error-summary").text()).toContain(en.errorSummaryTitle);
     });
 
-    it("should have CaTH account option", () => {
-      expect(en.cathLabel).toBe("With a Court and tribunal hearings account");
-    });
+    it("should pre-select the previously chosen account when re-rendering with data", () => {
+      const data = {
+        ...en,
+        errors: [{ text: en.errorMessage, href: "#accountType" }],
+        data: { accountType: "cath" }
+      };
 
-    it("should have continue button text", () => {
-      expect(en.continueButton).toBe("Continue");
-    });
+      const { $ } = render(env, TEMPLATE, data);
 
-    it("should have create account text and link", () => {
-      expect(en.createAccountText).toBe("Don't have a CaTH account?");
-      expect(en.createAccountLink).toBe("Create one here");
-    });
-  });
-
-  describe("Welsh locale", () => {
-    it("should have required title", () => {
-      expect(cy.title).toBe("Sut hoffech chi fewngofnodi?");
-    });
-
-    it("should have error summary title", () => {
-      expect(cy.errorSummaryTitle).toBe("Mae yna broblem");
-    });
-
-    it("should have error message", () => {
-      expect(cy.errorMessage).toBe("Rhaid dewis opsiwn");
-    });
-
-    it("should have HMCTS account option", () => {
-      expect(cy.hmctsLabel).toBe("Gyda chyfrif MyHMCTS");
-    });
-
-    it("should have Common Platform account option", () => {
-      expect(cy.commonPlatformLabel).toBe("Gyda chyfrif Common Platform");
-    });
-
-    it("should have CaTH account option", () => {
-      expect(cy.cathLabel).toBe("Gyda chyfrif gwrandawiadau Llys a thribiwnlys");
-    });
-
-    it("should have continue button text", () => {
-      expect(cy.continueButton).toBe("Parhau");
-    });
-
-    it("should have create account text and link", () => {
-      expect(cy.createAccountText).toBe("Nid oes gennych gyfrif CaTH?");
-      expect(cy.createAccountLink).toBe("Crëwch un yma");
+      expect($("input[value='cath']").attr("checked")).toBeDefined();
+      expect($("input[value='hmcts']").attr("checked")).toBeUndefined();
     });
   });
 
