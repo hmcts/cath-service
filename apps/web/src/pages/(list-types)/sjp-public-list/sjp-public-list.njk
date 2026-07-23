@@ -28,6 +28,14 @@
       {{ generatedOn }} {{ list.generatedAt | date }} {{ at }} {{ list.generatedAt | time12 }}.
     </p>
 
+    {% if downloadDisclaimerUrl %}
+    <div>
+      <a href="{{ downloadDisclaimerUrl }}" role="button" draggable="false" class="govuk-button" data-module="govuk-button">
+        {{ downloadCopy }}
+      </a>
+    </div>
+    {% endif %}
+
     <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" id="filter-toggle">
       {% if showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}{{ hideFilters }}{% else %}{{ showFilters }}{% endif %}
     </button>

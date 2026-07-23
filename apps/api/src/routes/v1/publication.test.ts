@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./publication.js";
 
 vi.mock("@hmcts/blob-ingestion/repository/service", () => ({
-  processBlobIngestion: vi.fn()
+  processBlobIngestion: vi.fn(),
+  processFlatFileBlobIngestion: vi.fn()
 }));
 
 vi.mock("@hmcts/blob-ingestion/middleware/oauth-middleware", () => ({
@@ -325,6 +326,165 @@ describe("POST /v1/publication", () => {
         s3_key: "pdda-html/2026/02/11/uuid.html",
         correlation_id: undefined
       });
+    });
+  });
+
+  describe("flat file upload (multipart/form-data without type field)", () => {
+    let mockFlatFileRequest: Partial<Request>;
+
+    beforeEach(() => {
+      mockFlatFileRequest = {
+        headers: {
+          "content-type": "multipart/form-data; boundary=----WebKitFormBoundary"
+        },
+        body: {
+          court_id: "123",
+          provenance: "MANUAL_UPLOAD",
+          content_date: "2024-01-15",
+          list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          display_from: "2024-01-15T00:00:00Z",
+          display_to: "2024-01-16T00:00:00Z"
+        },
+        file: {
+          fieldname: "file",
+          originalname: "civil-daily-cause-list.pdf",
+          encoding: "7bit",
+          mimetype: "application/pdf",
+          buffer: Buffer.from("%PDF-1.4"),
+          size: 1024,
+          stream: null as any,
+          destination: "",
+          filename: "",
+          path: ""
+        }
+      };
+    });
+
+    it("should return 201 on successful flat file upload", async () => {
+      // Arrange
+      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
+      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
+        success: true,
+        artefact_id: "flat-artefact-123",
+        no_match: false,
+        message: "Flat file ingested successfully"
+      });
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: true,
+        artefact_id: "flat-artefact-123",
+        no_match: false,
+        message: "Flat file ingested successfully"
+      });
+      expect(processFlatFileBlobIngestion).toHaveBeenCalledWith(mockFlatFileRequest.body, mockFlatFileRequest.file?.buffer, mockFlatFileRequest.file?.size);
+    });
+
+    it("should return 400 when required metadata fields are missing", async () => {
+      // Arrange
+      mockFlatFileRequest.body = {};
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "Invalid request body structure. Missing or invalid required fields."
+      });
+    });
+
+    it("should return 400 when no file is provided", async () => {
+      // Arrange
+      mockFlatFileRequest.file = undefined;
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "No file provided. Include a file in the 'file' field of the multipart form."
+      });
+    });
+
+    it("should return 400 when flat file validation fails", async () => {
+      // Arrange
+      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
+      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
+        success: false,
+        message: "Validation failed",
+        errors: [{ field: "list_type", message: "Invalid list type" }]
+      });
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        success: false,
+        message: "Validation failed",
+        errors: [{ field: "list_type", message: "Invalid list type" }]
+      });
+    });
+
+    it("should return 200 when location not found (no_match)", async () => {
+      // Arrange
+      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
+      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
+        success: false,
+        no_match: true,
+        message: "Flat file ingested but location not found in reference data"
+      });
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(200);
+    });
+
+    it("should pass source_artefact_id when provided", async () => {
+      // Arrange
+      mockFlatFileRequest.body = { ...mockFlatFileRequest.body, source_artefact_id: "custom-name.pdf" };
+      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
+      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
+        success: true,
+        artefact_id: "flat-artefact-123",
+        no_match: false,
+        message: "Flat file ingested successfully"
+      });
+
+      // Act
+      const handlers = Array.isArray(POST) ? POST : [POST];
+      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(processFlatFileBlobIngestion).toHaveBeenCalledWith(
+        expect.objectContaining({ source_artefact_id: "custom-name.pdf" }),
+        expect.any(Buffer),
+        expect.any(Number)
+      );
     });
   });
 });

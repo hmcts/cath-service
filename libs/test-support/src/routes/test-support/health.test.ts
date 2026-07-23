@@ -5,9 +5,7 @@ import { GET } from "./health.js";
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     $connect: vi.fn(),
-    jurisdiction: {
-      findMany: vi.fn()
-    }
+    $queryRaw: vi.fn()
   }
 }));
 
@@ -32,7 +30,7 @@ describe("health routes", () => {
     it("should return healthy status when database is connected and migrations are complete", async () => {
       // Arrange
       vi.mocked(prisma.$connect).mockResolvedValue(undefined);
-      vi.mocked((prisma as any).jurisdiction.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.$queryRaw).mockResolvedValue([{ count: BigInt(0) }]);
 
       // Act
       await GET(mockRequest as Request, mockResponse as Response);
@@ -48,7 +46,7 @@ describe("health routes", () => {
     it("should return 503 when migrations are pending", async () => {
       // Arrange
       vi.mocked(prisma.$connect).mockResolvedValue(undefined);
-      vi.mocked((prisma as any).jurisdiction.findMany).mockRejectedValue(new Error("Table does not exist"));
+      vi.mocked(prisma.$queryRaw).mockResolvedValue([{ count: BigInt(2) }]);
 
       // Act
       await GET(mockRequest as Request, mockResponse as Response);
@@ -59,7 +57,7 @@ describe("health routes", () => {
         status: "unhealthy",
         database: "connected",
         migrations: "pending",
-        error: "Database migrations not yet applied"
+        error: "2 migration(s) still in progress"
       });
     });
 

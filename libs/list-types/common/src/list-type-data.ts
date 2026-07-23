@@ -632,6 +632,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [26]
   },
   {
+    name: "PHT_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "Primary Health Tribunal Weekly Hearing List",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Iechyd Sylfaenol",
+    provenance: "MANUAL_UPLOAD",
+    urlPath: "pht-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: null,
+    shortenedFriendlyName: "PHT Weekly Hearing List",
+    subJurisdictionIds: [22]
+  },
+  {
     name: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
     englishFriendlyName: "Magistrates Adult Court List - Daily",
     welshFriendlyName: "Rhestr Llys Ynadon Oedolion - Dyddiol",
