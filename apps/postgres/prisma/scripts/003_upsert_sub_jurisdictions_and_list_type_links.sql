@@ -173,7 +173,15 @@ FROM (VALUES
   -- UT_LANDS_CHAMBER_DAILY_HEARING_LIST → Upper Tribunal (Lands Chamber) (29)
   ('UT_LANDS_CHAMBER_DAILY_HEARING_LIST',                                 29),
   -- UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST → Upper Tribunal (Administrative Appeals Chamber) (26)
-  ('UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST',                26)
+  ('UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST',                26),
+  -- BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST → High Court (10)
+  ('BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST',                             10),
+  -- CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST → High Court (10)
+  ('CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST',                          10),
+  -- HIGH_COURT_CIVIL_DAILY_CAUSE_LIST → High Court (10)
+  ('HIGH_COURT_CIVIL_DAILY_CAUSE_LIST',                                  10),
+  -- HIGH_COURT_FAMILY_DAILY_CAUSE_LIST → High Court of the Family Division (11)
+  ('HIGH_COURT_FAMILY_DAILY_CAUSE_LIST',                                 11)
 ) AS mapping(list_type_name, sub_jurisdiction_id)
 JOIN list_types lt ON lt.name = mapping.list_type_name
 JOIN sub_jurisdiction sj ON sj.sub_jurisdiction_id = mapping.sub_jurisdiction_id

@@ -681,5 +681,46 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
+  },
+  // High Court flat-file daily cause lists (manual upload)
+  {
+    name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Business & Property Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Busnes ac Eiddo",
+    provenance: "CFT_IDAM",
+    urlPath: "business-and-property-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Circuit Commercial Court Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Llys Masnachol Cylchdaith",
+    provenance: "CFT_IDAM",
+    urlPath: "circuit-commercial-court-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "HIGH_COURT_CIVIL_DAILY_CAUSE_LIST",
+    englishFriendlyName: "High Court Civil Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Sifil yr Uchel Lys",
+    provenance: "CFT_IDAM",
+    urlPath: "high-court-civil-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "HIGH_COURT_FAMILY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "High Court Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Teulu yr Uchel Lys",
+    provenance: "CFT_IDAM",
+    urlPath: "high-court-family-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [11]
   }
 ];
