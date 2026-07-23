@@ -188,6 +188,15 @@ jobs:
             `gh pr create` against master. The PR body must summarise the delta: counts of new /
             status-changed / impl-changed requirements with their REQ refs, and any
             below-the-gate cases noted for a human.
+
+            ## 8. Enable auto-merge
+            After the PR exists (whether newly created or the existing one you pushed onto),
+            enable auto-merge so it lands on master once its status checks pass:
+            `gh pr merge --auto --squash --delete-branch "<pr-url-or-number>"`.
+            Auto-merge only completes when the required checks are green, so a migration that
+            fails the build/integrity gate will never merge. Do not attempt an immediate or
+            admin merge; if enabling auto-merge fails (e.g. it is not enabled on the repo),
+            report that in the run output and leave the PR open rather than force-merging.
           claude_args: |
             --dangerously-skip-permissions
             --append-system-prompt "You are running in a scheduled GitHub Action to sync the requirements database. Read @CLAUDE.md and the requirements/ SQL files. Be precise: this is an append-only audit log. If there is no drift, do nothing and open no PR. Never hard-delete or down-status a requirement."
