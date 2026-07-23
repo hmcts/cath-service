@@ -76,11 +76,18 @@ describe("template-config", () => {
       expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("non-sjp-pdf-template");
     });
 
-    it("should return non-SJP PDF template when SJP but no Excel and no PDF", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF = "non-sjp-pdf-template";
+    it("should return no-links template when there are no files", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("non-sjp-pdf-template");
+      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
+    });
+
+    it("should return no-links template when SJP but no Excel and no PDF", async () => {
+      process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
+
+      const { getSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
     });
 
     it("should fall back to GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION for no-links when new var not set", async () => {
