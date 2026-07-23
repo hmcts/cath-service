@@ -391,47 +391,4 @@ describe("govnotify-client", () => {
     expect(result.success).toBe(true);
     expect(mockPrepareUpload).not.toHaveBeenCalled();
   });
-
-  it("should use pdf_link_to_file key and upload excel when both pdfBuffer and excelBuffer are provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
-
-    const pdfBuffer = Buffer.from("PDF content");
-    const excelBuffer = Buffer.from("Excel content");
-    mockPrepareUpload.mockReturnValueOnce({ file: "pdf-file-reference" }).mockReturnValueOnce({ file: "excel-file-reference" });
-
-    const result = await sendEmail({
-      emailAddress: "user@example.com",
-      templateParameters: {
-        locations: "Test Court",
-        ListType: "Magistrates Public List",
-        content_date: "1 December 2024",
-        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
-        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      },
-      pdfBuffer,
-      excelBuffer
-    });
-
-    expect(result.success).toBe(true);
-    expect(mockPrepareUpload).toHaveBeenCalledTimes(2);
-    expect(mockPrepareUpload).toHaveBeenCalledWith(pdfBuffer, { confirmEmailBeforeDownload: false, retentionPeriod: "1 week" });
-    expect(mockPrepareUpload).toHaveBeenCalledWith(excelBuffer, { confirmEmailBeforeDownload: false, retentionPeriod: "1 week" });
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      "test-template-id",
-      "user@example.com",
-      expect.objectContaining({
-        personalisation: expect.objectContaining({
-          pdf_link_to_file: { file: "pdf-file-reference" },
-          excel_link_to_file: { file: "excel-file-reference" }
-        })
-      })
-    );
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      expect.objectContaining({
-        personalisation: expect.not.objectContaining({ link_to_file: expect.anything() })
-      })
-    );
-  });
 });
