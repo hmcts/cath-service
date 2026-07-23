@@ -504,8 +504,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
             listTypeId,
             language,
             jsonData,
-            pdfFilePath,
-            excelPath
+            pdfFilePath
           },
           result.notifiedUserIds
         );
