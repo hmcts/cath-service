@@ -1,5 +1,4 @@
 {% extends "layouts/base-template.njk" %}
-{% from "govuk/components/table/macro.njk" import govukTable %}
 
 {% block head %}
   {{ super() }}
@@ -9,6 +8,9 @@
     }
     .no-wrap {
       white-space: nowrap;
+    }
+    .no-border-bottom {
+      border-bottom: 0;
     }
     .govuk-accordion__section-content {
       overflow: auto hidden;
@@ -23,19 +25,18 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h2 class="govuk-heading-l">{{ t.pageTitle }} {{ header.locationName }}</h2>
+    <h2 id="page-heading" class="govuk-heading-l">{{ t.inCop }}{% if header.region %}: {{ header.region }}{% endif %}</h2>
+    {% if header.regionalJoh %}
+      <h2 id="page-heading2" class="govuk-heading-l">{{ t.regionalLeadJudge }} {{ header.regionalJoh }}</h2>
+    {% endif %}
+    <h2 id="page-heading3" class="govuk-heading-l">{{ t.sittingAt }} {{ header.courtName }}</h2>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
 
     <p class="govuk-body">
       <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
     </p>
 
-    <p class="govuk-body">
-      {% for line in header.addressLines %}
-        {{ line }}{% if not loop.last %}<br>{% endif %}
-      {% endfor %}
-    </p>
-
-    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
     <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
 
     <details class="govuk-details" data-module="govuk-details" open>
@@ -68,25 +69,10 @@
     <div id="court-lists-container">
     {% for courtList in listData.courtLists %}
       {% set courtHouse = courtList.courtHouse %}
-      {% if courtHouse.courtHouseAddress %}
-        <div class="govuk-!-margin-bottom-6">
-          <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
-          {% for line in courtHouse.courtHouseAddress.line %}
-            {% if line | length %}
-              <p class="govuk-body">{{ line }}</p>
-            {% endif %}
-          {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.town }}</p>
-          {% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.county }}</p>
-          {% endif %}
-          {% if courtHouse.courtHouseAddress.postCode | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.postCode }}</p>
-          {% endif %}
-        </div>
-      {% endif %}
+
+      <div class="govuk-!-margin-bottom-6">
+        <h2 class="govuk-heading-l">{{ courtHouse.courtHouseName }}</h2>
+      </div>
 
       <div class="govuk-accordion" data-module="govuk-accordion">
         {% for courtRoom in courtHouse.courtRoom %}
@@ -96,7 +82,7 @@
                 <h2 class="govuk-accordion__section-heading">
                   <span class="govuk-accordion__section-button">
                     {% if session.formattedJudiciaries | length %}
-                      {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }}: {{ session.formattedJudiciaries }}
+                      {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }} {{ session.formattedJudiciaries }}
                     {% else %}
                       {{ courtRoom.courtRoomName }}
                     {% endif %}
@@ -109,12 +95,11 @@
                     <tr class="govuk-table__row">
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.startTime }}</th>
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.caseRef }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.caseName }}</th>
+                      <th scope="col" class="govuk-table__header no-wrap">{{ t.caseDetails }}</th>
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.caseType }}</th>
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.hearingType }}</th>
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.timeEstimate }}</th>
                       <th scope="col" class="govuk-table__header no-wrap">{{ t.hearingChannel }}</th>
-                      <th scope="col" class="govuk-table__header no-wrap">{{ t.reportingRestrictions }}</th>
                     </tr>
                   </thead>
                   <tbody class="govuk-table__body">
@@ -140,16 +125,26 @@
 
                       {% for hearing in sitting.hearing %}
                         {% for case in hearing.case %}
+                          {% set noBorder = '' %}
+                          {% if case.formattedReportingRestriction | length %}
+                            {% set noBorder = 'no-border-bottom' %}
+                          {% endif %}
                           <tr class="govuk-table__row">
-                            <td class="govuk-table__cell no-wrap">{{ sitting.time }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.caseNumber }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.caseName }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
-                            <td class="govuk-table__cell no-wrap">{{ case.caseType }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ hearing.hearingType }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ durationText }}</td>
-                            <td class="govuk-table__cell no-wrap">{{ sitting.caseHearingChannel }}</td>
-                            <td class="govuk-table__cell">{{ case.formattedReportingRestriction }}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ sitting.time }}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ case.caseNumber }}</td>
+                            <td class="govuk-table__cell {{ noBorder }}">{{ case.caseName }}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ case.caseType }}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ hearing.hearingType }}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ durationText }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                            <td class="govuk-table__cell no-wrap {{ noBorder }}">{{ sitting.caseHearingChannel }}</td>
                           </tr>
+                          {% if case.formattedReportingRestriction | length %}
+                            <tr class="govuk-table__row">
+                              <td class="govuk-table__cell" colspan="7">
+                                <strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}
+                              </td>
+                            </tr>
+                          {% endif %}
                         {% endfor %}
                       {% endfor %}
                     {% endfor %}
@@ -166,6 +161,10 @@
     <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">
       {{ t.dataSource }}: {{ dataSource }}
     </p>
+
+    <div class="back-to-top">
+      <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
+    </div>
 
   </div>
 </div>

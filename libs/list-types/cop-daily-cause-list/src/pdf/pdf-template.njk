@@ -3,22 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <title>{{ t.title }}</title>
   <style>{{ pdfStyles | safe }}</style>
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+    <h1>{{ t.inCop }}{% if header.region %}: {{ header.region }}{% endif %}</h1>
+    {% if header.regionalJoh %}
+      <h2>{{ t.regionalLeadJudge }} {{ header.regionalJoh }}</h2>
+    {% endif %}
+    <h2>{{ t.sittingAt }} {{ header.courtName }}</h2>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
 
     <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
 
-    <div class="address">
-      {% for line in header.addressLines %}
-        {{ line }}{% if not loop.last %}<br>{% endif %}
-      {% endfor %}
-    </div>
-
-    <p class="bold header-date">{{ t.listFor }} {{ header.contentDate }}</p>
     <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
   </div>
 
@@ -34,24 +33,14 @@
   {% for courtList in listData.courtLists %}
     {% set courtHouse = courtList.courtHouse %}
     <div class="court-section">
-      {% if courtHouse.courtHouseAddress %}
-        <h2>{{ courtHouse.courtHouseName }}</h2>
-        <div class="address">
-          {% for line in courtHouse.courtHouseAddress.line %}
-            {% if line | length %}{{ line }}<br>{% endif %}
-          {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
-          {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
-        </div>
-      {% endif %}
+      <h2>{{ courtHouse.courtHouseName }}</h2>
 
       {% for courtRoom in courtHouse.courtRoom %}
         {% for session in courtRoom.session %}
           <div class="court-room-section">
             <div class="section-heading">
               {% if session.formattedJudiciaries | length %}
-                {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }}: {{ session.formattedJudiciaries }}
+                {{ courtRoom.courtRoomName }}, {{ t.beforeJudge }} {{ session.formattedJudiciaries }}
               {% else %}
                 {{ courtRoom.courtRoomName }}
               {% endif %}
@@ -62,12 +51,11 @@
                 <tr>
                   <th class="no-wrap">{{ t.startTime }}</th>
                   <th class="no-wrap">{{ t.caseRef }}</th>
-                  <th class="no-wrap">{{ t.caseName }}</th>
+                  <th class="no-wrap">{{ t.caseDetails }}</th>
                   <th class="no-wrap">{{ t.caseType }}</th>
                   <th class="no-wrap">{{ t.hearingType }}</th>
                   <th class="no-wrap">{{ t.timeEstimate }}</th>
                   <th class="no-wrap">{{ t.hearingChannel }}</th>
-                  <th class="no-wrap">{{ t.reportingRestrictions }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -96,13 +84,17 @@
                       <tr>
                         <td class="no-wrap">{{ sitting.time }}</td>
                         <td class="no-wrap">{{ case.caseNumber }}</td>
-                        <td>{{ case.caseName }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
+                        <td>{{ case.caseName }}</td>
                         <td class="no-wrap">{{ case.caseType }}</td>
                         <td class="no-wrap">{{ hearing.hearingType }}</td>
-                        <td class="no-wrap">{{ durationText }}</td>
+                        <td class="no-wrap">{{ durationText }}{% if case.caseSequenceIndicator %} [{{ case.caseSequenceIndicator }}]{% endif %}</td>
                         <td class="no-wrap">{{ sitting.caseHearingChannel }}</td>
-                        <td>{{ case.formattedReportingRestriction }}</td>
                       </tr>
+                      {% if case.formattedReportingRestriction | length %}
+                        <tr>
+                          <td colspan="7"><strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}</td>
+                        </tr>
+                      {% endif %}
                     {% endfor %}
                   {% endfor %}
                 {% endfor %}

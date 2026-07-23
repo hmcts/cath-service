@@ -75,20 +75,8 @@ function buildSession({
   };
 }
 
-function buildCourtHouse({
-  courtHouseName = "Test Court",
-  courtHouseAddress = { line: ["Test Address"], postCode: "TC1 1AA" },
-  courtRoom = [buildSession()]
-}: {
-  courtHouseName?: string;
-  courtHouseAddress?: Record<string, unknown> | null;
-  courtRoom?: unknown[];
-} = {}) {
-  const courtHouse: Record<string, unknown> = { courtHouseName, courtRoom };
-  if (courtHouseAddress) {
-    courtHouse.courtHouseAddress = courtHouseAddress;
-  }
-  return { courtHouse };
+function buildCourtHouse({ courtHouseName = "Test Court", courtRoom = [buildSession()] }: { courtHouseName?: string; courtRoom?: unknown[] } = {}) {
+  return { courtHouse: { courtHouseName, courtRoom } };
 }
 
 function baseData(locale: typeof en | typeof cy = en) {
@@ -97,7 +85,10 @@ function baseData(locale: typeof en | typeof cy = en) {
     en,
     cy,
     header: {
-      locationName: "Test Court",
+      locationName: "Regional COP Court",
+      courtName: "Regional COP Court",
+      region: "North",
+      regionalJoh: "Judge Regional",
       addressLines: ["123 Test Street", "Test City", "TC1 1AA"],
       contentDate: "10 July 2026",
       lastUpdated: "10 July 2026 at 9:00am"
@@ -112,11 +103,18 @@ function baseData(locale: typeof en | typeof cy = en) {
 }
 
 function renderList(courtLists: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
-  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, listData: { courtLists } });
+  const base = baseData(locale);
+  return render(env, TEMPLATE, {
+    ...base,
+    ...overrides,
+    header: { ...base.header, ...(overrides.header as object) },
+    listData: { courtLists }
+  });
 }
 
-// The rendered hearings table columns, in order (8 columns, no applicant/respondent).
-const COLUMN = { startTime: 0, caseRef: 1, caseName: 2, caseType: 3, hearingType: 4, timeEstimate: 5, hearingChannel: 6, reportingRestriction: 7 } as const;
+// The rendered hearings table columns, in order (7 columns; reporting
+// restrictions render on a separate full-width row, not as a column).
+const COLUMN = { startTime: 0, caseRef: 1, caseDetails: 2, caseType: 3, hearingType: 4, timeEstimate: 5, hearingChannel: 6 } as const;
 
 function firstDataRowCells($: CheerioAPI) {
   return $("tbody.govuk-table__body tr")
@@ -154,12 +152,34 @@ describe("cop-daily-cause-list template", () => {
   });
 
   describe("Page header", () => {
-    it("should render the heading with the page title and location name", () => {
+    it("should render the 'In the Court of Protection' heading with the region", () => {
       const { $ } = renderList([]);
 
-      const heading = $("h2.govuk-heading-l").first().text();
-      expect(heading).toContain(en.pageTitle);
-      expect(heading).toContain("Test Court");
+      expect($("#page-heading").text().replace(/\s+/g, " ").trim()).toBe(`${en.inCop}: North`);
+    });
+
+    it("should render the regional lead judge heading when present", () => {
+      const { $ } = renderList([]);
+
+      expect($("#page-heading2").text().replace(/\s+/g, " ").trim()).toBe(`${en.regionalLeadJudge} Judge Regional`);
+    });
+
+    it("should omit the regional lead judge heading when absent", () => {
+      const { $ } = renderList([], { header: { regionalJoh: "" } });
+
+      expect($("#page-heading2")).toHaveLength(0);
+    });
+
+    it("should render the 'Sitting at' heading with the court name", () => {
+      const { $ } = renderList([]);
+
+      expect($("#page-heading3").text().replace(/\s+/g, " ").trim()).toBe(`${en.sittingAt} Regional COP Court`);
+    });
+
+    it("should omit the region suffix when no region is provided", () => {
+      const { $ } = renderList([], { header: { region: "" } });
+
+      expect($("#page-heading").text().replace(/\s+/g, " ").trim()).toBe(en.inCop);
     });
 
     it("should render the FACT link with the configured text and URL", () => {
@@ -185,6 +205,14 @@ describe("cop-daily-cause-list template", () => {
       expect(footer).toContain(en.dataSource);
       expect(footer).toContain("Court of Protection Data");
     });
+
+    it("should render a back to top link", () => {
+      const { $ } = renderList([]);
+
+      const backToTop = $('.back-to-top a[href="#top"]');
+      expect(backToTop).toHaveLength(1);
+      expect(backToTop.text().trim()).toBe(en.backToTop);
+    });
   });
 
   describe("Session judiciary variations", () => {
@@ -192,7 +220,7 @@ describe("cop-daily-cause-list template", () => {
       const { $ } = renderList([buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Court 1", formattedJudiciaries: "Judge Smith" })] })]);
 
       const heading = $(".govuk-accordion__section-button").text().replace(/\s+/g, " ").trim();
-      expect(heading).toBe(`Court 1, ${en.beforeJudge}: Judge Smith`);
+      expect(heading).toBe(`Court 1, ${en.beforeJudge} Judge Smith`);
     });
 
     it("should render only the court room name when no judiciary is provided", () => {
@@ -205,22 +233,13 @@ describe("cop-daily-cause-list template", () => {
   });
 
   describe("Hearings table", () => {
-    it("should render the eight table headers in order", () => {
+    it("should render the seven table headers in order", () => {
       const { $ } = renderList([buildCourtHouse()]);
 
       const headers = $("thead th")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(headers).toEqual([
-        en.startTime,
-        en.caseRef,
-        en.caseName,
-        en.caseType,
-        en.hearingType,
-        en.timeEstimate,
-        en.hearingChannel,
-        en.reportingRestrictions
-      ]);
+      expect(headers).toEqual([en.startTime, en.caseRef, en.caseDetails, en.caseType, en.hearingType, en.timeEstimate, en.hearingChannel]);
     });
 
     it("should place each case field in its correct column", () => {
@@ -233,7 +252,7 @@ describe("cop-daily-cause-list template", () => {
                   time: "10:00am",
                   caseHearingChannel: "Video",
                   hearingType: "Directions",
-                  cases: [buildCase({ caseNumber: "12345", caseName: "Re X", caseType: "COP", formattedReportingRestriction: "Section 11 applies" })]
+                  cases: [buildCase({ caseNumber: "12345", caseName: "Re X", caseType: "COP" })]
                 })
               ]
             })
@@ -244,11 +263,10 @@ describe("cop-daily-cause-list template", () => {
       const cells = firstDataRowCells($);
       expect(cells[COLUMN.startTime]).toBe("10:00am");
       expect(cells[COLUMN.caseRef]).toBe("12345");
-      expect(cells[COLUMN.caseName]).toBe("Re X");
+      expect(cells[COLUMN.caseDetails]).toBe("Re X");
       expect(cells[COLUMN.caseType]).toBe("COP");
       expect(cells[COLUMN.hearingType]).toBe("Directions");
       expect(cells[COLUMN.hearingChannel]).toBe("Video");
-      expect(cells[COLUMN.reportingRestriction]).toBe("Section 11 applies");
     });
 
     it("should render a row per case across multiple hearings and cases", () => {
@@ -303,32 +321,40 @@ describe("cop-daily-cause-list template", () => {
   });
 
   describe("Case variations", () => {
-    it("should append the sequence indicator to the case name when present", () => {
+    it("should append the sequence indicator to the time estimate when present", () => {
       const { $ } = renderList([
         buildCourtHouse({
-          courtRoom: [buildSession({ sittings: [buildSitting({ cases: [buildCase({ caseName: "Re X", caseSequenceIndicator: "2 of 3" })] })] })]
+          courtRoom: [
+            buildSession({ sittings: [buildSitting({ durationAsHours: 1, durationAsMinutes: 0, cases: [buildCase({ caseSequenceIndicator: "2 of 3" })] })] })
+          ]
         })
       ]);
 
-      expect(firstDataRowCells($)[COLUMN.caseName]).toBe("Re X [2 of 3]");
+      expect(firstDataRowCells($)[COLUMN.timeEstimate]).toBe("1 hour [2 of 3]");
     });
 
-    it("should render the reporting restriction in its column when present", () => {
+    it("should render the reporting restriction on a separate full-width row when present", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtRoom: [buildSession({ sittings: [buildSitting({ cases: [buildCase({ formattedReportingRestriction: "Section 4 applies" })] })] })]
         })
       ]);
 
-      expect(firstDataRowCells($)[COLUMN.reportingRestriction]).toBe("Section 4 applies");
+      const restrictionRow = $("tbody.govuk-table__body tr").last();
+      const cell = restrictionRow.find("td");
+      expect(cell).toHaveLength(1);
+      expect(cell.attr("colspan")).toBe("7");
+      expect(cell.text()).toContain(en.reportingRestrictions);
+      expect(cell.text()).toContain("Section 4 applies");
     });
 
-    it("should leave the reporting restriction column empty when there is no restriction", () => {
+    it("should not render a reporting restriction row when there is no restriction", () => {
       const { $ } = renderList([
         buildCourtHouse({ courtRoom: [buildSession({ sittings: [buildSitting({ cases: [buildCase({ formattedReportingRestriction: "" })] })] })] })
       ]);
 
-      expect(firstDataRowCells($)[COLUMN.reportingRestriction]).toBe("");
+      expect($("tbody.govuk-table__body tr")).toHaveLength(1);
+      expect($('td[colspan="7"]')).toHaveLength(0);
     });
   });
 
@@ -336,14 +362,15 @@ describe("cop-daily-cause-list template", () => {
     it("should render Welsh headings, table headers and labels", () => {
       const { $ } = renderList([buildCourtHouse({ courtRoom: [buildSession({ courtRoomName: "Court 1", formattedJudiciaries: "Barnwr Jones" })] })], {}, cy);
 
-      expect($("h2.govuk-heading-l").first().text()).toContain(cy.pageTitle);
+      expect($("#page-heading").text()).toContain(cy.inCop);
+      expect($("#page-heading3").text()).toContain(cy.sittingAt);
       expect($(".govuk-accordion__section-button").text()).toContain(cy.beforeJudge);
       const headers = $("thead th")
         .map((_, el) => $(el).text().trim())
         .get();
       expect(headers).toContain(cy.startTime);
       expect(headers).toContain(cy.hearingChannel);
-      expect(headers).toContain(cy.reportingRestrictions);
+      expect(headers).toContain(cy.caseDetails);
     });
   });
 });
