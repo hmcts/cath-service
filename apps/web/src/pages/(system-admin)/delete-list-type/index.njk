@@ -21,7 +21,7 @@
       </p>
     {% endif %}
 
-    <h1 class="govuk-heading-l">{{ title }}</h1>
+    <h1 class="govuk-heading-xl">{{ title }}</h1>
 
     {{ govukSummaryList({
       rows: [
@@ -63,6 +63,8 @@
       {{ govukButton({
         text: confirmButton
       }) }}
+
+      <a href="/manage-list-type?id={{ id }}" class="govuk-link govuk-!-margin-left-2">{{ cancelLink }}</a>
 
     </form>
 

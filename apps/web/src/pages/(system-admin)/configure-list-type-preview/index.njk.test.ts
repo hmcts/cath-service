@@ -75,15 +75,15 @@ describe("configure-list-type-preview template", () => {
       expect(html).toContain(en.configureListType.preview.noOption);
     });
 
-    it("should render change links pointing to the enter details and sub jurisdictions pages", () => {
-      const templateData = { t: en, data, subJurisdictionsText: "Civil" };
+    it("should render change links pointing to the details and sub jurisdictions pages", () => {
+      const templateData = { t: en, data, subJurisdictionsText: "Civil", changeDetailsHref: "/add-list-type" };
 
       const { $ } = render(env, TEMPLATE, templateData);
 
       const hrefs = $(".govuk-summary-list__actions a")
         .map((_, el) => $(el).attr("href"))
         .get();
-      expect(hrefs).toContain("/configure-list-type-enter-details");
+      expect(hrefs).toContain("/add-list-type");
       expect(hrefs).toContain("/configure-list-type-select-sub-jurisdictions");
     });
 
