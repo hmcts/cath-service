@@ -181,6 +181,27 @@ describe("generateMagistratesPublicListExcel", () => {
     expect(sanitiseCellValue).toHaveBeenCalledWith("Assault, Breach of bail");
   });
 
+  it("should handle missing optional fields by falling back to empty strings", async () => {
+    const dataWithMissingFields = makeRenderedData();
+    const hearing = dataWithMissingFields.listData.courtLists[0]!.courtHouse.courtRoom[0]!.session[0]!.sittings[0]!.hearing[0]!;
+    // Remove all optional fields from case and application items
+    hearing.case = [{ reportingRestriction: false } as any];
+    hearing.application = [{} as any];
+    // Remove optional fields from sitting and hearing
+    delete (dataWithMissingFields.listData.courtLists[0]!.courtHouse.courtRoom[0]!.session[0]!.sittings[0] as any).time;
+    delete (hearing as any).hearingType;
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(dataWithMissingFields as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    const result = await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(result.success).toBe(true);
+    // All ?? "" fallbacks should pass empty string to sanitiseCellValue
+    expect(sanitiseCellValue).toHaveBeenCalledWith("");
+  });
+
   it("should return failure result when an error occurs", async () => {
     vi.mocked(renderMagistratesPublicListData).mockRejectedValue(new Error("Render failed"));
 
