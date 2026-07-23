@@ -1,6 +1,6 @@
 import { renderMagistratesStandardListData, validateMagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson, listTypeHasExcel } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -21,7 +21,8 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     ...actual,
     getArtefactById: vi.fn(),
     getPublicationJson: vi.fn(),
-    canAccessPublicationData: vi.fn()
+    canAccessPublicationData: vi.fn(),
+    listTypeHasExcel: vi.fn()
   };
 });
 vi.mock("@hmcts/magistrates-standard-list");
@@ -349,7 +350,8 @@ describe("magistrates-standard-list controller", () => {
         isFlatFile: false,
         provenance: "UNKNOWN_PROVENANCE",
         supersededCount: 0,
-        noMatch: false
+        noMatch: false,
+        excelPath: null
       } as any;
       const mockJsonData = {
         document: { publicationDate: "2025-01-13T09:30:00.000Z" },
@@ -374,6 +376,90 @@ describe("magistrates-standard-list controller", () => {
         "magistrates-standard-list",
         expect.objectContaining({
           dataSource: "UNKNOWN_PROVENANCE"
+        })
+      );
+    });
+
+    it("should not pass excelDownloadUrl when list type does not have Excel", async () => {
+      req.query = { artefactId: "test-id" };
+      const mockArtefact = {
+        artefactId: "test-id",
+        locationId: "1",
+        listTypeId: 28,
+        listTypeName: "SOME_OTHER_LIST",
+        contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-01-13"),
+        displayTo: new Date("2025-01-20"),
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(listTypeHasExcel).mockReturnValue(false);
+      vi.mocked(getPublicationJson).mockResolvedValue({
+        document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+        venue: {},
+        courtLists: []
+      });
+      vi.mocked(validateMagistratesStandardList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" } as any);
+      vi.mocked(renderMagistratesStandardListData).mockReturnValue({
+        header: { contentDate: "13 January 2025", publishedDate: "13 January 2025", publishedTime: "09:30", venueAddress: "" },
+        listData: []
+      } as any);
+
+      await GET(req as Request, res as Response);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "magistrates-standard-list",
+        expect.objectContaining({
+          excelDownloadUrl: undefined,
+          pdfDownloadUrl: "/api/flat-file/test-id/download"
+        })
+      );
+    });
+
+    it("should pass excelDownloadUrl when list type has Excel", async () => {
+      req.query = { artefactId: "test-id" };
+      const mockArtefact = {
+        artefactId: "test-id",
+        locationId: "1",
+        listTypeId: 28,
+        listTypeName: "MAGISTRATES_STANDARD_LIST",
+        contentDate: new Date("2025-01-13"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-01-13"),
+        displayTo: new Date("2025-01-20"),
+        lastReceivedDate: new Date("2025-01-13"),
+        isFlatFile: false,
+        provenance: "MANUAL_UPLOAD",
+        supersededCount: 0,
+        noMatch: false
+      } as any;
+      vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
+      vi.mocked(listTypeHasExcel).mockReturnValue(true);
+      vi.mocked(getPublicationJson).mockResolvedValue({
+        document: { publicationDate: "2025-01-13T09:30:00.000Z" },
+        venue: {},
+        courtLists: []
+      });
+      vi.mocked(validateMagistratesStandardList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" } as any);
+      vi.mocked(renderMagistratesStandardListData).mockReturnValue({
+        header: { contentDate: "13 January 2025", publishedDate: "13 January 2025", publishedTime: "09:30", venueAddress: "" },
+        listData: []
+      } as any);
+
+      await GET(req as Request, res as Response);
+
+      expect(res.render).toHaveBeenCalledWith(
+        "magistrates-standard-list",
+        expect.objectContaining({
+          excelDownloadUrl: "/api/flat-file/test-id/download?format=excel",
+          pdfDownloadUrl: "/api/flat-file/test-id/download"
         })
       );
     });

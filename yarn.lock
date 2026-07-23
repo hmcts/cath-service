@@ -1866,6 +1866,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
+    exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -1878,7 +1879,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
   dependencies:
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    exceljs: "npm:4.4.0"
   languageName: unknown
   linkType: soft
 
@@ -1916,7 +1920,9 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/magistrates-adult-court-list": "workspace:*"
+    "@hmcts/magistrates-public-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/pht-weekly-hearing-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"

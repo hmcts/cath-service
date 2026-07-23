@@ -194,6 +194,14 @@
         {{ t.dataSource }}: {{ dataSource }}
       </p>
 
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ t.downloadSection }}</h2>
+      <ul class="govuk-list">
+        <li><a class="govuk-link" href="{{ pdfDownloadUrl }}" download>{{ t.downloadAsPdf }}</a></li>
+        {% if excelDownloadUrl %}
+          <li><a class="govuk-link" href="{{ excelDownloadUrl }}" download>{{ t.downloadAsSpreadsheet }}</a></li>
+        {% endif %}
+      </ul>
+
       <p class="govuk-body govuk-!-margin-top-4">
         <a class="govuk-link" href="#main-content">{{ t.linkToTop }}</a>
       </p>

@@ -5,6 +5,7 @@ import {
   renderMagistratesStandardListData,
   validateMagistratesStandardList
 } from "@hmcts/magistrates-standard-list";
+import { listTypeHasExcel } from "@hmcts/publication";
 import { createListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
 export const GET = createListTypeHandler<MagistratesStandardList>({
@@ -21,6 +22,8 @@ export const GET = createListTypeHandler<MagistratesStandardList>({
       contentDate: artefact.contentDate
     });
     const dataSource = resolveDataSource(artefact.provenance);
-    res.render("magistrates-standard-list", { en, cy, t, pageTitle: t.title, header, listData, dataSource });
+    const pdfDownloadUrl = `/api/flat-file/${artefact.artefactId}/download`;
+    const excelDownloadUrl = listTypeHasExcel(artefact.listTypeName) ? `/api/flat-file/${artefact.artefactId}/download?format=excel` : undefined;
+    res.render("magistrates-standard-list", { en, cy, t, pageTitle: t.title, header, listData, dataSource, pdfDownloadUrl, excelDownloadUrl });
   }
 });

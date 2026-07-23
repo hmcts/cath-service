@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { UserProfile } from "@hmcts/auth";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import type { Artefact } from "@hmcts/publication";
 import {
@@ -7,12 +8,13 @@ import {
   getArtefactById,
   getContentType,
   getFileBuffer,
-  getFileExtension,
   getFileName,
   getSourceArtefactId,
   resolveListType
 } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
+
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 type GuardError = { error: "NOT_FLAT_FILE" | "EXPIRED" | "ACCESS_DENIED" };
 
@@ -73,6 +75,40 @@ export async function getFileForDownload(artefactId: string, user: UserProfile |
   };
 }
 
+// No isFlatFile guard here. Excel files are generated from JSON publications
+// (isFlatFile: false). The guard in getFileForDownload is for flat-file artefacts only
+// and would incorrectly block every Excel download if added here.
+export async function getExcelForDownload(artefactId: string, user: UserProfile | undefined = undefined) {
+  const artefact = await getArtefactById(artefactId);
+
+  if (!artefact) {
+    return { error: "NOT_FOUND" as const };
+  }
+
+  const now = new Date();
+  if (now < artefact.displayFrom || now > artefact.displayTo) {
+    return { error: "EXPIRED" as const };
+  }
+
+  if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) {
+    return { error: "ACCESS_DENIED" as const };
+  }
+
+  const fileBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
+
+  if (!fileBuffer) {
+    return { error: "FILE_NOT_FOUND" as const };
+  }
+
+  return {
+    success: true,
+    fileBuffer,
+    contentType: XLSX_CONTENT_TYPE,
+    fileName: `${artefactId}.xlsx`
+  };
+}
+
 type FlatFileResult = Awaited<ReturnType<typeof getFlatFileForDisplay>>;
 type DownloadFileResult = Awaited<ReturnType<typeof getFileForDownload>>;
-export type { FlatFileResult, DownloadFileResult };
+type ExcelDownloadResult = Awaited<ReturnType<typeof getExcelForDownload>>;
+export type { FlatFileResult, DownloadFileResult, ExcelDownloadResult };

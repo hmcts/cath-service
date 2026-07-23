@@ -1,4 +1,5 @@
 export * from "./email-summary/summary-builder.js";
+export { generateMagistratesStandardListExcel } from "./excel/excel-generator.js";
 export { cy as magistratesStandardListCy } from "./locales/cy.js";
 export { en as magistratesStandardListEn } from "./locales/en.js";
 export * from "./models/types.js";

@@ -80,6 +80,7 @@ jobs:
       # GOV.UK Notify template IDs (non-secret)
       GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
       GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
+      GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL: 42f65ada-6de0-45da-822a-9632f6f682fd
 
     steps:
       - name: Checkout

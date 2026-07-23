@@ -6,6 +6,7 @@ export const en = {
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
+  warningText: "Warning",
   restrictionInformationHeading: "Restrictions on publishing or writing about these cases",
   restrictionInformationP1:
     "You must check if any reporting restrictions apply before publishing details on any of the cases listed here either in writing, in a broadcast or by internet, including social media.",
@@ -31,5 +32,19 @@ export const en = {
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  downloadSection: "Download this list",
+  downloadAsPdf: "Download as a PDF",
+  downloadAsSpreadsheet: "Download as a spreadsheet (Excel)",
+  excelColumns: {
+    courtHouse: "Court House",
+    courtRoom: "Court Room",
+    sittingAt: "Sitting at",
+    urn: "URN",
+    name: "Name",
+    hearingType: "Hearing Type",
+    prosecutingAuthority: "Prosecuting Authority",
+    offenceDetails: "Offence Details",
+    reportingRestrictions: "Reporting Restrictions"
+  }
 };
