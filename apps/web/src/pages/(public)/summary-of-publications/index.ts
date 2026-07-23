@@ -7,6 +7,11 @@ import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+const IAC_ORDER: Record<string, number> = {
+  IAC_DAILY_LIST: 0,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: 1
+};
+
 export const GET = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
@@ -73,6 +78,7 @@ export const GET = async (req: Request, res: Response) => {
     return {
       id: artefact.artefactId,
       listTypeName,
+      name: listType?.name ?? "",
       listTypeId: artefact.listTypeId,
       contentDate: artefact.contentDate,
       language: artefact.language,
@@ -98,6 +104,12 @@ export const GET = async (req: Request, res: Response) => {
 
   // Sort by list name, then by content date descending, then by language
   uniquePublications.sort((a: (typeof uniquePublications)[number], b: (typeof uniquePublications)[number]) => {
+    // IAC Daily List must always appear before its Additional Cases list, regardless
+    // of publish order or locale. Keyed on the stable list-type name, so no other
+    // list type's ordering is affected.
+    if (a.name in IAC_ORDER && b.name in IAC_ORDER) {
+      return IAC_ORDER[a.name] - IAC_ORDER[b.name];
+    }
     // First sort by list name
     if (a.listTypeName !== b.listTypeName) {
       return a.listTypeName.localeCompare(b.listTypeName);

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+    <h2>{{ common.heading }}<br/>{{ header.venueName }} {{ common.dailyList }}</h2>
+
+    <p class="bold header-date">{{ common.listDate }} {{ header.contentDate }}</p>
+    <p class="header-date">{{ common.listUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ common.importantInformationHeading }}</h3>
+    <p>{{ common.importantInformationP1 }}</p>
+    <p>{{ common.importantInformationP2 }}</p>
+    <p>{{ common.importantInformationP3 }}</p>
+  </div>
+
+  {% for courtList in hearings.courtLists %}
+    <h2>{{ courtList.courtListName }}</h2>
+    {% for session in courtList.session %}
+      <h3>
+        {% if session.isBailList %}
+          {{ session.courtRoomName }}{% if session.formattedJudiciary | length %}, {{ common.beforeJudge }} {{ session.formattedJudiciary }}{% endif %}
+        {% else %}
+          {{ common.hearingRoom }}: {{ session.courtRoomName }}
+        {% endif %}
+      </h3>
+      {% for sitting in session.sittings %}
+        <table>
+          <thead>
+            <tr>
+              <th class="no-wrap">{{ common.startTime }}</th>
+              <th>{{ common.caseRef }}</th>
+              <th>{{ common.appellant }}</th>
+              <th>{{ common.respondent }}</th>
+              <th>{{ common.interpreterLanguage }}</th>
+              <th>{{ common.hearingChannel }}</th>
+              <th>{{ common.hearingType }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hearing in sitting.hearing %}
+              {% for case in hearing.case %}
+                <tr>
+                  <td class="no-wrap">{{ sitting.startTime }}</td>
+                  <td>{{ case.caseRef }}</td>
+                  <td>
+                    {{ case.appellant }}<br/>
+                    {{ common.rep }}: {% if case.appellantRepresentative | length %}{{ case.appellantRepresentative }}{% else %}{{ common.noRep }}{% endif %}
+                  </td>
+                  <td>{{ case.prosecutingAuthority }}</td>
+                  <td>{{ case.language }}</td>
+                  <td>{{ sitting.caseHearingChannel }}</td>
+                  <td>{{ hearing.hearingType }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ common.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ common.cautionNote }}</p>
+      <p>{{ common.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -114,3 +114,103 @@ describe("listTypeData High Court flat-file daily cause lists", () => {
     expect(counts).toEqual([1, 1, 1, 1]);
   });
 });
+
+const IAC_LIST_TYPES = [
+  {
+    name: "IAC_DAILY_LIST",
+    englishFriendlyName: "Immigration and Asylum Chamber Daily List",
+    welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
+    shortenedFriendlyName: "IAC Daily List",
+    urlPath: "iac-daily-list",
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [6]
+  },
+  {
+    name: "IAC_DAILY_LIST_ADDITIONAL_CASES",
+    englishFriendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
+    welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches – Achosion Ychwanegol",
+    shortenedFriendlyName: "IAC Daily List – Additional Cases",
+    urlPath: "iac-daily-list-additional-cases",
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [6]
+  }
+];
+
+describe("listTypeData IAC daily lists", () => {
+  for (const expected of IAC_LIST_TYPES) {
+    describe(expected.name, () => {
+      it("should have exactly one entry", () => {
+        // Act
+        const entries = listTypeData.filter((entry) => entry.name === expected.name);
+
+        // Assert
+        expect(entries).toHaveLength(1);
+      });
+
+      it("should be strategic (isNonStrategic === false)", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.isNonStrategic).toBe(false);
+      });
+
+      it("should have provenance CFT_IDAM", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.provenance).toBe("CFT_IDAM");
+      });
+
+      it("should have defaultSensitivity Public", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.defaultSensitivity).toBe(expected.defaultSensitivity);
+      });
+
+      it("should have the correct urlPath", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.urlPath).toBe(expected.urlPath);
+      });
+
+      it("should be in the Immigration and Asylum Chamber sub-jurisdiction [6]", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.subJurisdictionIds).toEqual(expected.subJurisdictionIds);
+      });
+
+      it("should have the correct English and Welsh friendly names", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.englishFriendlyName).toBe(expected.englishFriendlyName);
+        expect(entry?.welshFriendlyName).toBe(expected.welshFriendlyName);
+      });
+
+      it("should have the correct shortened friendly name", () => {
+        // Act
+        const entry = listTypeData.find((item) => item.name === expected.name);
+
+        // Assert
+        expect(entry?.shortenedFriendlyName).toBe(expected.shortenedFriendlyName);
+      });
+    });
+  }
+
+  it("should not have a double space in the Welsh Additional Cases friendly name", () => {
+    // Act
+    const entry = listTypeData.find((item) => item.name === "IAC_DAILY_LIST_ADDITIONAL_CASES");
+
+    // Assert
+    expect(entry?.welshFriendlyName).not.toMatch(/ {2}/);
+  });
+});

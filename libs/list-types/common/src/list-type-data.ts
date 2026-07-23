@@ -722,5 +722,27 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [11]
+  },
+  {
+    name: "IAC_DAILY_LIST",
+    englishFriendlyName: "Immigration and Asylum Chamber Daily List",
+    welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
+    shortenedFriendlyName: "IAC Daily List",
+    provenance: "CFT_IDAM",
+    urlPath: "iac-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [6]
+  },
+  {
+    name: "IAC_DAILY_LIST_ADDITIONAL_CASES",
+    englishFriendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
+    welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches – Achosion Ychwanegol",
+    shortenedFriendlyName: "IAC Daily List – Additional Cases",
+    provenance: "CFT_IDAM",
+    urlPath: "iac-daily-list-additional-cases",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [6]
   }
 ];

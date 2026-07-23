@@ -17,6 +17,7 @@ import { moduleRoot as fttLrtModuleRoot } from "@hmcts/ftt-lands-registration-tr
 import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
 import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
 import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-hearing-list/config";
+import { moduleRoot as iacDailyListModuleRoot } from "@hmcts/iac-daily-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -143,6 +144,7 @@ export async function createApp(): Promise<Express> {
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     grcWeeklyHearingListModuleRoot,
+    iacDailyListModuleRoot,
     wpafccWeeklyHearingListModuleRoot,
     utiacStatutoryAppealModuleRoot,
     utiacJrModuleRoot,

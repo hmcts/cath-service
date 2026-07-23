@@ -703,4 +703,100 @@ describe("Summary of Publications - GET handler", () => {
       expect(renderCall.noListMessage).toBe("No list message");
     });
   });
+
+  describe("IAC Daily List ordering", () => {
+    const IAC_LIST_TYPES = [
+      {
+        id: 60,
+        name: "IAC_DAILY_LIST",
+        friendlyName: "Immigration and Asylum Chamber Daily List",
+        welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
+        url: "iac-daily-list",
+        allowedProvenance: "CFT_IDAM",
+        isNonStrategic: false
+      },
+      {
+        id: 61,
+        name: "IAC_DAILY_LIST_ADDITIONAL_CASES",
+        friendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
+        welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches - Achosion Ychwanegol",
+        url: "iac-daily-list-additional-cases",
+        allowedProvenance: "CFT_IDAM",
+        isNonStrategic: false
+      }
+    ];
+
+    function iacArtefact(listTypeId: number, artefactId: string, lastReceived: string) {
+      return {
+        artefactId,
+        locationId: "9",
+        listTypeId,
+        contentDate: new Date("2025-04-15"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: new Date("2025-04-01"),
+        displayTo: new Date("2025-12-31"),
+        lastReceivedDate: new Date(lastReceived),
+        isFlatFile: false
+      };
+    }
+
+    it("should place the daily list before additional cases when additional cases is published first", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      // Additional cases has the later lastReceivedDate, so it sorts first by default ordering.
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(61, "additional-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(60, "daily-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
+    });
+
+    it("should keep the daily list before additional cases when the daily list is published first", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(60, "daily-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(61, "additional-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
+    });
+
+    it("should keep the daily list before additional cases in the Welsh locale", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findAllListTypes } = await import("@hmcts/system-admin-pages");
+
+      vi.mocked(findAllListTypes).mockResolvedValueOnce(IAC_LIST_TYPES as any);
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+        iacArtefact(61, "additional-id", "2025-04-15T12:00:00Z"),
+        iacArtefact(60, "daily-id", "2025-04-15T09:00:00Z")
+      ] as any);
+
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const publications = renderSpy.mock.calls[0][1].publications;
+      expect(publications.map((p: any) => p.id)).toEqual(["daily-id", "additional-id"]);
+    });
+  });
 });

@@ -14,6 +14,7 @@ import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmc
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
+import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -86,6 +87,8 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeName: p.listTypeName ?? "" });
+
+const iacDailyListGenerator: PdfGenerator = (p) => generateIacDailyListPdf({ ...p, jsonData: p.jsonData as IacDailyList, listTypeName: p.listTypeName ?? "" });
 
 const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, jsonData: p.jsonData as SjpJson });
 
@@ -173,6 +176,8 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: (p) =>
     generateLondonAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as LondonAdminCourtData }),
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
+  IAC_DAILY_LIST: iacDailyListGenerator,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,

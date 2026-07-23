@@ -34,6 +34,7 @@
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
+    "@hmcts/iac-daily-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
