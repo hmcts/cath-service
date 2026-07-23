@@ -51,7 +51,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(true);
@@ -67,6 +68,24 @@ describe("govnotify-client", () => {
     });
   });
 
+  it("should fail when no templateId is provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Template ID is required");
+  });
+
   it("should handle errors and return failure result", async () => {
     const { sendEmail } = await import("./govnotify-client.js");
 
@@ -80,7 +99,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(false);
@@ -118,7 +138,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(true);
@@ -140,7 +161,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(false);
@@ -161,7 +183,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(false);
@@ -209,7 +232,8 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(true);
@@ -238,7 +262,7 @@ describe("govnotify-client", () => {
     expect(mockSendEmail).toHaveBeenCalledWith("custom-template-id", "user@example.com", expect.any(Object));
   });
 
-  it("should upload PDF and include link_to_file when pdfBuffer is provided", async () => {
+  it("should upload PDF and include link_to_file and pdf_link_to_file when pdfBuffer is provided", async () => {
     const { sendEmail } = await import("./govnotify-client.js");
 
     const pdfBuffer = Buffer.from("PDF content");
@@ -253,6 +277,7 @@ describe("govnotify-client", () => {
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       },
+      templateId: "test-template-id",
       pdfBuffer
     });
 
@@ -266,13 +291,89 @@ describe("govnotify-client", () => {
       "user@example.com",
       expect.objectContaining({
         personalisation: expect.objectContaining({
-          link_to_file: { file: "uploaded-file-reference" }
+          link_to_file: { file: "uploaded-file-reference" },
+          pdf_link_to_file: { file: "uploaded-file-reference" },
+          pdf_link_text: "Download PDF version"
         })
       })
     );
   });
 
-  it("should send email without link_to_file when pdfBuffer is not provided", async () => {
+  it("should upload Excel and include excel_link_to_file when excelBuffer is provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const excelBuffer = Buffer.from("Excel content");
+    mockPrepareUpload.mockReturnValue({ file: "uploaded-excel-reference" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      excelBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(excelBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          excel_link_to_file: { file: "uploaded-excel-reference" },
+          excel_link_text: "Download Excel version"
+        })
+      })
+    );
+  });
+
+  it("should upload both PDF and Excel when both buffers are provided", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const pdfBuffer = Buffer.from("PDF content");
+    const excelBuffer = Buffer.from("Excel content");
+    mockPrepareUpload.mockReturnValueOnce({ file: "pdf-ref" }).mockReturnValueOnce({ file: "excel-ref" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      pdfBuffer,
+      excelBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledTimes(2);
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          link_to_file: { file: "pdf-ref" },
+          pdf_link_to_file: { file: "pdf-ref" },
+          pdf_link_text: "Download PDF version",
+          excel_link_to_file: { file: "excel-ref" },
+          excel_link_text: "Download Excel version"
+        })
+      })
+    );
+  });
+
+  it("should send email without file links when no buffers are provided", async () => {
     const { sendEmail } = await import("./govnotify-client.js");
 
     const result = await sendEmail({
@@ -283,19 +384,11 @@ describe("govnotify-client", () => {
         content_date: "1 December 2024",
         start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
-      }
+      },
+      templateId: "test-template-id"
     });
 
     expect(result.success).toBe(true);
     expect(mockPrepareUpload).not.toHaveBeenCalled();
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      "test-template-id",
-      "user@example.com",
-      expect.objectContaining({
-        personalisation: expect.not.objectContaining({
-          link_to_file: expect.anything()
-        })
-      })
-    );
   });
 });

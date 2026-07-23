@@ -88,7 +88,8 @@ import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
-  getSubscriptionTemplateIdForListType,
+  getSubscriptionTemplateId,
+  isSjpListType,
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -318,6 +319,7 @@ interface EmailTemplateData {
   templateParameters: TemplateParameters;
   templateId?: string;
   pdfBuffer?: Buffer;
+  excelBuffer?: Buffer;
 }
 
 async function processUserNotification(
@@ -346,7 +348,8 @@ async function processUserNotification(
       emailAddress: subscription.user.email!,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {
@@ -387,15 +390,19 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config, caseValue);
+    return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
   }
 
-  return buildFallbackEmailData(event, userName, caseValue);
+  return buildFallbackEmailData(event, userName, listTypeName, caseValue);
 }
 
-async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-
+async function buildEnhancedEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig,
+  listTypeName?: string,
+  caseValue?: string
+): Promise<EmailTemplateData> {
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
@@ -409,47 +416,57 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
       caseValue
     });
 
-    if (event.pdfFilePath) {
-      return await buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
+    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName, caseValue);
+    return buildFallbackEmailData(event, userName, listTypeName, caseValue);
   }
 }
 
-async function buildEmailDataWithPdf(pdfBlobKey: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
-  const pdfBuffer = await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS);
+async function buildEmailDataWithFiles(
+  artefactId: string,
+  pdfBlobKey: string | undefined,
+  listTypeName: string | undefined,
+  templateParameters: TemplateParameters
+): Promise<EmailTemplateData> {
+  const isSjp = listTypeName ? isSjpListType(listTypeName) : false;
 
-  if (!pdfBuffer) {
-    return { templateParameters, templateId: getSubscriptionTemplateIdForListType(listTypeId, true, false) };
-  }
+  const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
+  const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
 
-  const pdfUnder2MB = pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-  const templateId = getSubscriptionTemplateIdForListType(listTypeId, true, pdfUnder2MB);
+  const hasPdf = !!pdfBuffer;
+  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
 
-  if (pdfUnder2MB) {
-    return { templateParameters, templateId, pdfBuffer };
-  }
+  const hasExcel = !!excelBuffer;
+  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
 
-  return { templateParameters, templateId };
-}
+  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
 
-function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): EmailTemplateData {
+  const templateId = getSubscriptionTemplateId({
+    isSjp,
+    hasPdf: hasPdf && pdfUnder2MB,
+    hasExcel: hasExcel && excelUnder2MB,
+    filesUnder2MB
+  });
+
   return {
-    templateParameters: buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseValue
-    })
+    templateParameters,
+    templateId,
+    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
+    excelBuffer: excelUnder2MB ? excelBuffer : undefined
   };
+}
+
+async function buildFallbackEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+  const templateParameters = buildTemplateParameters({
+    userName,
+    hearingListName: event.hearingListName,
+    publicationDate: event.publicationDate,
+    locationName: event.locationName,
+    caseValue
+  });
+
+  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
@@ -554,7 +571,8 @@ async function processListTypeUserNotification(
       emailAddress: subscriber.user.email,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {
