@@ -17,6 +17,37 @@ const DEFAULT_PROVENANCE_LOCATION_TYPE = "VENUE";
 export function generateSeedSql(data: typeof locationData, listTypes: ListTypeData[]): string {
   return [
     "BEGIN;",
+    // Realign first: region/jurisdiction/sub_jurisdiction/location each have UNIQUE(name) and
+    // UNIQUE(welsh_name) in addition to their id primary key. ON CONFLICT can arbitrate only the
+    // id, so if an environment already holds one of the seed's names/welsh_names at a *different*
+    // id (e.g. a value renamed or moved to a new id in a past release that never seeded cleanly),
+    // the id-keyed upsert below throws a unique violation on name/welsh_name. Parking those rows
+    // to a deterministic temp value first frees the names so the upsert can place them at their
+    // canonical id. Only name/welsh_name change here — ids and FK children are untouched.
+    generateRealignSql(
+      "region",
+      "region_id",
+      data.regions.map((r) => r.name),
+      data.regions.map((r) => r.welshName)
+    ),
+    generateRealignSql(
+      "jurisdiction",
+      "jurisdiction_id",
+      data.jurisdictions.map((j) => j.name),
+      data.jurisdictions.map((j) => j.welshName)
+    ),
+    generateRealignSql(
+      "sub_jurisdiction",
+      "sub_jurisdiction_id",
+      data.subJurisdictions.map((sj) => sj.name),
+      data.subJurisdictions.map((sj) => sj.welshName)
+    ),
+    generateRealignSql(
+      "location",
+      "location_id",
+      data.locations.map((l) => l.name),
+      data.locations.map((l) => l.welshName)
+    ),
     generateRegionsSql(data.regions),
     generateJurisdictionsSql(data.jurisdictions),
     generateSubJurisdictionsSql(data.subJurisdictions),
@@ -29,6 +60,17 @@ export function generateSeedSql(data: typeof locationData, listTypes: ListTypeDa
     generateSoftDeleteReconciliationSql(listTypes),
     "COMMIT;"
   ].join("\n\n");
+}
+
+// Park any row whose name or welsh_name matches a value the seed is about to insert, renaming it
+// to a deterministic id-keyed placeholder so the following ON CONFLICT (id) upsert can set that
+// name at its canonical id without a unique-constraint violation. A row parked but not restored by
+// the upsert (its id is absent from the seed) is a genuinely stale/moved row; its placeholder name
+// is inert and collision-free.
+function generateRealignSql(table: string, idColumn: string, names: string[], welshNames: string[]): string {
+  const nameList = names.map(sqlStr).join(", ");
+  const welshList = welshNames.map(sqlStr).join(", ");
+  return `UPDATE ${table} SET\n  name = '__realign_' || ${idColumn},\n  welsh_name = '__realign_w_' || ${idColumn}\nWHERE name IN (${nameList}) OR welsh_name IN (${welshList});`;
 }
 
 function generateRegionsSql(regions: typeof locationData.regions): string {

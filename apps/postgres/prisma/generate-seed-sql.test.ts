@@ -69,6 +69,24 @@ describe("generateSeedSql", () => {
     expect(sql.trimEnd().endsWith("COMMIT;")).toBe(true);
   });
 
+  it("should realign name/welsh_name collisions before inserting so ON CONFLICT (id) never hits a name conflict", () => {
+    const sql = generate();
+
+    // Each id-keyed table parks any pre-existing row holding a seed name/welsh_name.
+    for (const [table, idColumn] of [
+      ["region", "region_id"],
+      ["jurisdiction", "jurisdiction_id"],
+      ["sub_jurisdiction", "sub_jurisdiction_id"],
+      ["location", "location_id"]
+    ]) {
+      expect(sql).toContain(`UPDATE ${table} SET\n  name = '__realign_' || ${idColumn},\n  welsh_name = '__realign_w_' || ${idColumn}\nWHERE name IN (`);
+    }
+    // The seed names appear in the WHERE clause of the realign, and the realign precedes the insert.
+    expect(sql.indexOf("UPDATE region SET")).toBeLessThan(sql.indexOf("INSERT INTO region ("));
+    expect(sql).toContain("WHERE name IN ('London'");
+    expect(sql).toContain("Birmingham Magistrates'' Court");
+  });
+
   it("should emit an atomic ON CONFLICT insert for every reference table", () => {
     const sql = generate();
 
