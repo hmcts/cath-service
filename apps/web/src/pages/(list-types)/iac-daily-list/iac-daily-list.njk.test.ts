@@ -111,19 +111,32 @@ describe("iac-daily-list template", () => {
   });
 
   describe("Page header", () => {
-    it("should render the list title in the top heading", () => {
+    it("should render the list title as a caption above the heading", () => {
       const { $ } = renderList();
 
-      expect($("h1#top").text()).toContain(iacDailyListEn.IAC_DAILY_LIST.pageTitle);
+      expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListEn.IAC_DAILY_LIST.pageTitle);
+    });
+
+    it("should render the tribunal heading as the h1", () => {
+      const { $ } = renderList();
+
+      expect($("h1.govuk-heading-l").text()).toContain(commonEn.heading);
     });
 
     it("should render the venue name and daily list subheading", () => {
       const { $ } = renderList();
 
       const subHeading = $("h2.govuk-heading-m").first().text();
-      expect(subHeading).toContain(commonEn.heading);
       expect(subHeading).toContain("Manchester");
       expect(subHeading).toContain(commonEn.dailyList);
+    });
+
+    it("should render the find court contact details link", () => {
+      const { $ } = renderList();
+
+      const link = $(`a[href="${commonEn.factLinkUrl}"]`);
+      expect(link).toHaveLength(1);
+      expect(link.text()).toContain(commonEn.factLinkText);
     });
 
     it("should render the list date and last updated metadata", () => {
@@ -282,8 +295,8 @@ describe("iac-daily-list template", () => {
     it("should render Welsh headings, labels and metadata", () => {
       const { $ } = renderList([buildCourtList()], {}, "cy");
 
-      expect($("h1#top").text()).toContain(iacDailyListCy.IAC_DAILY_LIST.pageTitle);
-      expect($("h2.govuk-heading-m").first().text()).toContain(commonCy.heading);
+      expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListCy.IAC_DAILY_LIST.pageTitle);
+      expect($("h1.govuk-heading-l").text()).toContain(commonCy.heading);
       expect($(".govuk-body").text()).toContain(commonCy.listDate);
       expect($("details.govuk-details .govuk-details__summary-text").text()).toContain(commonCy.importantInformationHeading);
       expect($("p.govuk-body-s").text()).toContain(commonCy.dataSource);

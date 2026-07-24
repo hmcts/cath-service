@@ -8,8 +8,11 @@
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ header.listTitle }}</h1>
-    <h2>{{ common.heading }}<br/>{{ header.venueName }} {{ common.dailyList }}</h2>
+    <p class="caption">{{ header.listTitle }}</p>
+    <h1>{{ common.heading }}</h1>
+    <h2>{{ header.venueName }} {{ common.dailyList }}</h2>
+
+    <p>{{ common.factLinkText }} {{ common.factAdditionalText }}</p>
 
     <p class="bold header-date">{{ common.listDate }} {{ header.contentDate }}</p>
     <p class="header-date">{{ common.listUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>

@@ -10,6 +10,9 @@ export const en = {
   common: {
     heading: "First-tier Tribunal: Immigration and Asylum Chamber",
     dailyList: "Daily List",
+    factLinkText: "Find contact details and other information about courts and tribunals",
+    factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+    factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
     listUpdated: "Last updated",
     listDate: "List for",
     at: "at",

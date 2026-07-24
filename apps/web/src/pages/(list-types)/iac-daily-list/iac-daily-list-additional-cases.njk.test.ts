@@ -74,7 +74,7 @@ describe("iac-daily-list-additional-cases template", () => {
   it("should render the additional cases title in the top heading", () => {
     const { $ } = render(env, TEMPLATE, baseData());
 
-    expect($("h1#top").text()).toContain(iacDailyListEn.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
+    expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListEn.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
   });
 
   it("should render the case row in the correct columns", () => {
@@ -97,6 +97,6 @@ describe("iac-daily-list-additional-cases template", () => {
   it("should render the Welsh additional cases title", () => {
     const { $ } = render(env, TEMPLATE, baseData("cy"));
 
-    expect($("h1#top").text()).toContain(iacDailyListCy.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
+    expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListCy.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
   });
 });

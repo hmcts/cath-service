@@ -24,8 +24,13 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
 
-    <h1 id="top" class="govuk-heading-l">{{ header.listTitle }}</h1>
-    <h2 class="govuk-heading-m">{{ common.heading }}<br>{{ header.venueName }} {{ common.dailyList }}</h2>
+    <span id="top" class="govuk-caption-l">{{ header.listTitle }}</span>
+    <h1 class="govuk-heading-l">{{ common.heading }}</h1>
+    <h2 class="govuk-heading-m">{{ header.venueName }} {{ common.dailyList }}</h2>
+
+    <p class="govuk-body">
+      <a href="{{ common.factLinkUrl }}" class="govuk-link">{{ common.factLinkText }}</a> {{ common.factAdditionalText }}
+    </p>
 
     <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ common.listDate }} {{ header.contentDate }}</p>
     <p class="govuk-body">{{ common.listUpdated }} {{ header.lastUpdatedDate }} {{ common.at }} {{ header.lastUpdatedTime }}</p>
