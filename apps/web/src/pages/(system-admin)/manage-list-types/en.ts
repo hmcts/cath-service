@@ -3,5 +3,6 @@ export const en = {
   heading: "Manage list types",
   tableCaption: "List types",
   nameColumnHeading: "Name",
-  configureLink: "Manage"
+  configureLink: "Manage",
+  addNewButton: "Add new list type"
 };

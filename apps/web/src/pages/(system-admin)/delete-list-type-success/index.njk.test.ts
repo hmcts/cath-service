@@ -34,7 +34,7 @@ describe("delete-list-type-success template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h2").text()).toContain(en.deleteListType.success.description);
-      expect($('a[href="/view-list-types"]').text()).toContain(en.deleteListType.success.viewListTypesLink);
+      expect($('a[href="/manage-list-types"]').text()).toContain(en.deleteListType.success.viewListTypesLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(en.deleteListType.success.returnLink);
     });
   });
@@ -46,7 +46,7 @@ describe("delete-list-type-success template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($(".govuk-panel__title").text()).toContain(cy.deleteListType.success.title);
-      expect($('a[href="/view-list-types"]').text()).toContain(cy.deleteListType.success.viewListTypesLink);
+      expect($('a[href="/manage-list-types"]').text()).toContain(cy.deleteListType.success.viewListTypesLink);
       expect($('a[href="/system-admin-dashboard"]').text()).toContain(cy.deleteListType.success.returnLink);
     });
   });

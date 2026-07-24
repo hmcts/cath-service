@@ -1,0 +1,125 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errorList %}
+      {{ govukErrorSummary({
+        titleText: t.errorSummaryTitle,
+        errorList: errorList
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ t.title }}</h1>
+
+    <form method="post" novalidate>
+
+      {{ govukInput({
+        id: "name",
+        name: "name",
+        label: { text: t.nameLabel },
+        value: data.name,
+        errorMessage: errors.name if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "friendlyName",
+        name: "friendlyName",
+        label: { text: t.friendlyNameLabel },
+        value: data.friendlyName,
+        errorMessage: errors.friendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "welshFriendlyName",
+        name: "welshFriendlyName",
+        label: { text: t.welshFriendlyNameLabel },
+        value: data.welshFriendlyName,
+        errorMessage: errors.welshFriendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "shortenedFriendlyName",
+        name: "shortenedFriendlyName",
+        label: { text: t.shortenedFriendlyNameLabel },
+        value: data.shortenedFriendlyName,
+        errorMessage: errors.shortenedFriendlyName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "url",
+        name: "url",
+        label: { text: t.urlLabel },
+        value: data.url,
+        errorMessage: errors.url if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "caseNumberJsonFieldName",
+        name: "caseNumberJsonFieldName",
+        label: { text: t.caseNumberJsonFieldNameLabel },
+        value: data.caseNumberJsonFieldName,
+        errorMessage: errors.caseNumberJsonFieldName if errors else undefined
+      }) }}
+
+      {{ govukInput({
+        id: "caseNameJsonFieldName",
+        name: "caseNameJsonFieldName",
+        label: { text: t.caseNameJsonFieldNameLabel },
+        value: data.caseNameJsonFieldName,
+        errorMessage: errors.caseNameJsonFieldName if errors else undefined
+      }) }}
+
+      {{ govukSelect({
+        id: "defaultSensitivity",
+        name: "defaultSensitivity",
+        label: { text: t.defaultSensitivityLabel },
+        hint: { text: t.defaultSensitivityHint },
+        items: [
+          { value: "", text: "Select an option", selected: not data.defaultSensitivity },
+          { value: "Public", text: "Public", selected: data.defaultSensitivity == "Public" },
+          { value: "Private", text: "Private", selected: data.defaultSensitivity == "Private" },
+          { value: "Classified", text: "Classified", selected: data.defaultSensitivity == "Classified" }
+        ],
+        errorMessage: errors.defaultSensitivity if errors else undefined
+      }) }}
+
+      {{ govukCheckboxes({
+        name: "allowedProvenance",
+        fieldset: {
+          legend: { text: t.allowedProvenanceLabel }
+        },
+        hint: { text: t.allowedProvenanceHint },
+        items: [
+          { value: "CFT_IDAM", text: "CFT_IDAM", checked: checkedProvenance.CFT_IDAM },
+          { value: "PI_AAD", text: "PI_AAD", checked: checkedProvenance.PI_AAD },
+          { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: checkedProvenance.CRIME_IDAM }
+        ],
+        errorMessage: errors.allowedProvenance if errors else undefined
+      }) }}
+
+      {{ govukRadios({
+        name: "isNonStrategic",
+        fieldset: {
+          legend: { text: t.isNonStrategicLabel }
+        },
+        items: [
+          { value: "true", text: t.yesOption, checked: data.isNonStrategic == true },
+          { value: "false", text: t.noOption, checked: data.isNonStrategic == false }
+        ],
+        errorMessage: errors.isNonStrategic if errors else undefined
+      }) }}
+
+      {{ govukButton({ text: t.continueButton }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

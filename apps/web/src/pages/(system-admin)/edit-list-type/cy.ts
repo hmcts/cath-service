@@ -1,0 +1,20 @@
+export const cy = {
+  title: "[WELSH TRANSLATION REQUIRED: 'Edit list type']",
+  nameLabel: "[WELSH TRANSLATION REQUIRED: 'Name']",
+  friendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Friendly name']",
+  welshFriendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Welsh friendly name']",
+  shortenedFriendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Shortened friendly name']",
+  urlLabel: "URL",
+  caseNumberJsonFieldNameLabel: "[WELSH TRANSLATION REQUIRED: 'Case number JSON field name']",
+  caseNameJsonFieldNameLabel: "[WELSH TRANSLATION REQUIRED: 'Case name JSON field name']",
+  defaultSensitivityLabel: "[WELSH TRANSLATION REQUIRED: 'Default sensitivity']",
+  defaultSensitivityHint: "[WELSH TRANSLATION REQUIRED: 'Select the default sensitivity level']",
+  allowedProvenanceLabel: "[WELSH TRANSLATION REQUIRED: 'Allowed provenance']",
+  allowedProvenanceHint: "[WELSH TRANSLATION REQUIRED: 'Select all that apply']",
+  isNonStrategicLabel: "[WELSH TRANSLATION REQUIRED: 'Is non-strategic?']",
+  yesOption: "[WELSH TRANSLATION REQUIRED: 'Yes']",
+  noOption: "[WELSH TRANSLATION REQUIRED: 'No']",
+  continueButton: "Parhau",
+  errorSummaryTitle: "Mae yna broblem",
+  duplicateNameError: "[WELSH TRANSLATION REQUIRED: 'A list type with this name already exists']"
+};

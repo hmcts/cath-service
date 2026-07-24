@@ -42,6 +42,8 @@ export async function findListTypeById(id: number) {
       welshFriendlyName: true,
       shortenedFriendlyName: true,
       url: true,
+      caseNumberJsonFieldName: true,
+      caseNameJsonFieldName: true,
       defaultSensitivity: true,
       allowedProvenance: true,
       isNonStrategic: true,
@@ -63,8 +65,8 @@ export async function findListTypeById(id: number) {
 }
 
 export async function findListTypeByName(name: string) {
-  return prisma.listType.findUnique({
-    where: { name },
+  return prisma.listType.findFirst({
+    where: { name, deletedAt: null },
     select: {
       id: true,
       name: true
@@ -98,6 +100,35 @@ export async function findSubJurisdictionsByIds(ids: number[]) {
 }
 
 export async function createListType(data: CreateListTypeData) {
+  const deleted = await prisma.listType.findFirst({
+    where: { name: data.name, deletedAt: { not: null } },
+    select: { id: true }
+  });
+
+  if (deleted) {
+    return prisma.listType.update({
+      where: { id: deleted.id },
+      data: {
+        friendlyName: data.friendlyName,
+        welshFriendlyName: data.welshFriendlyName,
+        shortenedFriendlyName: data.shortenedFriendlyName,
+        url: data.url,
+        caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
+        caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
+        defaultSensitivity: data.defaultSensitivity,
+        allowedProvenance: data.allowedProvenance.join(","),
+        isNonStrategic: data.isNonStrategic,
+        deletedAt: null,
+        subJurisdictions: {
+          deleteMany: {},
+          create: data.subJurisdictionIds.map((subJurisdictionId) => ({
+            subJurisdictionId
+          }))
+        }
+      }
+    });
+  }
+
   return prisma.listType.create({
     data: {
       name: data.name,
@@ -105,6 +136,8 @@ export async function createListType(data: CreateListTypeData) {
       welshFriendlyName: data.welshFriendlyName,
       shortenedFriendlyName: data.shortenedFriendlyName,
       url: data.url,
+      caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
+      caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
       defaultSensitivity: data.defaultSensitivity,
       allowedProvenance: data.allowedProvenance.join(","),
       isNonStrategic: data.isNonStrategic,
@@ -131,6 +164,8 @@ export async function updateListType(id: number, data: UpdateListTypeData) {
         welshFriendlyName: data.welshFriendlyName,
         shortenedFriendlyName: data.shortenedFriendlyName,
         url: data.url,
+        caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
+        caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
         defaultSensitivity: data.defaultSensitivity,
         allowedProvenance: data.allowedProvenance.join(","),
         isNonStrategic: data.isNonStrategic,
@@ -150,6 +185,8 @@ interface CreateListTypeData {
   welshFriendlyName: string;
   shortenedFriendlyName: string;
   url: string;
+  caseNumberJsonFieldName?: string | null;
+  caseNameJsonFieldName?: string | null;
   defaultSensitivity: string;
   allowedProvenance: string[];
   isNonStrategic: boolean;
@@ -162,6 +199,8 @@ interface UpdateListTypeData {
   welshFriendlyName: string;
   shortenedFriendlyName: string;
   url: string;
+  caseNumberJsonFieldName?: string | null;
+  caseNameJsonFieldName?: string | null;
   defaultSensitivity: string;
   allowedProvenance: string[];
   isNonStrategic: boolean;

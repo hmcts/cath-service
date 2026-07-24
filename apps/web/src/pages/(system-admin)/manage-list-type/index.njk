@@ -1,0 +1,72 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block page_content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+
+      <h1 class="govuk-heading-l">{{ t.title }}</h1>
+
+      <table class="govuk-table">
+        <tbody class="govuk-table__body">
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.nameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.name }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.friendlyNameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.friendlyName or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.welshFriendlyNameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.welshFriendlyName or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.shortenedFriendlyNameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.shortenedFriendlyName or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.urlLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.url or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.caseNumberJsonFieldNameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.caseNumberJsonFieldName }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.caseNameJsonFieldNameLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.caseNameJsonFieldName }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.defaultSensitivityLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.defaultSensitivity or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.allowedProvenanceLabel }}</th>
+            <td class="govuk-table__cell">{{ listType.allowedProvenance or t.notSet }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.isNonStrategicLabel }}</th>
+            <td class="govuk-table__cell">{{ t.yesText if listType.isNonStrategic else t.noText }}</td>
+          </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.subJurisdictionsLabel }}</th>
+            <td class="govuk-table__cell">{{ subJurisdictionsText }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {{ govukButton({
+        text: t.editButton,
+        href: "/edit-list-type?id=" + listType.id
+      }) }}
+
+      {{ govukButton({
+        text: t.deleteButton,
+        href: "/delete-list-type?id=" + listType.id,
+        classes: "govuk-button--warning"
+      }) }}
+
+    </div>
+  </div>
+{% endblock %}
