@@ -164,7 +164,7 @@ describe("iac-daily-list template", () => {
       expect(input).toHaveLength(1);
       expect(input.attr("name")).toBe("search");
       const label = $("label[for='case-search-input']");
-      expect(label.text()).toContain(commonEn.searchCasesLabel);
+      expect(label.text()).toContain(commonEn.searchCasesTitle);
     });
   });
 

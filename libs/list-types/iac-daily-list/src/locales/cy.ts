@@ -37,7 +37,6 @@ export const cy = {
     rep: "Cynrychiolydd",
     noRep: "Dim Cynrychiolydd",
     searchCasesTitle: "Chwilio Achosion",
-    searchCasesLabel: "Chwilio yn ôl cyfeirnod yr achos, apelydd, neu fanylion eraill",
     cautionNote:
       "Sylwer bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
     cautionReporting:
