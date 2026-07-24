@@ -1,0 +1,130 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l" id="top">{{ t.title }}{% if header.regionName %}: {{ header.regionName }}{% endif %}</h1>
+
+    <p class="govuk-body">
+      <a class="govuk-link" href="{{ t.factLink }}">{{ t.factLinkText1 }}</a>{{ t.factLinkText2 }}
+    </p>
+
+    <p class="govuk-body">
+      {% for line in header.addressLines %}
+        {{ line }}{% if not loop.last %}<br>{% endif %}
+      {% endfor %}
+    </p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listFor }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    <details class="govuk-details" data-module="govuk-details" open>
+      <summary class="govuk-details__summary">
+        <span class="govuk-details__summary-text">
+          {{ t.importantInformation }}
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+        <p class="govuk-body">{{ t.openJustice1 }}</p>
+        <p class="govuk-body">{{ t.openJustice2 }}</p>
+        <p class="govuk-body">{{ t.openJustice3 }}</p>
+        <p class="govuk-body">{{ t.openJustice4 }} {{ openJustice.venueName }}, {{ openJustice.email }}, {{ openJustice.phone }}</p>
+        <p class="govuk-body">{{ t.openJustice5 }}</p>
+        <p class="govuk-body">{{ t.openJustice6 }}</p>
+      </div>
+    </details>
+
+    <div class="govuk-form-group govuk-!-margin-top-6">
+      <h2 class="govuk-label-wrapper"><label class="govuk-label govuk-label--s" for="case-search-input">{{ t.searchCases }}</label></h2>
+      <input class="govuk-input govuk-!-width-one-half" id="case-search-input" name="search" type="text">
+    </div>
+
+    <div id="court-lists-container">
+    {% for court in courts %}
+      <div class="govuk-!-margin-bottom-6">
+        <h2 class="govuk-heading-l">{{ t.venue }} {{ court.courtName }}</h2>
+        {% for line in court.addressLines %}
+          <p class="govuk-body govuk-!-margin-bottom-2">{{ line }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="govuk-accordion" data-module="govuk-accordion">
+        {% for day in court.days %}
+          <div class="govuk-accordion__section govuk-accordion__section--expanded">
+            <div class="govuk-accordion__section-header">
+              <h2 class="govuk-accordion__section-heading">
+                <span class="govuk-accordion__section-button">
+                  {{ day.sittingDate }}
+                </span>
+              </h2>
+            </div>
+            <div class="govuk-accordion__section-content">
+              <table class="govuk-table hearings-table" data-module="moj-sortable-table">
+                <thead class="govuk-table__head">
+                  <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[0] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[1] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[2] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[3] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[4] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[5] }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.tableHeaders[6] }}</th>
+                  </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                  {% for row in day.rows %}
+                    {% set durationText = '' %}
+                    {% if row.durationAsHours > 0 %}
+                      {% if row.durationAsHours > 1 %}
+                        {% set durationText = row.durationAsHours ~ ' ' ~ t.hearingDurationHours %}
+                      {% else %}
+                        {% set durationText = row.durationAsHours ~ ' ' ~ t.hearingDurationHour %}
+                      {% endif %}
+                    {% endif %}
+                    {% if row.durationAsMinutes > 0 %}
+                      {% if durationText | length %}
+                        {% set durationText = durationText ~ ' ' %}
+                      {% endif %}
+                      {% if row.durationAsMinutes > 1 %}
+                        {% set durationText = durationText ~ row.durationAsMinutes ~ ' ' ~ t.hearingDurationMinutes %}
+                      {% else %}
+                        {% set durationText = durationText ~ row.durationAsMinutes ~ ' ' ~ t.hearingDurationMinute %}
+                      {% endif %}
+                    {% endif %}
+                    <tr class="govuk-table__row">
+                      <td class="govuk-table__cell no-wrap">{{ row.sittingTime }}</td>
+                      <td class="govuk-table__cell no-wrap">{{ durationText }}{% if row.caseSequenceIndicator %}{% if durationText | length %} {% endif %}[{{ row.caseSequenceIndicator }}]{% endif %}</td>
+                      <td class="govuk-table__cell no-wrap">{{ row.caseNumber }}</td>
+                      <td class="govuk-table__cell">
+                        {{ row.applicant }}<br>
+                        {{ t.rep }}: {% if row.applicantRepresentative %}{{ row.applicantRepresentative }}{% else %}{{ t.noRep }}{% endif %}
+                      </td>
+                      <td class="govuk-table__cell">
+                        {{ row.respondent }}<br>
+                        {{ t.rep }}: {% if row.respondentRepresentative %}{{ row.respondentRepresentative }}{% else %}{{ t.noRep }}{% endif %}
+                      </td>
+                      <td class="govuk-table__cell no-wrap">{{ row.hearingType }}</td>
+                      <td class="govuk-table__cell no-wrap">{{ row.hearingPlatform }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    </div>
+
+    <p class="govuk-body govuk-!-margin-top-6">
+      {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+    <p class="govuk-body">
+      <a href="#top" class="govuk-link">{{ t.linkToTop }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
