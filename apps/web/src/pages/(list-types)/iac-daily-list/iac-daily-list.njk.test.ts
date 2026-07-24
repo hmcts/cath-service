@@ -120,6 +120,15 @@ describe("iac-daily-list template", () => {
       expect(heading).toContain(commonEn.dailyList);
     });
 
+    it("should render the additional cases suffix in the h1 when isAdditionalCases is set", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, isAdditionalCases: true } });
+
+      const heading = $("h1#top.govuk-heading-l").text();
+      expect(heading).toContain(commonEn.heading);
+      expect(heading).toContain("Manchester");
+      expect(heading).toContain(commonEn.dailyListAdditionalCases);
+    });
+
     it("should render the find court contact details link", () => {
       const { $ } = renderList();
 

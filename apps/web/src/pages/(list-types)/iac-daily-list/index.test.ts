@@ -99,7 +99,7 @@ describe("IAC Daily List page controller", () => {
     });
   });
 
-  it("should route to the additional cases template based on listTypeName", async () => {
+  it("should render the shared template with the additional cases list type", async () => {
     req.query = { artefactId: "test-artefact-123" };
     const jsonData = { document: {}, venue: {}, courtLists: [] };
 
@@ -111,7 +111,7 @@ describe("IAC Daily List page controller", () => {
 
     expect(renderIacDailyList).toHaveBeenCalledWith(jsonData, expect.objectContaining({ listTypeName: "IAC_DAILY_LIST_ADDITIONAL_CASES" }));
     const renderCall = vi.mocked(res.render!).mock.calls[0]!;
-    expect(renderCall[0]).toBe("iac-daily-list-additional-cases");
+    expect(renderCall[0]).toBe("iac-daily-list");
   });
 
   it("should return 400 when artefactId is missing", async () => {

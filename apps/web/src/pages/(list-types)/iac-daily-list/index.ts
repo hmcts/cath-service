@@ -16,7 +16,7 @@ const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: strin
   IAC_DAILY_LIST_ADDITIONAL_CASES: {
     en: en.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle,
     cy: cy.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle,
-    template: "iac-daily-list-additional-cases"
+    template: "iac-daily-list"
   }
 };
 
