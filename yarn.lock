@@ -1841,6 +1841,7 @@ __metadata:
     "@types/node": "npm:24.10.4"
     ajv: "npm:8.20.0"
     exceljs: "npm:4.4.0"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
     zod: "npm:3.25.76"
