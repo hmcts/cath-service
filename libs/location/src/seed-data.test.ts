@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the prisma client
 const mockPrisma = {
-  $executeRaw: vi.fn(),
   region: {
     count: vi.fn(),
     upsert: vi.fn()
@@ -110,36 +109,6 @@ describe("seed-data", () => {
   afterEach(() => {
     process.env = originalEnv;
     consoleLogSpy.mockRestore();
-  });
-
-  describe("advisory lock", () => {
-    it("should acquire and release the advisory lock around seeding", async () => {
-      process.env.ENVIRONMENT = "prod";
-      const { seedLocationData } = await import("./seed-data.js");
-
-      await seedLocationData();
-
-      const rawCalls = mockPrisma.$executeRaw.mock.calls;
-      expect(rawCalls).toHaveLength(2);
-      expect(rawCalls[0][0].join("")).toContain("pg_advisory_lock");
-      expect(rawCalls[1][0].join("")).toContain("pg_advisory_unlock");
-    });
-
-    it("should release the advisory lock even when seeding throws", async () => {
-      process.env.NODE_ENV = "development";
-      process.env.CI = "false";
-      mockPrisma.region.count.mockResolvedValue(0);
-      mockPrisma.jurisdiction.count.mockResolvedValue(0);
-      mockPrisma.subJurisdiction.count.mockResolvedValue(0);
-      mockPrisma.location.count.mockResolvedValue(0);
-      mockPrisma.region.upsert.mockRejectedValueOnce(new Error("boom"));
-
-      const { seedLocationData } = await import("./seed-data.js");
-
-      await expect(seedLocationData()).rejects.toThrow("boom");
-      const rawCalls = mockPrisma.$executeRaw.mock.calls;
-      expect(rawCalls[rawCalls.length - 1][0].join("")).toContain("pg_advisory_unlock");
-    });
   });
 
   describe("shouldSeed", () => {

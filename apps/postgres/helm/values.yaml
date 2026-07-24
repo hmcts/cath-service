@@ -1,10 +1,12 @@
 nodejs:
   releaseNameOverride: "{{ .Release.Name }}-postgres"
-  # Single replica only: this pod runs the migration + seed runner on startup.
-  # Multiple replicas seed the shared database concurrently and race on upserts
-  # (UniqueConstraintViolation). One replica is sufficient for a migration runner
-  # and Prisma Studio, and removes the race entirely.
+  # Single replica only: this pod runs the migration + seed runner on startup and
+  # hosts Prisma Studio. The base nodejs chart enables an HPA by default (min 1 /
+  # max 3), which OVERRIDES replicas, so autoscaling must be disabled for the pin
+  # to take effect — otherwise a crash loop spikes CPU and the HPA scales to 3.
   replicas: 1
+  autoscaling:
+    enabled: false
   applicationPort: 5555
   aadIdentityName: cath
   ingressHost: cath-postgres.{{ .Values.global.environment }}.platform.hmcts.net
