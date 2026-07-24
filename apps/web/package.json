@@ -32,6 +32,7 @@
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/civil-daily-cause-list": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
+    "@hmcts/cop-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",

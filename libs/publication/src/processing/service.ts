@@ -4,6 +4,7 @@ import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWee
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
+import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
 import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
@@ -139,6 +140,7 @@ const sscsGeneratorForListType =
 const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCauseListPdf({ ...p, jsonData: p.jsonData as CauseListData }),
+  COP_DAILY_CAUSE_LIST: (p) => generateCopDailyCauseListPdf({ ...p, jsonData: p.jsonData as CopCauseListData }),
   FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListPdf({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
   CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: (p) =>
     generateCareStandardsTribunalWeeklyHearingListPdf({

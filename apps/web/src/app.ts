@@ -8,6 +8,7 @@ import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
+import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
 import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
@@ -125,6 +126,7 @@ export async function createApp(): Promise<Express> {
     utlcModuleRoot,
     utaacModuleRoot,
     civilFamilyCauseListModuleRoot,
+    copDailyCauseListModuleRoot,
     civilDailyCauseListModuleRoot,
     familyDailyCauseListModuleRoot,
     sjpPressListModuleRoot,
