@@ -10,6 +10,7 @@ export const cy = {
   common: {
     heading: "Tribiwnlys Haen Gyntaf: Siambr Mewnfudo a Lloches",
     dailyList: "Rhestr Ddyddiol",
+    dailyListAdditionalCases: "Rhestr Ddyddiol – Achosion Ychwanegol",
     factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
     factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
     factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",

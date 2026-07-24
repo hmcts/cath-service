@@ -16,6 +16,7 @@ import type {
 } from "../models/types.js";
 
 const BAIL_LIST_NAME = "bail list";
+const ADDITIONAL_CASES_LIST_TYPE = "IAC_DAILY_LIST_ADDITIONAL_CASES";
 
 // IAC party roles after conversion. Mirrors pip-frontend's IacDailyListService, which
 // derives the Appellant/Applicant column from CLAIMANT_PETITIONER, the representative
@@ -73,6 +74,7 @@ export function renderIacDailyList(jsonData: IacDailyList, options: IacRenderOpt
     header: {
       listTitle: options.listTitle,
       venueName: jsonData.venue.venueName,
+      isAdditionalCases: options.listTypeName === ADDITIONAL_CASES_LIST_TYPE,
       contentDate,
       lastUpdatedDate,
       lastUpdatedTime

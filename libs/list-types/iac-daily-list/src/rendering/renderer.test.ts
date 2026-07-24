@@ -69,9 +69,16 @@ describe("renderIacDailyList", () => {
 
     expect(result.header.listTitle).toBe(OPTIONS.listTitle);
     expect(result.header.venueName).toBe("Manchester");
+    expect(result.header.isAdditionalCases).toBe(false);
     expect(result.header.contentDate).toContain("2026");
     expect(result.header.lastUpdatedDate).toContain("2026");
     expect(result.header.lastUpdatedTime).toBeTruthy();
+  });
+
+  it("should flag additional cases when the list type is IAC_DAILY_LIST_ADDITIONAL_CASES", () => {
+    const result = renderIacDailyList(buildList([buildCourtList()]), { ...OPTIONS, listTypeName: "IAC_DAILY_LIST_ADDITIONAL_CASES" });
+
+    expect(result.header.isAdditionalCases).toBe(true);
   });
 
   it("should map court rooms and sessions into rendered sessions", () => {

@@ -53,6 +53,7 @@ function baseData(locale: "en" | "cy" = "en") {
     header: {
       listTitle: titles.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle,
       venueName: "Manchester",
+      isAdditionalCases: true,
       contentDate: "15 January 2026",
       lastUpdatedDate: "14 January 2026",
       lastUpdatedTime: "12pm"
@@ -71,13 +72,13 @@ beforeEach(() => {
 });
 
 describe("iac-daily-list-additional-cases template", () => {
-  it("should render the tribunal heading, venue name and daily list in the h1", () => {
+  it("should render the tribunal heading, venue name and additional cases daily list in the h1", () => {
     const { $ } = render(env, TEMPLATE, baseData());
 
     const heading = $("h1#top.govuk-heading-l").text();
     expect(heading).toContain(commonEn.heading);
     expect(heading).toContain("Manchester");
-    expect(heading).toContain(commonEn.dailyList);
+    expect(heading).toContain(commonEn.dailyListAdditionalCases);
   });
 
   it("should render the case row in the correct columns", () => {

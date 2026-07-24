@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="header-section">
-    <h1>{{ common.heading }}<br/>{{ header.venueName }} {{ common.dailyList }}</h1>
+    <h1>{{ common.heading }}<br/>{{ header.venueName }} {% if header.isAdditionalCases %}{{ common.dailyListAdditionalCases }}{% else %}{{ common.dailyList }}{% endif %}</h1>
 
     <p>{{ common.factLinkText }} {{ common.factAdditionalText }}</p>
 

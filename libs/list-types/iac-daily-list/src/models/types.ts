@@ -105,6 +105,7 @@ export interface IacRenderedCourtList {
 export interface IacRenderedHeader {
   listTitle: string;
   venueName: string;
+  isAdditionalCases: boolean;
   contentDate: string;
   lastUpdatedDate: string;
   lastUpdatedTime: string;
