@@ -31,7 +31,7 @@ export const PDF_BASE_STYLES = `
     }
     .bold { font-weight: 700; }
     .header-date { margin-bottom: 5px; }
-    .address { margin-bottom: 15px; }
+    .address { margin-bottom: 15px; line-height: 1.2; }
     .address p { margin-bottom: 0; }
     .phone-number { margin-top: 10px; }
     .location { margin-bottom: 15px; }

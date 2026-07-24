@@ -1,0 +1,12 @@
+// Employment Tribunal list styles (et-daily-list, et-fortnightly-list).
+// Keeps hearing table columns on a single line and allows the wide table to
+// scroll horizontally within the accordion section on narrow viewports.
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.govuk-accordion__section-content,
+.govuk-table {
+  overflow: auto hidden;
+}
