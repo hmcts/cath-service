@@ -1,5 +1,10 @@
 nodejs:
   releaseNameOverride: "{{ .Release.Name }}-postgres"
+  # Single replica only: this pod runs the migration + seed runner on startup.
+  # Multiple replicas seed the shared database concurrently and race on upserts
+  # (UniqueConstraintViolation). One replica is sufficient for a migration runner
+  # and Prisma Studio, and removes the race entirely.
+  replicas: 1
   applicationPort: 5555
   aadIdentityName: cath
   ingressHost: cath-postgres.{{ .Values.global.environment }}.platform.hmcts.net

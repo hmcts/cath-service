@@ -2,6 +2,12 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { locationData } from "./location-data.js";
 import { seedListTypes } from "./seed-list-types.js";
 
+// Arbitrary but fixed key identifying the reference-data seed. Any process seeding
+// the shared database takes this session-level advisory lock first, so overlapping
+// runners (e.g. old and new pods during a rolling deploy) seed one at a time instead
+// of racing on upserts and hitting UniqueConstraintViolation.
+const SEED_ADVISORY_LOCK_KEY = 927_314_015;
+
 async function shouldSeed(): Promise<boolean> {
   // Skip seeding in production only — STG and other non-prod environments should be seeded.
   // Use ENVIRONMENT (set via Helm to the cluster environment name e.g. "stg", "prod")
@@ -34,6 +40,19 @@ async function shouldSeed(): Promise<boolean> {
 }
 
 export async function seedLocationData() {
+  // Serialise seeding across processes with a Postgres advisory lock. pg_advisory_lock
+  // blocks until the lock is free, so a concurrent runner waits rather than racing.
+  // The lock is session-scoped and released explicitly in finally (and automatically
+  // if the connection drops), so a crashed runner never leaves it held.
+  await prisma.$executeRaw`SELECT pg_advisory_lock(${SEED_ADVISORY_LOCK_KEY})`;
+  try {
+    await seedReferenceData();
+  } finally {
+    await prisma.$executeRaw`SELECT pg_advisory_unlock(${SEED_ADVISORY_LOCK_KEY})`;
+  }
+}
+
+async function seedReferenceData() {
   console.log("Checking if location data seeding is needed...");
 
   const needsSeeding = await shouldSeed();
