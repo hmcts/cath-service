@@ -10,7 +10,6 @@
     "migrate:dev": "yarn build && npx prisma migrate dev",
     "migrate:reset": "yarn build && npx prisma migrate reset",
     "studio": "yarn build && npx prisma studio",
-    "seed": "psql $DATABASE_URL -f prisma/seed.sql",
     "test": "echo 'No tests for migration runner'",
     "format": "biome format --write .",
     "lint": "biome check .",
@@ -18,8 +17,10 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
-    "http-proxy": "1.18.1"
+    "http-proxy": "1.18.1",
+    "tsx": "4.22.4"
   },
   "devDependencies": {
     "@prisma/client": "7.8.0",

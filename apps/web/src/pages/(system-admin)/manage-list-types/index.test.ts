@@ -118,7 +118,7 @@ describe("manage-list-types page", () => {
         expect(listType).toHaveProperty("id");
         expect(listType).toHaveProperty("name");
         expect(listType).toHaveProperty("configureUrl");
-        expect(listType.configureUrl).toMatch(/^\/list-search-config\/\d+$/);
+        expect(listType.configureUrl).toMatch(/^\/manage-list-type\?id=\d+$/);
       });
     });
 

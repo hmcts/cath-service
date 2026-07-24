@@ -30,6 +30,17 @@ export {
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
+export type {
+  CauseListCase,
+  CauseListData,
+  CourtHouse,
+  CourtRoom,
+  Hearing,
+  Party,
+  RenderOptions,
+  Session,
+  Sitting
+} from "./models/cause-list-types.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
   type BasePdfGenerationOptions,
@@ -58,7 +69,6 @@ export {
   formatPddaSittingTime,
   formatPublicationDateTime,
   formatTime,
-  type Party,
   type PddaCitizenName
 } from "./rendering/crown-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";

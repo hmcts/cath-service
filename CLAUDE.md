@@ -792,6 +792,29 @@ describe("validateMyListType", () => {
 - **Test every required field at every nesting depth** — a field buried 7 levels deep (e.g. `courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].caseNumber`) needs its own `it` block the same as a top-level field
 - Do not export a `validate*` function solely to make it testable — it must be the real public API used by `validateListTypeJson`
 
+**7. `list-type-data.ts` and `location-data.ts` are the single sources of truth — adding an entry is all you need. Do NOT hand-write `.sql` files.**
+
+`libs/list-types/common/src/list-type-data.ts` (list types) and `libs/location/src/location-data.ts` (regions, jurisdictions, sub-jurisdictions, locations) are the single sources of truth for reference data. Adding (or updating) an entry there is sufficient — it is reflected on every environment automatically. Do **not** hand-write static `.sql` seed files; the deploy SQL is *generated* from these TypeScript files (see below).
+
+**How seeding works:** On deploy, `apps/postgres/start.sh` runs `prisma migrate deploy`, then `prisma generate`, then generates and applies the seed SQL:
+
+```sh
+../../node_modules/.bin/tsx prisma/generate-seed-sql.ts > /tmp/seed.sql
+../../node_modules/.bin/prisma db execute --file /tmp/seed.sql --config=./prisma.config.ts
+```
+
+`apps/postgres/prisma/generate-seed-sql.ts` reads `locationData` and `listTypeData` and emits idempotent `INSERT ... ON CONFLICT` SQL wrapped in a single transaction. **Why generated SQL, not `prisma upsert`:** Prisma's `upsert` is non-atomic (a `SELECT` then `INSERT` in application code), so concurrent seeders across multiple pods race and crash with `UniqueConstraintViolation` (P2002). `INSERT ... ON CONFLICT` is resolved atomically inside Postgres, so any number of pods converge without racing. This replaced the earlier `tsx prisma/seed-deploy.ts` upsert path.
+
+**The web app does NOT seed.** `apps/web` autoscales (HPA), so a startup seed there meant several pods seeding concurrently — the original source of the crash loop. Seeding happens exclusively in the single-replica postgres deploy pod (`autoscaling.enabled: false` in `apps/postgres/helm/values.yaml`).
+
+**Locally, seeding still uses the TypeScript path.** `yarn db:seed` runs `apps/postgres/prisma/seed.ts`, which delegates to `seedLocationData()` (`libs/location/src/seed-data.ts`) → `seedListTypes()` (`libs/location/src/seed-list-types.ts`). This is single-process, so there is no race and the Prisma upsert path is fine. Keep `location-data.ts` / `list-type-data.ts` as the source of truth for both paths — the generator and the local seed read the same data.
+
+**Removals are reconciled by soft-delete:** deleting an entry from `listTypeData` causes the generated SQL to `UPDATE list_types SET deleted_at = NOW()` on any active row whose name is no longer present (this replaced the old CRIME_DAILY_LIST soft-delete script). Re-adding an entry clears `deleted_at` again. List types whose names start with `TEST_` or `E2E_` are exempt from reconciliation so E2E fixtures are never soft-deleted.
+
+**Environments:** this seeds all lower environments (local and STG). There is currently **no prod deployment**; when a prod pipeline is introduced, prod-specific guarding will be added to `generate-seed-sql.ts` then — do not pre-emptively branch for it.
+
+Everything remains keyed on the stable string `name`, never the numeric `id`.
+
 ## Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
