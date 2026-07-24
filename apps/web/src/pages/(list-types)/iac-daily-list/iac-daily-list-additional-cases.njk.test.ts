@@ -71,10 +71,13 @@ beforeEach(() => {
 });
 
 describe("iac-daily-list-additional-cases template", () => {
-  it("should render the additional cases title in the top heading", () => {
+  it("should render the tribunal heading, venue name and daily list in the h1", () => {
     const { $ } = render(env, TEMPLATE, baseData());
 
-    expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListEn.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
+    const heading = $("h1#top.govuk-heading-l").text();
+    expect(heading).toContain(commonEn.heading);
+    expect(heading).toContain("Manchester");
+    expect(heading).toContain(commonEn.dailyList);
   });
 
   it("should render the case row in the correct columns", () => {
@@ -94,9 +97,9 @@ describe("iac-daily-list-additional-cases template", () => {
     expect(cells[6]).toBe("Case Management");
   });
 
-  it("should render the Welsh additional cases title", () => {
+  it("should render the Welsh tribunal heading in the h1", () => {
     const { $ } = render(env, TEMPLATE, baseData("cy"));
 
-    expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListCy.IAC_DAILY_LIST_ADDITIONAL_CASES.pageTitle);
+    expect($("h1#top.govuk-heading-l").text()).toContain(commonCy.heading);
   });
 });

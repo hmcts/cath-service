@@ -111,24 +111,13 @@ describe("iac-daily-list template", () => {
   });
 
   describe("Page header", () => {
-    it("should render the list title as a caption above the heading", () => {
+    it("should render the tribunal heading, venue name and daily list in the h1", () => {
       const { $ } = renderList();
 
-      expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListEn.IAC_DAILY_LIST.pageTitle);
-    });
-
-    it("should render the tribunal heading as the h1", () => {
-      const { $ } = renderList();
-
-      expect($("h1.govuk-heading-l").text()).toContain(commonEn.heading);
-    });
-
-    it("should render the venue name and daily list subheading", () => {
-      const { $ } = renderList();
-
-      const subHeading = $("h2.govuk-heading-m").first().text();
-      expect(subHeading).toContain("Manchester");
-      expect(subHeading).toContain(commonEn.dailyList);
+      const heading = $("h1#top.govuk-heading-l").text();
+      expect(heading).toContain(commonEn.heading);
+      expect(heading).toContain("Manchester");
+      expect(heading).toContain(commonEn.dailyList);
     });
 
     it("should render the find court contact details link", () => {
@@ -295,8 +284,7 @@ describe("iac-daily-list template", () => {
     it("should render Welsh headings, labels and metadata", () => {
       const { $ } = renderList([buildCourtList()], {}, "cy");
 
-      expect($("span#top.govuk-caption-l").text()).toContain(iacDailyListCy.IAC_DAILY_LIST.pageTitle);
-      expect($("h1.govuk-heading-l").text()).toContain(commonCy.heading);
+      expect($("h1#top.govuk-heading-l").text()).toContain(commonCy.heading);
       expect($(".govuk-body").text()).toContain(commonCy.listDate);
       expect($("details.govuk-details .govuk-details__summary-text").text()).toContain(commonCy.importantInformationHeading);
       expect($("p.govuk-body-s").text()).toContain(commonCy.dataSource);
