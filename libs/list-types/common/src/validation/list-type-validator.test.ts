@@ -12,6 +12,8 @@ const testListTypes: ListTypeInfo[] = [
   { id: 58, name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Adult Court List - Future" },
   { id: 59, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", friendlyName: "Magistrates Public Adult Court List - Daily" },
   { id: 60, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Public Adult Court List - Future" },
+  { id: 70, name: "IAC_DAILY_LIST", friendlyName: "Immigration and Asylum Chamber Daily List" },
+  { id: 71, name: "IAC_DAILY_LIST_ADDITIONAL_CASES", friendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases" },
   { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" }
 ];
 
@@ -69,6 +71,17 @@ vi.mock("@hmcts/magistrates-public-adult-court-list", () => ({
     errors: [],
     schemaVersion: "1.0"
   })
+}));
+
+// Mock the dynamic import for @hmcts/iac-daily-list (used by both IAC_DAILY_LIST and IAC_DAILY_LIST_ADDITIONAL_CASES)
+vi.mock("@hmcts/iac-daily-list", () => ({
+  validateIacDailyList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  }),
+  extractCaseSummary: vi.fn().mockReturnValue([]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("")
 }));
 
 describe("list-type-validator", () => {
@@ -161,7 +174,8 @@ describe("list-type-validator", () => {
       ["57", "MAGISTRATES_ADULT_COURT_LIST_DAILY", "magistrates-adult-court-list"],
       ["58", "MAGISTRATES_ADULT_COURT_LIST_FUTURE", "magistrates-adult-court-list"],
       ["59", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", "magistrates-public-adult-court-list"],
-      ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"]
+      ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"],
+      ["71", "IAC_DAILY_LIST_ADDITIONAL_CASES", "iac-daily-list"]
     ])("should validate %s (%s) using the %s package alias", async (id) => {
       const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
 
