@@ -47,11 +47,6 @@ export const en = {
       href: "/manage-list-types"
     },
     {
-      title: "Configure List Type",
-      description: "Add and manage list type configurations",
-      href: "/configure-list-type-enter-details"
-    },
-    {
       title: "Manage Jurisdiction Data",
       description: "View, create, update and remove jurisdictions and sub-jurisdictions",
       href: "/jurisdiction-data"

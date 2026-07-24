@@ -1,0 +1,20 @@
+export const en = {
+  title: "Manage list type",
+  nameLabel: "Name",
+  friendlyNameLabel: "Friendly name",
+  welshFriendlyNameLabel: "Welsh friendly name",
+  shortenedFriendlyNameLabel: "Shortened friendly name",
+  urlLabel: "URL",
+  caseNumberJsonFieldNameLabel: "Case number JSON field name",
+  caseNameJsonFieldNameLabel: "Case name JSON field name",
+  defaultSensitivityLabel: "Default sensitivity",
+  allowedProvenanceLabel: "Allowed provenance",
+  isNonStrategicLabel: "Is non-strategic",
+  subJurisdictionsLabel: "Sub-jurisdictions",
+  yesText: "Yes",
+  noText: "No",
+  editButton: "Edit list type",
+  deleteButton: "Delete list type",
+  notSet: "Not set",
+  noneSelected: "None selected"
+};

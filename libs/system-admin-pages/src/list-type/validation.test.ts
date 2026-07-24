@@ -189,6 +189,101 @@ describe("validateListTypeDetails", () => {
     expect(errors[0].message).toBe("Select whether this list type is non-strategic");
   });
 
+  it("should return no errors when caseNumberJsonFieldName and caseNameJsonFieldName are not provided", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: false
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toEqual([]);
+  });
+
+  it("should return no errors when caseNumberJsonFieldName is within 255 characters", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      caseNumberJsonFieldName: "a".repeat(255),
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: false
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toEqual([]);
+  });
+
+  it("should return error when caseNumberJsonFieldName exceeds 255 characters", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      caseNumberJsonFieldName: "a".repeat(256),
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: false
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].field).toBe("caseNumberJsonFieldName");
+    expect(errors[0].message).toBe("Case number JSON field name must be 255 characters or less");
+    expect(errors[0].href).toBe("#caseNumberJsonFieldName");
+  });
+
+  it("should return error when caseNameJsonFieldName exceeds 255 characters", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      caseNameJsonFieldName: "a".repeat(256),
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: false
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toHaveLength(1);
+    expect(errors[0].field).toBe("caseNameJsonFieldName");
+    expect(errors[0].message).toBe("Case name JSON field name must be 255 characters or less");
+    expect(errors[0].href).toBe("#caseNameJsonFieldName");
+  });
+
+  it("should return no errors when caseNameJsonFieldName is null", () => {
+    const input: ListTypeDetailsInput = {
+      name: "TEST_LIST",
+      friendlyName: "Test List",
+      welshFriendlyName: "Rhestr Prawf",
+      shortenedFriendlyName: "Test",
+      url: "/test-list",
+      caseNameJsonFieldName: null,
+      defaultSensitivity: "Public",
+      allowedProvenance: ["CFT_IDAM"],
+      isNonStrategic: false
+    };
+
+    const errors = validateListTypeDetails(input);
+
+    expect(errors).toEqual([]);
+  });
+
   it("should return multiple errors for multiple invalid fields", () => {
     const input: ListTypeDetailsInput = {
       name: "",

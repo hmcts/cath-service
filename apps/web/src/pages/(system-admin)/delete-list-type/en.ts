@@ -8,11 +8,12 @@ export const en = {
   listTypeLabel: "List Type",
   confirmDeleteLabel: "Are you sure you want to delete this list type?",
   confirmDeleteHint: "This action cannot be undone.",
-  yesOption: "Yes, delete this list type",
-  noOption: "No, do not delete",
+  yesOption: "Yes",
+  noOption: "No",
   confirmButton: "Confirm",
   cancelLink: "Cancel",
-  errorCannotDelete: "This list type cannot be deleted because it has existing artifacts",
+  errorCannotDelete: "This list type cannot be deleted because it has existing artefacts.",
+  removeArtefactsLinkText: "Click here to delete all the artefact(s) for this list type",
   errorListTypeNotFound: "List type not found",
   errorConfirmationRequired: "Please select an option"
 };

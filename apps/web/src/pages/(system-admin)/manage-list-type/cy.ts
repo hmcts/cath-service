@@ -1,0 +1,20 @@
+export const cy = {
+  title: "[WELSH TRANSLATION REQUIRED: 'Manage list type']",
+  nameLabel: "[WELSH TRANSLATION REQUIRED: 'Name']",
+  friendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Friendly name']",
+  welshFriendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Welsh friendly name']",
+  shortenedFriendlyNameLabel: "[WELSH TRANSLATION REQUIRED: 'Shortened friendly name']",
+  urlLabel: "URL",
+  caseNumberJsonFieldNameLabel: "[WELSH TRANSLATION REQUIRED: 'Case number JSON field name']",
+  caseNameJsonFieldNameLabel: "[WELSH TRANSLATION REQUIRED: 'Case name JSON field name']",
+  defaultSensitivityLabel: "[WELSH TRANSLATION REQUIRED: 'Default sensitivity']",
+  allowedProvenanceLabel: "[WELSH TRANSLATION REQUIRED: 'Allowed provenance']",
+  isNonStrategicLabel: "[WELSH TRANSLATION REQUIRED: 'Is non-strategic']",
+  subJurisdictionsLabel: "[WELSH TRANSLATION REQUIRED: 'Sub-jurisdictions']",
+  yesText: "[WELSH TRANSLATION REQUIRED: 'Yes']",
+  noText: "[WELSH TRANSLATION REQUIRED: 'No']",
+  editButton: "[WELSH TRANSLATION REQUIRED: 'Edit list type']",
+  deleteButton: "[WELSH TRANSLATION REQUIRED: 'Delete list type']",
+  notSet: "[WELSH TRANSLATION REQUIRED: 'Not set']",
+  noneSelected: "[WELSH TRANSLATION REQUIRED: 'None selected']"
+};
