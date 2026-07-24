@@ -33,10 +33,10 @@ function buildCourtList(overrides: Partial<IacCourtList> = {}): IacCourtList {
                           caseNumber: "45684548",
                           language: "English",
                           party: [
-                            { partyRole: "APPELLANT", individualDetails: { individualForenames: "John", individualSurname: "Doe" } },
-                            { partyRole: "RESPONDENT", organisationDetails: { organisationName: "Home Office" } },
+                            { partyRole: "CLAIMANT_PETITIONER", individualDetails: { individualForenames: "John", individualSurname: "Doe" } },
+                            { partyRole: "PROSECUTING_AUTHORITY", organisationDetails: { organisationName: "Home Office" } },
                             {
-                              partyRole: "APPELLANT_REPRESENTATIVE",
+                              partyRole: "CLAIMANT_PETITIONER_REPRESENTATIVE",
                               individualDetails: { individualForenames: "Jane", individualSurname: "Rep" }
                             }
                           ]
@@ -100,7 +100,7 @@ describe("renderIacDailyList", () => {
     const result = renderIacDailyList(buildList([courtList]), OPTIONS);
     const renderedCase = result.hearings.courtLists[0].session[0].sittings[0].hearing[0].case[0];
 
-    expect(renderedCase.caseRef).toBe("45684548 2 of 3");
+    expect(renderedCase.caseRef).toBe("45684548 [2 of 3]");
   });
 
   it("should use the case number alone when there is no sequence indicator", () => {

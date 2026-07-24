@@ -1,4 +1,5 @@
-import { createPartyDetails, formatDisplayDate, formatLastUpdatedDateTime, formatTime } from "@hmcts/list-types-common";
+import { createPartyDetails, formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
+import { DateTime } from "luxon";
 import type {
   IacCase,
   IacDailyList,
@@ -15,9 +16,33 @@ import type {
 } from "../models/types.js";
 
 const BAIL_LIST_NAME = "bail list";
-const APPELLANT_ROLE = "APPELLANT";
-const RESPONDENT_ROLE = "RESPONDENT";
-const APPELLANT_REPRESENTATIVE_ROLE = "APPELLANT_REPRESENTATIVE";
+
+// IAC party roles after conversion. Mirrors pip-frontend's IacDailyListService, which
+// derives the Appellant/Applicant column from CLAIMANT_PETITIONER, the representative
+// from CLAIMANT_PETITIONER_REPRESENTATIVE, and the Respondent column from
+// PROSECUTING_AUTHORITY (see findAndManipulatePartyInformation in ListParseHelperService).
+const APPELLANT_ROLE = "CLAIMANT_PETITIONER";
+const APPELLANT_REPRESENTATIVE_ROLE = "CLAIMANT_PETITIONER_REPRESENTATIVE";
+const PROSECUTING_AUTHORITY_ROLE = "PROSECUTING_AUTHORITY";
+
+// Raw party-role codes mapped to their canonical role, mirroring pip-frontend's
+// partyRoleMappings/convertPartyRole. Canonical roles (e.g. CLAIMANT_PETITIONER) are not
+// listed and pass through unchanged.
+const PARTY_ROLE_MAPPINGS: Record<string, string[]> = {
+  APPLICANT_PETITIONER: ["APL", "APP", "CLP20", "CRED", "OTH", "PET"],
+  APPLICANT_PETITIONER_REPRESENTATIVE: ["CREP", "CREP20"],
+  RESPONDENT: ["DEBT", "DEF", "DEF20", "RES"],
+  RESPONDENT_REPRESENTATIVE: ["DREP", "DREP20", "RREP"]
+};
+
+function convertPartyRole(partyRole: string): string {
+  for (const [mappedRole, unmappedRoles] of Object.entries(PARTY_ROLE_MAPPINGS)) {
+    if (unmappedRoles.includes(partyRole)) {
+      return mappedRole;
+    }
+  }
+  return partyRole;
+}
 
 export function renderIacDailyList(jsonData: IacDailyList, options: IacRenderOptions): IacRenderedData {
   const contentDate = formatDisplayDate(options.contentDate, options.locale);
@@ -33,7 +58,7 @@ export function renderIacDailyList(jsonData: IacDailyList, options: IacRenderOpt
           courtRoomName: courtRoom.courtRoomName,
           formattedJudiciary: formatJudiciary(session.judiciary),
           isBailList,
-          sittings: (session.sittings ?? []).map((sitting) => renderSitting(sitting, session))
+          sittings: (session.sittings ?? []).map((sitting) => renderSitting(sitting, session, options.locale))
         });
       }
     }
@@ -56,9 +81,9 @@ export function renderIacDailyList(jsonData: IacDailyList, options: IacRenderOpt
   };
 }
 
-function renderSitting(sitting: IacSitting, session: IacSession): IacRenderedSitting {
+function renderSitting(sitting: IacSitting, session: IacSession, locale: string): IacRenderedSitting {
   return {
-    startTime: sitting.sittingStart ? formatTime(sitting.sittingStart) : "",
+    startTime: formatSittingStart(sitting.sittingStart, locale),
     caseHearingChannel: formatHearingChannel(sitting, session),
     hearing: (sitting.hearing ?? []).map((hearing) => ({
       hearingType: hearing.hearingType ?? "",
@@ -68,8 +93,8 @@ function renderSitting(sitting: IacSitting, session: IacSession): IacRenderedSit
 }
 
 function renderCase(caseItem: IacCase): IacRenderedCase {
-  const parties = processParties(caseItem.party);
-  const caseRef = caseItem.caseSequenceIndicator ? `${caseItem.caseNumber} ${caseItem.caseSequenceIndicator}`.trim() : caseItem.caseNumber;
+  const parties = extractCaseParties(caseItem.party);
+  const caseRef = appendCaseSequenceIndicator(caseItem.caseNumber, caseItem.caseSequenceIndicator);
 
   return {
     caseRef,
@@ -80,7 +105,9 @@ function renderCase(caseItem: IacCase): IacRenderedCase {
   };
 }
 
-function processParties(party: IacParty[] | undefined): { appellant: string; appellantRepresentative: string; prosecutingAuthority: string } {
+// Splits a case's party array into the Appellant/Applicant, representative and
+// Prosecuting authority strings, mirroring pip-frontend's findAndManipulatePartyInformation.
+export function extractCaseParties(party: IacParty[] | undefined): { appellant: string; appellantRepresentative: string; prosecutingAuthority: string } {
   const appellants: string[] = [];
   const representatives: string[] = [];
   const prosecutingAuthorities: string[] = [];
@@ -91,14 +118,14 @@ function processParties(party: IacParty[] | undefined): { appellant: string; app
     const details = createPartyDetails({ ...p, partyRole: p.partyRole }).trim();
     if (!details) continue;
 
-    switch (p.partyRole) {
+    switch (convertPartyRole(p.partyRole)) {
       case APPELLANT_ROLE:
         appellants.push(details);
         break;
       case APPELLANT_REPRESENTATIVE_ROLE:
         representatives.push(details);
         break;
-      case RESPONDENT_ROLE:
+      case PROSECUTING_AUTHORITY_ROLE:
         prosecutingAuthorities.push(details);
         break;
     }
@@ -125,6 +152,25 @@ function formatJudiciary(judiciary: IacJudiciary[] | undefined): string {
   }
 
   return names.join(", ");
+}
+
+// Mirrors pip-frontend's formatDate(sittingStart, 'h:mma', language): a lower-cased
+// 12-hour time that always shows two-digit minutes (e.g. "2:00pm", not "2pm").
+function formatSittingStart(sittingStart: string | undefined, locale: string): string {
+  if (!sittingStart || !/\S/.test(sittingStart)) {
+    return "";
+  }
+  return DateTime.fromISO(sittingStart, { zone: "Europe/London" }).setLocale(locale).toFormat("h:mma").toLowerCase();
+}
+
+// Mirrors pip-frontend's appendCaseSequenceIndicator nunjucks filter: the sequence
+// indicator is wrapped in square brackets and appended to the case number.
+function appendCaseSequenceIndicator(caseNumber: string, caseSequenceIndicator: string | undefined): string {
+  if (!caseSequenceIndicator) {
+    return caseNumber;
+  }
+  const bracketed = `[${caseSequenceIndicator}]`;
+  return caseNumber ? `${caseNumber} ${bracketed}` : bracketed;
 }
 
 function formatHearingChannel(sitting: IacSitting, session: IacSession): string {

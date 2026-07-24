@@ -1,5 +1,6 @@
 // Business logic exports
 export type { ValidationResult } from "@hmcts/list-types-common";
+export { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./email-summary/summary-builder.js";
 export { cy as iacDailyListCy } from "./locales/cy.js";
 // Locale exports
 export { en as iacDailyListEn } from "./locales/en.js";
