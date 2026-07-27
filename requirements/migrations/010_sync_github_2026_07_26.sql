@@ -11,13 +11,15 @@
 -- Delta captured (gate = "Refined Tickets" and beyond):
 --   * 3 NEW requirements (REQ-0157..REQ-0159):
 --       #593, #699, #859
---   * 1 status change:
+--   * 2 status changes:
+--       REQ-0098 (#342): approved -> verified
 --       REQ-0099 (#343): implemented -> verified
 --   * 1 impl change (combined with status change above):
 --       REQ-0099 (#343): impl_commit_sha and impl_paths populated
 --
--- HUMAN REVIEW REQUIRED: Board access unavailable; verify the 3 new issues are
--- actually past "Refined Tickets" on the CaTH Kanban before merging.
+-- HUMAN REVIEW REQUIRED: Board access unavailable; verify the 3 new issues and
+-- 2 status changes are actually past "Refined Tickets" on the CaTH Kanban before
+-- merging.
 
 BEGIN TRANSACTION;
 
@@ -344,6 +346,18 @@ All four have `isNonStrategic: false`, `provenance: "CFT_IDAM"`, and `defaultSen
 ', 'functional', 'verified', NULL, 'story', 859, 'https://github.com/hmcts/cath-service/issues/859', 'c74ad165fc754ea590a19d844d162381cec3cf9d', '["apps/postgres/prisma/scripts/001_insert_missing_list_types.sql", "apps/postgres/prisma/scripts/003_upsert_sub_jurisdictions_and_list_type_links.sql", "libs/list-types/common/src/list-type-data.test.ts", "libs/list-types/common/src/list-type-data.ts"]', '2026-07-15T08:49:48Z', '2026-07-15T08:49:48Z', 'junaidiqbalmoj', 'junaidiqbalmoj');
 
 -- ============================================================================
+-- STATUS CHANGE: REQ-0098 (#342) approved -> verified
+-- ============================================================================
+
+-- Issue closed as COMPLETED on 2026-07-22 (no merged PR — administrative close).
+UPDATE requirement
+SET status = 'verified',
+    version = version + 1,
+    updated_at = '2026-07-26T00:00:00Z',
+    updated_by = 'github-actions[bot]'
+WHERE id = 98;
+
+-- ============================================================================
 -- STATUS + IMPL CHANGE: REQ-0099 (#343) implemented -> verified
 -- ============================================================================
 
@@ -367,6 +381,12 @@ VALUES
   (157, 1, 'created', 'imported from GitHub issue', 'github-actions[bot]', '2026-05-13T08:51:59Z'),
   (158, 1, 'created', 'imported from GitHub issue', 'github-actions[bot]', '2026-06-10T13:46:48Z'),
   (159, 1, 'created', 'imported from GitHub issue', 'github-actions[bot]', '2026-07-15T08:49:48Z');
+
+-- Status change entry for REQ-0098 (#342).
+INSERT INTO requirement_change
+  (requirement_id, version, field, old_value, new_value, change_type, change_summary, changed_by, changed_at)
+VALUES
+  (98, 2, 'status', 'approved', 'verified', 'status_changed', 'board status moved', 'github-actions[bot]', '2026-07-26T00:00:00Z');
 
 -- Status + impl change entries for REQ-0099 (#343).
 INSERT INTO requirement_change
