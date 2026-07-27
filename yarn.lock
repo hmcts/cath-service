@@ -2513,7 +2513,7 @@ __metadata:
     "@types/express-session": "npm:1.19.0"
     "@types/govuk-frontend": "npm:5.11.0"
     "@types/nunjucks": "npm:3.2.6"
-    "@types/supertest": "npm:7.2.0"
+    "@types/supertest": "npm:7.2.1"
     compression: "npm:1.8.1"
     concurrently: "npm:10.0.3"
     config: "npm:4.4.2"
@@ -4728,17 +4728,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/supertest@npm:7.2.0":
-  version: 7.2.0
-  resolution: "@types/supertest@npm:7.2.0"
-  dependencies:
-    "@types/methods": "npm:^1.1.4"
-    "@types/superagent": "npm:^8.1.0"
-  checksum: 10c0/78c33e968acd45207acdd965ccbd5eb7a279813ff68fab1acc438937ed017698102cc077cef8aa60ec6caefff2fa61171e902eab40607fd7ce82ead3a82b766e
-  languageName: node
-  linkType: hard
-
-"@types/supertest@npm:^7.0.0":
+"@types/supertest@npm:7.2.1, @types/supertest@npm:^7.0.0":
   version: 7.2.1
   resolution: "@types/supertest@npm:7.2.1"
   dependencies:
@@ -5757,7 +5747,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/node": "npm:24.10.4"
     "@types/passport": "npm:1.0.17"
-    "@types/supertest": "npm:7.2.0"
+    "@types/supertest": "npm:7.2.1"
     "@vitest/coverage-v8": "npm:4.1.10"
     "@vitest/ui": "npm:4.1.10"
     accessible-autocomplete: "npm:^3.0.1"
