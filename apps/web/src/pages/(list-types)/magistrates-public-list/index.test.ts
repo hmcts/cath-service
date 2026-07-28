@@ -1,6 +1,6 @@
 import { renderMagistratesPublicListData, validateMagistratesPublicList } from "@hmcts/magistrates-public-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getArtefactById, getPublicationJson, listTypeHasExcel } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -21,8 +21,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     ...actual,
     getArtefactById: vi.fn(),
     getPublicationJson: vi.fn(),
-    canAccessPublicationData: vi.fn(),
-    listTypeHasExcel: vi.fn()
+    canAccessPublicationData: vi.fn()
   };
 });
 vi.mock("@hmcts/magistrates-public-list");
@@ -139,10 +138,9 @@ describe("magistrates-public-list controller", () => {
       expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
     });
 
-    it("should not pass excelDownloadUrl when list type does not have Excel", async () => {
+    it("should render the list with the rendered header and list data", async () => {
       req.query = { artefactId: "test-id" };
       vi.mocked(getArtefactById).mockResolvedValue(baseArtefact as any);
-      vi.mocked(listTypeHasExcel).mockReturnValue(false);
       vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
 
       await GET(req as Request, res as Response);
@@ -150,24 +148,8 @@ describe("magistrates-public-list controller", () => {
       const renderCall = vi.mocked(res.render!).mock.calls[0]!;
       expect(renderCall[0]).toBe("magistrates-public-list");
       expect(renderCall[1]).toMatchObject({
-        excelDownloadUrl: undefined,
-        pdfDownloadUrl: "/api/flat-file/test-id/download"
-      });
-    });
-
-    it("should pass excelDownloadUrl when list type has Excel", async () => {
-      req.query = { artefactId: "test-id" };
-      vi.mocked(getArtefactById).mockResolvedValue(baseArtefact as any);
-      vi.mocked(listTypeHasExcel).mockReturnValue(true);
-      vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-
-      await GET(req as Request, res as Response);
-
-      const renderCall = vi.mocked(res.render!).mock.calls[0]!;
-      expect(renderCall[0]).toBe("magistrates-public-list");
-      expect(renderCall[1]).toMatchObject({
-        excelDownloadUrl: "/api/flat-file/test-id/download?format=excel",
-        pdfDownloadUrl: "/api/flat-file/test-id/download"
+        header: mockRenderedData.header,
+        listData: mockRenderedData.listData
       });
     });
 

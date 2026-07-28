@@ -33,9 +33,6 @@ export const en = {
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
   error403Message: "You do not have permission to view this publication.",
-  downloadSection: "Download this list",
-  downloadAsPdf: "Download as a PDF",
-  downloadAsSpreadsheet: "Download as a spreadsheet (Excel)",
   excelColumns: {
     courtHouse: "Court House",
     courtRoom: "Court Room",
