@@ -1,0 +1,164 @@
+# Conflict Check
+#
+# After every push to master, predicts which open PRs would now hit merge
+# conflicts and leaves a comment on those that would.
+#
+# Read-only with respect to branches: `git merge-tree` performs the merge in the
+# object database only. No PR branch is rebased, updated or force-pushed, so this
+# never triggers a preview build (workflow.preview.yml fires on `synchronize`).
+#
+# Comments are sticky — the marker below identifies this workflow's comment so it
+# is edited in place rather than re-posted, and it is removed once the PR merges
+# cleanly again. A PR whose conflicted file set has not changed is left untouched
+# so nobody is re-notified about a conflict they already know about.
+
+name: Conflict Check
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Report findings in the log without commenting on PRs"
+        type: boolean
+        default: true
+
+concurrency:
+  group: conflict-check
+  cancel-in-progress: true
+
+jobs:
+  conflict-check:
+    name: Check Open PRs For Conflicts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full history: merge-tree needs the merge base of every open PR.
+          fetch-depth: 0
+
+      - name: List open PRs
+        id: prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Drafts are included deliberately — a stale draft is still worth flagging.
+          # Fork PRs need no special casing here; the script resolves their heads
+          # via refs/pull/<n>/head.
+          gh pr list --state open --base master --limit 200 \
+            --json number,headRefName,headRefOid \
+            > /tmp/prs.json
+          echo "count=$(jq length /tmp/prs.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | [.number, .headRefName, .headRefOid] | @tsv' /tmp/prs.json > /tmp/prs.tsv
+          echo "Found $(jq length /tmp/prs.json) open PR(s) targeting master"
+
+      - name: Predict conflicts
+        if: steps.prs.outputs.count != '0'
+        env:
+          BASE_REF: ${{ github.sha }}
+        run: |
+          chmod +x .github/workflows/jobs/conflict-check/check-conflicts.sh
+          .github/workflows/jobs/conflict-check/check-conflicts.sh \
+            < /tmp/prs.tsv > /tmp/results.jsonl
+          echo "--- results ---"
+          cat /tmp/results.jsonl
+
+      - name: Comment on conflicting PRs
+        if: steps.prs.outputs.count != '0'
+        uses: actions/github-script@v9
+        env:
+          DRY_RUN: ${{ inputs.dry-run }}
+        with:
+          script: |
+            const fs = require('fs');
+            const MARKER = '<!-- conflict-check -->';
+            const dryRun = process.env.DRY_RUN === 'true';
+            const { owner, repo } = context.repo;
+
+            const results = fs.readFileSync('/tmp/results.jsonl', 'utf8')
+              .split('\n').filter(Boolean).map(JSON.parse);
+
+            const findComment = async (pr) => {
+              const comments = await github.paginate(github.rest.issues.listComments,
+                { owner, repo, issue_number: pr, per_page: 100 });
+              return comments.find(c => c.body?.includes(MARKER));
+            };
+
+            const buildBody = (r) => {
+              const truncated = r.fileCount > r.files.length
+                ? `\n_…and ${r.fileCount - r.files.length} more._` : '';
+              // Signature drives the "has anything actually changed?" check, so it
+              // must depend on the conflicted files and nothing else — not the base
+              // SHA, or every master push would re-notify.
+              const signature = `<!-- files:${r.files.join(',')} -->`;
+              return [
+                MARKER,
+                signature,
+                '## ⚠️ This PR now conflicts with `master`',
+                '',
+                `Merging \`master\` into this branch would conflict in **${r.fileCount} file(s)**:`,
+                '',
+                ...r.files.map(f => `- \`${f}\``),
+                truncated,
+                '',
+                'Nothing has been changed on your branch — this is a dry-run prediction.',
+                'Rebase when you are ready:',
+                '',
+                '```bash',
+                'git fetch origin',
+                'git rebase origin/master',
+                '```',
+                '',
+                'Locally, `/auto-rebase` walks through this and handles the conflicts.',
+                '',
+                '_Re-checked automatically on every push to `master`._',
+              ].join('\n');
+            };
+
+            for (const r of results) {
+              const existing = await findComment(r.pr);
+
+              if (r.status === 'unknown') {
+                core.warning(`PR #${r.pr} (${r.head}): could not check — ${r.reason}`);
+                continue;
+              }
+
+              if (r.status === 'clean') {
+                if (existing) {
+                  core.info(`PR #${r.pr} (${r.head}): conflicts resolved, removing comment`);
+                  if (!dryRun) {
+                    await github.rest.issues.deleteComment(
+                      { owner, repo, comment_id: existing.id });
+                  }
+                } else {
+                  core.info(`PR #${r.pr} (${r.head}): clean`);
+                }
+                continue;
+              }
+
+              const body = buildBody(r);
+              const signature = body.split('\n')[1];
+
+              if (existing?.body?.includes(signature)) {
+                core.info(`PR #${r.pr} (${r.head}): same conflicts as before, not re-notifying`);
+                continue;
+              }
+
+              core.warning(
+                `PR #${r.pr} (${r.head}): conflicts in ${r.fileCount} file(s) — ${r.files.join(', ')}`);
+              if (dryRun) continue;
+
+              if (existing) {
+                await github.rest.issues.updateComment(
+                  { owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment(
+                  { owner, repo, issue_number: r.pr, body });
+              }
+            }
