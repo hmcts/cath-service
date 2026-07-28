@@ -52,6 +52,26 @@ git rev-list --left-right --count origin/{base_branch}...HEAD
 If `behind` is 0 the branch is already current. Report that and stop — do not tag or force-push
 for no reason.
 
+Then find out what will conflict, before rewriting anything:
+
+```bash
+.claude/skills/auto-rebase/check-conflicts.sh              # current branch vs origin/master
+.claude/skills/auto-rebase/check-conflicts.sh {branch}     # a branch other than HEAD
+BASE_REF=origin/{base_branch} .claude/skills/auto-rebase/check-conflicts.sh
+```
+
+It reports the files a merge would conflict in and exits 0 clean / 1 conflicts / 2 if it could
+not run. `git merge-tree` does the work in the object database, so nothing is checked out, no ref
+moves, and it is safe to run before asking for confirmation.
+
+Use it to set expectations, not as a guarantee. It predicts **one merge**, while a rebase replays
+each commit separately — so a branch reported clean can still stop mid-rebase, and a conflicted
+one can stop on files the report never listed. Reach for `--rebase-merges` planning and `rerere`
+(step 5) when it lists many files across many commits.
+
+The `--json` mode exists for `.github/workflows/conflict-check.yml`, which runs the same script
+per open PR after every push to master. Keep the two modes' output separate when editing it.
+
 ## 3. Back up, then choose the mode
 
 The tag covers the current branch only. `--update-refs` rewrites every stacked branch too, so
