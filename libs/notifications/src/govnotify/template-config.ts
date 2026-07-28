@@ -1,5 +1,4 @@
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SJP_PDF_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_PDF_EXCEL || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF =
@@ -27,13 +26,7 @@ export function getSubscriptionTemplateId(params: { isSjp: boolean; hasPdf: bool
   }
 
   if (isSjp) {
-    if (hasPdf && hasExcel) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_SJP_PDF_EXCEL) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SJP_PDF_EXCEL environment variable is not set");
-      }
-      return GOVUK_NOTIFY_TEMPLATE_ID_SJP_PDF_EXCEL;
-    }
-    if (hasExcel) {
+    if (hasExcel && !hasPdf) {
       if (!GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY) {
         throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY environment variable is not set");
       }
