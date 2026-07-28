@@ -10,9 +10,9 @@
 # Two callers, two modes:
 #
 #   Local (step 2 of SKILL.md) — one branch, human-readable:
-#     .claude/skills/auto-rebase/check-conflicts.sh                 # current branch
-#     .claude/skills/auto-rebase/check-conflicts.sh my-branch
-#     BASE_REF=origin/main .claude/skills/auto-rebase/check-conflicts.sh
+#     .claude/skills/auto-rebase/scripts/check-conflicts.sh                 # current branch
+#     .claude/skills/auto-rebase/scripts/check-conflicts.sh my-branch
+#     BASE_REF=origin/main .claude/skills/auto-rebase/scripts/check-conflicts.sh
 #
 #   CI (.github/workflows/conflict-check.yml) — one or many PRs, JSON Lines out:
 #     printf '563\tvibe-563\t478d910c\n' | BASE_REF=origin/master ./check-conflicts.sh --json

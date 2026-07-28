@@ -177,11 +177,11 @@ jobs:
           # see .claude/skills/auto-rebase/SKILL.md step 2. --json selects the
           # machine-readable mode. It exits 1 when a conflict is found, which is a
           # finding rather than an error here.
-          chmod +x .claude/skills/auto-rebase/check-conflicts.sh
+          chmod +x .claude/skills/auto-rebase/scripts/check-conflicts.sh
           set +e
           printf '%s\t%s\t%s\n' "$NUMBER" "$HEAD_REF" "$sha" \
             | BASE_REF=origin/master \
-              .claude/skills/auto-rebase/check-conflicts.sh --json > /tmp/result.jsonl
+              .claude/skills/auto-rebase/scripts/check-conflicts.sh --json > /tmp/result.jsonl
           rc=$?
           set -e
           # 0 = clean, 1 = conflicts found (a finding, not an error). Anything else

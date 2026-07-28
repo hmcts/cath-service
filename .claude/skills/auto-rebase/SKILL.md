@@ -55,9 +55,9 @@ for no reason.
 Then find out what will conflict, before rewriting anything:
 
 ```bash
-.claude/skills/auto-rebase/check-conflicts.sh              # current branch vs origin/master
-.claude/skills/auto-rebase/check-conflicts.sh {branch}     # a branch other than HEAD
-BASE_REF=origin/{base_branch} .claude/skills/auto-rebase/check-conflicts.sh
+.claude/skills/auto-rebase/scripts/check-conflicts.sh              # current branch vs origin/master
+.claude/skills/auto-rebase/scripts/check-conflicts.sh {branch}     # a branch other than HEAD
+BASE_REF=origin/{base_branch} .claude/skills/auto-rebase/scripts/check-conflicts.sh
 ```
 
 It reports the files a merge would conflict in and exits 0 clean / 1 conflicts / 2 if it could
