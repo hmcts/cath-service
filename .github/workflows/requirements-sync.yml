@@ -12,6 +12,12 @@ name: Requirements Sync
 #   (b) board status changes on existing requirements
 #   (c) implementation changes — new/changed merged closing PRs (impl_commit_sha / impl_paths)
 # Out of scope: title / statement / priority edits.
+#
+# Board access: the Claude App (claude[bot]) declares no projects permission, so it
+# cannot read Project #43 at all. The board is fetched by a separate step using
+# PROJECTS_READ_TOKEN (a fine-grained PAT with organization Projects: Read) and handed
+# to Claude as a file. That step fails the run if the board is unreadable — see
+# requirements/scripts/fetch_board.sh for why that matters.
 
 on:
   schedule:
@@ -24,9 +30,8 @@ permissions:
   id-token: write
 
 env:
-  # GitHub Project #43 (CaTH Kanban) — same IDs used by the claude-ready job in claude.yml.
+  # GitHub Project #43 (CaTH Kanban) — same ID used by the claude-ready job in claude.yml.
   PROJECT_ID: PVT_kwDOAVwpV84BNDg2
-  STATUS_FIELD_ID: PVTSSF_lADOAVwpV84BNDg2zg8KRxo
 
 jobs:
   sync:
@@ -80,6 +85,24 @@ jobs:
           role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
           aws-region: eu-west-1
 
+      # Read the board BEFORE Claude runs, with a token that can actually see it.
+      # The Claude App does not declare a projects permission, so this cannot use
+      # the App token. If the board is unreadable this step fails and the whole run
+      # stops — previously the query failed mid-prompt and Claude silently fell back
+      # to guessing status from merged PRs, which reports "no drift" forever.
+      - name: Fetch board state
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_READ_TOKEN }}
+          PROJECT_ID: ${{ env.PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::PROJECTS_READ_TOKEN is not set. It must be a fine-grained PAT with organization Projects: Read on hmcts."
+            exit 1
+          fi
+          requirements/scripts/fetch_board.sh > "${RUNNER_TEMP}/board.jsonl"
+          echo "BOARD_STATE_FILE=${RUNNER_TEMP}/board.jsonl" >> "$GITHUB_ENV"
+
       - name: Run Claude Code - Requirements Sync
         id: claude
         uses: anthropics/claude-code-action@v1
@@ -88,8 +111,7 @@ jobs:
           ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          PROJECT_ID: ${{ env.PROJECT_ID }}
-          STATUS_FIELD_ID: ${{ env.STATUS_FIELD_ID }}
+          BOARD_STATE_FILE: ${{ env.BOARD_STATE_FILE }}
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
@@ -114,26 +136,29 @@ jobs:
             REQ-NNNN ref.
 
             ## 2. Read the live GitHub state
-            Using `gh api graphql`, page through Project #43's items (PROJECT_ID env var,
-            Status field STATUS_FIELD_ID). The board statuses in order are: Backlog,
-            Prioritised Backlog, Refined Tickets, In Progress, Code Review, Ready For Test,
-            In Test, Ready For Sign Off, Done. The "gate" is **Refined Tickets and everything
-            after it** — ignore Backlog and Prioritised Backlog.
-            For each gated issue collect: number, title, body, url, createdAt, labels, and its
-            merged closing PRs (closedByPullRequestsReferences with state MERGED — merge
-            commit oid and changed file paths). Dedupe by issue_number.
+            The board has ALREADY been fetched for you. Read the JSON Lines file at the path
+            in the BOARD_STATE_FILE env var — one object per gated issue, with fields:
+            issueNumber, title, body, url, createdAt, status (already mapped from the board
+            column), labels, and mergedPrs (each with number, mergeCommitOid, paths).
+
+            Only issues at or past "Refined Tickets" are in the file; ungated ones are
+            already filtered out. Use `status` as given — do not re-derive it.
+
+            Do NOT query the project board yourself. You do not have a token that can read
+            it, and you must NOT substitute any proxy for board status (for example inferring
+            it from whether the issue is closed or has a merged PR). If the file is missing or
+            empty, STOP and exit with an error — do not continue with partial data.
 
             ## 3. Compute the delta — THREE change types only
             Apply this exact mapping (matching how seed.sql was built):
-            - board status -> requirement.status: Refined Tickets=approved, In Progress=in_progress,
-              Code Review / Ready For Test / In Test / Ready For Sign Off=implemented, Done=verified.
+            - requirement.status: use the `status` field from BOARD_STATE_FILE verbatim.
             - priority from priority:* label suffix (1-highest->highest, 2-high->high,
               3-medium->medium, 4-low->low, 5-lowest->lowest); NULL if no such label.
             - granularity from type:* label (epic/story/task); NULL if absent.
             - kind for NEW rows defaults to 'functional'.
-            - impl_commit_sha = the latest merged closing PR's merge commit oid.
-            - impl_paths = JSON array of the UNION of changed source files across merged closing
-              PRs, sorted, EXCLUDING: lockfiles (yarn.lock etc), .github/**, **/helm/**, *.md,
+            - impl_commit_sha = the latest merged closing PR's mergeCommitOid from mergedPrs.
+            - impl_paths = JSON array of the UNION of `paths` across mergedPrs, sorted,
+              EXCLUDING: lockfiles (yarn.lock etc), .github/**, **/helm/**, *.md,
               *.yml/*.yaml, and dist/build/generated/coverage paths. (See seed.sql for the style.)
 
             Detect:
@@ -188,8 +213,8 @@ jobs:
             below-the-gate cases noted for a human.
           claude_args: |
             --dangerously-skip-permissions
-            --append-system-prompt "You are running in a scheduled GitHub Action to sync the requirements database. Read @CLAUDE.md and the requirements/ SQL files. Be precise: this is an append-only audit log. If there is no drift, do nothing and open no PR. Never hard-delete or down-status a requirement."
-            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*),Bash(gh:*),Bash(sqlite3:*),Bash(./requirements/scripts/new_migration.sh:*)"
+            --append-system-prompt "You are running in a scheduled GitHub Action to sync the requirements database. Read @CLAUDE.md and the requirements/ SQL files. Be precise: this is an append-only audit log. If there is no drift, do nothing and open no PR. Never hard-delete or down-status a requirement. Board status comes only from BOARD_STATE_FILE — never infer it from issue state or merged PRs, and never query the project board."
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*),Bash(gh pr:*),Bash(sqlite3:*),Bash(./requirements/scripts/new_migration.sh:*)"
 
       - name: Independent build & integrity gate
         if: always()
