@@ -9,7 +9,8 @@
     "dev:nowatch": "yarn build:dev && tsx --env-file-if-exists=../../.env src/server.ts",
     "build:dev:watch": "yarn build:dev --watch",
     "build:dev": "NODE_OPTIONS='--import tsx' vite build --config vite.build.ts",
-    "build": "tsc --build && vite build --config vite.build.ts --configLoader runner",
+    "build": "tsc --build && vite build --config vite.build.ts --configLoader runner && yarn verify:assets",
+    "verify:assets": "tsx verify-assets.ts",
     "clean": "rm -rf dist",
     "start": "node dist/server.js",
     "certs:generate": "../../scripts/generate-local-certs.sh",
@@ -87,6 +88,6 @@
     "supertest": "7.2.2",
     "typescript": "6.0.3",
     "vite": "7.3.6",
-    "vite-plugin-static-copy": "4.1.1"
+    "vite-plugin-static-copy": "3.4.0"
   }
 }
