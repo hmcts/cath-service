@@ -70,7 +70,8 @@ one can stop on files the report never listed. Reach for `--rebase-merges` plann
 (step 5) when it lists many files across many commits.
 
 The `--json` mode exists for `.github/workflows/conflict-check.yml`, which runs the same script
-per open PR after every push to master. Keep the two modes' output separate when editing it.
+against a PR when it is opened or pushed to, and against every open PR when master moves. Keep
+the two modes' output separate when editing it.
 
 ## 3. Back up, then choose the mode
 

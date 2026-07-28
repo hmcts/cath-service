@@ -14,7 +14,7 @@
 #     .claude/skills/auto-rebase/check-conflicts.sh my-branch
 #     BASE_REF=origin/main .claude/skills/auto-rebase/check-conflicts.sh
 #
-#   CI (.github/workflows/conflict-check.yml) — many PRs, JSON Lines out:
+#   CI (.github/workflows/conflict-check.yml) — one or many PRs, JSON Lines out:
 #     printf '563\tvibe-563\t478d910c\n' | BASE_REF=origin/master ./check-conflicts.sh --json
 #     stdin is TSV: <pr-number>\t<head-label>\t<head-sha>
 #

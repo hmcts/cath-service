@@ -1,9 +1,17 @@
 # Conflict Check
 #
-# After every push to master, each open PR gets its own job that predicts whether
-# it would now conflict, comments if so, and hands it to Claude to rebase.
+# Predicts whether a PR would conflict with master, comments if so, and hands it
+# to Claude to rebase.
 #
-# One job per PR — check and rebase together. Checking is read-only (`git
+# Two triggers, because a conflict can appear from either side:
+#   - pull_request  — this PR changed. Fires on the PR itself, so it is checked
+#                     the moment it is opened or pushed to.
+#   - push: master  — the base changed under every open PR. Fans out one job per
+#                     open PR, since no event exists for "master broke PR #123".
+# Either way the unit of work is one PR in one job; the triggers differ only in
+# how many PRs the matrix ends up holding.
+#
+# Check and rebase together in that one job. Checking is read-only (`git
 # merge-tree` merges in the object database, so no branch is touched and no
 # preview build is triggered) and a clean PR's job stops right there. Only a PR
 # that actually conflicts pays for yarn install, Claude and a force-push.
@@ -20,6 +28,16 @@
 name: Conflict Check
 
 on:
+  pull_request:
+    branches:
+      - master
+    # `synchronize` (a push to the PR) is included even though a successful
+    # rebase force-pushes and so re-triggers this workflow on its own output.
+    # That settles rather than loops: the branch now contains master, so the
+    # follow-up run's check reports clean and the job stops before doing any
+    # work. The alternative — omitting it — means an author who pushes a
+    # conflicting commit hears nothing until master next moves.
+    types: [opened, reopened, synchronize]
   push:
     branches:
       - master
@@ -36,7 +54,7 @@ on:
 
 jobs:
   list-prs:
-    name: List Open PRs
+    name: List PRs to Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,25 +63,52 @@ jobs:
       prs: ${{ steps.list.outputs.prs }}
       count: ${{ steps.list.outputs.count }}
     steps:
-      - name: List open PRs
+      - name: List PRs to check
         id: list
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          # Populated on pull_request events only.
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
-          # Drafts are included deliberately — a stale draft is still worth flagging.
-          # `sha` here is only a starting point; each job re-reads its PR's head
-          # before rebasing, so a PR pushed while this run is queued is handled
-          # against its current head rather than this snapshot.
-          gh pr list --state open --base master --limit 200 \
-            --json number,headRefName,headRefOid,isCrossRepository \
-            --jq '[.[] | {number, head: .headRefName, sha: .headRefOid, fork: .isCrossRepository}]' \
-            > /tmp/prs.json
+          # The matrix shape is identical for both triggers — a pull_request event
+          # just yields a single-entry list, taken from the event payload so no API
+          # call is needed. A push to master has no such payload and must enumerate.
+          if [ "$EVENT" = "pull_request" ]; then
+            # A fork PR gets no secrets on pull_request, so the App-token step
+            # would fail the job before the fork guard in `decide` is reached.
+            # Emit an empty matrix instead. Fork PRs are still checked (and
+            # commented on) by the push-to-master path, which is a trusted
+            # context and does have secrets.
+            if [ "${PR_FORK:-false}" = "true" ]; then
+              echo "::notice::fork PR #${PR_NUMBER} skipped on pull_request (no secrets); it is covered by the next push to master"
+              echo '[]' > /tmp/prs.json
+            else
+              jq -nc --argjson n "$PR_NUMBER" \
+                --arg h "$PR_HEAD" \
+                --arg s "$PR_SHA" \
+                --argjson f false \
+                '[{number: $n, head: $h, sha: $s, fork: $f}]' > /tmp/prs.json
+            fi
+          else
+            # Drafts are included deliberately — a stale draft is still worth
+            # flagging. `sha` is only a starting point; each job re-reads its PR's
+            # head before rebasing, so a PR pushed while this run is queued is
+            # handled against its current head rather than this snapshot.
+            gh pr list --state open --base master --limit 200 \
+              --json number,headRefName,headRefOid,isCrossRepository \
+              --jq '[.[] | {number, head: .headRefName, sha: .headRefOid, fork: .isCrossRepository}]' \
+              > /tmp/prs.json
+          fi
 
           count=$(jq length /tmp/prs.json)
           echo "count=$count" >> "$GITHUB_OUTPUT"
           echo "prs=$(jq -c . /tmp/prs.json)" >> "$GITHUB_OUTPUT"
-          echo "$count open PR(s) targeting master:"
+          echo "$count PR(s) to check:"
           jq -r '.[] | "  #\(.number) \(.head)\(if .fork then " (fork)" else "" end)"' /tmp/prs.json
 
   check-and-rebase:
@@ -149,6 +194,32 @@ jobs:
           echo "file-count=$(jq -r '.fileCount // 0' /tmp/result.jsonl)" >> "$GITHUB_OUTPUT"
           echo "ahead=$(git rev-list --count origin/master..refs/remotes/pr-head)" >> "$GITHUB_OUTPUT"
 
+      - name: Decide whether to rebase
+        id: decide
+        env:
+          STATUS: ${{ steps.check.outputs.status }}
+          IS_FORK: ${{ matrix.pr.fork }}
+          # On push/pull_request events `inputs.*` is empty, which reads as "not a
+          # dry run" — so without ENABLED below the first conflicting PR after this
+          # merges would be rebased and force-pushed with nobody having watched a
+          # dry run first. Set repo variable CONFLICT_AUTO_REBASE to 'true' to arm
+          # it; until then every trigger comments only. It is also the kill switch:
+          # unset the variable to stop all rebasing without reverting anything.
+          ENABLED: ${{ vars.CONFLICT_AUTO_REBASE }}
+          DRY_RUN: ${{ inputs.dry-run }}
+          AUTO_REBASE: ${{ inputs.auto-rebase }}
+        run: |
+          # Single place that gates every remaining step, so the conditions cannot
+          # drift apart between them. Runs before the comment step so the comment
+          # can state what will actually happen rather than guessing.
+          rebase=true
+          [ "$STATUS" = "conflict" ]   || { rebase=false; echo "no conflict — nothing to rebase"; }
+          [ "$ENABLED" = "true" ]      || { rebase=false; echo "auto-rebase not armed (set repo variable CONFLICT_AUTO_REBASE=true) — comment only"; }
+          [ "$IS_FORK" != "true" ]     || { rebase=false; echo "::warning::fork PR conflicts but cannot be auto-rebased (App token cannot push to fork heads)"; }
+          [ "$DRY_RUN" != "true" ]     || { rebase=false; echo "dry run — skipping rebase"; }
+          [ "$AUTO_REBASE" != "false" ] || { rebase=false; echo "auto-rebase disabled for this run"; }
+          echo "rebase=$rebase" >> "$GITHUB_OUTPUT"
+
       - name: Comment on conflict
         if: steps.check.outputs.status != 'unknown'
         uses: actions/github-script@v9
@@ -156,7 +227,10 @@ jobs:
           DRY_RUN: ${{ inputs.dry-run }}
           PR: ${{ matrix.pr.number }}
           BRANCH: ${{ matrix.pr.head }}
-          WILL_REBASE: ${{ steps.check.outputs.status == 'conflict' && matrix.pr.fork != true && inputs.dry-run != true && inputs.auto-rebase != false }}
+          # Reuse the decide step's verdict rather than recomputing the conditions
+          # here — two copies would drift and the comment would promise a rebase
+          # that never runs.
+          WILL_REBASE: ${{ steps.decide.outputs.rebase }}
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
@@ -210,7 +284,7 @@ jobs:
               willRebase
                 ? 'If you have local work on this branch, wait for the result before pushing — the rebase force-pushes, so you will need to `git fetch` and reset afterwards.'
                 : null,
-              '_Re-checked automatically on every push to `master`._',
+              '_Re-checked automatically when you push to this PR and when `master` moves._',
             ].filter(l => l !== null).join('\n');
 
             if (existing?.body?.includes(signature)) {
@@ -229,23 +303,6 @@ jobs:
               await github.rest.issues.createComment(
                 { owner, repo, issue_number: pr, body });
             }
-
-      - name: Decide whether to rebase
-        id: decide
-        env:
-          STATUS: ${{ steps.check.outputs.status }}
-          IS_FORK: ${{ matrix.pr.fork }}
-          DRY_RUN: ${{ inputs.dry-run }}
-          AUTO_REBASE: ${{ inputs.auto-rebase }}
-        run: |
-          # Single place that gates every remaining step, so the conditions cannot
-          # drift apart between them.
-          rebase=true
-          [ "$STATUS" = "conflict" ]   || { rebase=false; echo "no conflict — nothing to rebase"; }
-          [ "$IS_FORK" != "true" ]     || { rebase=false; echo "::warning::fork PR conflicts but cannot be auto-rebased (App token cannot push to fork heads)"; }
-          [ "$DRY_RUN" != "true" ]     || { rebase=false; echo "dry run — skipping rebase"; }
-          [ "$AUTO_REBASE" != "false" ] || { rebase=false; echo "auto-rebase disabled for this run"; }
-          echo "rebase=$rebase" >> "$GITHUB_OUTPUT"
 
       - name: Check out PR branch and back it up
         id: pre
