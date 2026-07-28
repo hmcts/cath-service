@@ -4,6 +4,8 @@ import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
 import { type MagistratesPublicListData, renderMagistratesPublicListData } from "../rendering/renderer.js";
 
+const UNALLOCATED_COURT_ROOM = "to be allocated";
+
 interface ExcelGenerationOptions {
   artefactId: string;
   locationId: string;
@@ -48,6 +50,10 @@ export async function generateMagistratesPublicListExcel(options: ExcelGeneratio
 
       for (const courtRoom of courtList.courtHouse.courtRoom) {
         for (const session of courtRoom.session) {
+          const isUnallocated = courtRoom.courtRoomName.trim().toLowerCase() === UNALLOCATED_COURT_ROOM;
+          const courtRoomName =
+            session.formattedJudiciaries && !isUnallocated ? `${courtRoom.courtRoomName}: ${session.formattedJudiciaries}` : courtRoom.courtRoomName;
+
           for (const sitting of session.sittings) {
             for (const hearing of sitting.hearing) {
               for (const caseItem of hearing.case ?? []) {
@@ -56,7 +62,7 @@ export async function generateMagistratesPublicListExcel(options: ExcelGeneratio
 
                 worksheet.addRow([
                   sanitiseCellValue(courtHouseName),
-                  sanitiseCellValue(courtRoom.courtRoomName),
+                  sanitiseCellValue(courtRoomName),
                   sanitiseCellValue(sitting.time ?? ""),
                   sanitiseCellValue(caseItem.caseUrn ?? ""),
                   sanitiseCellValue(caseItem.defendant ?? ""),
@@ -72,7 +78,7 @@ export async function generateMagistratesPublicListExcel(options: ExcelGeneratio
 
                 worksheet.addRow([
                   sanitiseCellValue(courtHouseName),
-                  sanitiseCellValue(courtRoom.courtRoomName),
+                  sanitiseCellValue(courtRoomName),
                   sanitiseCellValue(sitting.time ?? ""),
                   sanitiseCellValue(application.applicationReference ?? ""),
                   sanitiseCellValue(application.defendant ?? ""),

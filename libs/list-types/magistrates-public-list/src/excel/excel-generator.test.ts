@@ -36,6 +36,7 @@ function makeRenderedData(overrides: Record<string, unknown> = {}) {
                 courtRoomName: "Court 1",
                 session: [
                   {
+                    formattedJudiciaries: "",
                     sittings: [
                       {
                         time: "10:00am",
@@ -112,6 +113,78 @@ describe("generateMagistratesPublicListExcel", () => {
     await generateMagistratesPublicListExcel(baseOptions);
 
     expect(sanitiseCellValue).toHaveBeenCalledWith("Manchester Crown Court");
+  });
+
+  it("should append the session judiciary to the court room column", async () => {
+    const data = makeRenderedData();
+    data.listData.courtLists[0]!.courtHouse.courtRoom[0]!.session[0]!.formattedJudiciaries = "Judge KnownAs, Judge KnownAs 2";
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(data as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Court 1: Judge KnownAs, Judge KnownAs 2");
+  });
+
+  it("should write the court room name alone when the session has no judiciary", async () => {
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(makeRenderedData() as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Court 1");
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith(expect.stringContaining("Court 1:"));
+  });
+
+  it("should resolve the judiciary per session so the same court room can differ between sessions", async () => {
+    const data = makeRenderedData();
+    const courtRoom = data.listData.courtLists[0]!.courtHouse.courtRoom[0]!;
+    const [firstSession] = courtRoom.session;
+    courtRoom.session = [firstSession!, { ...structuredClone(firstSession!), formattedJudiciaries: "Judge KnownAs" } as (typeof courtRoom.session)[number]];
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(data as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Court 1");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Court 1: Judge KnownAs");
+  });
+
+  it("should not append the judiciary when the court room is to be allocated", async () => {
+    const data = makeRenderedData();
+    const courtRoom = data.listData.courtLists[0]!.courtHouse.courtRoom[0]!;
+    courtRoom.courtRoomName = "to be allocated";
+    courtRoom.session[0]!.formattedJudiciaries = "Judge KnownAs, Judge KnownAs 2";
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(data as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("to be allocated");
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith(expect.stringContaining("Judge KnownAs"));
+  });
+
+  it("should not append the judiciary when the court room is to be allocated in a different case", async () => {
+    const data = makeRenderedData();
+    const courtRoom = data.listData.courtLists[0]!.courtHouse.courtRoom[0]!;
+    courtRoom.courtRoomName = "To Be Allocated";
+    courtRoom.session[0]!.formattedJudiciaries = "Judge KnownAs";
+
+    vi.mocked(renderMagistratesPublicListData).mockResolvedValue(data as any);
+
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    await generateMagistratesPublicListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("To Be Allocated");
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith(expect.stringContaining("Judge KnownAs"));
   });
 
   it("should write reporting restriction text when reportingRestriction is true", async () => {
