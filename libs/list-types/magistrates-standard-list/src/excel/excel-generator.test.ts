@@ -126,14 +126,83 @@ describe("generateMagistratesStandardListExcel", () => {
     expect(nameCalls.length).toBe(1);
   });
 
-  it("should write reporting restriction text when reportingRestriction is true", async () => {
-    const hearing = makeHearing([makeOffence()], { reportingRestriction: true });
+  it("should write the reporting restriction details when reportingRestriction is true", async () => {
+    const hearing = makeHearing([makeOffence()], {
+      reportingRestriction: true,
+      reportingRestrictionDetails: "Section 39 order in place"
+    });
 
     vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
 
     await generateMagistratesStandardListExcel(baseOptions);
 
-    expect(sanitiseCellValue).toHaveBeenCalledWith("Press/Publication restrictions apply to this case");
+    expect(sanitiseCellValue).toHaveBeenCalledWith("Section 39 order in place");
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith("Press/Publication restrictions apply to this case");
+  });
+
+  it("should never write the press restriction boilerplate text", async () => {
+    const hearing = makeHearing([makeOffence({ reportingRestriction: true })], {
+      reportingRestriction: true,
+      reportingRestrictionDetails: "Section 39 order in place"
+    });
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith("Press/Publication restrictions apply to this case");
+  });
+
+  it("should write the sitting heading including the case sequence indicator in the sitting at column", async () => {
+    const data = makeRenderedData();
+    data.listData[0].sittings[0].sittingHeading = "1:30pm [2 of 3]";
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(data as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1:30pm [2 of 3]");
+  });
+
+  it("should write the sitting heading in the sitting at column when the hearing has no offences", async () => {
+    const data = makeRenderedData([makeHearing([])]);
+    data.listData[0].sittings[0].sittingHeading = "1:30pm [2 of 3]";
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(data as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1:30pm [2 of 3]");
+  });
+
+  it("should append the adjourned text to the adjourned from date", async () => {
+    const hearing = makeHearing([makeOffence({ adjournedDate: "02/05/2026" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("02/05/2026 - For the trial");
+  });
+
+  it("should use the Welsh adjourned text when locale is cy", async () => {
+    const hearing = makeHearing([makeOffence({ adjournedDate: "02/05/2026" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel({ ...baseOptions, locale: "cy" });
+
+    expect(sanitiseCellValue).toHaveBeenCalledWith("02/05/2026 - Ar gyfer y treial");
+  });
+
+  it("should leave the adjourned from column empty when there is no adjourned date", async () => {
+    const hearing = makeHearing([makeOffence({ adjournedDate: "" })]);
+
+    vi.mocked(renderMagistratesStandardListData).mockResolvedValue(makeRenderedData([hearing]) as any);
+
+    await generateMagistratesStandardListExcel(baseOptions);
+
+    expect(sanitiseCellValue).not.toHaveBeenCalledWith(expect.stringContaining("For the trial"));
   });
 
   it("should sanitise cell values via sanitiseCellValue", async () => {

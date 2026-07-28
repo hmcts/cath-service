@@ -49,7 +49,6 @@ export const cy = {
   errorMessage: "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os bydd y broblem yn parhau, cysylltwch â'r llys yn uniongyrchol.",
   error403Title: "Mynediad wedi'i wrthod",
   error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
-  reportingRestrictionText: "Mae cyfyngiadau cyhoeddi/y wasg yn berthnasol i'r achos hwn",
   excelColumns: {
     courtHouse: "Llys",
     lja: "LJA",

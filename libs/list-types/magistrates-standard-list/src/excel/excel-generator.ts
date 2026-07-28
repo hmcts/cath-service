@@ -64,14 +64,14 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
     for (const courtRoom of listData) {
       for (const sitting of courtRoom.sittings) {
         for (const hearing of sitting.hearings) {
-          const reportingRestrictions = hearing.reportingRestriction ? t.reportingRestrictionText : "";
+          const reportingRestrictions = hearing.reportingRestriction ? hearing.reportingRestrictionDetails : "";
 
           if (hearing.offences.length === 0) {
             worksheet.addRow([
               sanitiseCellValue(courtRoom.courtHouseName),
               sanitiseCellValue(courtRoom.lja),
               sanitiseCellValue(courtRoom.courtRoomName),
-              sanitiseCellValue(hearing.sittingStartTime),
+              sanitiseCellValue(sitting.sittingHeading),
               sanitiseCellValue(hearing.partyInfo.name),
               sanitiseCellValue(hearing.applicationParticulars),
               sanitiseCellValue(hearing.partyInfo.dob),
@@ -101,7 +101,7 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
                 sanitiseCellValue(courtRoom.courtHouseName),
                 sanitiseCellValue(courtRoom.lja),
                 sanitiseCellValue(courtRoom.courtRoomName),
-                sanitiseCellValue(hearing.sittingStartTime),
+                sanitiseCellValue(sitting.sittingHeading),
                 sanitiseCellValue(hearing.partyInfo.name),
                 sanitiseCellValue(hearing.applicationParticulars),
                 sanitiseCellValue(hearing.partyInfo.dob),
@@ -123,7 +123,7 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
                 sanitiseCellValue(offence.plea),
                 sanitiseCellValue(offence.pleaDate),
                 sanitiseCellValue(offence.convictionDate),
-                sanitiseCellValue(offence.adjournedDate)
+                sanitiseCellValue(offence.adjournedDate ? `${offence.adjournedDate} - ${t.adjournedText}` : "")
               ]);
             }
           }
