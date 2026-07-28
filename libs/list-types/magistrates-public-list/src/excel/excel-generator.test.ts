@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMagistratesPublicListExcel } from "./excel-generator.js";
 
 vi.mock("@hmcts/list-types-common", () => ({
+  autoFitColumns: vi.fn(),
   sanitiseCellValue: vi.fn((v: string) => v),
   saveExcelToStorage: vi.fn().mockResolvedValue({ excelPath: "test-id.xlsx" })
 }));

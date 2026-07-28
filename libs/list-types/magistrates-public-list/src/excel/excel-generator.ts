@@ -1,4 +1,4 @@
-import { sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
+import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
 import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
@@ -93,6 +93,8 @@ export async function generateMagistratesPublicListExcel(options: ExcelGeneratio
         }
       }
     }
+
+    autoFitColumns(worksheet);
 
     const buffer = await workbook.xlsx.writeBuffer();
     const { excelPath } = await saveExcelToStorage(artefactId, Buffer.from(buffer));
