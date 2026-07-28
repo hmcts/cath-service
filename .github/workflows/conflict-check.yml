@@ -377,6 +377,19 @@ jobs:
             behaviour, database schema divergence, a dependency pinned to two different
             versions, or a modify/delete where you cannot tell which side should win.
 
+            Abort also when master has already solved the same problem a different way,
+            even though the conflict itself looks mechanical. Ask what capability this
+            branch adds, then check whether master now provides it by other means. If it
+            does, the branch is superseded and merging the two sides produces a working
+            tree with two competing implementations — a decision for the author, not a
+            resolution. Signals: the branch adds a tool, hook, config file or dependency
+            that master achieves with a different one; a file the branch creates has no
+            counterpart on master because master put the same logic elsewhere.
+            Real example: a branch adding husky pre-commit hooks while master had
+            adopted lefthook. Resolving package.json by keeping both entries passes lint
+            and tests, and installs two hook managers that both fight over the commit.
+            State this in the report as the reason for aborting.
+
             For yarn.lock: never hand-merge it. Take origin/master's copy, then
             regenerate with `yarn install --mode=update-lockfile` and stage the result.
 

@@ -152,6 +152,13 @@ take upstream's versions (never revert an upstream bump), re-apply the entries t
 added, and preserve the file's existing ordering and formatting so the next real regeneration
 produces no spurious diff.
 
+Some conflicts are mechanical to resolve but mean the branch is obsolete. Before resolving, ask
+what capability the branch adds and whether the base now provides it another way — a branch adding
+one tool while upstream adopted a different one for the same job, or creating a file whose logic
+upstream has put elsewhere. Keeping both sides of such a `package.json` conflict passes lint and
+tests and still ships two competing implementations. Say so and ask whether to close the branch
+rather than resolving it; that is the author's call, not a merge decision.
+
 A modify/delete conflict is a decision, not a merge: upstream deleted the file, this branch
 changed it. Check whether anything still references the symbol
 (`grep -rn 'theSymbol' <src> --include='*.ts'`) — but treat "no references" as evidence, not as
