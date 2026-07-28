@@ -1,11 +1,13 @@
 # Conflict Check
 #
 # After every push to master, predicts which open PRs would now hit merge
-# conflicts and leaves a comment on those that would.
+# conflicts, comments on those that would, then hands each one to Claude to
+# rebase and resolve.
 #
-# Read-only with respect to branches: `git merge-tree` performs the merge in the
-# object database only. No PR branch is rebased, updated or force-pushed, so this
-# never triggers a preview build (workflow.preview.yml fires on `synchronize`).
+# Detection (job 1) is read-only: `git merge-tree` merges in the object database
+# only, so no branch is touched and no preview build is triggered. Resolution
+# (job 2) does force-push, one PR per matrix leg, and only for PRs that were
+# found to conflict — a clean-but-stale PR is left alone.
 #
 # Comments are sticky — the marker below identifies this workflow's comment so it
 # is edited in place rather than re-posted, and it is removed once the PR merges
@@ -21,7 +23,11 @@ on:
   workflow_dispatch:
     inputs:
       dry-run:
-        description: "Report findings in the log without commenting on PRs"
+        description: "Report findings in the log without commenting or rebasing"
+        type: boolean
+        default: true
+      auto-rebase:
+        description: "Hand conflicting PRs to Claude to rebase and resolve"
         type: boolean
         default: true
 
@@ -36,6 +42,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    outputs:
+      conflicting: ${{ steps.summary.outputs.conflicting }}
+      has-conflicts: ${{ steps.summary.outputs.has-conflicts }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -49,10 +58,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Drafts are included deliberately — a stale draft is still worth flagging.
-          # Fork PRs need no special casing here; the script resolves their heads
-          # via refs/pull/<n>/head.
+          # Detection handles fork PRs fine (heads resolve via refs/pull/<n>/head);
+          # isCrossRepository is carried through so the rebase job can skip them.
           gh pr list --state open --base master --limit 200 \
-            --json number,headRefName,headRefOid \
+            --json number,headRefName,headRefOid,isCrossRepository \
             > /tmp/prs.json
           echo "count=$(jq length /tmp/prs.json)" >> "$GITHUB_OUTPUT"
           jq -r '.[] | [.number, .headRefName, .headRefOid] | @tsv' /tmp/prs.json > /tmp/prs.tsv
@@ -107,15 +116,13 @@ jobs:
                 ...r.files.map(f => `- \`${f}\``),
                 truncated,
                 '',
-                'Nothing has been changed on your branch — this is a dry-run prediction.',
-                'Rebase when you are ready:',
+                'Claude is attempting a rebase now and will report back on this PR.',
+                'A backup of the pre-rebase head is pushed to `backup/rebase/<branch>`,',
+                'so nothing is lost either way.',
                 '',
-                '```bash',
-                'git fetch origin',
-                'git rebase origin/master',
-                '```',
-                '',
-                'Locally, `/auto-rebase` walks through this and handles the conflicts.',
+                'If you have local work on this branch, wait for the result before pushing —',
+                'the rebase force-pushes, so you will need to `git fetch` and reset afterwards.',
+                'To do it yourself instead, `/auto-rebase` walks through it locally.',
                 '',
                 '_Re-checked automatically on every push to `master`._',
               ].join('\n');
@@ -162,3 +169,250 @@ jobs:
                   { owner, repo, issue_number: r.pr, body });
               }
             }
+
+      - name: Build rebase matrix
+        id: summary
+        if: steps.prs.outputs.count != '0'
+        run: |
+          # Only conflicting PRs go to the rebase job. Fork PRs are excluded: the
+          # App token cannot push to a fork head unless maintainer edits are on,
+          # so attempting it would fail after doing all the work.
+          jq -s --slurpfile prs /tmp/prs.json '
+            ($prs[0] | map({key: (.number|tostring), value: .isCrossRepository}) | from_entries) as $fork
+            | [ .[]
+                | select(.status == "conflict")
+                | select($fork[(.pr|tostring)] != true)
+                | {pr, head, fileCount} ]
+          ' /tmp/results.jsonl > /tmp/matrix.json
+
+          skipped=$(jq -s --slurpfile prs /tmp/prs.json '
+            ($prs[0] | map({key: (.number|tostring), value: .isCrossRepository}) | from_entries) as $fork
+            | [ .[] | select(.status == "conflict") | select($fork[(.pr|tostring)] == true) | .pr ]
+          ' /tmp/results.jsonl)
+          [ "$(jq length <<<"$skipped")" -eq 0 ] \
+            || echo "::warning::fork PRs conflict but cannot be auto-rebased: $skipped"
+
+          count=$(jq length /tmp/matrix.json)
+          echo "conflicting=$(jq -c . /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
+          echo "has-conflicts=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "$count conflicting PR(s) queued for rebase:"
+          jq . /tmp/matrix.json
+
+  rebase:
+    name: Rebase PR #${{ matrix.target.pr }}
+    needs: [conflict-check]
+    if: |
+      needs.conflict-check.outputs.has-conflicts == 'true' &&
+      inputs.dry-run != true &&
+      inputs.auto-rebase != false
+    strategy:
+      # One PR at a time: each successful rebase force-pushes, which fires a full
+      # preview pipeline. Serialising keeps that spend visible and bounded, and
+      # max-parallel>1 buys nothing since the legs never interact.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.conflict-check.outputs.conflicting) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+
+      - name: Checkout PR head
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.target.head }}
+          token: ${{ steps.app-token.outputs.token }}
+          # Rebase needs the full history of both sides to find the merge base.
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "claude-code-bot[bot]"
+          git config user.email "claude-code-bot[bot]@users.noreply.github.com"
+
+      - name: Record pre-rebase state
+        id: pre
+        run: |
+          git fetch --quiet origin master
+          echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "ahead=$(git rev-list --count origin/master..HEAD)" >> "$GITHUB_OUTPUT"
+          # Remote backup, not just a local tag: this runner is discarded, so a
+          # local-only backup would be worthless if the rebase went wrong.
+          git push --quiet --force origin \
+            "HEAD:refs/heads/backup/rebase/${{ matrix.target.head }}"
+          echo "Backed up $(git rev-parse --short HEAD) to backup/rebase/${{ matrix.target.head }}"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+          cache-dependency-path: '**/yarn.lock'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
+          aws-region: eu-west-1
+
+      - name: Run Claude Code - Rebase
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
+        with:
+          use_bedrock: "true"
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: |
+            Rebase this branch onto origin/master, resolving the conflicts.
+
+            REPO: ${{ github.repository }}
+            PR: ${{ matrix.target.pr }}
+            BRANCH: ${{ matrix.target.head }}
+            COMMITS TO REPLAY: ${{ steps.pre.outputs.ahead }}
+            PRE_REBASE_HEAD: ${{ steps.pre.outputs.head }}
+
+            The procedure is in .claude/skills/auto-rebase/SKILL.md — read it first and
+            follow it, with these overrides because no human is present:
+
+            - Skip steps 1-4. The branch is checked out, origin/master is fetched, and
+              the backup already exists at backup/rebase/${{ matrix.target.head }}.
+            - Do NOT ask questions. There is nobody to answer. Where the skill says to
+              stop and ask, instead run `git rebase --abort` and stop. Aborting is a
+              correct, expected outcome — not a failure.
+            - Do NOT push. A later step pushes for you. Leave the rebase finished and
+              the branch checked out.
+            - Do not use --update-refs; this is a single detached branch.
+
+            Resolve only conflicts you are confident about: the same change applied on
+            both sides, independent edits to different parts of a file, import or
+            formatting collisions, additions to different parts of a list. Abort for
+            anything requiring product judgment — contradictory logic for the same
+            behaviour, database schema divergence, a dependency pinned to two different
+            versions, or a modify/delete where you cannot tell which side should win.
+
+            For yarn.lock: never hand-merge it. Take origin/master's copy
+            (`git checkout --theirs -- yarn.lock` during a rebase takes the version
+            being replayed onto; verify which side you have), then regenerate with
+            `yarn install --mode=update-lockfile` and stage the result.
+
+            After the rebase completes, verify before finishing (step 8 of the skill):
+            - `yarn lint` and `yarn test` must pass. A clean rebase is not a correct
+              one — a conflict-free merge can still break at compile time.
+            - Check files that must stay in sync: for every locale pair changed by this
+              rebase, `en.ts` and `cy.ts` must have identical key sets.
+            If verification fails and you cannot fix it, `git rebase --abort` and stop.
+
+            Finally write a report to /tmp/rebase-report.md: what conflicted, how you
+            resolved each one, whether checks passed, and whether you aborted and why.
+            Write that file whether you succeed or abort.
+          claude_args: |
+            --dangerously-skip-permissions
+            --append-system-prompt "You are rebasing a PR branch in a GitHub Action with no human present. Read @CLAUDE.md and @.claude/skills/auto-rebase/SKILL.md. Prefix rebase commands with GIT_EDITOR=true so they cannot hang. Never push and never use --force. Aborting is always preferable to guessing at a resolution. Always write /tmp/rebase-report.md."
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*),Bash(node_modules/.bin/tsc:*)"
+
+      - name: Determine outcome
+        id: outcome
+        if: always()
+        run: |
+          # Trust git, not the model's self-report. Resolve the rebase-state dirs via
+          # --git-path rather than hardcoding .git/: in a worktree they live under
+          # .git/worktrees/<name>/, and a missed mid-rebase state would force-push a
+          # half-applied tree.
+          if [ -d "$(git rev-parse --git-path rebase-merge)" ] \
+             || [ -d "$(git rev-parse --git-path rebase-apply)" ]; then
+            echo "state=stuck" >> "$GITHUB_OUTPUT"
+            git rebase --abort || true
+          elif [ "$(git rev-parse HEAD)" = "${{ steps.pre.outputs.head }}" ]; then
+            echo "state=aborted" >> "$GITHUB_OUTPUT"
+          elif ! git merge-base --is-ancestor origin/master HEAD; then
+            echo "state=aborted" >> "$GITHUB_OUTPUT"
+          else
+            echo "state=rebased" >> "$GITHUB_OUTPUT"
+          fi
+
+          # A rebase must preserve the tree. If replaying changed the diff against
+          # master in ways the conflicts do not explain, that is data loss.
+          echo "ahead=$(git rev-list --count origin/master..HEAD)" >> "$GITHUB_OUTPUT"
+          echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Push rebased branch
+        if: steps.outcome.outputs.state == 'rebased'
+        run: |
+          # --force-with-lease pinned to the SHA seen at checkout: if the author
+          # pushed while Claude was working, this refuses rather than clobbering.
+          git push --force-with-lease=refs/heads/${{ matrix.target.head }}:${{ steps.pre.outputs.head }} \
+            origin "HEAD:refs/heads/${{ matrix.target.head }}"
+
+      - name: Report on PR
+        if: always()
+        uses: actions/github-script@v9
+        env:
+          STATE: ${{ steps.outcome.outputs.state }}
+          PR: ${{ matrix.target.pr }}
+          BRANCH: ${{ matrix.target.head }}
+          AHEAD_BEFORE: ${{ steps.pre.outputs.ahead }}
+          AHEAD_AFTER: ${{ steps.outcome.outputs.ahead }}
+          CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const pr = Number(process.env.PR);
+            const state = process.env.STATE;
+            const runUrl =
+              `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            let report = '';
+            try { report = fs.readFileSync('/tmp/rebase-report.md', 'utf8').trim(); }
+            catch { report = '_No report was produced._'; }
+
+            const before = process.env.AHEAD_BEFORE;
+            const after = process.env.AHEAD_AFTER;
+            const lost = state === 'rebased' && before && after && Number(after) > Number(before);
+
+            const heading = {
+              rebased: '## ✅ Rebased onto `master`',
+              aborted: '## ⏸️ Rebase aborted — needs a human',
+              stuck: '## ⚠️ Rebase left mid-flight and was aborted',
+            }[state] || '## ⚠️ Rebase failed';
+
+            const body = [
+              '<!-- conflict-check-rebase -->',
+              heading,
+              '',
+              state === 'rebased'
+                ? `Replayed ${before} commit(s). \`yarn lint\` and \`yarn test\` were run as part of the rebase — check the report below.`
+                : 'Your branch is **unchanged**. The conflicts need a decision Claude would not make unattended.',
+              '',
+              lost ? `> ⚠️ Commit count went ${before} → ${after}. Worth a look before merging.\n` : null,
+              '<details><summary>Rebase report</summary>',
+              '',
+              report,
+              '',
+              '</details>',
+              '',
+              state === 'rebased'
+                ? `Pre-rebase head is saved at \`backup/rebase/${process.env.BRANCH}\`. If you had local work, \`git fetch\` and reset — do not merge.`
+                : `Run \`/auto-rebase\` locally to resolve it yourself. Backup: \`backup/rebase/${process.env.BRANCH}\`.`,
+              '',
+              `[Workflow run](${runUrl})`,
+            ].filter(l => l !== null).join('\n');
+
+            await github.rest.issues.createComment(
+              { owner, repo, issue_number: pr, body });
