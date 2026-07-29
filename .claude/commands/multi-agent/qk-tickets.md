@@ -193,8 +193,7 @@ BLOCKS the other one. Show it that way round. derives_from and refines are hiera
 
 The two queries above only reach directly-linked requirements. A chain such as
 approved A -> unapproved X -> unapproved Y -> approved B would be missed, and A and B
-wrongly reported as safe to parallelise. Walk the whole graph with a recursive CTE,
-which traverses intermediate nodes whatever their status:
+wrongly reported as safe to parallelise. Walk the graph with a recursive CTE:
 
 WITH RECURSIVE reachable(root_id, id, depth) AS (
   SELECT r.id, r.id, 0
@@ -203,9 +202,11 @@ WITH RECURSIVE reachable(root_id, id, depth) AS (
   UNION
   SELECT rc.root_id, rl.target_id, rc.depth + 1
   FROM reachable rc
+  JOIN requirement mid ON mid.id = rc.id
   JOIN requirement_link rl ON rl.source_id = rc.id
   WHERE rl.type IN ('depends_on', 'derives_from', 'refines')
     AND rc.depth < 20
+    AND (rc.depth = 0 OR mid.status <> 'verified')
 )
 SELECT rc.root_id, rr.ref AS root_ref, rc.id AS reached_id, r.ref AS reached_ref,
        r.status, r.issue_number, rc.depth
@@ -215,6 +216,15 @@ JOIN requirement r  ON r.id  = rc.id
 WHERE rc.root_id <> rc.id;
 
 Two approved tickets are unsafe together if either reaches the other in this closure.
+
+`mid.status <> 'verified'` stops traversal AT a verified requirement rather than
+through it: verified work is already done, so it satisfies a dependency instead of
+transmitting one. Without that guard, approved A -> verified X -> approved B would
+report A and B as mutually blocking when the only thing between them is finished work.
+The `rc.depth = 0` exemption keeps the approved roots themselves in play. A verified
+requirement still appears as a *directly* reached node, which is what lets Step 3
+report the dependency as already satisfied.
+
 The `depth < 20` guard stops a cyclic link set from looping forever; `UNION` (not
 `UNION ALL`) already dedupes. Run the same query with source and target swapped to get
 the reverse direction, and treat `conflicts_with` as unsafe in both directions at
