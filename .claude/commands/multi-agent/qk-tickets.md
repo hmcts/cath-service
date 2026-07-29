@@ -56,55 +56,67 @@ If there are no open sync PRs, say so and use `master`. Otherwise ask the user t
 between `master` and one of the listed PRs, then continue with their choice. Do not
 guess.
 
+Normalise the choice to a single value before running anything else: either the literal
+string `master`, or the bare PR number with the `pr ` prefix stripped. Substitute that
+value for `<SOURCE>` in the blocks below — `$ARGUMENTS` is not a positional parameter,
+so `$1` is not set and `pr 912` would otherwise arrive as two words.
+
 ## Step 2: Build the database from that source
 
-Validate the argument before using it in a command.
+The database must be built from `master`, or from `master` plus the selected PR's
+migrations — never from whatever branch happens to be checked out. Everything below
+runs in a temporary worktree at `origin/master`, so the user's working tree is never
+touched and there is nothing to restore afterwards.
 
 ```bash
 EXECUTE:
 set -euo pipefail
 
-SOURCE="$1"          # "master" or a PR number
-ORIGINAL_REF=$(git rev-parse --abbrev-ref HEAD)
-
-if [ "$SOURCE" = "master" ]; then
-  echo "Source: master"
-else
-  if ! [[ "$SOURCE" =~ ^[0-9]+$ ]]; then
-    echo "Invalid PR number: '$SOURCE'"
-    exit 1
-  fi
-  echo "Source: PR #$SOURCE"
-fi
-```
-
-For **master**: make sure the working tree is clean, then build from the current
-checkout of master.
-
-```bash
-EXECUTE:
-set -euo pipefail
-if [ -n "$(git status --porcelain requirements/)" ]; then
-  echo "requirements/ has uncommitted changes — the build would not reflect master."
-  git status --short requirements/
+SOURCE="<SOURCE>"                     # "master" or a bare PR number
+if [ "$SOURCE" != "master" ] && ! [[ "$SOURCE" =~ ^[0-9]+$ ]]; then
+  echo "Invalid source: '$SOURCE'. Expected 'master' or a numeric PR number."
   exit 1
 fi
-yarn requirements:build
+
+git fetch --quiet origin master
+WORKTREE=$(mktemp -d "${TMPDIR:-/tmp}/qk-tickets.XXXXXX")
+git worktree add --quiet --detach "$WORKTREE" origin/master
+echo "WORKTREE=$WORKTREE"
+echo "Base: origin/master ($(git rev-parse --short origin/master))"
 ```
 
-For **pr `<number>`**: fetch only that PR's migration files into the working tree, so
-the build is master plus the proposed migration. Do not check the branch out — that
-would disturb the user's working tree.
+Keep `$WORKTREE` — Step 4 removes it.
+
+For **master**, build as-is:
 
 ```bash
 EXECUTE:
 set -euo pipefail
-PR="$1"
+cd "$WORKTREE"
+./requirements/scripts/init_db.sh
+```
+
+For a **PR**, overlay only that PR's migration files onto the worktree. A failure from
+`gh` must not be mistaken for "this PR has no migrations", so capture its exit status
+separately from `grep`'s no-match status:
+
+```bash
+EXECUTE:
+set -euo pipefail
+PR="<SOURCE>"
 
 HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq '.headRefOid')
-echo "PR #$PR head: $HEAD_SHA"
 
-FILES=$(gh pr diff "$PR" --name-only | grep '^requirements/migrations/' || true)
+set +e
+DIFF=$(gh pr diff "$PR" --name-only)
+gh_rc=$?
+set -e
+if [ "$gh_rc" -ne 0 ]; then
+  echo "gh pr diff failed for #$PR (exit $gh_rc) — cannot determine its migrations."
+  exit 1
+fi
+
+FILES=$(printf '%s\n' "$DIFF" | grep '^requirements/migrations/' || true)
 if [ -z "$FILES" ]; then
   echo "PR #$PR adds no migration files — nothing to overlay. Use master instead."
   exit 1
@@ -112,14 +124,15 @@ fi
 
 git fetch --quiet origin "$HEAD_SHA"
 for f in $FILES; do
-  git show "${HEAD_SHA}:${f}" > "$f"
+  git show "${HEAD_SHA}:${f}" > "${WORKTREE}/${f}"
   echo "Overlaid $f"
 done
 
-yarn requirements:build
+cd "$WORKTREE"
+./requirements/scripts/init_db.sh
 ```
 
-Record which files were overlaid — they must be reverted in Step 6.
+The database to query is `$WORKTREE/requirements/requirements.db`.
 
 ## Step 3: List approved tickets
 
@@ -127,9 +140,12 @@ Record which files were overlaid — they must be reverted in Step 6.
 AGENT: general-purpose
 DESCRIPTION: List available approved tickets
 PROMPT:
-"Query requirements/requirements.db for approved tickets ready to implement. The
-database has already been built — do NOT rebuild it, that would discard the chosen
-source.
+"Query the requirements database for approved tickets ready to implement.
+
+The database is at <WORKTREE>/requirements/requirements.db — substitute the worktree
+path printed by Step 2. Query THAT file, not the one in the main checkout, which
+reflects a different source. It has already been built: do NOT rebuild it and do NOT
+run `yarn requirements:build`, either would discard the chosen source.
 
 **Step 1: Get approved tickets**
 
@@ -172,6 +188,37 @@ The valid link types are derives_from, refines, satisfies, depends_on and
 conflicts_with. There is no 'blocks' type: an INCOMING depends_on means this ticket
 BLOCKS the other one. Show it that way round. derives_from and refines are hierarchical
 (parent/child); conflicts_with is symmetric.
+
+**Step 2b: Get the TRANSITIVE closure, not just adjacent links**
+
+The two queries above only reach directly-linked requirements. A chain such as
+approved A -> unapproved X -> unapproved Y -> approved B would be missed, and A and B
+wrongly reported as safe to parallelise. Walk the whole graph with a recursive CTE,
+which traverses intermediate nodes whatever their status:
+
+WITH RECURSIVE reachable(root_id, id, depth) AS (
+  SELECT r.id, r.id, 0
+  FROM requirement r
+  WHERE r.status = 'approved' AND r.issue_number IS NOT NULL
+  UNION
+  SELECT rc.root_id, rl.target_id, rc.depth + 1
+  FROM reachable rc
+  JOIN requirement_link rl ON rl.source_id = rc.id
+  WHERE rl.type IN ('depends_on', 'derives_from', 'refines')
+    AND rc.depth < 20
+)
+SELECT rc.root_id, rr.ref AS root_ref, rc.id AS reached_id, r.ref AS reached_ref,
+       r.status, r.issue_number, rc.depth
+FROM reachable rc
+JOIN requirement rr ON rr.id = rc.root_id
+JOIN requirement r  ON r.id  = rc.id
+WHERE rc.root_id <> rc.id;
+
+Two approved tickets are unsafe together if either reaches the other in this closure.
+The `depth < 20` guard stops a cyclic link set from looping forever; `UNION` (not
+`UNION ALL`) already dedupes. Run the same query with source and target swapped to get
+the reverse direction, and treat `conflicts_with` as unsafe in both directions at
+depth 1 only (a conflict is not transitive).
 
 **Step 3: Work out what can be done simultaneously**
 
@@ -242,20 +289,30 @@ Return: 'Listed [N] approved tickets, [M] safe to parallelise'"
 WAIT FOR AGENT
 ```
 
-## Step 4: Restore the working tree
+## Step 4: Remove the worktree
 
-If Step 2 overlaid migration files from a PR, revert them so the user's checkout is
-left as it was.
+Everything was built inside the temporary worktree, so cleanup is a removal — there is
+nothing to restore in the user's checkout, and no `git checkout --` that could discard
+their work.
 
 ```bash
 EXECUTE:
 set -euo pipefail
-if [ -n "$(git status --porcelain requirements/migrations/)" ]; then
-  git checkout -- requirements/migrations/
-  echo "Reverted overlaid migration files"
-  yarn requirements:build >/dev/null
+git worktree remove --force "$WORKTREE"
+rmdir "$WORKTREE" 2>/dev/null || true
+
+if git worktree list --porcelain | grep -q "^worktree ${WORKTREE}$"; then
+  echo "Worktree $WORKTREE was not removed — clean it up with: git worktree remove --force $WORKTREE"
+  exit 1
 fi
-git status --short requirements/
+echo "Removed worktree $WORKTREE"
+
+# The user's own checkout must be exactly as it was found.
+if [ -n "$(git status --porcelain requirements/)" ]; then
+  echo "requirements/ in the main checkout is unexpectedly dirty:"
+  git status --short requirements/
+  exit 1
+fi
 ```
 
-Confirm the working tree is clean before finishing.
+Run this even if Step 3 failed, so a stale worktree is never left behind.

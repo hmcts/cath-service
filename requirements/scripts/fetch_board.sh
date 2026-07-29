@@ -23,6 +23,23 @@ for cmd in gh jq; do
   command -v "$cmd" >/dev/null || { echo "error: ${cmd} is required but not installed" >&2; exit 1; }
 done
 
+# Board column -> requirement.status. Covers the WHOLE board, not just the gated
+# part, so the database can mirror backwards moves as well as forwards. Defined once
+# and shared by the unmapped-column check and the emit step, so they cannot diverge.
+MAP_STATUS_DEF='
+  def map_status:
+    if   . == "Backlog"             then "draft"
+    elif . == "Prioritised Backlog" then "proposed"
+    elif . == "Refined Tickets"     then "approved"
+    elif . == "In Progress"         then "in_progress"
+    elif . == "Code Review"         then "implemented"
+    elif . == "Ready For Test"      then "implemented"
+    elif . == "In Test"             then "implemented"
+    elif . == "Ready For Sign Off"  then "implemented"
+    elif . == "Done"                then "verified"
+    else null end;
+'
+
 read_page() {
   gh api graphql -f query='
     query($id: ID!, $after: String) {
@@ -60,19 +77,21 @@ read_page() {
 }
 
 total=0
+mapped=0
 cursor=null
+
+err_file=$(mktemp "${TMPDIR:-/tmp}/fetch_board_err.XXXXXX")
+trap 'rm -f "$err_file"' EXIT
 
 while :; do
   # stderr is kept separate: folding it into the captured JSON would turn any gh
   # warning on an otherwise-successful call into an unparseable response.
-  if ! resp=$(read_page "$cursor" 2>/tmp/fetch_board_err.$$); then
+  if ! resp=$(read_page "$cursor" 2>"$err_file"); then
     echo "error: cannot read Project board — GraphQL query failed." >&2
     echo "       The token needs organisation Projects: Read on hmcts." >&2
-    cat /tmp/fetch_board_err.$$ >&2
-    rm -f /tmp/fetch_board_err.$$
+    cat "$err_file" >&2
     exit 1
   fi
-  rm -f /tmp/fetch_board_err.$$
 
   # A token without projects access gets a null node rather than an HTTP error.
   if [ "$(jq -r '.data.node // "null"' <<<"$resp")" = "null" ]; then
@@ -81,23 +100,27 @@ while :; do
     exit 1
   fi
 
-  page=$(jq '.data.node.items.nodes | length' <<<"$resp")
+  page=$(jq '[.data.node.items.nodes[] | select(.content.number != null)] | length' <<<"$resp")
   total=$((total + page))
 
-  # Board column -> requirement.status. Covers the WHOLE board, not just the
-  # gated part, so the database can mirror backwards moves as well as forwards.
-  jq -c '
-    def map_status:
-      if   . == "Backlog"             then "draft"
-      elif . == "Prioritised Backlog" then "proposed"
-      elif . == "Refined Tickets"     then "approved"
-      elif . == "In Progress"         then "in_progress"
-      elif . == "Code Review"         then "implemented"
-      elif . == "Ready For Test"      then "implemented"
-      elif . == "In Test"             then "implemented"
-      elif . == "Ready For Sign Off"  then "implemented"
-      elif . == "Done"                then "verified"
-      else null end;
+  # An item in a column we do not recognise must not be silently dropped: that is
+  # the same "quietly incomplete" failure this script exists to prevent. A renamed
+  # or added column has to be mapped deliberately.
+  unknown=$(jq -r "$MAP_STATUS_DEF"'
+    .data.node.items.nodes[]
+    | select(.content.number != null)
+    | (.fieldValueByName.name // "") as $col
+    | select(($col | map_status) == null)
+    | "\($col)\t#\(.content.number)"' <<<"$resp")
+  if [ -n "$unknown" ]; then
+    echo "error: board items sit in columns with no status mapping:" >&2
+    printf '%s\n' "$unknown" | sort -u | sed 's/^/       /' >&2
+    echo "       Add the column to map_status in $0 (and to the status CHECK in" >&2
+    echo "       requirements/schema.sql if it needs a status that does not exist yet)." >&2
+    exit 1
+  fi
+
+  jq -c "$MAP_STATUS_DEF"'
     .data.node.items.nodes[]
     | select(.content.number != null)
     | (.fieldValueByName.name // "") as $col
@@ -115,8 +138,8 @@ while :; do
           | select(.state == "MERGED")
           | {number, mergeCommitOid: .mergeCommit.oid, paths: [.files.nodes[].path]}
         ]
-      }
-    | select(.status != null)' <<<"$resp"
+      }' <<<"$resp"
+  mapped=$((mapped + page))
 
   [ "$(jq -r '.data.node.items.pageInfo.hasNextPage' <<<"$resp")" = "true" ] || break
   cursor=$(jq -r '.data.node.items.pageInfo.endCursor' <<<"$resp")
@@ -127,4 +150,4 @@ if [ "$total" -eq 0 ]; then
   exit 1
 fi
 
-echo "Read ${total} board items" >&2
+echo "Read ${total} board items, all ${mapped} mapped to a status" >&2
