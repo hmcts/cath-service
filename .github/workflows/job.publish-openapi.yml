@@ -1,0 +1,70 @@
+# Publish OpenAPI Spec Job
+#
+# Converts docs/api/openapi.yaml to JSON and pushes it to hmcts/cnp-api-docs as
+# docs/specs/cath-service.json, where it is served at
+# https://hmcts.github.io/cnp-api-docs/specs/cath-service.json
+#
+# The push targets cnp-api-docs master directly with no PR — this is the established
+# HMCTS mechanism, shared by every service that publishes a spec. It is a no-op when
+# the generated JSON is unchanged.
+#
+# SWAGGER_PUBLISHER_API_TOKEN is an org-level secret, so callers need `secrets: inherit`.
+#
+# Usage:
+#   publish-openapi:
+#     needs: [build-stage]
+#     uses: ./.github/workflows/job.publish-openapi.yml
+#     secrets: inherit
+
+name: Publish OpenAPI Spec
+
+on:
+  workflow_call:
+
+jobs:
+  publish-openapi:
+    name: Publish OpenAPI Spec
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.17.0'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate OpenAPI JSON
+        run: yarn openapi:json /tmp/swagger-specs.json
+
+      - name: Publish to cnp-api-docs
+        run: |
+          mkdir swagger-staging
+          cd swagger-staging
+          git init
+          git config user.email "github-actions@users.noreply.github.com"
+          git config user.name "CaTH GitHub action"
+          git remote add upstream https://${{ secrets.SWAGGER_PUBLISHER_API_TOKEN }}@github.com/hmcts/cnp-api-docs.git
+          git pull upstream master
+          repo=`echo "$GITHUB_REPOSITORY" | cut -f2- -d/`
+          cp /tmp/swagger-specs.json "docs/specs/$repo.json"
+          git add "docs/specs/$repo.json"
+          # Only commit and push if the spec actually changed.
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update spec for $repo#${GITHUB_SHA:7}"; git push --set-upstream upstream master)

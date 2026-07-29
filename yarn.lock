@@ -5765,6 +5765,7 @@ __metadata:
     turbo: "npm:2.9.18"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
+    yaml: "npm:2.9.0"
   languageName: unknown
   linkType: soft
 
@@ -10941,7 +10942,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.0.0":
+"yaml@npm:2.9.0, yaml@npm:^2.0.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:
