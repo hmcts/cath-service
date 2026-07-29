@@ -23,7 +23,7 @@
 # overlapping hunks", not a guarantee the rebase will be painless.
 #
 # Exit status: 0 if every branch checked merges clean, 1 if any conflicts, 2 on
-# usage or setup error.
+# usage or setup error or if any row could not be evaluated at all.
 
 set -uo pipefail
 
@@ -91,6 +91,7 @@ fi
 json_string() { jq -R . <<<"$1"; }
 
 any_conflict=0
+any_unknown=0
 
 while IFS=$'\t' read -r number label head_sha; do
   [ -n "${number:-}" ] || continue
@@ -102,6 +103,7 @@ while IFS=$'\t' read -r number label head_sha; do
   fi
 
   if ! git cat-file -e "${head_sha}^{commit}" 2>/dev/null; then
+    any_unknown=1
     jq -nc --argjson n "$number" --argjson l "$(json_string "$label")" \
       '{pr: $n, head: $l, status: "unknown", reason: "head commit unavailable", files: []}'
     continue
@@ -114,6 +116,7 @@ while IFS=$'\t' read -r number label head_sha; do
   rc=$?
 
   if [ "$rc" -gt 1 ]; then
+    any_unknown=1
     jq -nc --argjson n "$number" --argjson l "$(json_string "$label")" \
       --argjson r "$(json_string "$(head -c 300 <<<"$output")")" \
       '{pr: $n, head: $l, status: "unknown", reason: $r, files: []}'
@@ -141,4 +144,9 @@ while IFS=$'\t' read -r number label head_sha; do
     '{pr: $n, head: $l, status: "conflict", behind: $b, fileCount: $total, files: $files}'
 done
 
-exit "$any_conflict"
+# A row this could not evaluate is a broken check, not a clean one — exiting 0 there
+# would tell the workflow "no conflicts" about a PR nobody looked at. Conflicts take
+# precedence so a real finding is never masked by an unrelated unknown row.
+[ "$any_conflict" -eq 1 ] && exit 1
+[ "$any_unknown" -eq 0 ] || exit 2
+exit 0

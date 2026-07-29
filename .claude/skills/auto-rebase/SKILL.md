@@ -28,6 +28,12 @@ gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'   # if base n
 git fetch origin
 ```
 
+If `git branch --show-current` prints nothing, `HEAD` is detached — it exits 0 either way, so
+check for the empty string rather than the exit status. Stop there: every later step needs a
+branch name (the backup tag, the stacked-branch scan, the push, and recovery), and a rebase on a
+detached `HEAD` leaves the result reachable only through the reflog. Say so and ask which branch
+to check out.
+
 `--update-refs` (step 5) needs Git ≥ 2.38 (`git --version`). On older Git, do a plain rebase and
 re-point each stacked branch manually afterwards.
 
@@ -61,9 +67,9 @@ for no reason.
 Then find out what will conflict, before rewriting anything:
 
 ```bash
-.claude/skills/auto-rebase/scripts/check-conflicts.sh              # current branch vs origin/master
-.claude/skills/auto-rebase/scripts/check-conflicts.sh {branch}     # a branch other than HEAD
 BASE_REF=origin/{base_branch} .claude/skills/auto-rebase/scripts/check-conflicts.sh
+BASE_REF=origin/{base_branch} .claude/skills/auto-rebase/scripts/check-conflicts.sh {branch}
+.claude/skills/auto-rebase/scripts/check-conflicts.sh              # BASE_REF defaults to origin/master
 ```
 
 It reports the files a merge would conflict in and exits 0 clean / 1 conflicts / 2 if it could
@@ -88,7 +94,20 @@ branches recoverable only via reflog:
 git tag -a {branch}-rebase-backup-$(date +%Y%m%d-%H%M%S) -m "pre-rebase backup" HEAD
 refs_file=$(git rev-parse --git-path pre-rebase-refs.txt)
 git for-each-ref --format='%(refname:short) %(objectname)' refs/heads > "$refs_file"
+git for-each-ref --format='remote %(refname:short) %(objectname)' refs/remotes/origin >> "$refs_file"
 ```
+
+The `remote` lines record what each branch pointed at on the remote before the rebase. Step 9
+leases its force-pushes against those SHAs — read `{remote_oid}` from this file rather than
+re-reading `origin/<branch>` at push time, which may have moved:
+
+```bash
+awk '$1=="remote" && $2=="origin/{branch}" {print $3}' "$refs_file"   # -> {remote_oid}
+```
+
+They are tagged with a leading `remote` field rather than filtered on the `origin/` prefix later,
+because `for-each-ref refs/remotes/origin` also emits a bare `origin` line for the remote's `HEAD`
+which a `^origin/` pattern does not match.
 
 Write it inside the repo's git dir, not `/tmp/pre-rebase-refs.txt`. A fixed world-writable path
 is overwritten by any concurrent rebase, and if something has pre-created it as a symlink the
@@ -246,9 +265,14 @@ Use the `{stash_sha}` recorded in step 2 — never a bare `git stash pop`, which
 at `stash@{0}` and may not be yours:
 
 ```bash
-git stash list                                    # confirm the entry is still there
-git stash apply {stash_sha}                       # apply the exact entry, keeping it in the list
+git stash list                                     # confirm the entry is still there
+git stash apply --index {stash_sha}                # apply the exact entry, keeping it in the list
 ```
+
+`--index` restores the staged/unstaged split. Without it everything comes back unstaged, so work
+the user had deliberately staged is silently merged in with work they had not. If git answers
+`conflicts in index. Try without --index`, retry as plain `git stash apply {stash_sha}` and tell
+the user their staging was flattened — the content is all there, but they will need to re-stage.
 
 Then, only once it has applied cleanly, drop that same entry. `git stash drop` takes an index
 rather than a SHA, so resolve the SHA to its current index instead of assuming it is still 0:
@@ -302,10 +326,22 @@ node_modules/.bin/tsc --noEmit --strict --target es2022 \
 stacked branch that exists on origin must be force-pushed individually. Print every command and
 wait for confirmation.
 
+Lease each push against the pre-rebase remote SHA recorded in step 3 (`{remote_oid}`):
+
 ```bash
-git push --force-with-lease origin "HEAD:{branch}"
-git push --force-with-lease origin "{stacked_branch}"   # repeat per moved stacked branch
+git push --force-with-lease="refs/heads/{branch}:{remote_oid}" origin "HEAD:{branch}"
+git push --force-with-lease="refs/heads/{stacked_branch}:{remote_oid}" \
+  origin "{stacked_branch}"                         # repeat per moved stacked branch
 ```
+
+Do not use the bare `--force-with-lease`. It leases against your local
+`refs/remotes/origin/{branch}`, which is a cache of what the remote looked like at your last
+fetch — so it protects you only while that cache is stale. Any fetch in between (your IDE, a
+`git pull` in another worktree, a tooling background job) silently updates the cache to include
+the very commit you are about to overwrite, and the lease then passes: verified by fetching
+between the rebase and the push, which turned a correctly-refused push into a successful forced
+one that discarded a colleague's commit. The explicit `<ref>:<oid>` form pins the check to the
+SHA you actually reasoned about, so a concurrent push is rejected regardless of fetch timing.
 
 Quote the refspecs. Git rejects branch names containing spaces, but `;`, `|`, `&`, backticks and
 `$(...)` are all legal in a branch name — unquoted, the shell acts on them before git sees them.
@@ -335,9 +371,13 @@ the ref file written in step 3. Show the diff first, then move only the branches
 
 ```bash
 refs_file=$(git rev-parse --git-path pre-rebase-refs.txt)
-git for-each-ref --format='%(refname:short) %(objectname)' refs/heads | diff "$refs_file" -
+git for-each-ref --format='%(refname:short) %(objectname)' refs/heads \
+  | diff <(grep -v '^remote ' "$refs_file") -
 git branch -f -- {stacked_branch} {old_sha}   # repeat per branch, using the recorded SHA
 ```
+
+Drop the `remote` lines — they are the pre-rebase remote positions step 9 leases against, and
+diffing them against local heads reports every one as a difference.
 
 If the tag or the ref file is gone, the old commits are still in the reflog for the gc window:
 

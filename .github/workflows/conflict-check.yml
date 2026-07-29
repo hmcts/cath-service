@@ -101,6 +101,12 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          # Defaults to every permission the App is installed with. This job needs
+          # exactly two: contents to fetch and force-push the branch, pull-requests
+          # to post the report. Claude runs unattended with this token in reach, so
+          # keep it to the minimum.
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -108,6 +114,10 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           # Full history: merge-tree and rebase both need the merge base.
           fetch-depth: 0
+          # Without this the token is written into .git/config as an http
+          # extraheader, where Claude — running with Bash(git:*) — could read it.
+          # The pushes below set it on the remote URL only when they need it.
+          persist-credentials: false
 
       - name: Configure Git
         run: |
@@ -269,13 +279,19 @@ jobs:
         if: steps.decide.outputs.rebase == 'true'
         env:
           HEAD_REF: ${{ matrix.pr.head }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
         run: |
           git checkout -B "$HEAD_REF" refs/remotes/pr-head
           echo "head=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
           # Remote backup, not just a local tag: this runner is discarded, so a
           # local-only backup would be worthless if the rebase went wrong.
-          git push --quiet --force origin "HEAD:refs/heads/backup/rebase/${HEAD_REF}"
+          # Pushed to an authenticated URL rather than via `remote set-url`, so the
+          # token is never written to .git/config for Claude to find.
+          git push --quiet --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" \
+            "HEAD:refs/heads/backup/rebase/${HEAD_REF}"
           echo "Backed up $(git rev-parse --short HEAD) to backup/rebase/${HEAD_REF}"
 
       - name: Enable Corepack
@@ -363,10 +379,15 @@ jobs:
             Finally write a report to /tmp/rebase-report.md: what conflicted, how you
             resolved each one, whether checks passed, and whether you aborted and why.
             Write that file whether you succeed or abort.
+          # The allowlist below enumerates git subcommands rather than using
+          # Bash(git:*), so "never push" is enforced by the tool gate and not only by
+          # the instruction in the system prompt — `git push`, `git remote` and
+          # general `git config` are simply not grantable. The workflow owns the two
+          # pushes it needs (backup, and the final force-with-lease).
           claude_args: |
             --dangerously-skip-permissions
             --append-system-prompt "You are rebasing a PR branch in a GitHub Action with no human present. Read @CLAUDE.md and @.claude/skills/auto-rebase/SKILL.md. Prefix rebase commands with GIT_EDITOR=true so they cannot hang. Never push and never use --force. Aborting is always preferable to guessing at a resolution. Always write /tmp/rebase-report.md."
-            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git:*),Bash(node_modules/.bin/tsc:*)"
+            --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(node_modules/.bin/tsc:*),Bash(git status:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git add:*),Bash(git rm:*),Bash(git checkout:*),Bash(git restore:*),Bash(git rebase:*),Bash(git cherry:*),Bash(git rev-parse:*),Bash(git rev-list:*),Bash(git merge-base:*),Bash(git ls-files:*),Bash(git cat-file:*),Bash(git stash:*),Bash(git config user.name:*),Bash(git config user.email:*)"
 
       - name: Determine outcome
         id: outcome
@@ -391,14 +412,27 @@ jobs:
           echo "ahead=$(git rev-list --count origin/master..HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Push rebased branch
+        id: push
         if: steps.outcome.outputs.state == 'rebased'
         env:
           HEAD_REF: ${{ matrix.pr.head }}
+          PRE_HEAD: ${{ steps.pre.outputs.head }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
         run: |
           # --force-with-lease pinned to the SHA read at the start of this job: if the
           # author pushed while Claude was working, this refuses rather than clobbering.
-          git push --force-with-lease="refs/heads/${HEAD_REF}:${{ steps.pre.outputs.head }}" \
-            origin "HEAD:refs/heads/${HEAD_REF}"
+          # The explicit <ref>:<expected-oid> form matters — the bare --force-with-lease
+          # leases against the local remote-tracking ref, so any fetch between the
+          # preflight read and this push silently downgrades it to a plain --force.
+          git push --force-with-lease="refs/heads/${HEAD_REF}:${PRE_HEAD}" \
+            "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" \
+            "HEAD:refs/heads/${HEAD_REF}"
+
+          # Read by the report step: without this the report derives its heading from
+          # `state`, which is set before this step runs, and would claim success on a
+          # rejected push.
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Report on PR
         if: always() && steps.decide.outputs.rebase == 'true'
@@ -409,7 +443,7 @@ jobs:
           BRANCH: ${{ matrix.pr.head }}
           AHEAD_BEFORE: ${{ steps.check.outputs.ahead }}
           AHEAD_AFTER: ${{ steps.outcome.outputs.ahead }}
-          PUSHED: ${{ steps.outcome.outputs.state == 'rebased' && job.status != 'failure' }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
@@ -428,19 +462,30 @@ jobs:
             const after = process.env.AHEAD_AFTER;
             const drifted = state === 'rebased' && before && after && Number(after) > Number(before);
 
-            const heading = {
-              rebased: '## ✅ Rebased onto `master`',
-              aborted: '## ⏸️ Rebase aborted — needs a human',
-              stuck: '## ⚠️ Rebase left mid-flight and was aborted',
-            }[state] || '## ⚠️ Rebase failed';
+            // The push is the only thing that changes the PR, and it runs after
+            // `state` is decided — so report on the push, not on the rebase. A lease
+            // rejection (the author pushed while Claude worked) leaves the branch
+            // exactly as it was, which must not read as success.
+            const pushed = process.env.PUSHED === 'true';
+            const succeeded = state === 'rebased' && pushed;
+
+            const heading = succeeded
+              ? '## ✅ Rebased onto `master`'
+              : {
+                  rebased: '## ⚠️ Rebased locally, but the push was rejected',
+                  aborted: '## ⏸️ Rebase aborted — needs a human',
+                  stuck: '## ⚠️ Rebase left mid-flight and was aborted',
+                }[state] || '## ⚠️ Rebase failed';
 
             const body = [
               '<!-- conflict-check-rebase -->',
               heading,
               '',
-              state === 'rebased'
+              succeeded
                 ? `Replayed ${before} commit(s). \`yarn lint\` and \`yarn test\` were run as part of the rebase — check the report below.`
-                : 'Your branch is **unchanged**. The conflicts need a decision Claude would not make unattended.',
+                : state === 'rebased'
+                  ? 'The rebase succeeded but the branch was **not** updated — the push failed its `--force-with-lease` check, which means the branch moved while Claude was working. Nothing was overwritten; rebase locally instead.'
+                  : 'Your branch is **unchanged**. The conflicts need a decision Claude would not make unattended.',
               '',
               drifted ? `> ⚠️ Commit count went ${before} → ${after}. Worth a look before merging.\n` : null,
               '<details><summary>Rebase report</summary>',
@@ -449,7 +494,7 @@ jobs:
               '',
               '</details>',
               '',
-              state === 'rebased'
+              succeeded
                 ? `Pre-rebase head is saved at \`backup/rebase/${process.env.BRANCH}\`. If you had local work, \`git fetch\` and reset — do not merge.`
                 : `Run \`/auto-rebase\` locally to resolve it yourself. Backup: \`backup/rebase/${process.env.BRANCH}\`.`,
               '',
