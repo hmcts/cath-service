@@ -44,9 +44,8 @@ PROMPT FOR AGENT:
 
 **STEP 2: Execute Implementation Tasks**
 Work through each task in the Implementation Tasks section of tasks.md:
-1. Implement the task following the technical plan. If plan.md says a template is migrated from
-   pip-frontend, Read `.claude/skills/migrate-pip-pages/SKILL.md` and follow it for that template,
-   using $ARGUMENT as the ticket number.
+1. Implement the task per the plan — for a TEMPLATE SOURCE of "migrate from pip-frontend", follow
+   `.claude/skills/migrate-pip-pages/SKILL.md` for that template (ticket $ARGUMENT).
 2. Write unit tests for new code (co-located .test.ts files), including template tests for new `.njk` files
 3. After completing each task, use the Edit tool to update docs/tickets/$ARGUMENT/tasks.md
    - Change '- [ ]' to '- [x]' for the completed task
