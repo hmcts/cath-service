@@ -62,9 +62,6 @@ jobs:
       - name: Generate OpenAPI JSON
         run: yarn openapi:json /tmp/openapi.json
 
-      # The token is passed as an input rather than job-level env so it is scoped to
-      # this step alone — `yarn install` above runs dependency lifecycle scripts, which
-      # have no business seeing a credential that can push to a shared repo.
       - name: Publish to cnp-api-docs
         uses: hmcts/cnp-githubactions-library/publish-openapi-spec@main
         with:
