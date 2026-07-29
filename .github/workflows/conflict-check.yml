@@ -392,6 +392,8 @@ jobs:
       - name: Determine outcome
         id: outcome
         if: always() && steps.decide.outputs.rebase == 'true'
+        env:
+          PRE_HEAD: ${{ steps.pre.outputs.head }}
         run: |
           # Trust git, not the model's self-report. Resolve the rebase-state dirs via
           # --git-path rather than hardcoding .git/: in a worktree they live under
@@ -401,7 +403,7 @@ jobs:
              || [ -d "$(git rev-parse --git-path rebase-apply)" ]; then
             echo "state=stuck" >> "$GITHUB_OUTPUT"
             git rebase --abort || true
-          elif [ "$(git rev-parse HEAD)" = "${{ steps.pre.outputs.head }}" ]; then
+          elif [ "$(git rev-parse HEAD)" = "$PRE_HEAD" ]; then
             echo "state=aborted" >> "$GITHUB_OUTPUT"
           elif ! git merge-base --is-ancestor origin/master HEAD; then
             echo "state=aborted" >> "$GITHUB_OUTPUT"

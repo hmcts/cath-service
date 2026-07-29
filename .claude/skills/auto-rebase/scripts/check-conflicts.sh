@@ -87,14 +87,24 @@ if [ "$mode" = local ]; then
   exit 1
 fi
 
-# jq -R . is the only safe way to quote arbitrary branch names and paths for JSON.
-json_string() { jq -R . <<<"$1"; }
-
 any_conflict=0
 any_unknown=0
 
 while IFS=$'\t' read -r number label head_sha; do
   [ -n "${number:-}" ] || continue
+
+  # `pr` is emitted with --argjson so it stays a JSON number. jq aborts the whole
+  # invocation on non-numeric input, printing nothing, so a malformed row would drop
+  # a PR from the output entirely while the run still looked successful.
+  case "$number" in
+    ''|*[!0-9]*)
+      any_unknown=1
+      jq -nc --arg n "$number" --arg l "${label:-}" \
+        '{pr: null, head: $l, status: "unknown",
+          reason: ("malformed pr number: " + $n), files: []}'
+      continue
+      ;;
+  esac
 
   # Fork heads are not on origin, but GitHub exposes every PR head under
   # refs/pull/<n>/head on the base repo, so one fetch path covers both cases.
@@ -104,7 +114,7 @@ while IFS=$'\t' read -r number label head_sha; do
 
   if ! git cat-file -e "${head_sha}^{commit}" 2>/dev/null; then
     any_unknown=1
-    jq -nc --argjson n "$number" --argjson l "$(json_string "$label")" \
+    jq -nc --argjson n "$number" --arg l "$label" \
       '{pr: $n, head: $l, status: "unknown", reason: "head commit unavailable", files: []}'
     continue
   fi
@@ -117,14 +127,14 @@ while IFS=$'\t' read -r number label head_sha; do
 
   if [ "$rc" -gt 1 ]; then
     any_unknown=1
-    jq -nc --argjson n "$number" --argjson l "$(json_string "$label")" \
-      --argjson r "$(json_string "$(head -c 300 <<<"$output")")" \
+    jq -nc --argjson n "$number" --arg l "$label" \
+      --arg r "$(head -c 300 <<<"$output")" \
       '{pr: $n, head: $l, status: "unknown", reason: $r, files: []}'
     continue
   fi
 
   if [ "$rc" -eq 0 ]; then
-    jq -nc --argjson n "$number" --argjson l "$(json_string "$label")" --argjson b "$behind" \
+    jq -nc --argjson n "$number" --arg l "$label" --argjson b "$behind" \
       '{pr: $n, head: $l, status: "clean", behind: $b, files: []}'
     continue
   fi
@@ -137,7 +147,7 @@ while IFS=$'\t' read -r number label head_sha; do
 
   jq -nc \
     --argjson n "$number" \
-    --argjson l "$(json_string "$label")" \
+    --arg l "$label" \
     --argjson b "$behind" \
     --argjson total "$total" \
     --argjson files "$(head -n "$MAX_FILES" <<<"$files" | jq -R . | jq -sc .)" \
