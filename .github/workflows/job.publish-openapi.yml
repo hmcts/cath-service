@@ -33,8 +33,6 @@ jobs:
   publish-openapi:
     name: Publish OpenAPI Spec
     runs-on: ubuntu-latest
-    env:
-      SWAGGER_PUBLISHER_API_TOKEN: ${{ secrets.SWAGGER_PUBLISHER_API_TOKEN }}
 
     steps:
       - name: Checkout
@@ -64,8 +62,12 @@ jobs:
       - name: Generate OpenAPI JSON
         run: yarn openapi:json /tmp/openapi.json
 
+      # The token is passed as an input rather than job-level env so it is scoped to
+      # this step alone — `yarn install` above runs dependency lifecycle scripts, which
+      # have no business seeing a credential that can push to a shared repo.
       - name: Publish to cnp-api-docs
         uses: hmcts/cnp-githubactions-library/publish-openapi-spec@main
         with:
           spec-path: /tmp/openapi.json
+          api-token: ${{ secrets.SWAGGER_PUBLISHER_API_TOKEN }}
           dry-run: ${{ inputs.dry-run }}
