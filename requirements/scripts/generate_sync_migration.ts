@@ -188,14 +188,14 @@ for (const item of items) {
       "INSERT INTO requirement_change",
       "  (requirement_id, version, field, old_value, new_value, change_type, change_summary, changed_by, changed_at)",
       "VALUES",
-      diffs
+      `${diffs
         .map(
           (d) =>
             `  (${row.id}, ${version}, ${sqlString(d.field)}, ${sqlString(d.from)}, ${sqlString(d.to)}, ` +
             `${d.field === "status" ? "'status_changed'" : "'modified'"}, 'reconciled with board', ` +
             `${sqlString(CHANGED_BY)}, ${sqlString(today)})`
         )
-        .join(",\n") + ";",
+        .join(",\n")};`,
       ""
     ].join("\n")
   );
