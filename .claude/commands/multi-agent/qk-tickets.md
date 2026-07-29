@@ -49,7 +49,9 @@ If `$ARGUMENTS` is empty, list the open sync PRs and ask the user which source t
 EXECUTE:
 gh pr list --state open --search "head:chore/requirements-sync-" \
   --json number,title,headRefName,createdAt \
-  --jq '.[] | "#\(.number)  \(.title)  (\(.headRefName), opened \(.createdAt[:10]))"'
+  --jq '.[]
+        | select(.headRefName | test("^chore/requirements-sync-[0-9]{4}-[0-9]{2}-[0-9]{2}$"))
+        | "#\(.number)  \(.title)  (\(.headRefName), opened \(.createdAt[:10]))"'
 ```
 
 If there are no open sync PRs, say so and use `master`. Otherwise ask the user to pick
