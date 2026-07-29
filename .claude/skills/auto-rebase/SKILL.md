@@ -38,7 +38,13 @@ continue). If the tree is dirty, confirm before stashing:
 
 ```bash
 git stash push -u -m "pre-rebase stash"
+git rev-parse stash@{0}          # record this SHA as {stash_sha} for step 7
 ```
+
+Record the SHA, not `stash@{0}`. Indices shift as entries are added, so if anything else stashes
+in between — a `pop` that conflicts, another tool, a second session — `stash@{0}` is no longer
+yours and a bare `git stash pop` in step 7 restores someone else's work and drops it. The SHA
+keeps pointing at the same entry regardless.
 
 If you stash, you own restoring it — step 7 is not optional, and the rebase is not "done" while
 the user's uncommitted work is still parked.
@@ -80,8 +86,14 @@ branches recoverable only via reflog:
 
 ```bash
 git tag -a {branch}-rebase-backup-$(date +%Y%m%d-%H%M%S) -m "pre-rebase backup" HEAD
-git for-each-ref --format='%(refname:short) %(objectname)' refs/heads > /tmp/pre-rebase-refs.txt
+refs_file=$(git rev-parse --git-path pre-rebase-refs.txt)
+git for-each-ref --format='%(refname:short) %(objectname)' refs/heads > "$refs_file"
 ```
+
+Write it inside the repo's git dir, not `/tmp/pre-rebase-refs.txt`. A fixed world-writable path
+is overwritten by any concurrent rebase, and if something has pre-created it as a symlink the
+redirect follows that link and truncates whatever it points at. `--git-path` also resolves
+per-worktree (`.git/worktrees/<name>/`), so parallel worktrees each get their own file.
 
 Record the tag as `{backup_ref}` and keep the ref file path — both are needed for Recovery. If
 the branch contains merge commits, ask whether to preserve
@@ -108,14 +120,15 @@ git for-each-ref --format='%(refname:short)' refs/heads | while read -r br; do
   if git merge-base --is-ancestor "$br" HEAD \
      && ! git merge-base --is-ancestor "$br" origin/{base_branch}; then
     note=""
-    grep -qx "$br" <<<"$worktreed" && note=" [checked out in another worktree — will NOT move]"
+    grep -qxF "$br" <<<"$worktreed" && note=" [checked out in another worktree — will NOT move]"
     echo "stacked: $br ($(git rev-parse --short "$br"))$note"
   fi
 done
 ```
 
 Git refuses to move a branch checked out elsewhere, so `--update-refs` skips those. Flag them
-for manual handling in steps 8 and 9.
+for manual handling in steps 8 and 9. `grep -qxF` matches the name literally — without `-F` a
+branch called `a.b` matches a worktree on `axb` and gets wrongly reported as immovable.
 
 ## 5. Run the rebase (needs confirmation)
 
@@ -145,11 +158,30 @@ question ("keep upstream behaviour X or feature behaviour Y?", "is this file gen
 to regenerate?").
 
 Before trusting a generated file's own "regenerate with: X" header, check that `X` actually
-exists (`grep '"X"' package.json`) — stale headers naming long-gone scripts are common. When
-there is no working regeneration command, hand-resolve to what regeneration *would* produce:
-take upstream's versions (never revert an upstream bump), re-apply the entries the feature branch
-added, and preserve the file's existing ordering and formatting so the next real regeneration
-produces no spurious diff.
+exists (`grep '"X"' package.json`) — stale headers naming long-gone scripts are common.
+
+`yarn.lock` has a dedicated resolver — do not hand-merge it. Resolve `package.json` first (the
+union of both sides' dependency entries), then let Yarn rebuild the lock from it:
+
+```bash
+corepack yarn install --mode=update-lockfile   # prints "YN0048: Automatically fixed merge conflicts"
+```
+
+It reads both sides of the conflict from the index, re-resolves, and writes correct `checksum:`
+lines. `--mode=update-lockfile` skips the link step, so nothing is installed into
+`node_modules`. It needs the registry: **if it cannot reach the network it still strips the
+conflict markers and then fails**, leaving a lockfile that looks resolved but has entries with no
+checksum. Check the exit status, not just the absence of markers. To undo a failed run and get the
+conflict back:
+
+```bash
+git checkout --merge -- yarn.lock
+```
+
+For a generated file with no working regeneration command at all, stop and ask rather than
+hand-reconstructing it. Files carrying integrity metadata — checksums, hashes, content-addressed
+identifiers — cannot be hand-merged into something equivalent to real generator output, and a
+plausible-looking hand merge is worse than an unresolved conflict because it passes review.
 
 Some conflicts are mechanical to resolve but mean the branch is obsolete. Before resolving, ask
 what capability the branch adds and whether the base now provides it another way — a branch adding
@@ -168,9 +200,13 @@ Stage only the files you resolved, then continue — `--continue` opens an edito
 message, so suppress it:
 
 ```bash
-git add <file...>
+git add -- <file...>
 GIT_EDITOR=true git rebase --continue
 ```
+
+Keep the `--`. Conflicted paths come from `git diff` output, not from you, and a repo can contain
+a file called `-p` or `HEAD`; without `--`, git reads those as an option or a revision instead of
+a path. Quote each path too — a filename with a space is one argument, not two.
 
 If resolving leaves nothing to commit — the replayed commit's changes are already upstream —
 the merge backend (Git's default) **drops that commit for you** and carries on. Nothing to do.
@@ -182,16 +218,21 @@ to apply a commit at all ("Your local changes … would be overwritten by merge"
 still reports success. Before ever skipping, confirm the pending commit is genuinely empty:
 
 ```bash
-git log -1 --format='%h %s' REBASE_HEAD                       # what is pending
-git diff --name-only --diff-filter=U                          # empty => not a conflict stop
-paths=$(git diff-tree --no-commit-id --name-only -r REBASE_HEAD)
-git diff --quiet REBASE_HEAD HEAD -- $paths                    # exit 0 => already upstream
+git log -1 --format='%h %s' REBASE_HEAD              # what is pending
+git diff --name-only --diff-filter=U                 # empty => not a conflict stop
+git cherry HEAD REBASE_HEAD                          # '-' prefix => already upstream
 ```
 
-Only if that last command exits 0 is `GIT_EDITOR=true git rebase --skip` safe. If it exits
-non-zero the rebase stopped for another reason — re-read the rebase output, fix that cause, and
-run `GIT_EDITOR=true git rebase --continue`. If the todo command could not be executed at all,
-the commit was rescheduled and continuing retries it; do not skip it.
+Only if `git cherry` prefixes the commit with `-` is `GIT_EDITOR=true git rebase --skip` safe. A
+`+` means the change is not upstream and skipping would delete it. `git cherry` compares patch-ids
+rather than paths, so it is unaffected by how the commit's filenames are spelled — do not
+reconstruct this check by collecting paths into a shell variable and passing them as a pathspec,
+because a filename containing a space splits into two pathspecs that match nothing, and `git diff
+--quiet` then exits 0 and wrongly reports the commit as empty.
+
+If it exits non-zero for another reason, or the todo command could not be executed at all, the
+commit was rescheduled — re-read the rebase output, fix that cause, and run
+`GIT_EDITOR=true git rebase --continue`. Do not skip it.
 
 Repeat until the rebase finishes. `git rebase --abort` backs out safely and is always preferred
 over `git reset --hard`. If resolution gets too risky, stop and propose aborting.
@@ -201,15 +242,26 @@ over `git reset --hard`. If resolution gets too risky, stop and propose aborting
 If step 2 stashed anything, restore it now — before pushing, so the checks in step 8 run against
 the tree the user actually had:
 
+Use the `{stash_sha}` recorded in step 2 — never a bare `git stash pop`, which takes whatever is
+at `stash@{0}` and may not be yours:
+
 ```bash
-git stash list                 # confirm "pre-rebase stash" is still there
-git stash pop
+git stash list                                    # confirm the entry is still there
+git stash apply {stash_sha}                       # apply the exact entry, keeping it in the list
 ```
 
-`pop` replays onto rewritten commits and can conflict itself. If it does, resolve as in step 6
-and `git add` the results — but do **not** `git stash drop`: a conflicted `pop` keeps the entry,
-which is the only copy of that work. If you cannot resolve it, say so and leave the stash in
-place rather than discarding it.
+Then, only once it has applied cleanly, drop that same entry. `git stash drop` takes an index
+rather than a SHA, so resolve the SHA to its current index instead of assuming it is still 0:
+
+```bash
+git stash list --format='%gd %H' | awk -v s={stash_sha} '$2==s{print $1}'   # -> stash@{N}
+git stash drop stash@{N}
+```
+
+`apply` can conflict, just as `pop` would. If it does, resolve as in step 6 and `git add` the
+results, then leave the entry alone — do **not** drop it, because it is the only copy of that
+work. `apply` (unlike `pop`) never removes the entry, so a failure here cannot lose it. If you
+cannot resolve the conflict, say so and leave the stash in place rather than discarding it.
 
 ## 8. Verify
 
@@ -251,9 +303,12 @@ stacked branch that exists on origin must be force-pushed individually. Print ev
 wait for confirmation.
 
 ```bash
-git push --force-with-lease origin HEAD:{branch}
-git push --force-with-lease origin {stacked_branch}   # repeat per moved stacked branch
+git push --force-with-lease origin "HEAD:{branch}"
+git push --force-with-lease origin "{stacked_branch}"   # repeat per moved stacked branch
 ```
+
+Quote the refspecs. Git rejects branch names containing spaces, but `;`, `|`, `&`, backticks and
+`$(...)` are all legal in a branch name — unquoted, the shell acts on them before git sees them.
 
 Branches skipped because they are checked out in another worktree were never moved — verify
 before pushing them.
@@ -275,12 +330,13 @@ git rebase --abort
 git reset --hard {backup_ref}
 ```
 
-If `--update-refs` moved stacked branches, each one needs restoring to its recorded position
-from `/tmp/pre-rebase-refs.txt`. Show the diff first, then move only the branches that changed:
+If `--update-refs` moved stacked branches, each one needs restoring to its recorded position from
+the ref file written in step 3. Show the diff first, then move only the branches that changed:
 
 ```bash
-git for-each-ref --format='%(refname:short) %(objectname)' refs/heads | diff /tmp/pre-rebase-refs.txt -
-git branch -f {stacked_branch} {old_sha}   # repeat per branch, using the recorded SHA
+refs_file=$(git rev-parse --git-path pre-rebase-refs.txt)
+git for-each-ref --format='%(refname:short) %(objectname)' refs/heads | diff "$refs_file" -
+git branch -f -- {stacked_branch} {old_sha}   # repeat per branch, using the recorded SHA
 ```
 
 If the tag or the ref file is gone, the old commits are still in the reflog for the gc window:
