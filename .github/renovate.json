@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "automerge": true,
+  "automerge": false,
   "node": {
     "enabled": true
   },
@@ -40,12 +40,6 @@
       "matchManagers": ["regex", "nvm"],
       "matchDatasources": ["node-version", "docker"],
       "enabled": true
-    },
-    {
-      "description": "Auto-merge Node.js minor and patch updates",
-      "matchPackageNames": ["node"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
     },
     {
       "description": "Require approval for Node.js major updates",
