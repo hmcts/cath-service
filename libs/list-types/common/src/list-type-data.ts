@@ -412,6 +412,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [24]
   },
   {
+    name: "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr Gwrandawiadau Wythnosol Rhenti'r Farchnad",
+    provenance: "CFT_IDAM",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Market Rents Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
     name: "SEND_DAILY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",

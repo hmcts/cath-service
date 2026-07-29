@@ -415,8 +415,8 @@ export const locationData: {
     },
     {
       subJurisdictionId: 24,
-      name: "Residential Property Tribunal",
-      welshName: "Tribiwnlys Eiddo Preswyl",
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
       jurisdictionId: 4
     },
     {
