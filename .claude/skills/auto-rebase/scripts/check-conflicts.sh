@@ -109,7 +109,11 @@ while IFS=$'\t' read -r number label head_sha; do
   # Fork heads are not on origin, but GitHub exposes every PR head under
   # refs/pull/<n>/head on the base repo, so one fetch path covers both cases.
   if ! git cat-file -e "${head_sha}^{commit}" 2>/dev/null; then
-    git fetch --quiet --no-tags origin "pull/${number}/head" 2>/dev/null || true
+    # </dev/null so nothing inside fetch can consume the TSV rows this loop is
+    # reading. Git hands the transport its own pipe, so no drain is reproducible
+    # here — but a helper that did read stdin would eat the remaining PRs and the
+    # run would still exit 0, which is too quiet a failure to leave to chance.
+    git fetch --quiet --no-tags origin "pull/${number}/head" </dev/null 2>/dev/null || true
   fi
 
   if ! git cat-file -e "${head_sha}^{commit}" 2>/dev/null; then
