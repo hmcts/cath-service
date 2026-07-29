@@ -1,7 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
   "extends": ["config:recommended"],
   "automerge": false,
+  "platformAutomerge": false,
+  "ignoreTests": false,
   "node": {
     "enabled": true
   },
@@ -42,9 +45,34 @@
       "enabled": true
     },
     {
-      "description": "Require approval for Node.js major updates",
-      "matchPackageNames": ["node"],
+      "description": "Automerge npm minor and patch updates only. Renovate merges via its own automerge path (platformAutomerge is false) so the branch must be green first. Applies equally to dependencies and devDependencies: PR #753 was a devDependency bump that broke the production GOV.UK assets, so depType is not a risk signal here. Rules below this one override it.",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Never automerge pre-1.0.0 packages, part 1 of 2. Under semver a 0.x minor bump may break, but Renovate still classifies it as minor. This form catches anything whose resolved currentVersion is below 1.0.0, including range values like '>=0.5.0 <1.0.0' and bare '0'. It cannot match ranges that have no single resolved version, which is why the sibling rule below exists.",
+      "matchCurrentVersion": "<1.0.0",
+      "automerge": false
+    },
+    {
+      "description": "Never automerge pre-1.0.0 packages, part 2 of 2. Catches caret and tilde ranges such as the '^0.7.0' passport peerDependency, where matchCurrentVersion has no single version to compare against. The two rules are complementary, not alternatives - neither covers every 0.x value form on its own.",
+      "matchCurrentValue": "/^\\^?~?0\\./",
+      "automerge": false
+    },
+    {
+      "description": "Never automerge the yarn packageManager version or a resolutions entry. A packageManager bump changes the toolchain for every workspace and every CI job, and resolutions are deliberate security or compatibility pins (axios, tar, undici, vite and others) whose whole purpose is to hold a chosen version - both need a human to look at them.",
+      "matchDepTypes": ["packageManager", "resolutions"],
+      "automerge": false
+    },
+    {
+      "description": "Never automerge major updates. Redundant against the top-level default, but must appear after the npm minor/patch rule so it wins for any grouped branch whose resolved updateType is major.",
       "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Node.js version updates always need manual review - a single update moves .nvmrc, four Dockerfile base images and three workflow files together.",
+      "matchPackageNames": ["node"],
       "automerge": false
     }
   ],
