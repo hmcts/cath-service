@@ -334,51 +334,32 @@ jobs:
             CONFLICTING FILES: ${{ steps.check.outputs.file-count }}
             PRE_REBASE_HEAD: ${{ steps.pre.outputs.head }}
 
-            The procedure is in .claude/skills/auto-rebase/SKILL.md — read it first and
-            follow it, with these overrides because no human is present:
+            Follow .claude/skills/auto-rebase/SKILL.md — read it first. It covers
+            resolution, yarn.lock, when to stop, and verification. Only the differences
+            for running with no human present are below.
 
-            - Skip steps 1-4. The branch is checked out, origin/master is fetched, and
-              the backup already exists at backup/rebase/${{ matrix.pr.head }}.
-            - Do NOT ask questions. There is nobody to answer. Where the skill says to
-              stop and ask, instead run `git rebase --abort` and stop. Aborting is a
-              correct, expected outcome — not a failure.
-            - Do NOT push. A later step pushes for you. Leave the rebase finished and
-              the branch checked out.
-            - Do not use --update-refs; this is a single branch.
+            - Skip steps 1-4 (done for you), step 7 (nothing stashed) and step 9.
+            - Do NOT ask questions — nobody can answer. Wherever the skill says to stop
+              and ask, run `git rebase --abort` and stop instead. Aborting is a correct,
+              expected outcome, not a failure. Give the reason in the report.
+            - Do NOT push. A later step does it. Leave the rebase finished and the branch
+              checked out.
+            - No --update-refs; this is a single branch.
 
-            Resolve only conflicts you are confident about: the same change applied on
-            both sides, independent edits to different parts of a file, import or
-            formatting collisions, additions to different parts of a list. Abort for
-            anything requiring product judgment — contradictory logic for the same
-            behaviour, database schema divergence, a dependency pinned to two different
-            versions, or a modify/delete where you cannot tell which side should win.
+            Resolve only what you are confident about: the same change on both sides,
+            independent edits to different parts of a file, import or formatting
+            collisions, additions to different parts of a list. Abort for anything
+            needing product judgment — contradictory logic for one behaviour, schema
+            divergence, a dependency pinned to two versions, or a modify/delete where
+            you cannot tell which side wins.
 
-            Abort also when master has already solved the same problem a different way,
-            even though the conflict itself looks mechanical. Ask what capability this
-            branch adds, then check whether master now provides it by other means. If it
-            does, the branch is superseded and merging the two sides produces a working
-            tree with two competing implementations — a decision for the author, not a
-            resolution. Signals: the branch adds a tool, hook, config file or dependency
-            that master achieves with a different one; a file the branch creates has no
-            counterpart on master because master put the same logic elsewhere.
-            Real example: a branch adding husky pre-commit hooks while master had
-            adopted lefthook. Resolving package.json by keeping both entries passes lint
-            and tests, and installs two hook managers that both fight over the commit.
-            State this in the report as the reason for aborting.
+            Step 8's checks are mandatory here: `yarn lint` and `yarn test` must pass,
+            and every `en.ts`/`cy.ts` pair this rebase touched must still have identical
+            key sets. If you cannot fix a failure, abort.
 
-            For yarn.lock: never hand-merge it. Take origin/master's copy, then
-            regenerate with `yarn install --mode=update-lockfile` and stage the result.
-
-            After the rebase completes, verify before finishing (step 8 of the skill):
-            - `yarn lint` and `yarn test` must pass. A clean rebase is not a correct
-              one — a conflict-free merge can still break at compile time.
-            - Check files that must stay in sync: for every locale pair changed by this
-              rebase, `en.ts` and `cy.ts` must have identical key sets.
-            If verification fails and you cannot fix it, `git rebase --abort` and stop.
-
-            Finally write a report to /tmp/rebase-report.md: what conflicted, how you
-            resolved each one, whether checks passed, and whether you aborted and why.
-            Write that file whether you succeed or abort.
+            Always write /tmp/rebase-report.md — what conflicted, how you resolved each
+            one, whether checks passed, and whether you aborted and why — whether you
+            succeed or abort.
           # The allowlist below enumerates git subcommands rather than using
           # Bash(git:*), so "never push" is enforced by the tool gate and not only by
           # the instruction in the system prompt — `git push`, `git remote` and
