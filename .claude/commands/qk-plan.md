@@ -73,10 +73,18 @@ TASK 1: Fetch GitHub Issue Details
 ## PHASE 3: Technical Planning
 *Mark "Create technical implementation plan" as in_progress*
 
-### Step 1.1: Generate Implementation Plan [ISOLATED AGENT]
+### Step 3.1: Determine template source
+
+Read docs/tickets/$ARGUMENT/ticket.md. If it needs a new rendered page or list-type view, set
+TEMPLATE SOURCE to "migrate from pip-frontend <page>" — migrating the `.njk` from pip-frontend is
+the default. Set TEMPLATE SOURCE to "n/a" for flat-file / manual-upload list
+types or registration-only work. Pass this value into the prompt below as TEMPLATE SOURCE.
+
+### Step 3.2: Generate Implementation Plan [ISOLATED AGENT]
 
 ```
 AGENT: full-stack-engineer
+TEMPLATE SOURCE: <migrate from pip-frontend <page> | write fresh | n/a>
 TASK: Create a technical implementation plan and task list for the issue
 INPUT: docs/tickets/$ARGUMENT/ticket.md
 OUTPUT: docs/tickets/$ARGUMENT/plan.md AND docs/tickets/$ARGUMENT/tasks.md
@@ -97,6 +105,7 @@ This is the technical specification/plan including:
 2. **Implementation Details**
    - File structure and organization (following @CLAUDE.md guidelines - use libs/ for features)
    - Components/modules to create
+   - Record the TEMPLATE SOURCE decision given to you above, verbatim, under Implementation Details. Do NOT copy the skill's fetch/adapt/verify steps into the plan — implement runs the skill itself.
    - API endpoints (if needed)
    - Database schema changes (if needed)
 
