@@ -75,13 +75,21 @@ git tag -a {branch}-rebase-backup-$(date +%Y%m%d-%H%M%S) -m "pre-rebase backup" 
 refs_file=$(git rev-parse --git-path pre-rebase-refs.txt)
 git for-each-ref --format='%(refname:short) %(objectname)' refs/heads > "$refs_file"
 git for-each-ref --format='remote %(refname:short) %(objectname)' refs/remotes/origin >> "$refs_file"
-awk '$1=="remote" && $2=="origin/{branch}" {print $3}' "$refs_file"   # -> {remote_oid} for step 9
 ```
 
 Record the tag as `{backup_ref}`; both it and the ref file are needed for Recovery.
 
-- The `remote` lines are what step 9 leases against. Read `{remote_oid}` here, not from
-  `origin/<branch>` at push time, which may have moved.
+- The `remote` lines are what step 9 leases against. Read each `{remote_oid}` from this file, not
+  from `origin/<branch>` at push time, which may have moved. Every branch pushed in step 9 needs
+  its own value — look up that branch's name, not the one being rebased:
+
+  ```bash
+  awk -v b="origin/$br" '$1=="remote" && $2==b {print $3}' "$refs_file"   # -> {remote_oid} for $br
+  ```
+
+  Empty output means the branch is not on origin yet. That is not an error: leave the lease value
+  empty (`refs/heads/<br>:`), which git reads as "must not exist there" and is exactly right for a
+  first push.
 - They carry a literal `remote` field rather than being filtered on `origin/` later, because
   `for-each-ref refs/remotes/origin` also emits a bare `origin` line for the remote's `HEAD`.
 - `--git-path` keeps the file in the git dir and resolves per-worktree. A fixed `/tmp` path is
@@ -253,8 +261,16 @@ the pre-rebase remote SHA from step 3:
 
 ```bash
 git push --force-with-lease="refs/heads/{branch}:{remote_oid}" origin "HEAD:{branch}"
-git push --force-with-lease="refs/heads/{stacked_branch}:{remote_oid}" \
-  origin "{stacked_branch}"                         # repeat per moved stacked branch
+```
+
+Then one push per moved stacked branch, each leased against **its own** pre-rebase remote SHA —
+reusing the rebased branch's OID leases against the wrong ref and the push is rejected every time:
+
+```bash
+for br in {stacked_branch...}; do
+  oid=$(awk -v b="origin/$br" '$1=="remote" && $2==b {print $3}' "$refs_file")
+  echo "git push --force-with-lease=\"refs/heads/$br:$oid\" origin \"$br\""
+done      # print all of them, confirm, then run them
 ```
 
 Not the bare `--force-with-lease`: it leases against `refs/remotes/origin/{branch}`, a cache of

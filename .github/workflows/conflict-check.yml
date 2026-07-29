@@ -154,15 +154,19 @@ jobs:
               .claude/skills/auto-rebase/scripts/check-conflicts.sh --json > /tmp/result.jsonl
           rc=$?
           set -e
-          # 0 = clean, 1 = conflicts found (a finding, not an error). Anything else
-          # means the check itself could not run, and must fail the job rather than
-          # be read as "no conflicts".
-          [ "$rc" -le 1 ] || { echo "::error::conflict check failed (exit $rc)"; exit "$rc"; }
           cat /tmp/result.jsonl
 
-          echo "status=$(jq -r .status /tmp/result.jsonl)" >> "$GITHUB_OUTPUT"
-          echo "file-count=$(jq -r '.fileCount // 0' /tmp/result.jsonl)" >> "$GITHUB_OUTPUT"
+          # 0 = clean, 1 = conflicts (a finding, not an error), 2 = a row could not be
+          # evaluated. Exit 2 must not read as "no conflicts", but it also must not die
+          # here: publish status=unknown so the comment step can say so on the PR, and
+          # let the final step fail the job. A setup error (bad BASE_REF) produces no
+          # JSON at all, hence the // "unknown" fallback.
+          echo "status=$(jq -r '.status // "unknown"' /tmp/result.jsonl 2>/dev/null || echo unknown)" >> "$GITHUB_OUTPUT"
+          echo "reason=$(jq -r '.reason // ""' /tmp/result.jsonl 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+          echo "file-count=$(jq -r '.fileCount // 0' /tmp/result.jsonl 2>/dev/null || echo 0)" >> "$GITHUB_OUTPUT"
           echo "ahead=$(git rev-list --count origin/master..refs/remotes/pr-head)" >> "$GITHUB_OUTPUT"
+          [ "$rc" -le 1 ] || echo "::error::conflict check could not evaluate PR #${NUMBER} (exit $rc)"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
 
       - name: Decide whether to rebase
         id: decide
@@ -191,12 +195,14 @@ jobs:
           echo "rebase=$rebase" >> "$GITHUB_OUTPUT"
 
       - name: Comment on conflict
-        if: steps.check.outputs.status != 'unknown'
         uses: actions/github-script@v9
         env:
           DRY_RUN: ${{ inputs.dry-run }}
           PR: ${{ matrix.pr.number }}
           BRANCH: ${{ matrix.pr.head }}
+          STATUS: ${{ steps.check.outputs.status }}
+          REASON: ${{ steps.check.outputs.reason }}
+          IS_FORK: ${{ matrix.pr.fork }}
           # Reuse the decide step's verdict rather than recomputing the conditions
           # here — two copies would drift and the comment would promise a rebase
           # that never runs.
@@ -208,10 +214,18 @@ jobs:
             const MARKER = '<!-- conflict-check -->';
             const dryRun = process.env.DRY_RUN === 'true';
             const willRebase = process.env.WILL_REBASE === 'true';
+            const isFork = process.env.IS_FORK === 'true';
             const { owner, repo } = context.repo;
             const pr = Number(process.env.PR);
 
-            const r = JSON.parse(fs.readFileSync('/tmp/result.jsonl', 'utf8').trim());
+            // An unevaluated PR may have produced no JSON at all, so fall back to the
+            // step outputs rather than letting a parse error mask the real reason.
+            let r;
+            try {
+              r = JSON.parse(fs.readFileSync('/tmp/result.jsonl', 'utf8').trim());
+            } catch {
+              r = { status: process.env.STATUS || 'unknown', reason: process.env.REASON, files: [] };
+            }
 
             const comments = await github.paginate(github.rest.issues.listComments,
               { owner, repo, issue_number: pr, per_page: 100 });
@@ -226,6 +240,34 @@ jobs:
                 }
               } else {
                 core.info(`PR #${pr}: clean (${r.behind} behind master)`);
+              }
+              return;
+            }
+
+            // A PR the check could not evaluate is worth saying out loud. Silently
+            // failing the job leaves the author with no signal on the PR itself, and
+            // "no comment" is indistinguishable from "no conflict".
+            if (r.status === 'unknown') {
+              const why = r.reason ? ` (${r.reason})` : '';
+              const unknownBody = [
+                MARKER,
+                '<!-- files:unknown -->',
+                '## ❓ Could not check this PR for conflicts',
+                '',
+                `The conflict check could not evaluate this branch${why}. This is a problem with`,
+                'the check, not necessarily with your PR — see the Actions log for detail.',
+                '',
+                'Nothing has been changed on your branch.',
+                '_Re-checked automatically on every push to `master`._',
+              ].join('\n');
+              core.warning(`PR #${pr} (${process.env.BRANCH}): could not evaluate${why}`);
+              if (dryRun) return;
+              if (existing) {
+                await github.rest.issues.updateComment(
+                  { owner, repo, comment_id: existing.id, body: unknownBody });
+              } else {
+                await github.rest.issues.createComment(
+                  { owner, repo, issue_number: pr, body: unknownBody });
               }
               return;
             }
@@ -250,6 +292,11 @@ jobs:
               willRebase
                 ? 'Claude is attempting a rebase now and will report back on this PR. A backup of the pre-rebase head is pushed to `backup/rebase/' + process.env.BRANCH + '` first, so nothing is lost either way.'
                 : 'Nothing has been changed on your branch. Rebase with `/auto-rebase` locally, or `git fetch origin && git rebase origin/master`.',
+              // Without this the author sees the generic "rebase it yourself" text and
+              // has to dig through the Actions log to find out why nothing happened.
+              !willRebase && isFork
+                ? '\n_This PR comes from a fork, so it cannot be rebased automatically — the app token cannot push to fork branches._'
+                : null,
               '',
               willRebase
                 ? 'If you have local work on this branch, wait for the result before pushing — the rebase force-pushes, so you will need to `git fetch` and reset afterwards.'
@@ -486,3 +533,13 @@ jobs:
 
             await github.rest.issues.createComment(
               { owner, repo, issue_number: pr, body });
+
+      # Last, so the PR comment above is posted before the job goes red. Exit 2 from
+      # the check means a PR was never evaluated, which must not pass as "no conflicts".
+      - name: Fail if the check could not evaluate this PR
+        if: always() && steps.check.outputs.rc != '0' && steps.check.outputs.rc != '1'
+        env:
+          RC: ${{ steps.check.outputs.rc }}
+        run: |
+          echo "conflict check exited $RC — this PR was not evaluated" >&2
+          exit 1
