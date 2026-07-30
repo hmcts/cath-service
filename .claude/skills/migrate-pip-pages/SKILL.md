@@ -33,7 +33,7 @@ Throughout this skill, `<name>` is the kebab-case list-type name and `<ticket>` 
 you were given — from the invoking argument, the plan, or the `docs/tickets/` folder you're working in.
 If you can't determine it, ask before writing anything to `docs/tickets/`.
 
-Raw files live at `raw.githubusercontent.com/hmcts/pip-frontend/master/...`:
+Files live in `hmcts/pip-frontend` on the `master` branch:
 
 | What | Path |
 |------|------|
@@ -42,16 +42,29 @@ Raw files live at `raw.githubusercontent.com/hmcts/pip-frontend/master/...`:
 | View | `src/main/views/**/<name>.njk` (cause lists are often under `views/style-guide/`) |
 | i18n content | `src/main/resources/locales/{en,cy}/<name>.json` |
 
-**Fetch with `curl` via Bash, not WebFetch.** WebFetch runs the file through a summarizing
-model and returns a *description*, not the markup — useless for copying. Get the verbatim source:
+**Fetch with `gh api` via Bash, not WebFetch** — WebFetch summarizes the file into a
+*description*, not the markup, which is useless for copying. Use the raw media type so the
+response body is the file itself, not a base64-wrapped JSON blob:
+
+```bash
+gh api -H "Accept: application/vnd.github.raw" \
+  "repos/hmcts/pip-frontend/contents/src/main/views/style-guide/<name>.njk?ref=master"
+```
+
+If `gh` is unauthenticated, fall back to `curl` against raw.githubusercontent.com:
 
 ```bash
 curl -sS "https://raw.githubusercontent.com/hmcts/pip-frontend/master/src/main/views/style-guide/<name>.njk"
 ```
 
-pip-frontend's file names and directories are inconsistent, so don't guess from the URL. If
-a path 404s: read `routes.ts` to find the controller, read the controller to find the exact
-`render("<view>")` name, and try `views/style-guide/` and kebab-case variants.
+pip-frontend's file names and directories are inconsistent, so don't guess from the path. If
+a fetch 404s: read `routes.ts` to find the controller, read the controller to find the exact
+`render("<view>")` name, and try `views/style-guide/` and kebab-case variants. To search rather
+than guess a path outright, list a directory instead of requesting raw content:
+
+```bash
+gh api "repos/hmcts/pip-frontend/contents/src/main/views/style-guide" --jq '.[].name'
+```
 
 **If the fetch is unobtainable** — every candidate path 404s, or GitHub is unreachable — stop and
 ask the user to paste the source `.njk` and locale JSON. If they can't, say so and label the output
