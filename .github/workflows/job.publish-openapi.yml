@@ -63,7 +63,7 @@ jobs:
         run: yarn openapi:json /tmp/openapi.json
 
       - name: Publish to cnp-api-docs
-        uses: hmcts/cnp-githubactions-library/publish-openapi-spec@main
+        uses: hmcts/cnp-githubactions-library/publish-openapi-spec@fix/publish-openapi-export-token
         with:
           spec-path: /tmp/openapi.json
           api-token: ${{ secrets.SWAGGER_PUBLISHER_API_TOKEN }}
