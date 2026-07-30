@@ -21,6 +21,14 @@
 # edited in place rather than re-posted, and it is removed once the PR merges
 # cleanly again. A PR whose conflicted file set has not changed is left untouched
 # so nobody is re-notified about a conflict they already know about.
+#
+# Renovate PRs are excluded in list-prs. Renovate force-pushes its own branches
+# to keep them current, and it fingerprints its last push to decide whether a
+# branch was "edited" by someone else — if so, it backs off and stops updating
+# it (see rebaseWhen/PR-edited detection in the Renovate docs). This workflow's
+# own force-push would trip that, permanently orphaning the PR from Renovate's
+# management. Renovate already rebases onto the base branch itself, so there is
+# nothing for this workflow to do there anyway.
 
 name: Conflict Check
 
@@ -60,15 +68,25 @@ jobs:
           # `sha` here is only a starting point; each job re-reads its PR's head
           # before rebasing, so a PR pushed while this run is queued is handled
           # against its current head rather than this snapshot.
+          #
+          # Renovate PRs are dropped here, before the matrix is built, so they never
+          # get a job at all — not even a comment. Matched on author login rather than
+          # the `renovate/` branch prefix, since the prefix is configurable per-repo
+          # and the login is not.
           gh pr list --state open --base master --limit 200 \
-            --json number,headRefName,headRefOid,isCrossRepository \
-            --jq '[.[] | {number, head: .headRefName, sha: .headRefOid, fork: .isCrossRepository}]' \
+            --json number,headRefName,headRefOid,isCrossRepository,author \
+            --jq '[.[] | select(.author.login != "renovate[bot]")
+                        | {number, head: .headRefName, sha: .headRefOid, fork: .isCrossRepository}]' \
             > /tmp/prs.json
+
+          skipped=$(gh pr list --state open --base master --limit 200 \
+            --json number,headRefName,author \
+            --jq '[.[] | select(.author.login == "renovate[bot]")] | length')
 
           count=$(jq length /tmp/prs.json)
           echo "count=$count" >> "$GITHUB_OUTPUT"
           echo "prs=$(jq -c . /tmp/prs.json)" >> "$GITHUB_OUTPUT"
-          echo "$count open PR(s) targeting master:"
+          echo "$count open PR(s) targeting master ($skipped Renovate PR(s) skipped):"
           jq -r '.[] | "  #\(.number) \(.head)\(if .fork then " (fork)" else "" end)"' /tmp/prs.json
 
   check-and-rebase:

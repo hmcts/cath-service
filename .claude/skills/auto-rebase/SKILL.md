@@ -12,6 +12,11 @@ deliberately rather than by guesswork.
 ## Hard rules
 
 - Operate on the current branch. Never create or switch branches unless explicitly asked.
+- Refuse a branch Renovate owns (name starts with `renovate/`, or `gh pr view --json author
+  --jq .author.login` for it reports `renovate[bot]`). Renovate force-pushes its own branches to
+  keep them current and fingerprints its last push to detect edits by anyone else; if it sees one,
+  it backs off and stops updating that branch for good. Tell the user to let Renovate rebase it
+  (or use Renovate's own "rebase" checkbox on the PR) instead.
 - Print the exact command and wait for confirmation before any history rewrite (`git rebase`,
   `git push --force*`).
 - Back up locally before starting (step 3). Never push backup refs.
@@ -31,6 +36,15 @@ git fetch origin
 Empty output from `--show-current` means detached `HEAD` — it exits 0 either way, so test the
 string. Stop and ask which branch to check out: every later step needs a branch name, and the
 result would be reachable only through the reflog.
+
+Stop here if the branch is Renovate's, per the hard rule above:
+
+```bash
+git branch --show-current | grep -q '^renovate/' && echo "renovate-owned branch name"
+gh pr view --json author --jq '.author.login' 2>/dev/null   # if a PR exists for this branch
+```
+
+A `renovate/` prefix is enough on its own — no need to wait on the `gh` call to confirm it.
 
 `--update-refs` (step 5) needs Git ≥ 2.38. On older Git, rebase plainly and re-point stacked
 branches by hand.
