@@ -33,6 +33,9 @@ async function shouldSeed(): Promise<boolean> {
   return true;
 }
 
+// Local-only seed path: `yarn db:seed` runs this single-process, so there is no
+// cross-process race. Deploys seed via apps/postgres/start.sh, which applies
+// atomic ON CONFLICT SQL generated from this same source of truth.
 export async function seedLocationData() {
   console.log("Checking if location data seeding is needed...");
 

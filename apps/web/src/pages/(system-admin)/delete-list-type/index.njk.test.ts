@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "(system-admin)/delete-list-type/index.njk";
 const LIST_TYPE_NAME = "Civil Daily Cause List";
+const LIST_TYPE_ID = 42;
 
 describe("delete-list-type template", () => {
   let env: nunjucks.Environment;
@@ -59,12 +60,12 @@ describe("delete-list-type template", () => {
     });
 
     it("should render the confirm button and cancel link", () => {
-      const data = { ...en, listTypeName: LIST_TYPE_NAME, data: {} };
+      const data = { ...en, id: LIST_TYPE_ID, listTypeName: LIST_TYPE_NAME, data: {} };
 
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("button.govuk-button").text().trim()).toBe(en.confirmButton);
-      const cancelLink = $('a[href="/view-list-types"]');
+      const cancelLink = $(`a[href="/manage-list-type?id=${LIST_TYPE_ID}"]`);
       expect(cancelLink).toHaveLength(1);
       expect(cancelLink.text().trim()).toBe(en.cancelLink);
     });
@@ -103,13 +104,13 @@ describe("delete-list-type template", () => {
 
   describe("Welsh content", () => {
     it("should render the Welsh heading and controls", () => {
-      const data = { ...cy, listTypeName: LIST_TYPE_NAME, data: {} };
+      const data = { ...cy, id: LIST_TYPE_ID, listTypeName: LIST_TYPE_NAME, data: {} };
 
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.title);
       expect($("button.govuk-button").text().trim()).toBe(cy.confirmButton);
-      expect($('a[href="/view-list-types"]').text().trim()).toBe(cy.cancelLink);
+      expect($(`a[href="/manage-list-type?id=${LIST_TYPE_ID}"]`).text().trim()).toBe(cy.cancelLink);
     });
 
     it("should render the Welsh error summary", () => {

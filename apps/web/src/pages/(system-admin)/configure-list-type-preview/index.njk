@@ -14,7 +14,7 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ t.configureListType.preview.title }}</h1>
+    <h1 class="govuk-heading-l">{{ t.configureListType.preview.title }}</h1>
     <p class="govuk-body">{{ t.configureListType.preview.description }}</p>
 
     {{ govukSummaryList({
@@ -25,7 +25,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.nameRow
               }
@@ -38,7 +38,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.friendlyNameRow
               }
@@ -51,7 +51,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.welshFriendlyNameRow
               }
@@ -64,7 +64,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.shortenedFriendlyNameRow
               }
@@ -77,9 +77,35 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.urlRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.caseNumberJsonFieldNameRow },
+          value: { text: data.caseNumberJsonFieldName or "" },
+          actions: {
+            items: [
+              {
+                href: changeDetailsHref,
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.caseNumberJsonFieldNameRow
+              }
+            ]
+          }
+        },
+        {
+          key: { text: t.configureListType.preview.caseNameJsonFieldNameRow },
+          value: { text: data.caseNameJsonFieldName or "" },
+          actions: {
+            items: [
+              {
+                href: changeDetailsHref,
+                text: t.configureListType.preview.changeLink,
+                visuallyHiddenText: t.configureListType.preview.caseNameJsonFieldNameRow
               }
             ]
           }
@@ -90,7 +116,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.defaultSensitivityRow
               }
@@ -103,7 +129,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.allowedProvenanceRow
               }
@@ -116,7 +142,7 @@
           actions: {
             items: [
               {
-                href: "/configure-list-type-enter-details",
+                href: changeDetailsHref,
                 text: t.configureListType.preview.changeLink,
                 visuallyHiddenText: t.configureListType.preview.isNonStrategicRow
               }

@@ -41,7 +41,11 @@ function formatPublicationDateTime(isoDateTime: string, locale: string): string 
 function formatAddress(address: CauseListData["venue"]["venueAddress"]): string[] {
   const parts: string[] = [];
 
-  for (const line of address.line) {
+  if (!address) {
+    return parts;
+  }
+
+  for (const line of address.line ?? []) {
     if (line && line.length > 0) {
       parts.push(line);
     }

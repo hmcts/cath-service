@@ -1671,6 +1671,61 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/et-daily-list@workspace:*, @hmcts/et-daily-list@workspace:libs/list-types/et-daily-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-daily-list@workspace:libs/list-types/et-daily-list"
+  dependencies:
+    "@hmcts/et-list-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/et-fortnightly-list@workspace:*, @hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-fortnightly-list@workspace:libs/list-types/et-fortnightly-list"
+  dependencies:
+    "@hmcts/et-list-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/et-list-common@workspace:*, @hmcts/et-list-common@workspace:libs/list-types/et-list-common":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/et-list-common@workspace:libs/list-types/et-list-common"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    luxon: "npm:3.7.2"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/excel-generation@workspace:*, @hmcts/excel-generation@workspace:libs/excel-generation":
   version: 0.0.0-use.local
   resolution: "@hmcts/excel-generation@workspace:libs/excel-generation"
@@ -1805,6 +1860,7 @@ __metadata:
     "@types/node": "npm:24.10.4"
     ajv: "npm:8.20.0"
     exceljs: "npm:4.4.0"
+    nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
     zod: "npm:3.25.76"
@@ -1928,6 +1984,8 @@ __metadata:
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
     "@hmcts/crown-warned-list": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
@@ -2018,11 +2076,13 @@ __metadata:
   resolution: "@hmcts/postgres@workspace:apps/postgres"
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/location": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@prisma/client": "npm:7.8.0"
     "@types/node": "npm:24.10.4"
     http-proxy: "npm:1.18.1"
     prisma: "npm:7.8.0"
+    tsx: "npm:4.22.4"
   languageName: unknown
   linkType: soft
 
@@ -2061,6 +2121,8 @@ __metadata:
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
     "@hmcts/crown-warned-list": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/excel-generation": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
@@ -2443,6 +2505,8 @@ __metadata:
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
+    "@hmcts/et-daily-list": "workspace:*"
+    "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -2471,7 +2535,7 @@ __metadata:
     "@types/express-session": "npm:1.19.0"
     "@types/govuk-frontend": "npm:5.11.0"
     "@types/nunjucks": "npm:3.2.6"
-    "@types/supertest": "npm:7.2.0"
+    "@types/supertest": "npm:7.2.1"
     compression: "npm:1.8.1"
     concurrently: "npm:10.0.3"
     config: "npm:4.4.2"
@@ -4686,13 +4750,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/supertest@npm:7.2.0, @types/supertest@npm:^7.0.0":
-  version: 7.2.0
-  resolution: "@types/supertest@npm:7.2.0"
+"@types/supertest@npm:7.2.1, @types/supertest@npm:^7.0.0":
+  version: 7.2.1
+  resolution: "@types/supertest@npm:7.2.1"
   dependencies:
     "@types/methods": "npm:^1.1.4"
     "@types/superagent": "npm:^8.1.0"
-  checksum: 10c0/78c33e968acd45207acdd965ccbd5eb7a279813ff68fab1acc438937ed017698102cc077cef8aa60ec6caefff2fa61171e902eab40607fd7ce82ead3a82b766e
+  checksum: 10c0/c1ca876d591dd1cead0d5f0fd53d21b8f15a84bdb59a1229c95ada0a031fc64bb83a5ddd88fd9a247dd1af1b9aee39b9d56815176b62104676d4f4cb4a042370
   languageName: node
   linkType: hard
 
@@ -5705,7 +5769,7 @@ __metadata:
     "@types/jsonwebtoken": "npm:9.0.10"
     "@types/node": "npm:24.10.4"
     "@types/passport": "npm:1.0.17"
-    "@types/supertest": "npm:7.2.0"
+    "@types/supertest": "npm:7.2.1"
     "@vitest/coverage-v8": "npm:4.1.10"
     "@vitest/ui": "npm:4.1.10"
     accessible-autocomplete: "npm:^3.0.1"
@@ -5723,6 +5787,7 @@ __metadata:
     turbo: "npm:2.9.18"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
+    yaml: "npm:2.9.0"
   languageName: unknown
   linkType: soft
 
@@ -10899,7 +10964,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.0.0":
+"yaml@npm:2.9.0, yaml@npm:^2.0.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:

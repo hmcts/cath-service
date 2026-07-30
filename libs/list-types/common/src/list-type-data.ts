@@ -93,6 +93,38 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [2, 11]
   },
   {
+    name: "PCOL_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Possession Claim Online Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Hawliadau Meddiant Ar-lein",
+    provenance: "CFT_IDAM",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "PCOL Daily Cause List",
+    subJurisdictionIds: [1]
+  },
+  {
+    name: "ET_DAILY_LIST",
+    englishFriendlyName: "Employment Tribunals Daily List",
+    welshFriendlyName: "Rhestr Ddyddiol y Tribiwnlysoedd Cyflogaeth",
+    provenance: "CFT_IDAM",
+    urlPath: "et-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "ET Daily List",
+    subJurisdictionIds: [3]
+  },
+  {
+    name: "ET_FORTNIGHTLY_PRESS_LIST",
+    englishFriendlyName: "Employment Tribunals Fortnightly Press List",
+    welshFriendlyName: "Rhestr y Wasg Pob Pythefnos y Tribiwnlysoedd Cyflogaeth",
+    provenance: "CFT_IDAM",
+    urlPath: "et-fortnightly-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "ET Fortnightly List",
+    subJurisdictionIds: [3]
+  },
+  {
     name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",

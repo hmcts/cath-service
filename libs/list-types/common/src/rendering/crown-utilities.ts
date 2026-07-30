@@ -1,18 +1,6 @@
 import { DateTime } from "luxon";
 import type { CaseSummary } from "../email-summary/case-summary-formatter.js";
-
-export interface Party {
-  partyRole: string;
-  individualDetails?: {
-    title?: string;
-    individualForenames?: string;
-    individualMiddleName?: string;
-    individualSurname?: string;
-  };
-  organisationDetails?: {
-    organisationName?: string;
-  };
-}
+import type { Party } from "../models/cause-list-types.js";
 
 export function createPartyDetails(party: Party): string {
   if (party.individualDetails) {

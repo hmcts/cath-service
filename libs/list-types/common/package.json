@@ -7,6 +7,10 @@
       "production": "./dist/index.js",
       "default": "./src/index.ts"
     },
+    "./list-type-data": {
+      "production": "./dist/list-type-data.js",
+      "default": "./src/list-type-data.ts"
+    },
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
@@ -40,6 +44,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "ajv": "8.20.0",
     "exceljs": "4.4.0",
+    "nunjucks": "3.2.4",
     "zod": "3.25.76"
   },
   "devDependencies": {
