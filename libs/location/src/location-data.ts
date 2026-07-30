@@ -183,6 +183,14 @@ export const locationData: {
       regions: [8],
       subJurisdictions: [22],
       provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 26,
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
+      regions: [8],
+      subJurisdictions: [24],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [
