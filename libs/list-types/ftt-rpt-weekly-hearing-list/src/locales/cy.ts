@@ -9,7 +9,7 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationTextTemplate:
-    "Gall aelodau o'r cyhoedd sy'n dymuno arsylwi gwrandawiad neu gynrychiolwyr y cyfryngau ymuno ag unrhyw wrandawiad fideo o bell ar gais tra'u bod yn cael eu cynnal drwy anfon e-bost ymlaen llaw at y tribiwnlys yn {email} gyda'r manylion canlynol yn y llinell bwnc \"CAIS [ARSYLLWR/CYFRYNGAU] – [cyfeirnod yr achos] – [dyddiad y gwrandawiad] (angen cynnwys unrhyw wybodaeth arall sy'n ofynnol gan y tribiwnlys)\" a gwneir trefniadau priodol i ganiatáu mynediad lle bo hynny'n rhesymol ymarferol.",
+    "Gall aelodau o'r cyhoedd sy'n dymuno arsylwi gwrandawiad neu gynrychiolwyr y cyfryngau ymuno ag unrhyw wrandawiad fideo o bell ar gais tra maent yn cael eu cynnal drwy anfon e-bost ymlaen llaw at y tribiwnlys yn {email} gyda'r manylion canlynol yn y llinell bwnc \"CAIS [ARSYLLWR/CYFRYNGAU] – [cyfeirnod yr achos] – [dyddiad y gwrandawiad]\" a gwneir trefniadau priodol i ganiatáu mynediad lle bo hynny'n rhesymol ymarferol.",
   importantInformationSecondParagraph:
     "Mae rhestrau'n aml yn newid ar fyr rybudd, ac felly os ydych yn dymuno arsylwi gwrandawiad, efallai yr hoffech gysylltu â'r swyddfa gyntaf i wirio a yw'n mynd yn ei flaen.",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
