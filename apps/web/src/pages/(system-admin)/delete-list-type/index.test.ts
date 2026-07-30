@@ -209,7 +209,7 @@ describe("delete-list-type page", () => {
       );
     });
 
-    it("should redirect to view-list-types when user selects no", async () => {
+    it("should redirect to manage-list-type when user selects no", async () => {
       const req = {
         query: { id: "1" },
         body: { confirmDelete: "no" }
@@ -230,7 +230,7 @@ describe("delete-list-type page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/view-list-types");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-type?id=1");
     });
 
     it("should show error when list type has artefacts", async () => {

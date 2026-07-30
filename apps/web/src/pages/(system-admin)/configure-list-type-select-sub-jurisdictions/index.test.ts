@@ -92,7 +92,7 @@ describe("select-sub-jurisdictions page", () => {
 
       await callHandler(GET, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-types");
       expect(res.render).not.toHaveBeenCalled();
     });
 
@@ -124,7 +124,7 @@ describe("select-sub-jurisdictions page", () => {
 
       await callHandler(POST, req, res);
 
-      expect(res.redirect).toHaveBeenCalledWith("/configure-list-type-enter-details");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-types");
     });
 
     it("should validate and redirect to preview on success", async () => {

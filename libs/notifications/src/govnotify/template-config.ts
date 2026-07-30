@@ -15,7 +15,10 @@ export function isSjpListType(listTypeName: string): boolean {
 export function getSubscriptionTemplateId(params: { isSjp: boolean; hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
   const { isSjp, hasPdf, hasExcel, filesUnder2MB } = params;
 
-  if (!filesUnder2MB) {
+  // No attachments (e.g. flat-file lists with no generated PDF/Excel) or files too
+  // large to link: use the no-links template. The PDF/Excel templates require
+  // pdf_link_*/excel_link_* personalisation that is only set when a buffer exists.
+  if (!filesUnder2MB || (!hasPdf && !hasExcel)) {
     if (!GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS) {
       throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS environment variable is not set");
     }

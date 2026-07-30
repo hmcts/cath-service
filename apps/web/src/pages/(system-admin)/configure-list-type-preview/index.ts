@@ -9,7 +9,7 @@ const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type-enter-details");
+    return res.redirect("/manage-list-types");
   }
 
   const language = req.query.lng === "cy" ? "cy" : "en";
@@ -19,10 +19,13 @@ const getHandler = async (req: Request, res: Response) => {
 
   const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
+  const changeDetailsHref = session.configureListType.editId ? `/edit-list-type?id=${session.configureListType.editId}` : "/add-list-type";
+
   res.render("configure-list-type-preview/index", {
     t: content,
     data: session.configureListType,
-    subJurisdictionsText
+    subJurisdictionsText,
+    changeDetailsHref
   });
 };
 
@@ -30,7 +33,7 @@ const postHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
 
   if (!session.configureListType) {
-    return res.redirect("/configure-list-type-enter-details");
+    return res.redirect("/manage-list-types");
   }
 
   try {
@@ -41,6 +44,8 @@ const postHandler = async (req: Request, res: Response) => {
         welshFriendlyName: session.configureListType.welshFriendlyName!,
         shortenedFriendlyName: session.configureListType.shortenedFriendlyName!,
         url: session.configureListType.url!,
+        caseNumberJsonFieldName: session.configureListType.caseNumberJsonFieldName,
+        caseNameJsonFieldName: session.configureListType.caseNameJsonFieldName,
         defaultSensitivity: session.configureListType.defaultSensitivity!,
         allowedProvenance: session.configureListType.allowedProvenance!,
         isNonStrategic: session.configureListType.isNonStrategic!,
@@ -60,10 +65,13 @@ const postHandler = async (req: Request, res: Response) => {
 
     const subJurisdictionsText = selectedSubJurisdictions.map((sj) => (language === "cy" ? sj.welshName : sj.name)).join(", ");
 
+    const changeDetailsHref = session.configureListType?.editId ? `/edit-list-type?id=${session.configureListType.editId}` : "/add-list-type";
+
     res.render("configure-list-type-preview/index", {
       t: content,
       data: session.configureListType,
       subJurisdictionsText,
+      changeDetailsHref,
       error: error instanceof Error ? error.message : "Failed to save list type"
     });
   }

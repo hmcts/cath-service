@@ -82,8 +82,12 @@ echo "Running database migrations..."
 echo "Generating Prisma client for seed..."
 ../../node_modules/.bin/prisma generate --config=./prisma.config.ts
 
-echo "Seeding reference data from list-type-data.ts..."
-../../node_modules/.bin/tsx prisma/seed-deploy.ts
+echo "Seeding reference data via atomic INSERT ... ON CONFLICT SQL..."
+# Generate to a file first: piping into prisma db execute would hide a generator
+# failure (a pipeline's exit status is the last command's, and /bin/sh has no pipefail),
+# so a crash could silently apply empty SQL. set -e catches the generate step here.
+../../node_modules/.bin/tsx prisma/generate-seed-sql.ts > /tmp/seed.sql
+../../node_modules/.bin/prisma db execute --file /tmp/seed.sql --config=./prisma.config.ts
 
 echo "Migrations completed successfully"
 echo "Starting Prisma Studio on port 5556..."
