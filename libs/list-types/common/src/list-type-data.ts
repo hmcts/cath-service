@@ -764,5 +764,15 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [11]
+  },
+  {
+    name: "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Companies Winding Up (Chancery Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)",
+    provenance: "CFT_IDAM",
+    urlPath: "companies-winding-up-chd-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
   }
 ];

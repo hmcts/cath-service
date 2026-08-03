@@ -183,6 +183,13 @@ export const locationData: {
       regions: [8],
       subJurisdictions: [22],
       provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 26,
+      name: "Business and Property Courts Rolls Building",
+      welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
+      regions: [11],
+      subJurisdictions: [10]
     }
   ],
   regions: [

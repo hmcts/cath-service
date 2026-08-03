@@ -32,6 +32,7 @@
     "@hmcts/cic-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/civil-daily-cause-list": "workspace:*",
+    "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*",
     "@hmcts/cookie-manager": "1.1.0",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/et-daily-list": "workspace:*",
