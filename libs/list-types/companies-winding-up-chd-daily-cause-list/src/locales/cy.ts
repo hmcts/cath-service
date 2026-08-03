@@ -2,9 +2,13 @@ import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common
 
 export const cy = {
   pageTitle: "Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd sydd heb eu datganoli yn yr Alban.",
   venueName: "Rolls Building",
   addressLine1: "Fetter Lane, London",
   addressLine2: "EC4A 1NL",
+  importantInformationHeading: "Gwybodaeth bwysig",
   importantInformationHeading1: "Cynllun Pro Bono Ansolfedd Cwmni",
   importantInformationLine1:
     "Mae'r Cynllun Pro Bono Ansolfedd Cwmnïau yn darparu cyngor cyfreithiol a / neu gynrychiolaeth am ddim yn y llys ar ddydd Mercher. Os oes gennych achos wedi'i restru yn y llys dirwyn i ben, dewch i Ystafell Ymgynghori 17 ar 2il Lawr Adeilad y Rolls i siarad â bargyfreithiwr fore Mercher. Gallwch hefyd anfon e-bost at admin@companyinsolvencyscheme.com ymlaen llaw.",

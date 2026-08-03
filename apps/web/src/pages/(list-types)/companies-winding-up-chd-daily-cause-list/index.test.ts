@@ -44,7 +44,7 @@ import { renderCompaniesWindingUpChdDailyCauseList } from "@hmcts/companies-wind
 import { getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { GET } from "./index.js";
 
-describe("Companies Winding Up (ChD) Daily Cause List page controller", () => {
+describe("Companies Winding Up (Chancery Division) Daily Cause List page controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
 

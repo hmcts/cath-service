@@ -2,9 +2,13 @@ import { provenanceLabelsEn as provenanceLabels } from "@hmcts/list-types-common
 
 export const en = {
   pageTitle: "Companies Winding Up (Chancery Division) Daily Cause List",
+  factLinkText: "Find contact details and other information about courts and tribunals",
+  factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
   venueName: "Rolls Building",
   addressLine1: "Fetter Lane, London",
   addressLine2: "EC4A 1NL",
+  importantInformationHeading: "Important information",
   importantInformationHeading1: "Company Insolvency Pro Bono Scheme",
   importantInformationLine1:
     "The Company Insolvency Pro Bono Scheme provides free legal advice and/or representation in court on Wednesdays. If you have a case listed in the winding up court, please come to Consultation Room 17 on the 2nd Floor of the Rolls Building to speak with a barrister on Wednesday morning. You can also email in advance on admin@companyinsolvencyscheme.com.",

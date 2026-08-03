@@ -121,6 +121,15 @@ describe("companies-winding-up-chd-daily-cause-list template", () => {
       expect(heading.text()).toContain(en.pageTitle);
     });
 
+    it("should render the FaCT link", () => {
+      const { $ } = renderPage();
+
+      const factLink = $(`a[href="${en.factLinkUrl}"]`);
+      expect(factLink).toHaveLength(1);
+      expect(factLink.text()).toContain(en.factLinkText);
+      expect($(".govuk-grid-column-full").text()).toContain(en.factAdditionalText);
+    });
+
     it("should render the venue name and address", () => {
       const { $ } = renderPage();
 
@@ -140,14 +149,20 @@ describe("companies-winding-up-chd-daily-cause-list template", () => {
   });
 
   describe("Important information section", () => {
-    it("should render the details component with the important information content", () => {
+    it("should render the details summary as 'Important information' with the scheme name in bold inside", () => {
       const { $ } = renderPage();
 
       const details = $(".govuk-details");
       expect(details).toHaveLength(1);
+      expect(details.find(".govuk-details__summary-text").text().trim()).toBe(en.importantInformationHeading);
+
       const detailsText = details.text();
       expect(detailsText).toContain(en.importantInformationHeading1);
       expect(detailsText).toContain(en.importantInformationLine1);
+
+      const boldSchemeName = details.find("p").first();
+      expect(boldSchemeName.attr("class")).toContain("govuk-!-font-weight-bold");
+      expect(boldSchemeName.text()).toBe(en.importantInformationHeading1);
     });
   });
 
@@ -246,12 +261,12 @@ describe("companies-winding-up-chd-daily-cause-list template", () => {
       expect(footer.text()).toContain("HMCTS Publishing Service");
     });
 
-    it("should render the special category data caution notes", () => {
+    it("should not render the special category data caution notes (PDF only)", () => {
       const { $ } = renderPage();
 
       const bodyText = $(".govuk-grid-column-full").text();
-      expect(bodyText).toContain(en.cautionNote);
-      expect(bodyText).toContain(en.cautionReporting);
+      expect(bodyText).not.toContain(en.cautionNote);
+      expect(bodyText).not.toContain(en.cautionReporting);
     });
 
     it("should render a back-to-top link pointing at the heading anchor", () => {

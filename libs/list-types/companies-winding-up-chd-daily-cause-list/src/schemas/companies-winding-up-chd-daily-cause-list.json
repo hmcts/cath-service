@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Companies Winding Up (ChD) Daily Cause List",
+  "title": "Companies Winding Up (Chancery Division) Daily Cause List",
   "type": "array",
   "items": {
     "type": "object",

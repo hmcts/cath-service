@@ -7,6 +7,12 @@
 
     <h1 class="govuk-heading-l" id="top">{{ header.listTitle }}</h1>
 
+    {% if t.factLinkText %}
+    <p class="govuk-body">
+      <a href="{{ t.factLinkUrl }}" class="govuk-link">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}
+    </p>
+    {% endif %}
+
     <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">{{ t.venueName }}</p>
     <p class="govuk-body govuk-!-margin-bottom-0">{{ t.addressLine1 }}</p>
     <p class="govuk-body">{{ t.addressLine2 }}</p>
@@ -15,8 +21,8 @@
     <p class="govuk-body">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
 
     {{ govukDetails({
-      summaryText: t.importantInformationHeading1,
-      html: '<p class="govuk-body">' + t.importantInformationLine1 + '</p>',
+      summaryText: t.importantInformationHeading,
+      html: '<p class="govuk-body govuk-!-font-weight-bold">' + t.importantInformationHeading1 + '</p><p class="govuk-body">' + t.importantInformationLine1 + '</p>',
       open: true
     }) }}
 
@@ -66,11 +72,6 @@
     {% endif %}
 
     <p class="govuk-body-s govuk-!-margin-top-6">{{ t.dataSource }}: {{ dataSource }}</p>
-
-    <div class="govuk-body-s">
-      <p>{{ t.cautionNote }}</p>
-      <p>{{ t.cautionReporting }}</p>
-    </div>
 
     <div class="back-to-top">
       <a href="#top" class="govuk-link">{{ t.backToTop }}</a>
