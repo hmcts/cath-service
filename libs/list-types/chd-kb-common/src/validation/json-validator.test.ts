@@ -35,7 +35,7 @@ describe("validateChdKbListType", () => {
     expect(result.errors).toHaveLength(0);
   });
 
-  it("should return valid when optional additionalInformation is omitted", () => {
+  it("should return invalid when additionalInformation is missing", () => {
     // Arrange
     const data = JSON.parse(JSON.stringify(VALID_DATA));
     delete data[0].additionalInformation;
@@ -44,8 +44,8 @@ describe("validateChdKbListType", () => {
     const result = validateChdKbListType(data);
 
     // Assert
-    expect(result.isValid).toBe(true);
-    expect(result.errors).toHaveLength(0);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
   it("should return invalid when judge is missing", () => {

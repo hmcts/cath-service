@@ -4,7 +4,7 @@
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+    "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
     "properties": {
       "judge": { "type": "string", "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$" },
       "time": { "type": "string", "pattern": "^\\d{1,2}([:.]\\d{2})?\\s*[ap]m\\s*$" },

@@ -11,7 +11,7 @@ export const CHD_KB_EXCEL_CONFIG: ExcelConverterConfig = {
     {
       header: "Additional Information",
       fieldName: "additionalInformation",
-      required: false,
+      required: true,
       validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
     }
   ],

@@ -22,14 +22,8 @@ describe("CHD_KB_EXCEL_CONFIG", () => {
     expect(CHD_KB_EXCEL_CONFIG.fields.map((f) => f.fieldName)).toEqual(["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"]);
   });
 
-  it("should mark additionalInformation as optional", () => {
-    const additionalInfoField = CHD_KB_EXCEL_CONFIG.fields.find((f) => f.fieldName === "additionalInformation");
-    expect(additionalInfoField?.required).toBe(false);
-  });
-
-  it("should mark all other fields as required", () => {
-    const requiredFields = CHD_KB_EXCEL_CONFIG.fields.filter((f) => f.fieldName !== "additionalInformation");
-    for (const field of requiredFields) {
+  it("should mark all fields as required", () => {
+    for (const field of CHD_KB_EXCEL_CONFIG.fields) {
       expect(field.required).toBe(true);
     }
   });
@@ -55,11 +49,17 @@ describe("CHD_KB_EXCEL_CONFIG", () => {
       const buffer = await createExcelBuffer(data);
       await expect(convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG)).rejects.toThrow(/Missing required field 'Judge'/);
     });
+
+    it("should reject a row with an empty additionalInformation cell", async () => {
+      const data = [HEADERS, ["Judge A", "9am", "Venue A", "Type A", "12345", "Case name A", ""]];
+      const buffer = await createExcelBuffer(data);
+      await expect(convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG)).rejects.toThrow(/Missing required field 'Additional Information'/);
+    });
   });
 
   describe("time validation", () => {
     it("should accept valid time formats with minutes", async () => {
-      const data = [HEADERS, ["Judge A", "10:30pm", "Venue A", "Type A", "12345", "Case name A", ""]];
+      const data = [HEADERS, ["Judge A", "10:30pm", "Venue A", "Type A", "12345", "Case name A", "Remote hearing"]];
       const buffer = await createExcelBuffer(data);
       const result = await convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG);
       expect(result).toHaveLength(1);
@@ -67,7 +67,7 @@ describe("CHD_KB_EXCEL_CONFIG", () => {
     });
 
     it("should accept time format with dot separator", async () => {
-      const data = [HEADERS, ["Judge A", "10.30am", "Venue A", "Type A", "12345", "Case name A", ""]];
+      const data = [HEADERS, ["Judge A", "10.30am", "Venue A", "Type A", "12345", "Case name A", "Remote hearing"]];
       const buffer = await createExcelBuffer(data);
       const result = await convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG);
       expect(result).toHaveLength(1);
@@ -75,7 +75,7 @@ describe("CHD_KB_EXCEL_CONFIG", () => {
     });
 
     it("should accept time format without minutes", async () => {
-      const data = [HEADERS, ["Judge A", "9am", "Venue A", "Type A", "12345", "Case name A", ""]];
+      const data = [HEADERS, ["Judge A", "9am", "Venue A", "Type A", "12345", "Case name A", "Remote hearing"]];
       const buffer = await createExcelBuffer(data);
       const result = await convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG);
       expect(result).toHaveLength(1);
@@ -131,14 +131,6 @@ describe("CHD_KB_EXCEL_CONFIG", () => {
       const buffer = await createExcelBuffer(data);
       await expect(convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG)).rejects.toThrow(/HTML tags are not allowed/);
     });
-  });
-
-  it("should handle a blank optional additionalInformation cell", async () => {
-    const data = [HEADERS, ["Judge A", "9am", "Venue A", "Type A", "12345", "Case name A", ""]];
-    const buffer = await createExcelBuffer(data);
-    const result = await convertExcelToJson(buffer, CHD_KB_EXCEL_CONFIG);
-    expect(result).toHaveLength(1);
-    expect(result[0].additionalInformation).toBe("");
   });
 
   it("should convert a valid sheet to the exact JSON shape and order", async () => {
