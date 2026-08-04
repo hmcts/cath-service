@@ -173,6 +173,7 @@ ticket's perspective.
 Outgoing (this ticket -> other):
 
 SELECT 'outgoing' AS direction, rl.type, rl.origin, rl.is_suspect,
+       rl.confidence, rl.rationale,
        r2.ref, r2.title, r2.status, r2.issue_number
 FROM requirement_link rl
 JOIN requirement r2 ON r2.id = rl.target_id
@@ -181,6 +182,7 @@ WHERE rl.source_id = [ticket.id];
 Incoming (other -> this ticket):
 
 SELECT 'incoming' AS direction, rl.type, rl.origin, rl.is_suspect,
+       rl.confidence, rl.rationale,
        r1.ref, r1.title, r1.status, r1.issue_number
 FROM requirement_link rl
 JOIN requirement r1 ON r1.id = rl.source_id
