@@ -117,7 +117,7 @@ UPDATE requirement SET granularity = 'story', version = 3, updated_at = '2026-08
 -- NEW: issue #3 — Dependency Dashboard
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  160, 'REQ-0160', 3,
+  289, 'REQ-0289', 3,
   'Dependency Dashboard',
   'This issue lists Renovate updates and detected dependencies. Read the [Dependency Dashboard](https://docs.renovatebot.com/key-concepts/dashboard/) docs to learn more.<br>[View this repository on the Mend.io Web Portal](https://developer.mend.io/github/hmcts/cath-service).
 
@@ -1570,12 +1570,12 @@ The following updates have all been created. To force a retry/rebase of any, cli
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (160, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2025-10-10T11:12:59Z', 'qk-requirements-sync');
+VALUES (289, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2025-10-10T11:12:59Z', 'qk-requirements-sync');
 
 -- NEW: issue #210 — [VIBE-138] CaTH Verified User Sign In
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  161, 'REQ-0161', 210,
+  290, 'REQ-0290', 210,
   '[VIBE-138] CaTH Verified User Sign In',
   '> **Migrated from [VIBE-138](https://tools.hmcts.net/jira/browse/VIBE-138)**
 
@@ -1600,12 +1600,12 @@ Verified users are required to sign into CaTH before accessing restricted inform
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (161, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:58:32Z', 'qk-requirements-sync');
+VALUES (290, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:58:32Z', 'qk-requirements-sync');
 
 -- NEW: issue #212 — [VIBE-148] CaTH – All Pages Specification
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  162, 'REQ-0162', 212,
+  291, 'REQ-0291', 212,
   '[VIBE-148] CaTH – All Pages Specification',
   '> **Migrated from [VIBE-148](https://tools.hmcts.net/jira/browse/VIBE-148)**
 
@@ -1630,12 +1630,12 @@ This epic captures all the technical specifications and requirements to be displ
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (162, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:58:51Z', 'qk-requirements-sync');
+VALUES (291, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:58:51Z', 'qk-requirements-sync');
 
 -- NEW: issue #214 — [VIBE-161] CaTH Publication - Excel Upload
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  163, 'REQ-0163', 214,
+  292, 'REQ-0292', 214,
   '[VIBE-161] CaTH Publication - Excel Upload',
   '> **Migrated from [VIBE-161](https://tools.hmcts.net/jira/browse/VIBE-161)**
 
@@ -1660,12 +1660,12 @@ This epic comprises all the steps, processes and technical requirements needed f
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (163, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:09Z', 'qk-requirements-sync');
+VALUES (292, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:09Z', 'qk-requirements-sync');
 
 -- NEW: issue #215 — [VIBE-168] CaTH Publication - Remove list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  164, 'REQ-0164', 215,
+  293, 'REQ-0293', 215,
   '[VIBE-168] CaTH Publication - Remove list',
   '> **Migrated from [VIBE-168](https://tools.hmcts.net/jira/browse/VIBE-168)**
 
@@ -1690,12 +1690,12 @@ This epic contains all the steps, processes and technical requirements needed to
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (164, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:18Z', 'qk-requirements-sync');
+VALUES (293, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:18Z', 'qk-requirements-sync');
 
 -- NEW: issue #216 — [VIBE-174] CaTH Verified User - Subscription Journey 
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  165, 'REQ-0165', 216,
+  294, 'REQ-0294', 216,
   '[VIBE-174] CaTH Verified User - Subscription Journey ',
   '> **Migrated from [VIBE-174](https://tools.hmcts.net/jira/browse/VIBE-174)**
 
@@ -1720,12 +1720,12 @@ This epic covers the email subscription and un~~subscription processes. The sign
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (165, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:27Z', 'qk-requirements-sync');
+VALUES (294, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:27Z', 'qk-requirements-sync');
 
 -- NEW: issue #217 — [VIBE-179] CaTH Back-End Requirements
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  166, 'REQ-0166', 217,
+  295, 'REQ-0295', 217,
   '[VIBE-179] CaTH Back-End Requirements',
   '> **Migrated from [VIBE-179](https://tools.hmcts.net/jira/browse/VIBE-179)**
 
@@ -1750,12 +1750,12 @@ This epic covers all the back end requirements needed to form the foundation tha
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (166, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:36Z', 'qk-requirements-sync');
+VALUES (295, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:36Z', 'qk-requirements-sync');
 
 -- NEW: issue #218 — [VIBE-200] Single Sign On
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  167, 'REQ-0167', 218,
+  296, 'REQ-0296', 218,
   '[VIBE-200] Single Sign On',
   '> **Migrated from [VIBE-200](https://tools.hmcts.net/jira/browse/VIBE-200)**
 
@@ -1780,12 +1780,12 @@ This epic covers all the processes, pages and users covered in the single sign o
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (167, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:46Z', 'qk-requirements-sync');
+VALUES (296, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:46Z', 'qk-requirements-sync');
 
 -- NEW: issue #219 — [VIBE-206] System Admin User Journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  168, 'REQ-0168', 219,
+  297, 'REQ-0297', 219,
   '[VIBE-206] System Admin User Journey',
   '> **Migrated from [VIBE-206](https://tools.hmcts.net/jira/browse/VIBE-206)**
 
@@ -1810,12 +1810,12 @@ This epic captures the requirements for the system admin user
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (168, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:55Z', 'qk-requirements-sync');
+VALUES (297, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T16:59:55Z', 'qk-requirements-sync');
 
 -- NEW: issue #220 — [VIBE-210] User Consumption - Display of Pubs
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  169, 'REQ-0169', 220,
+  298, 'REQ-0298', 220,
   '[VIBE-210] User Consumption - Display of Pubs',
   '> **Migrated from [VIBE-210](https://tools.hmcts.net/jira/browse/VIBE-210)**
 
@@ -1840,12 +1840,12 @@ This epic covers all the requirements for the display of publications in CaTH, i
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (169, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:06Z', 'qk-requirements-sync');
+VALUES (298, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:06Z', 'qk-requirements-sync');
 
 -- NEW: issue #221 — [VIBE-224] CTSC Admin User Journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  170, 'REQ-0170', 221,
+  299, 'REQ-0299', 221,
   '[VIBE-224] CTSC Admin User Journey',
   '> **Migrated from [VIBE-224](https://tools.hmcts.net/jira/browse/VIBE-224)**
 
@@ -1870,12 +1870,12 @@ This epic covers the CTSC Admin User Journey which includes the approval and rej
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (170, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:15Z', 'qk-requirements-sync');
+VALUES (299, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:15Z', 'qk-requirements-sync');
 
 -- NEW: issue #223 — [VIBE-294] Verified User (Part 2) - Subscription
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  171, 'REQ-0171', 223,
+  300, 'REQ-0300', 223,
   '[VIBE-294] Verified User (Part 2) - Subscription',
   '> **Migrated from [VIBE-294](https://tools.hmcts.net/jira/browse/VIBE-294)**
 
@@ -1900,12 +1900,12 @@ This epic covers the remaining flow of the subscription journey (subscription by
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (171, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:34Z', 'qk-requirements-sync');
+VALUES (300, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:34Z', 'qk-requirements-sync');
 
 -- NEW: issue #224 — [VIBE-295] System Admin functionality (Part 2) 
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  172, 'REQ-0172', 224,
+  301, 'REQ-0301', 224,
   '[VIBE-295] System Admin functionality (Part 2) ',
   '> **Migrated from [VIBE-295](https://tools.hmcts.net/jira/browse/VIBE-295)**
 
@@ -1930,12 +1930,12 @@ This epic covers the 2nd part of the system admin functionality (audit logs, 3rd
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (172, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:44Z', 'qk-requirements-sync');
+VALUES (301, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:44Z', 'qk-requirements-sync');
 
 -- NEW: issue #225 — [VIBE-296] Non-Strategic Publishing (Part 2)
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  173, 'REQ-0173', 225,
+  302, 'REQ-0302', 225,
   '[VIBE-296] Non-Strategic Publishing (Part 2)',
   '> **Migrated from [VIBE-296](https://tools.hmcts.net/jira/browse/VIBE-296)**
 
@@ -1960,12 +1960,12 @@ This epic covers the exploration of AI coding of several list types with similar
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (173, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:53Z', 'qk-requirements-sync');
+VALUES (302, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:00:53Z', 'qk-requirements-sync');
 
 -- NEW: issue #282 — [VIBE-220] Create flux config for deploying CaTH AI
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  174, 'REQ-0174', 282,
+  303, 'REQ-0303', 282,
   '[VIBE-220] Create flux config for deploying CaTH AI',
   '> **Migrated from [VIBE-220](https://tools.hmcts.net/jira/browse/VIBE-220)**
 
@@ -2007,12 +2007,12 @@ Placeholder ticket to capture the flux deployment of CaTH and the postgres DB
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (174, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:15:46Z', 'qk-requirements-sync');
+VALUES (303, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:15:46Z', 'qk-requirements-sync');
 
 -- NEW: issue #307 — [VIBE-340] Excel generation (SJP Only) and fulfilment for subscriptions
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  175, 'REQ-0175', 307,
+  304, 'REQ-0304', 307,
   '[VIBE-340] Excel generation (SJP Only) and fulfilment for subscriptions',
   '> **Migrated from [VIBE-340](https://tools.hmcts.net/jira/browse/VIBE-340)**
 
@@ -2234,12 +2234,12 @@ _Attachments will be added in a comment below._
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (175, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:22:54Z', 'qk-requirements-sync');
+VALUES (304, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-20T17:22:54Z', 'qk-requirements-sync');
 
 -- NEW: issue #321 — [VIBE-338] Subscription Fulfilment 
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  176, 'REQ-0176', 321,
+  305, 'REQ-0305', 321,
   '[VIBE-338] Subscription Fulfilment ',
   '> **Migrated from [VIBE-338](https://tools.hmcts.net/jira/browse/VIBE-338)**
 
@@ -2264,12 +2264,12 @@ This epic covers the Subscription Fulfilment Process (current and future options
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (176, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-29T15:56:24Z', 'qk-requirements-sync');
+VALUES (305, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-29T15:56:24Z', 'qk-requirements-sync');
 
 -- NEW: issue #324 — [VIBE-369] SJP Download 
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  177, 'REQ-0177', 324,
+  306, 'REQ-0306', 324,
   '[VIBE-369] SJP Download ',
   '> **Migrated from [VIBE-369](https://tools.hmcts.net/jira/browse/VIBE-369)**
 
@@ -2456,12 +2456,12 @@ _Attachments will be added in a comment below._
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (177, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-29T16:02:45Z', 'qk-requirements-sync');
+VALUES (306, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-29T16:02:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #327 — [VIBE-138] CaTH Verified User Sign In
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  178, 'REQ-0178', 327,
+  307, 'REQ-0307', 327,
   '[VIBE-138] CaTH Verified User Sign In',
   '> **Migrated from [VIBE-138](https://tools.hmcts.net/jira/browse/VIBE-138)**
 
@@ -2486,12 +2486,12 @@ Verified users are required to sign into CaTH before accessing restricted inform
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (178, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-30T13:58:16Z', 'qk-requirements-sync');
+VALUES (307, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-01-30T13:58:16Z', 'qk-requirements-sync');
 
 -- NEW: issue #351 — CaTH Cron Trigger - Automated Inactive Accounts
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  179, 'REQ-0179', 351,
+  308, 'REQ-0308', 351,
   'CaTH Cron Trigger - Automated Inactive Accounts',
   'I want the system to automatically identify inactive user accounts, notify users before action is taken, and delete accounts that exceed inactivity thresholds,
 
@@ -2546,12 +2546,12 @@ crime_sign_in_link',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (179, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:26:10Z', 'qk-requirements-sync');
+VALUES (308, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:26:10Z', 'qk-requirements-sync');
 
 -- NEW: issue #352 — CaTH Cron Trigger - Manage Expired Artefacts and Audit Logs
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  180, 'REQ-0180', 352,
+  309, 'REQ-0309', 352,
   'CaTH Cron Trigger - Manage Expired Artefacts and Audit Logs',
   'I want the system to automatically manage expired artefacts and audit logs, so that the application remains efficient and complies with data retention policies.
 
@@ -2580,12 +2580,12 @@ The archiving process includes:
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (180, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:36:47Z', 'qk-requirements-sync');
+VALUES (309, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:36:47Z', 'qk-requirements-sync');
 
 -- NEW: issue #353 — CaTH Cron Trigger - Automate Media Application Reporting and Cleanup
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  181, 'REQ-0181', 353,
+  310, 'REQ-0310', 353,
   'CaTH Cron Trigger - Automate Media Application Reporting and Cleanup',
   'I want the system to automatically process media applications for reporting and cleanup, so that the reporting process is streamlined and outdated applications are removed.
 
@@ -2607,12 +2607,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (181, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:44:40Z', 'qk-requirements-sync');
+VALUES (310, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T13:44:40Z', 'qk-requirements-sync');
 
 -- NEW: issue #355 — CaTH Cron Trigger - Manage Artefacts, Refresh Views and Subscription Triggers
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  182, 'REQ-0182', 355,
+  311, 'REQ-0311', 355,
   'CaTH Cron Trigger - Manage Artefacts, Refresh Views and Subscription Triggers',
   'I want the application to manage artefacts and refresh materialised views based on scheduled triggers,
 so that the data remains up-to-date and artefacts are processed efficiently.
@@ -2644,12 +2644,12 @@ The system should log and handle any errors encountered during the execution of 
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (182, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T14:21:09Z', 'qk-requirements-sync');
+VALUES (311, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T14:21:09Z', 'qk-requirements-sync');
 
 -- NEW: issue #359 — Create Azure API Management (APIM) Infrastructure
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  183, 'REQ-0183', 359,
+  312, 'REQ-0312', 359,
   'Create Azure API Management (APIM) Infrastructure',
   '## Overview
 
@@ -2790,12 +2790,12 @@ variable "sampling_percentage" {
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (183, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T15:59:45Z', 'qk-requirements-sync');
+VALUES (312, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-12T15:59:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #412 — Welsh translations on Admin page
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  184, 'REQ-0184', 412,
+  313, 'REQ-0313', 412,
   'Welsh translations on Admin page',
   'Placeholder for discussion on welsh translations for Admin pages',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -2803,12 +2803,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (184, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-24T18:26:43Z', 'qk-requirements-sync');
+VALUES (313, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-24T18:26:43Z', 'qk-requirements-sync');
 
 -- NEW: issue #413 — Add audit logs for all System Admin and Admin Dashboard actions
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  185, 'REQ-0185', 413,
+  314, 'REQ-0314', 413,
   'Add audit logs for all System Admin and Admin Dashboard actions',
   'Check all the system and admin dashboard pages and make sure that we are logging all the action in audit logs.',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -2816,12 +2816,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (185, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-24T18:29:29Z', 'qk-requirements-sync');
+VALUES (314, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-02-24T18:29:29Z', 'qk-requirements-sync');
 
 -- NEW: issue #547 — Outstanding Welsh Translations
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  186, 'REQ-0186', 547,
+  315, 'REQ-0315', 547,
   'Outstanding Welsh Translations',
   'This epic covers tickets raised for all outstanding Welsh translations.',
   'draft', NULL, 'epic', 'functional', NULL, NULL,
@@ -2829,12 +2829,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (186, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-06T13:58:11Z', 'qk-requirements-sync');
+VALUES (315, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-06T13:58:11Z', 'qk-requirements-sync');
 
 -- NEW: issue #548 — Outstanding Welsh translations for Public user journey pages
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  187, 'REQ-0187', 548,
+  316, 'REQ-0316', 548,
   'Outstanding Welsh translations for Public user journey pages',
   '**PROBLEM STATEMENT**
 This ticket contains the welsh translations for the public user journey
@@ -3006,12 +3006,12 @@ Cwmbran Magistrates'' Court –
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (187, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-06T13:59:33Z', 'qk-requirements-sync');
+VALUES (316, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-06T13:59:33Z', 'qk-requirements-sync');
 
 -- NEW: issue #551 — Configure SSO Redirect URLs Across All Environments
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  188, 'REQ-0188', 551,
+  317, 'REQ-0317', 551,
   'Configure SSO Redirect URLs Across All Environments',
   'We need add these URLs in redirectUri setting on MOJ CaTH IDAM Applications using MOJ Dev account. We already got owner permission for non-prod environment except demo, but we need owner permission for PROD MOJ account. 
 For PROD MOJ CaTH Application permission, you need request it using slack channel **staff-identity-authentication-services**.
@@ -3023,12 +3023,12 @@ This ticket can be played once CaTH AI urls for all environments are confirmed a
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (188, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T11:31:45Z', 'qk-requirements-sync');
+VALUES (317, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T11:31:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #553 — Configure CFT IDAM Redirect URLs Across All Environments
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  189, 'REQ-0189', 553,
+  318, 'REQ-0318', 553,
   'Configure CFT IDAM Redirect URLs Across All Environments',
   'We need add these URLs in redirectUri setting on CFT IDAM. You need request it using slack channel idam-support-cft.
 
@@ -3038,12 +3038,12 @@ This ticket can be played once CaTH AI urls for all environments are confirmed a
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (189, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T13:11:08Z', 'qk-requirements-sync');
+VALUES (318, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T13:11:08Z', 'qk-requirements-sync');
 
 -- NEW: issue #554 — Configure Crime IDAM Redirect URLs Across All Environments
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  190, 'REQ-0190', 554,
+  319, 'REQ-0319', 554,
   'Configure Crime IDAM Redirect URLs Across All Environments',
   'We need add these URLs in redirectUri setting on Crime IDAM. You need request it using slack channel idam-support-crime or you can contact Crime IDAM tech lead: Kremena.Nenkova@HMCTS.NET
 
@@ -3053,12 +3053,12 @@ This ticket can be played once CaTH AI urls for all environments are confirmed a
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (190, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T13:15:01Z', 'qk-requirements-sync');
+VALUES (319, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-08T13:15:01Z', 'qk-requirements-sync');
 
 -- NEW: issue #561 — Enable E2E Test on Master Build
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  191, 'REQ-0191', 561,
+  320, 'REQ-0320', 561,
   'Enable E2E Test on Master Build',
   'Once SSO and CFT IDAM have been configured, we need to enable E2E Tests on master build to make sure all end to end tests passed before deploying changes to PROD (similar to existing CaTH)',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -3066,12 +3066,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (191, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-11T10:54:34Z', 'qk-requirements-sync');
+VALUES (320, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-11T10:54:34Z', 'qk-requirements-sync');
 
 -- NEW: issue #562 — Delete the Github Branch automatically when merge into master
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  192, 'REQ-0192', 562,
+  321, 'REQ-0321', 562,
   'Delete the Github Branch automatically when merge into master',
   'We need to make sure that once dev branch is merged into master branch, it must be deleted automatically.',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -3079,12 +3079,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (192, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-11T10:57:52Z', 'qk-requirements-sync');
+VALUES (321, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-11T10:57:52Z', 'qk-requirements-sync');
 
 -- NEW: issue #567 — Add email rate limiting using Redis to prevent notification spam
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  193, 'REQ-0193', 567,
+  322, 'REQ-0322', 567,
   'Add email rate limiting using Redis to prevent notification spam',
   '## User Story
 
@@ -3145,12 +3145,12 @@ If the number of emails for the user has exceeded the allowed value, the behavio
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (193, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T10:27:22Z', 'qk-requirements-sync');
+VALUES (322, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T10:27:22Z', 'qk-requirements-sync');
 
 -- NEW: issue #568 — Cache outgoing OAuth access tokens in Redis to reduce latency on third-party API calls
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  194, 'REQ-0194', 568,
+  323, 'REQ-0323', 568,
   'Cache outgoing OAuth access tokens in Redis to reduce latency on third-party API calls',
   '## User Story
 
@@ -3189,12 +3189,12 @@ As a developer, I want outgoing OAuth access tokens for third-party APIs to be c
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (194, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T10:27:37Z', 'qk-requirements-sync');
+VALUES (323, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T10:27:37Z', 'qk-requirements-sync');
 
 -- NEW: issue #574 — Set up performance test data seeding for public journey performance tests
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  195, 'REQ-0195', 574,
+  324, 'REQ-0324', 574,
   'Set up performance test data seeding for public journey performance tests',
   '## User Story
 
@@ -3273,12 +3273,12 @@ Document the following env vars needed for performance tests to run against STG:
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (195, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:34:13Z', 'qk-requirements-sync');
+VALUES (324, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:34:13Z', 'qk-requirements-sync');
 
 -- NEW: issue #575 — Implement Gatling performance tests for ViewStyleGuide and AlphabeticalSearch public journeys
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  196, 'REQ-0196', 575,
+  325, 'REQ-0325', 575,
   'Implement Gatling performance tests for ViewStyleGuide and AlphabeticalSearch public journeys',
   '## User Story
 
@@ -3440,12 +3440,12 @@ perfLocationId: ${env:PERF_LOCATION_ID:-1}
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (196, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:35:04Z', 'qk-requirements-sync');
+VALUES (325, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:35:04Z', 'qk-requirements-sync');
 
 -- NEW: issue #576 — Implement publication upload smoke test for POST /v1/publication endpoint
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  197, 'REQ-0197', 576,
+  326, 'REQ-0326', 576,
   'Implement publication upload smoke test for POST /v1/publication endpoint',
   '## User Story
 
@@ -3558,12 +3558,12 @@ Add a step after the existing health checks to run the smoke test spec against t
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (197, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:42:21Z', 'qk-requirements-sync');
+VALUES (326, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:42:21Z', 'qk-requirements-sync');
 
 -- NEW: issue #577 — Add supertest route integration tests for all page controllers
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  198, 'REQ-0198', 577,
+  327, 'REQ-0327', 577,
   'Add supertest route integration tests for all page controllers',
   '## User Story
 
@@ -3632,12 +3632,12 @@ Plus route files in `libs/api/src/routes/`.
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (198, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:54:48Z', 'qk-requirements-sync');
+VALUES (327, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:54:48Z', 'qk-requirements-sync');
 
 -- NEW: issue #578 — Run route integration tests in CI on PR and master
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  199, 'REQ-0199', 578,
+  328, 'REQ-0328', 578,
   'Run route integration tests in CI on PR and master',
   '## User Story
 
@@ -3670,12 +3670,12 @@ Currently the build stage runs `yarn test` across all workspaces via Turborepo. 
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (199, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:54:59Z', 'qk-requirements-sync');
+VALUES (328, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:54:59Z', 'qk-requirements-sync');
 
 -- NEW: issue #579 — Add Swagger/OpenAPI documentation for the POST /v1/publication endpoint
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  200, 'REQ-0200', 579,
+  329, 'REQ-0329', 579,
   'Add Swagger/OpenAPI documentation for the POST /v1/publication endpoint',
   '## User Story
 
@@ -3732,12 +3732,12 @@ There is no OpenAPI/Swagger documentation. Consumers need to inspect source code
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (200, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:58:22Z', 'qk-requirements-sync');
+VALUES (329, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T11:58:22Z', 'qk-requirements-sync');
 
 -- NEW: issue #587 — System Admin delete court - complete journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  201, 'REQ-0201', 587,
+  330, 'REQ-0330', 587,
   'System Admin delete court - complete journey',
   'The current delete court functionality is incomplete and has some issues which have to be addressed:
 
@@ -3753,12 +3753,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (201, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T14:58:34Z', 'qk-requirements-sync');
+VALUES (330, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T14:58:34Z', 'qk-requirements-sync');
 
 -- NEW: issue #588 — Add bespoke logic for publication subscription triggers
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  202, 'REQ-0202', 588,
+  331, 'REQ-0331', 588,
   'Add bespoke logic for publication subscription triggers',
   'Currently the subscription  notification process for the email subscribers and API subscribers are triggered on every publication upload (Except no match). The following check should be performed before processing subscription:
 - Subscription should not be triggered if the displayFrom date is from tomorrow onwards.  CaTh should notify the subscribers if the publication is already displayable (today or earlier). Subscription for future dated publications is done via the subscription cron job.
@@ -3769,12 +3769,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (202, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T16:00:40Z', 'qk-requirements-sync');
+VALUES (331, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T16:00:40Z', 'qk-requirements-sync');
 
 -- NEW: issue #589 — Set payload limit for generation of publication files and summary
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  203, 'REQ-0203', 589,
+  332, 'REQ-0332', 589,
   'Set payload limit for generation of publication files and summary',
   'The current payload limits on CaTH are:
 - PDF generation - 256KB (Will need to determine the new limit on AI CaTH as the PDF is generated using a different technology so the file size might be quite different). This needs to be investigated because CaTH AI PDF size may be small as compare to CaTH ORG.
@@ -3787,12 +3787,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (203, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T19:51:49Z', 'qk-requirements-sync');
+VALUES (332, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-12T19:51:49Z', 'qk-requirements-sync');
 
 -- NEW: issue #590 — Auto-update open PRs when master is updated
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  204, 'REQ-0204', 590,
+  333, 'REQ-0333', 590,
   'Auto-update open PRs when master is updated',
   '## User Story
 
@@ -3824,12 +3824,12 @@ The fix is a single new workflow file using `chinthakagodawita/autoupdate-action
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (204, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T07:51:00Z', 'qk-requirements-sync');
+VALUES (333, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T07:51:00Z', 'qk-requirements-sync');
 
 -- NEW: issue #591 — Style Guide: Implement COP Daily Cause List
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  205, 'REQ-0205', 591,
+  334, 'REQ-0334', 591,
   'Style Guide: Implement COP Daily Cause List',
   '## User Story
 
@@ -4093,12 +4093,12 @@ Notes for the TS port:
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (205, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T08:51:02Z', 'qk-requirements-sync');
+VALUES (334, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T08:51:02Z', 'qk-requirements-sync');
 
 -- NEW: issue #614 — Azure Frontdoor WAF: Rate Limiting & Bot Protection for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  206, 'REQ-0206', 614,
+  335, 'REQ-0335', 614,
   'Azure Frontdoor WAF: Rate Limiting & Bot Protection for cath-service',
   '## User Story
 
@@ -4215,12 +4215,12 @@ custom_rules = [
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (206, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T11:05:25Z', 'qk-requirements-sync');
+VALUES (335, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T11:05:25Z', 'qk-requirements-sync');
 
 -- NEW: issue #615 — Integrate Fortify SAST Scan into Nightly Pipeline
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  207, 'REQ-0207', 615,
+  336, 'REQ-0336', 615,
   'Integrate Fortify SAST Scan into Nightly Pipeline',
   '## User Story
 
@@ -4269,12 +4269,12 @@ The existing nightly pipeline (`.github/workflows/nightly.yml`) runs at 2am UTC 
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (207, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T11:30:37Z', 'qk-requirements-sync');
+VALUES (336, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T11:30:37Z', 'qk-requirements-sync');
 
 -- NEW: issue #617 — Setup Azure B2C App Registrations and Secret Rotation for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  208, 'REQ-0208', 617,
+  337, 'REQ-0337', 617,
   'Setup Azure B2C App Registrations and Secret Rotation for cath-service',
   '## User Story
 
@@ -4441,12 +4441,12 @@ Replace the static pip-sourced secret values with references to cath''s own app 
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (208, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T15:41:40Z', 'qk-requirements-sync');
+VALUES (337, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-13T15:41:40Z', 'qk-requirements-sync');
 
 -- NEW: issue #619 — Create APIM OTP API for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  209, 'REQ-0209', 619,
+  338, 'REQ-0338', 619,
   'Create APIM OTP API for cath-service',
   '## Overview
 
@@ -4602,12 +4602,12 @@ infrastructure/resources/
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (209, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T12:02:25Z', 'qk-requirements-sync');
+VALUES (338, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T12:02:25Z', 'qk-requirements-sync');
 
 -- NEW: issue #620 — Create APIM Testing-Support API for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  210, 'REQ-0210', 620,
+  339, 'REQ-0339', 620,
   'Create APIM Testing-Support API for cath-service',
   '## Overview
 
@@ -4731,12 +4731,12 @@ Operation policies include `{TENANT_ID}` and `{CLIENT_ID}` substitution — thes
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (210, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T12:03:06Z', 'qk-requirements-sync');
+VALUES (339, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T12:03:06Z', 'qk-requirements-sync');
 
 -- NEW: issue #621 — Add Application Insights Alerting for Production
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  211, 'REQ-0211', 621,
+  340, 'REQ-0340', 621,
   'Add Application Insights Alerting for Production',
   '## Overview
 
@@ -4856,12 +4856,12 @@ module "third_party_subscription_alerting" {
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (211, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:13:02Z', 'qk-requirements-sync');
+VALUES (340, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:13:02Z', 'qk-requirements-sync');
 
 -- NEW: issue #622 — Add Dedicated APIM Key Vault for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  212, 'REQ-0212', 622,
+  341, 'REQ-0341', 622,
   'Add Dedicated APIM Key Vault for cath-service',
   '## Overview
 
@@ -5012,12 +5012,12 @@ locals {
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (212, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:14:10Z', 'qk-requirements-sync');
+VALUES (341, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:14:10Z', 'qk-requirements-sync');
 
 -- NEW: issue #624 — Configure Crime Portal OIDC Federated Identity for cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  213, 'REQ-0213', 624,
+  342, 'REQ-0342', 624,
   'Configure Crime Portal OIDC Federated Identity for cath-service',
   '## Overview
 
@@ -5120,12 +5120,12 @@ resource "azurerm_federated_identity_credential" "cath_crime_federated_connectio
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (213, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:15:39Z', 'qk-requirements-sync');
+VALUES (342, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:15:39Z', 'qk-requirements-sync');
 
 -- NEW: issue #625 — Upgrade Redis Infrastructure: Prod-Tier Config and KV Secret Improvements
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  214, 'REQ-0214', 625,
+  343, 'REQ-0343', 625,
   'Upgrade Redis Infrastructure: Prod-Tier Config and KV Secret Improvements',
   '## Overview
 
@@ -5289,12 +5289,12 @@ Premium tier provides dedicated compute, no noisy-neighbour risk, and supports d
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (214, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:18:25Z', 'qk-requirements-sync');
+VALUES (343, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:18:25Z', 'qk-requirements-sync');
 
 -- NEW: issue #626 — Implement Bulk Create Media Accounts
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  215, 'REQ-0215', 626,
+  344, 'REQ-0344', 626,
   'Implement Bulk Create Media Accounts',
   '## User Story
 
@@ -5483,12 +5483,12 @@ Full Welsh translations required for all pages (same structure as English).
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (215, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:52:23Z', 'qk-requirements-sync');
+VALUES (344, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-14T13:52:23Z', 'qk-requirements-sync');
 
 -- NEW: issue #628 — MI Report Download - System Admin Dashboard
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  216, 'REQ-0216', 628,
+  345, 'REQ-0345', 628,
   'MI Report Download - System Admin Dashboard',
   '## User Story
 
@@ -5642,12 +5642,12 @@ This story automates that process, allowing System Admins to self-serve the repo
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (216, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T08:08:32Z', 'qk-requirements-sync');
+VALUES (345, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T08:08:32Z', 'qk-requirements-sync');
 
 -- NEW: issue #630 — Add SDP (Secure Data Platform) read-only access via materialised views
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  217, 'REQ-0217', 630,
+  346, 'REQ-0346', 630,
   'Add SDP (Secure Data Platform) read-only access via materialised views',
   '## Background
 
@@ -5818,12 +5818,12 @@ resource "azurerm_key_vault_secret" "sdp_postgres_database" {
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (217, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T10:29:33Z', 'qk-requirements-sync');
+VALUES (346, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T10:29:33Z', 'qk-requirements-sync');
 
 -- NEW: issue #632 — Update LLD Document
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  218, 'REQ-0218', 632,
+  347, 'REQ-0347', 632,
   'Update LLD Document',
   'This is placeholder ticket to update LLD. Details will be added later',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -5831,12 +5831,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (218, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T10:49:05Z', 'qk-requirements-sync');
+VALUES (347, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-15T10:49:05Z', 'qk-requirements-sync');
 
 -- NEW: issue #646 — Fix Application Insights — logs not appearing in Azure
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  219, 'REQ-0219', 646,
+  348, 'REQ-0348', 646,
   'Fix Application Insights — logs not appearing in Azure',
   '## Problem
 
@@ -5880,12 +5880,12 @@ In `apps/web/src/app.ts`, `monitoringMiddleware` is registered after `healthchec
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (219, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-19T15:21:15Z', 'qk-requirements-sync');
+VALUES (348, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-19T15:21:15Z', 'qk-requirements-sync');
 
 -- NEW: issue #647 — Configure DNS for non-prod environments (ithc, demo, test) in azure-public-dns
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  220, 'REQ-0220', 647,
+  349, 'REQ-0349', 647,
   'Configure DNS for non-prod environments (ithc, demo, test) in azure-public-dns',
   '## User Story
 
@@ -5945,12 +5945,12 @@ Use the staging entry in `environments/staging/staging-apps-hmcts-net.yml` as th
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (220, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-19T15:31:36Z', 'qk-requirements-sync');
+VALUES (349, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-19T15:31:36Z', 'qk-requirements-sync');
 
 -- NEW: issue #654 — Implement Third-Party Inbound Publication API
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  221, 'REQ-0221', 654,
+  350, 'REQ-0350', 654,
   'Implement Third-Party Inbound Publication API',
   '## User Story
 
@@ -6071,12 +6071,12 @@ CaTH will authenticate using **OAuth2 client credentials grant flow**. cath-serv
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (221, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T13:46:46Z', 'qk-requirements-sync');
+VALUES (350, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T13:46:46Z', 'qk-requirements-sync');
 
 -- NEW: issue #655 — Create proxy app to split traffic between pip-frontend and cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  222, 'REQ-0222', 655,
+  351, 'REQ-0351', 655,
   'Create proxy app to split traffic between pip-frontend and cath-service',
   '## User Story
 
@@ -6147,12 +6147,12 @@ The proxy strategy (percentage-based, route-based, header/cookie-based) is yet t
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (222, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T14:25:00Z', 'qk-requirements-sync');
+VALUES (351, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T14:25:00Z', 'qk-requirements-sync');
 
 -- NEW: issue #657 — Data Migration: Migrate artefacts from pip-data-management to cath-service
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  223, 'REQ-0223', 657,
+  352, 'REQ-0352', 657,
   'Data Migration: Migrate artefacts from pip-data-management to cath-service',
   '## User Story
 
@@ -6256,12 +6256,12 @@ The migration must be run once as part of the go-live cutover process. Only **ac
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (223, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T14:53:55Z', 'qk-requirements-sync');
+VALUES (352, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T14:53:55Z', 'qk-requirements-sync');
 
 -- NEW: issue #659 — The 'Business and Property Courts Rolls Building' venue is created in CaTH
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  224, 'REQ-0224', 659,
+  353, 'REQ-0353', 659,
   'The ''Business and Property Courts Rolls Building'' venue is created in CaTH',
   '**PROBLEM STATEMENT**
 
@@ -6320,12 +6320,12 @@ Technology and Construction Court (KB) daily cause list
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (224, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T16:35:25Z', 'qk-requirements-sync');
+VALUES (353, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-05-20T16:35:25Z', 'qk-requirements-sync');
 
 -- NEW: issue #671 — CaTH User Experience  & Accessibility
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  225, 'REQ-0225', 671,
+  354, 'REQ-0354', 671,
   'CaTH User Experience  & Accessibility',
   'This epic covers all updates to AI CaTH to enhance user experience and accessibility.',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -6333,12 +6333,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (225, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:34:15Z', 'qk-requirements-sync');
+VALUES (354, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:34:15Z', 'qk-requirements-sync');
 
 -- NEW: issue #672 — Validate Page View Analytics Tracking for Nunjucks (.njk) Rendered Pages
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  226, 'REQ-0226', 672,
+  355, 'REQ-0355', 672,
   'Validate Page View Analytics Tracking for Nunjucks (.njk) Rendered Pages',
   '**Description:**
 Conduct testing to ensure page view analytics are implemented and functioning correctly across all pages rendered from Nunjucks (`.njk`) templates. Validate that page view events are triggered consistently, contain the correct metadata, and are accurately recorded in the analytics platform.
@@ -6373,12 +6373,12 @@ Conduct testing to ensure page view analytics are implemented and functioning co
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (226, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:41:18Z', 'qk-requirements-sync');
+VALUES (355, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:41:18Z', 'qk-requirements-sync');
 
 -- NEW: issue #673 — Excel - Magistrate public and standard hearing lists
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  227, 'REQ-0227', 673,
+  356, 'REQ-0356', 673,
   'Excel - Magistrate public and standard hearing lists',
   '**PROBLEM STATEMENT**
 
@@ -6407,12 +6407,12 @@ This ticket is raised to create the excel downloadable version of the Magistrate
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (227, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:48:48Z', 'qk-requirements-sync');
+VALUES (356, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T12:48:48Z', 'qk-requirements-sync');
 
 -- NEW: issue #674 — Excel - Crown hearing lists
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  228, 'REQ-0228', 674,
+  357, 'REQ-0357', 674,
   'Excel - Crown hearing lists',
   '**PROBLEM STATEMENT**
 
@@ -6441,12 +6441,12 @@ This ticket is raised to create the Excel downloadable version of the Crown hear
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (228, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:29:20Z', 'qk-requirements-sync');
+VALUES (357, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:29:20Z', 'qk-requirements-sync');
 
 -- NEW: issue #675 — Excel - Magistrates Hearing Lists - Part 2
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  229, 'REQ-0229', 675,
+  358, 'REQ-0358', 675,
   'Excel - Magistrates Hearing Lists - Part 2',
   '**PROBLEM STATEMENT**
 
@@ -6482,12 +6482,12 @@ MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (229, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:50:00Z', 'qk-requirements-sync');
+VALUES (358, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:50:00Z', 'qk-requirements-sync');
 
 -- NEW: issue #676 — Excel - SJP Hearing Lists
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  230, 'REQ-0230', 676,
+  359, 'REQ-0359', 676,
   'Excel - SJP Hearing Lists',
   '**PROBLEM STATEMENT**
 
@@ -6513,12 +6513,12 @@ This ticket is raised to create the Excel downloadable version of the SJP hearin
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (230, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:56:26Z', 'qk-requirements-sync');
+VALUES (359, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:56:26Z', 'qk-requirements-sync');
 
 -- NEW: issue #677 — Excel - CFT Hearing Lists
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  231, 'REQ-0231', 677,
+  360, 'REQ-0360', 677,
   'Excel - CFT Hearing Lists',
   '**PROBLEM STATEMENT**
 
@@ -6544,12 +6544,12 @@ Links to download both file types are displayed in the email notifications ',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (231, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:59:33Z', 'qk-requirements-sync');
+VALUES (360, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-04T13:59:33Z', 'qk-requirements-sync');
 
 -- NEW: issue #696 — Add all list types to AI CaTH
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  232, 'REQ-0232', 696,
+  361, 'REQ-0361', 696,
   'Add all list types to AI CaTH',
   '**PROBLEM STATEMENT**
 This ticket is raised to add all the list types to AI CaTH. This implementation does not require any Dev work and will be performed through the list type configuration on the System Admin Dashboard.
@@ -6692,12 +6692,12 @@ War Pensions and Armed Forces Compensation Weekly Hearing List
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (232, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T10:53:27Z', 'qk-requirements-sync');
+VALUES (361, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T10:53:27Z', 'qk-requirements-sync');
 
 -- NEW: issue #697 — Migrate from Azure Cache for Redis → Azure Managed Redis Migration
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  233, 'REQ-0233', 697,
+  362, 'REQ-0362', 697,
   'Migrate from Azure Cache for Redis → Azure Managed Redis Migration',
   'Microsoft is retiring Azure Cache for Redis, and we are currently identifying the owning teams for Azure Cache for Redis instances and notifying them about the migration to Azure Managed Redis.
  Important limitation:
@@ -6716,12 +6716,12 @@ https://hmcts-reform.slack.com/archives/CA4F2MAFR/p1780581352439719
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (233, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T12:15:01Z', 'qk-requirements-sync');
+VALUES (362, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T12:15:01Z', 'qk-requirements-sync');
 
 -- NEW: issue #698 — Add/Update provenance for all lists
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  234, 'REQ-0234', 698,
+  363, 'REQ-0363', 698,
   'Add/Update provenance for all lists',
   '**PROBLEM STATEMENT**
 This ticket is raised to add/update the provenance for all the lists in CaTH. 
@@ -6737,12 +6737,12 @@ The provenance for all the lists in CaTH are added/updated through the system ad
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (234, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T12:57:31Z', 'qk-requirements-sync');
+VALUES (363, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T12:57:31Z', 'qk-requirements-sync');
 
 -- NEW: issue #703 — CaTH Enhancement
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  235, 'REQ-0235', 703,
+  364, 'REQ-0364', 703,
   'CaTH Enhancement',
   'This ticket cover all enhancements needed to manage the disparities highlighted from the gap analysis between OG and AI CaTH.',
   'draft', NULL, NULL, 'functional', NULL, NULL,
@@ -6750,12 +6750,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (235, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T16:38:03Z', 'qk-requirements-sync');
+VALUES (364, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-10T16:38:03Z', 'qk-requirements-sync');
 
 -- NEW: issue #742 — Advisory message for SJP Publishing time
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  236, 'REQ-0236', 742,
+  365, 'REQ-0365', 742,
   'Advisory message for SJP Publishing time',
   '**PROBLEM STATEMENT**
 
@@ -6793,12 +6793,12 @@ During the British Summer Time, SJP hearing lists are triggered to CaTH at a lat
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (236, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T10:28:52Z', 'qk-requirements-sync');
+VALUES (365, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T10:28:52Z', 'qk-requirements-sync');
 
 -- NEW: issue #744 — Update Verified User Case Subscription Search Screen
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  237, 'REQ-0237', 744,
+  366, 'REQ-0366', 744,
   'Update Verified User Case Subscription Search Screen',
   '**PROBLEM STATEMENT**
 We need to remove the party information from the search result of case name and reference number search. We also need to update the search functionality when user searches by case name and reference number.
@@ -6815,12 +6815,12 @@ We need to remove the party information from the search result of case name and 
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (237, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T11:44:54Z', 'qk-requirements-sync');
+VALUES (366, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T11:44:54Z', 'qk-requirements-sync');
 
 -- NEW: issue #745 — Add PNC ID to Magistrate Standard List
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  238, 'REQ-0238', 745,
+  367, 'REQ-0367', 745,
   'Add PNC ID to Magistrate Standard List',
   '**PROBLEM STATEMENT**
 
@@ -6852,12 +6852,12 @@ PNC ID filed to be displayed under the ASN field in the front end/ style guide a
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (238, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T12:04:26Z', 'qk-requirements-sync');
+VALUES (367, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-18T12:04:26Z', 'qk-requirements-sync');
 
 -- NEW: issue #760 — Changes to Residential Property Tribunal (new list + name change)
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  239, 'REQ-0239', 760,
+  368, 'REQ-0368', 760,
   'Changes to Residential Property Tribunal (new list + name change)',
   '**PROBLEM STATEMENT**
 
@@ -6959,12 +6959,12 @@ Ar gyfer ceisiadau Rhenti’r Farchnad a ddaeth i law cyn 16 Mawrth 2026, gwiriw
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (239, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-19T15:16:21Z', 'qk-requirements-sync');
+VALUES (368, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-19T15:16:21Z', 'qk-requirements-sync');
 
 -- NEW: issue #762 — Update Verified User Case Subscription Search Screen
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  240, 'REQ-0240', 762,
+  369, 'REQ-0369', 762,
   'Update Verified User Case Subscription Search Screen',
   '**PROBLEM STATEMENT**
 
@@ -6983,12 +6983,12 @@ Party information has been removed from search results for both case name and ca
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (240, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-22T08:52:40Z', 'qk-requirements-sync');
+VALUES (369, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-22T08:52:40Z', 'qk-requirements-sync');
 
 -- NEW: issue #763 — Gov Notify Email Implementation - Email subscription add/delete.
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  241, 'REQ-0241', 763,
+  370, 'REQ-0370', 763,
   'Gov Notify Email Implementation - Email subscription add/delete.',
   '**PROBLEM STATEMENT**
 Verified user are users can subscribe to email notifications from CaTH. This would require the triggering of email notifications to be sent automatically to subscribed users from CaTH back end through Gov.Notify when a hearing list relevant to their subscriptions is published. This ticket is raised to trigger the email notifications for all hearing lists available in CaTH which have not yet being activated. 
@@ -7010,12 +7010,12 @@ Verified user are users can subscribe to email notifications from CaTH. This wou
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (241, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-23T13:42:45Z', 'qk-requirements-sync');
+VALUES (370, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-23T13:42:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #764 — Check session timeout login for CFT, Crime and MOJ SSO IDAM
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  242, 'REQ-0242', 764,
+  371, 'REQ-0371', 764,
   'Check session timeout login for CFT, Crime and MOJ SSO IDAM',
   '**PROBLEM STATEMENT**
 This ticket is raised to investigate the session timeout after login for CFT, Crime and MOJ SSO IDAM users.
@@ -7033,12 +7033,12 @@ Confirm the set timing for session timeout CFT, Crime, and MOJ SSO IDAM users an
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (242, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-23T13:49:42Z', 'qk-requirements-sync');
+VALUES (371, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-23T13:49:42Z', 'qk-requirements-sync');
 
 -- NEW: issue #769 — Inconsistencies - Frontend issue
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  243, 'REQ-0243', 769,
+  372, 'REQ-0372', 769,
   'Inconsistencies - Frontend issue',
   '**PROBLEM STATEMENT**
 This ticket is raised to make changes to the ''How do you want to sign in?'' page in CaTH.
@@ -7063,12 +7063,12 @@ The following changes need to be made and should follow the format displayed her
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (243, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-24T16:33:57Z', 'qk-requirements-sync');
+VALUES (372, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-06-24T16:33:57Z', 'qk-requirements-sync');
 
 -- NEW: issue #791 — Style Guide: IAC Daily List
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  244, 'REQ-0244', 791,
+  373, 'REQ-0373', 791,
   'Style Guide: IAC Daily List',
   '**PROBLEM STATEMENT**
 This ticket is raised for the creation of IAC Daily List for manual publishing in CaTH.
@@ -7127,12 +7127,12 @@ This ticket is raised for the creation of IAC Daily List for manual publishing i
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (244, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T12:42:33Z', 'qk-requirements-sync');
+VALUES (373, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T12:42:33Z', 'qk-requirements-sync');
 
 -- NEW: issue #792 — Style Guide: Mental Health Tribunal Daily Hearing List
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  245, 'REQ-0245', 792,
+  374, 'REQ-0374', 792,
   'Style Guide: Mental Health Tribunal Daily Hearing List',
   '**PROBLEM STATEMENT**
 This ticket is raised for the creation of the Mental Health Tribunal Daily Hearing List for manual publishing in CaTH.
@@ -7181,12 +7181,12 @@ This ticket is raised for the creation of the Mental Health Tribunal Daily Heari
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (245, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T12:43:38Z', 'qk-requirements-sync');
+VALUES (374, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T12:43:38Z', 'qk-requirements-sync');
 
 -- NEW: issue #798 — Interim Applications List (ChD) Daily Cause List
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  246, 'REQ-0246', 798,
+  375, 'REQ-0375', 798,
   'Interim Applications List (ChD) Daily Cause List',
   '**PROBLEM STATEMENT**
  This ticket covers the non-strategic publishing of The Interim Applications List (ChD) Daily Cause List (through the upload of excel files in CaTH) which would require the creation of validation schema and style guides.
@@ -7212,12 +7212,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (246, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:52:24Z', 'qk-requirements-sync');
+VALUES (375, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:52:24Z', 'qk-requirements-sync');
 
 -- NEW: issue #799 — Admiralty Court (KB) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  247, 'REQ-0247', 799,
+  376, 'REQ-0376', 799,
   'Admiralty Court (KB) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7264,12 +7264,12 @@ This ticket covers the non-strategic publishing of The Admiralty Court (KB) dail
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (247, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:55:51Z', 'qk-requirements-sync');
+VALUES (376, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:55:51Z', 'qk-requirements-sync');
 
 -- NEW: issue #800 — Business list (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  248, 'REQ-0248', 800,
+  377, 'REQ-0377', 800,
   'Business list (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7317,12 +7317,12 @@ This ticket covers the non-strategic publishing of The Business list (ChD) daily
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (248, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:58:39Z', 'qk-requirements-sync');
+VALUES (377, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T17:58:39Z', 'qk-requirements-sync');
 
 -- NEW: issue #801 — Chancery Appeals (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  249, 'REQ-0249', 801,
+  378, 'REQ-0378', 801,
   'Chancery Appeals (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 This ticket covers the non-strategic publishing of The Chancery Appeals (ChD) daily cause list (through the upload of excel files in CaTH) which would require the creation of validation schema and style guides.
@@ -7367,12 +7367,12 @@ This ticket covers the non-strategic publishing of The Chancery Appeals (ChD) da
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (249, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:00:52Z', 'qk-requirements-sync');
+VALUES (378, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:00:52Z', 'qk-requirements-sync');
 
 -- NEW: issue #802 — Commercial Court (KB) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  250, 'REQ-0250', 802,
+  379, 'REQ-0379', 802,
   'Commercial Court (KB) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7419,12 +7419,12 @@ This ticket covers the non-strategic publishing of The Commercial Court (KB) dai
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (250, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:03:12Z', 'qk-requirements-sync');
+VALUES (379, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:03:12Z', 'qk-requirements-sync');
 
 -- NEW: issue #803 — Companies Winding Up (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  251, 'REQ-0251', 803,
+  380, 'REQ-0380', 803,
   'Companies Winding Up (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 This ticket covers the non-strategic publishing of The Companies Winding Up (ChD) daily cause list (through the upload of excel files in CaTH) which would require the creation of validation schema and style guides.
@@ -7468,12 +7468,12 @@ This ticket covers the non-strategic publishing of The Companies Winding Up (ChD
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (251, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:04:52Z', 'qk-requirements-sync');
+VALUES (380, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:04:52Z', 'qk-requirements-sync');
 
 -- NEW: issue #804 — Competition List (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  252, 'REQ-0252', 804,
+  381, 'REQ-0381', 804,
   'Competition List (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7520,12 +7520,12 @@ This ticket covers the non-strategic publishing of The Competition List (ChD) da
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (252, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:06:18Z', 'qk-requirements-sync');
+VALUES (381, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:06:18Z', 'qk-requirements-sync');
 
 -- NEW: issue #805 — Financial List (ChD/KB) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  253, 'REQ-0253', 805,
+  382, 'REQ-0382', 805,
   'Financial List (ChD/KB) daily cause list',
   '**PROBLEM STATEMENT**
 This ticket covers the non-strategic publishing of The Financial List (ChD/KB) daily cause list (through the upload of excel files in CaTH) which would require the creation of validation schema and style guides.
@@ -7571,12 +7571,12 @@ This ticket covers the non-strategic publishing of The Financial List (ChD/KB) d
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (253, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:07:45Z', 'qk-requirements-sync');
+VALUES (382, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:07:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #806 — Intellectual Property List (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  254, 'REQ-0254', 806,
+  383, 'REQ-0383', 806,
   'Intellectual Property List (ChD) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7623,12 +7623,12 @@ This ticket covers the non-strategic publishing of The Intellectual Property Lis
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (254, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:09:39Z', 'qk-requirements-sync');
+VALUES (383, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:09:39Z', 'qk-requirements-sync');
 
 -- NEW: issue #807 — Intellectual Property and Enterprise Court (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  255, 'REQ-0255', 807,
+  384, 'REQ-0384', 807,
   'Intellectual Property and Enterprise Court (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7676,12 +7676,12 @@ This ticket covers the non-strategic publishing of The Intellectual Property and
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (255, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:10:40Z', 'qk-requirements-sync');
+VALUES (384, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:10:40Z', 'qk-requirements-sync');
 
 -- NEW: issue #808 — Insolvency & Companies Court (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  256, 'REQ-0256', 808,
+  385, 'REQ-0385', 808,
   'Insolvency & Companies Court (ChD) daily cause list',
   '**PROBLEM STATEMENT**
 
@@ -7728,12 +7728,12 @@ This ticket covers the non-strategic publishing of The Insolvency & Companies Co
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (256, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:12:07Z', 'qk-requirements-sync');
+VALUES (385, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:12:07Z', 'qk-requirements-sync');
 
 -- NEW: issue #809 — Revenue List (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  257, 'REQ-0257', 809,
+  386, 'REQ-0386', 809,
   'Revenue List (ChD) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7757,12 +7757,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (257, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:16:25Z', 'qk-requirements-sync');
+VALUES (386, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:16:25Z', 'qk-requirements-sync');
 
 -- NEW: issue #810 — Property, Trusts and Probate list (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  258, 'REQ-0258', 810,
+  387, 'REQ-0387', 810,
   'Property, Trusts and Probate list (ChD) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7786,12 +7786,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (258, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:17:44Z', 'qk-requirements-sync');
+VALUES (387, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:17:44Z', 'qk-requirements-sync');
 
 -- NEW: issue #811 — Pensions List (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  259, 'REQ-0259', 811,
+  388, 'REQ-0388', 811,
   'Pensions List (ChD) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7815,12 +7815,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (259, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:19:13Z', 'qk-requirements-sync');
+VALUES (388, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:19:13Z', 'qk-requirements-sync');
 
 -- NEW: issue #812 — London Circuit Commercial Court (KB) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  260, 'REQ-0260', 812,
+  389, 'REQ-0389', 812,
   'London Circuit Commercial Court (KB) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7844,12 +7844,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (260, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:20:23Z', 'qk-requirements-sync');
+VALUES (389, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:20:23Z', 'qk-requirements-sync');
 
 -- NEW: issue #813 — Patents Court (ChD) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  261, 'REQ-0261', 813,
+  390, 'REQ-0390', 813,
   'Patents Court (ChD) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7873,12 +7873,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (261, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:21:45Z', 'qk-requirements-sync');
+VALUES (390, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:21:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #814 — Technology and Construction Court (KB) daily cause list
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  262, 'REQ-0262', 814,
+  391, 'REQ-0391', 814,
   'Technology and Construction Court (KB) daily cause list',
   'PROBLEM STATEMENT
 
@@ -7902,12 +7902,12 @@ A PDF and Excel downloadable version of the hearing list is created.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (262, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:23:10Z', 'qk-requirements-sync');
+VALUES (391, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-01T18:23:10Z', 'qk-requirements-sync');
 
 -- NEW: issue #828 — Fulfilment of Third Party Subscription Requests
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  263, 'REQ-0263', 828,
+  392, 'REQ-0392', 828,
   'Fulfilment of Third Party Subscription Requests',
   '',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -7915,12 +7915,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (263, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:53:59Z', 'qk-requirements-sync');
+VALUES (392, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:53:59Z', 'qk-requirements-sync');
 
 -- NEW: issue #829 — Add functionality to Test Connection in Third Party Subscription
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  264, 'REQ-0264', 829,
+  393, 'REQ-0393', 829,
   'Add functionality to Test Connection in Third Party Subscription',
   '',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -7928,12 +7928,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (264, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:55:17Z', 'qk-requirements-sync');
+VALUES (393, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:55:17Z', 'qk-requirements-sync');
 
 -- NEW: issue #830 — Add functionality to update status (Pending/Approve) for Third Party Subscriber
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  265, 'REQ-0265', 830,
+  394, 'REQ-0394', 830,
   'Add functionality to update status (Pending/Approve) for Third Party Subscriber',
   '',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -7941,12 +7941,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (265, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:55:47Z', 'qk-requirements-sync');
+VALUES (394, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-07T09:55:47Z', 'qk-requirements-sync');
 
 -- NEW: issue #834 — 1 - Public Journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  266, 'REQ-0266', 834,
+  395, 'REQ-0395', 834,
   '1 - Public Journey',
   'All publicly accessible lists are displayed in AI CaTH. ',
   'in_progress', NULL, 'epic', 'functional', NULL, NULL,
@@ -7954,12 +7954,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (266, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T10:32:10Z', 'qk-requirements-sync');
+VALUES (395, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T10:32:10Z', 'qk-requirements-sync');
 
 -- NEW: issue #835 — 2 - Verified User Journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  267, 'REQ-0267', 835,
+  396, 'REQ-0396', 835,
   '2 - Verified User Journey',
   'All accessible lists are displayed to verified users. All verified account and subscription data is migrated to AI CaTH.',
   'in_progress', NULL, 'epic', 'functional', NULL, NULL,
@@ -7967,12 +7967,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (267, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:04:45Z', 'qk-requirements-sync');
+VALUES (396, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:04:45Z', 'qk-requirements-sync');
 
 -- NEW: issue #836 — 3 - Third Party Journey
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  268, 'REQ-0268', 836,
+  397, 'REQ-0397', 836,
   '3 - Third Party Journey',
   'All third-party account and subscription data is migrated to AI CaTH. ',
   'draft', NULL, 'epic', 'functional', NULL, NULL,
@@ -7980,12 +7980,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (268, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:18:13Z', 'qk-requirements-sync');
+VALUES (397, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:18:13Z', 'qk-requirements-sync');
 
 -- NEW: issue #837 — 4 - Data ingestion / Admin
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  269, 'REQ-0269', 837,
+  398, 'REQ-0398', 837,
   '4 - Data ingestion / Admin',
   'Data ingestion sources send data directly to AI CaTH. Admin users log into AI CaTH for manually publishing and all other duties. ',
   'draft', NULL, 'epic', 'functional', NULL, NULL,
@@ -7993,12 +7993,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (269, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:19:46Z', 'qk-requirements-sync');
+VALUES (398, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T11:19:46Z', 'qk-requirements-sync');
 
 -- NEW: issue #838 — Open cookie policy and accessibility statement pages on current tab
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  270, 'REQ-0270', 838,
+  399, 'REQ-0399', 838,
   'Open cookie policy and accessibility statement pages on current tab',
   'Open cookie policy and accessibility statement pages on current tab, not new tab to be consistent with OG CaTH',
   'verified', NULL, 'story', 'functional', '0d9b4d8392d463d706952f29446aae17f3fbd929', '["e2e-tests/tests/cookie-policy.spec.ts","e2e-tests/tests/page-structure.spec.ts","libs/web-core/src/views/components/site-footer.njk"]',
@@ -8006,12 +8006,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (270, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T14:29:44Z', 'qk-requirements-sync');
+VALUES (399, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-08T14:29:44Z', 'qk-requirements-sync');
 
 -- NEW: issue #845 — Check PDF reporting Restriction grey background for all list type and also check caution message
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  271, 'REQ-0271', 845,
+  400, 'REQ-0400', 845,
   'Check PDF reporting Restriction grey background for all list type and also check caution message',
   'Some of list types PDF are missing grey background for reporting restriction section. Check all the list types and make it consistent across all the list with grey background.
 Also check the caution message at the end of each PDF to make sure it is there.',
@@ -8020,12 +8020,12 @@ Also check the caution message at the end of each PDF to make sure it is there.'
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (271, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-10T10:26:49Z', 'qk-requirements-sync');
+VALUES (400, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-10T10:26:49Z', 'qk-requirements-sync');
 
 -- NEW: issue #846 — Make sure list name (enum) as same as CaTH ORG
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  272, 'REQ-0272', 846,
+  401, 'REQ-0401', 846,
   'Make sure list name (enum) as same as CaTH ORG',
   'Make sure list name (enum) as same as CaTH ORG otherwise data sync between CaTH ORG and CATH AI will not work.',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -8033,12 +8033,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (272, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-10T10:29:23Z', 'qk-requirements-sync');
+VALUES (401, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-10T10:29:23Z', 'qk-requirements-sync');
 
 -- NEW: issue #850 — Blob Explorer: Add functionality to download JSON
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  273, 'REQ-0273', 850,
+  402, 'REQ-0402', 850,
   'Blob Explorer: Add functionality to download JSON',
   '',
   'draft', NULL, 'story', 'functional', NULL, NULL,
@@ -8046,12 +8046,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (273, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-13T10:55:54Z', 'qk-requirements-sync');
+VALUES (402, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-13T10:55:54Z', 'qk-requirements-sync');
 
 -- NEW: issue #852 — Click on "Back" link on some pages showed the error page
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  274, 'REQ-0274', 852,
+  403, 'REQ-0403', 852,
   'Click on "Back" link on some pages showed the error page',
   '',
   'approved', NULL, 'story', 'functional', NULL, NULL,
@@ -8059,12 +8059,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (274, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-13T15:44:14Z', 'qk-requirements-sync');
+VALUES (403, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-13T15:44:14Z', 'qk-requirements-sync');
 
 -- NEW: issue #872 — Mags Subscription emails updated with new Media Protocol
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  275, 'REQ-0275', 872,
+  404, 'REQ-0404', 872,
   'Mags Subscription emails updated with new Media Protocol',
   '**PROBLEM STATEMENT**
 Following the recent updates to the Third Party media protocol, the opening message for the subscription email on all Magistrates court hearing lists from Libra/Crime Portal and Common Platform need to be revised to reflect this change.
@@ -8123,12 +8123,12 @@ You may be asked to provide details of your UK Press Card or relevant identifica
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (275, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-22T16:08:18Z', 'qk-requirements-sync');
+VALUES (404, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-22T16:08:18Z', 'qk-requirements-sync');
 
 -- NEW: issue #887 — Fix issue with font changes and missing logo on UI
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  276, 'REQ-0276', 887,
+  405, 'REQ-0405', 887,
   'Fix issue with font changes and missing logo on UI',
   '',
   'verified', NULL, NULL, 'functional', NULL, NULL,
@@ -8136,12 +8136,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (276, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T08:41:48Z', 'qk-requirements-sync');
+VALUES (405, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T08:41:48Z', 'qk-requirements-sync');
 
 -- NEW: issue #889 — Enable auto merging of dependencies only for minor version changes
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  277, 'REQ-0277', 889,
+  406, 'REQ-0406', 889,
   'Enable auto merging of dependencies only for minor version changes',
   'Right now, we disabled all the dependencies auto merging into master because it is breaking CaTH AI in some cases. i.e. https://github.com/hmcts/cath-service/commit/3e09fb5e8c8d5e0bc99e5f8cbde805e5e357161f
 Above change broke the front and icon on CaTH AI. We need to make sure only dependencies with minor version change can be auto merged. ',
@@ -8150,12 +8150,12 @@ Above change broke the front and icon on CaTH AI. We need to make sure only depe
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (277, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T09:11:56Z', 'qk-requirements-sync');
+VALUES (406, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T09:11:56Z', 'qk-requirements-sync');
 
 -- NEW: issue #892 — Adopt MOJ Frontend mojFilter component across the six hand-rolled filter panels
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  278, 'REQ-0278', 892,
+  407, 'REQ-0407', 892,
   'Adopt MOJ Frontend mojFilter component across the six hand-rolled filter panels',
   '## Problem
 
@@ -8272,12 +8272,12 @@ Already safe (text/label-based locators): `audit-log-list/index.njk.test.ts`, `l
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (278, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:29:55Z', 'qk-requirements-sync');
+VALUES (407, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:29:55Z', 'qk-requirements-sync');
 
 -- NEW: issue #893 — Add publishing policy link to CaTH footer
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  279, 'REQ-0279', 893,
+  408, 'REQ-0408', 893,
   'Add publishing policy link to CaTH footer',
   '**PROBLEM STATEMENT**
 This ticket is raised to add the publishing policy link to CaTH footer.
@@ -8309,12 +8309,12 @@ This ticket is raised to add the publishing policy link to CaTH footer.
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (279, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:32:47Z', 'qk-requirements-sync');
+VALUES (408, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:32:47Z', 'qk-requirements-sync');
 
 -- NEW: issue #894 — ‘Deleted accounts’ to be added to the MI Report
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  280, 'REQ-0280', 894,
+  409, 'REQ-0409', 894,
   '‘Deleted accounts’ to be added to the MI Report',
   '**PROBLEM STATEMENT**
 
@@ -8344,12 +8344,12 @@ Following the annual verification process of CaTH accounts, accounts that are no
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (280, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:38:50Z', 'qk-requirements-sync');
+VALUES (409, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:38:50Z', 'qk-requirements-sync');
 
 -- NEW: issue #895 — CaTH account verification requirement added in CaTH account creation T&C
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  281, 'REQ-0281', 895,
+  410, 'REQ-0410', 895,
   'CaTH account verification requirement added in CaTH account creation T&C',
   '**PROBLEM STATEMENT**
 
@@ -8390,12 +8390,12 @@ To Be Determined
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (281, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:43:46Z', 'qk-requirements-sync');
+VALUES (410, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:43:46Z', 'qk-requirements-sync');
 
 -- NEW: issue #896 — Sending an email for account deletion
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  282, 'REQ-0282', 896,
+  411, 'REQ-0411', 896,
   'Sending an email for account deletion',
   '**PROBLEM STATEMENT**
 
@@ -8417,12 +8417,12 @@ An email notification is generated and sent out immediately to the owners of eve
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (282, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:45:49Z', 'qk-requirements-sync');
+VALUES (411, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:45:49Z', 'qk-requirements-sync');
 
 -- NEW: issue #897 — Descriptive text to be added to 'Send code' on forgot password page
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  283, 'REQ-0283', 897,
+  412, 'REQ-0412', 897,
   'Descriptive text to be added to ''Send code'' on forgot password page',
   '**PROBLEM STATEMENT**
 Following the recent complaints from users regarding the password reset process, this ticket is raised to add descriptive text around the ''Send code'' button on the CaTH password reset  page so users understand the password reset process.
@@ -8455,12 +8455,12 @@ Byddwn yn anfon cod dilysu i''ch cyfeiriad e-bost, y bydd arnoch angen hwn i ail
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (283, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:54:14Z', 'qk-requirements-sync');
+VALUES (412, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-28T13:54:14Z', 'qk-requirements-sync');
 
 -- NEW: issue #901 — Review no-match logic
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  284, 'REQ-0284', 901,
+  413, 'REQ-0413', 901,
   'Review no-match logic',
   'The handling of no-match publication in CaTH AI is very different to OG CaTH. Need a review to determine whether we are happy to go with this approach. 
 
@@ -8472,12 +8472,12 @@ publication.ts:80 has a 200 branch for no_match, but processBlobIngestion return
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (284, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T08:25:24Z', 'qk-requirements-sync');
+VALUES (413, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T08:25:24Z', 'qk-requirements-sync');
 
 -- NEW: issue #903 — Bug: Magistrate Standard List not showing Prosecuting authority properly in Email Summary
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  285, 'REQ-0285', 903,
+  414, 'REQ-0414', 903,
   'Bug: Magistrate Standard List not showing Prosecuting authority properly in Email Summary',
   'Magistrate Standard List not showing Prosecuting authority properly in Email Summary. If Prosecuting authority is empty, we still not show Prosecuting authority as empty value.
 
@@ -8500,12 +8500,12 @@ It should match CaTH ORG.',
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (285, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T11:32:06Z', 'qk-requirements-sync');
+VALUES (414, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T11:32:06Z', 'qk-requirements-sync');
 
 -- NEW: issue #904 — Bug: CFT Lists Important Information Text Issue
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  286, 'REQ-0286', 904,
+  415, 'REQ-0415', 904,
   'Bug: CFT Lists Important Information Text Issue',
   '**Bug 1**
 
@@ -8528,12 +8528,12 @@ CFT lists means Civil Daily Cause List, Family Daily Cause List and Civil and Fa
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (286, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T13:44:41Z', 'qk-requirements-sync');
+VALUES (415, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T13:44:41Z', 'qk-requirements-sync');
 
 -- NEW: issue #907 — Review GOV.UK Notify subscription template
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  287, 'REQ-0287', 907,
+  416, 'REQ-0416', 907,
   'Review GOV.UK Notify subscription template',
   'There are many Notify subscription templates and some of them are obsolete. We also have some SJP only template for PDF Excel. This should not be SJP specific as other Crime lists also have PDF.
 
@@ -8544,12 +8544,12 @@ VALUES (
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (287, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T15:54:55Z', 'qk-requirements-sync');
+VALUES (416, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-29T15:54:55Z', 'qk-requirements-sync');
 
 -- NEW: issue #910 — Verify GOV.UK Notify email download links end to end for all list types
 INSERT INTO requirement (id, ref, issue_number, title, statement, status, priority, granularity, kind, impl_commit_sha, impl_paths, created_at, updated_at, created_by, updated_by, version)
 VALUES (
-  288, 'REQ-0288', 910,
+  417, 'REQ-0417', 910,
   'Verify GOV.UK Notify email download links end to end for all list types',
   '## Problem
 
@@ -8688,7 +8688,7 @@ them and should list all six.
   'qk-requirements-sync', 'qk-requirements-sync', 1
 );
 INSERT INTO requirement_change (requirement_id, version, change_type, change_summary, old_value, new_value, changed_at, changed_by)
-VALUES (288, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-30T15:57:12Z', 'qk-requirements-sync');
+VALUES (417, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-30T15:57:12Z', 'qk-requirements-sync');
 -- ============================================================
 -- INFERRED LINKS for new requirements (is_suspect=1, needs review)
 -- ============================================================
@@ -8696,32 +8696,32 @@ VALUES (288, 1, 'created', 'imported from GitHub issue', NULL, NULL, '2026-07-30
 -- REQ-0161 [VIBE-138 CaTH Verified User Sign In] depends on REQ-0007 (B2C Sign In)
 -- and REQ-0009 (Forgotten password), and REQ-0178 [VIBE-138 duplicate] refines REQ-0161
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (161, 7, 'depends_on', 'inferred', 0.75,
+VALUES (290, 7, 'depends_on', 'inferred', 0.75,
   'CaTH Verified User Sign In (161) is a higher-level description of the same sign-in work; the B2C Sign In (7) is the concrete implementation it depends on.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (178, 161, 'refines', 'inferred', 0.80,
+VALUES (307, 161, 'refines', 'inferred', 0.80,
   'REQ-0178 (issue 327) is a duplicate import of the same VIBE-138 CaTH Verified User Sign In requirement as REQ-0161 (issue 210); the later import refines/duplicates the earlier one.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0162 [VIBE-148 All Pages Specification] is derived from by many page-specific requirements
 -- REQ-0163 [VIBE-161 Publication - Excel Upload] depends on REQ-0023 (Excel Upload step)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (163, 23, 'refines', 'inferred', 0.80,
+VALUES (292, 23, 'refines', 'inferred', 0.80,
   'VIBE-161 is the higher-level epic for publication Excel upload; REQ-0023 is the concrete upload-form story that implements it.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0164 [VIBE-168 Publication - Remove list] refines REQ-0029/30/31/32/33 (remove list steps)
 -- Already covered at the sub-issue level in existing links; link epic → first step
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (164, 29, 'refines', 'inferred', 0.75,
+VALUES (293, 29, 'refines', 'inferred', 0.75,
   'VIBE-168 is the Remove List epic; REQ-0029 is the matching Remove Publication story it encompasses.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0165 [VIBE-174 Verified User Subscription Journey] refines REQ-0040 (email subscriptions)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (165, 40, 'refines', 'inferred', 0.80,
+VALUES (294, 40, 'refines', 'inferred', 0.80,
   'VIBE-174 is the epic for the verified user subscription journey; REQ-0040 is the email subscriptions story that is its primary deliverable.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
@@ -8767,540 +8767,540 @@ VALUES (63, 170, 'derives_from', 'inferred', 0.78,
 
 -- REQ-0171 [VIBE-294 Verified User Part 2 - Subscription] refines REQ-0165 (sub journey epic)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (171, 165, 'refines', 'inferred', 0.72,
+VALUES (300, 165, 'refines', 'inferred', 0.72,
   'VIBE-294 (Verified User Part 2 – Subscription, REQ-0171) continues from VIBE-174 (REQ-0165) by extending the subscription feature set.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0172 [VIBE-295 System Admin Part 2] refines REQ-0168 (System Admin epic)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (172, 168, 'refines', 'inferred', 0.72,
+VALUES (301, 168, 'refines', 'inferred', 0.72,
   'System Admin Part 2 (REQ-0172) is the second phase of the system admin user journey epic (REQ-0168), extending it with audit logs and third-party functionality.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0173 [VIBE-296 Non-Strategic Publishing Part 2] depends on REQ-0023 (Excel Upload)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (173, 23, 'depends_on', 'inferred', 0.72,
+VALUES (302, 23, 'depends_on', 'inferred', 0.72,
   'Non-Strategic Publishing Part 2 (REQ-0173) extends the non-strategic Excel upload route introduced in REQ-0023.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0175 [VIBE-340 Excel generation SJP + fulfilment] depends on REQ-0117 (Generate SJP Excel)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (175, 117, 'depends_on', 'inferred', 0.85,
+VALUES (304, 117, 'depends_on', 'inferred', 0.85,
   'VIBE-340 SJP Excel generation and subscription fulfilment (REQ-0175) is the higher-level epic that depends on the core SJP Excel generation work in REQ-0117.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (175, 99, 'depends_on', 'inferred', 0.80,
+VALUES (304, 99, 'depends_on', 'inferred', 0.80,
   'VIBE-340 SJP Excel + fulfilment (REQ-0175) depends on the subscription email fulfilment complete journey (REQ-0099) which it extends for SJP.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0176 [VIBE-338 Subscription Fulfilment] depends on REQ-0060 (backend subscription fulfilment)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (176, 60, 'refines', 'inferred', 0.78,
+VALUES (305, 60, 'refines', 'inferred', 0.78,
   'VIBE-338 Subscription Fulfilment (REQ-0176) is a higher-level epic encompassing the backend subscription fulfilment (REQ-0060) and extends it.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0177 [VIBE-369 SJP Download] depends on REQ-0015 (View SJP cases) and REQ-0117 (SJP Excel)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (177, 15, 'depends_on', 'inferred', 0.78,
+VALUES (306, 15, 'depends_on', 'inferred', 0.78,
   'SJP Download (REQ-0177) depends on viewing SJP cases (REQ-0015) as the download is a capability added to that view.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (177, 117, 'depends_on', 'inferred', 0.82,
+VALUES (306, 117, 'depends_on', 'inferred', 0.82,
   'SJP Download (REQ-0177) depends on the SJP Excel file generation (REQ-0117) to produce the downloadable file.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0179-0182 (Cron triggers) depend on REQ-0183 (APIM infrastructure)
 -- and share inter-dependencies
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (179, 34, 'depends_on', 'inferred', 0.80,
+VALUES (308, 34, 'depends_on', 'inferred', 0.80,
   'The inactive accounts cron (REQ-0179) deletes media accounts that were created via the account creation flow (REQ-0034).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (180, 148, 'depends_on', 'inferred', 0.78,
+VALUES (309, 148, 'depends_on', 'inferred', 0.78,
   'The expired artefacts cron (REQ-0180) archives artefacts stored via blob upload (REQ-0148 adds flat file/blob to publication endpoint).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (181, 62, 'depends_on', 'inferred', 0.78,
+VALUES (310, 62, 'depends_on', 'inferred', 0.78,
   'The media application reporting cron (REQ-0181) processes approved/rejected media applications whose lifecycle starts with REQ-0062 (approve) and REQ-0063 (reject).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (182, 217, 'depends_on', 'inferred', 0.82,
+VALUES (311, 217, 'depends_on', 'inferred', 0.82,
   'The cron that refreshes SDP materialised views (REQ-0182) depends on the SDP read-only access and materialised views infrastructure (REQ-0217).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (182, 60, 'depends_on', 'inferred', 0.78,
+VALUES (311, 60, 'depends_on', 'inferred', 0.78,
   'The cron that triggers subscription processing (REQ-0182) depends on the backend subscription fulfilment mechanism (REQ-0060).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0184 (Welsh translations on Admin page) refines REQ-0186/0187 (outstanding Welsh)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (184, 186, 'refines', 'inferred', 0.72,
+VALUES (313, 186, 'refines', 'inferred', 0.72,
   'Welsh translations on Admin page (REQ-0184) is a specific subset of the outstanding Welsh translations work tracked in REQ-0186.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (187, 186, 'refines', 'inferred', 0.75,
+VALUES (316, 186, 'refines', 'inferred', 0.75,
   'Outstanding Welsh translations for public user journey pages (REQ-0187) is a specific subset of the broader outstanding Welsh translations requirement (REQ-0186).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0185 (Audit logs for admin actions) depends on REQ-0076 (Audit Log View)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (185, 76, 'depends_on', 'inferred', 0.82,
+VALUES (314, 76, 'depends_on', 'inferred', 0.82,
   'Adding audit log entries for all system admin actions (REQ-0185) requires the audit log view (REQ-0076) where those entries are displayed.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0188/0189/0190 (SSO/IDAM redirect URLs) depend on REQ-0167 (SSO epic)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (188, 167, 'depends_on', 'inferred', 0.78,
+VALUES (317, 167, 'depends_on', 'inferred', 0.78,
   'Configuring SSO redirect URLs (REQ-0188) is a configuration task required to make the SSO integration described in VIBE-200 (REQ-0167) work across environments.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (189, 102, 'depends_on', 'inferred', 0.80,
+VALUES (318, 102, 'depends_on', 'inferred', 0.80,
   'Configuring CFT IDAM redirect URLs (REQ-0189) is a follow-on configuration step needed for the CFT IDAM integration (REQ-0102) to work across all environments.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (190, 102, 'depends_on', 'inferred', 0.80,
+VALUES (319, 102, 'depends_on', 'inferred', 0.80,
   'Configuring Crime IDAM redirect URLs (REQ-0190) is a configuration task needed for the Crime IDAM integration (REQ-0102) to work across all environments.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0193 (Redis rate limiting) and REQ-0194 (Redis OAuth token caching)
 -- both depend on the Redis infrastructure
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (193, 233, 'depends_on', 'inferred', 0.72,
+VALUES (322, 233, 'depends_on', 'inferred', 0.72,
   'Email rate limiting using Redis (REQ-0193) depends on having a managed Redis instance available; REQ-0233 is the Redis infrastructure migration/upgrade.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (194, 233, 'depends_on', 'inferred', 0.72,
+VALUES (323, 233, 'depends_on', 'inferred', 0.72,
   'Caching OAuth tokens in Redis (REQ-0194) depends on having a managed Redis instance; REQ-0233 is the Redis infrastructure migration/upgrade.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0201 (delete court complete journey) refines REQ-0077 (Delete Court Process)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (201, 77, 'refines', 'inferred', 0.88,
+VALUES (330, 77, 'refines', 'inferred', 0.88,
   'System Admin delete court complete journey (REQ-0201) is an extension/completion of the delete court process (REQ-0077) that adds missing steps identified during development.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0202 (bespoke subscription trigger logic) depends on REQ-0060 (backend subscription fulfilment)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (202, 60, 'depends_on', 'inferred', 0.82,
+VALUES (331, 60, 'depends_on', 'inferred', 0.82,
   'Bespoke publication subscription trigger logic (REQ-0202) extends the core backend subscription fulfilment (REQ-0060) with list-type-specific triggering rules.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0205 (Style Guide: COP Daily Cause List) depends on REQ-0023 (Excel Upload)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (205, 23, 'depends_on', 'inferred', 0.72,
+VALUES (334, 23, 'depends_on', 'inferred', 0.72,
   'The COP Daily Cause List style guide (REQ-0205) is published via the non-strategic Excel upload route, which depends on the Excel upload capability (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0208 (Azure B2C app registrations) depends on REQ-0007 (B2C Sign In)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (208, 7, 'depends_on', 'inferred', 0.78,
+VALUES (337, 7, 'depends_on', 'inferred', 0.78,
   'Azure B2C app registrations (REQ-0208) are the infrastructure prerequisite for the B2C sign-in integration (REQ-0007).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0209/0210 (APIM OTP and Testing-Support APIs) depend on REQ-0183 (APIM infrastructure)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (209, 183, 'depends_on', 'inferred', 0.88,
+VALUES (338, 183, 'depends_on', 'inferred', 0.88,
   'APIM OTP API (REQ-0209) depends on the Azure APIM infrastructure (REQ-0183) that hosts it.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (210, 183, 'depends_on', 'inferred', 0.88,
+VALUES (339, 183, 'depends_on', 'inferred', 0.88,
   'APIM Testing-Support API (REQ-0210) depends on the Azure APIM infrastructure (REQ-0183) that hosts it.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0212 (Dedicated APIM Key Vault) depends on REQ-0183 (APIM infrastructure)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (212, 183, 'depends_on', 'inferred', 0.82,
+VALUES (341, 183, 'depends_on', 'inferred', 0.82,
   'Dedicated APIM Key Vault (REQ-0212) is infrastructure supporting APIM and depends on the APIM infrastructure (REQ-0183).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0215 (Bulk Create Media Accounts) depends on REQ-0034 (account creation) and REQ-0100 (B2C journey)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (215, 100, 'depends_on', 'inferred', 0.80,
+VALUES (344, 100, 'depends_on', 'inferred', 0.80,
   'Bulk create media accounts (REQ-0215) extends the single B2C media user creation journey (REQ-0100) to work in bulk.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0216 (MI Report Download - System Admin) depends on REQ-0048 (System Admin dashboard)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (216, 48, 'depends_on', 'inferred', 0.82,
+VALUES (345, 48, 'depends_on', 'inferred', 0.82,
   'MI Report Download on System Admin Dashboard (REQ-0216) is a feature on the System Admin dashboard (REQ-0048) and depends on it.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0221 (Third-Party Inbound Publication API) depends on REQ-0091 (Third Party User Management)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (221, 91, 'depends_on', 'inferred', 0.78,
+VALUES (350, 91, 'depends_on', 'inferred', 0.78,
   'The third-party inbound publication API (REQ-0221) requires third-party users to be managed (REQ-0091) so that only authorised third parties can publish.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0222 (proxy app pip-frontend / cath-service) depends on REQ-0126 (ITHC/Demo/Test envs)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (222, 126, 'depends_on', 'inferred', 0.68,
+VALUES (351, 126, 'depends_on', 'inferred', 0.68,
   'The traffic-splitting proxy (REQ-0222) targets multiple deployed environments (REQ-0126) so it depends on those environments existing.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0224 (B&P Courts Rolls Building venue) depends on REQ-0050 (Create Court)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (224, 50, 'depends_on', 'inferred', 0.88,
+VALUES (353, 50, 'depends_on', 'inferred', 0.88,
   'Creating the Business and Property Courts Rolls Building venue (REQ-0224) uses the Create Court functionality (REQ-0050).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0246 to REQ-0262: all ChD/KB daily cause lists depend on REQ-0224 (Rolls Building venue)
 -- and all use non-strategic Excel upload (REQ-0023) and follow REQ-0159 (High Court manual-upload lists)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (246, 224, 'depends_on', 'inferred', 0.88,
+VALUES (375, 224, 'depends_on', 'inferred', 0.88,
   'Interim Applications List (ChD) (REQ-0246) must be published under the Business and Property Courts Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (246, 23, 'depends_on', 'inferred', 0.82,
+VALUES (375, 23, 'depends_on', 'inferred', 0.82,
   'Interim Applications List (ChD) (REQ-0246) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (247, 224, 'depends_on', 'inferred', 0.88,
+VALUES (376, 224, 'depends_on', 'inferred', 0.88,
   'Admiralty Court (KB) daily cause list (REQ-0247) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (247, 23, 'depends_on', 'inferred', 0.82,
+VALUES (376, 23, 'depends_on', 'inferred', 0.82,
   'Admiralty Court (KB) daily cause list (REQ-0247) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (248, 224, 'depends_on', 'inferred', 0.88,
+VALUES (377, 224, 'depends_on', 'inferred', 0.88,
   'Business list (ChD) daily cause list (REQ-0248) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (248, 23, 'depends_on', 'inferred', 0.82,
+VALUES (377, 23, 'depends_on', 'inferred', 0.82,
   'Business list (ChD) daily cause list (REQ-0248) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (249, 224, 'depends_on', 'inferred', 0.88,
+VALUES (378, 224, 'depends_on', 'inferred', 0.88,
   'Chancery Appeals (ChD) daily cause list (REQ-0249) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (249, 23, 'depends_on', 'inferred', 0.82,
+VALUES (378, 23, 'depends_on', 'inferred', 0.82,
   'Chancery Appeals (ChD) daily cause list (REQ-0249) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (250, 224, 'depends_on', 'inferred', 0.88,
+VALUES (379, 224, 'depends_on', 'inferred', 0.88,
   'Commercial Court (KB) daily cause list (REQ-0250) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (250, 23, 'depends_on', 'inferred', 0.82,
+VALUES (379, 23, 'depends_on', 'inferred', 0.82,
   'Commercial Court (KB) daily cause list (REQ-0250) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (251, 224, 'depends_on', 'inferred', 0.88,
+VALUES (380, 224, 'depends_on', 'inferred', 0.88,
   'Companies Winding Up (ChD) daily cause list (REQ-0251) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (251, 23, 'depends_on', 'inferred', 0.82,
+VALUES (380, 23, 'depends_on', 'inferred', 0.82,
   'Companies Winding Up (ChD) daily cause list (REQ-0251) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (252, 224, 'depends_on', 'inferred', 0.88,
+VALUES (381, 224, 'depends_on', 'inferred', 0.88,
   'Competition List (ChD) daily cause list (REQ-0252) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (252, 23, 'depends_on', 'inferred', 0.82,
+VALUES (381, 23, 'depends_on', 'inferred', 0.82,
   'Competition List (ChD) daily cause list (REQ-0252) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (253, 224, 'depends_on', 'inferred', 0.88,
+VALUES (382, 224, 'depends_on', 'inferred', 0.88,
   'Financial List (ChD/KB) daily cause list (REQ-0253) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (253, 23, 'depends_on', 'inferred', 0.82,
+VALUES (382, 23, 'depends_on', 'inferred', 0.82,
   'Financial List (ChD/KB) daily cause list (REQ-0253) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (254, 224, 'depends_on', 'inferred', 0.88,
+VALUES (383, 224, 'depends_on', 'inferred', 0.88,
   'Intellectual Property List (ChD) daily cause list (REQ-0254) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (254, 23, 'depends_on', 'inferred', 0.82,
+VALUES (383, 23, 'depends_on', 'inferred', 0.82,
   'Intellectual Property List (ChD) daily cause list (REQ-0254) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (255, 224, 'depends_on', 'inferred', 0.88,
+VALUES (384, 224, 'depends_on', 'inferred', 0.88,
   'Intellectual Property and Enterprise Court (ChD) daily cause list (REQ-0255) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (255, 23, 'depends_on', 'inferred', 0.82,
+VALUES (384, 23, 'depends_on', 'inferred', 0.82,
   'Intellectual Property and Enterprise Court (ChD) daily cause list (REQ-0255) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (256, 224, 'depends_on', 'inferred', 0.88,
+VALUES (385, 224, 'depends_on', 'inferred', 0.88,
   'Insolvency & Companies Court (ChD) daily cause list (REQ-0256) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (256, 23, 'depends_on', 'inferred', 0.82,
+VALUES (385, 23, 'depends_on', 'inferred', 0.82,
   'Insolvency & Companies Court (ChD) daily cause list (REQ-0256) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (257, 224, 'depends_on', 'inferred', 0.88,
+VALUES (386, 224, 'depends_on', 'inferred', 0.88,
   'Revenue List (ChD) daily cause list (REQ-0257) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (257, 23, 'depends_on', 'inferred', 0.82,
+VALUES (386, 23, 'depends_on', 'inferred', 0.82,
   'Revenue List (ChD) daily cause list (REQ-0257) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (258, 224, 'depends_on', 'inferred', 0.88,
+VALUES (387, 224, 'depends_on', 'inferred', 0.88,
   'Property, Trusts and Probate list (ChD) daily cause list (REQ-0258) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (258, 23, 'depends_on', 'inferred', 0.82,
+VALUES (387, 23, 'depends_on', 'inferred', 0.82,
   'Property, Trusts and Probate list (ChD) daily cause list (REQ-0258) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (259, 224, 'depends_on', 'inferred', 0.88,
+VALUES (388, 224, 'depends_on', 'inferred', 0.88,
   'Pensions List (ChD) daily cause list (REQ-0259) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (259, 23, 'depends_on', 'inferred', 0.82,
+VALUES (388, 23, 'depends_on', 'inferred', 0.82,
   'Pensions List (ChD) daily cause list (REQ-0259) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (260, 224, 'depends_on', 'inferred', 0.88,
+VALUES (389, 224, 'depends_on', 'inferred', 0.88,
   'London Circuit Commercial Court (KB) daily cause list (REQ-0260) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (260, 23, 'depends_on', 'inferred', 0.82,
+VALUES (389, 23, 'depends_on', 'inferred', 0.82,
   'London Circuit Commercial Court (KB) daily cause list (REQ-0260) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (261, 224, 'depends_on', 'inferred', 0.88,
+VALUES (390, 224, 'depends_on', 'inferred', 0.88,
   'Patents Court (ChD) daily cause list (REQ-0261) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (261, 23, 'depends_on', 'inferred', 0.82,
+VALUES (390, 23, 'depends_on', 'inferred', 0.82,
   'Patents Court (ChD) daily cause list (REQ-0261) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (262, 224, 'depends_on', 'inferred', 0.88,
+VALUES (391, 224, 'depends_on', 'inferred', 0.88,
   'Technology and Construction Court (KB) daily cause list (REQ-0262) must be published under the Rolls Building venue (REQ-0224).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (262, 23, 'depends_on', 'inferred', 0.82,
+VALUES (391, 23, 'depends_on', 'inferred', 0.82,
   'Technology and Construction Court (KB) daily cause list (REQ-0262) is published via the non-strategic Excel upload route (REQ-0023).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0263 (Fulfilment of Third Party Subscription Requests) depends on REQ-0092
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (263, 92, 'depends_on', 'inferred', 0.85,
+VALUES (392, 92, 'depends_on', 'inferred', 0.85,
   'Fulfilment of third-party subscription requests (REQ-0263) extends the existing third-party subscription fulfilment capability (REQ-0092).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0264 (Test Connection - Third Party Subscription) depends on REQ-0091
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (264, 91, 'depends_on', 'inferred', 0.82,
+VALUES (393, 91, 'depends_on', 'inferred', 0.82,
   'Testing the connection for a third-party subscription (REQ-0264) is a feature of the third-party user management interface (REQ-0091).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0265 (Update status Pending/Approve for Third Party) depends on REQ-0091
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (265, 91, 'depends_on', 'inferred', 0.85,
+VALUES (394, 91, 'depends_on', 'inferred', 0.85,
   'Updating third-party subscriber status (REQ-0265) is a feature of the third-party user management interface (REQ-0091).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0266-0269 (migration readiness milestones) — Public Journey depends on REQ-0001
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (266, 1, 'depends_on', 'inferred', 0.72,
+VALUES (395, 1, 'depends_on', 'inferred', 0.72,
   'The "Public Journey" migration milestone (REQ-0266) depends on the Public User Journey requirement (REQ-0001) being implemented.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (267, 165, 'depends_on', 'inferred', 0.72,
+VALUES (396, 165, 'depends_on', 'inferred', 0.72,
   'The "Verified User Journey" migration milestone (REQ-0267) depends on the Verified User Subscription Journey being implemented (REQ-0165).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (268, 91, 'depends_on', 'inferred', 0.72,
+VALUES (397, 91, 'depends_on', 'inferred', 0.72,
   'The "Third Party Journey" migration milestone (REQ-0268) depends on Third Party User Management (REQ-0091) being available.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (269, 2, 'depends_on', 'inferred', 0.72,
+VALUES (398, 2, 'depends_on', 'inferred', 0.72,
   'The "Data ingestion / Admin" migration milestone (REQ-0269) depends on the manual publishing capability (REQ-0002) being available.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0227 (Excel Magistrate public and standard) depends on REQ-0141 (Style Guide Magistrates Standard List)
 -- and REQ-0156 (Style Guide Magistrates Public List)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (227, 141, 'depends_on', 'inferred', 0.85,
+VALUES (356, 141, 'depends_on', 'inferred', 0.85,
   'Generating the Excel for Magistrates Standard List (REQ-0227) depends on the style guide and schema for that list (REQ-0141) having been implemented.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (227, 156, 'depends_on', 'inferred', 0.85,
+VALUES (356, 156, 'depends_on', 'inferred', 0.85,
   'Generating the Excel for Magistrates Public List (REQ-0227) depends on the style guide for that list (REQ-0156) having been implemented.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0228 (Excel Crown hearing lists) depends on REQ-0080 (The RCJ Hearing Lists)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (228, 80, 'depends_on', 'inferred', 0.85,
+VALUES (357, 80, 'depends_on', 'inferred', 0.85,
   'Generating Excel for Crown hearing lists (REQ-0228) depends on the RCJ/Crown hearing lists being implemented in CaTH (REQ-0080).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0229 (Excel Magistrates Hearing Lists Part 2) depends on REQ-0120 (Magistrates Crime Portal lists)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (229, 120, 'depends_on', 'inferred', 0.82,
+VALUES (358, 120, 'depends_on', 'inferred', 0.82,
   'Excel for Magistrates Hearing Lists Part 2 (REQ-0229) targets lists defined in the Magistrates Crime Portal/Libra style guide (REQ-0120).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0230 (Excel SJP Hearing Lists) depends on REQ-0117 (Generate SJP Excel)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (230, 117, 'depends_on', 'inferred', 0.82,
+VALUES (359, 117, 'depends_on', 'inferred', 0.82,
   'Excel for SJP Hearing Lists (REQ-0230) extends the SJP Excel generation originally implemented in REQ-0117.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0231 (Excel CFT Hearing Lists) depends on REQ-0133 (Civil and Family Daily Cause Lists style guide)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (231, 133, 'depends_on', 'inferred', 0.82,
+VALUES (360, 133, 'depends_on', 'inferred', 0.82,
   'Excel for CFT Hearing Lists (REQ-0231) depends on the Civil and Family Daily Cause List style guide and schema (REQ-0133) having been implemented.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0237/0240 (Update Verified User Case Subscription Search Screen) refines REQ-0071
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (237, 71, 'refines', 'inferred', 0.78,
+VALUES (366, 71, 'refines', 'inferred', 0.78,
   'Update Verified User Case Subscription Search Screen (REQ-0237) is a refinement of the original case subscription search (REQ-0071).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (240, 71, 'refines', 'inferred', 0.78,
+VALUES (369, 71, 'refines', 'inferred', 0.78,
   'Update Verified User Case Subscription Search Screen (REQ-0240) is a second iteration of refinements to the case subscription search (REQ-0071).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0240 refines REQ-0237 (same title, appears to be a successive update)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (240, 237, 'refines', 'inferred', 0.72,
+VALUES (369, 237, 'refines', 'inferred', 0.72,
   'REQ-0240 (issue 762) and REQ-0237 (issue 744) both update the Verified User Case Subscription Search Screen; the later issue refines the earlier.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0241 (Gov Notify Email - subscription add/delete) depends on REQ-0040 (email subscriptions)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (241, 40, 'depends_on', 'inferred', 0.82,
+VALUES (370, 40, 'depends_on', 'inferred', 0.82,
   'Gov Notify email implementation for subscription add/delete (REQ-0241) is triggered by the email subscription actions (REQ-0040) and depends on them.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (241, 60, 'depends_on', 'inferred', 0.80,
+VALUES (370, 60, 'depends_on', 'inferred', 0.80,
   'Gov Notify email for subscription events (REQ-0241) depends on the backend subscription fulfilment mechanism (REQ-0060) that triggers the emails.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0242 (session timeout investigation) depends on REQ-0102 (Crime IDAM) and REQ-0167 (SSO)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (242, 102, 'depends_on', 'inferred', 0.72,
+VALUES (371, 102, 'depends_on', 'inferred', 0.72,
   'Session timeout investigation for CFT, Crime, and MOJ SSO IDAM (REQ-0242) depends on those integrations (REQ-0102 for Crime IDAM) being in place to investigate.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0244 (Style Guide: IAC Daily List) refines REQ-0110 (PCOL, Mental Health, IAC Daily List style guide)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (244, 110, 'refines', 'inferred', 0.78,
+VALUES (373, 110, 'refines', 'inferred', 0.78,
   'Style Guide: IAC Daily List (REQ-0244) is the dedicated implementation of the IAC list that was grouped into the combined style guide in REQ-0110.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0245 (Style Guide: Mental Health Tribunal) refines REQ-0110
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (245, 110, 'refines', 'inferred', 0.78,
+VALUES (374, 110, 'refines', 'inferred', 0.78,
   'Style Guide: Mental Health Tribunal Daily Hearing List (REQ-0245) is the dedicated implementation of the Mental Health Tribunal list grouped in REQ-0110.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0271 (PDF reporting restriction grey background check) depends on REQ-0082/0083 (PDF subscription templates)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (271, 82, 'depends_on', 'inferred', 0.72,
+VALUES (400, 82, 'depends_on', 'inferred', 0.72,
   'Checking PDF reporting restriction background for all list types (REQ-0271) requires PDFs to have been generated, depending on PDF template work (REQ-0082).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0275 (Mags subscription emails - Media Protocol) refines REQ-0060 (backend subscription fulfilment)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (275, 60, 'refines', 'inferred', 0.75,
+VALUES (404, 60, 'refines', 'inferred', 0.75,
   'Updating Magistrates subscription emails with the new Media Protocol (REQ-0275) is a specific refinement of the backend subscription fulfilment (REQ-0060).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0278 (MOJ Frontend mojFilter) depends on REQ-0086 (header and footer update)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (278, 86, 'depends_on', 'inferred', 0.65,
+VALUES (407, 86, 'depends_on', 'inferred', 0.65,
   'Adopting MOJ Frontend components (REQ-0278) is related to the broader header/footer and frontend update work (REQ-0086).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0280 (Deleted accounts in MI Report) depends on REQ-0216 (MI Report Download)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (280, 216, 'refines', 'inferred', 0.85,
+VALUES (409, 216, 'refines', 'inferred', 0.85,
   'Adding deleted accounts to the MI report (REQ-0280) is a specific enhancement to the MI report download feature (REQ-0216).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0282 (Email for account deletion) depends on REQ-0179 (inactive account cron)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (282, 179, 'depends_on', 'inferred', 0.80,
+VALUES (411, 179, 'depends_on', 'inferred', 0.80,
   'Sending an email on account deletion (REQ-0282) is triggered by the inactive account deletion cron (REQ-0179), so it depends on that mechanism.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0285/0286 (bugs on Magistrate Standard List and CFT Lists) refine the respective style guides
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (285, 141, 'refines', 'inferred', 0.82,
+VALUES (414, 141, 'refines', 'inferred', 0.82,
   'Bug fix for Magistrate Standard List prosecuting authority in email summary (REQ-0285) is a refinement of the Magistrates Standard List style guide (REQ-0141).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (286, 133, 'refines', 'inferred', 0.80,
+VALUES (415, 133, 'refines', 'inferred', 0.80,
   'Bug fix for CFT lists important information text (REQ-0286) is a refinement of the Civil and Family Daily Cause Lists style guide (REQ-0133).',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 -- REQ-0287/0288 (review/verify GOV.UK Notify templates) depend on REQ-0241 (Gov Notify implementation)
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (287, 241, 'depends_on', 'inferred', 0.78,
+VALUES (416, 241, 'depends_on', 'inferred', 0.78,
   'Reviewing the GOV.UK Notify subscription template (REQ-0287) requires the Gov Notify email implementation (REQ-0241) to be in place first.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (288, 241, 'depends_on', 'inferred', 0.82,
+VALUES (417, 241, 'depends_on', 'inferred', 0.82,
   'Verifying GOV.UK Notify email download links end-to-end (REQ-0288) depends on the Gov Notify email implementation (REQ-0241) being in place.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
 INSERT INTO requirement_link (source_id, target_id, type, origin, confidence, rationale, is_suspect, created_at, created_by)
-VALUES (288, 60, 'depends_on', 'inferred', 0.78,
+VALUES (417, 60, 'depends_on', 'inferred', 0.78,
   'End-to-end verification of email download links (REQ-0288) requires the backend subscription fulfilment pipeline (REQ-0060) to generate the links.',
   1, '2026-08-04T00:00:00Z', 'qk-requirements-sync');
 
