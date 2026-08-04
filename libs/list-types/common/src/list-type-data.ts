@@ -82,6 +82,16 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1, 2]
   },
   {
+    name: "PCOL_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Possession Claim Online Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Hawliadau Meddiant Ar-lein",
+    provenance: "CFT_IDAM",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "PCOL Daily Cause List",
+    subJurisdictionIds: [1]
+  },
+  {
     name: "ET_DAILY_LIST",
     englishFriendlyName: "Employment Tribunals Daily List",
     welshFriendlyName: "Rhestr Ddyddiol y Tribiwnlysoedd Cyflogaeth",
@@ -112,6 +122,16 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [9]
+  },
+  {
+    name: "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST",
+    englishFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Dyddiol y Tribiwnlys Iechyd Meddwl",
+    provenance: "PI_AAD",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    subJurisdictionIds: [20]
   },
   // RCJ Standard Format
   {

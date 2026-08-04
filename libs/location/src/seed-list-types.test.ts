@@ -41,7 +41,7 @@ const mockListTypeData = [
   }
 ];
 
-vi.mock("@hmcts/list-types-common", () => ({
+vi.mock("@hmcts/list-types-common/list-type-data", () => ({
   listTypeData: mockListTypeData
 }));
 

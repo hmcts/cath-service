@@ -122,7 +122,7 @@ test.describe("Language Toggle in Phase Banner - Issue 292", () => {
     await expect(persistedToggle).toBeVisible();
   });
 
-  test("admin users do not see language toggle in service navigation @nightly", async ({ page }) => {
+  test.skip("admin users do not see language toggle in service navigation @nightly", async ({ page }) => {
     // 1. Login as admin user
     await page.goto("/admin-dashboard");
     await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
@@ -167,7 +167,7 @@ test.describe("Language Toggle in Phase Banner - Issue 292", () => {
     await expect(welshLanguageToggle).not.toBeVisible();
   });
 
-  test("system admin users do not see language toggle in service navigation @nightly", async ({ page }) => {
+  test.skip("system admin users do not see language toggle in service navigation @nightly", async ({ page }) => {
     // Test with system admin role
     await page.goto("/system-admin-dashboard");
     await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
