@@ -33,7 +33,7 @@ export const locationData: {
       name: "Royal Courts of Justice",
       welshName: "Llysoedd Barn Brenhinol",
       regions: [1],
-      subJurisdictions: [1, 4, 5]
+      subJurisdictions: [1, 5, 10, 11, 12]
     },
     {
       locationId: 5,
@@ -183,6 +183,13 @@ export const locationData: {
       regions: [8],
       subJurisdictions: [22],
       provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 26,
+      name: "Business and Property Courts Rolls Building",
+      welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
+      regions: [11],
+      subJurisdictions: [10]
     }
   ],
   regions: [

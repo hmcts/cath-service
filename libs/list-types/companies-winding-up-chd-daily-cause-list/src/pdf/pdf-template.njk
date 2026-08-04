@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <div class="location">
+      <p class="bold">{{ t.venueName }}</p>
+      <p>{{ t.addressLine1 }}</p>
+      <p>{{ t.addressLine2 }}</p>
+    </div>
+
+    <p class="bold header-date">{{ t.listFor }} {{ header.listDate }}</p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformationHeading }}</h3>
+    <h4>{{ t.importantInformationHeading1 }}</h4>
+    <p>{{ t.importantInformationLine1 }}</p>
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.judge }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.venue }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.type }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.caseNumber }}</th>
+          <th>{{ t.tableHeaders.caseName }}</th>
+          <th>{{ t.tableHeaders.additionalInformation }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td>{{ hearing.judge }}</td>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.type }}</td>
+            <td class="no-wrap">{{ hearing.caseNumber }}</td>
+            <td>{{ hearing.caseName }}</td>
+            <td>{{ hearing.additionalInformation }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t.noHearingsMessage }}</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
+  </div>
+</body>
+</html>
