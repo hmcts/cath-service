@@ -46,6 +46,11 @@
       "matchPackageNames": ["node"],
       "matchUpdateTypes": ["major"],
       "automerge": false
+    },
+    {
+      "description": "Never auto-merge major updates — they need a human to check for breaking changes",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
     }
   ],
   "constraints": {
