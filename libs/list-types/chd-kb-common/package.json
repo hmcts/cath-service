@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/companies-winding-up-chd-daily-cause-list",
+  "name": "@hmcts/chd-kb-common",
   "version": "1.0.0",
   "type": "module",
   "exports": {
@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pdf && cd src/pdf && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pdf/$(dirname {}) && cp {} ../../dist/pdf/{}' \\;",
+    "build": "tsc && yarn build:schemas",
+    "build:schemas": "mkdir -p dist/schemas && cp src/schemas/*.json dist/schemas/",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -23,21 +23,11 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/chd-kb-common": "workspace:*",
-    "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/pdf-generation": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*",
-    "exceljs": "4.4.0",
-    "luxon": "3.7.2",
-    "nunjucks": "3.2.4"
+    "@hmcts/list-types-common": "workspace:*"
   },
   "devDependencies": {
-    "@types/luxon": "3.7.1",
     "@types/node": "24.10.4",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
-  },
-  "peerDependencies": {
-    "express": "^5.1.0"
   }
 }

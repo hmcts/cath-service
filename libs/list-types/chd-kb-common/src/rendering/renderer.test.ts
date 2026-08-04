@@ -1,8 +1,8 @@
-import type { ChdKbHearingList } from "@hmcts/chd-kb-common";
 import { describe, expect, it } from "vitest";
-import { renderCompaniesWindingUpChdDailyCauseList } from "./renderer.js";
+import type { ChdKbHearingList } from "../models/types.js";
+import { renderChdKbHearingList } from "./renderer.js";
 
-describe("renderCompaniesWindingUpChdDailyCauseList", () => {
+describe("renderChdKbHearingList", () => {
   it("should render hearing list with header and hearings", () => {
     const hearingList: ChdKbHearingList = [
       {
@@ -19,12 +19,13 @@ describe("renderCompaniesWindingUpChdDailyCauseList", () => {
     const options = {
       locale: "en",
       contentDate: new Date("2025-06-20"),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Test List Title"
     };
 
-    const result = renderCompaniesWindingUpChdDailyCauseList(hearingList, options);
+    const result = renderChdKbHearingList(hearingList, options);
 
-    expect(result.header.listTitle).toBe("Companies Winding Up (Chancery Division) Daily Cause List");
+    expect(result.header.listTitle).toBe("Test List Title");
     expect(result.header.listDate).toBe("20 June 2025");
     expect(result.header.lastUpdatedDate).toBe("1 January 2025");
     expect(result.header.lastUpdatedTime).toContain("am");
@@ -43,26 +44,28 @@ describe("renderCompaniesWindingUpChdDailyCauseList", () => {
     const options = {
       locale: "en",
       contentDate: new Date("2025-01-01"),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Test List Title"
     };
 
-    const result = renderCompaniesWindingUpChdDailyCauseList(hearingList, options);
+    const result = renderChdKbHearingList(hearingList, options);
 
     expect(result.hearings).toHaveLength(0);
-    expect(result.header.listTitle).toBe("Companies Winding Up (Chancery Division) Daily Cause List");
+    expect(result.header.listTitle).toBe("Test List Title");
   });
 
-  it("should use the Welsh list title when locale is cy", () => {
+  it("should pass the supplied list title through unchanged", () => {
     const hearingList: ChdKbHearingList = [];
     const options = {
       locale: "cy",
       contentDate: new Date("2025-01-01"),
-      lastReceivedDate: "2025-01-01T09:55:00Z"
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Teitl Rhestr Prawf"
     };
 
-    const result = renderCompaniesWindingUpChdDailyCauseList(hearingList, options);
+    const result = renderChdKbHearingList(hearingList, options);
 
-    expect(result.header.listTitle).toBe("Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)");
+    expect(result.header.listTitle).toBe("Teitl Rhestr Prawf");
   });
 
   it("should format PM times correctly", () => {
@@ -70,10 +73,11 @@ describe("renderCompaniesWindingUpChdDailyCauseList", () => {
     const options = {
       locale: "en",
       contentDate: new Date("2025-01-01"),
-      lastReceivedDate: "2025-01-01T14:30:00Z"
+      lastReceivedDate: "2025-01-01T14:30:00Z",
+      listTitle: "Test List Title"
     };
 
-    const result = renderCompaniesWindingUpChdDailyCauseList(hearingList, options);
+    const result = renderChdKbHearingList(hearingList, options);
 
     expect(result.header.lastUpdatedTime).toBe("2:30pm");
   });

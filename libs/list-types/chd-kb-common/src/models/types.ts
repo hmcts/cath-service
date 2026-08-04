@@ -1,4 +1,4 @@
-export interface CompaniesWindingUpHearing {
+export interface ChdKbHearing {
   judge: string;
   time: string;
   venue: string;
@@ -8,4 +8,4 @@ export interface CompaniesWindingUpHearing {
   additionalInformation: string;
 }
 
-export type CompaniesWindingUpHearingList = CompaniesWindingUpHearing[];
+export type ChdKbHearingList = ChdKbHearing[];

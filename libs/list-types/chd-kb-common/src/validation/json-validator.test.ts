@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateCompaniesWindingUpChdDailyCauseList } from "./json-validator.js";
+import { validateChdKbListType } from "./json-validator.js";
 
 const VALID_DATA = [
   {
@@ -22,13 +22,13 @@ const VALID_DATA = [
   }
 ];
 
-describe("validateCompaniesWindingUpChdDailyCauseList", () => {
+describe("validateChdKbListType", () => {
   it("should return valid when all required fields are present", () => {
     // Arrange
     const data = JSON.parse(JSON.stringify(VALID_DATA));
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(true);
@@ -41,7 +41,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].additionalInformation;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(true);
@@ -54,7 +54,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].judge;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -67,7 +67,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].time;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -80,7 +80,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].venue;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -93,7 +93,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].type;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -106,7 +106,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].caseNumber;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -119,7 +119,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     delete data[0].caseName;
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -132,7 +132,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     data[0].time = "not-a-time";
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);
@@ -145,7 +145,7 @@ describe("validateCompaniesWindingUpChdDailyCauseList", () => {
     data[0].caseName = "<script>alert('xss')</script>";
 
     // Act
-    const result = validateCompaniesWindingUpChdDailyCauseList(data);
+    const result = validateChdKbListType(data);
 
     // Assert
     expect(result.isValid).toBe(false);

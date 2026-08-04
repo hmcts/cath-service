@@ -33,7 +33,7 @@ export const locationData: {
       name: "Royal Courts of Justice",
       welshName: "Llysoedd Barn Brenhinol",
       regions: [1],
-      subJurisdictions: [1, 4, 5]
+      subJurisdictions: [1, 5, 10, 11, 12]
     },
     {
       locationId: 5,

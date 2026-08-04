@@ -1,22 +1,10 @@
-import { createConverter, type ExcelConverterConfig, registerConverterByName, validateNoHtmlTags, validateTimeFormatSimple } from "@hmcts/list-types-common";
+import { CHD_KB_EXCEL_CONFIG } from "@hmcts/chd-kb-common";
+import { createConverter, registerConverterByName } from "@hmcts/list-types-common";
 
-export const COMPANIES_WINDING_UP_CHD_EXCEL_CONFIG: ExcelConverterConfig = {
-  fields: [
-    { header: "Judge", fieldName: "judge", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge", rowNumber)] },
-    { header: "Time", fieldName: "time", required: true, validators: [(value, rowNumber) => validateTimeFormatSimple(value, rowNumber)] },
-    { header: "Venue", fieldName: "venue", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)] },
-    { header: "Type", fieldName: "type", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Type", rowNumber)] },
-    { header: "Case Number", fieldName: "caseNumber", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Number", rowNumber)] },
-    { header: "Case Name", fieldName: "caseName", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Name", rowNumber)] },
-    {
-      header: "Additional Information",
-      fieldName: "additionalInformation",
-      required: false,
-      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
-    }
-  ],
-  minRows: 1
-};
+// Field definitions live in @hmcts/chd-kb-common and are shared with future list types using the
+// same schema. Registration under this list type's own DB name must stay here, since each CHD/KB
+// list type has a distinct name and the converter registry is keyed on that name.
+export const COMPANIES_WINDING_UP_CHD_EXCEL_CONFIG = CHD_KB_EXCEL_CONFIG;
 
 const companiesWindingUpChdConverter = createConverter(COMPANIES_WINDING_UP_CHD_EXCEL_CONFIG);
 registerConverterByName("COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST", companiesWindingUpChdConverter);

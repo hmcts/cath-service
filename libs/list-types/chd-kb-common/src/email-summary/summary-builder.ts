@@ -1,9 +1,9 @@
 import { type CaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
-import type { CompaniesWindingUpHearing, CompaniesWindingUpHearingList } from "../models/types.js";
+import type { ChdKbHearing, ChdKbHearingList } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 
-function mapHearingToSummary(hearing: CompaniesWindingUpHearing): CaseSummary {
+function mapHearingToSummary(hearing: ChdKbHearing): CaseSummary {
   return [
     { label: "Time", value: hearing.time || "" },
     { label: "Case number", value: hearing.caseNumber || "" },
@@ -11,6 +11,6 @@ function mapHearingToSummary(hearing: CompaniesWindingUpHearing): CaseSummary {
   ];
 }
 
-export function extractCaseSummary(jsonData: CompaniesWindingUpHearingList): CaseSummary[] {
+export function extractCaseSummary(jsonData: ChdKbHearingList): CaseSummary[] {
   return jsonData.map(mapHearingToSummary);
 }

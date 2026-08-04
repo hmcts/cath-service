@@ -1,5 +1,5 @@
+import type { ChdKbHearingList } from "@hmcts/chd-kb-common";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CompaniesWindingUpHearingList } from "../models/types.js";
 
 const { mockUploadBlob } = vi.hoisted(() => ({
   mockUploadBlob: vi.fn()
@@ -31,7 +31,7 @@ const mockRenderedData = {
   hearings: []
 };
 
-const mockHearingList: CompaniesWindingUpHearingList = [
+const mockHearingList: ChdKbHearingList = [
   {
     judge: "Judge A",
     time: "9am",

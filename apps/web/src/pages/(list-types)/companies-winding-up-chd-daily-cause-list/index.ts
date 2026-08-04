@@ -1,14 +1,13 @@
+import { validateChdKbListType } from "@hmcts/chd-kb-common";
 import {
   type CompaniesWindingUpHearingList,
   companiesWindingUpChdDailyCauseListCy as cy,
   companiesWindingUpChdDailyCauseListEn as en,
   renderCompaniesWindingUpChdDailyCauseList
 } from "@hmcts/companies-winding-up-chd-daily-cause-list";
-import { schemaPath } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
-import { createJsonValidator } from "@hmcts/list-types-common";
 import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-handler.js";
 
-const validate = createJsonValidator(schemaPath);
+const validate = validateChdKbListType;
 
 const SUPPORTED_LIST_TYPE = "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST";
 

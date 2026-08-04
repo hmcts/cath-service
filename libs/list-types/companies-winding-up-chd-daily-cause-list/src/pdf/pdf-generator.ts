@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ChdKbHearingList } from "@hmcts/chd-kb-common";
 import {
   type BasePdfGenerationOptions,
   configureNunjucks,
@@ -11,13 +12,12 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
-import type { CompaniesWindingUpHearingList } from "../models/types.js";
 import { renderCompaniesWindingUpChdDailyCauseList } from "../rendering/renderer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface PdfGenerationOptions extends BasePdfGenerationOptions<CompaniesWindingUpHearingList> {
+interface PdfGenerationOptions extends BasePdfGenerationOptions<ChdKbHearingList> {
   contentDate: Date;
 }
 

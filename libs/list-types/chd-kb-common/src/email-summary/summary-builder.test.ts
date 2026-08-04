@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CompaniesWindingUpHearingList } from "../models/types.js";
+import type { ChdKbHearingList } from "../models/types.js";
 import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
 describe("SPECIAL_CATEGORY_DATA_WARNING", () => {
@@ -11,7 +11,7 @@ describe("SPECIAL_CATEGORY_DATA_WARNING", () => {
 
 describe("extractCaseSummary", () => {
   it("should extract case summaries from hearing list", () => {
-    const hearingList: CompaniesWindingUpHearingList = [
+    const hearingList: ChdKbHearingList = [
       {
         judge: "Judge A",
         time: "9am",
@@ -48,7 +48,7 @@ describe("extractCaseSummary", () => {
   });
 
   it("should handle empty hearing list", () => {
-    const hearingList: CompaniesWindingUpHearingList = [];
+    const hearingList: ChdKbHearingList = [];
     const result = extractCaseSummary(hearingList);
     expect(result).toHaveLength(0);
   });

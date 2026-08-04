@@ -1,5 +1,6 @@
-import { formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
-import type { CompaniesWindingUpHearing, CompaniesWindingUpHearingList } from "../models/types.js";
+import { type ChdKbHearing, type ChdKbHearingList, renderChdKbHearingList } from "@hmcts/chd-kb-common";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 
 export interface RenderOptions {
   locale: string;
@@ -14,21 +15,13 @@ export interface RenderedData {
     lastUpdatedDate: string;
     lastUpdatedTime: string;
   };
-  hearings: CompaniesWindingUpHearing[];
+  hearings: ChdKbHearing[];
 }
 
-export function renderCompaniesWindingUpChdDailyCauseList(hearingList: CompaniesWindingUpHearingList, options: RenderOptions): RenderedData {
-  const listDate = formatDisplayDate(options.contentDate, options.locale);
-  const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
+// Rendering logic is shared with future list types via @hmcts/chd-kb-common. The list title is
+// specific to this list type, so it is sourced from this package's own locale files and passed in.
+export function renderCompaniesWindingUpChdDailyCauseList(hearingList: ChdKbHearingList, options: RenderOptions): RenderedData {
+  const t = options.locale === "cy" ? cy : en;
 
-  return {
-    header: {
-      listTitle:
-        options.locale === "cy" ? "Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)" : "Companies Winding Up (Chancery Division) Daily Cause List",
-      listDate,
-      lastUpdatedDate,
-      lastUpdatedTime
-    },
-    hearings: hearingList.map((hearing) => ({ ...hearing }))
-  };
+  return renderChdKbHearingList(hearingList, { ...options, listTitle: t.pageTitle });
 }
