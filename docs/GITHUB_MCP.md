@@ -5,9 +5,8 @@ definition that gives Claude Code **typed GitHub tools** (read issues, pull
 requests, repository contents, and Project boards) instead of relying on
 hand-written `gh api graphql` calls and `jq` parsing.
 
-It is **local-only**: it runs in developer Claude Code sessions. The CI workflows
-(`requirements-sync.yml`, `claude.yml`) are unchanged and continue to use the `gh`
-CLI directly.
+It is **local-only**: it runs in developer Claude Code sessions. The CI workflow
+(`claude.yml`) is unchanged and continues to use the `gh` CLI directly.
 
 ## How it works
 
