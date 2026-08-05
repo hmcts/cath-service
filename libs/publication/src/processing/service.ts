@@ -253,6 +253,13 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
       courtName: "First-tier Tribunal (Residential Property Tribunal)",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"
     }),
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: (p) =>
+    generateFttRptWeeklyHearingListPdf({
+      ...p,
+      jsonData: p.jsonData as FttRptHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List"
+    }),
   GRC_WEEKLY_HEARING_LIST: (p) => generateGrcWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as GrcWeeklyHearingList }),
   WPAFCC_WEEKLY_HEARING_LIST: (p) => generateWpafccWeeklyHearingListPdf({ ...p, jsonData: p.jsonData as WpafccWeeklyHearingList }),
   UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: (p) =>
