@@ -1,11 +1,11 @@
 # #894: ‘Deleted accounts’ to be added to the MI Report
 
 **State:** OPEN
-**Assignees:** None
+**Assignees:** 
 **Author:** OgechiOkelu
-**Labels:** None
+**Labels:** 
 **Created:** 2026-07-28T13:38:50Z
-**Updated:** 2026-07-28T13:49:09Z
+**Updated:** 2026-08-05T11:34:34Z
 
 ## Description
 
@@ -26,20 +26,21 @@ Following the annual verification process of CaTH accounts, accounts that are no
 
 **ACCEPTANCE CRITERIA**
 - In the ‘Download MI Report’ tab, another option titled ‘Deleted accounts’ is included in the ‘Select report type’ drop down options.
-- Backend changes are implemented to support the generation of the ‘Deleted accounts’ report.
-- The 'Deleted accounts' report should contain the total number of active accounts prior to the deletion, the number of deleted accounts from the annual verification process and the difference between both for the selected report duration. 
+Backend changes are implemented to support the generation of the ‘Deleted accounts’ report.
+The 'Deleted accounts' report should contain the total number of all deleted CaTH accounts and their CaTH IDs for the selected report duration.
 - The implementation of this requirement is dependent on https://github.com/hmcts/cath-service/issues/628 
-
 [Deleted accounts MI Report Mock-up.docx](https://github.com/user-attachments/files/30464146/Deleted.accounts.MI.Report.Mock-up.docx)
 
 
 ## Comments
 
-### Comment by OgechiOkelu on 2026-07-28T13:39:37Z
+### Comment by OgechiOkelu on 2026-08-05T11:25:57Z
 
-@spec 
+@SPEC
 
-### Comment by hmctsclaudecode on 2026-07-28T13:47:47Z
+---
+
+### Comment by hmctsclaudecode on 2026-08-05T11:33:34Z
 
 # Technical Specification — Issue #894: 'Deleted accounts' to be added to the MI Report
 
@@ -51,720 +52,642 @@ Following the annual verification process of CaTH accounts, accounts that are no
 
 ## 2. Background
 
-Following the annual verification process of CaTH accounts, accounts that are not re-verified by their owners are deleted. The System Admin dashboard needs to expose a downloadable Management Information (MI) report covering those deletions so the volumes can be reported on.
+Following the annual verification process of CaTH accounts, accounts that are not re-verified by their owners are deleted. The System Admin Dashboard supports downloading an MI Report, and this ticket adds a further report type covering deleted accounts.
 
-### Current state of the codebase (verified)
+### Dependency: issue #628 (MI Report Download)
 
-Three facts materially shape this specification:
+This work is **blocked by** [#628](https://github.com/hmcts/cath-service/issues/628), which is not yet implemented. There is currently no `/mi-report` page, no report-type selector, and no MI report generation code anywhere in the repository (verified: no matches for `mi-report`, `miReport`, or `Download MI Report` outside the requirements database).
 
-1. **There is no MI Report page in the repository.** A search across `apps/web/src/pages` and `libs/system-admin-pages/src/pages` finds no `mi-report` route, no "Download MI Report" tab, and no "Select report type" dropdown. The System Admin dashboard (`apps/web/src/pages/(system-admin)/system-admin-dashboard/en.ts`) lists 10 tiles; none of them is an MI report. The acceptance criteria are written as though the tab already exists — it does not. This specification therefore covers **both** the MI Report download page and the 'Deleted accounts' report type, so the ticket is deliverable on its own.
+Issue #628 (`REQ-0345`, status `approved`) specifies:
 
-2. **User deletion is a hard delete with no history.** `deleteUserById` in `libs/system-admin-pages/src/user-management/queries.ts` runs `prisma.user.delete`, removing the row entirely. The `User` model in `libs/postgres-prisma/prisma/schema/base.prisma` has no `deletedAt`, no `lastVerifiedDate`, and no deletion-history relation. Once an account is deleted there is no record of it having existed, so **the report cannot be derived from the current schema** — no query can recover "how many accounts existed before the deletion run".
+* A `Download MI Report` tile on the System Admin Dashboard, `SYSTEM_ADMIN`-only.
+* A page at `/mi-report` with a **reporting period** selector (7 / 14 / 21 / 30 days) and a **report type** selector (User Accounts, Publications, Location Subscriptions, All Subscriptions, All Data).
+* `.xlsx` generation via `exceljs`, streamed directly with no intermediate storage.
+* File naming `mi-report-{type}-{days}days-{YYYY-MM-DD}.xlsx`.
+* Welsh support via `?lng=cy`.
 
-3. **The audit log is not a viable data source.** `AuditLog` (`libs/postgres-prisma/prisma/schema/audit-log.prisma`) records `DELETE_USER` entries, but only for *manual* deletions performed by a System Admin through the UI, attributed to that admin's `userId`. The automated annual verification job has no System Admin actor, and the audit log holds no "active account count prior to deletion" figure. Counting `DELETE_USER` rows would conflate manual admin deletions with verification-driven deletions and would still leave two of the three required figures unobtainable.
+This specification is written as a **delta on top of #628** and assumes those foundations exist. Where #628's shape is assumed, it is called out explicitly.
 
-The consequence: this ticket requires a **new persistence structure** that the annual verification process writes to. That structure is specified in §6.
+### The blocking data problem
 
-### Dependency
+**Deleted accounts leave no trace in the database today.** `deleteUserById` in `libs/system-admin-pages/src/user-management/queries.ts` performs a hard delete inside a transaction:
 
-* **Blocked by** [#628](https://github.com/hmcts/cath-service/issues/628) — the annual verification process. #628 owns the job that deletes non-re-verified accounts. This ticket's report is meaningless until that job exists and populates the run record specified in §6.2. The schema and the write call in §6.2 are the integration contract between the two tickets.
-* The mock-up (`Deleted accounts MI Report Mock-up.docx`) is attached to the issue but is not retrievable from this environment. Column ordering, header labels and file format below are derived from the acceptance criteria and existing repository conventions; they must be reconciled against the mock-up before implementation starts (see §14).
+```typescript
+await tx.notificationAuditLog.deleteMany({ where: { subscriptionId: { in: subscriptionIds } } });
+await tx.subscription.deleteMany({ where: { userId } });
+await tx.user.delete({ where: { userId } });
+```
 
-### Existing patterns this work follows
+The `User` model in `libs/postgres-prisma/prisma/schema/base.prisma` has no `deletedAt` column. Once a row is gone, its CaTH ID is unrecoverable — the `audit_log` table records a free-text `details` string (`User: {email}`) for the `Delete user` action, but not the user ID in a queryable column, and it is only written for System Admin manual deletions.
 
-| Concern | Reference implementation |
-|---|---|
-| CSV generation and download | `libs/system-admin-pages/src/reference-data-upload/services/download-service.ts` + `apps/web/src/pages/(system-admin)/reference-data-download/index.ts` (Papa Parse `unparse`, `Content-Disposition: attachment`) |
-| Date-range filter form with validation | `apps/web/src/pages/(system-admin)/audit-log-list/` (`govukDateInput`, day/month/year parsing, error summary) |
-| System Admin route protection | `requireRole([USER_ROLES.SYSTEM_ADMIN])` exported from `@hmcts/auth` |
-| Repository → service → page controller layering | `libs/system-admin-pages/src/audit-log/{repository,service}.ts` |
-| Auditing a System Admin action | `req.auditMetadata` consumed by `auditLogMiddleware()` |
+**Therefore this ticket cannot be delivered by adding a query over existing data. It requires a new persistence record written at deletion time.** That new table is the substance of the backend work below.
+
+### Related, not-yet-built work
+
+* [#895](https://github.com/hmcts/cath-service/issues/895) — verification requirement added to account creation T&Cs.
+* [#896](https://github.com/hmcts/cath-service/issues/896) — email notification on account deletion.
+* The **annual verification deletion job itself does not exist**. `apps/crons` contains only `example.ts`. This spec defines the deletion-record contract that the future job must write to, and delivers the report over whatever records exist.
 
 ## 3. Acceptance Criteria
 
-* **Scenario:** System Admin opens the MI report download page
-    * **Given** I am signed in as a System Admin
-    * **When** I select "Download MI Report" from the System Admin dashboard
-    * **Then** I see a "Select report type" dropdown containing a "Deleted accounts" option, and inputs for a report start date and report end date
+* **Scenario:** Deleted accounts appears as a report type option
+    * **Given** I am signed in as a `SYSTEM_ADMIN` and I am on `/mi-report`
+    * **When** the page renders
+    * **Then** a `Deleted accounts` option appears in the report type list, with the hint `Accounts deleted following the annual verification process`
 
-* **Scenario:** 'Deleted accounts' appears in the report type dropdown
-    * **Given** I am on the "Download MI Report" page
-    * **When** I open the "Select report type" dropdown
-    * **Then** "Deleted accounts" is listed as a selectable option
+* **Scenario:** Download a Deleted accounts report with data
+    * **Given** three accounts were deleted by the annual verification process 5 days ago
+    * **And** I have selected reporting period `7 days` and report type `Deleted accounts`
+    * **When** I select `Download report`
+    * **Then** an `.xlsx` file named `mi-report-deleted-accounts-7days-{YYYY-MM-DD}.xlsx` downloads
+    * **And** the workbook contains a `Summary` sheet and a `Deleted Accounts` sheet
+    * **And** the `Deleted Accounts` sheet contains one row per deleted account with its CaTH ID
 
-* **Scenario:** System Admin downloads a Deleted accounts report
-    * **Given** I am on the "Download MI Report" page
-    * **And** two annual verification deletion runs completed within the selected date range
-    * **When** I select "Deleted accounts", enter a valid start and end date, and select "Download report"
-    * **Then** a CSV file downloads named `deleted-accounts-YYYY-MM-DD.csv`
-    * **And** it contains one row per verification run within the range, each showing the run date, the total active accounts prior to deletion, the number of accounts deleted, and the difference between the two
-    * **And** it contains a totals row summing the deleted-account counts across the range
+* **Scenario:** Summary figures are correct
+    * **Given** 3 accounts were deleted by annual verification inside the reporting period and 250 accounts remain active
+    * **When** I download the `Deleted accounts` report
+    * **Then** the `Summary` sheet reports `Deleted accounts (annual verification)` as `3`
+    * **And** `Active accounts prior to deletion` as `253`
+    * **And** `Active accounts after deletion` as `250`
 
-* **Scenario:** Date range contains no verification runs
-    * **Given** no annual verification run completed between 1 January 2026 and 31 January 2026
-    * **When** I request a Deleted accounts report for that range
-    * **Then** a CSV downloads containing only the header row and a totals row of zero
-    * **And** no error is shown
+* **Scenario:** Deletions outside the reporting period are excluded
+    * **Given** one account was deleted 3 days ago and another 40 days ago
+    * **When** I download the `Deleted accounts` report for a `7 days` period
+    * **Then** only the account deleted 3 days ago appears, and the deleted count is `1`
 
-* **Scenario:** No report type selected
-    * **Given** I am on the "Download MI Report" page
-    * **When** I select "Download report" without choosing a report type
-    * **Then** the page re-renders with an error summary titled "There is a problem" containing "Select a report type"
-    * **And** the dropdown shows an inline error message
-    * **And** any dates I already entered are retained
+* **Scenario:** Manual System Admin deletions are counted separately
+    * **Given** 2 accounts were deleted by annual verification and 1 was deleted manually by a System Admin inside the reporting period
+    * **When** I download the `Deleted accounts` report
+    * **Then** `Deleted accounts (annual verification)` is `2`
+    * **And** `Deleted accounts (System Admin)` is `1`
+    * **And** all 3 rows appear on the `Deleted Accounts` sheet with a `Deletion reason` column distinguishing them
 
-* **Scenario:** Incomplete date entered
-    * **Given** I have selected "Deleted accounts"
-    * **When** I enter a start date with a day and month but no year
-    * **Then** the page re-renders with the error "Report start date must include a year"
-    * **And** the error summary link moves focus to the start date day field
+* **Scenario:** No deletions in the period
+    * **Given** no accounts were deleted in the last 7 days
+    * **When** I download the `Deleted accounts` report for a `7 days` period
+    * **Then** the workbook downloads successfully with a populated `Summary` sheet showing `0` deletions
+    * **And** the `Deleted Accounts` sheet contains only the header row
 
-* **Scenario:** End date precedes start date
-    * **Given** I have selected "Deleted accounts"
-    * **When** I enter a start date of 1 March 2026 and an end date of 1 February 2026
-    * **Then** the page re-renders with the error "Report end date must be the same as or after the report start date"
+* **Scenario:** Deleted accounts included in All Data
+    * **Given** I select report type `All Data`
+    * **When** I download the report
+    * **Then** the workbook contains a `Deleted Accounts` tab in addition to the four tabs defined by #628
 
-* **Scenario:** Non-System-Admin access is refused
-    * **Given** I am signed in as a verified media user
-    * **When** I navigate to `/mi-report`
-    * **Then** I am refused access by the existing role guard and do not see the page
+* **Scenario:** Report type is required
+    * **Given** I am on `/mi-report` and have selected a reporting period but no report type
+    * **When** I select `Download report`
+    * **Then** the page re-renders with an error summary containing `Select a report type`
+    * **And** my reporting period selection is preserved
 
-* **Scenario:** Welsh language support
-    * **Given** I am on the "Download MI Report" page
-    * **When** I switch the language to Welsh
-    * **Then** the page heading, dropdown label, all report type option labels, date labels, hint text, button text and every error message are shown in Welsh
+* **Scenario:** Welsh language
+    * **Given** I visit `/mi-report?lng=cy`
+    * **When** the page renders
+    * **Then** the `Deleted accounts` option label and hint appear in Welsh
 
-* **Scenario:** Download is audited
-    * **Given** I am a System Admin
-    * **When** I successfully download a Deleted accounts report
-    * **Then** an audit log entry is recorded with the action `DOWNLOAD_MI_REPORT` and details naming the report type and the date range
+* **Scenario:** Access control
+    * **Given** I am signed in as a `VERIFIED` user
+    * **When** I request `POST /mi-report` with `reportType=deleted-accounts`
+    * **Then** I receive a `403` and no report is generated
+
+* **Scenario:** A deletion writes a durable record
+    * **Given** a System Admin deletes a user through `/delete-user-confirm/{userId}`
+    * **When** the deletion transaction commits
+    * **Then** a `deleted_account` row exists containing that user's CaTH ID, role, provenance, created date, last signed-in date, deletion date and reason `SYSTEM_ADMIN`
+    * **And** the row contains no email address, name or provenance ID
 
 ## 4. User Journey Flow
 
 ```
-┌──────────────────────────┐
-│ System Admin Dashboard   │
-│ /system-admin-dashboard  │
-│  [Download MI Report]    │  ← new tile added by this ticket
-└───────────┬──────────────┘
-            │ selects tile
+System Admin Dashboard
+        │
+        │ selects "Download MI Report" tile
+        ▼
+GET /mi-report  ──────────────────────────────┐
+        │                                     │
+        │ selects "30 days"                   │ validation fails
+        │ selects "Deleted accounts"          │ (missing selection)
+        │ selects "Download report"           │
+        ▼                                     │
+POST /mi-report                               │
+        │                                     │
+        ├── invalid ──────────────────────────┘
+        │   (re-render with error summary,
+        │    preserving selections)
+        │
+        └── valid
+            │
             ▼
-┌────────────────────────────────────────────┐
-│ Download MI Report          GET /mi-report │
-│  • Select report type (dropdown)           │
-│  • Report start date (day/month/year)      │
-│  • Report end date   (day/month/year)      │
-│  • [Download report]                       │
-└───────────┬────────────────────────────────┘
-            │ POST /mi-report
+        countActiveAccounts()
+        findDeletedAccountsSince(cutoff)
+            │
             ▼
-     ┌──────────────────┐
-     │ Validate input   │
-     └───┬──────────┬───┘
-    invalid         valid
-         │            │
-         ▼            ▼
-┌──────────────┐  ┌───────────────────────────────┐
-│ Re-render    │  │ Query account_verification_run │
-│ with error   │  │ rows in range                  │
-│ summary +    │  └───────────────┬────────────────┘
-│ retained     │                  │
-│ input        │                  ▼
-└──────────────┘  ┌────────────────────────────────┐
-                  │ Build CSV (Papa.unparse)       │
-                  │ Write audit log entry          │
-                  │ Stream as file attachment      │
-                  └───────────────┬────────────────┘
-                                  │
-                                  ▼
-                  ┌────────────────────────────────┐
-                  │ Browser downloads              │
-                  │ deleted-accounts-YYYY-MM-DD.csv│
-                  │ (page stays on /mi-report)     │
-                  └────────────────────────────────┘
+        generateDeletedAccountsWorkbook()
+            │
+            ▼
+        stream .xlsx  ─── stays on /mi-report,
+                          browser handles download
 ```
 
-Data production flow (owned by #628, consumed here):
+Data-flow for the record that makes the report possible:
 
 ```
-Annual verification job (#628)
-   │
-   ├─ counts active accounts before deletion  ──┐
-   ├─ deletes accounts not re-verified          │
-   ├─ counts accounts deleted                   ├─► recordVerificationRun()
-   └─ on completion                           ──┘        │
-                                                         ▼
-                                          account_verification_run row
-                                                         │
-                                                         ▼
-                                             Deleted accounts MI report
+┌──────────────────────────────┐      ┌──────────────────────────────┐
+│ Annual verification cron     │      │ System Admin manual delete   │
+│ (future — issue #896 sibling)│      │ /delete-user-confirm/{id}    │
+└──────────────┬───────────────┘      └──────────────┬───────────────┘
+               │                                     │
+               │  reason: ANNUAL_VERIFICATION         │ reason: SYSTEM_ADMIN
+               └──────────────┬──────────────────────┘
+                              ▼
+                 deleteUserById(userId, reason)
+                 ── single Prisma transaction ──
+                   1. INSERT deleted_account
+                   2. DELETE notification_audit_log
+                   3. DELETE subscription
+                   4. DELETE user
+                              │
+                              ▼
+                     deleted_account table
+                              │
+                              ▼
+                  MI Report "Deleted accounts"
 ```
 
 ## 5. Low Fidelity Wireframe
 
-### `/mi-report` — initial state
+### `/mi-report` — report type list with the new option
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ GOV.UK  Court and tribunal hearings                     Cymraeg       │
-├───────────────────────────────────────────────────────────────────────┤
-│ ‹ Back                                                                │
-│                                                                       │
-│ Download MI Report                                                    │
-│ ══════════════════                                                    │
-│                                                                       │
-│ Select report type                                                    │
-│ ┌─────────────────────────────────────────────┐                       │
-│ │ Select a report type                     ▼  │                       │
-│ ├─────────────────────────────────────────────┤                       │
-│ │ Select a report type                        │                       │
-│ │ Deleted accounts                            │  ← added by this      │
-│ └─────────────────────────────────────────────┘     ticket            │
-│                                                                       │
-│ Report start date                                                     │
-│ For example, 1 4 2026                                                 │
-│  Day     Month    Year                                                │
-│ ┌────┐  ┌────┐  ┌──────┐                                              │
-│ │    │  │    │  │      │                                              │
-│ └────┘  └────┘  └──────┘                                              │
-│                                                                       │
-│ Report end date                                                       │
-│ For example, 31 3 2027                                                │
-│  Day     Month    Year                                                │
-│ ┌────┐  ┌────┐  ┌──────┐                                              │
-│ │    │  │    │  │      │                                              │
-│ └────┘  └────┘  └──────┘                                              │
-│                                                                       │
-│ ┌──────────────────┐                                                  │
-│ │ Download report  │                                                  │
-│ └──────────────────┘                                                  │
-│                                                                       │
-├───────────────────────────────────────────────────────────────────────┤
-│ Footer                                                                │
-└───────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│  GOV.UK  Court and Tribunal Hearings                               │
+├────────────────────────────────────────────────────────────────────┤
+│  < Back                                                            │
+│                                                                    │
+│  Download MI Report                                                │
+│  ═══════════════════                                               │
+│                                                                    │
+│  Reporting period                                                  │
+│  How many days of data do you want to include?                     │
+│                                                                    │
+│   ( ) 7 days                                                       │
+│   ( ) 14 days                                                      │
+│   ( ) 21 days                                                      │
+│   (o) 30 days                                                      │
+│                                                                    │
+│  Report type                                                       │
+│  Select the data you want to download                              │
+│                                                                    │
+│   ( ) User Accounts                                                │
+│       User account data including provenance and roles             │
+│   ( ) Publications                                                 │
+│       NoMatch publications with court and list type data           │
+│   ( ) Location Subscriptions                                       │
+│       Subscriptions by location with court names                   │
+│   ( ) All Subscriptions                                            │
+│       All subscriptions including search type                      │
+│   (o) Deleted accounts                          ◄── NEW OPTION     │
+│       Accounts deleted following the annual verification process   │
+│   ( ) All Data                                                     │
+│       All of the above in a single file with multiple tabs         │
+│                                                                    │
+│  ┌──────────────────┐                                              │
+│  │ Download report  │                                              │
+│  └──────────────────┘                                              │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### `/mi-report` — validation error state
+### Validation error state
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│ ‹ Back                                                                │
-│ ┌───────────────────────────────────────────────────────────────────┐ │
-│ │ ▌ There is a problem                                              │ │
-│ │ ▌  • Select a report type                                         │ │
-│ │ ▌  • Report start date must include a year                        │ │
-│ └───────────────────────────────────────────────────────────────────┘ │
-│                                                                       │
-│ Download MI Report                                                    │
-│ ══════════════════                                                    │
-│                                                                       │
-│ Select report type                                                    │
-│ ▌ Error: Select a report type                                         │
-│ ▌┌─────────────────────────────────────────────┐                      │
-│ ▌│ Select a report type                     ▼  │                      │
-│ ▌└─────────────────────────────────────────────┘                      │
-│                                                                       │
-│ Report start date                                                     │
-│ For example, 1 4 2026                                                 │
-│ ▌ Error: Report start date must include a year                        │
-│ ▌ Day     Month    Year                                               │
-│ ▌┌────┐  ┌────┐  ┌──────┐                                             │
-│ ▌│ 1  │  │ 4  │  │      │   ← entered values retained                 │
-│ ▌└────┘  └────┘  └──────┘                                             │
-└───────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ There is a problem                                           │  │
+│  │                                                              │  │
+│  │  • Select a report type                                      │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+│  Download MI Report                                                │
+│  ═══════════════════                                               │
+│  ...                                                               │
+│  Report type                                                       │
+│  Select the data you want to download                              │
+│  │                                                                 │
+│  │ Error: Select a report type                                     │
+│  │  ( ) User Accounts                                              │
+│  │  ...                                                            │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### Downloaded CSV — shape
+### Downloaded workbook — `Summary` sheet
 
 ```
-REPORT_DATE,ACTIVE_ACCOUNTS_BEFORE_DELETION,ACCOUNTS_DELETED,DIFFERENCE
-01/04/2026,15230,412,14818
-01/04/2027,14990,378,14612
-Total,,790,
+mi-report-deleted-accounts-30days-2026-08-05.xlsx
+┌────────────────────────────────────────────────────┬───────────┐
+│ Measure                                            │ Value     │
+├────────────────────────────────────────────────────┼───────────┤
+│ Reporting period (days)                            │ 30        │
+│ Period start                                       │ 06/07/2026│
+│ Period end                                         │ 05/08/2026│
+│ Active accounts prior to deletion                  │ 253       │
+│ Deleted accounts (annual verification)             │ 3         │
+│ Deleted accounts (System Admin)                    │ 1         │
+│ Deleted accounts (total)                           │ 4         │
+│ Active accounts after deletion                     │ 249       │
+└────────────────────────────────────────────────────┴───────────┘
+ [ Summary ] [ Deleted Accounts ]
 ```
+
+### Downloaded workbook — `Deleted Accounts` sheet
+
+```
+┌──────────────────────────┬───────────────┬────────┬─────────────┬─────────────────────┬──────────────┬──────────────────────┐
+│ CaTH ID                  │ User provenance│ Role   │ Created date│ Last signed in date │ Deleted date │ Deletion reason      │
+├──────────────────────────┼───────────────┼────────┼─────────────┼─────────────────────┼──────────────┼──────────────────────┤
+│ 8f14e45f-ceea-467a-...   │ B2C_IDAM      │VERIFIED│ 12/03/2025  │ 04/07/2025          │ 21/07/2026   │ Annual verification  │
+│ 3c59dc04-8e88-4650-...   │ B2C_IDAM      │VERIFIED│ 09/01/2025  │                     │ 21/07/2026   │ Annual verification  │
+│ b6d767d2-f8ed-5d98-...   │ SSO           │VERIFIED│ 27/05/2025  │ 11/06/2026          │ 30/07/2026   │ System Admin         │
+└──────────────────────────┴───────────────┴────────┴─────────────┴─────────────────────┴──────────────┴──────────────────────┘
+```
+
+Blank cell where `Last signed in date` is null — no placeholder text, so the column remains sortable and filterable in Excel.
 
 ## 6. Page Specifications
 
-### 6.1 Overview of changes
+No new page is created. The change is one additional radio item on the existing `/mi-report` page from #628, plus new backend generation and persistence.
 
-| Layer | File | Change |
-|---|---|---|
-| Schema | `libs/postgres-prisma/prisma/schema/account-verification.prisma` | New file, new `AccountVerificationRun` model |
-| Migration | `apps/postgres/prisma/migrations/<timestamp>_add_account_verification_run/` | New migration creating `account_verification_run` |
-| Repository | `libs/system-admin-pages/src/mi-report/deleted-accounts-repository.ts` | New — range query + run recording |
-| Service | `libs/system-admin-pages/src/mi-report/deleted-accounts-report.ts` | New — CSV generation |
-| Report registry | `libs/system-admin-pages/src/mi-report/report-types.ts` | New — report type constants and dispatch |
-| Validation | `libs/system-admin-pages/src/mi-report/validation.ts` | New — report type and date-range rules |
-| Exports | `libs/system-admin-pages/src/index.ts` | Export the above |
-| Audit action | `libs/system-admin-pages/src/audit-log/logger.ts` | Add `DOWNLOAD_MI_REPORT` to `AuditLogAction` |
-| Page | `apps/web/src/pages/(system-admin)/mi-report/{index.ts,index.njk,en.ts,cy.ts}` | New page |
-| Dashboard | `apps/web/src/pages/(system-admin)/system-admin-dashboard/{en.ts,cy.ts}` | Add "Download MI Report" tile |
+### 6.1 Database — new `DeletedAccount` model
 
-### 6.2 Database schema
-
-New schema file — reference data lives in `libs/postgres-prisma/prisma/schema/`, one file per domain, per the project conventions.
+`libs/postgres-prisma/prisma/schema/deleted-account.prisma` (new file, one schema per domain per the repo convention):
 
 ```prisma
-// libs/postgres-prisma/prisma/schema/account-verification.prisma
+enum AccountDeletionReason {
+  ANNUAL_VERIFICATION
+  SYSTEM_ADMIN
+}
 
-model AccountVerificationRun {
-  id                     String   @id @default(uuid()) @db.Uuid
-  runDate                DateTime @map("run_date") @db.Date
-  activeAccountsBefore   Int      @map("active_accounts_before")
-  accountsDeleted        Int      @map("accounts_deleted")
-  createdAt              DateTime @default(now()) @map("created_at")
+model DeletedAccount {
+  id               String                @id @default(uuid()) @db.Uuid
+  userId           String                @unique @map("user_id") @db.Uuid
+  userProvenance   String                @map("user_provenance") @db.VarChar(20)
+  role             String                @db.VarChar(20)
+  createdDate      DateTime              @map("created_date")
+  lastSignedInDate DateTime?             @map("last_signed_in_date")
+  deletedDate      DateTime              @default(now()) @map("deleted_date")
+  deletionReason   AccountDeletionReason @map("deletion_reason")
 
-  @@index([runDate])
-  @@map("account_verification_run")
+  @@index([deletedDate])
+  @@index([deletionReason])
+  @@map("deleted_account")
 }
 ```
 
-Design notes:
+Design decisions:
 
-* `runDate` is a `@db.Date`, not a timestamp — the report is reported by day and the range filter is inclusive of whole days. This avoids the timezone-boundary handling that `audit-log/repository.ts` needs for its timestamp filter.
-* `activeAccountsBefore` and `accountsDeleted` are **stored, not derived**. The "before" count cannot be recomputed after the fact because deletion is destructive. Storing the count at run time is the only correct option.
-* The third required figure — the difference — is **not stored**. It is `activeAccountsBefore - accountsDeleted`, computed in the service. Storing a derivable value invites drift.
-* No `activeAccountsAfter` column for the same reason.
-* `runDate` is deliberately **not** unique. A verification run could legitimately be re-executed, or split across a day boundary; a unique constraint would turn an operational retry into a crash inside #628's job.
+* **Separate append-only table, not a `deletedAt` column on `user`.** Soft-deleting `user` would require every existing query in `libs/account`, `libs/system-admin-pages/src/user-management/queries.ts`, `libs/subscriptions` and the auth middleware to add `deletedAt: null`, and would collide with the `userProvenanceId @unique` constraint if a user re-registers with the same Azure B2C object ID. A dedicated table keeps the read paths untouched.
+* **No email, name, or `userProvenanceId`.** The account has been deleted; retaining direct identifiers would defeat the deletion. The AC asks only for CaTH IDs and counts, so only the CaTH ID (`user_id`, a UUID with no external meaning) and non-identifying attributes are retained. This is a deliberate constraint, not an omission — see §14.
+* **`userId` is `@unique`** so a re-run of the deletion job cannot double-count an account. Insert uses `create` inside the deletion transaction; a duplicate is a genuine error and should surface.
+* **No FK to `user`** — the `user` row is deleted in the same transaction, so a relation would be immediately dangling.
+* **`deletionReason` as a Prisma enum**, not a string, per the backend rules ("Don't use string literals for fields that should be enums").
 
-### 6.3 Repository
+New Prisma migration under `apps/postgres/prisma/migrations/20260805000000_add_deleted_account/`.
 
-```typescript
-// libs/system-admin-pages/src/mi-report/deleted-accounts-repository.ts
-import { prisma } from "@hmcts/postgres-prisma";
+### 6.2 Write path — record the deletion
 
-export async function findVerificationRunsInRange(from: Date, to: Date): Promise<AccountVerificationRun[]>
-export async function recordVerificationRun(data: RecordVerificationRunInput): Promise<void>
-```
-
-* `findVerificationRunsInRange` filters `runDate: { gte: from, lte: to }`, ordered `runDate: "asc"`. Both bounds inclusive.
-* `recordVerificationRun` is the write side, called by the #628 job. It is specified here because the schema is introduced here; the *caller* belongs to #628.
-* Types (`AccountVerificationRun`, `RecordVerificationRunInput`) are colocated in this file — the project forbids `types.ts` files.
-
-### 6.4 Report service
+`libs/system-admin-pages/src/user-management/queries.ts` — extend `deleteUserById` to take a reason and write the record inside the existing transaction:
 
 ```typescript
-// libs/system-admin-pages/src/mi-report/deleted-accounts-report.ts
-export async function generateDeletedAccountsCsv(from: Date, to: Date): Promise<string>
+export async function deleteUserById(userId: string, reason: AccountDeletionReason): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUniqueOrThrow({
+      where: { userId },
+      select: { userProvenance: true, role: true, createdDate: true, lastSignedInDate: true }
+    });
+
+    await tx.deletedAccount.create({
+      data: { userId, ...user, deletionReason: reason }
+    });
+
+    // existing cascade: notification audit logs -> subscriptions -> user
+  });
+}
 ```
 
-Behaviour:
+`reason` is a required parameter — there is no default. This forces every future caller (including the annual verification job) to state which process deleted the account, which is what the report distinguishes on.
 
-1. Fetch runs in range via the repository.
-2. Map each run to a CSV row, computing `DIFFERENCE = activeAccountsBefore - accountsDeleted`.
-3. Format `REPORT_DATE` as `dd/mm/yyyy`, matching the display convention already used by `formatTimestamp` in `libs/system-admin-pages/src/audit-log/service.ts`.
-4. Append a `Total` row summing `ACCOUNTS_DELETED`. `ACTIVE_ACCOUNTS_BEFORE_DELETION` and `DIFFERENCE` are left blank on the totals row — summing point-in-time snapshots across runs produces a number with no meaning, and a blank cell is safer than a misleading one.
-5. Serialise with `Papa.unparse(rows, { header: true })`, matching `generateReferenceDataCsv`. `papaparse` `5.5.4` is already a dependency of `@hmcts/system-admin-pages`; no new dependency is needed.
-6. An empty range yields the header row plus a `Total` row of `0`. This is not an error state.
+Caller update: `apps/web/src/pages/(system-admin)/delete-user-confirm/[userId]/index.ts` passes `AccountDeletionReason.SYSTEM_ADMIN`. Its existing `req.auditMetadata` audit-log entry is unchanged.
 
-Functions are plain exported functions, not a class — no shared state.
+### 6.3 Read path — query and service
 
-### 6.5 Report type registry
+`libs/system-admin-pages/src/mi-report/deleted-accounts-queries.ts` (new):
 
 ```typescript
-// libs/system-admin-pages/src/mi-report/report-types.ts
-export const MI_REPORT_TYPES = {
-  DELETED_ACCOUNTS: "deleted-accounts"
-} as const;
+export async function findDeletedAccountsSince(cutoff: Date): Promise<DeletedAccountRow[]>
+export async function countDeletedAccountsSince(cutoff: Date): Promise<Record<AccountDeletionReason, number>>
+export async function countActiveAccounts(): Promise<number>
 ```
 
-A registry mapping report type → `{ generate, filenamePrefix }` keeps the page controller free of per-report branching, so the next MI report type is an entry rather than an `if`. The key is the **stable string slug**, never a numeric ID — the same reasoning that governs `listTypeName` across this codebase.
+* `findDeletedAccountsSince` — `prisma.deletedAccount.findMany({ where: { deletedDate: { gte: cutoff } }, orderBy: { deletedDate: "desc" }, select: {...} })`. Explicit `select`, no `include`, filtering and ordering at the database level per the backend rules.
+* `countDeletedAccountsSince` — `prisma.deletedAccount.groupBy({ by: ["deletionReason"], where: { deletedDate: { gte: cutoff } }, _count: true })`, normalised to a record with `0` defaults so both reasons always appear on the Summary sheet.
+* `countActiveAccounts` — `prisma.user.count()`.
 
-### 6.6 Page controller — `apps/web/src/pages/(system-admin)/mi-report/index.ts`
+`libs/system-admin-pages/src/mi-report/deleted-accounts-service.ts` (new) composes the three into a `DeletedAccountsReport` and derives the summary figures:
+
+```
+activeAfterDeletion  = countActiveAccounts()
+deletedInPeriod      = annualVerification + systemAdmin
+activePriorToDeletion = activeAfterDeletion + deletedInPeriod
+```
+
+`Active accounts prior to deletion` is **derived, not snapshotted**. It is exact when no accounts were created inside the reporting period; accounts created during the period inflate it. Recording a true point-in-time snapshot would require the annual verification job (not yet built) to write a run-level record. See §14 — this is the main open question on this ticket.
+
+The three queries run concurrently via `Promise.all`.
+
+### 6.4 Workbook generation
+
+`libs/excel-generation/src/excel/deleted-accounts-excel-generator.ts` (new) — this lib already owns `exceljs` at pinned `4.4.0` and exports `generateSjpPublicListExcel` / `generateSjpPressListExcel`, so the MI report generators belong here rather than adding a second `exceljs` dependency to `libs/system-admin-pages` as #628's technical notes suggested.
 
 ```typescript
-export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
-export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];
+export function addDeletedAccountsSheets(workbook: ExcelJS.Workbook, report: DeletedAccountsReport): void
+export async function generateDeletedAccountsExcel(report: DeletedAccountsReport): Promise<Buffer>
 ```
 
-`getHandler`:
-* Resolves locale from `res.locals.locale`, selects `cy` or `en`.
-* Renders `mi-report/index` with `{ en, cy, t, reportTypeItems, data: {}, errors: undefined }`.
-* `reportTypeItems` is built from `t.reportTypes`, so option labels are translated.
+Splitting the sheet-building from the buffer-writing lets `All Data` call `addDeletedAccountsSheets` on the shared workbook without producing an intermediate file. Header and cell styling reuse the existing `HEADER_FONT`, `HEADER_FILL`, `HEADER_ALIGNMENT`, `DATA_FONT`, `DATA_ALIGNMENT` and `CELL_BORDER` constants from `libs/excel-generation/src/excel/excel-styles.ts`.
 
-`postHandler`:
-* Reads `reportType`, `fromDay/fromMonth/fromYear`, `toDay/toMonth/toYear` from `req.body`.
-* Calls `validateMiReportRequest`. On any error: re-renders `mi-report/index` with `errors`, per-field `errorMessage` objects, and `data` echoing the submitted values so nothing the user typed is lost. Returns HTTP 200 with the form — not a redirect — so the error summary is present on first paint and focusable.
-* On success: sets `req.auditMetadata = { shouldLog: true, action: AuditLogAction.DOWNLOAD_MI_REPORT, entityInfo: ... }` **before** sending the response. `auditLogMiddleware` wraps `res.send`, so the metadata must be assigned first or the entry is logged without context.
-* Sets `Content-Type: text/csv`, `Content-Disposition: attachment; filename="deleted-accounts-<yyyy-mm-dd>.csv"`, then `res.send(csv)`.
-* Wraps generation in `try/catch`; on failure logs server-side and renders `errors/500`. The catch must not leak database detail into the response.
+Column headers are constants in `libs/excel-generation/src/excel/excel-headers.ts` alongside the existing `SJP_*_HEADERS`. Headers stay **English only** — the workbook is a data artefact consumed by analysts, matching the column naming already specified in #628 (`user_id`, `provenance_user_id`, …). Only the web page is bilingual. Flagged in §14.
 
-### 6.7 Template — `index.njk`
+Dates render as `dd/MM/yyyy` strings, consistent with `formatTimestamp` in `libs/system-admin-pages/src/audit-log/service.ts`.
 
-* Extends `layouts/base-template.njk`; content in `{% block page_content %}`.
-* `{% block backLink %}` links to `/system-admin-dashboard`.
-* Imports `govukSelect`, `govukDateInput`, `govukButton`, `govukErrorSummary`.
-* Error summary rendered inside `{% if errorList %}` at the top of the content column, before the `h1`, per the GOV.UK validation pattern.
-* Single `<form method="post" novalidate>` — `novalidate` so GOV.UK error handling owns validation rather than the browser.
-* Layout is `govuk-grid-column-two-thirds`.
-* All visible strings come from `t.*`. No hardcoded English in the template.
+### 6.5 Controller changes
 
-### 6.8 Dashboard tile
+`apps/web/src/pages/(system-admin)/mi-report/index.ts` (created by #628):
 
-Appended to the `tiles` array in `system-admin-dashboard/en.ts` and `cy.ts`:
+* Add `deleted-accounts` to the accepted `reportType` values.
+* `POST` branch delegates to the service, then the generator, then streams:
 
-```
-title: "Download MI Report"
-description: "Download management information reports"
-href: "/mi-report"
+```typescript
+res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+res.setHeader("Content-Disposition", `attachment; filename="mi-report-deleted-accounts-${days}days-${today}.xlsx"`);
+res.send(buffer);
 ```
 
-Note the existing `system-admin-dashboard.spec.ts` E2E test asserts an exact tile count of 9 while the page renders 10, and the suite is `test.describe.skip`-ed. Adding an 11th tile does not make this worse, but the count assertion should be corrected rather than propagated (see §14).
+This matches the streaming pattern in `apps/web/src/pages/(system-admin)/reference-data-download/index.ts`. Guarded by `requireRole([USER_ROLES.SYSTEM_ADMIN])` as the first element of the exported `RequestHandler[]`.
+
+No business logic in the controller — it validates, calls the service, and streams.
+
+### 6.6 Files changed
+
+| File | Change |
+|---|---|
+| `libs/postgres-prisma/prisma/schema/deleted-account.prisma` | New — `DeletedAccount` model, `AccountDeletionReason` enum |
+| `apps/postgres/prisma/migrations/20260805000000_add_deleted_account/migration.sql` | New — generated via `yarn db:migrate:dev` |
+| `libs/system-admin-pages/src/user-management/queries.ts` | `deleteUserById` takes `reason`, writes `deleted_account` in-transaction |
+| `libs/system-admin-pages/src/user-management/queries.test.ts` | Cover the new record write and transaction rollback |
+| `libs/system-admin-pages/src/mi-report/deleted-accounts-queries.ts` | New |
+| `libs/system-admin-pages/src/mi-report/deleted-accounts-queries.test.ts` | New |
+| `libs/system-admin-pages/src/mi-report/deleted-accounts-service.ts` | New |
+| `libs/system-admin-pages/src/mi-report/deleted-accounts-service.test.ts` | New |
+| `libs/system-admin-pages/src/index.ts` | Export the new service, queries and types |
+| `libs/excel-generation/src/excel/deleted-accounts-excel-generator.ts` | New |
+| `libs/excel-generation/src/excel/deleted-accounts-excel-generator.test.ts` | New |
+| `libs/excel-generation/src/excel/excel-headers.ts` | Add `DELETED_ACCOUNTS_HEADERS`, `DELETED_ACCOUNTS_SUMMARY_LABELS` |
+| `libs/excel-generation/src/index.ts` | Export the new generator functions |
+| `apps/web/src/pages/(system-admin)/delete-user-confirm/[userId]/index.ts` | Pass `SYSTEM_ADMIN` reason |
+| `apps/web/src/pages/(system-admin)/mi-report/index.ts` | Accept and handle `deleted-accounts`; add the tab to `All Data` |
+| `apps/web/src/pages/(system-admin)/mi-report/en.ts` | New radio label + hint |
+| `apps/web/src/pages/(system-admin)/mi-report/cy.ts` | Welsh label + hint |
+| `apps/web/src/pages/(system-admin)/mi-report/index.test.ts` | Extend for the new report type |
+| `apps/web/src/pages/(system-admin)/mi-report/index.njk.test.ts` | Assert the new radio renders in both locales |
+| `e2e-tests/tests/system-admin/mi-report.spec.ts` | Extend the #628 journey to cover the new option |
+
+No new lib is created — `@hmcts/system-admin-pages` and `@hmcts/excel-generation` both already exist and are registered, so there are no `tsconfig.json`, `vite.config.ts` or `app.ts` registration changes.
 
 ## 7. Content
 
-### English — `apps/web/src/pages/(system-admin)/mi-report/en.ts`
+### English — appended to `apps/web/src/pages/(system-admin)/mi-report/en.ts`
 
 ```typescript
-export const en = {
-  title: "Download MI Report",
-  reportTypeLabel: "Select report type",
-  reportTypePlaceholder: "Select a report type",
-  reportTypes: {
-    deletedAccounts: "Deleted accounts"
-  },
-  fromDateLegend: "Report start date",
-  fromDateHint: "For example, 1 4 2026",
-  toDateLegend: "Report end date",
-  toDateHint: "For example, 31 3 2027",
-  dayLabel: "Day",
-  monthLabel: "Month",
-  yearLabel: "Year",
-  downloadButton: "Download report",
-  backLink: "Back",
-  errorSummaryTitle: "There is a problem",
-  errors: {
-    reportTypeRequired: "Select a report type",
-    fromDateRequired: "Enter a report start date",
-    fromDateIncompleteDay: "Report start date must include a day",
-    fromDateIncompleteMonth: "Report start date must include a month",
-    fromDateIncompleteYear: "Report start date must include a year",
-    fromDateInvalid: "Report start date must be a real date",
-    toDateRequired: "Enter a report end date",
-    toDateIncompleteDay: "Report end date must include a day",
-    toDateIncompleteMonth: "Report end date must include a month",
-    toDateIncompleteYear: "Report end date must include a year",
-    toDateInvalid: "Report end date must be a real date",
-    toDateBeforeFromDate: "Report end date must be the same as or after the report start date",
-    fromDateInFuture: "Report start date must be today or in the past",
-    generationFailed: "There was a problem generating the report. Try again later."
+reportTypes: {
+  // ...existing entries from #628
+  deletedAccounts: {
+    label: "Deleted accounts",
+    hint: "Accounts deleted following the annual verification process"
   }
+}
+```
+
+### Welsh — appended to `apps/web/src/pages/(system-admin)/mi-report/cy.ts`
+
+```typescript
+reportTypes: {
+  // ...existing entries from #628
+  deletedAccounts: {
+    label: "[TRANSLATE: \"Deleted accounts\"]",
+    hint: "[TRANSLATE: \"Accounts deleted following the annual verification process\"]"
+  }
+}
+```
+
+The `cy` object must mirror `en` exactly; the template test asserts key parity with `expect(Object.keys(en.reportTypes).sort()).toEqual(Object.keys(cy.reportTypes).sort())`.
+
+### Workbook content — English only
+
+`libs/excel-generation/src/excel/excel-headers.ts`:
+
+```typescript
+export const DELETED_ACCOUNTS_HEADERS = {
+  cathId: "CaTH ID",
+  userProvenance: "User provenance",
+  role: "Role",
+  createdDate: "Created date",
+  lastSignedInDate: "Last signed in date",
+  deletedDate: "Deleted date",
+  deletionReason: "Deletion reason"
+};
+
+export const DELETED_ACCOUNTS_SUMMARY_LABELS = {
+  reportingPeriod: "Reporting period (days)",
+  periodStart: "Period start",
+  periodEnd: "Period end",
+  activePriorToDeletion: "Active accounts prior to deletion",
+  deletedAnnualVerification: "Deleted accounts (annual verification)",
+  deletedSystemAdmin: "Deleted accounts (System Admin)",
+  deletedTotal: "Deleted accounts (total)",
+  activeAfterDeletion: "Active accounts after deletion"
 };
 ```
 
-### Welsh — `apps/web/src/pages/(system-admin)/mi-report/cy.ts`
+Deletion reason display values: `ANNUAL_VERIFICATION` → `Annual verification`, `SYSTEM_ADMIN` → `System Admin`.
 
-```typescript
-export const cy = {
-  title: [WELSH TRANSLATION REQUIRED: "Download MI Report"],
-  reportTypeLabel: [WELSH TRANSLATION REQUIRED: "Select report type"],
-  reportTypePlaceholder: [WELSH TRANSLATION REQUIRED: "Select a report type"],
-  reportTypes: {
-    deletedAccounts: [WELSH TRANSLATION REQUIRED: "Deleted accounts"]
-  },
-  fromDateLegend: [WELSH TRANSLATION REQUIRED: "Report start date"],
-  fromDateHint: [WELSH TRANSLATION REQUIRED: "For example, 1 4 2026"],
-  toDateLegend: [WELSH TRANSLATION REQUIRED: "Report end date"],
-  toDateHint: [WELSH TRANSLATION REQUIRED: "For example, 31 3 2027"],
-  dayLabel: [WELSH TRANSLATION REQUIRED: "Day"],
-  monthLabel: [WELSH TRANSLATION REQUIRED: "Month"],
-  yearLabel: [WELSH TRANSLATION REQUIRED: "Year"],
-  downloadButton: [WELSH TRANSLATION REQUIRED: "Download report"],
-  backLink: Yn ôl,
-  errorSummaryTitle: Mae problem,
-  errors: {
-    reportTypeRequired: [WELSH TRANSLATION REQUIRED: "Select a report type"],
-    fromDateRequired: [WELSH TRANSLATION REQUIRED: "Enter a report start date"],
-    fromDateIncompleteDay: [WELSH TRANSLATION REQUIRED: "Report start date must include a day"],
-    fromDateIncompleteMonth: [WELSH TRANSLATION REQUIRED: "Report start date must include a month"],
-    fromDateIncompleteYear: [WELSH TRANSLATION REQUIRED: "Report start date must include a year"],
-    fromDateInvalid: [WELSH TRANSLATION REQUIRED: "Report start date must be a real date"],
-    toDateRequired: [WELSH TRANSLATION REQUIRED: "Enter a report end date"],
-    toDateIncompleteDay: [WELSH TRANSLATION REQUIRED: "Report end date must include a day"],
-    toDateIncompleteMonth: [WELSH TRANSLATION REQUIRED: "Report end date must include a month"],
-    toDateIncompleteYear: [WELSH TRANSLATION REQUIRED: "Report end date must include a year"],
-    toDateInvalid: [WELSH TRANSLATION REQUIRED: "Report end date must be a real date"],
-    toDateBeforeFromDate: [WELSH TRANSLATION REQUIRED: "Report end date must be the same as or after the report start date"],
-    fromDateInFuture: [WELSH TRANSLATION REQUIRED: "Report start date must be today or in the past"],
-    generationFailed: [WELSH TRANSLATION REQUIRED: "There was a problem generating the report. Try again later."]
-  }
-};
-```
-
-### Dashboard tile content
-
-* English: title `"Download MI Report"`, description `"Download management information reports"`
-* Welsh: title `[WELSH TRANSLATION REQUIRED: "Download MI Report"]`, description `[WELSH TRANSLATION REQUIRED: "Download management information reports"]`
-
-### CSV column headers
-
-CSV headers are machine-facing data-extract identifiers, not UI copy. They stay in English and uppercase in both locales, matching the established `generateReferenceDataCsv` convention (`LOCATION_ID`, `WELSH_LOCATION_NAME`).
-
-| Header | Meaning |
-|---|---|
-| `REPORT_DATE` | Date the verification run completed, `dd/mm/yyyy` |
-| `ACTIVE_ACCOUNTS_BEFORE_DELETION` | Active accounts immediately before that run's deletions |
-| `ACCOUNTS_DELETED` | Accounts deleted by that run |
-| `DIFFERENCE` | `ACTIVE_ACCOUNTS_BEFORE_DELETION` − `ACCOUNTS_DELETED` |
-
-The final row has `REPORT_DATE` = `Total` and only `ACCOUNTS_DELETED` populated.
-
-Locale key parity between `en.ts` and `cy.ts` is asserted by test (§13).
+Sheet names: `Summary`, `Deleted Accounts`.
 
 ## 8. URL
 
-| Method | Path | Purpose | Auth |
-|---|---|---|---|
-| `GET` | `/mi-report` | Render the download form | `SYSTEM_ADMIN` |
-| `POST` | `/mi-report` | Validate; stream CSV or re-render with errors | `SYSTEM_ADMIN` |
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/mi-report` | Report selection page (existing, from #628) |
+| `GET` | `/mi-report?lng=cy` | Welsh |
+| `POST` | `/mi-report` | Generate and stream the report; `reportType=deleted-accounts` is the new accepted value |
 
-* Both handlers live in `apps/web/src/pages/(system-admin)/mi-report/index.ts`. The `(system-admin)` route group adds no URL prefix, so the path is `/mi-report`.
-* Pages under `apps/web/src/pages` are auto-discovered by `createSimpleRouter` in `apps/web/src/app.ts`. No manual route registration.
-* `POST` rather than a `GET` download link: the request carries a report type and two dates, and the response is a generated file. A `GET` with query parameters would put the filter in the browser history and encourage the report being re-run by refresh. The existing `GET /reference-data-download` takes no parameters, so it is not a precedent here.
-* Welsh is reached via `?lng=cy`, consistent with every other page.
-* No new API route in `apps/api`. The report is a System Admin UI download, not a machine-consumed endpoint. Adding an API surface would be speculative.
+No new route or page directory. `reportType` uses the kebab-case value `deleted-accounts` to match the `{type}` segment in #628's filename convention, giving `mi-report-deleted-accounts-30days-2026-08-05.xlsx`.
 
 ## 9. Validation
 
-Implemented in `libs/system-admin-pages/src/mi-report/validation.ts` as pure functions returning `ValidationError[]`, mirroring `user-management/validation.ts`.
+Server-side only, in the `POST` handler. `novalidate` on the form.
 
-### Report type
+| Field | Rule |
+|---|---|
+| `reportingPeriod` | Required. Must be one of `7`, `14`, `21`, `30`. Any other value is treated as absent. |
+| `reportType` | Required. Must be one of `user-accounts`, `publications`, `location-subscriptions`, `all-subscriptions`, `deleted-accounts`, `all-data`. Any other value is treated as absent. |
 
-| Rule | Condition | Error key |
-|---|---|---|
-| Required | `reportType` absent or empty | `reportTypeRequired` |
-| Known value | `reportType` not a value in `MI_REPORT_TYPES` | `reportTypeRequired` |
+The allow-list on `reportType` is what makes the new value valid — an unrecognised value must not fall through to a default report or a 500. Both fields are validated on every submission, and on failure the page re-renders with both the error summary and the user's existing selections preserved.
 
-An unknown value is treated as "not selected" rather than surfacing a distinct message. The only way to submit one is tampering with the form, and a bespoke error message would be user-hostile noise for a case no real user reaches. Critically, the value must be checked against the registry **before** dispatch — never used to index a lookup unguarded.
-
-### Report start date and report end date
-
-Both are required. Each is validated independently before the cross-field rule runs.
-
-| Rule | Condition | Error key |
-|---|---|---|
-| Required | all three parts empty | `fromDateRequired` / `toDateRequired` |
-| Day present | day empty, others populated | `fromDateIncompleteDay` / `toDateIncompleteDay` |
-| Month present | month empty, others populated | `fromDateIncompleteMonth` / `toDateIncompleteMonth` |
-| Year present | year empty, others populated | `fromDateIncompleteYear` / `toDateIncompleteYear` |
-| Numeric and real | any part non-numeric, or the combination is not a real calendar date (e.g. 31/02/2026) | `fromDateInvalid` / `toDateInvalid` |
-| Four-digit year | year is not exactly 4 digits | `fromDateInvalid` / `toDateInvalid` |
-| Not in the future | start date is after today | `fromDateInFuture` |
-| Ordering | end date is before start date | `toDateBeforeFromDate` |
-
-Implementation notes:
-
-* Reuse `parseDate({ day, month, year })` from `@hmcts/web-core` (`libs/web-core/src/utils/date-utils.ts`). It builds the date with `Date.UTC` and rejects rollover (`31/02` becomes `03/03` in a naive `new Date`, and `parseDate` already catches that). Do not hand-roll date parsing.
-* Multiple errors are reported together in one pass, so a user with two mistakes sees both.
-* The cross-field ordering check runs only when both dates parse; otherwise it would emit a confusing third error on top of two parse failures.
-* An end date in the future is allowed and simply returns no runs beyond today — it is not an error, and rejecting it would be a gratuitous obstacle for someone typing a financial-year end.
-* Range size is unbounded. `account_verification_run` gains roughly one row per year, so there is no volume risk to guard against and a cap would be invented complexity.
-* Query parameters reach Prisma as typed `Date` objects through Prisma's parameterised queries. No string interpolation into SQL anywhere in this feature.
+No user-supplied value reaches a query. `days` is parsed to an integer from the allow-list and used only to compute `cutoff = new Date(Date.now() - days * 86_400_000)`; the Prisma `where` clause takes only that `Date`.
 
 ## 10. Error Messages
 
-### Field validation
-
-| Field | Trigger | Message |
-|---|---|---|
-| Report type | Not selected | Select a report type |
-| Report start date | All parts empty | Enter a report start date |
-| Report start date | Day missing | Report start date must include a day |
-| Report start date | Month missing | Report start date must include a month |
-| Report start date | Year missing | Report start date must include a year |
-| Report start date | Not a real date | Report start date must be a real date |
-| Report start date | After today | Report start date must be today or in the past |
-| Report end date | All parts empty | Enter a report end date |
-| Report end date | Day missing | Report end date must include a day |
-| Report end date | Month missing | Report end date must include a month |
-| Report end date | Year missing | Report end date must include a year |
-| Report end date | Not a real date | Report end date must be a real date |
-| Report end date | Before start date | Report end date must be the same as or after the report start date |
-
-### Error summary
-
-* Title: **There is a problem**
-* Order matches field order on the page: report type, then start date, then end date.
-* `href` targets: `#reportType`, `#fromDate-day`, `#toDate-day` — the summary link moves focus to the first input of the offending group, per the GOV.UK date input guidance.
-
-### Page-level errors
-
-| Situation | Response |
+| Condition | Error summary / inline message |
 |---|---|
-| CSV generation throws | Render `errors/500`; log server-side with the report type and range; do not surface database detail |
-| Non-System-Admin user | Handled by the existing `requireRole` guard — no bespoke message |
-| Unknown report type submitted | Treated as "not selected"; see §9 |
+| No reporting period selected | `Select a reporting period` |
+| No report type selected | `Select a report type` |
 
-Empty result sets are **not** errors. A range with no verification runs returns a valid CSV with a zero totals row. Blocking the download would mean a Product Manager could not tell "nothing happened" apart from "the report is broken".
+Welsh:
+
+| Condition | Message |
+|---|---|
+| No reporting period selected | `[WELSH TRANSLATION REQUIRED: "Select a reporting period"]` |
+| No report type selected | `[WELSH TRANSLATION REQUIRED: "Select a report type"]` |
+
+Error summary title: `There is a problem` / `Mae problem`.
+
+Error summary items link to the first radio in the relevant group (`#reportingPeriod`, `#reportType`).
+
+Failures that are not user error:
+
+| Condition | Behaviour |
+|---|---|
+| Database unavailable during generation | Log with context, render `errors/500`. Do not send a partial file — build the whole buffer before setting any response header. |
+| Workbook generation throws | Same as above. |
+| Non-`SYSTEM_ADMIN` request | `requireRole` returns `403`; no report generated, nothing logged as a download. |
+
+The empty-result case is **not** an error: zero deletions in the period produces a valid workbook with a populated `Summary` sheet and a header-only `Deleted Accounts` sheet. A Product Manager needs `0` as a reportable figure.
 
 ## 11. Navigation
 
-| From | Trigger | To |
-|---|---|---|
-| System Admin dashboard | "Download MI Report" tile | `GET /mi-report` |
-| `/mi-report` | Back link | `/system-admin-dashboard` |
-| `/mi-report` | "Download report", valid | File download; page remains on `/mi-report` |
-| `/mi-report` | "Download report", invalid | Re-render `/mi-report` with error summary, HTTP 200 |
-| `/mi-report` | Language toggle | `/mi-report?lng=cy` |
-
-* There is no confirmation or success page. A file download is its own confirmation, and the GOV.UK confirmation-page pattern is for completed transactions that change state — this one does not.
-* The current language is preserved on redirects using the `?lng=cy` convention already used by `delete-user-confirm/[userId]/index.ts`.
-* Because validation failures re-render rather than redirect, the browser back button does not resurrect a stale error state.
+* Entry: `Download MI Report` tile on `/system-admin-dashboard` (added by #628).
+* Back link on `/mi-report` returns to `/system-admin-dashboard`, preserving `?lng=cy`.
+* `POST /mi-report` returns a file attachment, not a redirect or render. The browser stays on `/mi-report`, so the user can immediately download a second report with different options — no confirmation page, matching the existing `reference-data-download` behaviour.
+* Because the response is a download and not a state change, the standard post-redirect-get rule does not apply.
+* `auditLogMiddleware` intercepts `res.send` on `POST` requests for `SYSTEM_ADMIN` users and will write an audit entry with the path-derived action `MI_REPORT`. This is existing behaviour from #628 and is desirable — downloads of user data should be traceable. Not a change in this ticket.
 
 ## 12. Accessibility
 
-Target: **WCAG 2.2 AA**, as mandated for all pages in this service.
+WCAG 2.2 AA. The new option is a standard `govukRadios` item, so it inherits the component's compliance; the requirements below are what must be verified rather than newly built.
 
-### Structure and semantics
+* **Radio group semantics** — the new item is added to the existing `reportType` `govukRadios` call inside a `fieldset` whose `legend` is `Report type`. Do not introduce a second control or a `select`. Per the design rules, `select` is a last resort and radios are correct for a small single-choice set.
+* **Hint association** — the hint text is passed via the macro's item `hint` property so `exceljs`-bound content is irrelevant and `aria-describedby` wires the hint to the input automatically.
+* **Error state** — on validation failure the fieldset receives `errorMessage`, rendering the visually hidden `Error:` prefix and setting `aria-describedby` to include the error. The error summary is placed before the `h1`, receives focus on render, and each item links to the first radio in the group.
+* **Heading hierarchy** — `h1` `Download MI Report`, fieldset legends as the section headings. No new heading level, no skipped level.
+* **Page title matches `h1`.**
+* **Keyboard** — arrow keys move within the radio group, `Tab` moves between groups and to the button, `Enter` submits. Adding a sixth radio changes tab order not at all; the group remains a single tab stop.
+* **Target size** — untouched; GOV.UK radio labels exceed 44×44px.
+* **Colour** — the error state is conveyed by the red bar, the `Error:` text prefix and the summary, not colour alone.
+* **No JavaScript dependency** — the form is a native `POST` and the download is a normal HTTP response. Works fully with JS disabled.
+* **Screen reader announcement** — verify the new option announces as `Deleted accounts, Accounts deleted following the annual verification process, radio button, 5 of 6`.
+* **Downloaded file** — set a descriptive `Content-Disposition` filename (done) and give the header row on each sheet bold styling plus a frozen top row so the data is navigable with assistive technology in Excel.
 
-* Page `<title>` mirrors the `h1`: "Download MI Report". On validation failure it is prefixed with "Error: " so screen reader users hear the failure before the page name.
-* One `<h1 class="govuk-heading-l">`; no heading levels skipped.
-* Each date group is a `govukDateInput`, which renders a `<fieldset>` with a `<legend>` — this is what associates the three loose inputs with "Report start date" for assistive technology. Do not replace it with bare labelled inputs.
-* `govukSelect` associates its `<label>` with the `<select>` via `for`/`id`.
-* Date inputs carry `inputmode="numeric"` and `autocomplete` is omitted — these are report parameters, not the user's own data, so browser autofill would be wrong.
-
-### Errors
-
-* `govukErrorSummary` renders with `role="alert"` and receives focus on page load, so the failure is announced immediately.
-* Summary entries are links to the offending control; for date groups they target the day input.
-* Inline `govukErrorMessage` includes a visually hidden "Error:" prefix and is wired to the input via `aria-describedby`, so the message is read as part of the field rather than as orphaned text.
-* Errors are conveyed by text, not by the red border alone — colour is never the sole carrier of meaning.
-
-### Keyboard and focus
-
-* Tab order follows visual order: back link → report type select → start day/month/year → end day/month/year → download button.
-* The select is operable with arrow keys and type-ahead; no custom dropdown widget.
-* Visible focus indicators come from GOV.UK Frontend defaults and must not be overridden.
-* No time limits, no auto-dismissing messages.
-
-### Contrast and target size
-
-* Only GOV.UK Frontend components and colours — 4.5:1 body text and 3:1 for interactive boundaries are met by the design system.
-* The download button meets the 44×44px target guidance at default GOV.UK sizing.
-* No custom CSS is introduced by this ticket.
-
-### Progressive enhancement
-
-The page is a plain HTML `<form method="post">` with a `<select>` and text inputs. It works fully with JavaScript disabled — validation is server-side and the download is a normal form response. No client-side JavaScript is added.
-
-### Downloaded file
-
-The CSV is served with `Content-Type: text/csv` and an explicit filename including the generation date, so the file is identifiable once saved. WCAG applies to the page, not the CSV, but a header row is still required for the file to be navigable in a screen reader inside a spreadsheet application.
+Axe checks run inline within the E2E journey test, in both English and Welsh, in the default and error states.
 
 ## 13. Test Scenarios
 
-### Unit — validation (`libs/system-admin-pages/src/mi-report/validation.test.ts`)
+### Unit — `deleteUserById` write path
+* Deleting a user inserts a `deleted_account` row with the correct CaTH ID, provenance, role, created date, last signed-in date and the reason passed by the caller.
+* The inserted row contains no email, name or provenance ID.
+* A user with a null `lastSignedInDate` produces a record with a null `lastSignedInDate` rather than failing.
+* When the `user` delete fails, the transaction rolls back and no `deleted_account` row remains.
+* Deleting a user that does not exist rejects and writes nothing.
+* The `SYSTEM_ADMIN` reason is recorded when called from the `delete-user-confirm` controller.
 
-* Returns no errors when a known report type and a valid, correctly ordered date range are supplied
-* Returns a report-type-required error when the report type is absent, empty, or not a value in the registry
-* Returns a required error for each date when all three of its parts are empty
-* Returns the specific incomplete-part error when exactly one of day, month or year is missing, for each part and each date
-* Returns an invalid-date error for a non-numeric part, a two-digit year, and an impossible calendar date such as 31 February
-* Returns an ordering error when the end date precedes the start date, and none when the dates are equal
-* Returns a future-date error when the start date is after today, and none when the end date is in the future
-* Accumulates multiple independent errors from a single submission rather than stopping at the first
-* Suppresses the ordering error when either date failed to parse
+### Unit — queries
+* `findDeletedAccountsSince` returns only records with `deletedDate >= cutoff`, ordered most-recent first.
+* `findDeletedAccountsSince` returns an empty array when nothing matches.
+* `countDeletedAccountsSince` returns a zero for a reason with no records, so both reasons always appear.
+* `countActiveAccounts` returns the `user` row count.
 
-### Unit — repository (`deleted-accounts-repository.test.ts`, `prisma` mocked)
+### Unit — service
+* Summary figures: `activePriorToDeletion` equals `activeAfterDeletion` plus total deletions in the period.
+* Deletions are split correctly between the annual-verification and System Admin counts.
+* Period start and end are computed from the selected day count.
+* All three queries are issued concurrently.
+* A period with zero deletions produces a report with zero counts and an empty row array, not a thrown error.
 
-* Queries with an inclusive `gte`/`lte` `runDate` filter ordered ascending
-* Returns runs falling exactly on the range boundaries
-* Returns an empty array when no runs fall in the range
-* `recordVerificationRun` writes the supplied before-count and deleted-count
+### Unit — workbook generator
+* The workbook contains exactly two sheets named `Summary` and `Deleted Accounts`.
+* The `Deleted Accounts` sheet has one row per deleted account plus a header row.
+* Header cells carry the shared header font, fill and border styling.
+* Dates render as `dd/MM/yyyy`; a null `lastSignedInDate` renders as an empty cell.
+* `ANNUAL_VERIFICATION` renders as `Annual verification` and `SYSTEM_ADMIN` as `System Admin`.
+* The `Summary` sheet contains all eight labelled measures with the expected values.
+* Zero deleted accounts produces a header-only data sheet and a valid buffer.
+* `addDeletedAccountsSheets` adds its sheets to a pre-existing workbook without disturbing sheets already present — the `All Data` path.
 
-### Unit — report service (`deleted-accounts-report.test.ts`, repository mocked)
+### Unit — controller
+* `GET` renders the page with `en`, `cy` and the resolved `t`, including the new report-type entry.
+* `POST` with `reportType=deleted-accounts` and a valid period sets `Content-Type` to the xlsx media type, sets `Content-Disposition` with the expected filename, and sends a buffer.
+* `POST` with a missing report type re-renders with `Select a report type` and preserves the reporting period.
+* `POST` with an unrecognised `reportType` value is rejected as a validation error, not silently defaulted.
+* `POST` with `reportType=all-data` includes the deleted-accounts sheets in the workbook.
+* A thrown service error renders `errors/500` and sends no partial file.
+* `GET` and `POST` are both guarded by `requireRole([USER_ROLES.SYSTEM_ADMIN])`.
 
-* Emits the four expected headers in the documented order
-* Emits one row per verification run, in ascending date order
-* Computes `DIFFERENCE` as before-count minus deleted-count
-* Formats `REPORT_DATE` as `dd/mm/yyyy`
-* Appends a totals row summing `ACCOUNTS_DELETED` and leaving the snapshot columns blank
-* Returns header plus a zero totals row when the range contains no runs
-* Handles a run where zero accounts were deleted without producing a blank or `NaN` cell
-* Propagates a repository failure rather than returning a partial CSV
+### Template — `index.njk.test.ts`
+* The `reportType` radio group renders six items, and the sixth is `Deleted accounts`.
+* The new item's hint text renders and is associated with its input.
+* Rendering with the `cy` locale shows the Welsh label and hint.
+* `en` and `cy` `reportTypes` key sets are identical.
+* With errors present, the fieldset renders an error message and the error summary lists it; with no errors, neither is present.
 
-### Unit — page controller (`apps/web/src/pages/(system-admin)/mi-report/index.test.ts`)
-
-* `GET` renders `mi-report/index` with `en`, `cy` and `t`
-* `GET` renders Welsh content when the locale is `cy`
-* `GET` builds the report type dropdown items from the active locale, so Welsh users see Welsh option labels
-* `POST` with valid input sets `Content-Type: text/csv` and a `Content-Disposition` filename matching `deleted-accounts-YYYY-MM-DD.csv`, and sends the generated CSV
-* `POST` with valid input sets `req.auditMetadata` with the `DOWNLOAD_MI_REPORT` action before the response is sent
-* `POST` with no report type re-renders with an error summary and does not call the report service
-* `POST` with an invalid date re-renders with the field error and echoes back the submitted values
-* `POST` with an unknown report type re-renders rather than dispatching
-* `POST` renders `errors/500` and logs when generation throws
-* Both `GET` and `POST` are guarded by `requireRole([USER_ROLES.SYSTEM_ADMIN])`
-
-### Template (`index.njk.test.ts`, using `@hmcts/test-support`)
-
-* Renders the `h1` with the page title
-* Renders a `<select>` whose options include a placeholder and "Deleted accounts"
-* Renders two date fieldsets, each with its legend, hint, and three inputs
-* Renders no error summary when no errors are passed
-* Renders an error summary listing each message, with hrefs targeting `#reportType`, `#fromDate-day` and `#toDate-day`
-* Renders inline error messages against the correct form groups
-* Retains previously submitted values in the date inputs and the select on the error re-render
-* Renders Welsh headings, labels and option text when passed the `cy` locale
-* Asserts `Object.keys(en).sort()` equals `Object.keys(cy).sort()`, including the nested `errors` and `reportTypes` objects
-
-### E2E (`e2e-tests/tests/system-admin/mi-report.spec.ts`) — one journey test
-
-A single `@nightly` test covering the whole journey, with validation, Welsh and accessibility checks inline rather than as separate tests:
-
-* Sign in as System Admin, land on the dashboard, follow the "Download MI Report" tile
-* Run an Axe scan on the form page and assert no violations
-* Submit with nothing selected; assert the error summary and inline errors appear
-* Run an Axe scan on the error state and assert no violations
-* Switch to Welsh; assert the heading, dropdown label and the "Deleted accounts" option render in Welsh
-* Return to English, select "Deleted accounts", enter a valid range covering a seeded verification run
-* Tab to and activate the download button by keyboard
-* Assert the download event fires with a filename matching `deleted-accounts-*.csv`, and that the payload contains the expected header row and the seeded run's figures
-
-Test data: seed an `account_verification_run` row through the existing `libs/test-support` route pattern so the assertion has known figures; clean it up in teardown via the established test-prefix mechanism.
-
-### Migration
-
-* Applying the migration on a database with existing data creates `account_verification_run` without touching the `user` table
-* `yarn db:generate` produces a client exposing `prisma.accountVerificationRun`
+### E2E — extend the #628 journey, `@nightly`
+One journey test, not one per assertion:
+* Sign in as System Admin → dashboard → `Download MI Report` tile.
+* Submit with no report type selected; assert the `Select a report type` error summary appears and the period selection survived.
+* Run an axe scan in the error state.
+* Switch to Welsh, assert the Welsh `Deleted accounts` label renders, run an axe scan.
+* Switch back to English, select `30 days` and `Deleted accounts`, navigate the radio group by keyboard, and submit with `Enter`.
+* Assert the download event fires with a filename matching `mi-report-deleted-accounts-30days-\d{4}-\d{2}-\d{2}\.xlsx`.
+* Assert a `VERIFIED` user requesting `/mi-report` receives a 403.
 
 ## 14. Assumptions & Open Questions
 
-### Blocking — resolve before implementation
+### Blocking
 
-1. **#628 must define who writes the run record.** This ticket specifies the `account_verification_run` table and a `recordVerificationRun` function; the annual verification job in #628 must call it, inside the same transaction as the deletions, capturing the active-account count *before* any row is removed. If #628 ships without that call, the table stays empty and this report returns zeroes forever. This is the single hard integration point and needs explicit agreement across both tickets.
+* **#628 must land first.** There is no `/mi-report` page, no report-type selector and no MI report generation code in the repository. This ticket is a delta and cannot start until #628 is merged. If #628 slips, the only part of this work that can proceed independently is §6.1 and §6.2 — the `deleted_account` table and the write path — which is worth doing early because **every account deleted before that table exists is permanently unreportable**. Recommend splitting the persistence change out and shipping it ahead of the reporting UI.
 
-2. **The mock-up has not been read.** `Deleted accounts MI Report Mock-up.docx` could not be retrieved in this environment. Column order, header wording, date format and — most importantly — **file format** are inferred from the acceptance criteria and repository convention. If the mock-up shows an Excel workbook rather than CSV, §6.4 changes to use `exceljs` (already a dependency of `@hmcts/excel-generation`) and the download content type changes accordingly. Confirm before starting.
+* **The acceptance criteria conflict between two sources.** The GitHub issue body states the report should contain *"the total number of all deleted CaTH accounts and their CaTH IDs for the selected report duration"*. The requirements database entry for the same issue (`REQ-0409`) states it should contain *"the total number of active accounts prior to the deletion, the number of deleted accounts from the annual verification process and the difference between both"*. This spec delivers **both** — a `Summary` sheet with the three aggregate figures and a `Deleted Accounts` sheet with per-account CaTH IDs — which satisfies either reading. Confirm with the Product Manager that the row-level CaTH IDs are wanted; if only aggregates are needed, the second sheet can be dropped and the retained data reduced further.
 
-3. **The "Download MI Report" tab does not exist.** The acceptance criteria assume it does. This specification creates it. If another in-flight ticket also creates an MI Report page, the two will collide on `/mi-report` and on the dashboard tile — check before implementation and, if so, reduce this ticket's scope to adding the dropdown option plus the backend from §6.2–6.5.
+* **`Active accounts prior to deletion` is derived, not measured.** With no historic snapshot, the figure is computed as `current active count + deletions in the period`. That is exact only if no accounts were created during the reporting period; accounts created in the window inflate it. Getting a true point-in-time figure requires the annual verification job to record the active count at the moment it runs. Since that job does not exist yet, the cleanest fix is to specify the snapshot as part of the job's ticket. **Question for Product: is a derived figure acceptable for the analytical report, or is a measured pre-deletion count required?**
 
-### Assumptions made
+### Design decisions taken, open to challenge
 
-4. **CSV, not Excel.** Chosen because it is the format the only comparable download in the codebase uses (`reference-data-download`), it needs no new dependency, and MI data is consumed analytically. Subject to item 2.
+* **The mock-up attachment was not readable.** `Deleted accounts MI Report Mock-up.docx` is a GitHub user-content attachment that cannot be fetched from this environment. The workbook layout in §5 is inferred from the acceptance criteria and the existing MI Report tab structure described in #628. **Verify the sheet names, column order and summary labels against the mock-up before implementing.**
 
-5. **"Report duration" means a start and end date.** The acceptance criteria say "for the selected report duration" without specifying the control. Two date inputs are specified as the most flexible reading. A dropdown of preset periods (financial year, last 12 months) would be a smaller interaction — worth confirming with the Product Manager, since it is a materially different page.
+* **The issue says "drop down"; this spec specifies a radio option.** #628 implements report type as a `govukRadios` group, and the GOV.UK design rules treat `select` as a last resort. Adding a sixth radio is consistent with the built page and better for accessibility. Flagging in case the Product Manager specifically wants a `select` — that would be a change to #628's page, not just an added option.
 
-6. **One CSV row per verification run.** The criteria describe three figures "for the selected report duration", which could mean a single aggregated row. Per-run rows are specified because they are strictly more informative, aggregate trivially, and are the only shape that stays meaningful when a range spans several annual runs. The totals row satisfies the aggregate reading.
+* **Deleted-account records deliberately exclude email, name and `userProvenanceId`.** Retaining direct identifiers for accounts that have been deleted would undermine the deletion. Only the CaTH ID (an internal UUID) and non-identifying attributes are kept. If the analytical report needs to correlate deleted accounts with anything external, that requirement changes the data-protection position and needs a decision from the information-governance owner rather than a code change.
 
-7. **The totals row omits the snapshot columns.** Summing "active accounts before deletion" across two annual runs produces a number that means nothing. Blank cells are specified rather than a misleading total. Confirm this against the mock-up.
+* **No retention limit on `deleted_account` rows.** The table grows without bound. At the scale of an annual verification cycle this is negligible, but if a retention period applies to deletion records it needs specifying — and note that purging rows removes the ability to report on those periods.
 
-8. **"Total number of active accounts prior to the deletion" counts all accounts, not just media accounts.** The `user` table holds `VERIFIED`, `SYSTEM_ADMIN`, `INTERNAL_ADMIN_CTSC` and `INTERNAL_ADMIN_LOCAL` roles. Annual verification applies to media accounts. If the Product Manager wants the figure scoped to verified media accounts only, that scoping belongs in #628's counting logic, not in this report — the report reads whatever number the job stored. **This needs deciding in #628**, because it determines the meaning of every figure in the report.
+* **Manual System Admin deletions are recorded and reported separately.** The AC scopes the report to annual verification, but the manual deletion path is the only deletion path that exists today, and excluding it would make `Active accounts prior to deletion` wrong. Both reasons are recorded and the summary reports them separately, so the annual-verification figure is available in isolation.
 
-9. **The report is not scoped by provenance.** No filtering by `userProvenance` is specified. If media accounts across B2C and PI_AAD provenances need separating, the table needs additional columns and #628 needs to count per provenance.
+* **Workbook headers are English only.** The `.xlsx` is a data artefact for analysts, and #628 already specifies English snake_case column names for the other tabs. Only the web page is bilingual. Confirm no Welsh-language workbook is required.
 
-### Non-blocking, flag for follow-up
+* **The `All Data` report gains a fifth tab.** #628 specifies four tabs. Adding `Deleted Accounts` to `All Data` is the consistent behaviour but changes the shape of a file that may already have downstream consumers. Confirm this is wanted rather than keeping the deleted-accounts report standalone.
 
-10. **Historical data cannot be backfilled.** Verification runs that happened before this table exists left no trace, because deletion is destructive. The report will only ever cover runs from deployment onwards. If the Product Manager expects prior-year figures, they must come from outside the system.
-
-11. **Manual deletions are excluded.** Accounts a System Admin deletes through `/manage-user` are not verification-driven and will not appear. The acceptance criteria say "deleted accounts from the annual verification process", so this is correct as specified — but it means the report is not a complete picture of account deletion. Worth stating explicitly to the Product Manager so the analytical report is not mislabelled.
-
-12. **The dashboard E2E tile-count assertion is already wrong.** `e2e-tests/tests/system-admin/system-admin-dashboard.spec.ts` asserts 9 tiles against a page rendering 10, and is `test.describe.skip`-ed so the drift is invisible. Adding an 11th tile makes it wronger. Fix the assertion — ideally derive it from the content file rather than hardcoding a number — as part of this ticket.
-
-13. **No API endpoint.** Deliberately omitted per YAGNI. If the analytical report is ever automated, an authenticated `apps/api` route can be added then.
-
-14. **Retention of the run records.** `account_verification_run` holds aggregate counts, no personal data, so it falls outside data-subject deletion obligations and can be retained indefinitely. Confirm with the information governance owner if MI retention is formally bounded.
+* **`countActiveAccounts` counts all `user` rows regardless of role**, so System Admin and internal admin accounts are included. Whether "active CaTH accounts" in the analytical report means only `VERIFIED` media accounts needs confirming — if so, the count filters on `role: "VERIFIED"` and the summary label should say so.
 
 
-### Comment by OgechiOkelu on 2026-07-28T13:49:09Z
+---
 
-@plan
+### Comment by OgechiOkelu on 2026-08-05T11:34:34Z
+
+@plan 
+
