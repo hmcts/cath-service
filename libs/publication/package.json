@@ -27,6 +27,7 @@
     "@hmcts/cic-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
     "@hmcts/civil-daily-cause-list": "workspace:*",
+    "@hmcts/cop-daily-cause-list": "workspace:*",
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*",
     "@hmcts/crown-daily-list": "workspace:*",
     "@hmcts/crown-firm-list": "workspace:*",
