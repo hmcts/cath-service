@@ -44,12 +44,8 @@ export function extractCaseSummary(jsonData: MagistratesStandardList): CaseSumma
                 if (name) fields.push({ label: "Name", value: name });
               }
 
-              if (prosecutor) {
-                const authority = extractPartyName(prosecutor);
-                if (authority) fields.push({ label: "Prosecuting authority", value: authority });
-              }
-
-              fields.push({ label: "Reference", value: caseItem.caseUrn });
+              const authority = prosecutor ? extractPartyName(prosecutor) : "";
+              fields.push({ label: "Prosecuting authority", value: authority }, { label: "Reference", value: caseItem.caseUrn });
 
               if (hearing.hearingType) {
                 fields.push({ label: "Hearing type", value: hearing.hearingType });

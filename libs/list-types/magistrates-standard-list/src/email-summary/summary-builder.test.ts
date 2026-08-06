@@ -165,6 +165,53 @@ describe("extractCaseSummary", () => {
     expect(result[0].find((f) => f.label === "Prosecuting authority")?.value).toBe("Crown Prosecution Service");
   });
 
+  it("should include prosecuting authority field with empty value when the prosecutor party has an empty name", () => {
+    // Arrange
+    const json = makeJson([
+      {
+        case: [
+          {
+            caseUrn: "URN007",
+            party: [
+              { partyRole: "DEFENDANT", individualDetails: { individualForenames: "Kim", individualSurname: "Lee" } },
+              { partyRole: "PROSECUTING_AUTHORITY" }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    // Act
+    const result = extractCaseSummary(json);
+
+    // Assert
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
+  it("should include prosecuting authority field with empty value when no prosecutor party exists", () => {
+    // Arrange
+    const json = makeJson([
+      {
+        case: [
+          {
+            caseUrn: "URN008",
+            party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Ray", individualSurname: "Ford" } }]
+          }
+        ]
+      }
+    ]);
+
+    // Act
+    const result = extractCaseSummary(json);
+
+    // Assert
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
   it("should not include Offence field for applications with no offences", () => {
     const result = extractCaseSummary(
       makeJson([
