@@ -74,3 +74,4 @@ registerConverterByName("FTT_RPT_LONDON_WEEKLY_HEARING_LIST", fttRptConverter);
 registerConverterByName("FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", fttRptConverter);
 registerConverterByName("FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
 registerConverterByName("FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", fttRptConverter);
+registerConverterByName("FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST", fttRptConverter);

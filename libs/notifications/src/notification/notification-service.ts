@@ -246,6 +246,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
   GRC_WEEKLY_HEARING_LIST: {
     extract: extractGrcSummary as SummaryExtractor,
     format: formatGrcSummaryForEmail

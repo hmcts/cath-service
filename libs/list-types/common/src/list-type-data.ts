@@ -134,6 +134,16 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [9]
   },
+  {
+    name: "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST",
+    englishFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    welshFriendlyName: "Rhestr Wrandawiadau Dyddiol y Tribiwnlys Iechyd Meddwl",
+    provenance: "PI_AAD",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "Mental Health Tribunal Daily Hearing List",
+    subJurisdictionIds: [20]
+  },
   // RCJ Standard Format
   {
     name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
@@ -430,6 +440,17 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "FTT (RPT) Southern Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    name: "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr Gwrandawiadau Wythnosol Rhenti'r Farchnad",
+    provenance: "CFT_IDAM",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Market Rents Weekly Hearing List",
     subJurisdictionIds: [24]
   },
   {
