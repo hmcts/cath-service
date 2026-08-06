@@ -99,9 +99,35 @@ describe("courts-tribunals-list template", () => {
       expect($("button").text()).toContain(en.applyFilters);
       expect($.root().text()).toContain(en.jurisdictionHeading);
       expect($.root().text()).toContain(en.regionHeading);
-      expect($("#show-filters-btn").text()).toContain(en.showFilters);
-      expect($("#hide-filters-btn").text()).toContain(en.hideFilters);
       expect($.root().text()).toContain(en.backToTop);
+    });
+
+    it("should render the MOJ filter component and its layout containers", () => {
+      const data = buildData(en, "en");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".moj-filter[data-module='moj-filter']")).toHaveLength(1);
+      expect($(".moj-filter-layout")).toHaveLength(1);
+      // Marks this as an always-visible sidebar page so the desktop toggle button is
+      // hidden via CSS (filter-overrides.scss), unlike the toggle-to-reveal SJP pages.
+      expect($(".moj-filter-layout.app-filter-layout--sidebar")).toHaveLength(1);
+      expect($(".moj-filter-layout__filter")).toHaveLength(1);
+      expect($(".moj-filter-layout__content")).toHaveLength(1);
+      // Empty container the FilterToggleButton appends the show/hide button into.
+      expect($(".moj-action-bar__filter")).toHaveLength(1);
+    });
+
+    it("should expose the show/hide toggle text via data attributes (never interpolated into JS)", () => {
+      const data = buildData(en, "en");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const filter = $(".moj-filter");
+      expect(filter.attr("data-show-text")).toBe(en.showFilters);
+      expect(filter.attr("data-hide-text")).toBe(en.hideFilters);
+      expect(filter.attr("data-start-hidden")).toBe("false");
+      expect($("script").text()).not.toContain(en.showFilters);
     });
 
     it("should render court listings with English names and publication links", () => {
@@ -123,18 +149,20 @@ describe("courts-tribunals-list template", () => {
       expect($(".az-navigation__letter--disabled").length).toBeGreaterThan(0);
     });
 
-    it("should render selected filter tags with remove links", () => {
+    it("should render selected filter tags as MOJ filter tags with accessible remove links", () => {
       const data = buildData(en, "en", {
         selectedJurisdictions: [1],
         selectedJurisdictionsDisplay: ["Civil"],
-        jurisdictionRemoveUrls: ["/courts-tribunals-list"]
+        jurisdictionRemoveUrls: ["/courts-tribunals-list?remove=civil"]
       });
 
       const { $ } = render(env, TEMPLATE, data);
 
-      const tag = $(".filter-tag");
+      const tag = $(".moj-filter__tag");
+      expect(tag).toHaveLength(1);
       expect(tag.text()).toContain("Civil");
-      expect(tag.find("a.filter-tag-remove").attr("aria-label")).toContain("Civil");
+      expect(tag.attr("href")).toBe("/courts-tribunals-list?remove=civil");
+      expect(tag.find(".govuk-visually-hidden").text()).toContain("Remove this filter");
     });
 
     it("should render Welsh headings and court names", () => {
@@ -144,11 +172,11 @@ describe("courts-tribunals-list template", () => {
 
       expect($("h1").text()).toContain(cy.title);
       expect($("h2").text()).toContain(cy.filterHeading);
-      expect($("h3").text()).toContain(cy.selectedFiltersHeading);
+      expect($("h2").text()).toContain(cy.selectedFiltersHeading);
       expect($(`a[href="/courts-tribunals-list"]`).text()).toContain(cy.clearFilters);
       expect($("button").text()).toContain(cy.applyFilters);
-      expect($("#hide-filters-btn").text()).toContain(cy.hideFilters);
-      expect($("#show-filters-btn").text()).toContain(cy.showFilters);
+      expect($(".moj-filter").attr("data-show-text")).toBe(cy.showFilters);
+      expect($(".moj-filter").attr("data-hide-text")).toBe(cy.hideFilters);
       expect($.root().text()).toContain(cy.jurisdictionHeading);
       expect($.root().text()).toContain(cy.regionHeading);
       expect($(`a[href="/summary-of-publications?locationId=501"]`).text()).toContain("Canolfan Wrandawiadau Tribiwnlys Aberdeen");

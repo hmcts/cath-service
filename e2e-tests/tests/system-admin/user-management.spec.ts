@@ -76,11 +76,12 @@ test.describe
       await expect(page.getByText(/\d+ users? found/)).toBeVisible();
       await expect(page.getByText(testEmail)).toBeVisible();
 
-      // Verify filter heading appears in selected filters
-      await expect(page.getByRole("heading", { name: "Email", level: 4 })).toBeVisible();
+      // Verify filter heading appears in selected filters (MOJ renders category
+      // headings as h3 inside .moj-filter__selected)
+      await expect(page.getByRole("heading", { name: "Email", level: 3 })).toBeVisible();
 
-      // Test removing a filter by clicking the tag
-      const filterTag = page.locator(".user-management-filter-tag").first();
+      // Test removing a filter by clicking the MOJ filter tag
+      const filterTag = page.locator(".moj-filter__tag").first();
       await filterTag.click();
 
       // Verify filter was removed (should show all results again)
@@ -93,9 +94,9 @@ test.describe
       await page.getByRole("button", { name: "Apply filters" }).click();
 
       // Verify filter headings appear in selected filters
-      await expect(page.getByRole("heading", { name: "Email", level: 4 })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Roles", level: 4 })).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Provenance", level: 4 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Email", level: 3 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Roles", level: 3 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Provenance", level: 3 })).toBeVisible();
 
       // Test Clear filters button
       await page.getByRole("link", { name: "Clear filters" }).click();

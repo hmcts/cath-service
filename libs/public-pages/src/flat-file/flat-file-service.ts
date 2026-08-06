@@ -7,7 +7,6 @@ import {
   getArtefactById,
   getContentType,
   getFileBuffer,
-  getFileExtension,
   getFileName,
   getSourceArtefactId,
   resolveListType

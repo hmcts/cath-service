@@ -1,7 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "moj/components/filter/macro.njk" import mojFilter %}
 
 {% block backLink %}
   {{ govukBackLink({
@@ -17,53 +17,55 @@
   </div>
 </div>
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-one-quarter filter-column">
-    <div style="border: 1px solid #b1b4b6;">
+{% set filterOptionsHtml %}
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ t.typeHeading }}</legend>
+      {{ govukCheckboxes({
+        name: "type",
+        classes: "govuk-checkboxes--small",
+        items: typeItems
+      }) }}
+    </fieldset>
+  </div>
+{% endset %}
 
-      <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
-        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ t.filterHeading }}</h2>
-      </div>
+{% set selectedCategories = [] %}
+{% if selectedTypes.length > 0 %}
+  {% set typeTags = [] %}
+  {% for i in range(0, selectedTypes.length) %}
+    {% set typeTags = (typeTags.push({ text: selectedTypesDisplay[i], href: typeRemoveUrls[i] }), typeTags) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: t.typeHeading }, items: typeTags }), selectedCategories) %}
+{% endif %}
 
-      <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
-        <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ t.selectedFiltersHeading }}</h3>
-        <a href="/jurisdiction-data-list" class="govuk-link">{{ t.clearFilters }}</a>
-        {% if selectedTypes.length > 0 %}
-          <div class="filter-tags govuk-!-margin-top-4">
-            {% for i in range(0, selectedTypes.length) %}
-              <span class="filter-tag">
-                {{ selectedTypesDisplay[i] }}
-                <a href="{{ typeRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedTypesDisplay[i] }} filter">×</a>
-              </span>
-            {% endfor %}
-          </div>
-        {% endif %}
-      </div>
-
-      <div class="govuk-!-padding-4">
-        <form method="get" novalidate>
-          {{ govukButton({ text: t.applyFiltersButton }) }}
-
-          <div class="filter-section">
-            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="type-section">
-              <span class="filter-section-heading">{{ t.typeHeading }}</span>
-              <span class="filter-section-icon" aria-hidden="true">−</span>
-            </button>
-            <div id="type-section" class="filter-section-content">
-              {{ govukCheckboxes({
-                name: "type",
-                classes: "govuk-checkboxes--small",
-                items: typeItems
-              }) }}
-            </div>
-          </div>
-        </form>
-      </div>
-
-    </div>
+<div class="moj-filter-layout app-filter-layout--sidebar">
+  <div class="moj-filter-layout__filter">
+    <form method="get" novalidate>
+      {{ mojFilter({
+        heading: { text: t.filterHeading },
+        submit: { text: t.applyFiltersButton },
+        selectedFilters: {
+          heading: { text: t.selectedFiltersHeading },
+          clearLink: { href: "/jurisdiction-data-list", text: t.clearFilters },
+          categories: selectedCategories
+        },
+        optionsHtml: filterOptionsHtml,
+        attributes: {
+          "data-show-text": t.showFilters,
+          "data-hide-text": t.hideFilters,
+          "data-close-text": t.hideFilters,
+          "data-start-hidden": "false"
+        }
+      }) }}
+    </form>
   </div>
 
-  <div class="govuk-grid-column-three-quarters courts-column">
+  <div class="moj-filter-layout__content">
+    <div class="moj-action-bar">
+      <div class="moj-action-bar__filter"></div>
+    </div>
+
     {% if tableRows.length > 0 %}
       <table class="govuk-table">
         <thead class="govuk-table__head">
