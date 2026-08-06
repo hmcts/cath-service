@@ -18,19 +18,21 @@
 
   <div class="info-box">
     <h3>{{ t.importantInformationTitle }}</h3>
-    <p>{{ t.importantInformationText }}</p>
+    <p>{{ importantInformationText }}</p>
+    <p>{{ t.importantInformationSecondParagraph }}</p>
     <p><a href="{{ t.importantInformationLinkUrl }}">{{ t.importantInformationLinkText }}</a></p>
+    {% if extraInformationText %}<p class="bold">{{ extraInformationText }}</p>{% endif %}
   </div>
 
   {% if hearings.length > 0 %}
     <table>
       <thead>
         <tr>
-          <th class="no-wrap">{{ t.tableHeaders.date }}</th>
-          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th>{{ t.tableHeaders.date }}</th>
+          <th>{{ t.tableHeaders.time }}</th>
           <th>{{ t.tableHeaders.venue }}</th>
           <th>{{ t.tableHeaders.caseType }}</th>
-          <th class="no-wrap">{{ t.tableHeaders.caseReferenceNumber }}</th>
+          <th>{{ t.tableHeaders.caseReferenceNumber }}</th>
           <th>{{ t.tableHeaders.judges }}</th>
           <th>{{ t.tableHeaders.members }}</th>
           <th>{{ t.tableHeaders.hearingMethod }}</th>

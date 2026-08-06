@@ -82,6 +82,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1, 2]
   },
   {
+    name: "COP_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Court of Protection Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Gwarchod",
+    provenance: "CFT_IDAM",
+    urlPath: "cop-daily-cause-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "COP Daily Cause List",
+    subJurisdictionIds: [2, 11]
+  },
+  {
     name: "PCOL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Possession Claim Online Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Hawliadau Meddiant Ar-lein",
@@ -429,6 +440,17 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     shortenedFriendlyName: "FTT (RPT) Southern Weekly Hearing List",
+    subJurisdictionIds: [24]
+  },
+  {
+    name: "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST",
+    englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr Gwrandawiadau Wythnosol Rhenti'r Farchnad",
+    provenance: "CFT_IDAM",
+    urlPath: "ftt-rpt-weekly-hearing-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    shortenedFriendlyName: "FTT (RPT) Market Rents Weekly Hearing List",
     subJurisdictionIds: [24]
   },
   {

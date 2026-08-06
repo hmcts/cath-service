@@ -14,6 +14,7 @@ import {
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
+import { extractCaseSummary as extractCopSummary, formatCaseSummaryForEmail as formatCopSummaryForEmail } from "@hmcts/cop-daily-cause-list";
 import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
@@ -138,6 +139,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCivilSummary as SummaryExtractor,
     format: formatCivilSummaryForEmail
   },
+  COP_DAILY_CAUSE_LIST: {
+    extract: extractCopSummary as SummaryExtractor,
+    format: formatCopSummaryForEmail
+  },
   FAMILY_DAILY_CAUSE_LIST: {
     extract: extractFamilySummary as SummaryExtractor,
     format: formatFamilySummaryForEmail
@@ -238,6 +243,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     format: formatFttRptSummaryForEmail
   },
   FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },

@@ -1,4 +1,10 @@
-import { fttRptWeeklyHearingListCy as cy, fttRptWeeklyHearingListEn as en, type FttRptHearingList, renderFttRptData } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import {
+  buildImportantInformationText,
+  fttRptWeeklyHearingListCy as cy,
+  fttRptWeeklyHearingListEn as en,
+  type FttRptHearingList,
+  renderFttRptData
+} from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { schemaPath } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
 import { createJsonValidator } from "@hmcts/list-types-common";
 import type { Artefact } from "@hmcts/publication";
@@ -37,8 +43,16 @@ const LIST_TYPE_CONFIG: Record<string, { enCourtName: string; cyCourtName: strin
     cyCourtName: cy.rptSouthernCourtName,
     enTitle: en.rptSouthernPageTitle,
     cyTitle: cy.rptSouthernPageTitle
+  },
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: {
+    enCourtName: en.rptMarketRentsCourtName,
+    cyCourtName: cy.rptMarketRentsCourtName,
+    enTitle: en.rptMarketRentsPageTitle,
+    cyTitle: cy.rptMarketRentsPageTitle
   }
 };
+
+const MARKET_RENTS_LIST_TYPE = "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST";
 
 function guardArtefact(artefact: Artefact, res: Response): boolean {
   if (!artefact.listTypeName || !LIST_TYPE_CONFIG[artefact.listTypeName]) {
@@ -62,7 +76,8 @@ export const GET = createSimpleListTypeHandler<FttRptHearingList>({
   guardArtefact,
   render: ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const listTypeConfig = LIST_TYPE_CONFIG[artefact.listTypeName ?? ""];
+    const listTypeName = artefact.listTypeName ?? "";
+    const listTypeConfig = LIST_TYPE_CONFIG[listTypeName];
     const courtName = locale === "cy" ? listTypeConfig.cyCourtName : listTypeConfig.enCourtName;
     const listTitle = locale === "cy" ? listTypeConfig.cyTitle : listTypeConfig.enTitle;
 
@@ -75,7 +90,23 @@ export const GET = createSimpleListTypeHandler<FttRptHearingList>({
     });
 
     const dataSource = resolveDataSource(artefact.provenance, t as { provenanceLabels?: Record<string, string> });
+    const regionalEmail = t.rptRegionalEmail[listTypeName as keyof typeof t.rptRegionalEmail];
+    if (!regionalEmail) {
+      throw new Error(`No regional email configured for list type: ${listTypeName}`);
+    }
+    const importantInformationText = buildImportantInformationText(t.importantInformationTextTemplate, regionalEmail);
+    const extraInformationText = listTypeName === MARKET_RENTS_LIST_TYPE ? t.marketRentsExtraInformation : "";
 
-    res.render("ftt-rpt-weekly-hearing-list", { en, cy, t, title: header.listTitle, header, hearings, dataSource });
+    res.render("ftt-rpt-weekly-hearing-list", {
+      en,
+      cy,
+      t,
+      title: header.listTitle,
+      header,
+      hearings,
+      dataSource,
+      importantInformationText,
+      extraInformationText
+    });
   }
 });

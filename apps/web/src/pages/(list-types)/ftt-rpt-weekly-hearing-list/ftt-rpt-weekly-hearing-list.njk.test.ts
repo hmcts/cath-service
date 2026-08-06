@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { fttRptWeeklyHearingListCy as cy, fttRptWeeklyHearingListEn as en } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import { buildImportantInformationText, fttRptWeeklyHearingListCy as cy, fttRptWeeklyHearingListEn as en } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
 import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
@@ -52,7 +52,21 @@ function buildHeader(overrides: Record<string, unknown> = {}) {
 }
 
 function renderList(hearings: unknown[], overrides: Record<string, unknown> = {}, locale: typeof en | typeof cy = en) {
-  return render(env, TEMPLATE, { t: locale, en, cy, header: buildHeader(), dataSource: "RPT", hearings, ...overrides });
+  const importantInformationText = buildImportantInformationText(
+    locale.importantInformationTextTemplate,
+    locale.rptRegionalEmail.FTT_RPT_EASTERN_WEEKLY_HEARING_LIST
+  );
+  return render(env, TEMPLATE, {
+    t: locale,
+    en,
+    cy,
+    header: buildHeader(),
+    dataSource: "RPT",
+    hearings,
+    importantInformationText,
+    extraInformationText: "",
+    ...overrides
+  });
 }
 
 // The rendered hearings table columns, in order.
@@ -141,14 +155,34 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
   });
 
   describe("Important information details", () => {
-    it("should render an open details component with the important information", () => {
+    it("should render an open details component with the substituted regional email", () => {
       const { $ } = renderList([buildHearing()]);
 
       const details = $("details.govuk-details[data-module='govuk-details']");
       expect(details).toHaveLength(1);
       expect(details.attr("open")).toBeDefined();
       expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformationTitle);
-      expect(details.find(".govuk-details__text").text()).toContain(en.importantInformationText);
+      const detailsText = details.find(".govuk-details__text").text();
+      expect(detailsText).toContain(en.rptRegionalEmail.FTT_RPT_EASTERN_WEEKLY_HEARING_LIST);
+      expect(detailsText).toContain(en.importantInformationSecondParagraph);
+    });
+
+    it("should never render the unsubstituted {email} placeholder", () => {
+      const { $ } = renderList([buildHearing()]);
+
+      const detailsText = $(".govuk-details__text").text();
+      expect(detailsText).not.toContain("{email}");
+      expect(detailsText).not.toContain("[insert office email]");
+    });
+
+    it("should render the bold extra-information paragraph only when extraInformationText is passed", () => {
+      const { $: withoutExtra } = renderList([buildHearing()], { extraInformationText: "" });
+      expect(withoutExtra(".govuk-details__text p.govuk-\\!-font-weight-bold")).toHaveLength(0);
+
+      const { $: withExtra } = renderList([buildHearing()], { extraInformationText: en.marketRentsExtraInformation });
+      const boldParagraph = withExtra(".govuk-details__text p.govuk-\\!-font-weight-bold");
+      expect(boldParagraph).toHaveLength(1);
+      expect(boldParagraph.text()).toContain(en.marketRentsExtraInformation);
     });
 
     it("should render the important information link with target and rel attributes", () => {

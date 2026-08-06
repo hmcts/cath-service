@@ -1550,6 +1550,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hmcts/cop-daily-cause-list@workspace:*, @hmcts/cop-daily-cause-list@workspace:libs/list-types/cop-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/cop-daily-cause-list@workspace:libs/list-types/cop-daily-cause-list"
+  dependencies:
+    "@hmcts/daily-cause-list-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.2"
+    "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/court-of-appeal-civil-daily-cause-list@workspace:*, @hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/court-of-appeal-civil-daily-cause-list@workspace:libs/list-types/court-of-appeal-civil-daily-cause-list"
@@ -1922,6 +1941,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
+    exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -1934,7 +1954,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/magistrates-standard-list@workspace:libs/list-types/magistrates-standard-list"
   dependencies:
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
+    exceljs: "npm:4.4.0"
   languageName: unknown
   linkType: soft
 
@@ -1960,6 +1983,7 @@ __metadata:
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
@@ -1974,7 +1998,9 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*"
     "@hmcts/magistrates-adult-court-list": "workspace:*"
+    "@hmcts/magistrates-public-adult-court-list": "workspace:*"
     "@hmcts/magistrates-public-list": "workspace:*"
+    "@hmcts/magistrates-standard-list": "workspace:*"
     "@hmcts/pht-weekly-hearing-list": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*"
@@ -2096,6 +2122,7 @@ __metadata:
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
@@ -2482,6 +2509,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
+    "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
