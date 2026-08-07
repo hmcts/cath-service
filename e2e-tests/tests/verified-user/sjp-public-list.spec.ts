@@ -315,17 +315,16 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     // Navigate to list
     await page.goto(listUrl);
 
-    const filterPanel = page.locator("#filter-panel");
-    const contentArea = page.locator("#content-area");
+    // The MOJ FilterToggleButton shows/hides the .moj-filter element via the
+    // moj-js-hidden class (gated on .js-enabled).
+    const filterPanel = page.locator("#filter-panel .moj-filter");
 
     // Initially filters should be hidden
     await expect(filterPanel).toBeHidden();
-    await expect(contentArea).not.toHaveClass(/with-filters/);
 
     // Show filters
     await page.getByRole("button", { name: "Show filters" }).click();
     await expect(filterPanel).toBeVisible();
-    await expect(contentArea).toHaveClass(/with-filters/);
 
     // Check filter elements
     await expect(page.getByRole("heading", { name: "Selected filters" })).toBeVisible();
@@ -339,11 +338,11 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     await page.getByRole("button", { name: "Apply filters" }).click();
 
     await expect(page).toHaveURL(/postcode=/);
-    await expect(page.locator(".filter-tag").filter({ hasText: postcodeValue! })).toBeVisible();
+    await expect(page.locator(".moj-filter__tag").filter({ hasText: postcodeValue! })).toBeVisible();
 
     // Clear filters
     await page.getByRole("link", { name: "Clear filters" }).click();
-    await expect(page.locator(".filter-tag")).toHaveCount(0);
+    await expect(page.locator(".moj-filter__tag")).toHaveCount(0);
 
     // Test accessibility with filters
     const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();

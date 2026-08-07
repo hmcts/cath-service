@@ -5,6 +5,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/accordion/macro.njk" import govukAccordion %}
+{% from "moj/components/filter/macro.njk" import mojFilter %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
@@ -36,9 +37,11 @@
     </div>
     {% endif %}
 
-    <button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" id="filter-toggle">
-      {% if showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}{{ hideFilters }}{% else %}{{ showFilters }}{% endif %}
-    </button>
+    {% set filtersActive = showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}
+
+    <div class="moj-action-bar">
+      <div class="moj-action-bar__filter"></div>
+    </div>
 
     {% if pagination.totalPages > 1 %}
     <nav class="govuk-pagination govuk-!-margin-top-4 govuk-!-margin-bottom-4" role="navigation" aria-label="Pagination">
@@ -70,120 +73,106 @@
     </nav>
     {% endif %}
 
-    <div class="moj-filter-layout">
-      <div class="filter-form layout-width-two-filters {% if not (showFilter or (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0)) %}hidden{% endif %}" id="filter-panel">
-        <form method="post" class="moj-filter-layout__filter" autocomplete="off">
-          <input type="hidden" name="artefactId" value="{{ list.artefactId }}">
+    {% set filterOptionsHtml %}
+      <input type="hidden" name="artefactId" value="{{ list.artefactId }}">
+      {{ govukInput({
+        id: "filter-search",
+        name: "filter-search",
+        type: "text",
+        label: {
+          text: searchLabel,
+          classes: "govuk-label--m"
+        },
+        classes: "govuk-!-margin-bottom-4"
+      }) }}
 
-        <div class="moj-filter" data-module="moj-filter" style="border: 1px solid #b1b4b6;">
-          <div class="moj-filter__header">
-            <div class="moj-filter__header-title">
-              <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
-                <h2 class="govuk-heading-m govuk-!-margin-bottom-0" tabindex="0">{{ filterTitle }}</h2>
-              </div>
+      <div class="govuk-form-group">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">{{ postcodeFilterHeading }}</legend>
+          <div class="govuk-checkboxes govuk-checkboxes--small" id="postcodes-checkbox" data-module="govuk-checkboxes">
+            {% for area in postcodeAreas %}
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input" id="postcode-{{ loop.index }}" name="postcode" type="checkbox" value="{{ area }}" {% if filters.postcodes and filters.postcodes.indexOf(area) !== -1 %}checked{% endif %}>
+              <label class="govuk-label govuk-checkboxes__label" for="postcode-{{ loop.index }}">
+                {{ area }}
+              </label>
             </div>
-          </div>
-
-          {# Selected Filters Section - Always visible #}
-          <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
-            <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFilters }}</h3>
-            <a href="?artefactId={{ list.artefactId }}&showFilter=true" class="govuk-link">{{ clearFilters }}</a>
-
-            {% if (filters.postcodes and filters.postcodes.length > 0) or (filters.prosecutors and filters.prosecutors.length > 0) %}
-            <div class="filter-tags govuk-!-margin-top-4">
-              {% if filters.postcodes and filters.postcodes.length > 0 %}
-                {% for postcode in filters.postcodes %}
-                  <span class="filter-tag">
-                    {{ postcode }}
-                    <a href="?artefactId={{ list.artefactId }}{% for pc in filters.postcodes %}{% if pc != postcode %}&postcode={{ pc }}{% endif %}{% endfor %}{% if filters.prosecutors %}{% for p in filters.prosecutors %}&prosecutor={{ p }}{% endfor %}{% endif %}" class="filter-tag-remove" aria-label="Remove {{ postcode }} filter">×</a>
-                  </span>
-                {% endfor %}
-              {% endif %}
-
-              {% if filters.prosecutors and filters.prosecutors.length > 0 %}
-                {% for prosecutor in filters.prosecutors %}
-                  <span class="filter-tag">
-                    {{ prosecutor }}
-                    <a href="?artefactId={{ list.artefactId }}{% if filters.postcodes %}{% for pc in filters.postcodes %}&postcode={{ pc }}{% endfor %}{% endif %}{% for p in filters.prosecutors %}{% if p != prosecutor %}&prosecutor={{ p }}{% endif %}{% endfor %}" class="filter-tag-remove" aria-label="Remove {{ prosecutor }} filter">×</a>
-                  </span>
-                {% endfor %}
-              {% endif %}
+            {% endfor %}
+            {% if hasLondonPostcodes %}
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input" id="postcode-london" name="postcode" type="checkbox" value="LONDON_POSTCODES" {% if filters.postcodes and filters.postcodes.indexOf('LONDON_POSTCODES') !== -1 %}checked{% endif %}>
+              <label class="govuk-label govuk-checkboxes__label" for="postcode-london">
+                {{ londonPostcodesLabel }}
+              </label>
             </div>
             {% endif %}
           </div>
+        </fieldset>
+      </div>
 
-          {# Filter Controls Section #}
-          <div class="govuk-!-padding-4">
-              {{ govukButton({
-                text: applyFilters
-              }) }}
-
-              {{ govukInput({
-                id: "filter-search",
-                name: "filter-search",
-                type: "text",
-                label: {
-                  text: searchLabel,
-                  classes: "govuk-label--m"
-                },
-                classes: "govuk-!-margin-bottom-4"
-              }) }}
-
-              <div class="govuk-form-group">
-                <fieldset class="govuk-fieldset">
-                  <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-                    <h1 class="govuk-fieldset__heading">
-                      <a href="javascript:;" class="govuk-link govuk-!-font-size-19" id="postcodes-anchor">{{ postcodeFilterHeading }}</a>
-                      <span class="govuk-body govuk-!-font-size-19 filter-colour" id="postcodes-link">▶</span>
-                    </h1>
-                  </legend>
-                  <div class="govuk-checkboxes govuk-checkboxes--small" id="postcodes-checkbox" data-module="govuk-checkboxes">
-                    {% for area in postcodeAreas %}
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="postcode-{{ loop.index }}" name="postcode" type="checkbox" value="{{ area }}" {% if filters.postcodes and filters.postcodes.indexOf(area) !== -1 %}checked{% endif %}>
-                      <label class="govuk-label govuk-checkboxes__label" for="postcode-{{ loop.index }}">
-                        {{ area }}
-                      </label>
-                    </div>
-                    {% endfor %}
-                    {% if hasLondonPostcodes %}
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="postcode-london" name="postcode" type="checkbox" value="LONDON_POSTCODES" {% if filters.postcodes and filters.postcodes.indexOf('LONDON_POSTCODES') !== -1 %}checked{% endif %}>
-                      <label class="govuk-label govuk-checkboxes__label" for="postcode-london">
-                        {{ londonPostcodesLabel }}
-                      </label>
-                    </div>
-                    {% endif %}
-                  </div>
-                </fieldset>
-              </div>
-
-              <div class="govuk-form-group">
-                <fieldset class="govuk-fieldset">
-                  <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">
-                    <h1 class="govuk-fieldset__heading">
-                      <a href="javascript:;" class="govuk-link govuk-!-font-size-19" id="prosecutor-anchor">{{ prosecutorFilterHeading }}</a>
-                      <span class="govuk-body govuk-!-font-size-19 filter-colour" id="prosecutor-link">▶</span>
-                    </h1>
-                  </legend>
-                  <div class="govuk-checkboxes govuk-checkboxes--small" id="prosecutor-checkbox" data-module="govuk-checkboxes">
-                    {% for prosecutor in prosecutors %}
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="prosecutor-{{ loop.index }}" name="prosecutor" type="checkbox" value="{{ prosecutor }}" {% if filters.prosecutors and filters.prosecutors.indexOf(prosecutor) !== -1 %}checked{% endif %}>
-                      <label class="govuk-label govuk-checkboxes__label" for="prosecutor-{{ loop.index }}">
-                        {{ prosecutor }}
-                      </label>
-                    </div>
-                    {% endfor %}
-                  </div>
-                </fieldset>
-              </div>
+      <div class="govuk-form-group">
+        <fieldset class="govuk-fieldset">
+          <legend class="govuk-fieldset__legend govuk-fieldset__legend--m">{{ prosecutorFilterHeading }}</legend>
+          <div class="govuk-checkboxes govuk-checkboxes--small" id="prosecutor-checkbox" data-module="govuk-checkboxes">
+            {% for prosecutor in prosecutors %}
+            <div class="govuk-checkboxes__item">
+              <input class="govuk-checkboxes__input" id="prosecutor-{{ loop.index }}" name="prosecutor" type="checkbox" value="{{ prosecutor }}" {% if filters.prosecutors and filters.prosecutors.indexOf(prosecutor) !== -1 %}checked{% endif %}>
+              <label class="govuk-label govuk-checkboxes__label" for="prosecutor-{{ loop.index }}">
+                {{ prosecutor }}
+              </label>
             </div>
+            {% endfor %}
           </div>
+        </fieldset>
+      </div>
+    {% endset %}
+
+    {% set selectedCategories = [] %}
+    {% if filters.postcodes and filters.postcodes.length > 0 %}
+      {% set postcodeTags = [] %}
+      {% for postcode in filters.postcodes %}
+        {% set removeHref = "?artefactId=" + list.artefactId %}
+        {% for pc in filters.postcodes %}{% if pc != postcode %}{% set removeHref = removeHref + "&postcode=" + pc %}{% endif %}{% endfor %}
+        {% if filters.prosecutors %}{% for p in filters.prosecutors %}{% set removeHref = removeHref + "&prosecutor=" + p %}{% endfor %}{% endif %}
+        {% set postcodeTags = (postcodeTags.push({ text: postcode, href: removeHref }), postcodeTags) %}
+      {% endfor %}
+      {% set selectedCategories = (selectedCategories.push({ heading: { text: postcodeFilterHeading }, items: postcodeTags }), selectedCategories) %}
+    {% endif %}
+    {% if filters.prosecutors and filters.prosecutors.length > 0 %}
+      {% set prosecutorTags = [] %}
+      {% for prosecutor in filters.prosecutors %}
+        {% set removeHref = "?artefactId=" + list.artefactId %}
+        {% if filters.postcodes %}{% for pc in filters.postcodes %}{% set removeHref = removeHref + "&postcode=" + pc %}{% endfor %}{% endif %}
+        {% for p in filters.prosecutors %}{% if p != prosecutor %}{% set removeHref = removeHref + "&prosecutor=" + p %}{% endif %}{% endfor %}
+        {% set prosecutorTags = (prosecutorTags.push({ text: prosecutor, href: removeHref }), prosecutorTags) %}
+      {% endfor %}
+      {% set selectedCategories = (selectedCategories.push({ heading: { text: prosecutorFilterHeading }, items: prosecutorTags }), selectedCategories) %}
+    {% endif %}
+
+    <div class="moj-filter-layout app-filter-layout--reveal">
+      <div class="moj-filter-layout__filter" id="filter-panel">
+        <form method="post" autocomplete="off">
+          {{ mojFilter({
+            heading: { text: filterTitle },
+            submit: { text: applyFilters },
+            selectedFilters: {
+              heading: { text: selectedFilters },
+              clearLink: { href: "?artefactId=" + list.artefactId + "&showFilter=true", text: clearFilters },
+              categories: selectedCategories
+            },
+            optionsHtml: filterOptionsHtml,
+            attributes: {
+              "data-show-text": showFilters,
+              "data-hide-text": hideFilters,
+              "data-close-text": hideFilters,
+              "data-start-hidden": "true" if not filtersActive else "false",
+              "data-big-mode-media-query": "(min-width: 99999px)"
+            }
+          }) }}
         </form>
       </div>
 
-      <div class="layout-width-four-fifths" id="content-area">
+      <div class="moj-filter-layout__content" id="content-area">
         {% if cases.length > 0 %}
         {{ govukTable({
           attributes: {
@@ -224,68 +213,4 @@
 
   </div>
 </div>
-{% endblock %}
-
-{% block bodyEnd %}
-  {{ super() }}
-  <script nonce="{{ cspNonce }}">
-    // Show/Hide filter panel
-    const filterToggle = document.getElementById('filter-toggle');
-    const filterPanel = document.getElementById('filter-panel');
-    const contentArea = document.getElementById('content-area');
-
-    if (filterToggle && filterPanel && contentArea) {
-      // Initialize: check if filter panel is visible on page load
-      const isFilterPanelVisible = !filterPanel.classList.contains('hidden');
-
-      if (isFilterPanelVisible) {
-        contentArea.classList.add('with-filters');
-      } else {
-        contentArea.classList.remove('with-filters');
-      }
-
-      filterToggle.addEventListener('click', function() {
-        if (filterPanel.classList.contains('hidden')) {
-          filterPanel.classList.remove('hidden');
-          contentArea.classList.add('with-filters');
-          filterToggle.textContent = '{{ hideFilters }}';
-        } else {
-          filterPanel.classList.add('hidden');
-          contentArea.classList.remove('with-filters');
-          filterToggle.textContent = '{{ showFilters }}';
-        }
-      });
-    }
-
-    // Collapsible filter sections
-    function setupFilterToggle(anchorId, linkId, checkboxId) {
-      const anchor = document.getElementById(anchorId);
-      const link = document.getElementById(linkId);
-      const checkbox = document.getElementById(checkboxId);
-
-      if (anchor && link && checkbox) {
-        // Initially show the checkboxes
-        checkbox.style.display = 'block';
-        link.classList.add('rotated');
-
-        anchor.addEventListener('click', function(e) {
-          e.preventDefault();
-          const isHidden = checkbox.style.display === 'none';
-          checkbox.style.display = isHidden ? 'block' : 'none';
-
-          // Toggle rotation class
-          if (isHidden) {
-            link.classList.add('rotated');
-          } else {
-            link.classList.remove('rotated');
-          }
-        });
-      }
-    }
-
-    // Setup postcode and prosecutor filter toggles
-    setupFilterToggle('postcodes-anchor', 'postcodes-link', 'postcodes-checkbox');
-    setupFilterToggle('prosecutor-anchor', 'prosecutor-link', 'prosecutor-checkbox');
-
-  </script>
 {% endblock %}

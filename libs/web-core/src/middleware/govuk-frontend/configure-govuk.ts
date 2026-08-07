@@ -15,8 +15,9 @@ const __dirname = path.dirname(__filename);
 export async function configureGovuk(app: Express, paths: string[], options: GovukSetupOptions): Promise<nunjucks.Environment> {
   const { mergedViewPaths, mergedI18nPaths } = mergeConfigs(paths);
   const govukFrontendPath = "../../node_modules/govuk-frontend/dist";
+  const mojFrontendPath = "../../node_modules/@ministryofjustice/frontend";
   const sharedViews = path.join(__dirname, "../../views");
-  const allViewPaths = [govukFrontendPath, sharedViews, ...mergedViewPaths];
+  const allViewPaths = [govukFrontendPath, mojFrontendPath, sharedViews, ...mergedViewPaths];
 
   const env = nunjucks.configure(allViewPaths, {
     autoescape: true,

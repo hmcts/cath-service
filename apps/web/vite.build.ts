@@ -53,7 +53,10 @@ const baseConfig: UserConfig = {
   css: {
     preprocessorOptions: {
       scss: {
-        loadPaths: ["node_modules"]
+        // Repo root is included so @ministryofjustice/frontend's vendor layer,
+        // which @forwards "node_modules/govuk-frontend/...", resolves; "node_modules"
+        // keeps bare "govuk-frontend/..." / "@ministryofjustice/frontend/..." imports working.
+        loadPaths: [path.resolve(__dirname, "../.."), "node_modules"]
       }
     },
     devSourcemap: true
@@ -73,6 +76,12 @@ const baseConfig: UserConfig = {
         {
           // Copy GOV.UK Frontend images (rebranded assets are the default from v6)
           src: "../../node_modules/govuk-frontend/dist/govuk/assets/images/*",
+          dest: "images"
+        },
+        {
+          // MOJ Frontend images referenced by the filter component SCSS
+          // (tag remove cross, close cross, toggle plus/minus) via /assets/images.
+          src: "../../node_modules/@ministryofjustice/frontend/moj/assets/images/*",
           dest: "images"
         },
         {

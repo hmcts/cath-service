@@ -2,6 +2,7 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "moj/components/filter/macro.njk" import mojFilter %}
 
 {% block pageTitle %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
@@ -22,112 +23,92 @@
   </div>
 </div>
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-one-quarter filter-column">
-    <div style="border: 1px solid #b1b4b6;">
+{% set filterOptionsHtml %}
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ jurisdictionHeading }}</legend>
+      {{ govukCheckboxes({
+        name: "jurisdiction",
+        classes: "govuk-checkboxes--small",
+        items: jurisdictionItems
+      }) }}
 
-      {# Filter Panel Title #}
-      <div class="govuk-!-padding-4" style="background-color: #d8d8d8; border-bottom: 1px solid #b1b4b6;">
-        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">{{ filterHeading }}</h2>
-      </div>
-
-      {# Selected Filters Section #}
-      <div class="govuk-!-padding-4 govuk-!-margin-bottom-0" style="background-color: #f3f2f1; border-bottom: 1px solid #b1b4b6;">
-        <h3 class="govuk-heading-s govuk-!-margin-bottom-3">{{ selectedFiltersHeading }}</h3>
-        <a href="/location-name-search" class="govuk-link">{{ clearFilters }}</a>
-        {% if selectedJurisdictions.length > 0 or selectedRegions.length > 0 or selectedSubJurisdictions.length > 0 %}
-          <div class="filter-tags govuk-!-margin-top-4">
-            {% for i in range(0, selectedJurisdictions.length) %}
-              <span class="filter-tag">
-              {{ selectedJurisdictionsDisplay[i] }}
-              <a href="{{ jurisdictionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedJurisdictionsDisplay[i] }} filter">×</a>
-            </span>
-            {% endfor %}
-            {% for i in range(0, selectedSubJurisdictions.length) %}
-              <span class="filter-tag">
-              {{ selectedSubJurisdictionsDisplay[i] }}
-              <a href="{{ subJurisdictionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedSubJurisdictionsDisplay[i] }} filter">×</a>
-            </span>
-            {% endfor %}
-            {% for i in range(0, selectedRegions.length) %}
-              <span class="filter-tag">
-              {{ selectedRegionsDisplay[i] }}
-              <a href="{{ regionRemoveUrls[i] }}" class="filter-tag-remove" aria-label="Remove {{ selectedRegionsDisplay[i] }} filter">×</a>
-            </span>
-            {% endfor %}
+      {% for item in jurisdictionItems %}
+        {% if subJurisdictionItemsByJurisdiction[item.jurisdictionId].length > 0 %}
+          <div class="sub-jurisdiction-section" data-parent-jurisdiction="{{ item.value }}" {% if not item.checked %}hidden{% endif %}>
+            <span class="govuk-heading-s govuk-!-margin-bottom-1 govuk-!-margin-top-2">{{ item.subJurisdictionLabel }}</span>
+            {{ govukCheckboxes({
+              name: "subJurisdiction",
+              classes: "govuk-checkboxes--small",
+              items: subJurisdictionItemsByJurisdiction[item.jurisdictionId]
+            }) }}
           </div>
         {% endif %}
-      </div>
-
-      {# Filter Controls Section #}
-      <div class="govuk-!-padding-4">
-        <form method="get" novalidate>
-          {{ govukButton({
-            text: applyFilters
-          }) }}
-
-          {# Mobile hide filters button #}
-          <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="hide-filters-btn" data-module="govuk-button" style="display: none;">
-            {{ hideFilters }}
-          </button>
-
-          <div class="filter-section">
-            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
-              <span class="filter-section-heading">{{ jurisdictionHeading }}</span>
-              <span class="filter-section-icon" aria-hidden="true">−</span>
-            </button>
-            <div id="jurisdiction-section" class="filter-section-content">
-              {{ govukCheckboxes({
-                name: "jurisdiction",
-                classes: "govuk-checkboxes--small",
-                items: jurisdictionItems
-              }) }}
-
-              {# Sub-jurisdiction sections #}
-              {% for item in jurisdictionItems %}
-                {% if subJurisdictionItemsByJurisdiction[item.jurisdictionId].length > 0 %}
-                  <div class="sub-jurisdiction-section filter-section" data-parent-jurisdiction="{{ item.value }}" style="display: {% if item.checked %}block{% else %}none{% endif %};">
-                    <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="sub-section-{{ item.value }}">
-                      <span class="filter-section-heading">{{ item.subJurisdictionLabel }}</span>
-                      <span class="filter-section-icon" aria-hidden="true">−</span>
-                    </button>
-                    <div id="sub-section-{{ item.value }}" class="filter-section-content">
-                      {{ govukCheckboxes({
-                        name: "subJurisdiction",
-                        classes: "govuk-checkboxes--small",
-                        items: subJurisdictionItemsByJurisdiction[item.jurisdictionId]
-                      }) }}
-                    </div>
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </div>
-          </div>
-
-          <div class="filter-section">
-            <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="region-section">
-              <span class="filter-section-heading">{{ regionHeading }}</span>
-              <span class="filter-section-icon" aria-hidden="true">−</span>
-            </button>
-            <div id="region-section" class="filter-section-content">
-              {{ govukCheckboxes({
-                name: "region",
-                classes: "govuk-checkboxes--small",
-                items: regionItems
-              }) }}
-            </div>
-          </div>
-        </form>
-      </div>
-
-    </div>
+      {% endfor %}
+    </fieldset>
   </div>
 
-  <div class="govuk-grid-column-three-quarters courts-column">
-    {# Mobile filter toggle button #}
-    <button type="button" class="govuk-button govuk-button--secondary mobile-filter-toggle" id="show-filters-btn" data-module="govuk-button">
-      {{ showFilters }}
-    </button>
+  <div class="govuk-form-group">
+    <fieldset class="govuk-fieldset">
+      <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ regionHeading }}</legend>
+      {{ govukCheckboxes({
+        name: "region",
+        classes: "govuk-checkboxes--small",
+        items: regionItems
+      }) }}
+    </fieldset>
+  </div>
+{% endset %}
+
+{% set selectedCategories = [] %}
+{% if selectedJurisdictions.length > 0 %}
+  {% set jurisdictionTags = [] %}
+  {% for i in range(0, selectedJurisdictions.length) %}
+    {% set jurisdictionTags = (jurisdictionTags.push({ text: selectedJurisdictionsDisplay[i], href: jurisdictionRemoveUrls[i] }), jurisdictionTags) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: jurisdictionHeading }, items: jurisdictionTags }), selectedCategories) %}
+{% endif %}
+{% if selectedSubJurisdictions.length > 0 %}
+  {% set subJurisdictionTags = [] %}
+  {% for i in range(0, selectedSubJurisdictions.length) %}
+    {% set subJurisdictionTags = (subJurisdictionTags.push({ text: selectedSubJurisdictionsDisplay[i], href: subJurisdictionRemoveUrls[i] }), subJurisdictionTags) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: filterHeading }, items: subJurisdictionTags }), selectedCategories) %}
+{% endif %}
+{% if selectedRegions.length > 0 %}
+  {% set regionTags = [] %}
+  {% for i in range(0, selectedRegions.length) %}
+    {% set regionTags = (regionTags.push({ text: selectedRegionsDisplay[i], href: regionRemoveUrls[i] }), regionTags) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: regionHeading }, items: regionTags }), selectedCategories) %}
+{% endif %}
+
+<div class="moj-filter-layout app-filter-layout--sidebar">
+  <div class="moj-filter-layout__filter">
+    <form method="get" novalidate>
+      {{ mojFilter({
+        heading: { text: filterHeading },
+        submit: { text: applyFilters },
+        selectedFilters: {
+          heading: { text: selectedFiltersHeading },
+          clearLink: { href: "/location-name-search", text: clearFilters },
+          categories: selectedCategories
+        },
+        optionsHtml: filterOptionsHtml,
+        attributes: {
+          "data-show-text": showFilters,
+          "data-hide-text": hideFilters,
+          "data-close-text": hideFilters,
+          "data-start-hidden": "false"
+        }
+      }) }}
+    </form>
+  </div>
+
+  <div class="moj-filter-layout__content">
+    <div class="moj-action-bar">
+      <div class="moj-action-bar__filter"></div>
+    </div>
 
     <form method="post" novalidate>
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
@@ -160,7 +141,7 @@
       </table>
 
       <h2 class="govuk-heading-m">{{ totalSelected }}</h2>
-      <div class="selection-counter-box govuk-!-padding-top-3 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2 govuk-!-margin-bottom-4" style="background-color: #f3f2f1;">
+      <div class="selection-counter-box govuk-!-padding-top-3 govuk-!-padding-bottom-1 govuk-!-padding-left-2 govuk-!-padding-right-2 govuk-!-margin-bottom-4">
         <p class="govuk-body"><span id="selectionCount">0</span> {{ selected }}</p>
       </div>
 
