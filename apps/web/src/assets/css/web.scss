@@ -40,6 +40,14 @@
   margin-left: auto !important;
 }
 
+// Let long unbroken cell values (e.g. email addresses, which have no spaces to
+// wrap at) break to fit their column. Used on the find-users results table, whose
+// email column would otherwise force the table wider than the MOJ filter-layout
+// content area and trigger a horizontal scrollbar.
+.app-wrap-anywhere {
+  overflow-wrap: anywhere;
+}
+
 // A <button> styled to look like a link, used for in-table actions (Remove /
 // Change). Unlike govuk-body it has no bottom margin, so table rows keep the
 // standard cell height instead of being inflated by the action button.
