@@ -35,6 +35,7 @@ import {
   formatCaseSummaryForEmail as formatFttTaxSummaryForEmail
 } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
+import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -118,6 +119,7 @@ interface EmailBuilderConfig {
   format: SummaryFormatter;
 }
 
+const iacDailyConfig: EmailBuilderConfig = { extract: extractIacDailySummary as SummaryExtractor, format: formatIacDailySummaryForEmail };
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
 const sscsConfig: EmailBuilderConfig = { extract: extractSscsSummary as SummaryExtractor, format: formatSscsSummaryForEmail };
@@ -167,6 +169,8 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractPhtSummary as SummaryExtractor,
     format: formatPhtSummaryForEmail
   },
+  IAC_DAILY_LIST: iacDailyConfig,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyConfig,
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardConfig,
