@@ -190,6 +190,14 @@ export const locationData: {
       welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
       regions: [11],
       subJurisdictions: [10]
+    },
+    {
+      locationId: 27,
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
+      regions: [8],
+      subJurisdictions: [24],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [
@@ -422,8 +430,8 @@ export const locationData: {
     },
     {
       subJurisdictionId: 24,
-      name: "Residential Property Tribunal",
-      welshName: "Tribiwnlys Eiddo Preswyl",
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
       jurisdictionId: 4
     },
     {

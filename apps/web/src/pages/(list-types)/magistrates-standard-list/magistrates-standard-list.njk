@@ -44,7 +44,7 @@
       <p class="govuk-body">{{ t.noHearings }}</p>
     {% endif %}
 
-    <div class="search-area">
+    <div id="court-lists-container">
       {% set courtRoomCount = 0 %}
       {% for room in listData %}
         {% set courtRoomCount = courtRoomCount + 1 %}

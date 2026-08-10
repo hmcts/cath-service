@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@hmcts/location": "workspace:*"
+    "@hmcts/azure-blob": "workspace:*",
+    "@hmcts/list-types-common": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "exceljs": "4.4.0"
   },
   "exports": {
     ".": {

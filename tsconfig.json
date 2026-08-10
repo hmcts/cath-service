@@ -30,6 +30,7 @@
       "@hmcts/daily-cause-list-common": ["libs/list-types/daily-cause-list-common/src"],
       "@hmcts/et-list-common": ["libs/list-types/et-list-common/src"],
       "@hmcts/civil-and-family-daily-cause-list": ["libs/list-types/civil-and-family-daily-cause-list/src"],
+      "@hmcts/cop-daily-cause-list": ["libs/list-types/cop-daily-cause-list/src"],
       "@hmcts/et-daily-list": ["libs/list-types/et-daily-list/src"],
       "@hmcts/et-daily-list/config": ["libs/list-types/et-daily-list/src/config"],
       "@hmcts/et-fortnightly-list": ["libs/list-types/et-fortnightly-list/src"],
