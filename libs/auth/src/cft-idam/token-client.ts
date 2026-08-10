@@ -63,6 +63,9 @@ export async function exchangeCodeForToken(code: string, config: CftIdamConfig):
       throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
     }
 
+    // Release the connection back to the pool before retrying - an unconsumed
+    // response body keeps it open.
+    await response.body?.cancel();
     await sleep(TOKEN_EXCHANGE_RETRY_DELAY_MS);
   }
 

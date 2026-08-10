@@ -19,6 +19,8 @@ describe("Token Client", () => {
   });
 
   describe("exchangeCodeForToken", () => {
+    const mockFetch = vi.mocked(global.fetch);
+
     it("should exchange code for token successfully", async () => {
       const mockResponse = {
         access_token: "mock-access-token",
@@ -27,10 +29,10 @@ describe("Token Client", () => {
         expires_in: 3600
       };
 
-      (fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
-      });
+      } as Response);
 
       const result = await exchangeCodeForToken("test-code", mockConfig);
 
@@ -46,15 +48,15 @@ describe("Token Client", () => {
     });
 
     it("should include all required parameters in request", async () => {
-      (fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
-      });
+      } as Response);
 
       await exchangeCodeForToken("test-code", mockConfig);
 
-      const callArgs = (fetch as any).mock.calls[0];
-      const bodyParams = new URLSearchParams(callArgs[1].body);
+      const callArgs = mockFetch.mock.calls[0];
+      const bodyParams = new URLSearchParams(callArgs[1]?.body as string);
 
       expect(bodyParams.get("client_id")).toBe("app-pip-frontend");
       expect(bodyParams.get("client_secret")).toBe("test-secret");
@@ -64,22 +66,22 @@ describe("Token Client", () => {
     });
 
     it("should throw error when token exchange fails", async () => {
-      (fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
         text: async () => "Invalid code"
-      });
+      } as Response);
 
       await expect(exchangeCodeForToken("invalid-code", mockConfig)).rejects.toThrow("Token exchange failed: 400 Invalid code");
       expect(fetch).toHaveBeenCalledTimes(1);
     });
 
     it("should not retry when token exchange fails with a 4xx client error", async () => {
-      (fetch as any).mockResolvedValueOnce({
+      mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
         text: async () => "invalid_client"
-      });
+      } as Response);
 
       await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("Token exchange failed: 401 invalid_client");
       expect(fetch).toHaveBeenCalledTimes(1);
@@ -92,30 +94,33 @@ describe("Token Client", () => {
         token_type: "Bearer",
         expires_in: 3600
       };
+      const cancelBody = vi.fn();
 
-      (fetch as any)
+      mockFetch
         .mockResolvedValueOnce({
           ok: false,
           status: 503,
-          text: async () => "Service unavailable"
-        })
+          text: async () => "Service unavailable",
+          body: { cancel: cancelBody }
+        } as unknown as Response)
         .mockResolvedValueOnce({
           ok: true,
           json: async () => mockResponse
-        });
+        } as Response);
 
       const result = await exchangeCodeForToken("test-code", mockConfig);
 
       expect(result).toEqual(mockResponse);
       expect(fetch).toHaveBeenCalledTimes(2);
+      expect(cancelBody).toHaveBeenCalledTimes(1);
     });
 
     it("should throw after exhausting retries when IDAM keeps returning 5xx errors", async () => {
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 502,
         text: async () => "Bad gateway"
-      });
+      } as Response);
 
       await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("Token exchange failed: 502 Bad gateway");
       expect(fetch).toHaveBeenCalledTimes(2);
@@ -129,10 +134,10 @@ describe("Token Client", () => {
         expires_in: 3600
       };
 
-      (fetch as any).mockRejectedValueOnce(new TypeError("fetch failed")).mockResolvedValueOnce({
+      mockFetch.mockRejectedValueOnce(new TypeError("fetch failed")).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
-      });
+      } as Response);
 
       const result = await exchangeCodeForToken("test-code", mockConfig);
 
@@ -141,7 +146,7 @@ describe("Token Client", () => {
     });
 
     it("should throw after exhausting retries when the network keeps failing", async () => {
-      (fetch as any).mockRejectedValue(new TypeError("fetch failed"));
+      mockFetch.mockRejectedValue(new TypeError("fetch failed"));
 
       await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("fetch failed");
       expect(fetch).toHaveBeenCalledTimes(2);
