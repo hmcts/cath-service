@@ -800,7 +800,7 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Financial List (ChD/KB) Daily Cause List",
+    englishFriendlyName: "Financial List (Chancery Division/King's Bench Division/Commercial Court) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Rhestr Ariannol (Adran Siawnsri/Adran Mainc y Brenin)",
     shortenedFriendlyName: "Financial List (ChD/KB) Daily Cause List",
     provenance: "CFT_IDAM",
