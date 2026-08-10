@@ -788,6 +788,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [11]
   },
   {
+    name: "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Companies Winding Up (Chancery Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)",
+    shortenedFriendlyName: "Companies Winding Up (ChD) Daily Cause List",
+    provenance: "CFT_IDAM",
+    urlPath: "companies-winding-up-chd-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
     name: "IAC_DAILY_LIST",
     englishFriendlyName: "Immigration and Asylum Chamber Daily List",
     welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",

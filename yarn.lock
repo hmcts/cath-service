@@ -1487,6 +1487,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/chd-kb-common@workspace:*, @hmcts/chd-kb-common@workspace:libs/list-types/chd-kb-common":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/chd-kb-common@workspace:libs/list-types/chd-kb-common"
+  dependencies:
+    "@hmcts/list-types-common": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/cic-weekly-hearing-list@workspace:*, @hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/cic-weekly-hearing-list@workspace:libs/list-types/cic-weekly-hearing-list"
@@ -1540,6 +1551,26 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/companies-winding-up-chd-daily-cause-list@workspace:*, @hmcts/companies-winding-up-chd-daily-cause-list@workspace:libs/list-types/companies-winding-up-chd-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/companies-winding-up-chd-daily-cause-list@workspace:libs/list-types/companies-winding-up-chd-daily-cause-list"
+  dependencies:
+    "@hmcts/chd-kb-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
   languageName: unknown
   linkType: soft
 
@@ -2001,6 +2032,7 @@ __metadata:
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
@@ -2141,6 +2173,7 @@ __metadata:
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
@@ -2525,9 +2558,11 @@ __metadata:
     "@hmcts/auth": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/chd-kb-common": "workspace:*"
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
+    "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
