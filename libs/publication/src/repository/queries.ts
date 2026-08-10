@@ -186,6 +186,12 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
         console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
       }
     });
+    deleteBlob(`${artefact.artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
+      // 404 is expected if no Excel file was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete Excel blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
   }
 
   await prisma.artefact.deleteMany({

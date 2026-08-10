@@ -488,135 +488,136 @@ test.describe("Summary of Publications Page", () => {
   });
 });
 
-test.describe("Non-Strategic Publication (CST Excel Upload)", () => {
-  test.skip("should upload CST Excel file and view in summary of publications", async ({ page }) => {
-    // Create unique location for this test
-    const testLocation = await createUniqueTestLocation({ namePrefix: "CST Upload Test Court" });
+test.describe
+  .skip("Non-Strategic Publication (CST Excel Upload)", () => {
+    test("should upload CST Excel file and view in summary of publications", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "CST Upload Test Court" });
 
-    // Step 1: Authenticate as System Admin
-    await authenticateSystemAdmin(page);
+      // Step 1: Authenticate as System Admin
+      await authenticateSystemAdmin(page);
 
-    // Step 2: Ensure CST list type exists (it's a non-strategic list type)
-    const cstListType = await createOrGetListType({
-      name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-      friendlyName: "Care Standards Tribunal Weekly Hearing List",
-      welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
-      url: "/care-standards-tribunal-weekly-hearing-list",
-      defaultSensitivity: "Public",
-      provenance: "MANUAL_UPLOAD",
-      isNonStrategic: true
+      // Step 2: Ensure CST list type exists (it's a non-strategic list type)
+      const cstListType = await createOrGetListType({
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
+        url: "/care-standards-tribunal-weekly-hearing-list",
+        defaultSensitivity: "Public",
+        provenance: "MANUAL_UPLOAD",
+        isNonStrategic: true
+      });
+
+      // Step 3: Create and upload CST Excel file
+      const excelBuffer = await createValidCSTExcel();
+      await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
+
+      // Step 4: Verify summary page displays correctly
+      await expect(page.locator("h1")).toContainText("File upload summary");
+
+      // Verify form data is shown
+      const summaryValues = page.locator(".govuk-summary-list__value");
+      await expect(summaryValues.filter({ hasText: "Care Standards Tribunal Weekly Hearing List" })).toBeVisible();
+
+      // Step 5: Confirm the upload
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+      // Verify success page
+      const successPanel = page.locator(".govuk-panel");
+      await expect(successPanel).toBeVisible();
+      await expect(page.locator(".govuk-panel__title")).toContainText("File upload successful");
+
+      // Step 6: Navigate to summary of publications and verify CST list appears
+      await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
+      await expect(page.locator("h1.govuk-heading-l")).toBeVisible();
+
+      // Find the CST publication link
+      const cstLink = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
+      await expect(cstLink).toBeVisible();
+      await expect(cstLink).toContainText("Care Standards Tribunal Weekly Hearing List");
+
+      // In deployed environments, separate pod replicas have separate filesystems.
+      // The web pod that processed the upload saved the JSON locally, but the view request
+      // may hit a different replica. Upload the JSON explicitly so all replicas can serve it.
+      if (IS_DEPLOYED) {
+        const cstLinkHref = await cstLink.getAttribute("href");
+        const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
+        expect(artefactIdMatch).toBeTruthy();
+        await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
+      }
+
+      // Step 7: Click to view the CST publication
+      await cstLink.click();
+      await page.waitForLoadState("networkidle");
+
+      // Verify CST list content is displayed
+      await expect(page).toHaveURL(/\/care-standards-tribunal-weekly-hearing-list\?artefactId=/);
+      await expect(page.locator("body")).toContainText("Care Standards Tribunal Weekly Hearing List");
+      await expect(page.locator("body")).toContainText("Test Case A vs B");
+      await expect(page.locator("body")).toContainText("Another Case C vs D");
+      await expect(page.locator("body")).toContainText("Substantive hearing");
+      await expect(page.locator("body")).toContainText("Preliminary hearing");
+
+      // Step 8: Test accessibility on the CST view page
+      const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name", "scrollable-region-focusable"]).analyze();
+
+      expect(accessibilityScanResults.violations).toEqual([]);
+
+      // Clean up UI-created artefacts (not tracked by prefix)
+      await deleteTestArtefacts({ locationId: testLocation.locationId.toString() });
     });
 
-    // Step 3: Create and upload CST Excel file
-    const excelBuffer = await createValidCSTExcel();
-    await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
+    test("should display CST publication in Welsh @nightly", async ({ page }) => {
+      // Create unique location for this test
+      const testLocation = await createUniqueTestLocation({ namePrefix: "CST Welsh Test Court" });
 
-    // Step 4: Verify summary page displays correctly
-    await expect(page.locator("h1")).toContainText("File upload summary");
+      // Step 1: Authenticate and upload CST file
+      await authenticateSystemAdmin(page);
 
-    // Verify form data is shown
-    const summaryValues = page.locator(".govuk-summary-list__value");
-    await expect(summaryValues.filter({ hasText: "Care Standards Tribunal Weekly Hearing List" })).toBeVisible();
+      const cstListType = await createOrGetListType({
+        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        friendlyName: "Care Standards Tribunal Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
+        url: "/care-standards-tribunal-weekly-hearing-list",
+        defaultSensitivity: "Public",
+        provenance: "MANUAL_UPLOAD",
+        isNonStrategic: true
+      });
 
-    // Step 5: Confirm the upload
-    await page.getByRole("button", { name: "Confirm" }).click();
-    await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+      const excelBuffer = await createValidCSTExcel();
+      await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
+      await page.getByRole("button", { name: "Confirm" }).click();
+      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
 
-    // Verify success page
-    const successPanel = page.locator(".govuk-panel");
-    await expect(successPanel).toBeVisible();
-    await expect(page.locator(".govuk-panel__title")).toContainText("File upload successful");
+      // Navigate directly to Welsh version of summary of publications
+      await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}&lng=cy`);
+      await expect(page.locator("h1.govuk-heading-l")).toBeVisible();
 
-    // Step 6: Navigate to summary of publications and verify CST list appears
-    await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
-    await expect(page.locator("h1.govuk-heading-l")).toBeVisible();
+      // Verify the CST list link is visible
+      const cstLink = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
+      await expect(cstLink).toBeVisible();
 
-    // Find the CST publication link
-    const cstLink = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
-    await expect(cstLink).toBeVisible();
-    await expect(cstLink).toContainText("Care Standards Tribunal Weekly Hearing List");
+      // In deployed environments, upload the JSON to the web pod so all replicas can serve it
+      if (IS_DEPLOYED) {
+        const cstLinkHref = await cstLink.getAttribute("href");
+        const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
+        expect(artefactIdMatch).toBeTruthy();
+        await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
+      }
 
-    // In deployed environments, separate pod replicas have separate filesystems.
-    // The web pod that processed the upload saved the JSON locally, but the view request
-    // may hit a different replica. Upload the JSON explicitly so all replicas can serve it.
-    if (IS_DEPLOYED) {
-      const cstLinkHref = await cstLink.getAttribute("href");
-      const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
-      expect(artefactIdMatch).toBeTruthy();
-      await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
-    }
+      // Click to view the CST publication
+      await cstLink.click();
+      await page.waitForLoadState("networkidle");
 
-    // Step 7: Click to view the CST publication
-    await cstLink.click();
-    await page.waitForLoadState("networkidle");
+      // Verify we're on the correct page
+      await expect(page).toHaveURL(/\/care-standards-tribunal-weekly-hearing-list\?artefactId=/);
 
-    // Verify CST list content is displayed
-    await expect(page).toHaveURL(/\/care-standards-tribunal-weekly-hearing-list\?artefactId=/);
-    await expect(page.locator("body")).toContainText("Care Standards Tribunal Weekly Hearing List");
-    await expect(page.locator("body")).toContainText("Test Case A vs B");
-    await expect(page.locator("body")).toContainText("Another Case C vs D");
-    await expect(page.locator("body")).toContainText("Substantive hearing");
-    await expect(page.locator("body")).toContainText("Preliminary hearing");
+      // Verify the page loaded successfully with case data
+      await expect(page.locator("body")).toContainText("Test Case A vs B");
+      await expect(page.locator("body")).toContainText("Another Case C vs D");
 
-    // Step 8: Test accessibility on the CST view page
-    const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name", "scrollable-region-focusable"]).analyze();
-
-    expect(accessibilityScanResults.violations).toEqual([]);
-
-    // Clean up UI-created artefacts (not tracked by prefix)
-    await deleteTestArtefacts({ locationId: testLocation.locationId.toString() });
-  });
-
-  test("should display CST publication in Welsh @nightly", async ({ page }) => {
-    // Create unique location for this test
-    const testLocation = await createUniqueTestLocation({ namePrefix: "CST Welsh Test Court" });
-
-    // Step 1: Authenticate and upload CST file
-    await authenticateSystemAdmin(page);
-
-    const cstListType = await createOrGetListType({
-      name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-      friendlyName: "Care Standards Tribunal Weekly Hearing List",
-      welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
-      url: "/care-standards-tribunal-weekly-hearing-list",
-      defaultSensitivity: "Public",
-      provenance: "MANUAL_UPLOAD",
-      isNonStrategic: true
+      // Clean up UI-created artefacts (not tracked by prefix)
+      await deleteTestArtefacts({ locationId: testLocation.locationId.toString() });
     });
-
-    const excelBuffer = await createValidCSTExcel();
-    await uploadCSTExcel(page, excelBuffer, testLocation.locationId, cstListType.id);
-    await page.getByRole("button", { name: "Confirm" }).click();
-    await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
-
-    // Navigate directly to Welsh version of summary of publications
-    await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}&lng=cy`);
-    await expect(page.locator("h1.govuk-heading-l")).toBeVisible();
-
-    // Verify the CST list link is visible
-    const cstLink = page.locator('.govuk-list a[href*="care-standards-tribunal-weekly-hearing-list"]');
-    await expect(cstLink).toBeVisible();
-
-    // In deployed environments, upload the JSON to the web pod so all replicas can serve it
-    if (IS_DEPLOYED) {
-      const cstLinkHref = await cstLink.getAttribute("href");
-      const artefactIdMatch = cstLinkHref!.match(/artefactId=([a-zA-Z0-9-]+)/);
-      expect(artefactIdMatch).toBeTruthy();
-      await uploadTestFlatFileToWeb({ artefactId: artefactIdMatch![1], content: Buffer.from(JSON.stringify(CST_TEST_HEARINGS_JSON)), extension: ".json" });
-    }
-
-    // Click to view the CST publication
-    await cstLink.click();
-    await page.waitForLoadState("networkidle");
-
-    // Verify we're on the correct page
-    await expect(page).toHaveURL(/\/care-standards-tribunal-weekly-hearing-list\?artefactId=/);
-
-    // Verify the page loaded successfully with case data
-    await expect(page.locator("body")).toContainText("Test Case A vs B");
-    await expect(page.locator("body")).toContainText("Another Case C vs D");
-
-    // Clean up UI-created artefacts (not tracked by prefix)
-    await deleteTestArtefacts({ locationId: testLocation.locationId.toString() });
   });
-});
