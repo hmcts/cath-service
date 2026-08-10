@@ -127,6 +127,46 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
     expect(result.error).toBe("Puppeteer crashed");
   });
 
+  it("should generate a PDF for the Market Rents list using its dedicated court name and list title", async () => {
+    // Arrange
+    vi.mocked(renderFttRptData).mockReturnValue({
+      header: {
+        listTitle: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List",
+        weekCommencingDate: "01 January 2026",
+        lastUpdatedDate: "12 November 2025",
+        lastUpdatedTime: "9am"
+      },
+      hearings: []
+    });
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF content"),
+      sizeBytes: 2048
+    });
+
+    // Act
+    const result = await generateFttRptWeeklyHearingListPdf({
+      artefactId: "market-rents-123",
+      contentDate: new Date("2026-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List"
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(result.pdfPath).toContain("market-rents-123.pdf");
+    expect(renderFttRptData).toHaveBeenCalledWith(
+      mockHearingList,
+      expect.objectContaining({
+        courtName: "First-tier Tribunal (Residential Property Tribunal)",
+        listTitle: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List"
+      })
+    );
+  });
+
   it("should pass correct render options to renderer", async () => {
     // Arrange
     vi.mocked(generatePdfFromHtml).mockResolvedValue({
@@ -156,5 +196,108 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       lastReceivedDate: expect.any(String),
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"
     });
+  });
+
+  it("should resolve the important information text with the regional email when listTypeName is provided", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    // Act
+    await generateFttRptWeeklyHearingListPdf({
+      artefactId: "eastern-important-info",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
+      listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST"
+    });
+
+    // Assert
+    const html = vi.mocked(generatePdfFromHtml).mock.calls[0][0];
+    expect(html).toContain("RPEastern@justice.gov.uk");
+    expect(html).not.toContain("{email}");
+  });
+
+  it("should render an empty important information paragraph when listTypeName is not provided", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    // Act
+    await generateFttRptWeeklyHearingListPdf({
+      artefactId: "no-list-type-name",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"
+    });
+
+    // Assert
+    const html = vi.mocked(generatePdfFromHtml).mock.calls[0][0];
+    expect(html).not.toContain("{email}");
+    expect(html).not.toContain("justice.gov.uk");
+  });
+
+  it("should include the bold Market Rents extra information paragraph only for the Market Rents list type", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    // Act
+    await generateFttRptWeeklyHearingListPdf({
+      artefactId: "market-rents-extra-info",
+      contentDate: new Date("2026-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal)",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Market Rents Weekly Hearing List",
+      listTypeName: "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST"
+    });
+
+    // Assert
+    const html = vi.mocked(generatePdfFromHtml).mock.calls[0][0];
+    expect(html).toContain("marketrents@justice.gov.uk");
+    expect(html).toContain("For Market Rent applications received before 16 March 2026");
+  });
+
+  it("should not include the Market Rents extra information paragraph for other regions", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    // Act
+    await generateFttRptWeeklyHearingListPdf({
+      artefactId: "southern-no-extra-info",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
+      listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
+      listTypeName: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST"
+    });
+
+    // Assert
+    const html = vi.mocked(generatePdfFromHtml).mock.calls[0][0];
+    expect(html).toContain("RPSouthern@justice.gov.uk");
+    expect(html).not.toContain("For Market Rent applications received before 16 March 2026");
   });
 });

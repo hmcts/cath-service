@@ -1,0 +1,59 @@
+name: Renovate Config
+
+# Validates .github/renovate.json whenever it changes.
+#
+# This deliberately does NOT live in job.lint.yml. That job is only reachable via
+# stage.build.yml <- workflow.preview.yml, whose detect-code-changes gate is
+# paths: "^(yarn\.lock|apps/|libs/|helm/)" — so a PR touching only .github/ never
+# runs it. Widening that gate to include .github/ would drag the whole
+# build/deploy/e2e pipeline into every workflow edit, so the check is scoped here
+# to its own trigger instead.
+#
+# --no-global is required: without it the validator treats the file as a
+# self-hosted *global* config and validates it against the wrong schema, so
+# repo-config mistakes can pass. It exits 0 on the pre-existing
+# regexManagers/fileMatch deprecations (warn, not error).
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/renovate.json'
+      - '.github/workflows/renovate-config.yml'
+      - 'scripts/verify-renovate-automerge.mjs'
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/renovate.json'
+      - 'scripts/verify-renovate-automerge.mjs'
+
+jobs:
+  validate:
+    name: Validate Renovate Config
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      # Renovate is not a devDependency - the tree is ~333MB and it updates itself.
+      # Installed into a scratch prefix so it never touches yarn.lock.
+      - name: Install Renovate
+        run: npm install --no-save --prefix "${RUNNER_TEMP}/renovate" renovate
+
+      - name: Validate Renovate config
+        run: "${RUNNER_TEMP}/renovate/node_modules/.bin/renovate-config-validator --no-global .github/renovate.json"
+
+      # The validator only checks the config is well-formed. This asserts what it
+      # actually resolves to - packageRules are order-dependent and last-match-wins.
+      - name: Verify automerge resolution
+        env:
+          RENOVATE_MODULE: ${{ runner.temp }}/renovate/node_modules/renovate
+        run: node scripts/verify-renovate-automerge.mjs

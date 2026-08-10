@@ -86,6 +86,7 @@ export interface FttSiacWeeklyHearingListPdfOptions<T> extends BasePdfGeneration
   importCy: () => Promise<{ cy: Record<string, unknown> }>;
   generatePdf: (html: string) => Promise<{ success: boolean; pdfBuffer?: Buffer; sizeBytes?: number; error?: string }>;
   renderData: (jsonData: T, opts: { locale: string; courtName: string; contentDate: Date; lastReceivedDate: string; listTitle: string }) => RenderedPdfData;
+  resolveTemplateVars?: (translations: Record<string, unknown>) => Record<string, unknown>;
 }
 
 export async function generateFttSiacWeeklyHearingListPdf<T>(options: FttSiacWeeklyHearingListPdfOptions<T>): Promise<PdfGenerationResult> {
@@ -106,7 +107,8 @@ export async function generateFttSiacWeeklyHearingListPdf<T>(options: FttSiacWee
       hearings: renderedData.hearings,
       dataSource: options.provenanceLabel,
       t: translations,
-      pdfStyles: PDF_BASE_STYLES
+      pdfStyles: PDF_BASE_STYLES,
+      ...(options.resolveTemplateVars ? options.resolveTemplateVars(translations) : {})
     });
 
     const pdfResult = await options.generatePdf(html);
