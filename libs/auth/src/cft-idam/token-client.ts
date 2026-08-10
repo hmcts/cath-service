@@ -1,5 +1,8 @@
 import type { CftIdamConfig } from "../config/cft-idam-config.js";
 
+const MAX_TOKEN_EXCHANGE_ATTEMPTS = 2;
+const TOKEN_EXCHANGE_RETRY_DELAY_MS = 250;
+
 interface TokenResponse {
   access_token: string;
   id_token?: string;
@@ -17,6 +20,10 @@ export interface CftIdamUserInfo {
   roles: string[];
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function exchangeCodeForToken(code: string, config: CftIdamConfig): Promise<TokenResponse> {
   const params = new URLSearchParams({
     client_id: config.clientId,
@@ -25,21 +32,41 @@ export async function exchangeCodeForToken(code: string, config: CftIdamConfig):
     redirect_uri: config.redirectUri,
     code
   });
+  const body = params.toString();
 
-  const response = await fetch(config.tokenEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: params.toString()
-  });
+  for (let attempt = 1; attempt <= MAX_TOKEN_EXCHANGE_ATTEMPTS; attempt++) {
+    const isLastAttempt = attempt === MAX_TOKEN_EXCHANGE_ATTEMPTS;
+    let response: Response;
+    try {
+      response = await fetch(config.tokenEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body
+      });
+    } catch (error) {
+      // Transient network failure (DNS, connection reset, timeout) reaching IDAM - safe to retry.
+      if (isLastAttempt) throw error;
+      await sleep(TOKEN_EXCHANGE_RETRY_DELAY_MS);
+      continue;
+    }
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
+    if (response.ok) {
+      return await response.json();
+    }
+
+    // 5xx responses from IDAM are transient; 4xx (e.g. an already-used authorization
+    // code) will never succeed on retry, so fail fast for those.
+    if (response.status < 500 || isLastAttempt) {
+      const errorText = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
+    }
+
+    await sleep(TOKEN_EXCHANGE_RETRY_DELAY_MS);
   }
 
-  return await response.json();
+  throw new Error("Token exchange failed: exhausted retries");
 }
 
 function parseJwt(token: string): any {

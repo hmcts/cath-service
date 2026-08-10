@@ -71,6 +71,80 @@ describe("Token Client", () => {
       });
 
       await expect(exchangeCodeForToken("invalid-code", mockConfig)).rejects.toThrow("Token exchange failed: 400 Invalid code");
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not retry when token exchange fails with a 4xx client error", async () => {
+      (fetch as any).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        text: async () => "invalid_client"
+      });
+
+      await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("Token exchange failed: 401 invalid_client");
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry once and succeed when IDAM returns a transient 5xx error", async () => {
+      const mockResponse = {
+        access_token: "mock-access-token",
+        id_token: "mock-id-token",
+        token_type: "Bearer",
+        expires_in: 3600
+      };
+
+      (fetch as any)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 503,
+          text: async () => "Service unavailable"
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockResponse
+        });
+
+      const result = await exchangeCodeForToken("test-code", mockConfig);
+
+      expect(result).toEqual(mockResponse);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("should throw after exhausting retries when IDAM keeps returning 5xx errors", async () => {
+      (fetch as any).mockResolvedValue({
+        ok: false,
+        status: 502,
+        text: async () => "Bad gateway"
+      });
+
+      await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("Token exchange failed: 502 Bad gateway");
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("should retry once and succeed after a transient network failure", async () => {
+      const mockResponse = {
+        access_token: "mock-access-token",
+        id_token: "mock-id-token",
+        token_type: "Bearer",
+        expires_in: 3600
+      };
+
+      (fetch as any).mockRejectedValueOnce(new TypeError("fetch failed")).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      });
+
+      const result = await exchangeCodeForToken("test-code", mockConfig);
+
+      expect(result).toEqual(mockResponse);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("should throw after exhausting retries when the network keeps failing", async () => {
+      (fetch as any).mockRejectedValue(new TypeError("fetch failed"));
+
+      await expect(exchangeCodeForToken("test-code", mockConfig)).rejects.toThrow("fetch failed");
+      expect(fetch).toHaveBeenCalledTimes(2);
     });
   });
 
