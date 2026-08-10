@@ -23,6 +23,7 @@ export function convertListTypeNameToKebabCase(name: string): string {
  * Used when a list type shares the same JSON schema as another list type.
  */
 const PACKAGE_ALIASES: Record<string, string> = {
+  "iac-daily-list-additional-cases": "iac-daily-list",
   "et-fortnightly-press-list": "et-fortnightly-list",
   "magistrates-adult-court-list-daily": "magistrates-adult-court-list",
   "magistrates-adult-court-list-future": "magistrates-adult-court-list",
