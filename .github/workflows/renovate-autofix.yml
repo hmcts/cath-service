@@ -1,50 +1,17 @@
 name: Renovate Autofix
 
-# When the Preview pipeline fails on a Renovate PR, hand the failure to Claude once
-# and push the fix to the branch.
+# When the Preview pipeline fails on a Renovate PR, hand the failure to Claude once and
+# push the fix to the branch. Report-only until repo variable RENOVATE_AUTOFIX is set to
+# 'true'; unsetting it again is the kill switch.
 #
-# ONE ATTEMPT PER PR, ENFORCED BY A LABEL CLAIMED UP FRONT
+# A commit from claude-code-bot[bot] makes Renovate treat the branch as edited, so it
+# stops rebasing it and — since renovate.json sets automerge for npm minor+patch — stops
+# automerging the PR. gitIgnoredAuthors would suppress that and is deliberately not used,
+# so the report comment says the PR needs manual review, and Claude is told to change
+# nothing unless the failure is clearly caused by the update.
 #
-# The claude:autofix-attempted label is added *before* Claude is invoked, not after,
-# and its absence gates the whole workflow. Claiming it first is what makes the
-# short-circuit hold when the run does not finish cleanly — a crash, a timeout, a
-# cancelled run or a Bedrock error would all otherwise leave the PR eligible again and
-# the pipeline would keep paying for attempts on a PR it cannot fix. Everything after
-# the claim is best-effort. Removing the label by hand grants exactly one more attempt.
-#
-# THIS TAKES THE PR OUT OF RENOVATE'S MANAGEMENT
-#
-# Renovate decides whether a branch was edited by someone else by comparing the last
-# commit's author against its own gitAuthor. Once claude-code-bot[bot] has committed to
-# a renovate/* branch, Renovate backs off: it stops rebasing and refreshing the branch,
-# and since .github/renovate.json sets automerge: true for npm minor+patch, it will no
-# longer automerge that PR either. The fix is not clobbered, but the PR becomes a manual
-# review-and-merge.
-#
-# This is the same effect that makes the auto-rebase workflow exclude Renovate PRs
-# outright. Renovate's gitIgnoredAuthors option would suppress it and is deliberately
-# not used here, so the behaviour is accepted rather than overlooked. Two consequences
-# are built in: the report comment says so explicitly whenever a push lands, so nobody
-# is left waiting on an automerge that will not come; and Claude is told that changing
-# nothing is the preferred outcome unless the failure is clearly a code incompatibility,
-# because a speculative push costs the PR its automation.
-#
-# WHY workflow_run
-#
-# The trigger is the whole Preview run's conclusion, not one job's, because any stage
-# failing is in scope — including terraform, helm deploy, smoke and e2e. Those are
-# usually environmental rather than code, which is why the prompt spends as much effort
-# on recognising a failure it should not touch as on fixing one it should.
-#
-# Note that workflow_run only ever runs the version of this file on the default branch,
-# so editing it on a PR changes nothing until merged. workflow_dispatch exists to
-# exercise it against a real PR before then, and defaults to a dry run.
-#
-# ARMING
-#
-# Repo variable RENOVATE_AUTOFIX must be 'true' before anything is pushed or labelled;
-# until then every run reports what it would have done and stops. It is also the kill
-# switch — unset the variable to disable the workflow without reverting it.
+# workflow_run only ever runs the default-branch copy of this file, so edits do nothing
+# until merged; workflow_dispatch (dry run by default) is there to exercise it before then.
 
 on:
   workflow_run:
@@ -85,21 +52,19 @@ jobs:
           INPUT_PR: ${{ inputs.pr-number }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          # A JSON array on the payload, so it has to come through the environment
-          # rather than being interpolated into the script.
+          # A JSON array, so it comes through the environment, not interpolation.
           RUN_PRS: ${{ toJson(github.event.workflow_run.pull_requests) }}
         run: |
           set -euo pipefail
 
           if [ "$EVENT" = "workflow_dispatch" ]; then
             number="$INPUT_PR"
-            # No triggering run to read, so find the most recent failed Preview run for
-            # this PR's branch further down, once the branch is known.
+            # No triggering run — the failed one is looked up below, once the branch
+            # is known.
             run_id=""
           else
-            # workflow_run.pull_requests is populated for same-repo PRs but is empty
-            # often enough — notably when the run was queued before the PR existed —
-            # that the branch lookup has to be there as a fallback.
+            # pull_requests is empty often enough that the branch lookup below has to
+            # be there as a fallback.
             number=$(jq -r 'first(.[].number) // empty' <<<"$RUN_PRS")
             if [ -z "$number" ]; then
               number=$(gh pr list --state open --head "$RUN_BRANCH" --limit 1 \
@@ -156,16 +121,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Single place that gates the autofix job, so the conditions cannot drift
-          # apart across the steps that depend on them.
+          # Single place that gates the autofix job, so the conditions cannot drift.
           eligible=true
           note() { eligible=false; echo "$1"; }
 
           [ "$FOUND" = "true" ] || note "no PR resolved"
           [ "$EVENT" = "workflow_dispatch" ] || [ "$CONCLUSION" = "failure" ] \
             || note "Preview concluded '$CONCLUSION' — only failures are attempted"
-          # Matched on author login rather than the renovate/ branch prefix: the prefix
-          # is configurable per-repo, the login is not.
+          # Author login, not the renovate/ branch prefix — the prefix is configurable.
           [ "$AUTHOR" = "renovate[bot]" ] || note "PR author is '$AUTHOR', not renovate[bot]"
           [ "$STATE" = "OPEN" ] || note "PR is $STATE"
           [ "$BASE" = "master" ] || note "PR targets '$BASE', not master"
@@ -183,9 +146,8 @@ jobs:
     if: needs.resolve.outputs.eligible == 'true'
     runs-on: ubuntu-latest
     concurrency:
-      # Per-PR, and deliberately NOT cancel-in-progress: a second Preview failure
-      # arriving must not kill an attempt that is midway through. It queues instead,
-      # and finds the label already claimed when it gets there.
+      # Not cancel-in-progress: a second Preview failure must not kill an attempt
+      # midway through. It queues, then finds the label already claimed.
       group: renovate-autofix-pr-${{ needs.resolve.outputs.number }}
       cancel-in-progress: false
     permissions:
@@ -205,9 +167,8 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
-          # Defaults to every permission the App is installed with. This job needs
-          # three: contents to push the branch, pull-requests to comment, issues to
-          # label. Claude runs unattended with this token in reach, so keep it minimal.
+          # Scoped down from every permission the App has — Claude runs unattended
+          # with this token in reach.
           permission-contents: write
           permission-pull-requests: write
           permission-issues: write
@@ -215,14 +176,12 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v7
         with:
-          # By SHA, not branch name: the branch may have moved since it was resolved,
-          # and the push below leases against exactly this commit.
+          # By SHA, not branch name — the push below leases against this exact commit.
           ref: ${{ needs.resolve.outputs.head-sha }}
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
-          # Without this the token is written into .git/config as an http extraheader,
-          # where Claude — holding Bash — could read it. The push below puts it on the
-          # remote URL for that one command instead.
+          # Otherwise the token lands in .git/config, where Claude could read it. The
+          # push below puts it on the remote URL for that one command instead.
           persist-credentials: false
 
       - name: Configure Git
@@ -240,28 +199,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Gathered here rather than by granting Claude Bash(gh run:*): one
-          # deterministic artefact, and --log-failed on a pipeline this size needs
-          # truncating before it goes anywhere near a prompt.
+          # Gathered here rather than by granting Claude Bash(gh run:*) — one
+          # artefact, and --log-failed needs truncating before it reaches a prompt.
           failed_jobs=$(gh run view "$RUN_ID" --json jobs \
             --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
           echo "jobs=$failed_jobs" >> "$GITHUB_OUTPUT"
           echo "Failed jobs: ${failed_jobs:-(none reported)}"
 
-          # Keep the tail: the assertion or stack trace that explains the failure is at
-          # the end of a job's log, not the start.
+          # Keep the tail — the assertion or stack trace is at the end of the log.
           gh run view "$RUN_ID" --log-failed 2>/dev/null | tail -c 200000 \
             > /tmp/ci-failure.log || echo "(could not retrieve logs)" > /tmp/ci-failure.log
           wc -l /tmp/ci-failure.log
 
-          # Which dependency this PR is actually updating, so Claude can tell an
-          # incompatibility caused by the bump from unrelated breakage.
+          # Which dependency this PR updates, so Claude can tell breakage caused by
+          # the bump from breakage that is unrelated to it.
           git log -1 --pretty=%s > /tmp/renovate-subject.txt
           echo "subject=$(cat /tmp/renovate-subject.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Claim the attempt
-        # Before Claude runs, not after — see the header comment. Skipped on a dry run,
-        # which is therefore repeatable by design.
+        # Before Claude runs, not after, so a crash or timeout still consumes the one
+        # attempt. Skipped on a dry run, which is therefore repeatable.
         if: ${{ inputs.dry-run != true && vars.RENOVATE_AUTOFIX == 'true' }}
         uses: actions/github-script@v9
         with:
@@ -288,8 +245,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Generate Prisma Client
-        # Not optional — lint and test both fail without it, so every CI job here runs
-        # it first. Claude would otherwise spend its turns rediscovering that.
+        # Not optional — lint and test both fail without it.
         run: yarn db:generate
 
       - name: Configure AWS credentials
@@ -347,10 +303,8 @@ jobs:
             Always write /tmp/autofix-report.md: what failed, whether it was the
             update, what you changed or why you changed nothing, and whether the checks
             passed. Write it whether you fix anything or not.
-          # The allowlist enumerates git subcommands rather than using Bash(git:*), so
-          # "never push" is enforced by the tool gate and not only by the instruction
-          # above — git push, git remote and general git config are not grantable. The
-          # workflow owns the one push it needs.
+          # Git subcommands are enumerated rather than Bash(git:*), so "never push" is
+          # enforced by the tool gate and not only by the instruction above.
           claude_args: |
             --dangerously-skip-permissions
             --max-turns 40
@@ -365,8 +319,8 @@ jobs:
 
           # Trust git, not the model's self-report.
           if [ -n "$(git status --porcelain)" ]; then
-            # Uncommitted changes mean it stopped partway. Pushing a commit while
-            # leaving edits on the floor would ship half a fix.
+            # Uncommitted changes mean it stopped partway — pushing would ship half
+            # a fix.
             state=dirty
             git status --short
           elif [ "$(git rev-parse HEAD)" = "$HEAD_SHA" ]; then
@@ -387,18 +341,15 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Leased against the SHA this job checked out: if Renovate refreshed the
-          # branch while Claude was working, this refuses rather than clobbering it.
-          # The explicit <ref>:<oid> form matters — bare --force-with-lease leases
-          # against the local remote-tracking ref, so any fetch in between silently
-          # downgrades it to a plain --force.
+          # Leased against the checked-out SHA, so a branch Renovate refreshed
+          # mid-run is refused rather than clobbered. The explicit <ref>:<oid> form
+          # matters — the bare form leases against the local remote-tracking ref and
+          # silently degrades to a plain --force after any fetch.
           git push --force-with-lease="refs/heads/${HEAD_REF}:${HEAD_SHA}" \
             "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" \
             "HEAD:refs/heads/${HEAD_REF}"
 
-          # Read by the report step. Without it the report derives its heading from
-          # `state`, which is set before this runs, and would claim success on a
-          # rejected push.
+          # Read by the report step, which must not claim success on a rejected push.
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Report on PR
@@ -424,10 +375,8 @@ jobs:
             const runUrl =
               `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
-            // The push is the only thing that changes the PR, and it runs after
-            // `state` is decided — so report on the push, not on the fix. A lease
-            // rejection leaves the branch exactly as it was and must not read as
-            // success.
+            // Report on the push, not the fix: a lease rejection leaves the branch
+            // exactly as it was and must not read as success.
             const pushed = process.env.PUSHED === 'true';
             const wouldPush = state === 'fixed' && !pushed;
 
@@ -435,9 +384,8 @@ jobs:
             try { report = fs.readFileSync('/tmp/autofix-report.md', 'utf8').trim(); }
             catch { report = '_No report was produced._'; }
 
-            // Claude erroring (Bedrock throttle, timeout, max turns) also leaves the
-            // tree at no-change, which must not be reported as a considered decision
-            // to leave the PR alone.
+            // A throttle, timeout or max-turns stop also leaves the tree at
+            // no-change, which must not read as a considered decision.
             const crashed = process.env.CLAUDE_OUTCOME !== 'success';
 
             const heading = pushed
@@ -461,8 +409,7 @@ jobs:
                   : null;
 
             const footer = [
-              // Only when a commit actually landed — on a no-change or rejected run
-              // the PR is still Renovate's and this advice would be wrong.
+              // Only when a commit landed — otherwise the PR is still Renovate's.
               pushed
                 ? 'ℹ️ **This PR now needs manual review and merge.** It carries a commit that is not Renovate\'s, so Renovate will no longer rebase, update or automerge it.'
                 : null,
@@ -498,8 +445,8 @@ jobs:
             }
 
       - name: Fail on an incomplete attempt
-        # A dirty tree or a rejected push is worth a red run so it shows up in the
-        # Actions list. no-change is a legitimate outcome and stays green.
+        # A dirty tree or rejected push is worth a red run; no-change is a legitimate
+        # outcome and stays green.
         if: ${{ steps.outcome.outputs.state == 'dirty' || (steps.outcome.outputs.state == 'fixed' && inputs.dry-run != true && vars.RENOVATE_AUTOFIX == 'true' && steps.push.outputs.pushed != 'true') }}
         run: |
           echo "::error::autofix did not complete cleanly (state=${{ steps.outcome.outputs.state }}, pushed=${{ steps.push.outputs.pushed || 'false' }})"
