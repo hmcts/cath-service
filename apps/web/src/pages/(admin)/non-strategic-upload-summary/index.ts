@@ -7,6 +7,7 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 import "@hmcts/care-standards-tribunal-weekly-hearing-list"; // Register CST converter (9)
 import "@hmcts/companies-winding-up-chd-daily-cause-list"; // Register Companies Winding Up (ChD) converter
+import "@hmcts/financial-list-chd-kb-daily-cause-list"; // Register Financial List (ChD/KB) converter
 import "@hmcts/court-of-appeal-civil-daily-cause-list"; // Register civil appeal converter (19)
 import { getLocationById } from "@hmcts/location";
 import "@hmcts/london-administrative-court-daily-cause-list"; // Register London admin converter (18)

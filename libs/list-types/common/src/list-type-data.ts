@@ -775,5 +775,16 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: "Public",
     subJurisdictionIds: [10]
+  },
+  {
+    name: "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Financial List (ChD/KB) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Rhestr Ariannol (Adran Siawnsri/Adran Mainc y Brenin)",
+    shortenedFriendlyName: "Financial List (ChD/KB) Daily Cause List",
+    provenance: "CFT_IDAM",
+    urlPath: "financial-list-chd-kb-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
   }
 ];
