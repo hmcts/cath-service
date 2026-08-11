@@ -799,6 +799,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [10]
   },
   {
+    name: "INSOLVENCY_AND_COMPANIES_COURT_CHD_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Insolvency & Companies Court (Chancery Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Llys Cwmnïau ac achosion Ansolfedd (Adran Siawnsri)",
+    shortenedFriendlyName: "Insolvency & Companies Court (ChD) Daily Cause List",
+    provenance: "CFT_IDAM",
+    urlPath: "insolvency-and-companies-court-chd-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
     name: "IAC_DAILY_LIST",
     englishFriendlyName: "Immigration and Asylum Chamber Daily List",
     welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",

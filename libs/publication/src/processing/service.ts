@@ -19,6 +19,10 @@ import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmc
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
+import {
+  generateInsolvencyAndCompaniesCourtChdDailyCauseListPdf,
+  type InsolvencyAndCompaniesCourtChdHearingList
+} from "@hmcts/insolvency-and-companies-court-chd-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -186,6 +190,8 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: (p) =>
     generateCompaniesWindingUpChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as CompaniesWindingUpHearingList }),
+  INSOLVENCY_AND_COMPANIES_COURT_CHD_DAILY_CAUSE_LIST: (p) =>
+    generateInsolvencyAndCompaniesCourtChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as InsolvencyAndCompaniesCourtChdHearingList }),
   IAC_DAILY_LIST: iacDailyListGenerator,
   IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
