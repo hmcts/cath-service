@@ -1487,6 +1487,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/chancery-appeals-chd-daily-cause-list@workspace:*, @hmcts/chancery-appeals-chd-daily-cause-list@workspace:libs/list-types/chancery-appeals-chd-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/chancery-appeals-chd-daily-cause-list@workspace:libs/list-types/chancery-appeals-chd-daily-cause-list"
+  dependencies:
+    "@hmcts/chd-kb-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/chd-kb-common@workspace:*, @hmcts/chd-kb-common@workspace:libs/list-types/chd-kb-common":
   version: 0.0.0-use.local
   resolution: "@hmcts/chd-kb-common@workspace:libs/list-types/chd-kb-common"
@@ -2029,6 +2049,7 @@ __metadata:
     "@hmcts/ast-daily-hearing-list": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/chancery-appeals-chd-daily-cause-list": "workspace:*"
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
@@ -2170,6 +2191,7 @@ __metadata:
     "@hmcts/auth": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/chancery-appeals-chd-daily-cause-list": "workspace:*"
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
@@ -2558,6 +2580,7 @@ __metadata:
     "@hmcts/auth": "workspace:*"
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*"
+    "@hmcts/chancery-appeals-chd-daily-cause-list": "workspace:*"
     "@hmcts/chd-kb-common": "workspace:*"
     "@hmcts/cic-weekly-hearing-list": "workspace:*"
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"

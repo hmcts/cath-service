@@ -29,6 +29,7 @@
     "@hmcts/auth": "workspace:*",
     "@hmcts/azure-blob": "workspace:*",
     "@hmcts/care-standards-tribunal-weekly-hearing-list": "workspace:*",
+    "@hmcts/chancery-appeals-chd-daily-cause-list": "workspace:*",
     "@hmcts/chd-kb-common": "workspace:*",
     "@hmcts/cic-weekly-hearing-list": "workspace:*",
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*",
