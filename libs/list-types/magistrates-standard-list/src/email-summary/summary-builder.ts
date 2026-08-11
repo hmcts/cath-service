@@ -13,7 +13,8 @@ function extractPartyName(party: {
     const { individualForenames, individualMiddleName, individualSurname } = party.individualDetails;
     const forenames = [individualForenames, individualMiddleName].filter(Boolean).join(" ");
     const parts = [individualSurname, forenames].filter(Boolean);
-    return parts.join(", ");
+    const name = parts.join(", ");
+    if (name) return name;
   }
   if (party.organisationDetails) {
     return party.organisationDetails.organisationName;
@@ -61,6 +62,7 @@ export function extractCaseSummary(jsonData: MagistratesStandardList): CaseSumma
 
             for (const application of hearing.application ?? []) {
               const subject = application.party?.find((p) => p.subject === true);
+              const prosecutor = application.party?.find((p) => p.partyRole === "PROSECUTING_AUTHORITY");
               const fields: CaseSummary = [];
 
               if (subject) {
@@ -68,7 +70,8 @@ export function extractCaseSummary(jsonData: MagistratesStandardList): CaseSumma
                 if (name) fields.push({ label: "Name", value: name });
               }
 
-              fields.push({ label: "Reference", value: application.applicationReference });
+              const authority = prosecutor ? extractPartyName(prosecutor) : "";
+              fields.push({ label: "Prosecuting authority", value: authority }, { label: "Reference", value: application.applicationReference });
 
               if (hearing.hearingType) {
                 fields.push({ label: "Hearing type", value: hearing.hearingType });

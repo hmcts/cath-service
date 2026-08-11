@@ -212,6 +212,68 @@ describe("extractCaseSummary", () => {
     expect(field?.value).toBe("");
   });
 
+  it("should fall back to organisation name when individual details are empty", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "AppRefB",
+              party: [
+                {
+                  subject: true,
+                  individualDetails: { individualForenames: "", individualSurname: "" },
+                  organisationDetails: { organisationName: "This is an organisation" }
+                }
+              ]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Name")?.value).toBe("This is an organisation");
+  });
+
+  it("should include prosecuting authority for applications", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "APP005",
+              party: [
+                { subject: true, individualDetails: { individualForenames: "Eve", individualSurname: "North" } },
+                { partyRole: "PROSECUTING_AUTHORITY", organisationDetails: { organisationName: "Prosecuting Authority Name E" } }
+              ]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Prosecuting authority")?.value).toBe("Prosecuting Authority Name E");
+  });
+
+  it("should include prosecuting authority field with empty value when application has no prosecutor party", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "APP006",
+              party: [{ subject: true, individualDetails: { individualForenames: "Ivy", individualSurname: "West" } }]
+            }
+          ]
+        }
+      ])
+    );
+
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
   it("should not include Offence field for applications with no offences", () => {
     const result = extractCaseSummary(
       makeJson([
