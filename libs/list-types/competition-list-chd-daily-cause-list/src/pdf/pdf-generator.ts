@@ -1,16 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChdKbHearingList } from "@hmcts/chd-kb-common";
-import {
-  type BasePdfGenerationOptions,
-  configureNunjucks,
-  createPdfErrorResult,
-  loadTranslations,
-  PDF_BASE_STYLES,
-  type PdfGenerationResult,
-  savePdfToStorage
-} from "@hmcts/list-types-common";
-import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { type BasePdfGenerationOptions, generateListPdf, type PdfGenerationResult } from "@hmcts/list-types-common";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import { renderCompetitionListChdDailyCauseList } from "../rendering/renderer.js";
 
@@ -22,41 +13,17 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<ChdKbHearingList
 }
 
 export async function generateCompetitionListChdDailyCauseListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
-  try {
-    const renderedData = renderCompetitionListChdDailyCauseList(options.jsonData, {
-      locale: options.locale,
-      contentDate: options.contentDate,
-      lastReceivedDate: new Date().toISOString()
-    });
+  const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
 
-    const translations = await loadTranslations(
-      options.locale,
-      () => import("../locales/en.js"),
-      () => import("../locales/cy.js")
-    );
-
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
-
-    const env = configureNunjucks(__dirname);
-    const html = env.render("pdf-template.njk", {
-      header: renderedData.header,
-      hearings: renderedData.hearings,
-      dataSource: provenanceLabel,
-      t: translations,
-      pdfStyles: PDF_BASE_STYLES
-    });
-
-    const pdfResult = await generatePdfFromHtml(html);
-
-    if (!pdfResult.success || !pdfResult.pdfBuffer) {
-      return {
-        success: false,
-        error: pdfResult.error || "PDF generation failed"
-      };
-    }
-
-    return await savePdfToStorage(options.artefactId, pdfResult.pdfBuffer, pdfResult.sizeBytes!);
-  } catch (error) {
-    return createPdfErrorResult(error);
-  }
+  // The renderer sources its own list title from this package's locales, so listTitle is unused here.
+  return generateListPdf<ChdKbHearingList>({
+    ...options,
+    listTitle: "",
+    provenanceLabel,
+    templateDir: __dirname,
+    renderData: (jsonData, { locale, contentDate, lastReceivedDate }) =>
+      renderCompetitionListChdDailyCauseList(jsonData, { locale, contentDate, lastReceivedDate }),
+    importEn: () => import("../locales/en.js"),
+    importCy: () => import("../locales/cy.js")
+  });
 }
