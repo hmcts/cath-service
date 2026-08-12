@@ -118,6 +118,77 @@ describe("filter-toggle", () => {
     expect(filterToggleButtonSpy).toHaveBeenCalledTimes(1);
   });
 
+  it("should reopen the reveal panel on load when filters are active and MOJ has force-hidden it", async () => {
+    // Arrange — reveal-layout page (SJP) with data-start-hidden="false" (filters applied).
+    // Simulate MOJ's small-mode constructor having force-hidden the panel: moj-js-hidden
+    // on the filter and a collapsed toggle button in the action bar.
+    document.body.innerHTML = `
+      <div class="moj-action-bar"><div class="moj-action-bar__filter">
+        <button type="button" aria-expanded="false">Show filters</button>
+      </div></div>
+      <div class="moj-filter-layout app-filter-layout--reveal">
+        <div class="moj-filter moj-js-hidden" data-module="moj-filter"
+             data-hide-text="Hide filters" data-start-hidden="false"></div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert — panel revealed and toggle reflects the expanded state.
+    const filter = document.querySelector(".moj-filter") as HTMLElement;
+    const toggle = document.querySelector(".moj-action-bar__filter button") as HTMLButtonElement;
+    expect(filter.classList.contains("moj-js-hidden")).toBe(false);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.textContent).toBe("Hide filters");
+  });
+
+  it("should not reopen the panel when data-start-hidden is true", async () => {
+    // Arrange — reveal-layout page with no filters applied (panel should stay closed).
+    document.body.innerHTML = `
+      <div class="moj-action-bar"><div class="moj-action-bar__filter">
+        <button type="button" aria-expanded="false">Show filters</button>
+      </div></div>
+      <div class="moj-filter-layout app-filter-layout--reveal">
+        <div class="moj-filter moj-js-hidden" data-module="moj-filter"
+             data-hide-text="Hide filters" data-start-hidden="true"></div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert — panel stays hidden.
+    const filter = document.querySelector(".moj-filter") as HTMLElement;
+    const toggle = document.querySelector(".moj-action-bar__filter button") as HTMLButtonElement;
+    expect(filter.classList.contains("moj-js-hidden")).toBe(true);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("should not reopen the panel on non-reveal (sidebar) layouts", async () => {
+    // Arrange — sidebar page with data-start-hidden="false"; big mode handles visibility,
+    // so this helper must not touch it.
+    document.body.innerHTML = `
+      <div class="moj-action-bar"><div class="moj-action-bar__filter">
+        <button type="button" aria-expanded="false">Show filters</button>
+      </div></div>
+      <div class="moj-filter-layout app-filter-layout--sidebar">
+        <div class="moj-filter moj-js-hidden" data-module="moj-filter"
+             data-hide-text="Hide filters" data-start-hidden="false"></div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert — untouched by the reveal helper.
+    const toggle = document.querySelector(".moj-action-bar__filter button") as HTMLButtonElement;
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
   it("should render the hide button after the apply button as a plain (non-cross) secondary button", async () => {
     // Arrange
     document.body.innerHTML = `

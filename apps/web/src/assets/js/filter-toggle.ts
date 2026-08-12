@@ -8,6 +8,7 @@ const HIDE_CONTAINER_CLASS = "app-filter__hide";
 const SELECTED_SELECTOR = ".moj-filter__selected";
 const CLEAR_ACTION_SELECTOR = ".moj-filter__heading-action";
 const DEFAULT_BIG_MODE_MEDIA_QUERY = "(min-width: 48.0625em)";
+const REVEAL_LAYOUT_SELECTOR = ".app-filter-layout--reveal";
 
 // Wires up the MOJ Frontend filter toggle for the single filter panel a page may
 // render. All user-facing button text is read from data-* attributes on the
@@ -46,9 +47,31 @@ export function initFilterToggle(): void {
       toggleButtonContainer: { selector: TOGGLE_CONTAINER_SELECTOR },
       closeButtonContainer: { selector: closeContainerSelector }
     });
+
+    keepRevealPanelOpenOnLoad(filter, startHidden, hideText);
   } catch (error) {
     console.error("Error initializing filter toggle:", error);
   }
+}
+
+// The toggle-to-reveal SJP pages set a never-matching bigModeMediaQuery so the panel
+// is always in MOJ's "small mode". In small mode the component's constructor calls
+// hideMenu() unconditionally, ignoring startHidden — so after applying a filter (when
+// the server sets data-start-hidden="false" because filters are active) the panel is
+// slammed shut on load instead of staying open. Re-open it here to honour startHidden.
+// We reveal the panel by hand rather than clicking the toggle so focus stays at the top
+// of the page (MOJ's toggle() moves focus into the panel, jarring on load). Sidebar
+// pages sit in big mode on desktop (panel already shown) and aren't reveal layouts, so
+// this leaves them untouched.
+function keepRevealPanelOpenOnLoad(filter: HTMLElement, startHidden: string | undefined, hideText: string | undefined): void {
+  if (startHidden !== "false" || !filter.closest(REVEAL_LAYOUT_SELECTOR)) return;
+
+  const toggleButton = document.querySelector<HTMLButtonElement>(`${TOGGLE_CONTAINER_SELECTOR} button`);
+  if (!toggleButton || toggleButton.getAttribute("aria-expanded") !== "false") return;
+
+  filter.classList.remove("moj-js-hidden");
+  toggleButton.setAttribute("aria-expanded", "true");
+  toggleButton.textContent = hideText ?? "Hide filters";
 }
 
 // Inserts an empty container immediately after the "Apply filters" button (the first
