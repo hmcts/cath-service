@@ -80,11 +80,16 @@ jobs:
           fi
 
           gh pr view "$number" \
-            --json number,headRefName,headRefOid,author,isCrossRepository,state,baseRefName,labels \
+            --json number,headRefName,headRefOid,isCrossRepository,state,baseRefName,labels \
             > /tmp/pr.json
           cat /tmp/pr.json
 
           head_ref=$(jq -r .headRefName /tmp/pr.json)
+
+          # REST, not gh pr view --json author: the GraphQL-backed field renders an App
+          # author as 'app/renovate', so a 'renovate[bot]' comparison never matches.
+          author=$(gh api "repos/${GH_REPO}/pulls/${number}" --jq .user.login)
+          echo "author: $author"
 
           if [ -z "$run_id" ]; then
             run_id=$(gh run list --workflow workflow.preview.yml --branch "$head_ref" \
@@ -99,7 +104,7 @@ jobs:
             echo "head-ref=$head_ref"
             echo "head-sha=$(jq -r .headRefOid /tmp/pr.json)"
             echo "run-id=$run_id"
-            echo "author=$(jq -r .author.login /tmp/pr.json)"
+            echo "author=$author"
             echo "state=$(jq -r .state /tmp/pr.json)"
             echo "base=$(jq -r .baseRefName /tmp/pr.json)"
             echo "fork=$(jq -r .isCrossRepository /tmp/pr.json)"
