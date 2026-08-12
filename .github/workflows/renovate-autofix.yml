@@ -1,8 +1,9 @@
 name: Renovate Autofix
 
 # When the Preview pipeline fails on a Renovate PR, hand the failure to Claude once and
-# push the fix to the branch. Report-only until repo variable RENOVATE_AUTOFIX is set to
-# 'true'; unsetting it again is the kill switch.
+# push the fix to the branch. One attempt per PR: the claude:autofix-attempted label is
+# claimed before Claude runs, so a crash or timeout still uses up the attempt. Remove the
+# label to allow another.
 #
 # A commit from claude-code-bot[bot] makes Renovate treat the branch as edited, so it
 # stops rebasing it and — since renovate.json sets automerge for npm minor+patch — stops
@@ -11,7 +12,7 @@ name: Renovate Autofix
 # nothing unless the failure is clearly caused by the update.
 #
 # workflow_run only ever runs the default-branch copy of this file, so edits do nothing
-# until merged; workflow_dispatch (dry run by default) is there to exercise it before then.
+# until merged; workflow_dispatch is there to run it on a specific PR on demand.
 
 on:
   workflow_run:
@@ -23,10 +24,6 @@ on:
         description: "PR number to attempt"
         type: string
         required: true
-      dry-run:
-        description: "Diagnose and report without pushing or labelling"
-        type: boolean
-        default: true
 
 jobs:
   resolve:
@@ -223,8 +220,7 @@ jobs:
 
       - name: Claim the attempt
         # Before Claude runs, not after, so a crash or timeout still consumes the one
-        # attempt. Skipped on a dry run, which is therefore repeatable.
-        if: ${{ inputs.dry-run != true && vars.RENOVATE_AUTOFIX == 'true' }}
+        # attempt.
         uses: actions/github-script@v9
         with:
           github-token: ${{ steps.app-token.outputs.token }}
@@ -354,7 +350,7 @@ jobs:
 
       - name: Push the fix
         id: push
-        if: ${{ steps.outcome.outputs.state == 'fixed' && inputs.dry-run != true && vars.RENOVATE_AUTOFIX == 'true' }}
+        if: ${{ steps.outcome.outputs.state == 'fixed' }}
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
@@ -380,8 +376,6 @@ jobs:
           PUSHED: ${{ steps.push.outputs.pushed }}
           FAILED_JOBS: ${{ steps.failure.outputs.jobs }}
           CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
-          DRY_RUN: ${{ inputs.dry-run }}
-          ARMED: ${{ vars.RENOVATE_AUTOFIX }}
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
@@ -390,8 +384,6 @@ jobs:
             const { owner, repo } = context.repo;
             const pr = Number(process.env.PR);
             const state = process.env.STATE;
-            const dryRun = process.env.DRY_RUN === 'true';
-            const armed = process.env.ARMED === 'true';
             const runUrl =
               `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
 
@@ -415,27 +407,19 @@ jobs:
                 : state === 'no-change'
                   ? '## 🤖 Autofix made no changes'
                   : state === 'fixed'
-                    ? (dryRun || !armed
-                        ? '## 🤖 Autofix has a fix ready (not pushed)'
-                        : '## ⚠️ Autofix produced a fix but could not push it')
+                    ? '## ⚠️ Autofix produced a fix but could not push it'
                     : '## ⚠️ Autofix stopped partway';
 
-            const why = !armed
-              ? '\nNothing was pushed or labelled: `RENOVATE_AUTOFIX` is not set, so this run was report-only.'
-              : dryRun
-                ? '\nNothing was pushed or labelled: this was a dry run.'
-                : wouldPush
-                  ? '\nThe push was rejected — the branch moved while Claude was working, so it has been left alone. Its head no longer matches what was fixed.'
-                  : null;
+            const why = wouldPush
+              ? '\nThe push was rejected — the branch moved while Claude was working, so it has been left alone. Its head no longer matches what was fixed.'
+              : null;
 
             const footer = [
               // Only when a commit landed — otherwise the PR is still Renovate's.
               pushed
                 ? 'ℹ️ **This PR now needs manual review and merge.** It carries a commit that is not Renovate\'s, so Renovate will no longer rebase, update or automerge it.'
                 : null,
-              armed && !dryRun
-                ? '_Autofix runs once per PR. Remove the `claude:autofix-attempted` label to allow one more attempt._'
-                : null,
+              '_Autofix runs once per PR. Remove the `claude:autofix-attempted` label to allow one more attempt._',
             ].filter(l => l !== null);
 
             const body = [
@@ -467,7 +451,7 @@ jobs:
       - name: Fail on an incomplete attempt
         # A dirty tree or rejected push is worth a red run; no-change is a legitimate
         # outcome and stays green.
-        if: ${{ steps.outcome.outputs.state == 'dirty' || (steps.outcome.outputs.state == 'fixed' && inputs.dry-run != true && vars.RENOVATE_AUTOFIX == 'true' && steps.push.outputs.pushed != 'true') }}
+        if: ${{ steps.outcome.outputs.state == 'dirty' || (steps.outcome.outputs.state == 'fixed' && steps.push.outputs.pushed != 'true') }}
         run: |
           echo "::error::autofix did not complete cleanly (state=${{ steps.outcome.outputs.state }}, pushed=${{ steps.push.outputs.pushed || 'false' }})"
           exit 1
