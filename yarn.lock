@@ -1574,6 +1574,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/competition-list-chd-daily-cause-list@workspace:*, @hmcts/competition-list-chd-daily-cause-list@workspace:libs/list-types/competition-list-chd-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/competition-list-chd-daily-cause-list@workspace:libs/list-types/competition-list-chd-daily-cause-list"
+  dependencies:
+    "@hmcts/chd-kb-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/cookie-manager@npm:1.1.0":
   version: 1.1.0
   resolution: "@hmcts/cookie-manager@npm:1.1.0"
@@ -2033,6 +2053,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
+    "@hmcts/competition-list-chd-daily-cause-list": "workspace:*"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
@@ -2174,6 +2195,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
+    "@hmcts/competition-list-chd-daily-cause-list": "workspace:*"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
     "@hmcts/crown-daily-list": "workspace:*"
@@ -2563,6 +2585,7 @@ __metadata:
     "@hmcts/civil-and-family-daily-cause-list": "workspace:*"
     "@hmcts/civil-daily-cause-list": "workspace:*"
     "@hmcts/companies-winding-up-chd-daily-cause-list": "workspace:*"
+    "@hmcts/competition-list-chd-daily-cause-list": "workspace:*"
     "@hmcts/cookie-manager": "npm:1.1.0"
     "@hmcts/cop-daily-cause-list": "workspace:*"
     "@hmcts/court-of-appeal-civil-daily-cause-list": "workspace:*"
