@@ -313,8 +313,9 @@ jobs:
             run `yarn format`, `yarn lint` and `yarn test`, and make sure all three
             pass.
 
-            Commit once, subject `fix(deps): adapt to <dependency> update`. Do NOT
-            push — a later step owns that.
+            Commit once, subject `fix(deps): adapt to <dependency> update`. No
+            `Co-Authored-By` trailer — this repo does not use them. Do NOT push — a
+            later step owns that.
 
             Always write /tmp/autofix-report.md: what failed, whether it was the
             update, what you changed or why you changed nothing, and whether the checks
