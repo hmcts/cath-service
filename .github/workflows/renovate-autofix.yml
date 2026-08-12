@@ -246,12 +246,11 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: '**/yarn.lock'
 
-      - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Generate Prisma Client
-        # Not optional — lint and test both fail without it.
-        run: yarn db:generate
+      # yarn install and yarn db:generate are deliberately NOT steps here. The update
+      # under diagnosis is often what breaks install, and a step can only report that
+      # secondhand — run by Claude, the error is in its own terminal, where it can read
+      # it and act on it. Both write only to gitignored paths, so neither dirties the
+      # tree that decides the outcome below.
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -269,6 +268,10 @@ jobs:
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
+          # The triggering actor is renovate, and the action refuses non-human actors
+          # by default. Only renovate is listed — not '*' — so the prompt below stays
+          # the only thing that can drive this job.
+          allowed_bots: "renovate"
           prompt: |
             The Preview pipeline failed on a Renovate dependency-update PR. Work out
             whether the failure is caused by the update and, if it is, fix it.
@@ -282,6 +285,18 @@ jobs:
             Read /tmp/ci-failure.log first — it is the tail of the failed jobs' logs.
             Diagnose from it before changing anything.
 
+            Nothing is installed yet. Run `yarn install --immutable` and then
+            `yarn db:generate` before any lint or test command — both fail without the
+            Prisma client.
+
+            If `yarn install` itself fails, that is very likely the whole failure, so
+            read its error carefully. When the registry is refusing the version —
+            quarantined, yanked, unpublished — no change to this repo can fix it:
+            report that and stop. When it is a lockfile problem, `yarn install --mode
+            update-lockfile` to repair the entry for the updated package is a valid
+            fix, provided the resulting yarn.lock still resolves the version this PR is
+            updating to. Do not resolve it back to the old version.
+
             CHANGING NOTHING IS OFTEN THE RIGHT ANSWER. Any stage of the pipeline can
             fail here, and most of them for reasons that are not code: terraform plan
             drift, helm deploy, AKS capacity, smoke and e2e flakes, registry timeouts.
@@ -294,13 +309,13 @@ jobs:
             When it IS the update, the fix is to adapt this repo to the new version:
             a renamed or moved export, a changed signature, a new lint rule, an updated
             snapshot, a type that got stricter. Never widen or pin back the version in
-            package.json, and never edit yarn.lock to undo the update — that defeats
-            the entire PR. If the new version genuinely cannot be adopted without a
-            judgment call about behaviour, stop and explain; do not guess.
+            package.json, and never hand-edit yarn.lock to undo the update — that
+            defeats the entire PR. If the new version genuinely cannot be adopted
+            without a judgment call about behaviour, stop and explain; do not guess.
 
             Keep the change as small as the failure demands. Then, before committing:
             run `yarn format`, `yarn lint` and `yarn test`, and make sure all three
-            pass. Dependencies are installed and `yarn db:generate` has already run.
+            pass.
 
             Commit once, subject `fix(deps): adapt to <dependency> update`. Do NOT
             push — a later step owns that.
