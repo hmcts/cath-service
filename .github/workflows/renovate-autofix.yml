@@ -247,10 +247,17 @@ jobs:
           cache-dependency-path: '**/yarn.lock'
 
       - name: Install dependencies
+        id: install
+        # Not fatal: the update being diagnosed is often what breaks install (a
+        # quarantined or yanked version), and that diagnosis is exactly what this job
+        # exists to report. Claude is told below whether deps are available.
+        continue-on-error: true
         run: yarn install --immutable
 
       - name: Generate Prisma Client
         # Not optional — lint and test both fail without it.
+        if: steps.install.outcome == 'success'
+        continue-on-error: true
         run: yarn db:generate
 
       - name: Configure AWS credentials
@@ -269,6 +276,10 @@ jobs:
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
+          # The triggering actor is renovate, and the action refuses non-human actors
+          # by default. Only renovate is listed — not '*' — so the prompt below stays
+          # the only thing that can drive this job.
+          allowed_bots: "renovate"
           prompt: |
             The Preview pipeline failed on a Renovate dependency-update PR. Work out
             whether the failure is caused by the update and, if it is, fix it.
@@ -278,9 +289,16 @@ jobs:
             BRANCH: ${{ env.HEAD_REF }}
             UPDATE: ${{ steps.failure.outputs.subject }}
             FAILED JOBS: ${{ steps.failure.outputs.jobs }}
+            DEPENDENCIES INSTALLED: ${{ steps.install.outcome == 'success' && 'yes' || 'NO — yarn install itself failed' }}
 
             Read /tmp/ci-failure.log first — it is the tail of the failed jobs' logs.
             Diagnose from it before changing anything.
+
+            If DEPENDENCIES INSTALLED is NO, `yarn install` failed here too and no
+            source change can fix it — the registry is refusing the version (yanked,
+            quarantined, unpublished) or the lockfile does not match package.json.
+            Neither is this repo's code. Change nothing, report which it is, and stop.
+            You cannot run lint or tests in that state, so do not try.
 
             CHANGING NOTHING IS OFTEN THE RIGHT ANSWER. Any stage of the pipeline can
             fail here, and most of them for reasons that are not code: terraform plan
@@ -300,7 +318,8 @@ jobs:
 
             Keep the change as small as the failure demands. Then, before committing:
             run `yarn format`, `yarn lint` and `yarn test`, and make sure all three
-            pass. Dependencies are installed and `yarn db:generate` has already run.
+            pass. When DEPENDENCIES INSTALLED is yes, `yarn db:generate` has already
+            run.
 
             Commit once, subject `fix(deps): adapt to <dependency> update`. Do NOT
             push — a later step owns that.
