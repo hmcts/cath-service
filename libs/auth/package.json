@@ -37,7 +37,7 @@
     "@hmcts-cft/cloud-native-platform": "2.3.0",
     "@hmcts/account": "*",
     "@microsoft/microsoft-graph-client": "3.0.7",
-    "openid-client": "6.8.4"
+    "openid-client": "6.8.5"
   },
   "devDependencies": {
     "@types/express": "5.0.6",

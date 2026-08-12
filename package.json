@@ -90,7 +90,7 @@
     "jsonwebtoken": "9.0.3",
     "jwks-rsa": "4.1.0",
     "notifications-node-client": "^8.2.1",
-    "openid-client": "6.8.4",
+    "openid-client": "6.8.5",
     "passport": "0.7.0",
     "pg": "8.21.0"
   }
