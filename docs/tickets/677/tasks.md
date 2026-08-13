@@ -1,0 +1,68 @@
+# Tasks — Issue #677: Downloadable Excel File, CFT Hearing Lists
+
+See `plan.md` for the verified list of 18 in-scope `listTypeName` strings and the corrections to the spec comment. Never key anything on numeric `listTypeId`.
+
+## Implementation Tasks
+
+### Excel generators (shared)
+
+- [ ] Task 1: Add `toWorksheetName(title: string): string` to `libs/list-types/common/src/excel/excel-utilities.ts` — strip `[ ] : * ? / \`, collapse whitespace, trim to 31 characters. Export from `libs/list-types/common/src/index.ts`.
+- [ ] Task 2: Create `libs/list-types/common/src/excel/hearing-list-excel.ts` exporting `ExcelColumn<T>`, `ExcelSection<T>` and `generateHearingListExcel<T>(...)` — bold header row, optional leading section column, every cell through `sanitiseCellValue`, `autoFitColumns`, `writeBuffer`, `saveExcelToStorage`; returns `{ success, excelPath?, error? }` and never throws. Export from the package `index.ts`.
+- [ ] Task 3: Extract the sitting-duration formatting currently inlined in the four Shape A `pdf-template.njk` files into `libs/list-types/daily-cause-list-common/src/rendering/sitting-duration.ts` as `formatSittingDuration(sitting)`. Preserve the existing hardcoded English `" hours"` / `" mins"` output exactly, including under the `cy` locale. Export from the package `index.ts`.
+- [ ] Task 4: Create `libs/list-types/daily-cause-list-common/src/excel/cause-list-excel.ts` exporting `CauseListExcelRow` and `generateCauseListExcel(...)` — calls `renderCauseListData`, flattens `courtLists → courtHouse → courtRoom → session → sittings → hearing → case` to one row per case, repeats court house / court room / judge on every row, delegates to `generateHearingListExcel`. Export from the package `index.ts`.
+
+### Excel generators (per list type)
+
+- [ ] Task 5: Add `excelColumns` to `locales/{en,cy}.ts` in `civil-daily-cause-list`, `family-daily-cause-list`, `civil-and-family-daily-cause-list` and `cop-daily-cause-list`, with one label per `<th>` in that package's `pdf-template.njk` plus the added context columns (court house, court room, judge, reporting restriction, legal advisors). Welsh keys must mirror English key-for-key; use `[WELSH TRANSLATION REQUIRED: "..."]` where no translation exists.
+- [ ] Task 6: Create `libs/list-types/civil-daily-cause-list/src/excel/excel-generator.ts` — `generateCivilDailyCauseListExcel`, 7 PDF columns (`time, caseId, caseName, caseType, hearingType, location, duration`), **no** applicant/respondent. Export from `index.ts`.
+- [ ] Task 7: Create `libs/list-types/family-daily-cause-list/src/excel/excel-generator.ts` — 9 PDF columns including `applicant` and `respondent` with their legal-advisor sub-values as separate columns.
+- [ ] Task 8: Create `libs/list-types/civil-and-family-daily-cause-list/src/excel/excel-generator.ts` — same 9 columns as Task 7, with `caseSequenceIndicator` appended to the case-name cell as the PDF does.
+- [ ] Task 9: Create `libs/list-types/cop-daily-cause-list/src/excel/excel-generator.ts` — 7 COP columns (`startTime, caseRef, caseDetails, caseType, hearingType, timeEstimate, hearingChannel`), with `caseSequenceIndicator` appended to the **duration** cell, matching the COP PDF.
+- [ ] Task 10: Create `libs/list-types/rcj-standard-daily-cause-list/src/excel/excel-generator.ts` — `generateRcjStandardDailyCauseListExcel({ listTypeName, ... })`, calls `renderStandardDailyCauseList`, maps `StandardHearing` fields to columns, sheet name from the existing per-list title map.
+- [ ] Task 11: Create `libs/list-types/administrative-court-daily-cause-list/src/excel/excel-generator.ts` — serves all four regional Administrative Court list types, keyed on `listTypeName` for the sheet name.
+- [ ] Task 12: Create `libs/list-types/london-administrative-court-daily-cause-list/src/excel/excel-generator.ts` — two sections (`mainHearings`, `planningCourt`) with a leading section column.
+- [ ] Task 13: Create `libs/list-types/court-of-appeal-civil-daily-cause-list/src/excel/excel-generator.ts` — two sections (`dailyHearings`, `futureJudgments`); the future-judgments section includes the extra `date` field.
+- [ ] Task 14: Create `libs/list-types/companies-winding-up-chd-daily-cause-list/src/excel/excel-generator.ts` — `ChdKbHearing` accessors (`type`, `caseName`, not `hearingType`, `caseDetails`).
+
+### Registration
+
+- [ ] Task 15: In `libs/publication/src/processing/service.ts`, add shared `ExcelGenerator` constants for the RCJ standard and Administrative Court families, mirroring the existing `rcjStandardGenerator` / `adminCourtGenerator` PDF pattern.
+- [ ] Task 16: Add all 18 entries to `EXCEL_GENERATOR_REGISTRY` keyed by the exact `listTypeName` strings from `plan.md` §2.1. Do **not** add `COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST`, `HIGH_COURT_CIVIL_DAILY_CAUSE_LIST`, `HIGH_COURT_FAMILY_DAILY_CAUSE_LIST` or `PCOL_DAILY_CAUSE_LIST`. Make no other change to `generatePublicationExcel`, `listTypeHasExcel` or `processPublication`.
+
+### Download journey
+
+- [ ] Task 17: Create `apps/web/src/pages/(list-types)/list-download-shared.ts` with `UUID_REGEX`, `ALLOWED_TYPES`, `DOWNLOADABLE_LIST_TYPES` (the 18 names), `getAvailableFiles(artefactId)`, `formatFileSize`, `hasDownloadableFile(artefactId)` (try/catch → `false` on storage error) and `requireDownloadAccess` implementing the six-step guard chain from `plan.md` §5 (UUID → sign-in redirect with `session.returnTo` → VERIFIED role → `getArtefactById` → `canAccessPublicationData` → `res.locals.artefact`).
+- [ ] Task 18: Create `apps/web/src/pages/(list-types)/list-download-disclaimer/index.ts` and `index.njk` — `GET` renders the disclaimer with a hidden `artefactId`; `POST` requires `agreed` and redirects to `/list-download-files?artefactId=...`, otherwise re-renders with a `govukErrorSummary` item linked to `#agreed`. Template extends `layouts/base-template.njk`, uses `{% block page_content %}`, `novalidate` form, no JavaScript dependency.
+- [ ] Task 19: Create `apps/web/src/pages/(list-types)/list-download-files/index.ts` and `index.njk` — lists only the formats whose blobs exist, with size labels; `404` + `errors/404` when neither exists.
+- [ ] Task 20: Create `apps/web/src/pages/(list-types)/list-download/index.ts` — validates `type` against the allow-list, streams the blob with `Content-Disposition: attachment` and `Cache-Control: private, max-age=0, no-cache, no-store, must-revalidate`, `404` + `errors/404` when the requested blob is missing. Render GOV.UK error pages, not JSON.
+
+### List page entry point
+
+- [ ] Task 21: Create `libs/web-core/src/views/components/list-download-button.njk` — a `govuk-button--secondary` anchor with `role="button"` and `data-module="govuk-button"`, rendered only when `downloadDisclaimerUrl` is set.
+- [ ] Task 22: In `apps/web/src/pages/(list-types)/list-type-handler.ts`, set `res.locals.downloadDisclaimerUrl` and `res.locals.listDownload` in both `createListTypeHandler` (after the `checkAccess` branch) and `createSimpleListTypeHandler` (after the `canAccessPublicationData` branch). Gate on `req.user?.role === "VERIFIED"`, `DOWNLOADABLE_LIST_TYPES.has(artefact.listTypeName)` and `await hasDownloadableFile(artefactId)`.
+- [ ] Task 23: Include `list-download-button.njk` immediately below the "Last updated" line in all 16 in-scope templates across 9 directories: `civil-daily-cause-list`, `family-daily-cause-list`, `civil-and-family-daily-cause-list`, `cop-daily-cause-list`, the 7 in-scope templates in `rcj-standard-daily-cause-list` (**not** the Court of Appeal Criminal one), `administrative-court-daily-cause-list` (one template serving 4 list types), `london-administrative-court-daily-cause-list`, `court-of-appeal-civil-daily-cause-list`, `companies-winding-up-chd-daily-cause-list`.
+
+### Notifications
+
+- [ ] Task 24: In `libs/notifications/src/notification/notification-service.ts`, replace the combined `filesUnder2MB` flag in `buildEmailDataWithFiles` with per-file gating (`attachPdf`, `attachExcel`) so an oversized PDF no longer suppresses an in-size Excel link, and pass the pre-gated booleans to `getSubscriptionTemplateId`.
+- [ ] Task 25: In `libs/notifications/src/govnotify/template-config.ts`, drop the `filesUnder2MB` parameter from `getSubscriptionTemplateId` and fix the non-SJP Excel-only fall-through so `{ isSjp: false, hasPdf: false, hasExcel: true }` returns `GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS` rather than `GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF`, whose `pdf_link_to_file` personalisation would be unset. Update all callers.
+
+### Content / Welsh
+
+- [ ] Task 26: Create `libs/web-core/src/locales/list-download/en.ts` and `cy.ts` with `downloadListButton`, `disclaimer.*` and `downloadFiles.*` keys carried over from the SJP journey wording; export as `listDownloadEn` / `listDownloadCy` from `libs/web-core/src/index.ts`. Mark untranslated Welsh with `[WELSH TRANSLATION REQUIRED: "..."]`.
+- [ ] Task 27: Verify recursive `en`/`cy` key parity for `list-download` and for every `excelColumns` object added in Task 5, and that no generator or template contains a hardcoded English display string.
+
+### Tests
+
+- [ ] Task 28: Unit tests for `toWorksheetName` (over-long title truncated to 31, invalid characters stripped) and for `generateHearingListExcel` (bold header row, section column emitted only when `sectionHeader` set, `sanitiseCellValue` applied to a `=cmd` value, empty `sections` produces a header-only workbook, storage failure returns `{ success: false }` without throwing).
+- [ ] Task 29: Unit tests for `formatSittingDuration` — `"2 hours 30 mins"`, `"1 hour"`, `"1 min"`, zero/missing duration returns empty, and English output retained under the `cy` locale.
+- [ ] Task 30: Unit tests for `generateCauseListExcel` against a fixture with two court houses, two court rooms, two sessions, two sittings and multiple hearings and cases — one row per case, court house / room / judge repeated on every row, missing `party` / `judiciary` / `sittingStart` tolerated, empty `courtLists` produces a header-only workbook.
+- [ ] Task 31: Unit test per per-list generator (Tasks 6–14) asserting the header row equals the expected ordered label list, cell values map to the right columns, list-type-specific behaviour holds (COP `caseSequenceIndicator` in the duration cell; Civil has no applicant/respondent; ChdKb uses `type`/`caseName`; London and Court of Appeal Civil emit both sections), and Welsh headers render under the `cy` locale. Fixtures use `listTypeId: 999`.
+- [ ] Task 32: Column-parity test per in-scope list type asserting every `t.*` locale key used in a `<th>` of that list's PDF template appears in the generator's column spec (AC2 guard against future drift).
+- [ ] Task 33: Registry tests in `libs/publication/src/processing/service.test.ts` — `listTypeHasExcel` returns `true` for each of the 18 names and `false` for `COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST`, `HIGH_COURT_CIVIL_DAILY_CAUSE_LIST`, `HIGH_COURT_FAMILY_DAILY_CAUSE_LIST` and `PCOL_DAILY_CAUSE_LIST`; `processPublication` sets `result.excelPath = "<artefactId>.xlsx"`; a generator that throws leaves `result.pdfPath` set and notifications sent.
+- [ ] Task 34: Controller tests for the three download pages — anonymous redirects to `/sign-in` with `session.returnTo`; non-VERIFIED gets `403`; malformed `artefactId` gets `400` with no DB or blob call; unknown artefact gets `404`; `canAccessPublicationData` false gets `403`; disclaimer `POST` without `agreed` re-renders with the error summary and preserves `artefactId`; files page shows both formats when both blobs exist, PDF only when Excel is absent, `404` when neither; `/list-download?type=exe` gets `400`.
+- [ ] Task 35: Template tests `list-download-disclaimer/index.njk.test.ts` and `list-download-files/index.njk.test.ts` using `createTestEnvironment` / `render` from `@hmcts/test-support` with Cheerio structural assertions (no AAA comments) — heading text, hidden `artefactId` input, checkbox and error summary present and absent, one link per available file with its size label, and Welsh headings under the `cy` locale.
+- [ ] Task 36: Template test for `list-download-button.njk` — anchor rendered with the expected `href` when `downloadDisclaimerUrl` is set, nothing rendered when it is null; plus a `list-type-handler` test asserting `res.locals.downloadDisclaimerUrl` is set for a VERIFIED user with a blob and null for anonymous users, non-VERIFIED users, missing blobs and out-of-scope list types.
+- [ ] Task 37: Notification tests — both files under 2MB sends the PDF+Excel template with both personalisations; PDF over 2MB and Excel under sends the Excel-link template (regression for the verified defect, not the no-links template); Excel over and PDF under sends the PDF-only template; both over sends no-links; Excel blob absent leaves existing PDF-only behaviour unchanged; non-SJP Excel-only sends no-links. Update `template-config.test.ts` for the dropped `filesUnder2MB` parameter.
+- [ ] Task 38: Add one E2E journey test `e2e-tests/tests/verified-user/list-download.spec.ts` tagged `@nightly`, modelled on `verified-user/sjp-public-list.spec.ts`: verified user opens a Civil or Family list page, follows "Download this list", submits the disclaimer without ticking to assert the validation error, switches to Welsh to assert the translated content, runs an Axe scan, checks keyboard navigation, ticks and continues, then downloads both the PDF and the `.xlsx`. One test for the whole journey, not one per assertion.
+- [ ] Task 39: Run `yarn lint:fix`, `yarn test` and `yarn test:e2e` from the repository root and fix all failures, including the `libs/list-types/common/src/validation/guard.test.ts` CI guard.
