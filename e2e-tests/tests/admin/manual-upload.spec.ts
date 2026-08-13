@@ -48,6 +48,7 @@ test.describe
       // Verify form fields exist
       const fileUpload = page.locator('input[name="file"]');
       await expect(fileUpload).toBeVisible();
+      ("");
 
       const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
       await courtInput.waitFor({ state: "visible", timeout: 10000 });

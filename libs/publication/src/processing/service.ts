@@ -4,6 +4,7 @@ import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWee
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
+import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
@@ -17,6 +18,7 @@ import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmc
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
+import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -90,6 +92,8 @@ const rcjStandardGenerator: PdfGenerator = (p) =>
 
 const adminCourtGenerator: PdfGenerator = (p) =>
   generateAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as AdministrativeCourtHearingList, listTypeName: p.listTypeName ?? "" });
+
+const iacDailyListGenerator: PdfGenerator = (p) => generateIacDailyListPdf({ ...p, jsonData: p.jsonData as IacDailyList, listTypeName: p.listTypeName ?? "" });
 
 const sjpPublicGenerator: PdfGenerator = (p) => generateSjpPublicListPdf({ ...p, listTypeName: p.listTypeName ?? "", jsonData: p.jsonData as SjpJson });
 
@@ -180,6 +184,10 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: (p) =>
     generateLondonAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as LondonAdminCourtData }),
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
+  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: (p) =>
+    generateCompaniesWindingUpChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as CompaniesWindingUpHearingList }),
+  IAC_DAILY_LIST: iacDailyListGenerator,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,

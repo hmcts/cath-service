@@ -6,6 +6,7 @@ import "@hmcts/send-daily-hearing-list"; // Register SEND converter
 import "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"; // Register UTCC converter
 import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTLC converter
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
+import "@hmcts/companies-winding-up-chd-daily-cause-list"; // Register Companies Winding Up (ChD) converter
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
