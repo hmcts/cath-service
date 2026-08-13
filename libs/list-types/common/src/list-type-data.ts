@@ -799,6 +799,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [10]
   },
   {
+    name: "COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Commercial Court (King's Bench Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Masnach (Adran Mainc y Brenin)",
+    shortenedFriendlyName: "Commercial Court (KB) Daily Cause List",
+    provenance: "CFT_IDAM",
+    urlPath: "commercial-court-kb-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
     name: "IAC_DAILY_LIST",
     englishFriendlyName: "Immigration and Asylum Chamber Daily List",
     welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
