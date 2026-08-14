@@ -4,6 +4,7 @@ import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWee
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
+import { type CommercialCourtKbHearingList, generateCommercialCourtKbDailyCauseListPdf } from "@hmcts/commercial-court-kb-daily-cause-list";
 import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
@@ -186,6 +187,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: (p) =>
     generateCompaniesWindingUpChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as CompaniesWindingUpHearingList }),
+  COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST: (p) => generateCommercialCourtKbDailyCauseListPdf({ ...p, jsonData: p.jsonData as CommercialCourtKbHearingList }),
   IAC_DAILY_LIST: iacDailyListGenerator,
   IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,

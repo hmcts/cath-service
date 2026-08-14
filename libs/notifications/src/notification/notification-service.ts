@@ -15,6 +15,10 @@ import {
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
 import {
+  extractCaseSummary as extractCommercialCourtKbSummary,
+  formatCaseSummaryForEmail as formatCommercialCourtKbSummaryForEmail
+} from "@hmcts/commercial-court-kb-daily-cause-list";
+import {
   extractCaseSummary as extractCompaniesWindingUpChdSummary,
   formatCaseSummaryForEmail as formatCompaniesWindingUpChdSummaryForEmail
 } from "@hmcts/companies-winding-up-chd-daily-cause-list";
@@ -194,6 +198,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
     extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
     format: formatCompaniesWindingUpChdSummaryForEmail
+  },
+  COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST: {
+    extract: extractCommercialCourtKbSummary as SummaryExtractor,
+    format: formatCommercialCourtKbSummaryForEmail
   },
   CROWN_DAILY_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,
