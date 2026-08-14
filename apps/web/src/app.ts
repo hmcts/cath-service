@@ -6,6 +6,7 @@ import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoo
 import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-daily-cause-list/config";
 import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
+import { moduleRoot as chanceryAppealsChdModuleRoot } from "@hmcts/chancery-appeals-chd-daily-cause-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
 import { moduleRoot as companiesWindingUpChdModuleRoot } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
@@ -141,6 +142,7 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     companiesWindingUpChdModuleRoot,
+    chanceryAppealsChdModuleRoot,
     adminCourtModuleRoot,
     magistratesPublicAdultCourtListModuleRoot,
     magistratesPublicListModuleRoot,
