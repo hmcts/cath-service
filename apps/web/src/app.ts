@@ -9,6 +9,7 @@ import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-stand
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
 import { moduleRoot as companiesWindingUpChdModuleRoot } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
+import { moduleRoot as competitionListChdModuleRoot } from "@hmcts/competition-list-chd-daily-cause-list/config";
 import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
@@ -141,6 +142,7 @@ export async function createApp(): Promise<Express> {
     londonAdminModuleRoot,
     civilAppealModuleRoot,
     companiesWindingUpChdModuleRoot,
+    competitionListChdModuleRoot,
     adminCourtModuleRoot,
     magistratesPublicAdultCourtListModuleRoot,
     magistratesPublicListModuleRoot,
