@@ -36,4 +36,4 @@ export function setCookieBannerSeen(res: Response): void {
   });
 }
 
-export { COOKIE_POLICY_NAME, COOKIE_BANNER_SEEN };
+export { COOKIE_BANNER_SEEN, COOKIE_POLICY_NAME };
