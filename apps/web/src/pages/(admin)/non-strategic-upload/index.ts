@@ -8,6 +8,7 @@ import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTL
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
 import "@hmcts/companies-winding-up-chd-daily-cause-list"; // Register Companies Winding Up (ChD) converter
 import "@hmcts/insolvency-and-companies-court-chd-daily-cause-list"; // Register Insolvency & Companies Court (ChD) converter
+import "@hmcts/financial-list-chd-kb-daily-cause-list"; // Register Financial List (ChD/KB) converter
 import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";

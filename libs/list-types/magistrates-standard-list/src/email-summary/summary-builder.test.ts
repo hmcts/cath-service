@@ -165,6 +165,115 @@ describe("extractCaseSummary", () => {
     expect(result[0].find((f) => f.label === "Prosecuting authority")?.value).toBe("Crown Prosecution Service");
   });
 
+  it("should include prosecuting authority field with empty value when the prosecutor party has an empty name", () => {
+    // Arrange
+    const json = makeJson([
+      {
+        case: [
+          {
+            caseUrn: "URN007",
+            party: [
+              { partyRole: "DEFENDANT", individualDetails: { individualForenames: "Kim", individualSurname: "Lee" } },
+              { partyRole: "PROSECUTING_AUTHORITY" }
+            ]
+          }
+        ]
+      }
+    ]);
+
+    // Act
+    const result = extractCaseSummary(json);
+
+    // Assert
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
+  it("should include prosecuting authority field with empty value when no prosecutor party exists", () => {
+    // Arrange
+    const json = makeJson([
+      {
+        case: [
+          {
+            caseUrn: "URN008",
+            party: [{ partyRole: "DEFENDANT", individualDetails: { individualForenames: "Ray", individualSurname: "Ford" } }]
+          }
+        ]
+      }
+    ]);
+
+    // Act
+    const result = extractCaseSummary(json);
+
+    // Assert
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
+  it("should fall back to organisation name when individual details are empty", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "AppRefB",
+              party: [
+                {
+                  subject: true,
+                  individualDetails: { individualForenames: "", individualSurname: "" },
+                  organisationDetails: { organisationName: "This is an organisation" }
+                }
+              ]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Name")?.value).toBe("This is an organisation");
+  });
+
+  it("should include prosecuting authority for applications", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "APP005",
+              party: [
+                { subject: true, individualDetails: { individualForenames: "Eve", individualSurname: "North" } },
+                { partyRole: "PROSECUTING_AUTHORITY", organisationDetails: { organisationName: "Prosecuting Authority Name E" } }
+              ]
+            }
+          ]
+        }
+      ])
+    );
+
+    expect(result[0].find((f) => f.label === "Prosecuting authority")?.value).toBe("Prosecuting Authority Name E");
+  });
+
+  it("should include prosecuting authority field with empty value when application has no prosecutor party", () => {
+    const result = extractCaseSummary(
+      makeJson([
+        {
+          application: [
+            {
+              applicationReference: "APP006",
+              party: [{ subject: true, individualDetails: { individualForenames: "Ivy", individualSurname: "West" } }]
+            }
+          ]
+        }
+      ])
+    );
+
+    const field = result[0].find((f) => f.label === "Prosecuting authority");
+    expect(field).toBeDefined();
+    expect(field?.value).toBe("");
+  });
+
   it("should not include Offence field for applications with no offences", () => {
     const result = extractCaseSummary(
       makeJson([
