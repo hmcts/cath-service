@@ -1789,6 +1789,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/financial-list-chd-kb-daily-cause-list@workspace:*, @hmcts/financial-list-chd-kb-daily-cause-list@workspace:libs/list-types/financial-list-chd-kb-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/financial-list-chd-kb-daily-cause-list@workspace:libs/list-types/financial-list-chd-kb-daily-cause-list"
+  dependencies:
+    "@hmcts/chd-kb-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:*, @hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list"
@@ -2041,6 +2061,7 @@ __metadata:
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
@@ -2183,6 +2204,7 @@ __metadata:
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/excel-generation": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
@@ -2569,6 +2591,7 @@ __metadata:
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/iac-daily-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
@@ -4576,6 +4599,13 @@ __metadata:
     "@types/ms": "npm:*"
     "@types/node": "npm:*"
   checksum: 10c0/0688ac8fb75f809201cb7e18a12b9d80ce539cb9dd27e1b01e11807cb1a337059e899b8ee3abc3f2c9417f02e363a3069d9eab9ef9724b1da1f0e10713514f94
+  languageName: node
+  linkType: hard
+
+"@types/luxon@npm:3.7.1":
+  version: 3.7.1
+  resolution: "@types/luxon@npm:3.7.1"
+  checksum: 10c0/2db30c13b58adcd86daa447faa3ba59515fe907ead8ee3e6bb716d662812af0619d712f6c1eb190cdd7f9d2c00444c3ecd80af0f36e8143eb0c5e7339d6b2aca
   languageName: node
   linkType: hard
 

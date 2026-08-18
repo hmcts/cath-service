@@ -68,6 +68,8 @@
       "@hmcts/court-of-appeal-civil-daily-cause-list": ["libs/list-types/court-of-appeal-civil-daily-cause-list/src"],
       "@hmcts/companies-winding-up-chd-daily-cause-list": ["libs/list-types/companies-winding-up-chd-daily-cause-list/src"],
       "@hmcts/companies-winding-up-chd-daily-cause-list/config": ["libs/list-types/companies-winding-up-chd-daily-cause-list/src/config"],
+      "@hmcts/financial-list-chd-kb-daily-cause-list": ["libs/list-types/financial-list-chd-kb-daily-cause-list/src"],
+      "@hmcts/financial-list-chd-kb-daily-cause-list/config": ["libs/list-types/financial-list-chd-kb-daily-cause-list/src/config"],
       "@hmcts/chd-kb-common": ["libs/list-types/chd-kb-common/src"],
       "@hmcts/chd-kb-common/config": ["libs/list-types/chd-kb-common/src/config"],
       "@hmcts/administrative-court-daily-cause-list": ["libs/list-types/administrative-court-daily-cause-list/src"],
