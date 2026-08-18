@@ -23,7 +23,7 @@ const requireVerifiedWithProvenance: RequestHandler = async (req: Request, res: 
   }
 
   const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
-  if (!dbListType || !dbListType.allowedProvenance.split(",").includes(req.user.provenance)) {
+  if (!dbListType?.allowedProvenance.split(",").includes(req.user.provenance)) {
     req.session.returnTo = req.originalUrl;
     return res.redirect("/sign-in");
   }

@@ -3,6 +3,7 @@ import { createArtefactSearch, deleteArtefactSearchByArtefactId, findArtefactSea
 import {
   createArtefact,
   deleteArtefacts,
+  deleteArtefactsByLocationId,
   getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
@@ -655,6 +656,41 @@ describe("deleteArtefacts", () => {
         }
       }
     });
+  });
+});
+
+describe("deleteArtefactsByLocationId", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should delete all artefacts for a location and return the count", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+      { artefactId: "550e8400-e29b-41d4-a716-446655440000" },
+      { artefactId: "550e8400-e29b-41d4-a716-446655440001" }
+    ] as any);
+    // Second findMany call inside deleteArtefacts (fetches sourceArtefactId)
+    vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([
+      { artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: null },
+      { artefactId: "550e8400-e29b-41d4-a716-446655440001", sourceArtefactId: null }
+    ] as any);
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 });
+
+    const result = await deleteArtefactsByLocationId("123");
+
+    expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+      where: { artefactId: { in: ["550e8400-e29b-41d4-a716-446655440000", "550e8400-e29b-41d4-a716-446655440001"] } }
+    });
+    expect(result).toBe(2);
+  });
+
+  it("should be a no-op when the location has no artefacts", async () => {
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([] as any);
+
+    const result = await deleteArtefactsByLocationId("999");
+
+    expect(prisma.artefact.deleteMany).not.toHaveBeenCalled();
+    expect(result).toBe(0);
   });
 });
 
