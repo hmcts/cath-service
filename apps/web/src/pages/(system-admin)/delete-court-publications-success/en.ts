@@ -1,5 +1,5 @@
 export const en = {
-  pageTitle: "Delete successful",
+  pageTitle: "Delete Successful",
   bannerText: "Court publication(s) has been deleted",
   nextStepsTitle: "What do you want to do next?",
   continueDeleteCourtLink: "Continue deletion of",
