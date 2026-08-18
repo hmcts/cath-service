@@ -10,9 +10,12 @@
   </div>
 
   {% set filterOptionsHtml %}
-    <div class="govuk-form-group">
-      <fieldset class="govuk-fieldset">
-        <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ jurisdictionHeading }}</legend>
+    <div class="filter-section">
+      <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
+        <span class="filter-section-heading">{{ jurisdictionHeading }}</span>
+        <span class="filter-section-icon" aria-hidden="true">−</span>
+      </button>
+      <div id="jurisdiction-section" class="filter-section-content">
         {{ govukCheckboxes({
           name: "jurisdiction",
           classes: "govuk-checkboxes--small",
@@ -22,27 +25,37 @@
         {% for item in jurisdictionItems %}
           {% if subJurisdictionItemsByJurisdiction[item.jurisdictionId].length > 0 %}
             <div class="sub-jurisdiction-section" data-parent-jurisdiction="{{ item.value }}" {% if not item.checked %}hidden{% endif %}>
-              <span class="govuk-heading-s govuk-!-margin-bottom-1 govuk-!-margin-top-2">{{ item.subJurisdictionLabel }}</span>
-              {{ govukCheckboxes({
-                name: "subJurisdiction",
-                classes: "govuk-checkboxes--small",
-                items: subJurisdictionItemsByJurisdiction[item.jurisdictionId]
-              }) }}
+              <div class="filter-section">
+                <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="sub-jurisdiction-section-{{ item.value }}">
+                  <span class="filter-section-heading">{{ item.subJurisdictionLabel }}</span>
+                  <span class="filter-section-icon" aria-hidden="true">−</span>
+                </button>
+                <div id="sub-jurisdiction-section-{{ item.value }}" class="filter-section-content">
+                  {{ govukCheckboxes({
+                    name: "subJurisdiction",
+                    classes: "govuk-checkboxes--small",
+                    items: subJurisdictionItemsByJurisdiction[item.jurisdictionId]
+                  }) }}
+                </div>
+              </div>
             </div>
           {% endif %}
         {% endfor %}
-      </fieldset>
+      </div>
     </div>
 
-    <div class="govuk-form-group">
-      <fieldset class="govuk-fieldset">
-        <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ regionHeading }}</legend>
+    <div class="filter-section">
+      <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="region-section">
+        <span class="filter-section-heading">{{ regionHeading }}</span>
+        <span class="filter-section-icon" aria-hidden="true">−</span>
+      </button>
+      <div id="region-section" class="filter-section-content">
         {{ govukCheckboxes({
           name: "region",
           classes: "govuk-checkboxes--small",
           items: regionItems
         }) }}
-      </fieldset>
+      </div>
     </div>
   {% endset %}
 

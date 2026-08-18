@@ -307,6 +307,25 @@ describe("sjp-public-list template", () => {
       expect($("#filter-search")).toHaveLength(1);
     });
 
+    it("should render the postcode and prosecutor filters as collapsible sections expanded by default", () => {
+      const { $ } = renderList();
+
+      const toggles = $(".filter-section-toggle");
+      expect(toggles).toHaveLength(2);
+      toggles.each((_, el) => {
+        expect($(el).attr("aria-expanded")).toBe("true");
+        expect($(el).find(".filter-section-icon").text()).toBe("▼");
+      });
+
+      const postcodeToggle = $('.filter-section-toggle[aria-controls="postcode-section"]');
+      expect(postcodeToggle.find(".filter-section-heading").text()).toContain(en.common.postcodeFilterHeading);
+      expect($("#postcode-section.filter-section-content #postcodes-checkbox")).toHaveLength(1);
+
+      const prosecutorToggle = $('.filter-section-toggle[aria-controls="prosecutor-section"]');
+      expect(prosecutorToggle.find(".filter-section-heading").text()).toContain(en.common.prosecutorFilterHeading);
+      expect($("#prosecutor-section.filter-section-content #prosecutor-checkbox")).toHaveLength(1);
+    });
+
     it("should include the hidden artefactId field", () => {
       const { $ } = renderList();
 
@@ -363,10 +382,10 @@ describe("sjp-public-list template", () => {
     it("should render the postcode heading", () => {
       const { $ } = renderList();
 
-      const legends = $("legend")
+      const headings = $(".filter-section-heading")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(legends).toContain(en.common.postcodeFilterHeading);
+      expect(headings).toContain(en.common.postcodeFilterHeading);
     });
 
     it("should render a checkbox per postcode area", () => {
@@ -407,10 +426,10 @@ describe("sjp-public-list template", () => {
     it("should render the prosecutor heading", () => {
       const { $ } = renderList();
 
-      const legends = $("legend")
+      const headings = $(".filter-section-heading")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(legends).toContain(en.common.prosecutorFilterHeading);
+      expect(headings).toContain(en.common.prosecutorFilterHeading);
     });
 
     it("should render a checkbox per prosecutor", () => {
@@ -534,11 +553,11 @@ describe("sjp-public-list template", () => {
       expect($(".moj-filter").attr("data-show-text")).toBe(cy.common.showFilters);
       expect($("#filter-panel h2.govuk-heading-m").text()).toContain(cy.common.filterTitle);
       expect($(".moj-filter__selected h2").text()).toContain(cy.common.selectedFilters);
-      const legends = $("legend")
+      const headings = $(".filter-section-heading")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(legends).toContain(cy.common.postcodeFilterHeading);
-      expect(legends).toContain(cy.common.prosecutorFilterHeading);
+      expect(headings).toContain(cy.common.postcodeFilterHeading);
+      expect(headings).toContain(cy.common.prosecutorFilterHeading);
       expect($("#content-area p.govuk-body").text().trim()).toBe(cy.common.noCasesFound);
     });
 

@@ -1,7 +1,9 @@
 // Court listing table + A-Z navigation for the courts-tribunals-list and
-// location-name-search results columns. The mobile filter show/hide is now
-// handled by the MOJ FilterToggleButton + filter-layout object, so the former
-// .filter-column / .courts-column / .mobile-filter-toggle rules are gone.
+// location-name-search results columns, plus the collapsible filter-section
+// styles used by the +/− section toggles in the filter sidebar. The mobile
+// filter show/hide is handled by the MOJ FilterToggleButton + filter-layout
+// object, so the former .filter-column / .courts-column / .mobile-filter-toggle
+// rules are gone.
 .court-table {
   margin-top: 0;
 }
@@ -75,4 +77,83 @@
 
 .az-navigation__letter--disabled {
   color: #b1b4b6;
+}
+
+.filter-section {
+  margin-bottom: 10px;
+}
+
+.filter-section-toggle {
+  width: 100%;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #b1b4b6;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.filter-section-toggle:hover {
+  background-color: #f3f2f1;
+}
+
+.filter-section-toggle:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #fd0;
+  box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+  text-decoration: none;
+}
+
+.filter-section-heading {
+  font-weight: 600;
+}
+
+.filter-section-icon {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+// SJP lists render the section toggle as a blue GOV.UK link (heading + triangle).
+// Scoped via the data-expanded-icon attribute, which only the SJP toggles set,
+// so the −/+ toggles on the other filter pages keep the default black styling.
+// Group the heading and triangle together on the left ("Postcode ▼") instead of
+// pushing the triangle to the far-right edge like the −/+ toggles.
+.filter-section-toggle[data-expanded-icon] {
+  justify-content: flex-start;
+  gap: 5px;
+  border-bottom: none;
+}
+
+.filter-section-toggle[data-expanded-icon] .filter-section-heading,
+.filter-section-toggle[data-expanded-icon] .filter-section-icon {
+  color: #1d70b8;
+}
+
+.filter-section-toggle[data-expanded-icon] .filter-section-heading {
+  text-decoration: underline;
+}
+
+.filter-section-toggle[data-expanded-icon]:hover .filter-section-heading,
+.filter-section-toggle[data-expanded-icon]:hover .filter-section-icon {
+  color: #003078;
+}
+
+// On the GOV.UK yellow focus background the link text must be black, not blue.
+.filter-section-toggle[data-expanded-icon]:focus .filter-section-heading,
+.filter-section-toggle[data-expanded-icon]:focus .filter-section-icon {
+  color: #0b0c0c;
+}
+
+.filter-section-content {
+  margin-top: 15px;
+}
+
+.filter-section-content[hidden] {
+  display: none;
 }

@@ -99,6 +99,17 @@ describe("jurisdiction-data-list template", () => {
 
       expect($("input[name='type']")).toHaveLength(2);
     });
+
+    it("should render the type filter as a collapsible section expanded by default", () => {
+      const { $ } = render(env, TEMPLATE, buildData(en));
+
+      const toggle = $('.filter-section-toggle[aria-controls="type-section"]');
+      expect(toggle).toHaveLength(1);
+      expect(toggle.attr("aria-expanded")).toBe("true");
+      expect(toggle.find(".filter-section-heading").text()).toContain(en.typeHeading);
+      expect(toggle.find(".filter-section-icon").text()).toBe("−");
+      expect($("#type-section.filter-section-content")).toHaveLength(1);
+    });
   });
 
   describe("Results table", () => {

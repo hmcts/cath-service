@@ -301,14 +301,15 @@ describe("sjp-press-list template", () => {
       expect($('label[for="filter-search"]').text()).toContain(en.common.searchLabel);
     });
 
-    it("should render the postcode filter section", () => {
+    it("should render the postcode filter as a collapsible section expanded by default", () => {
       const { $ } = renderList({ showFilter: true, postcodeAreas: ["SW1", "E1", "N1"] });
 
-      const legends = $("legend")
-        .map((_, el) => $(el).text().trim())
-        .get();
-      expect(legends).toContain(en.common.postcodeFilterHeading);
-      expect($("#postcodes-checkbox")).toHaveLength(1);
+      const toggle = $('.filter-section-toggle[aria-controls="postcode-section"]');
+      expect(toggle).toHaveLength(1);
+      expect(toggle.attr("aria-expanded")).toBe("true");
+      expect(toggle.find(".filter-section-heading").text()).toContain(en.common.postcodeFilterHeading);
+      expect(toggle.find(".filter-section-icon").text()).toBe("▼");
+      expect($("#postcode-section.filter-section-content #postcodes-checkbox")).toHaveLength(1);
     });
 
     it("should render a checkbox per postcode area", () => {
@@ -344,14 +345,15 @@ describe("sjp-press-list template", () => {
       expect($("#postcode-london")).toHaveLength(0);
     });
 
-    it("should render the prosecutor filter section", () => {
+    it("should render the prosecutor filter as a collapsible section expanded by default", () => {
       const { $ } = renderList({ showFilter: true, prosecutors: ["CPS", "TfL"] });
 
-      const legends = $("legend")
-        .map((_, el) => $(el).text().trim())
-        .get();
-      expect(legends).toContain(en.common.prosecutorFilterHeading);
-      expect($("#prosecutor-checkbox")).toHaveLength(1);
+      const toggle = $('.filter-section-toggle[aria-controls="prosecutor-section"]');
+      expect(toggle).toHaveLength(1);
+      expect(toggle.attr("aria-expanded")).toBe("true");
+      expect(toggle.find(".filter-section-heading").text()).toContain(en.common.prosecutorFilterHeading);
+      expect(toggle.find(".filter-section-icon").text()).toBe("▼");
+      expect($("#prosecutor-section.filter-section-content #prosecutor-checkbox")).toHaveLength(1);
     });
 
     it("should render a checkbox per prosecutor", () => {
@@ -653,11 +655,11 @@ describe("sjp-press-list template", () => {
       const { $ } = renderList({ showFilter: true, postcodeAreas: ["SW1"], prosecutors: ["CPS"] }, cy);
 
       expect($("#filter-panel h2.govuk-heading-m").text()).toContain(cy.common.filterTitle);
-      const legends = $("legend")
+      const headings = $(".filter-section-heading")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(legends).toContain(cy.common.postcodeFilterHeading);
-      expect(legends).toContain(cy.common.prosecutorFilterHeading);
+      expect(headings).toContain(cy.common.postcodeFilterHeading);
+      expect(headings).toContain(cy.common.prosecutorFilterHeading);
       const applyButton = $("button.govuk-button").filter((_, el) => $(el).text().trim() === cy.common.applyFilters);
       expect(applyButton).toHaveLength(1);
     });

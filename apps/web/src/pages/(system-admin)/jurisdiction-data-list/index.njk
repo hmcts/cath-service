@@ -18,15 +18,18 @@
 </div>
 
 {% set filterOptionsHtml %}
-  <div class="govuk-form-group">
-    <fieldset class="govuk-fieldset">
-      <legend class="govuk-fieldset__legend govuk-fieldset__legend--s">{{ t.typeHeading }}</legend>
+  <div class="filter-section">
+    <button type="button" class="filter-section-toggle" aria-expanded="true" aria-controls="type-section">
+      <span class="filter-section-heading">{{ t.typeHeading }}</span>
+      <span class="filter-section-icon" aria-hidden="true">−</span>
+    </button>
+    <div id="type-section" class="filter-section-content">
       {{ govukCheckboxes({
         name: "type",
         classes: "govuk-checkboxes--small",
         items: typeItems
       }) }}
-    </fieldset>
+    </div>
   </div>
 {% endset %}
 

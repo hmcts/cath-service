@@ -104,6 +104,78 @@ describe("filter-panel", () => {
       });
     });
 
+    describe("collapsible filter sections", () => {
+      it("should collapse a section and swap the icon to + when an expanded toggle is clicked", async () => {
+        // Arrange
+        document.body.innerHTML = `
+          <button class="filter-section-toggle" aria-expanded="true" aria-controls="jurisdiction-section">
+            <span class="filter-section-icon">−</span>
+          </button>
+          <div id="jurisdiction-section" class="filter-section-content"></div>
+        `;
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+        const toggle = document.querySelector(".filter-section-toggle") as HTMLElement;
+        const content = document.getElementById("jurisdiction-section") as HTMLElement;
+        const icon = toggle.querySelector(".filter-section-icon") as HTMLElement;
+
+        // Act
+        toggle.dispatchEvent(new Event("click"));
+
+        // Assert
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+        expect(content.hasAttribute("hidden")).toBe(true);
+        expect(icon.textContent).toBe("+");
+      });
+
+      it("should expand a section and swap the icon to − when a collapsed toggle is clicked", async () => {
+        // Arrange
+        document.body.innerHTML = `
+          <button class="filter-section-toggle" aria-expanded="false" aria-controls="jurisdiction-section">
+            <span class="filter-section-icon">+</span>
+          </button>
+          <div id="jurisdiction-section" class="filter-section-content" hidden></div>
+        `;
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+        const toggle = document.querySelector(".filter-section-toggle") as HTMLElement;
+        const content = document.getElementById("jurisdiction-section") as HTMLElement;
+        const icon = toggle.querySelector(".filter-section-icon") as HTMLElement;
+
+        // Act
+        toggle.dispatchEvent(new Event("click"));
+
+        // Assert
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+        expect(content.hasAttribute("hidden")).toBe(false);
+        expect(icon.textContent).toBe("−");
+      });
+
+      it("should use the custom expanded/collapsed icons when the toggle overrides them", async () => {
+        // Arrange
+        document.body.innerHTML = `
+          <button class="filter-section-toggle" aria-expanded="true" aria-controls="postcode-section" data-expanded-icon="▼" data-collapsed-icon="▶">
+            <span class="filter-section-icon">▼</span>
+          </button>
+          <div id="postcode-section" class="filter-section-content"></div>
+        `;
+        const { initFilterPanel } = await import("./filter-panel.js");
+        initFilterPanel();
+        const toggle = document.querySelector(".filter-section-toggle") as HTMLElement;
+        const icon = toggle.querySelector(".filter-section-icon") as HTMLElement;
+
+        // Act
+        toggle.dispatchEvent(new Event("click"));
+        // Assert
+        expect(icon.textContent).toBe("▶");
+
+        // Act
+        toggle.dispatchEvent(new Event("click"));
+        // Assert
+        expect(icon.textContent).toBe("▼");
+      });
+    });
+
     describe("initialization", () => {
       it("should not throw when no filter elements are present", async () => {
         // Arrange

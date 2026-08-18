@@ -102,6 +102,34 @@ describe("courts-tribunals-list template", () => {
       expect($.root().text()).toContain(en.backToTop);
     });
 
+    it("should render collapsible filter sections expanded by default with a +/- toggle", () => {
+      const data = buildData(en, "en");
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const toggles = $(".filter-section-toggle");
+      expect(toggles).toHaveLength(3);
+      toggles.each((_, el) => {
+        expect($(el).attr("aria-expanded")).toBe("true");
+        expect($(el).find(".filter-section-icon").text()).toBe("−");
+      });
+
+      const jurisdictionToggle = $('.filter-section-toggle[aria-controls="jurisdiction-section"]');
+      expect(jurisdictionToggle).toHaveLength(1);
+      expect(jurisdictionToggle.find(".filter-section-heading").text()).toContain(en.jurisdictionHeading);
+      expect($("#jurisdiction-section.filter-section-content")).toHaveLength(1);
+
+      const subJurisdictionToggle = $('.filter-section-toggle[aria-controls="sub-jurisdiction-section-1"]');
+      expect(subJurisdictionToggle).toHaveLength(1);
+      expect(subJurisdictionToggle.find(".filter-section-heading").text()).toContain("Type of civil court");
+      expect($("#sub-jurisdiction-section-1.filter-section-content")).toHaveLength(1);
+
+      const regionToggle = $('.filter-section-toggle[aria-controls="region-section"]');
+      expect(regionToggle).toHaveLength(1);
+      expect(regionToggle.find(".filter-section-heading").text()).toContain(en.regionHeading);
+      expect($("#region-section.filter-section-content")).toHaveLength(1);
+    });
+
     it("should render the MOJ filter component and its layout containers", () => {
       const data = buildData(en, "en");
 
