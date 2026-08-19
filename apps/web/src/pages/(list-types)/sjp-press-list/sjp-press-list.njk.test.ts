@@ -175,42 +175,73 @@ describe("sjp-press-list template", () => {
   });
 
   describe("Filter toggle", () => {
-    it("should label the toggle 'Show filters' when no filters are active", () => {
+    // The show/hide toggle button is created at runtime by the MOJ FilterToggleButton
+    // and appended to .moj-action-bar__filter; the template only renders the empty
+    // container and the panel's start-hidden state via data attributes.
+    it("should render the action-bar container the toggle button is appended into", () => {
       const { $ } = renderList();
 
-      expect($("#filter-toggle").text().trim()).toBe(en.common.showFilters);
+      expect($(".moj-action-bar__filter")).toHaveLength(1);
     });
 
-    it("should label the toggle 'Hide filters' when showFilter is true", () => {
+    it("should start the panel hidden when no filters are active", () => {
+      const { $ } = renderList();
+
+      expect($(".moj-filter").attr("data-start-hidden")).toBe("true");
+    });
+
+    it("should not start the panel hidden when showFilter is true", () => {
       const { $ } = renderList({ showFilter: true });
 
-      expect($("#filter-toggle").text().trim()).toBe(en.common.hideFilters);
+      expect($(".moj-filter").attr("data-start-hidden")).toBe("false");
     });
 
-    it("should label the toggle 'Hide filters' when postcode filters are active", () => {
+    it("should not start the panel hidden when postcode filters are active", () => {
       const { $ } = renderList({ filters: { postcodes: ["SW1"], prosecutors: [] } });
 
-      expect($("#filter-toggle").text().trim()).toBe(en.common.hideFilters);
+      expect($(".moj-filter").attr("data-start-hidden")).toBe("false");
     });
 
-    it("should label the toggle 'Hide filters' when prosecutor filters are active", () => {
+    it("should not start the panel hidden when prosecutor filters are active", () => {
       const { $ } = renderList({ filters: { postcodes: [], prosecutors: ["CPS"] } });
 
-      expect($("#filter-toggle").text().trim()).toBe(en.common.hideFilters);
+      expect($(".moj-filter").attr("data-start-hidden")).toBe("false");
     });
   });
 
   describe("Filter panel", () => {
-    it("should mark the filter panel hidden when no filters are active", () => {
+    it("should render the MOJ filter component inside the filter-layout", () => {
       const { $ } = renderList();
 
-      expect($("#filter-panel").hasClass("hidden")).toBe(true);
+      expect($(".moj-filter[data-module='moj-filter']")).toHaveLength(1);
+      expect($("#filter-panel").hasClass("moj-filter-layout__filter")).toBe(true);
+      // Marks this as a toggle-to-reveal page: CSS hides MOJ's injected close button
+      // (redundant with the Show/Hide toggle above the box) and narrows the panel.
+      expect($(".moj-filter-layout.app-filter-layout--reveal")).toHaveLength(1);
     });
 
-    it("should not hide the filter panel when showFilter is true", () => {
+    it("should start hidden and toggle on all viewports when no filters are active", () => {
+      const { $ } = renderList();
+
+      const filter = $(".moj-filter");
+      expect(filter.attr("data-start-hidden")).toBe("true");
+      // A never-matching big-mode query keeps the SJP "Show filters" reveal on all viewports.
+      expect(filter.attr("data-big-mode-media-query")).toContain("99999px");
+    });
+
+    it("should not start hidden when showFilter is true", () => {
       const { $ } = renderList({ showFilter: true });
 
-      expect($("#filter-panel").hasClass("hidden")).toBe(false);
+      expect($(".moj-filter").attr("data-start-hidden")).toBe("false");
+    });
+
+    it("should expose show/hide text via data attributes without interpolating into JS", () => {
+      const { $ } = renderList();
+
+      const filter = $(".moj-filter");
+      expect(filter.attr("data-show-text")).toBe(en.common.showFilters);
+      expect(filter.attr("data-hide-text")).toBe(en.common.hideFilters);
+      expect($("script").text()).not.toContain(en.common.hideFilters);
     });
 
     it("should render the filter title and apply button", () => {
@@ -224,7 +255,7 @@ describe("sjp-press-list template", () => {
     it("should render the selected filters heading and clear filters link", () => {
       const { $ } = renderList({ showFilter: true });
 
-      expect($("h3.govuk-heading-s").text()).toContain(en.common.selectedFilters);
+      expect($(".moj-filter__selected h2").text()).toContain(en.common.selectedFilters);
       const clearLink = $('a[href="?artefactId=test-artefact-123&showFilter=true"]');
       expect(clearLink).toHaveLength(1);
       expect(clearLink.text()).toContain(en.common.clearFilters);
@@ -233,19 +264,18 @@ describe("sjp-press-list template", () => {
     it("should render active postcode filter tags", () => {
       const { $ } = renderList({ filters: { postcodes: ["SW1", "E1"], prosecutors: [] } });
 
-      const tags = $(".filter-tag")
+      const tags = $(".moj-filter__tag")
         .map((_, el) => $(el).text().trim())
         .get();
       expect(tags).toHaveLength(2);
       expect(tags[0]).toContain("SW1");
       expect(tags[1]).toContain("E1");
-      expect($(".filter-tag-remove")).toHaveLength(2);
     });
 
     it("should render active prosecutor filter tags", () => {
       const { $ } = renderList({ filters: { postcodes: [], prosecutors: ["CPS", "TfL"] } });
 
-      const tags = $(".filter-tag")
+      const tags = $(".moj-filter__tag")
         .map((_, el) => $(el).text().trim())
         .get();
       expect(tags).toHaveLength(2);
@@ -256,9 +286,10 @@ describe("sjp-press-list template", () => {
     it("should render filter tags with an accessible remove link", () => {
       const { $ } = renderList({ filters: { postcodes: ["SW1"], prosecutors: [] } });
 
-      const removeLink = $('a[aria-label="Remove SW1 filter"]');
-      expect(removeLink).toHaveLength(1);
-      expect(removeLink.hasClass("filter-tag-remove")).toBe(true);
+      const tag = $(".moj-filter__tag");
+      expect(tag).toHaveLength(1);
+      expect(tag.text()).toContain("SW1");
+      expect(tag.find(".govuk-visually-hidden").text()).toContain("Remove this filter");
     });
 
     it("should render the search input with its label", () => {
@@ -270,11 +301,15 @@ describe("sjp-press-list template", () => {
       expect($('label[for="filter-search"]').text()).toContain(en.common.searchLabel);
     });
 
-    it("should render the postcode filter section", () => {
+    it("should render the postcode filter as a collapsible section expanded by default", () => {
       const { $ } = renderList({ showFilter: true, postcodeAreas: ["SW1", "E1", "N1"] });
 
-      expect($("#postcodes-anchor").text()).toContain(en.common.postcodeFilterHeading);
-      expect($("#postcodes-checkbox")).toHaveLength(1);
+      const toggle = $('.filter-section-toggle[aria-controls="postcode-section"]');
+      expect(toggle).toHaveLength(1);
+      expect(toggle.attr("aria-expanded")).toBe("true");
+      expect(toggle.find(".filter-section-heading").text()).toContain(en.common.postcodeFilterHeading);
+      expect(toggle.find(".filter-section-icon").text()).toBe("▼");
+      expect($("#postcode-section.filter-section-content #postcodes-checkbox")).toHaveLength(1);
     });
 
     it("should render a checkbox per postcode area", () => {
@@ -310,11 +345,15 @@ describe("sjp-press-list template", () => {
       expect($("#postcode-london")).toHaveLength(0);
     });
 
-    it("should render the prosecutor filter section", () => {
+    it("should render the prosecutor filter as a collapsible section expanded by default", () => {
       const { $ } = renderList({ showFilter: true, prosecutors: ["CPS", "TfL"] });
 
-      expect($("#prosecutor-anchor").text()).toContain(en.common.prosecutorFilterHeading);
-      expect($("#prosecutor-checkbox")).toHaveLength(1);
+      const toggle = $('.filter-section-toggle[aria-controls="prosecutor-section"]');
+      expect(toggle).toHaveLength(1);
+      expect(toggle.attr("aria-expanded")).toBe("true");
+      expect(toggle.find(".filter-section-heading").text()).toContain(en.common.prosecutorFilterHeading);
+      expect(toggle.find(".filter-section-icon").text()).toBe("▼");
+      expect($("#prosecutor-section.filter-section-content #prosecutor-checkbox")).toHaveLength(1);
     });
 
     it("should render a checkbox per prosecutor", () => {
@@ -591,22 +630,13 @@ describe("sjp-press-list template", () => {
     });
   });
 
-  describe("Client-side scripts", () => {
-    it("should render the filter toggle script under the CSP nonce", () => {
+  describe("Client-side behaviour", () => {
+    it("should not emit any bespoke inline filter script (toggle is now the MOJ bundle)", () => {
       const { $ } = renderList();
 
-      const script = $('script[nonce="test-nonce-12345"]').filter((_, el) => $(el).text().includes("filterToggle"));
-      expect(script).toHaveLength(1);
-      expect(script.text()).toContain("filterPanel");
-    });
-
-    it("should render the collapsible filter sections script", () => {
-      const { $ } = renderList();
-
-      const script = $('script[nonce="test-nonce-12345"]').filter((_, el) => $(el).text().includes("setupFilterToggle"));
-      expect(script).toHaveLength(1);
-      expect(script.text()).toContain("postcodes-anchor");
-      expect(script.text()).toContain("prosecutor-anchor");
+      const scriptText = $("script").text();
+      expect(scriptText).not.toContain("filterToggle");
+      expect(scriptText).not.toContain("setupFilterToggle");
     });
   });
 
@@ -625,8 +655,11 @@ describe("sjp-press-list template", () => {
       const { $ } = renderList({ showFilter: true, postcodeAreas: ["SW1"], prosecutors: ["CPS"] }, cy);
 
       expect($("#filter-panel h2.govuk-heading-m").text()).toContain(cy.common.filterTitle);
-      expect($("#postcodes-anchor").text()).toContain(cy.common.postcodeFilterHeading);
-      expect($("#prosecutor-anchor").text()).toContain(cy.common.prosecutorFilterHeading);
+      const headings = $(".filter-section-heading")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headings).toContain(cy.common.postcodeFilterHeading);
+      expect(headings).toContain(cy.common.prosecutorFilterHeading);
       const applyButton = $("button.govuk-button").filter((_, el) => $(el).text().trim() === cy.common.applyFilters);
       expect(applyButton).toHaveLength(1);
     });

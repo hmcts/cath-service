@@ -1,11 +1,28 @@
+// MOJ Frontend selectively @use'd before govuk-frontend's index: the MOJ vendor
+// layer configures the shared govuk "base" module with `with (...)`, which Sass
+// only allows before that module is first loaded. govuk-frontend's index then
+// @forwards the same (already configured) base module without `with`, which is
+// permitted. Only the filter component and its layout object are pulled in to
+// avoid re-asserting GDS defaults over the rebrand overrides further down.
+@use "@ministryofjustice/frontend/moj/components/filter/filter";
+@use "@ministryofjustice/frontend/moj/objects/filter-layout";
+// The filter toggle (FilterToggleButton) shows/hides the panel by toggling
+// `.moj-js-hidden`, which lives in MOJ's hidden utility — without this @use the
+// class has no rule and the panel can never hide (breaks the SJP show/hide).
+@use "@ministryofjustice/frontend/moj/utilities/hidden";
 @use "govuk-frontend/dist/govuk/index";
+// The MOJ vendor layer above configures the shared govuk "base" module with
+// $govuk-include-default-font-face: false, which suppresses GOV.UK's GDS Transport
+// @font-face for the whole stylesheet (govuk helpers/_typography.scss gates on that flag).
+// The gds-transport mixin is re-included below (after all @use rules) to re-emit them.
+@use "govuk-frontend/dist/govuk/helpers/font-faces--internal" as govuk-font-faces;
+@use "./filter-overrides.scss";
 @use "./search-autocomplete.scss";
 @use "./filter-panel.scss";
 @use "./back-to-top.scss";
 @use "./button-as-link.scss";
 @use "./admin-pages.scss" as admin;
 @use "./dashboard.scss";
-@use "./user-management.scss";
 @use "./verified-pages.scss" as verified;
 @use "./session-timeout.scss";
 @use "./list-types/et-lists.scss";
@@ -15,8 +32,20 @@
 @use "./list-types/sjp-filters.scss";
 @use "./list-types/sjp-public-list.scss";
 
+// Re-emit GOV.UK's GDS Transport @font-face, suppressed by the MOJ base config above.
+// Without this the whole site falls back to Arial. Idempotent (govuk-exports guarded).
+@include govuk-font-faces.gds-transport;
+
 .govuk-service-navigation__navigation-end {
   margin-left: auto !important;
+}
+
+// Let long unbroken cell values (e.g. email addresses, which have no spaces to
+// wrap at) break to fit their column. Used on the find-users results table, whose
+// email column would otherwise force the table wider than the MOJ filter-layout
+// content area and trigger a horizontal scrollbar.
+.app-wrap-anywhere {
+  overflow-wrap: anywhere;
 }
 
 // A <button> styled to look like a link, used for in-table actions (Remove /

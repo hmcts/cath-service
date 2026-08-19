@@ -5,7 +5,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
-{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "moj/components/filter/macro.njk" import mojFilter %}
 
 {% block backLink %}
 <a href="/system-admin-dashboard{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-back-link">{{ backLink }}</a>
@@ -26,147 +26,115 @@
   </div>
 </div>
 
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-one-third">
-    <div class="user-management-filter-wrapper">
-      <div class="user-management-filter-section user-management-filter-header">
-        <h2 class="govuk-heading-l govuk-!-margin-bottom-0">{{ filterHeading }}</h2>
-      </div>
-      {% if hasFilters %}
-        <div class="user-management-filter-section user-management-selected-filters">
-          <h3 class="govuk-heading-m">{{ selectedFiltersHeading }}</h3>
-          {% for group in selectedFilterGroups %}
-            <h4 class="govuk-heading-s">{{ group.heading }}</h4>
-            <div class="user-management-filter-tags">
-              {% for tag in group.tags %}
-                {% set tagHtml = (tag.label | escape) + ' <span class="user-management-filter-tag-remove">×</span>' %}
-                <a href="{{ tag.removeUrl }}" class="user-management-filter-tag-link">
-                  {{ govukTag({
-                    html: tagHtml,
-                    classes: "user-management-filter-tag"
-                  }) }}
-                  <span class="govuk-visually-hidden">Remove filter: {{ tag.label }}</span>
-                </a>
-              {% endfor %}
-            </div>
-          {% endfor %}
-          <p class="govuk-!-margin-top-3">
-            <a href="/find-users/clear-filters{% if lng %}?lng={{ lng }}{% endif %}" class="govuk-link">{{ clearFiltersButton }}</a>
-          </p>
-        </div>
-      {% endif %}
-      <div class="user-management-filter-section">
-        <form method="post" novalidate>
-      {{ govukInput({
-        label: {
-          text: emailLabel,
-          classes: "govuk-label--m"
-        },
-        id: "email",
-        name: "email",
-        type: "email",
-        value: filters.email
-      }) }}
+{% set filterOptionsHtml %}
+  {{ govukInput({
+    label: {
+      text: emailLabel,
+      classes: "govuk-label--s"
+    },
+    id: "email",
+    name: "email",
+    type: "email",
+    value: filters.email
+  }) }}
 
-      {{ govukInput({
-        label: {
-          text: userIdLabel,
-          classes: "govuk-label--m"
-        },
-        hint: {
-          text: userIdHint
-        },
-        id: "userId",
-        name: "userId",
-        value: filters.userId
-      }) }}
+  {{ govukInput({
+    label: {
+      text: userIdLabel,
+      classes: "govuk-label--s"
+    },
+    hint: {
+      text: userIdHint
+    },
+    id: "userId",
+    name: "userId",
+    value: filters.userId
+  }) }}
 
-      {{ govukInput({
-        label: {
-          text: userProvenanceIdLabel,
-          classes: "govuk-label--m"
-        },
-        hint: {
-          text: userProvenanceIdHint
-        },
-        id: "userProvenanceId",
-        name: "userProvenanceId",
-        value: filters.userProvenanceId
-      }) }}
+  {{ govukInput({
+    label: {
+      text: userProvenanceIdLabel,
+      classes: "govuk-label--s"
+    },
+    hint: {
+      text: userProvenanceIdHint
+    },
+    id: "userProvenanceId",
+    name: "userProvenanceId",
+    value: filters.userProvenanceId
+  }) }}
 
-      {{ govukCheckboxes({
-        name: "roles",
-        fieldset: {
-          legend: {
-            text: rolesLabel,
-            classes: "govuk-fieldset__legend--m"
-          }
-        },
-        items: [
-          {
-            value: "VERIFIED",
-            text: roleVerified,
-            checked: filters.roles and "VERIFIED" in filters.roles
-          },
-          {
-            value: "INTERNAL_ADMIN_CTSC",
-            text: roleCtscAdmin,
-            checked: filters.roles and "INTERNAL_ADMIN_CTSC" in filters.roles
-          },
-          {
-            value: "INTERNAL_ADMIN_LOCAL",
-            text: roleLocalAdmin,
-            checked: filters.roles and "INTERNAL_ADMIN_LOCAL" in filters.roles
-          },
-          {
-            value: "SYSTEM_ADMIN",
-            text: roleSystemAdmin,
-            checked: filters.roles and "SYSTEM_ADMIN" in filters.roles
-          }
-        ]
-      }) }}
+  {{ govukCheckboxes({
+    name: "roles",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: rolesLabel,
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: [
+      { value: "VERIFIED", text: roleVerified, checked: filters.roles and "VERIFIED" in filters.roles },
+      { value: "INTERNAL_ADMIN_CTSC", text: roleCtscAdmin, checked: filters.roles and "INTERNAL_ADMIN_CTSC" in filters.roles },
+      { value: "INTERNAL_ADMIN_LOCAL", text: roleLocalAdmin, checked: filters.roles and "INTERNAL_ADMIN_LOCAL" in filters.roles },
+      { value: "SYSTEM_ADMIN", text: roleSystemAdmin, checked: filters.roles and "SYSTEM_ADMIN" in filters.roles }
+    ]
+  }) }}
 
-      {{ govukCheckboxes({
-        name: "provenances",
-        fieldset: {
-          legend: {
-            text: provenanceLabel,
-            classes: "govuk-fieldset__legend--m"
-          }
-        },
-        items: [
-          {
-            value: "CFT_IDAM",
-            text: provenanceCftIdam,
-            checked: filters.provenances and "CFT_IDAM" in filters.provenances
-          },
-          {
-            value: "SSO",
-            text: provenanceSso,
-            checked: filters.provenances and "SSO" in filters.provenances
-          },
-          {
-            value: "B2C_IDAM",
-            text: provenanceB2c,
-            checked: filters.provenances and "B2C_IDAM" in filters.provenances
-          },
-          {
-            value: "CRIME_IDAM",
-            text: provenanceCrimeIdam,
-            checked: filters.provenances and "CRIME_IDAM" in filters.provenances
-          }
-        ]
-      }) }}
+  {{ govukCheckboxes({
+    name: "provenances",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: provenanceLabel,
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: [
+      { value: "CFT_IDAM", text: provenanceCftIdam, checked: filters.provenances and "CFT_IDAM" in filters.provenances },
+      { value: "SSO", text: provenanceSso, checked: filters.provenances and "SSO" in filters.provenances },
+      { value: "B2C_IDAM", text: provenanceB2c, checked: filters.provenances and "B2C_IDAM" in filters.provenances },
+      { value: "CRIME_IDAM", text: provenanceCrimeIdam, checked: filters.provenances and "CRIME_IDAM" in filters.provenances }
+    ]
+  }) }}
+{% endset %}
 
-        {{ govukButton({
-          text: applyFiltersButton
-        }) }}
-        </form>
-      </div>
-    </div>
+{% set selectedCategories = [] %}
+{% for group in selectedFilterGroups %}
+  {% set groupItems = [] %}
+  {% for tag in group.tags %}
+    {% set groupItems = (groupItems.push({ text: tag.label, href: tag.removeUrl }), groupItems) %}
+  {% endfor %}
+  {% set selectedCategories = (selectedCategories.push({ heading: { text: group.heading }, items: groupItems }), selectedCategories) %}
+{% endfor %}
+
+<div class="moj-filter-layout app-filter-layout--sidebar">
+  <div class="moj-filter-layout__filter">
+    <form method="post" novalidate>
+      {{ mojFilter({
+        heading: { text: filterHeading },
+        submit: { text: applyFiltersButton },
+        selectedFilters: {
+          heading: { text: selectedFiltersHeading },
+          clearLink: { href: "/find-users/clear-filters" + ("?lng=" + lng if lng else ""), text: clearFiltersButton },
+          categories: selectedCategories
+        },
+        optionsHtml: filterOptionsHtml,
+        attributes: {
+          "data-show-text": showFilters,
+          "data-hide-text": hideFilters,
+          "data-close-text": hideFilters,
+          "data-start-hidden": "false"
+        }
+      }) }}
+    </form>
   </div>
 
-  <div class="govuk-grid-column-two-thirds">
+  <div class="moj-filter-layout__content">
+    <div class="moj-action-bar">
+      <div class="moj-action-bar__filter"></div>
+    </div>
+
     {% if totalCount > 0 %}
       <p class="govuk-body">{{ resultsCount(totalCount) }}</p>
 

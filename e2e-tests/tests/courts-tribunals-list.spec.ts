@@ -235,8 +235,9 @@ test.describe("Courts and Tribunals List Page", () => {
     test("should display filter panel with jurisdictions and regions", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
-      // Check filter heading is visible (it's an h2)
-      const filterHeading = page.locator('h2:has-text("Filter")');
+      // Check filter heading is visible (MOJ renders the panel heading and the
+      // "Selected filters" heading both as h2, so match the exact filter title).
+      const filterHeading = page.getByRole("heading", { name: "Filter", exact: true });
       await expect(filterHeading).toBeVisible();
 
       // Check jurisdiction section is visible
@@ -299,7 +300,7 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(page.url()).toContain("region=1");
 
       // Verify selected filter tag appears
-      const filterTag = page.locator(".filter-tag");
+      const filterTag = page.locator(".moj-filter__tag");
       await expect(filterTag.first()).toBeVisible();
     });
 
@@ -349,23 +350,22 @@ test.describe("Courts and Tribunals List Page", () => {
       expect(page.url()).toContain("subJurisdiction=");
     });
 
-    test("should remove filter when filter tag close button is clicked @nightly", async ({ page }) => {
+    test("should remove filter when the MOJ filter tag is clicked @nightly", async ({ page }) => {
       // Start with a filter already applied
       await page.goto("/courts-tribunals-list?region=1");
 
-      // Verify filter tag is visible
-      const filterTag = page.locator(".filter-tag");
+      // The whole MOJ filter tag is the remove link (with a visually-hidden
+      // "Remove this filter" label).
+      const filterTag = page.locator(".moj-filter__tag");
       await expect(filterTag.first()).toBeVisible();
 
-      // Click the remove button on the filter tag
-      const removeButton = filterTag.locator(".filter-tag-remove").first();
-      await removeButton.click();
+      await filterTag.first().click();
 
       // Verify navigation to page without filter
       await expect(page).toHaveURL("/courts-tribunals-list");
 
-      // Verify filter tag is no longer visible
-      await expect(filterTag.first()).toBeHidden();
+      // Verify filter tag is no longer present
+      await expect(page.locator(".moj-filter__tag")).toHaveCount(0);
     });
 
     test("should clear all filters when clear filters link is clicked @nightly", async ({ page }) => {
@@ -380,30 +380,13 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(page).toHaveURL("/courts-tribunals-list");
     });
 
-    test("should collapse and expand filter sections @nightly", async ({ page }) => {
+    test("should render the MOJ filter panel with its jurisdiction and region controls @nightly", async ({ page }) => {
       await page.goto("/courts-tribunals-list");
 
-      // Find a collapsible section toggle button
-      const toggleButton = page.locator(".filter-section-toggle").first();
-      await expect(toggleButton).toBeVisible();
-
-      // Get initial aria-expanded state
-      const initialState = await toggleButton.getAttribute("aria-expanded");
-      expect(initialState).toBe("true");
-
-      // Click to collapse
-      await toggleButton.click();
-
-      // Verify section is collapsed
-      const collapsedState = await toggleButton.getAttribute("aria-expanded");
-      expect(collapsedState).toBe("false");
-
-      // Click to expand again
-      await toggleButton.click();
-
-      // Verify section is expanded
-      const expandedState = await toggleButton.getAttribute("aria-expanded");
-      expect(expandedState).toBe("true");
+      // The MOJ filter component renders the panel with its heading and controls.
+      await expect(page.locator(".moj-filter")).toBeVisible();
+      await expect(page.locator('input[name="jurisdiction"]').first()).toBeVisible();
+      await expect(page.locator('input[name="region"]').first()).toBeVisible();
     });
 
     test("should maintain accessibility with filters applied @nightly", async ({ page }) => {
@@ -462,7 +445,7 @@ test.describe("Courts and Tribunals List Page", () => {
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
       // Check that multiple filter tags are visible
-      const filterTags = page.locator(".filter-tag");
+      const filterTags = page.locator(".moj-filter__tag");
       const tagCount = await filterTags.count();
       expect(tagCount).toBeGreaterThanOrEqual(2);
     });

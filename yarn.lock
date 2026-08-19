@@ -1789,6 +1789,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/financial-list-chd-kb-daily-cause-list@workspace:*, @hmcts/financial-list-chd-kb-daily-cause-list@workspace:libs/list-types/financial-list-chd-kb-daily-cause-list":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/financial-list-chd-kb-daily-cause-list@workspace:libs/list-types/financial-list-chd-kb-daily-cause-list"
+  dependencies:
+    "@hmcts/chd-kb-common": "workspace:*"
+    "@hmcts/list-types-common": "workspace:*"
+    "@hmcts/pdf-generation": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/luxon": "npm:3.7.1"
+    "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
+    luxon: "npm:3.7.2"
+    nunjucks: "npm:3.2.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  peerDependencies:
+    express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:*, @hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list@workspace:libs/list-types/ftt-lands-registration-tribunal-weekly-hearing-list"
@@ -2060,6 +2080,7 @@ __metadata:
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
@@ -2203,6 +2224,7 @@ __metadata:
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/excel-generation": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
@@ -2590,6 +2612,7 @@ __metadata:
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"
+    "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*"
     "@hmcts/iac-daily-list": "workspace:*"
     "@hmcts/interim-applications-chd-daily-cause-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
@@ -2613,6 +2636,7 @@ __metadata:
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@ministryofjustice/frontend": "npm:10.0.1"
     "@types/config": "npm:4.4.0"
     "@types/cookie-parser": "npm:1.4.10"
     "@types/express": "npm:5.0.6"
@@ -2637,7 +2661,7 @@ __metadata:
     pg: "npm:8.21.0"
     pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
-    sass: "npm:1.101.0"
+    sass: "npm:1.102.0"
     supertest: "npm:7.2.2"
     typescript: "npm:6.0.3"
     vite: "npm:7.3.6"
@@ -2770,6 +2794,16 @@ __metadata:
     stream-browserify:
       optional: true
   checksum: 10c0/0e5b3dd469be0606ba34a82464d18a8c919f396adf65756612e9ec0bb47c99c4c3eaf5d65eec953e2c6f5b79e48e003efe914adbfc8b741d098e8e8f7084ea8b
+  languageName: node
+  linkType: hard
+
+"@ministryofjustice/frontend@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@ministryofjustice/frontend@npm:10.0.1"
+  peerDependencies:
+    govuk-frontend: ^6.0.0
+    moment: 2.30.1
+  checksum: 10c0/ec895678d17ca70e966b8313cdf120e1d56cc4cf44f8832d085a0dfc8648ddb92cbe000941453b1d331808a9fc056c3682637d24e6bea7c788264f64466a3db8
   languageName: node
   linkType: hard
 
@@ -4407,44 +4441,44 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@turbo/darwin-64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/darwin-64@npm:2.9.18"
+"@turbo/darwin-64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/darwin-64@npm:2.10.9"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@turbo/darwin-arm64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/darwin-arm64@npm:2.9.18"
+"@turbo/darwin-arm64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/darwin-arm64@npm:2.10.9"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@turbo/linux-64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/linux-64@npm:2.9.18"
-  conditions: os=linux & cpu=x64
+"@turbo/linux-64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/linux-64@npm:2.10.9"
+  conditions: (os=android | os=linux) & cpu=x64
   languageName: node
   linkType: hard
 
-"@turbo/linux-arm64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/linux-arm64@npm:2.9.18"
-  conditions: os=linux & cpu=arm64
+"@turbo/linux-arm64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/linux-arm64@npm:2.10.9"
+  conditions: (os=android | os=linux) & cpu=arm64
   languageName: node
   linkType: hard
 
-"@turbo/windows-64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/windows-64@npm:2.9.18"
+"@turbo/windows-64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/windows-64@npm:2.10.9"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@turbo/windows-arm64@npm:2.9.18":
-  version: 2.9.18
-  resolution: "@turbo/windows-arm64@npm:2.9.18"
+"@turbo/windows-arm64@npm:2.10.9":
+  version: 2.10.9
+  resolution: "@turbo/windows-arm64@npm:2.10.9"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -4598,6 +4632,13 @@ __metadata:
     "@types/ms": "npm:*"
     "@types/node": "npm:*"
   checksum: 10c0/0688ac8fb75f809201cb7e18a12b9d80ce539cb9dd27e1b01e11807cb1a337059e899b8ee3abc3f2c9417f02e363a3069d9eab9ef9724b1da1f0e10713514f94
+  languageName: node
+  linkType: hard
+
+"@types/luxon@npm:3.7.1":
+  version: 3.7.1
+  resolution: "@types/luxon@npm:3.7.1"
+  checksum: 10c0/2db30c13b58adcd86daa447faa3ba59515fe907ead8ee3e6bb716d662812af0619d712f6c1eb190cdd7f9d2c00444c3ecd80af0f36e8143eb0c5e7339d6b2aca
   languageName: node
   linkType: hard
 
@@ -5697,7 +5738,7 @@ __metadata:
     pg: "npm:8.21.0"
     supertest: "npm:7.2.2"
     tsx: "npm:4.22.4"
-    turbo: "npm:2.9.18"
+    turbo: "npm:2.10.9"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
     yaml: "npm:2.9.0"
@@ -9632,9 +9673,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:1.101.0":
-  version: 1.101.0
-  resolution: "sass@npm:1.101.0"
+"sass@npm:1.102.0":
+  version: 1.102.0
+  resolution: "sass@npm:1.102.0"
   dependencies:
     "@parcel/watcher": "npm:^2.4.1"
     chokidar: "npm:^5.0.0"
@@ -9645,7 +9686,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: 10c0/1fbbcef2f767dec4d97773a2a084f4e1ef2e4abecf574e08743e52237069f1129a6b43b07b5c23aa3bcbf395509e40db758d9748a07940da227aa1626329a74d
+  checksum: 10c0/77c05a0d14dc05653e98978c4f1cc6754254fcbf6cba71f111bc49c0c69477f3f9e180f99c65641d19a23b964d6039ef116191700144ebefc1709a5b6d5899b1
   languageName: node
   linkType: hard
 
@@ -10252,16 +10293,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo@npm:2.9.18":
-  version: 2.9.18
-  resolution: "turbo@npm:2.9.18"
+"turbo@npm:2.10.9":
+  version: 2.10.9
+  resolution: "turbo@npm:2.10.9"
   dependencies:
-    "@turbo/darwin-64": "npm:2.9.18"
-    "@turbo/darwin-arm64": "npm:2.9.18"
-    "@turbo/linux-64": "npm:2.9.18"
-    "@turbo/linux-arm64": "npm:2.9.18"
-    "@turbo/windows-64": "npm:2.9.18"
-    "@turbo/windows-arm64": "npm:2.9.18"
+    "@turbo/darwin-64": "npm:2.10.9"
+    "@turbo/darwin-arm64": "npm:2.10.9"
+    "@turbo/linux-64": "npm:2.10.9"
+    "@turbo/linux-arm64": "npm:2.10.9"
+    "@turbo/windows-64": "npm:2.10.9"
+    "@turbo/windows-arm64": "npm:2.10.9"
   dependenciesMeta:
     "@turbo/darwin-64":
       optional: true
@@ -10277,7 +10318,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: 10c0/e9fd8565dc49d62d878a0eff4542316bce0dc8d255df0f78372bed8c6f118378b33d760030927bc9d68bb911ecc4a5f79faf840a9c71675c34e5efa4dea343fa
+  checksum: 10c0/0e60e745ae954cd1dfb6f263714ffa280651e2540aaa6d16b77dd3d8144f05a707c094623eb5540b75f62fee30af30636da18d9abdd5a68c31ee52f6892bbb71
   languageName: node
   linkType: hard
 

@@ -30,6 +30,10 @@ import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail 
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
 import {
+  extractCaseSummary as extractFinancialListChdKbSummary,
+  formatCaseSummaryForEmail as formatFinancialListChdKbSummaryForEmail
+} from "@hmcts/financial-list-chd-kb-daily-cause-list";
+import {
   extractCaseSummary as extractFttLrtSummary,
   formatCaseSummaryForEmail as formatFttLrtSummaryForEmail
 } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
@@ -202,6 +206,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST: {
     extract: extractInterimApplicationsChdSummary as SummaryExtractor,
     format: formatInterimApplicationsChdSummaryForEmail
+  },
+  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
+    extract: extractFinancialListChdKbSummary as SummaryExtractor,
+    format: formatFinancialListChdKbSummaryForEmail
   },
   CROWN_DAILY_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,

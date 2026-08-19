@@ -7,6 +7,8 @@ export const cy = {
   clearFilters: "Clirio hidlwyr",
   typeHeading: "Math",
   applyFiltersButton: "Cadarnhau hidlwyr",
+  showFilters: "Dangos hidlwyr",
+  hideFilters: "Cuddio hidlwyr",
   typeLabels: {
     Jurisdiction: "Awdurdodaeth",
     "Sub-Jurisdiction": "Is-awdurdodaeth"
