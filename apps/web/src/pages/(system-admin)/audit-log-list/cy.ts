@@ -13,6 +13,8 @@ export const cy = {
     selectedFilters: "Hidlyddion a ddewiswyd",
     clearFilters: "Clirio hidlyddion",
     applyFilters: "Cymhwyso hidlyddion",
+    showFilters: "Dangos hidlyddion",
+    hideFilters: "Cuddio hidlyddion",
     emailLabel: "E-bost",
     userIdLabel: "ID Defnyddiwr",
     userIdHint: "Rhaid iddo fod yn union yr un fath",

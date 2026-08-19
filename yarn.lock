@@ -2614,6 +2614,7 @@ __metadata:
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
+    "@ministryofjustice/frontend": "npm:10.0.1"
     "@types/config": "npm:4.4.0"
     "@types/cookie-parser": "npm:1.4.10"
     "@types/express": "npm:5.0.6"
@@ -2771,6 +2772,16 @@ __metadata:
     stream-browserify:
       optional: true
   checksum: 10c0/0e5b3dd469be0606ba34a82464d18a8c919f396adf65756612e9ec0bb47c99c4c3eaf5d65eec953e2c6f5b79e48e003efe914adbfc8b741d098e8e8f7084ea8b
+  languageName: node
+  linkType: hard
+
+"@ministryofjustice/frontend@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@ministryofjustice/frontend@npm:10.0.1"
+  peerDependencies:
+    govuk-frontend: ^6.0.0
+    moment: 2.30.1
+  checksum: 10c0/ec895678d17ca70e966b8313cdf120e1d56cc4cf44f8832d085a0dfc8648ddb92cbe000941453b1d331808a9fc056c3682637d24e6bea7c788264f64466a3db8
   languageName: node
   linkType: hard
 

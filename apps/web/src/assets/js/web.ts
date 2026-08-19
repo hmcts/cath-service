@@ -2,6 +2,7 @@ import cookieManager from "@hmcts/cookie-manager";
 import { initAll } from "govuk-frontend";
 import { initBackToTop } from "./back-to-top.js";
 import { initFilterPanel } from "./filter-panel.js";
+import { initFilterToggle } from "./filter-toggle.js";
 import { initListTypeSensitivity } from "./list-type-sensitivity.js";
 import { initSearchAutocomplete } from "./search-autocomplete.js";
 import { initSortableTable } from "./sortable-table.js";
@@ -18,6 +19,7 @@ if (document.readyState === "loading") {
       console.error("Error initializing search autocomplete:", error);
     });
     initFilterPanel();
+    initFilterToggle();
     initBackToTop();
     initListTypeSensitivity();
     initTableSearch();
@@ -29,6 +31,7 @@ if (document.readyState === "loading") {
     console.error("Error initializing search autocomplete:", error);
   });
   initFilterPanel();
+  initFilterToggle();
   initBackToTop();
   initListTypeSensitivity();
   initTableSearch();

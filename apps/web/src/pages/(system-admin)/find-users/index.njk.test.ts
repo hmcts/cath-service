@@ -69,6 +69,19 @@ describe("find-users template", () => {
       expect($("button.govuk-button").text().trim()).toBe(en.applyFiltersButton);
     });
 
+    it("should render the MOJ filter component and layout containers", () => {
+      const data = { ...baseData };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".moj-filter[data-module='moj-filter']")).toHaveLength(1);
+      expect($(".moj-filter-layout__filter")).toHaveLength(1);
+      expect($(".moj-filter-layout__content")).toHaveLength(1);
+      expect($(".moj-action-bar__filter")).toHaveLength(1);
+      expect($(".moj-filter").attr("data-show-text")).toBe(en.showFilters);
+      expect($(".moj-filter").attr("data-hide-text")).toBe(en.hideFilters);
+    });
+
     it("should render the results count and table with a user row", () => {
       const data = { ...baseData };
 
@@ -102,10 +115,11 @@ describe("find-users template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(".user-management-selected-filters h3").text().trim()).toBe(en.selectedFiltersHeading);
-      const removeLink = $('a[href="/find-users/remove-filter?filter=email"]');
+      expect($(".moj-filter__selected h2").text()).toContain(en.selectedFiltersHeading);
+      const removeLink = $('a.moj-filter__tag[href="/find-users/remove-filter?filter=email"]');
       expect(removeLink).toHaveLength(1);
       expect(removeLink.text()).toContain("user@example.com");
+      expect(removeLink.find(".govuk-visually-hidden").text()).toContain("Remove this filter");
       const clearLink = $('a[href="/find-users/clear-filters"]');
       expect(clearLink).toHaveLength(1);
       expect(clearLink.text().trim()).toBe(en.clearFiltersButton);

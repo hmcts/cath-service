@@ -63,6 +63,7 @@
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
+    "@ministryofjustice/frontend": "10.0.1",
     "compression": "1.8.1",
     "config": "4.4.2",
     "connect-redis": "9.0.0",

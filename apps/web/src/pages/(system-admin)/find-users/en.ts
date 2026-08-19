@@ -14,6 +14,8 @@ export const en = {
   provenancesLabel: "Provenances",
   applyFiltersButton: "Apply filters",
   clearFiltersButton: "Clear filters",
+  showFilters: "Show filters",
+  hideFilters: "Hide filters",
   tableHeadEmail: "Email",
   tableHeadRole: "Role",
   tableHeadProvenance: "Provenance",

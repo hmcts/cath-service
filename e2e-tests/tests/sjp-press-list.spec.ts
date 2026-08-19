@@ -185,7 +185,9 @@ test.describe("SJP Press List @nightly", () => {
   test("user can use filter functionality @nightly", async ({ page }) => {
     await page.goto(listUrl);
 
-    const filterPanel = page.locator("#filter-panel");
+    // The MOJ FilterToggleButton shows/hides the .moj-filter element via the
+    // moj-js-hidden class (gated on .js-enabled).
+    const filterPanel = page.locator("#filter-panel .moj-filter");
 
     // Initially filters should be hidden
     await expect(filterPanel).toBeHidden();
