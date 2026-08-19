@@ -169,6 +169,77 @@ describe("delete-court-confirm template", () => {
 
       assertErrorSummary($, [en.locationNotFound]);
     });
+
+    it("should render a publications deletion link with the court name appended", () => {
+      const data = {
+        ...buildData(en),
+        errors: [{ text: en.activeArtefacts }],
+        deletionLink: { href: "/delete-court-publications", text: en.deletePublicationsLinkText }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const link = $(`a[href="/delete-court-publications"]`);
+      expect(link).toHaveLength(1);
+      expect(link.text().trim()).toBe(`${en.deletePublicationsLinkText} Test Court`);
+    });
+
+    it("should render a subscriptions deletion link with the court name appended", () => {
+      const data = {
+        ...buildData(en),
+        errors: [{ text: en.activeSubscriptions }],
+        deletionLink: { href: "/delete-court-subscriptions", text: en.deleteSubscriptionsLinkText }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const link = $(`a[href="/delete-court-subscriptions"]`);
+      expect(link).toHaveLength(1);
+      expect(link.text().trim()).toBe(`${en.deleteSubscriptionsLinkText} Test Court`);
+    });
+
+    it("should render the deletion link above the heading and outside the error summary", () => {
+      const data = {
+        ...buildData(en),
+        errors: [{ text: en.activeArtefacts }],
+        deletionLink: { href: "/delete-court-publications", text: en.deletePublicationsLinkText }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      // The link is a plain body paragraph, not part of the red error summary.
+      expect($(".govuk-error-summary a[href='/delete-court-publications']")).toHaveLength(0);
+      expect($("p.govuk-body > a[href='/delete-court-publications']")).toHaveLength(1);
+
+      // It appears before the page heading in DOM order.
+      const linkParagraph = $("p.govuk-body").has("a[href='/delete-court-publications']").get(0);
+      const heading = $("h1").get(0);
+      const order = $("*").toArray();
+      expect(order.indexOf(linkParagraph)).toBeLessThan(order.indexOf(heading));
+    });
+
+    it("should render the Welsh deletion link with the court name appended", () => {
+      const data = {
+        ...buildData(cy),
+        errors: [{ text: cy.activeArtefacts }],
+        deletionLink: { href: "/delete-court-publications?lng=cy", text: cy.deletePublicationsLinkText }
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const link = $(`a[href="/delete-court-publications?lng=cy"]`);
+      expect(link).toHaveLength(1);
+      expect(link.text().trim()).toBe(`${cy.deletePublicationsLinkText} Test Court`);
+    });
+
+    it("should not render a deletion link when none is provided", () => {
+      const data = { ...buildData(en), errors: [{ text: en.locationNotFound }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(`a[href="/delete-court-publications"]`)).toHaveLength(0);
+      expect($(`a[href="/delete-court-subscriptions"]`)).toHaveLength(0);
+    });
   });
 
   describe("Locale consistency", () => {
@@ -189,7 +260,9 @@ describe("delete-court-confirm template", () => {
         "noRadioSelected",
         "activeSubscriptions",
         "activeArtefacts",
-        "locationNotFound"
+        "locationNotFound",
+        "deletePublicationsLinkText",
+        "deleteSubscriptionsLinkText"
       ];
       for (const key of requiredKeys) {
         expect(en).toHaveProperty(key);

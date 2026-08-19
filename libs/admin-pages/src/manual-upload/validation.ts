@@ -203,7 +203,7 @@ export async function validateNonStrategicUploadForm(
 }
 
 export function validateDate(dateInput: DateInput | undefined, fieldName: string, requiredMessage: string, invalidMessage: string): ValidationError | null {
-  if (!dateInput || !dateInput.day || !dateInput.month || !dateInput.year) {
+  if (!dateInput?.day || !dateInput.month || !dateInput.year) {
     return { text: requiredMessage, href: `#${fieldName}` };
   }
 

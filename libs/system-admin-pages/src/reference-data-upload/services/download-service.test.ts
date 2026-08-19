@@ -11,12 +11,13 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 describe("generateReferenceDataCsv", () => {
-  it("should query only active (non-deleted) locations", async () => {
+  it("should query all locations without a soft-delete filter", async () => {
     vi.mocked(prisma.location.findMany).mockResolvedValue([]);
 
     await generateReferenceDataCsv();
 
-    expect(prisma.location.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { deletedAt: null } }));
+    const call = vi.mocked(prisma.location.findMany).mock.calls.at(-1)?.[0];
+    expect(call?.where).toBeUndefined();
   });
 
   it("should generate CSV with active location data", async () => {

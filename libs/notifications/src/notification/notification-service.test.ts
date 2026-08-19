@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "./notification-service.js";
+import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications, sendSystemAdminNotification } from "./notification-service.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
   downloadBlob: vi.fn().mockResolvedValue(null),
@@ -36,6 +36,8 @@ vi.mock("../govnotify/template-config.js", () => ({
     summary_of_cases: "Case 123 - Smith v Jones"
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
+  getSystemAdminTemplateId: vi.fn().mockReturnValue("location-deleted-template-id"),
+  getEnvName: vi.fn().mockReturnValue("Local"),
   isSjpListType: vi.fn().mockReturnValue(false)
 }));
 
@@ -512,5 +514,68 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     expect(sendEmail).toHaveBeenCalledTimes(1);
     // Email shows both location and case
     expect(buildTemplateParameters).toHaveBeenCalledWith(expect.objectContaining({ caseValue: "AB-123" }));
+  });
+});
+
+describe("sendSystemAdminNotification", () => {
+  const notification = {
+    requesterEmail: "requester@example.com",
+    changeType: "Delete Location",
+    additionalChangeDetail: "Location Test Court with Id 42 has been deleted."
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should send an email to each system admin with the five personalisation fields", async () => {
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
+
+    await sendSystemAdminNotification(["admin1@example.com", "admin2@example.com"], notification);
+
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailAddress: "admin1@example.com",
+        templateId: "location-deleted-template-id",
+        templateParameters: {
+          requester_email: "requester@example.com",
+          "attempted/succeeded": "succeeded",
+          "change-type": "Delete Location",
+          Additional_change_detail: "Location Test Court with Id 42 has been deleted.",
+          env_name: "Local"
+        }
+      })
+    );
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailAddress: "admin2@example.com" }));
+  });
+
+  it("should use the provided action result when set", async () => {
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
+
+    await sendSystemAdminNotification(["admin1@example.com"], { ...notification, actionResult: "attempted" });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templateParameters: expect.objectContaining({ "attempted/succeeded": "attempted" })
+      })
+    );
+  });
+
+  it("should not send any email when there are no admins", async () => {
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+
+    await sendSystemAdminNotification([], notification);
+
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should not throw when an email send fails (best-effort)", async () => {
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
+
+    await expect(sendSystemAdminNotification(["admin1@example.com"], notification)).resolves.toBeUndefined();
   });
 });

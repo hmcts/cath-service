@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { User } from "./model.js";
-import { createOrUpdateUser, createUser, findUserByEmail, findUserById, findUserByProvenanceId, updateUser } from "./query.js";
+import { createOrUpdateUser, createUser, findSystemAdminEmails, findUserByEmail, findUserById, findUserByProvenanceId, updateUser } from "./query.js";
 
 // Mock @hmcts/postgres
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -9,6 +9,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       create: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn()
     }
   }
@@ -375,6 +376,28 @@ describe("User Repository", () => {
           lastSignedInDate: expect.any(Date)
         }
       });
+    });
+  });
+
+  describe("findSystemAdminEmails", () => {
+    it("should return all system admin emails", async () => {
+      vi.mocked(prisma.user.findMany).mockResolvedValue([{ email: "admin1@example.com" }, { email: "admin2@example.com" }] as any);
+
+      const result = await findSystemAdminEmails();
+
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: { role: "SYSTEM_ADMIN" },
+        select: { email: true }
+      });
+      expect(result).toEqual(["admin1@example.com", "admin2@example.com"]);
+    });
+
+    it("should return an empty array when there are no system admins", async () => {
+      vi.mocked(prisma.user.findMany).mockResolvedValue([] as any);
+
+      const result = await findSystemAdminEmails();
+
+      expect(result).toEqual([]);
     });
   });
 });

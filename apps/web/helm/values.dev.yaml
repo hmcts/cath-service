@@ -18,6 +18,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT: '2b4ccd66-2b04-4d27-94e5-b7372f58be08'
+    GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: 'b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c'
     ENABLE_B2C: 'true'
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'

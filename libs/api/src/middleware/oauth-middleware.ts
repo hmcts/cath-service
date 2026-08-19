@@ -14,7 +14,7 @@ export function authenticateApi() {
     try {
       const authHeader = req.headers.authorization;
 
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      if (!authHeader?.startsWith("Bearer ")) {
         return res.status(401).json({
           success: false,
           message: "Missing or invalid Authorization header"
