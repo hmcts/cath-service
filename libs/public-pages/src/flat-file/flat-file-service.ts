@@ -111,4 +111,5 @@ export async function getExcelForDownload(artefactId: string, user: UserProfile 
 type FlatFileResult = Awaited<ReturnType<typeof getFlatFileForDisplay>>;
 type DownloadFileResult = Awaited<ReturnType<typeof getFileForDownload>>;
 type ExcelDownloadResult = Awaited<ReturnType<typeof getExcelForDownload>>;
-export type { FlatFileResult, DownloadFileResult, ExcelDownloadResult };
+
+export type { DownloadFileResult, ExcelDownloadResult, FlatFileResult };

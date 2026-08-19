@@ -33,7 +33,7 @@ export const locationData: {
       name: "Royal Courts of Justice",
       welshName: "Llysoedd Barn Brenhinol",
       regions: [1],
-      subJurisdictions: [1, 4, 5]
+      subJurisdictions: [1, 5, 10, 11, 12]
     },
     {
       locationId: 5,
@@ -186,6 +186,13 @@ export const locationData: {
     },
     {
       locationId: 26,
+      name: "Business and Property Courts Rolls Building",
+      welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
+      regions: [11],
+      subJurisdictions: [10]
+    },
+    {
+      locationId: 27,
       name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
       welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
       regions: [8],

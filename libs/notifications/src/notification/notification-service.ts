@@ -14,6 +14,10 @@ import {
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
+import {
+  extractCaseSummary as extractCompaniesWindingUpChdSummary,
+  formatCaseSummaryForEmail as formatCompaniesWindingUpChdSummaryForEmail
+} from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { extractCaseSummary as extractCopSummary, formatCaseSummaryForEmail as formatCopSummaryForEmail } from "@hmcts/cop-daily-cause-list";
 import {
   extractCaseSummary as extractCourtOfAppealSummary,
@@ -26,6 +30,10 @@ import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail 
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
 import {
+  extractCaseSummary as extractFinancialListChdKbSummary,
+  formatCaseSummaryForEmail as formatFinancialListChdKbSummaryForEmail
+} from "@hmcts/financial-list-chd-kb-daily-cause-list";
+import {
   extractCaseSummary as extractFttLrtSummary,
   formatCaseSummaryForEmail as formatFttLrtSummaryForEmail
 } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
@@ -35,6 +43,7 @@ import {
   formatCaseSummaryForEmail as formatFttTaxSummaryForEmail
 } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
+import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -118,6 +127,7 @@ interface EmailBuilderConfig {
   format: SummaryFormatter;
 }
 
+const iacDailyConfig: EmailBuilderConfig = { extract: extractIacDailySummary as SummaryExtractor, format: formatIacDailySummaryForEmail };
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
 const sscsConfig: EmailBuilderConfig = { extract: extractSscsSummary as SummaryExtractor, format: formatSscsSummaryForEmail };
@@ -167,6 +177,8 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractPhtSummary as SummaryExtractor,
     format: formatPhtSummaryForEmail
   },
+  IAC_DAILY_LIST: iacDailyConfig,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyConfig,
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardConfig,
@@ -182,6 +194,14 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
+  },
+  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
+    extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
+    format: formatCompaniesWindingUpChdSummaryForEmail
+  },
+  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
+    extract: extractFinancialListChdKbSummary as SummaryExtractor,
+    format: formatFinancialListChdKbSummaryForEmail
   },
   CROWN_DAILY_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,
