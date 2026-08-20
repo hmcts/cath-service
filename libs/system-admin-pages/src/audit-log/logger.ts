@@ -13,6 +13,7 @@ export enum AuditLogAction {
   DELETE_SUB_JURISDICTION = "Delete sub-jurisdiction",
   DELETE_THIRD_PARTY_USER = "Delete third party user",
   DELETE_USER = "Delete user",
+  DOWNLOAD_MI_REPORT = "Download MI report",
   MANUAL_UPLOAD = "Manual upload",
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
