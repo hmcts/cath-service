@@ -23,10 +23,9 @@ Optionally specify a template type: `new-feature` (default), `technical-task`, `
    - Check `apps/web/src/pages/` for existing page controllers and templates that follow the same pattern
    - Check `libs/` for shared components, locale files, or utilities that would be reused
    - Check `docs/tickets/` for prior specs on related issues
-4. **Write the specification section by section** to `docs/tickets/<issue-number>/specification.md`:
-   - Use the Write tool to create the file with the first section
-   - Use the Edit tool to append each subsequent section — one tool call per section
-   - Never write the entire spec in a single tool call
+4. **Write the specification section by section as a markdown document in the chat**:
+   - Output the first section, then continue section by section
+   - Never output the entire spec in a single response
    - Confirm each section is written before continuing to the next
 5. **For Welsh content**, insert `[TRANSLATE: "English text here"]` markers wherever Welsh text is needed. Do not attempt to write Welsh directly. The `welsh-translation` skill resolves these markers.
 
@@ -42,9 +41,9 @@ Optionally specify a template type: `new-feature` (default), `technical-task`, `
 
 ## Output
 
-`docs/tickets/<issue-number>/specification.md` — a completed specification with all template placeholders replaced with real, specific content.
+A completed specification as a markdown document in the chat, with all template placeholders replaced with real, specific content.
 
-After writing the spec, inform the user that Welsh translation markers can be resolved by running the `welsh-translation` skill.
+Inform the user that any `[TRANSLATE: "..."]` markers in the output can be resolved by running the `welsh-translation` skill.
 
 ## Notes
 
@@ -53,4 +52,4 @@ After writing the spec, inform the user that Welsh translation markers can be re
 - For test scenarios (section 13 in `new-feature`), write **at most 5 high-level scenarios** — no test code, just descriptions.
 - For complex tickets covering many list types or variants, **describe the pattern once** and note which variants it applies to. Do not enumerate every permutation separately.
 - If the issue depends on other issues, note them in section 14 (Assumptions & Open Questions).
-- This skill does **not** post GitHub comments or create branches. It only writes the spec file.
+- This skill does **not** post GitHub comments, create branches, or write files. It produces the spec as chat output only.

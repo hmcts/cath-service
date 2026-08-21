@@ -26,16 +26,16 @@ Provide:
 4. **For each affected section**, update it using the Edit tool — one Edit call per section changed.
    - Do not rewrite sections that are not affected.
    - Do not change the structure or section numbering.
-5. **Add a change summary** to the end of the file under a `## Change Log` heading (create it if it doesn't exist):
+5. **Output a change summary to the user** (do not write it to the file):
    ```
-   ### <date>
+   ### Changes made
    - Section X: [brief description of what changed and why]
    ```
-6. **For any new Welsh content**, insert `[TRANSLATE: "English text here"]` markers. Run the `welsh-translation` skill to resolve them.
+6. **For any new Welsh content**, insert `[TRANSLATE: "English text here"]` markers in the updated sections. Advise the user to run the `welsh-translation` skill to resolve them.
 
 ## Output
 
-Updated `docs/tickets/<issue-number>/specification.md` with targeted edits and a change log entry.
+Updated `docs/tickets/<issue-number>/specification.md` with targeted edits, plus a change summary output to the user in the chat.
 
 ## Notes
 
