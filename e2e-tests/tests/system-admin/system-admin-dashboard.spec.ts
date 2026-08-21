@@ -17,20 +17,23 @@ test.describe
       await expect(heading).toBeVisible();
       await expect(heading).toHaveText("System Admin Dashboard");
 
-      // Verify all 9 admin tiles are displayed
+      // Verify all 11 admin tiles are displayed
       const tiles = page.locator(".admin-tile");
-      await expect(tiles).toHaveCount(9);
+      await expect(tiles).toHaveCount(11);
 
       // Verify correct tile titles and hrefs
       const tileData = [
         { title: "Reference Data", href: "/reference-data" },
         { title: "Delete Court", href: "/delete-court" },
         { title: "Manage Third Party Users", href: "/manage-third-party-users" },
-        { title: "User Management", href: "/user-management" },
+        { title: "Manage Third-Party Subscribers", href: "/third-party-subscribers" },
+        { title: "User Management", href: "/find-users" },
         { title: "Blob Explorer", href: "/blob-explorer-locations" },
         { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
         { title: "Audit Log Viewer", href: "/audit-log-list" },
-        { title: "Manage List Types", href: "/manage-list-types" }
+        { title: "Manage List Types", href: "/manage-list-types" },
+        { title: "Manage Jurisdiction Data", href: "/jurisdiction-data" },
+        { title: "Download MI Report", href: "/mi-report" }
       ];
 
       for (const { title, href } of tileData) {
@@ -41,11 +44,11 @@ test.describe
 
       // Verify tile descriptions are displayed
       const descriptions = page.locator(".admin-tile__description");
-      await expect(descriptions).toHaveCount(9);
+      await expect(descriptions).toHaveCount(11);
 
       // Verify 2-column grid layout
       const gridColumns = page.locator(".govuk-grid-column-one-half");
-      await expect(gridColumns).toHaveCount(9);
+      await expect(gridColumns).toHaveCount(11);
 
       // Accessibility check
       const accessibilityScanResults = await axeCheck(page).analyze();
@@ -62,7 +65,7 @@ test.describe
     test("dashboard is keyboard accessible @nightly", async ({ page }) => {
       // Verify tiles are focusable
       const tileLinks = page.locator("a.admin-tile");
-      await expect(tileLinks).toHaveCount(9);
+      await expect(tileLinks).toHaveCount(11);
 
       // Verify first tile is visible and focusable
       const firstTile = tileLinks.first();

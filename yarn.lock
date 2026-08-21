@@ -2374,6 +2374,7 @@ __metadata:
   resolution: "@hmcts/system-admin-pages@workspace:libs/system-admin-pages"
   dependencies:
     "@hmcts/auth": "workspace:*"
+    "@hmcts/excel-generation": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
