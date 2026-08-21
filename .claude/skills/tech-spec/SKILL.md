@@ -23,10 +23,7 @@ Optionally specify a template type: `new-feature` (default), `technical-task`, `
    - Check `apps/web/src/pages/` for existing page controllers and templates that follow the same pattern
    - Check `libs/` for shared components, locale files, or utilities that would be reused
    - Check `docs/tickets/` for prior specs on related issues
-4. **Write the specification section by section as a markdown document in the chat**:
-   - Output the first section, then continue section by section
-   - Never output the entire spec in a single response
-   - Confirm each section is written before continuing to the next
+4. **Output the completed specification as a markdown document in the chat.**
 5. **For Welsh content**, insert `[TRANSLATE: "English text here"]` markers wherever Welsh text is needed. Do not attempt to write Welsh directly. The `welsh-translation` skill resolves these markers.
 
 ### Template selection guide
