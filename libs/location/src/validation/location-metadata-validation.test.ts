@@ -118,6 +118,71 @@ describe("validateLocationMetadataInput", () => {
     expect(result).toEqual({ valid: true });
   });
 
+  it.each([
+    ["cautionMessage", "English caution message"],
+    ["welshCautionMessage", "Welsh caution message"],
+    ["noListMessage", "English no list message"],
+    ["welshNoListMessage", "Welsh no list message"]
+  ])("should return invalid when %s contains HTML tags", (field, label) => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      [field]: '<img src="x" onerror="alert(1)">'
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      error: `${label} contains HTML tags which are not allowed`
+    });
+  });
+
+  it("should return invalid when a script tag is embedded in otherwise valid text", () => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      cautionMessage: "Please note <script>alert(1)</script> the court is closed"
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      error: "English caution message contains HTML tags which are not allowed"
+    });
+  });
+
+  it("should return invalid when a field other than the first contains HTML tags", () => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      cautionMessage: "Plain text caution",
+      welshNoListMessage: "<b>Dim rhestr</b>"
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      error: "Welsh no list message contains HTML tags which are not allowed"
+    });
+  });
+
+  it("should return valid for plain text containing punctuation but no angle brackets", () => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      cautionMessage: "Hearings start at 10am. Contact the court on 0300 123 4567 (option 2)."
+    });
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  // Matches the HTML_TAG_REGEX behaviour already applied to jurisdiction, region and
+  // list-type names: any angle-bracket pair is rejected rather than parsed as markup.
+  it("should return invalid when a message contains an angle bracket pair that is not real markup", () => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      cautionMessage: "Hearings start at < 10am and finish > 4pm"
+    });
+
+    expect(result).toEqual({
+      valid: false,
+      error: "English caution message contains HTML tags which are not allowed"
+    });
+  });
+
   it("should work with UpdateLocationMetadataInput (no locationId)", () => {
     const result = validateLocationMetadataInput({
       cautionMessage: "Updated caution"

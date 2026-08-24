@@ -10,5 +10,6 @@ export const en = {
   deleteButtonText: "Delete",
   errorSummaryTitle: "There is a problem",
   atLeastOneMessageRequired: "Enter at least one message",
+  htmlTagsNotAllowed: (fieldLabel: string) => `${fieldLabel} contains HTML tags which are not allowed`,
   locationNotFoundInSession: "Location not found. Please search again."
 };
