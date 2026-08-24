@@ -1,5 +1,9 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
+import {
+  type BusinessAndPropertyRollsData,
+  generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf
+} from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
@@ -20,7 +24,7 @@ import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmc
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
-import { generateInterimApplicationsChdDailyCauseListPdf, type InterimApplicationsChdData } from "@hmcts/interim-applications-chd-daily-cause-list";
+import { generateInterimApplicationsDailyCauseListPdf, type InterimApplicationsData } from "@hmcts/interim-applications-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -185,11 +189,12 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardGenerator,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: (p) =>
     generateLondonAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as LondonAdminCourtData }),
+  BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: (p) =>
+    generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf({ ...p, jsonData: p.jsonData as BusinessAndPropertyRollsData }),
+  INTERIM_APPLICATIONS_DAILY_CAUSE_LIST: (p) => generateInterimApplicationsDailyCauseListPdf({ ...p, jsonData: p.jsonData as InterimApplicationsData }),
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: (p) =>
     generateCompaniesWindingUpChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as CompaniesWindingUpHearingList }),
-  INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST: (p) =>
-    generateInterimApplicationsChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as InterimApplicationsChdData }),
   FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: (p) => generateFinancialListChdKbDailyCauseListPdf({ ...p, jsonData: p.jsonData as FinancialListChdKbHearingList }),
   IAC_DAILY_LIST: iacDailyListGenerator,
   IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,

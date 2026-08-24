@@ -5,6 +5,7 @@ import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-daily-cause-list/config";
 import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
+import { moduleRoot as businessAndPropertyRollsModuleRoot } from "@hmcts/business-and-property-division-rolls-building-daily-cause-list/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
@@ -23,7 +24,7 @@ import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-li
 import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
 import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-hearing-list/config";
 import { moduleRoot as iacDailyListModuleRoot } from "@hmcts/iac-daily-list/config";
-import { moduleRoot as interimApplicationsChdModuleRoot } from "@hmcts/interim-applications-chd-daily-cause-list/config";
+import { moduleRoot as interimApplicationsModuleRoot } from "@hmcts/interim-applications-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -141,9 +142,10 @@ export async function createApp(): Promise<Express> {
     sjpPublicListModuleRoot,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
+    businessAndPropertyRollsModuleRoot,
+    interimApplicationsModuleRoot,
     civilAppealModuleRoot,
     companiesWindingUpChdModuleRoot,
-    interimApplicationsChdModuleRoot,
     financialListChdKbModuleRoot,
     adminCourtModuleRoot,
     magistratesPublicAdultCourtListModuleRoot,

@@ -5,6 +5,10 @@ import {
 import { extractCaseSummary as extractAstSummary, formatCaseSummaryForEmail as formatAstSummaryForEmail } from "@hmcts/ast-daily-hearing-list";
 import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import {
+  extractCaseSummary as extractBusinessAndPropertyRollsSummary,
+  formatCaseSummaryForEmail as formatBusinessAndPropertyRollsSummaryForEmail
+} from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
+import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
@@ -45,9 +49,9 @@ import {
 import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
 import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
 import {
-  extractCaseSummary as extractInterimApplicationsChdSummary,
-  formatCaseSummaryForEmail as formatInterimApplicationsChdSummaryForEmail
-} from "@hmcts/interim-applications-chd-daily-cause-list";
+  extractCaseSummary as extractInterimApplicationsSummary,
+  formatCaseSummaryForEmail as formatInterimApplicationsSummaryForEmail
+} from "@hmcts/interim-applications-daily-cause-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -195,6 +199,14 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractLondonAdminSummary as SummaryExtractor,
     format: formatLondonAdminSummaryForEmail
   },
+  BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: {
+    extract: extractBusinessAndPropertyRollsSummary as SummaryExtractor,
+    format: formatBusinessAndPropertyRollsSummaryForEmail
+  },
+  INTERIM_APPLICATIONS_DAILY_CAUSE_LIST: {
+    extract: extractInterimApplicationsSummary as SummaryExtractor,
+    format: formatInterimApplicationsSummaryForEmail
+  },
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
@@ -202,10 +214,6 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
     extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
     format: formatCompaniesWindingUpChdSummaryForEmail
-  },
-  INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST: {
-    extract: extractInterimApplicationsChdSummary as SummaryExtractor,
-    format: formatInterimApplicationsChdSummaryForEmail
   },
   FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
     extract: extractFinancialListChdKbSummary as SummaryExtractor,
