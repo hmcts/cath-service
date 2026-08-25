@@ -268,6 +268,48 @@ describe("sendListTypePublicationNotifications", () => {
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ pdfBuffer: expect.any(Buffer) }));
   });
 
+  it("should use the enhanced summary when the source payload is within the summary limit", async () => {
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+
+    await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { courtLists: [] } });
+
+    expect(buildEnhancedTemplateParameters).toHaveBeenCalled();
+  });
+
+  it("should fall back to the no-summary template when the source payload exceeds the summary limit", async () => {
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+
+    // ~300KB source: over the 256KB summary gate
+    const oversizedSummary = { big: "x".repeat(300 * 1024) };
+
+    await sendListTypePublicationNotifications({ ...baseEvent, jsonData: oversizedSummary });
+
+    expect(buildEnhancedTemplateParameters).not.toHaveBeenCalled();
+    expect(buildTemplateParameters).toHaveBeenCalled();
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Email summary skipped generation: source payload"),
+      expect.objectContaining({ publicationId: "pub-1" })
+    );
+    consoleLogSpy.mockRestore();
+  });
+
   it("should send email without PDF buffer when PDF blob is not found", async () => {
     // Arrange
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
