@@ -1,6 +1,7 @@
 import { downloadBlob, getBlobProperties } from "@hmcts/azure-blob";
 import { getContentType } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
+import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound, sendAccessDenied, sendFileNotFound } from "./publication-access.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_TYPES = new Set(["pdf", "xlsx"]);
@@ -11,6 +12,13 @@ export async function handleBlobDownload(req: Request, res: Response): Promise<R
 
   if (!artefactId || !UUID_REGEX.test(artefactId) || !type || !ALLOWED_TYPES.has(type)) {
     return res.status(400).json({ error: "Invalid request" });
+  }
+
+  const access = await checkArtefactDataAccess(req.user, artefactId);
+  if (access.reason === AccessReason.ACCESS_DENIED) {
+    return sendAccessDenied(res);
+  } else if (!access.allowed) {
+    return sendFileNotFound(res);
   }
 
   const extension = `.${type}`;
@@ -67,6 +75,13 @@ export function createListDownloadFilesHandler(en: object, cy: object, downloadF
 
     if (!artefactId || !UUID_REGEX.test(artefactId)) {
       return res.status(400).render("errors/400", { en, cy, locale });
+    }
+
+    const access = await checkArtefactDataAccess(req.user, artefactId);
+    if (access.reason === AccessReason.ACCESS_DENIED) {
+      return renderAccessDenied(res, locale);
+    } else if (!access.allowed) {
+      return renderNotFound(res, locale, { en, cy });
     }
 
     const content = locale === "cy" ? cy : en;
