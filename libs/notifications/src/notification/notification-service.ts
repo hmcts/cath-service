@@ -18,10 +18,6 @@ import {
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
-import {
-  extractCaseSummary as extractCompaniesWindingUpChdSummary,
-  formatCaseSummaryForEmail as formatCompaniesWindingUpChdSummaryForEmail
-} from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { extractCaseSummary as extractCopSummary, formatCaseSummaryForEmail as formatCopSummaryForEmail } from "@hmcts/cop-daily-cause-list";
 import {
   extractCaseSummary as extractCourtOfAppealSummary,
@@ -33,10 +29,6 @@ import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEm
 import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
-import {
-  extractCaseSummary as extractFinancialListChdKbSummary,
-  formatCaseSummaryForEmail as formatFinancialListChdKbSummaryForEmail
-} from "@hmcts/financial-list-chd-kb-daily-cause-list";
 import {
   extractCaseSummary as extractFttLrtSummary,
   formatCaseSummaryForEmail as formatFttLrtSummaryForEmail
@@ -210,14 +202,6 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
-  },
-  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
-    extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
-    format: formatCompaniesWindingUpChdSummaryForEmail
-  },
-  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
-    extract: extractFinancialListChdKbSummary as SummaryExtractor,
-    format: formatFinancialListChdKbSummaryForEmail
   },
   CROWN_DAILY_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,

@@ -9,7 +9,6 @@ import { moduleRoot as businessAndPropertyRollsModuleRoot } from "@hmcts/busines
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
-import { moduleRoot as companiesWindingUpChdModuleRoot } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
 import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
@@ -18,7 +17,6 @@ import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-lis
 import { moduleRoot as etDailyListModuleRoot } from "@hmcts/et-daily-list/config";
 import { moduleRoot as etFortnightlyListModuleRoot } from "@hmcts/et-fortnightly-list/config";
 import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
-import { moduleRoot as financialListChdKbModuleRoot } from "@hmcts/financial-list-chd-kb-daily-cause-list/config";
 import { moduleRoot as fttLrtModuleRoot } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list/config";
 import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
 import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
@@ -145,8 +143,6 @@ export async function createApp(): Promise<Express> {
     businessAndPropertyRollsModuleRoot,
     interimApplicationsModuleRoot,
     civilAppealModuleRoot,
-    companiesWindingUpChdModuleRoot,
-    financialListChdKbModuleRoot,
     adminCourtModuleRoot,
     magistratesPublicAdultCourtListModuleRoot,
     magistratesPublicListModuleRoot,

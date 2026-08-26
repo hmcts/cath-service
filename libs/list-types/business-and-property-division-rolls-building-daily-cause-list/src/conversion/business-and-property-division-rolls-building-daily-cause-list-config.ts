@@ -1,9 +1,31 @@
-import { CHD_KB_EXCEL_CONFIG_SIMPLE_TIME } from "@hmcts/chd-kb-common";
-import { createMultiSheetConverter, registerConverterByName } from "@hmcts/list-types-common";
+import {
+  createMultiSheetConverter,
+  type ExcelConverterConfig,
+  registerConverterByName,
+  validateNoHtmlTags,
+  validateTimeFormatSimple
+} from "@hmcts/list-types-common";
 import { SECTIONS } from "../sections.js";
 
-// ChD/KB 7-field configuration used by every section tab
-export const STANDARD_CONFIG = CHD_KB_EXCEL_CONFIG_SIMPLE_TIME;
+// ChD/KB 7-field configuration used by every section tab. Simple time validation (no hour range
+// check). Only "Additional Information" is optional; minRows is 0 so section sheets may be empty.
+export const STANDARD_CONFIG: ExcelConverterConfig = {
+  fields: [
+    { header: "Judge", fieldName: "judge", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Judge", rowNumber)] },
+    { header: "Time", fieldName: "time", required: true, validators: [(value, rowNumber) => validateTimeFormatSimple(value, rowNumber)] },
+    { header: "Venue", fieldName: "venue", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Venue", rowNumber)] },
+    { header: "Type", fieldName: "type", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Type", rowNumber)] },
+    { header: "Case Number", fieldName: "caseNumber", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Number", rowNumber)] },
+    { header: "Case Name", fieldName: "caseName", required: true, validators: [(value, rowNumber) => validateNoHtmlTags(value, "Case Name", rowNumber)] },
+    {
+      header: "Additional Information",
+      fieldName: "additionalInformation",
+      required: false,
+      validators: [(value, rowNumber) => validateNoHtmlTags(value, "Additional Information", rowNumber)]
+    }
+  ],
+  minRows: 0
+};
 
 // One worksheet per section, matched by the English section label (tab name). All 16 sections share
 // the same field config, so a positional-index fallback cannot tell them apart and would silently

@@ -24,7 +24,6 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
-    "@hmcts/chd-kb-common": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
