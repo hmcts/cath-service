@@ -3,9 +3,6 @@ name: Test ProjectsV2 access
 on:
   workflow_dispatch:
 
-permissions:
-  projects: read
-
 jobs:
   test:
     runs-on: ubuntu-latest
