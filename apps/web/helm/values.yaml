@@ -27,6 +27,10 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
+    # Source-payload size gates for publication output generation (KB)
+    MAX_PDF_PAYLOAD_KB: 2048 # 2 MB
+    MAX_EXCEL_PAYLOAD_KB: 10240 # 10 MB
+    MAX_SUMMARY_PAYLOAD_KB: 256
   keyVaults:
     cath-ss-kv:
       secrets:
