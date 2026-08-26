@@ -16,7 +16,7 @@ Provide one of the following:
 ## Process
 
 1. **Read reference material**
-   - Read the output template from `templates/requirements-analysis.md` — this defines the exact structure to follow
+   - Read the output template from `resources/templates/requirements-analysis.md` — this defines the exact structure to follow
    - Read the impact level criteria from `resources/impact-levels.md` — use this to calibrate the rating
 
 2. **Gather context**
@@ -39,7 +39,7 @@ Provide one of the following:
    - Do NOT list specific files to modify or patterns to follow — that is `/qk-plan`'s job
 
 5. **Output**
-   - Render the completed analysis as a markdown document in the chat, following the structure from `templates/requirements-analysis.md`
+   - Render the completed analysis as a markdown document in the chat, following the structure from `resources/templates/requirements-analysis.md`
    - Include: conflicts with other issues (table if any found, otherwise "No conflicts detected"), conflicts with existing code (same), and the impact rating block
 
 ## Output
