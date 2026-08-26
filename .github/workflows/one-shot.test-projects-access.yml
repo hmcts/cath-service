@@ -1,0 +1,17 @@
+name: Test ProjectsV2 access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  projects: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query project board
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh project view 43 --owner hmcts
