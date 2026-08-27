@@ -146,7 +146,7 @@ const getHandler = async (req: Request, res: Response) => {
   };
 
   const userRows = searchResult.users.map((user) => [
-    { text: user.email },
+    { text: user.email, classes: "app-wrap-anywhere" },
     { text: roleLabels[user.role] || user.role },
     { text: provenanceLabels[user.userProvenance] || user.userProvenance },
     { html: `<a href="/manage-user/${user.userId}${lngParam}" class="govuk-link">${content.manageLink}</a>` }
