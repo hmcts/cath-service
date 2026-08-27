@@ -1,10 +1,11 @@
 import { extractPressCases, type SjpJson } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
-import { SJP_PRESS_LIST_HEADERS } from "./excel-headers.js";
+import { getSjpPressListHeaders } from "./excel-headers.js";
 import { CELL_BORDER, DATA_ALIGNMENT, DATA_FONT, HEADER_ALIGNMENT, HEADER_FILL, HEADER_FONT } from "./excel-styles.js";
 
-export async function generateSjpPressListExcel(json: SjpJson): Promise<Buffer> {
+export async function generateSjpPressListExcel(json: SjpJson, locale: "en" | "cy" = "en"): Promise<Buffer> {
   const cases = extractPressCases(json);
+  const headers = getSjpPressListHeaders(locale);
 
   const maxOffences = cases.reduce((max, c) => Math.max(max, c.offences.length), 0);
 
@@ -12,21 +13,21 @@ export async function generateSjpPressListExcel(json: SjpJson): Promise<Buffer> 
   const worksheet = workbook.addWorksheet("SJP Press List");
 
   const columns: Array<{ header: string; key: string; width: number }> = [
-    { header: SJP_PRESS_LIST_HEADERS.address, key: "address", width: 40 },
-    { header: SJP_PRESS_LIST_HEADERS.caseUrn, key: "caseUrn", width: 20 },
-    { header: SJP_PRESS_LIST_HEADERS.dateOfBirth, key: "dateOfBirth", width: 25 },
-    { header: SJP_PRESS_LIST_HEADERS.defendantName, key: "defendantName", width: 30 }
+    { header: headers.address, key: "address", width: 40 },
+    { header: headers.caseUrn, key: "caseUrn", width: 20 },
+    { header: headers.dateOfBirth, key: "dateOfBirth", width: 25 },
+    { header: headers.defendantName, key: "defendantName", width: 30 }
   ];
 
   for (let i = 1; i <= maxOffences; i++) {
     columns.push(
-      { header: SJP_PRESS_LIST_HEADERS.offenceRestriction(i), key: `offence${i}Restriction`, width: 35 },
-      { header: SJP_PRESS_LIST_HEADERS.offenceTitle(i), key: `offence${i}Title`, width: 35 },
-      { header: SJP_PRESS_LIST_HEADERS.offenceWording(i), key: `offence${i}Wording`, width: 45 }
+      { header: headers.offenceRestriction(i), key: `offence${i}Restriction`, width: 35 },
+      { header: headers.offenceTitle(i), key: `offence${i}Title`, width: 35 },
+      { header: headers.offenceWording(i), key: `offence${i}Wording`, width: 45 }
     );
   }
 
-  columns.push({ header: SJP_PRESS_LIST_HEADERS.prosecutorName, key: "prosecutorName", width: 30 });
+  columns.push({ header: headers.prosecutorName, key: "prosecutorName", width: 30 });
 
   worksheet.columns = columns;
 
