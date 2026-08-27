@@ -100,7 +100,9 @@ import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
+  getEnvName,
   getSubscriptionTemplateId,
+  getSystemAdminTemplateId,
   isSjpListType,
   type TemplateParameters
 } from "../govnotify/template-config.js";
@@ -359,6 +361,43 @@ interface EmailTemplateData {
   templateId?: string;
   pdfBuffer?: Buffer;
   excelBuffer?: Buffer;
+}
+
+export interface SystemAdminNotification {
+  requesterEmail: string;
+  changeType: string;
+  actionResult?: string;
+  additionalChangeDetail: string;
+}
+
+export async function sendSystemAdminNotification(adminEmails: string[], details: SystemAdminNotification): Promise<void> {
+  if (adminEmails.length === 0) {
+    return;
+  }
+
+  const templateId = getSystemAdminTemplateId();
+  const personalisation = {
+    requester_email: details.requesterEmail,
+    "attempted/succeeded": details.actionResult ?? "succeeded",
+    "change-type": details.changeType,
+    Additional_change_detail: details.additionalChangeDetail,
+    env_name: getEnvName()
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    adminEmails.map(async (emailAddress) => {
+      const result = await sendEmail({
+        emailAddress,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send system admin notification to ${emailAddress}: ${result.error}`);
+      }
+    })
+  );
 }
 
 async function processUserNotification(

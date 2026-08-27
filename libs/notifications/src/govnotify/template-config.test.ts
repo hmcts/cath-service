@@ -177,6 +177,22 @@ describe("template-config", () => {
     });
   });
 
+  describe("getEnvName", () => {
+    it("should return the configured environment name when set", async () => {
+      process.env.ENV_NAME = "Staging";
+
+      const { getEnvName } = await import("./template-config.js");
+      expect(getEnvName()).toBe("Staging");
+    });
+
+    it("should default to Local when the environment variable is not set", async () => {
+      delete process.env.ENV_NAME;
+
+      const { getEnvName } = await import("./template-config.js");
+      expect(getEnvName()).toBe("Local");
+    });
+  });
+
   describe("getServiceUrl", () => {
     it("should return service URL when environment variable is set", async () => {
       process.env.CATH_SERVICE_URL = "https://custom-service.gov.uk";
