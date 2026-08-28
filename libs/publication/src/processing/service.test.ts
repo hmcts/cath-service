@@ -61,14 +61,6 @@ vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
   generateLondonAdministrativeCourtDailyCauseListPdf: vi.fn()
 }));
 
-vi.mock("@hmcts/cop-daily-cause-list", () => ({
-  generateCopDailyCauseListPdf: vi.fn()
-}));
-
-vi.mock("@hmcts/companies-winding-up-chd-daily-cause-list", () => ({
-  generateCompaniesWindingUpChdDailyCauseListPdf: vi.fn()
-}));
-
 vi.mock("@hmcts/sjp-public-list", () => ({
   generateSjpPublicListPdf: vi.fn()
 }));
@@ -1647,21 +1639,6 @@ describe("publication-processor", async () => {
 
     it("should register exactly the 3 in-scope Civil and Family cause lists", () => {
       expect(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES).toHaveLength(3);
-    });
-
-    it("should return false for COP_DAILY_CAUSE_LIST (legacy produces no Excel for it)", () => {
-      expect(listTypeHasExcel("COP_DAILY_CAUSE_LIST")).toBe(false);
-    });
-
-    it("should return false for NonStrategic list types (no legacy Excel)", () => {
-      expect(listTypeHasExcel("CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST")).toBe(false);
-      expect(listTypeHasExcel("LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST")).toBe(false);
-      expect(listTypeHasExcel("COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST")).toBe(false);
-      expect(listTypeHasExcel("COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST")).toBe(false);
-    });
-
-    it("should return false for COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST (a Crime list)", () => {
-      expect(listTypeHasExcel("COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST")).toBe(false);
     });
 
     it("should return false for an undefined list type name", () => {

@@ -11,7 +11,15 @@ vi.mock("@hmcts/azure-blob", () => ({
 }));
 
 import { uploadBlob } from "@hmcts/azure-blob";
-import { type CauseListExcelColumn, combinePartyWithRepresentative, formatCaseName, formatDuration, generateCauseListExcel } from "./excel-generator.js";
+import {
+  buildFamilyStyleColumns,
+  type CauseListExcelColumn,
+  combinePartyWithRepresentative,
+  type FamilyStyleColumnLabels,
+  formatCaseName,
+  formatDuration,
+  generateCauseListExcel
+} from "./excel-generator.js";
 
 const CONTEXT_HEADERS = { courtHouse: "Court House", courtRoom: "Court Room", judge: "Judge" };
 
@@ -185,6 +193,94 @@ describe("generateCauseListExcel", () => {
     // Assert
     expect(result.success).toBe(false);
     expect(result.error).toContain("upload failed");
+  });
+});
+
+describe("buildFamilyStyleColumns", () => {
+  const LABELS: FamilyStyleColumnLabels = {
+    time: "Time",
+    caseRef: "Case ref",
+    caseName: "Case name",
+    caseType: "Case type",
+    hearingType: "Hearing type",
+    location: "Location",
+    duration: "Duration",
+    applicant: "Applicant",
+    respondent: "Respondent",
+    reportingRestrictions: "Reporting Restriction"
+  };
+
+  function buildContext(caseOverrides = {}) {
+    return {
+      courtHouseName: "Court House",
+      courtRoomName: "Court 1",
+      judge: "Judge Smith",
+      hearingType: "Trial",
+      duration: "2 hours",
+      sitting: { time: "10am", caseHearingChannel: "In Person" },
+      caseItem: {
+        caseNumber: "F1",
+        caseName: "A v B",
+        caseSequenceIndicator: "1 of 2",
+        caseType: "Family",
+        applicant: "Alice Applicant",
+        applicantRepresentative: "Adam Advisor",
+        respondent: "Rob Respondent",
+        respondentRepresentative: "",
+        formattedReportingRestriction: "Restricted",
+        ...caseOverrides
+      }
+    } as never;
+  }
+
+  it("should build the ten-column family layout in order", () => {
+    const columns = buildFamilyStyleColumns(LABELS, "Legal Advisor");
+
+    expect(columns.map((c) => c.header)).toEqual([
+      LABELS.time,
+      LABELS.caseRef,
+      LABELS.caseName,
+      LABELS.caseType,
+      LABELS.hearingType,
+      LABELS.location,
+      LABELS.duration,
+      LABELS.applicant,
+      LABELS.respondent,
+      LABELS.reportingRestrictions
+    ]);
+  });
+
+  it("should map every accessor to the expected cell value", () => {
+    const columns = buildFamilyStyleColumns(LABELS, "Legal Advisor");
+    const context = buildContext();
+
+    expect(columns.map((c) => c.accessor(context))).toEqual([
+      "10am",
+      "F1",
+      "A v B [1 of 2]",
+      "Family",
+      "Trial",
+      "In Person",
+      "2 hours",
+      "Alice Applicant, Legal Advisor: Adam Advisor",
+      "Rob Respondent",
+      "Restricted"
+    ]);
+  });
+
+  it("should fall back to empty strings when case and sitting fields are missing", () => {
+    const columns = buildFamilyStyleColumns(LABELS, "Legal Advisor");
+    const context = {
+      courtHouseName: "",
+      courtRoomName: "",
+      judge: "",
+      hearingType: "",
+      duration: "",
+      sitting: {},
+      caseItem: {}
+    } as never;
+
+    expect(columns.map((c) => c.accessor(context))).toEqual(["", "", "", "", "", "", "", "", "", ""]);
   });
 });
 
