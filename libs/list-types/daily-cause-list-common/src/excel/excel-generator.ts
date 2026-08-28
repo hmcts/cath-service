@@ -65,6 +65,42 @@ export interface CauseListExcelResult {
   error?: string;
 }
 
+export interface FamilyStyleColumnLabels {
+  time: string;
+  caseRef: string;
+  caseName: string;
+  caseType: string;
+  hearingType: string;
+  location: string;
+  duration: string;
+  applicant: string;
+  respondent: string;
+  reportingRestrictions: string;
+}
+
+// Family and Civil-and-Family share an identical 10-column layout, differing only in the
+// locale labels they pass in. Building the columns here keeps the two wrappers from duplicating it.
+export function buildFamilyStyleColumns(labels: FamilyStyleColumnLabels, legalAdvisorLabel: string): CauseListExcelColumn[] {
+  return [
+    { header: labels.time, accessor: (c) => c.sitting.time ?? "" },
+    { header: labels.caseRef, accessor: (c) => c.caseItem.caseNumber ?? "" },
+    { header: labels.caseName, accessor: (c) => formatCaseName(c.caseItem.caseName, c.caseItem.caseSequenceIndicator) },
+    { header: labels.caseType, accessor: (c) => c.caseItem.caseType ?? "" },
+    { header: labels.hearingType, accessor: (c) => c.hearingType },
+    { header: labels.location, accessor: (c) => c.sitting.caseHearingChannel ?? "" },
+    { header: labels.duration, accessor: (c) => c.duration },
+    {
+      header: labels.applicant,
+      accessor: (c) => combinePartyWithRepresentative(c.caseItem.applicant ?? "", c.caseItem.applicantRepresentative ?? "", legalAdvisorLabel)
+    },
+    {
+      header: labels.respondent,
+      accessor: (c) => combinePartyWithRepresentative(c.caseItem.respondent ?? "", c.caseItem.respondentRepresentative ?? "", legalAdvisorLabel)
+    },
+    { header: labels.reportingRestrictions, accessor: (c) => c.caseItem.formattedReportingRestriction ?? "" }
+  ];
+}
+
 export function formatCaseName(caseName: string | undefined, caseSequenceIndicator: string | undefined): string {
   const name = caseName ?? "";
 
