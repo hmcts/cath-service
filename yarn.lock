@@ -1696,6 +1696,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.4"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
