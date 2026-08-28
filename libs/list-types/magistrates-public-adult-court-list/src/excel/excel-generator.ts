@@ -6,6 +6,7 @@ import { type MagistratesPublicAdultCourtListData, renderMagistratesPublicAdultC
 
 // ExcelJS rejects worksheet names longer than 31 characters.
 const MAX_SHEET_NAME_LENGTH = 31;
+const SHEET_NAME = "Magistrates Public Adult Court";
 
 interface ExcelGenerationOptions {
   artefactId: string;
@@ -23,18 +24,16 @@ interface ExcelGenerationResult {
 }
 
 export async function generateMagistratesPublicAdultCourtListExcel(options: ExcelGenerationOptions): Promise<ExcelGenerationResult> {
-  const { artefactId, locationId, contentDate, locale, listTypeName, jsonData } = options;
+  const { artefactId, locationId, contentDate, locale, jsonData } = options;
 
   try {
-    const isFuture = listTypeName === "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE";
     const t = locale === "cy" ? cyLocale : enLocale;
     const cols = t.excelColumns;
-    const sheetTitle = isFuture ? t.titleFuture : t.titleDaily;
 
     const { listData } = await renderMagistratesPublicAdultCourtListData(jsonData, { locationId, contentDate, locale });
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(sheetTitle.slice(0, MAX_SHEET_NAME_LENGTH));
+    const worksheet = workbook.addWorksheet(SHEET_NAME.slice(0, MAX_SHEET_NAME_LENGTH));
 
     const headerRow = worksheet.addRow([cols.courtHouse, cols.sittingAt, cols.lja, cols.sessionStart, cols.listingTime, cols.defendantName, cols.caseNumber]);
     headerRow.font = { bold: true };
