@@ -33,7 +33,7 @@ Confirm the plan in one short message, then continue. **Pause.**
 
 **Step 2: Domain vocabulary.** Output this on its own, before anything else. List 8–15 terms a developer must know to read this code, one line each, drawn from the schema, docs and module names. Explicitly flag any term that means something different here from its everyday or industry meaning. **Pause** and ask which terms they want expanded.
 
-**Step 3: Project context and high-level design.** The business purpose, the primary users, the main architectural pattern, and the core boundaries. Fold in the filtered anomalies from Step 0b here — they land as structure, not trivia, once the developer has the layout in mind. **Pause.**
+**Step 3: Project context and high-level design.** The business purpose, the primary users, the main architectural pattern, and the core boundaries. **Pause.**
 
 **Step 4: Getting it running.** Exact commands to install dependencies, run migrations, seed data, and start locally — plus how local differs from staging and production (required env vars, secrets, stubbed services). Ask them to run it and confirm the app is up. Offer to debug setup errors. **Pause** until it is running.
 
