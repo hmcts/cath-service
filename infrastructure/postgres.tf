@@ -3,8 +3,10 @@ module "postgresql" {
     azurerm.postgres_network = azurerm.postgres_network
   }
 
-  source        = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
-  name          = "${var.product}-${var.env}"
+  source = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
+
+  # The module appends -${var.env} to this, so pass the product alone to get cath-aat.
+  name          = var.product
   env           = var.env
   product       = var.product
   component     = var.component

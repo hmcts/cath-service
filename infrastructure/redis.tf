@@ -2,7 +2,7 @@ module "redis" {
   source = "git::https://github.com/hmcts/cnp-module-redis?ref=master"
 
   product       = var.product
-  name          = "${var.product}-${var.component}-${var.env}"
+  name          = "${var.product}-${var.env}"
   location      = var.location
   env           = var.env
   common_tags   = var.common_tags

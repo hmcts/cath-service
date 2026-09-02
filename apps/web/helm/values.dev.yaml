@@ -9,7 +9,6 @@ nodejs:
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
-    REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
     THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-stg'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
