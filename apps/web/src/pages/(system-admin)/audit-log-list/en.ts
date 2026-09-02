@@ -13,6 +13,8 @@ export const en = {
     selectedFilters: "Selected filters",
     clearFilters: "Clear filters",
     applyFilters: "Apply filters",
+    showFilters: "Show filters",
+    hideFilters: "Hide filters",
     emailLabel: "Email",
     userIdLabel: "User ID",
     userIdHint: "Must be an exact match",

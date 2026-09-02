@@ -20,6 +20,8 @@ describe("list-type-service", () => {
       welshFriendlyName: "Rhestr Prawf",
       shortenedFriendlyName: "Test",
       url: "/test-list",
+      caseNumberJsonFieldName: "caseNo",
+      caseNameJsonFieldName: "caseName",
       defaultSensitivity: "Public",
       allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false,

@@ -9,7 +9,8 @@ describe("accessibility-statement page", () => {
   beforeEach(() => {
     req = {};
     res = {
-      render: vi.fn()
+      render: vi.fn(),
+      locals: {}
     };
   });
 

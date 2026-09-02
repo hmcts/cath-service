@@ -11,7 +11,16 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 describe("generateReferenceDataCsv", () => {
-  it("should generate CSV with all location data", async () => {
+  it("should query all locations without a soft-delete filter", async () => {
+    vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+
+    await generateReferenceDataCsv();
+
+    const call = vi.mocked(prisma.location.findMany).mock.calls.at(-1)?.[0];
+    expect(call?.where).toBeUndefined();
+  });
+
+  it("should generate CSV with active location data", async () => {
     const mockLocations = [
       {
         locationId: 1,

@@ -23,7 +23,7 @@ model Artefact {
   provenance        String
   supersededCount   Int               @default(0) @map("superseded_count")
   noMatch           Boolean           @default(false) @map("no_match")
-  fileExtension     String?           @map("file_extension") @db.VarChar(10)
+  sourceArtefactId  String?           @map("source_artefact_id")
   ingestionLogs     IngestionLog[]
   artefactSearches  ArtefactSearch[]
   listType          ListType          @relation(fields: [listTypeId], references: [id])

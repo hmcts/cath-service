@@ -117,7 +117,7 @@ async function createFlatFileArtefact(
     if (USE_BLOB_STORAGE) {
       // Upload via the web app's test-support endpoint which writes to blob storage (Azurite in CI, Azure in prod)
       console.log(`[flat-file] Uploading file to blob storage for artefact ${artefactId}`);
-      await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf" });
+      await uploadTestFlatFileToWeb({ artefactId, content: pdfBuffer, extension: ".pdf", sourceArtefactId: "civil-daily-cause-list.pdf" });
     } else {
       // Locally without blob storage: write directly to shared storage directory
       if (!fs.existsSync(STORAGE_PATH)) {
@@ -245,7 +245,7 @@ test.describe("Flat File Viewing", () => {
 
     const contentDisposition = response.headers()["content-disposition"];
     expect(contentDisposition).toContain("inline");
-    expect(contentDisposition).toContain(`${artefactId}.pdf`);
+    expect(contentDisposition).toContain(USE_BLOB_STORAGE ? "civil-daily-cause-list.pdf" : `${artefactId}.pdf`);
 
     const cacheControl = response.headers()["cache-control"];
     expect(cacheControl).toBe("private, max-age=0, no-cache, no-store, must-revalidate");

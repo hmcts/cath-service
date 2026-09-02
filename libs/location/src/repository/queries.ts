@@ -53,7 +53,6 @@ export async function getAllLocations(language: "en" | "cy", filters?: LocationF
 
   const locations = await prisma.location.findMany({
     where: {
-      deletedAt: null,
       ...(filters?.regions &&
         filters.regions.length > 0 && {
           locationRegions: {
@@ -90,7 +89,6 @@ export async function searchLocationsByName(query: string, language: "en" | "cy"
 
   const locations = await prisma.location.findMany({
     where: {
-      deletedAt: null,
       [searchField]: {
         contains: query,
         mode: "insensitive"
@@ -108,8 +106,7 @@ export async function searchLocationsByName(query: string, language: "en" | "cy"
 export async function getLocationById(id: number): Promise<Location | undefined> {
   const location = await prisma.location.findFirst({
     where: {
-      locationId: id,
-      deletedAt: null
+      locationId: id
     },
     select: LOCATION_SELECT
   });
@@ -126,8 +123,7 @@ export async function getLocationsByIds(ids: number[]): Promise<Location[]> {
     where: {
       locationId: {
         in: ids
-      },
-      deletedAt: null
+      }
     },
     select: LOCATION_SELECT
   });
@@ -185,8 +181,7 @@ export async function getSubJurisdictionsByJurisdiction(jurisdictionId: number):
 export async function getLocationWithDetails(locationId: number): Promise<import("./model.js").LocationDetails | null> {
   const location = await prisma.location.findFirst({
     where: {
-      locationId,
-      deletedAt: null
+      locationId
     },
     select: {
       locationId: true,
@@ -266,13 +261,10 @@ export async function hasActiveArtefacts(locationId: number): Promise<boolean> {
   return count > 0;
 }
 
-export async function softDeleteLocation(locationId: number): Promise<void> {
-  await prisma.location.update({
-    where: {
-      locationId
-    },
-    data: {
-      deletedAt: new Date()
-    }
-  });
+export async function deleteLocation(locationId: number): Promise<void> {
+  await prisma.$transaction([
+    prisma.locationSubJurisdiction.deleteMany({ where: { locationId } }),
+    prisma.locationRegion.deleteMany({ where: { locationId } }),
+    prisma.location.delete({ where: { locationId } })
+  ]);
 }

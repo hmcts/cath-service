@@ -1,0 +1,23 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l">{{ t.pageTitle }}</h1>
+
+    <p class="govuk-body">{{ t.saveInstructions }}</p>
+
+    {% for file in files %}
+      <p class="govuk-body">
+        <a href="{{ file.url }}" class="govuk-link">
+          {% if file.type === "pdf" %}{{ t.downloadPdfLink }}{% else %}{{ t.downloadExcelLink }}{% endif %} ({{ file.sizeLabel }}) {{ t.toDevice }}
+        </a>
+      </p>
+    {% endfor %}
+
+    <p class="govuk-body govuk-!-margin-top-6">{{ t.contactInfo }}</p>
+
+  </div>
+</div>
+{% endblock %}

@@ -108,7 +108,7 @@ describe("Logout handler", () => {
         email: "b2c@example.com",
         displayName: "B2C User",
         role: "VERIFIED",
-        provenance: "B2C"
+        provenance: "PI_AAD"
       },
       logout: vi.fn((cb) => cb(null)),
       session: {

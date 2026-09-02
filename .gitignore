@@ -10,8 +10,14 @@ build/
 public/build/
 database/build
 
+# Requirements SQLite DB (build artefact; rebuild with requirements/scripts/init_db.sh)
+requirements/*.db
+
 # Temporary storage
 apps/web/storage/temp/
+
+# Git worktrees for parallel development
+.claude/worktrees/
 
 # macOS
 .DS_Store
@@ -86,7 +92,11 @@ libs/postgres-prisma/generated/
 
 # Exception: Utility scripts that are source JS
 !e2e-tests/run-with-credentials.js
+!scripts/install-hooks.js
 
 # Exception: Hand-written ambient type declarations
 !**/global.d.ts
 !types/**/*.d.ts
+
+# Lefthook local overrides
+.lefthook-local.yml

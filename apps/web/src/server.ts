@@ -3,24 +3,22 @@ import type http from "node:http";
 import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createApp } from "./app.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const { createApp } = await import("./app.js");
+
 const PORT = process.env.PORT || 8080;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 async function startServer() {
   const app = await createApp();
 
-  // Dynamic import to avoid eager initialization of @hmcts/postgres-prisma before
-  // getPropertiesVolumeSecrets() has set DATABASE_URL from the Key Vault mount.
-  try {
-    const { seedLocationData } = await import("@hmcts/location");
-    await seedLocationData();
-  } catch (error) {
-    console.error("Location data seeding failed, continuing server startup:", error);
-  }
+  // Reference data is seeded exclusively by the postgres deploy pod (apps/postgres/start.sh),
+  // which applies idempotent ON CONFLICT SQL generated from the TypeScript source of truth.
+  // The web app must not seed on startup: web autoscales, so concurrent seeders raced on
+  // Prisma's non-atomic upsert and crashed with UniqueConstraintViolation.
 
   // Check if we should use HTTPS (local development with certificates)
   const certsDir = path.join(__dirname, "..", "certs");

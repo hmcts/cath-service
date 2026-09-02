@@ -44,8 +44,25 @@ describe("renderCauseListData", () => {
 
     expect(result.header.locationName).toBe("Oxford Combined Court Centre");
     expect(result.header.addressLines).toEqual(["St Aldate's", "Oxford", "Oxfordshire", "OX1 1TL"]);
-    expect(result.header.contentDate).toBe("01 January 2025");
+    expect(result.header.contentDate).toBe("1 January 2025");
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
+  });
+
+  it("should return empty address lines when venue has no address", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: { venueName: "Preston" },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual([]);
+    expect(result.header.locationName).toBe("Preston");
   });
 
   it("should render open justice information", async () => {

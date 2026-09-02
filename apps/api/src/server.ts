@@ -1,4 +1,4 @@
-import { createApp } from "./app.js";
+const { createApp } = await import("./app.js");
 
 const PORT = process.env.API_PORT || 3001;
 

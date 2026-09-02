@@ -69,14 +69,14 @@ describe("delete-third-party-user page", () => {
     });
 
     it("should render delete confirmation page with user data", async () => {
-      req.query = { id: "user-123" };
-      const mockUser = { id: "user-123", name: "Test User" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test User" };
       (findThirdPartyUserById as any).mockResolvedValue(mockUser);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(findThirdPartyUserById).toHaveBeenCalledWith("user-123");
+      expect(findThirdPartyUserById).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
       expect(res.render).toHaveBeenCalledWith(
         "delete-third-party-user/index",
         expect.objectContaining({
@@ -87,22 +87,22 @@ describe("delete-third-party-user page", () => {
     });
 
     it("should store user info in session", async () => {
-      req.query = { id: "user-123" };
-      const mockUser = { id: "user-123", name: "Test User" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test User" };
       (findThirdPartyUserById as any).mockResolvedValue(mockUser);
 
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
       expect((req.session as any).deleteThirdPartyUser).toEqual({
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       });
     });
 
     it("should render page in Welsh", async () => {
-      req.query = { id: "user-123", lng: "cy" };
-      const mockUser = { id: "user-123", name: "Test User" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001", lng: "cy" };
+      const mockUser = { id: "00000000-0000-0000-0000-000000000001", name: "Test User" };
       (findThirdPartyUserById as any).mockResolvedValue(mockUser);
 
       const handler = GET[GET.length - 1];
@@ -135,7 +135,7 @@ describe("delete-third-party-user page", () => {
 
     it("should show validation error when no radio selected", async () => {
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = {};
@@ -155,7 +155,7 @@ describe("delete-third-party-user page", () => {
 
     it("should redirect to manage user page when user selects no", async () => {
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = { confirmDelete: "no" };
@@ -165,14 +165,14 @@ describe("delete-third-party-user page", () => {
       await handler(req as Request, res as Response, vi.fn());
 
       expect(deleteThirdPartyUser).not.toHaveBeenCalled();
-      expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-user?id=user-123");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-user?id=00000000-0000-0000-0000-000000000001");
       expect((req.session as any).deleteThirdPartyUser).toBeUndefined();
     });
 
     it("should redirect to manage user page with Welsh locale when user selects no", async () => {
       req.query = { lng: "cy" };
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = { confirmDelete: "no" };
@@ -181,12 +181,12 @@ describe("delete-third-party-user page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-user?id=user-123&lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-third-party-user?id=00000000-0000-0000-0000-000000000001&lng=cy");
     });
 
     it("should delete user and redirect to success page when confirmed", async () => {
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = { confirmDelete: "yes" };
@@ -196,7 +196,7 @@ describe("delete-third-party-user page", () => {
       const handler = POST[POST.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(deleteThirdPartyUser).toHaveBeenCalledWith("user-123");
+      expect(deleteThirdPartyUser).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-user-deleted");
       expect((req.session as any).deleteThirdPartyUser).toBeUndefined();
     });
@@ -204,7 +204,7 @@ describe("delete-third-party-user page", () => {
     it("should redirect to success page with Welsh locale after deletion", async () => {
       req.query = { lng: "cy" };
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = { confirmDelete: "yes" };
@@ -219,7 +219,7 @@ describe("delete-third-party-user page", () => {
 
     it("should set audit metadata on deletion", async () => {
       (req.session as any).deleteThirdPartyUser = {
-        userId: "user-123",
+        userId: "00000000-0000-0000-0000-000000000001",
         userName: "Test User"
       };
       req.body = { confirmDelete: "yes" };
@@ -232,7 +232,7 @@ describe("delete-third-party-user page", () => {
       expect(req.auditMetadata).toEqual({
         shouldLog: true,
         action: "Delete third party user",
-        entityInfo: "ID: user-123, Name: Test User"
+        entityInfo: "ID: 00000000-0000-0000-0000-000000000001, Name: Test User"
       });
     });
   });

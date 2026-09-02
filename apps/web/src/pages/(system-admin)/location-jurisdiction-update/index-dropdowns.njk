@@ -1,0 +1,57 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ locationName }}</h1>
+    <h2 class="govuk-heading-m">{{ title }}</h2>
+
+    <form method="post" novalidate>
+      {% for group in subJurisdictionGroups %}
+        {{ govukCheckboxes({
+          name: "subJurisdictionIds",
+          fieldset: {
+            legend: {
+              text: group.heading,
+              classes: "govuk-fieldset__legend--s"
+            }
+          },
+          items: group.items
+        }) }}
+      {% endfor %}
+
+      {{ govukCheckboxes({
+        name: "regionIds",
+        fieldset: {
+          legend: {
+            text: regionLabel,
+            classes: "govuk-fieldset__legend--s"
+          }
+        },
+        items: regionCheckboxes
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: confirmButton
+        }) }}
+        <a href="{{ cancelHref }}" role="button" draggable="false" class="govuk-button govuk-button--warning" data-module="govuk-button">
+          {{ cancelButton }}
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

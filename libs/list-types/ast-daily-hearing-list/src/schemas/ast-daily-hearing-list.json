@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AST Daily Hearing List",
+  "description": "Schema for Asylum Support Tribunal Daily Hearing List",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["appellant", "appealReferenceNumber", "caseType", "hearingType", "hearingTime", "additionalInformation"],
+    "properties": {
+      "appellant": {
+        "title": "Appellant",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "appealReferenceNumber": {
+        "title": "Appeal reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "caseType": {
+        "title": "Case type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "hearingType": {
+        "title": "Hearing type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "hearingTime": {
+        "title": "Hearing time",
+        "type": "string",
+        "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$",
+        "examples": ["10am", "2:30pm"]
+      },
+      "additionalInformation": {
+        "title": "Additional information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  {% for option in options %}
+    <div class="govuk-grid-column-one-half">
+      <a href="{{ option.href }}" class="admin-tile">
+        <h2 class="admin-tile__heading">{{ option.label }}</h2>
+        <p class="admin-tile__description">{{ option.description }}</p>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

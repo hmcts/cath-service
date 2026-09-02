@@ -3,6 +3,7 @@ import { BlobServiceClient, StorageSharedKeyCredential } from "@azure/storage-bl
 
 export const CONTAINER = {
   ARTEFACT: "artefact",
+  FILES: "files",
   PUBLICATIONS: "publications"
 } as const;
 
@@ -53,6 +54,22 @@ export async function downloadBlob(blobName: string, containerName: ContainerNam
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }
     return Buffer.concat(chunks);
+  } catch (error) {
+    if (error instanceof Error && "statusCode" in error && (error as { statusCode: number }).statusCode === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export async function getBlobProperties(blobName: string, containerName: ContainerName = CONTAINER.ARTEFACT): Promise<{ size: number } | null> {
+  const client = createBlobServiceClient();
+  const containerClient = client.getContainerClient(containerName);
+  const blobClient = containerClient.getBlobClient(blobName);
+
+  try {
+    const properties = await blobClient.getProperties();
+    return { size: properties.contentLength ?? 0 };
   } catch (error) {
     if (error instanceof Error && "statusCode" in error && (error as { statusCode: number }).statusCode === 404) {
       return null;

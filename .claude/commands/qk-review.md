@@ -40,7 +40,9 @@ PROMPT FOR AGENT:
 **STEP 1: Analyze Changes**
 1. Run: git diff --name-only to see all changed files
 2. Run: git diff to see the actual changes
-3. Read docs/tickets/$ARGUMENT/ticket.md to understand the requirements
+3. Read docs/tickets/$ARGUMENT/ticket.md to understand the requirements, and extract the
+   acceptance criteria verbatim (the 'Acceptance Criteria'/'AC' section or checklist items in
+   the Description) so each one can be checked individually in the report
 4. Read docs/tickets/$ARGUMENT/plan.md to understand the intended approach
 5. Read docs/tickets/$ARGUMENT/tasks.md to verify all tasks were completed
 
@@ -86,6 +88,13 @@ Perform a comprehensive review covering:
 - Progressive enhancement (works without JS)
 - Plain English content
 
+**STEP 2b: Measure Test Coverage**
+1. Run: git diff --name-only to identify which workspaces (libs/* and apps/*) changed
+2. Run: yarn test:coverage
+3. For each changed workspace, read its 'Coverage summary' block in the output and take the
+   percentage from the 'Statements :' line (e.g. "Statements : 87% (…)")
+4. Record each changed workspace's statement coverage % for use in the report
+
 **STEP 3: Generate Review Report**
 Create a review report at docs/tickets/$ARGUMENT/review.md with the following structure:
 
@@ -121,12 +130,20 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
 - Unit tests: [assessment]
 - E2E tests: [assessment]
 - Accessibility tests: [assessment]
-- Coverage percentage: [if available]
+- Statement coverage per changed workspace (from STEP 2b):
+  - <workspace>: <NN>%  (flag ⚠️ if below 80%)
 
 ## Acceptance Criteria Verification
-[Check each acceptance criterion from ticket.md]
-- [ ] Criterion 1: [Status and notes]
-- [ ] Criterion 2: [Status and notes]
+[List EVERY acceptance criterion extracted from ticket.md — do not summarise or omit any.
+Mark each using exactly three states:
+  - '- [x]' fully met
+  - '- [~]' partially met (state what is done and what is missing)
+  - '- [ ]' not met
+Every met or partially met criterion MUST cite at least one file:line reference to the code or
+test that satisfies it. If a criterion is met but no such reference exists, mark it '- [ ]' and
+record 'no evidence'.]
+- [ ] Criterion 1: [Status and notes — file:line]
+- [ ] Criterion 2: [Status and notes — file:line]
 ...
 
 ## Next Steps
@@ -137,6 +154,18 @@ Create a review report at docs/tickets/$ARGUMENT/review.md with the following st
 
 ## Overall Assessment
 [APPROVED / NEEDS CHANGES / MAJOR REVISIONS REQUIRED]
+
+Coverage rule: if any changed workspace is below 80% statement coverage (per STEP 2b), the
+Overall Assessment MUST be at least NEEDS CHANGES, and each such workspace MUST be listed under
+HIGH PRIORITY Issues (or CRITICAL if coverage is far below). This verdict is advisory — it does
+not block the developer from committing.
+
+Acceptance Criteria rule: if any acceptance criterion is not fully met (any '- [ ]' or '- [~]'
+in the Acceptance Criteria Verification section), the Overall Assessment MUST be at least NEEDS
+CHANGES. Each not-met ('- [ ]') criterion MUST be listed under CRITICAL Issues — an unmet
+criterion is an unimplemented requirement. Each partially met ('- [~]') criterion MUST be listed
+under HIGH PRIORITY Issues with the missing part described. This verdict is advisory — it does
+not block the developer from committing.
 
 ---
 
@@ -165,7 +194,8 @@ ACTION: Read the review report and present key findings to the user
    - Number of critical issues
    - Number of high priority issues
    - Number of suggestions
-   - Acceptance criteria status
+   - Acceptance criteria status (N met / P partial / U unmet of M, with any partial or unmet
+     criteria named)
 
 3. Show the full review report location
 ```
@@ -180,6 +210,8 @@ Code review complete for issue #$ARGUMENT!
 
 📊 Review Summary:
 [Display counts of critical/high priority/suggestions]
+
+Acceptance Criteria: [N met / P partial / U unmet of M — name any partial or unmet criteria]
 
 Overall Assessment: [APPROVED/NEEDS CHANGES/MAJOR REVISIONS REQUIRED]
 

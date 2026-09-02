@@ -1,0 +1,71 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ locationName }}</h1>
+    <h2 class="govuk-heading-m">{{ title }}</h2>
+
+    <form method="post" novalidate>
+      <div class="govuk-accordion" data-module="govuk-accordion" id="jurisdiction-accordion">
+        <div class="govuk-accordion__section">
+          <div class="govuk-accordion__section-header">
+            <h3 class="govuk-accordion__section-heading">
+              <span class="govuk-accordion__section-button" id="accordion-sub-jurisdictions">Sub-Jurisdictions</span>
+            </h3>
+          </div>
+          <div class="govuk-accordion__section-content">
+            {% for item in allData %}
+              {% if item.type == "Sub-Jurisdiction" %}
+                <div class="govuk-checkboxes__item">
+                  <input class="govuk-checkboxes__input" id="sub-{{ item.id }}" name="subJurisdictionIds" type="checkbox" value="{{ item.id }}" {% if item.id in currentSubJurisdictionIds %}checked{% endif %}>
+                  <label class="govuk-label govuk-checkboxes__label" for="sub-{{ item.id }}">{{ item.name }}</label>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        <div class="govuk-accordion__section">
+          <div class="govuk-accordion__section-header">
+            <h3 class="govuk-accordion__section-heading">
+              <span class="govuk-accordion__section-button" id="accordion-regions">Regions</span>
+            </h3>
+          </div>
+          <div class="govuk-accordion__section-content">
+            {% for item in allData %}
+              {% if item.type == "Region" %}
+                <div class="govuk-checkboxes__item">
+                  <input class="govuk-checkboxes__input" id="region-{{ item.id }}" name="regionIds" type="checkbox" value="{{ item.id }}" {% if item.id in currentRegionIds %}checked{% endif %}>
+                  <label class="govuk-label govuk-checkboxes__label" for="region-{{ item.id }}">{{ item.name }}</label>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: confirmButton
+        }) }}
+        <a href="{{ cancelHref }}" role="button" draggable="false" class="govuk-button govuk-button--warning" data-module="govuk-button">
+          {{ cancelButton }}
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

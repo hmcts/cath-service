@@ -1,62 +1,90 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CONTAINER, uploadBlob } from "@hmcts/azure-blob";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { saveIdProofFile } from "./storage.js";
 
-vi.mock("node:fs/promises");
+vi.mock("@hmcts/azure-blob", () => ({
+  uploadBlob: vi.fn().mockResolvedValue(undefined),
+  CONTAINER: { FILES: "files", ARTEFACT: "artefact", PUBLICATIONS: "publications" },
+  getContentType: vi.fn((ext: string) => {
+    const map: Record<string, string> = { ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png" };
+    return map[ext] ?? "application/octet-stream";
+  })
+}));
 
 describe("saveIdProofFile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-    vi.mocked(fs.writeFile).mockResolvedValue();
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it("should upload PDF and return blob key", async () => {
+    // Arrange
+    const buffer = Buffer.from("pdf-content");
+
+    // Act
+    const result = await saveIdProofFile("app-123", "passport.pdf", buffer);
+
+    // Assert
+    expect(result).toBe("app-123.pdf");
+    expect(uploadBlob).toHaveBeenCalledWith("app-123.pdf", buffer, "application/pdf", CONTAINER.FILES);
   });
 
-  it("should save file with correct naming convention", async () => {
-    const applicationId = "test-uuid-123";
-    const originalFileName = "passport.jpg";
-    const fileBuffer = Buffer.from("test file content");
+  it("should upload JPG and return blob key", async () => {
+    // Arrange
+    const buffer = Buffer.from("jpg-content");
 
-    const result = await saveIdProofFile(applicationId, originalFileName, fileBuffer);
+    // Act
+    const result = await saveIdProofFile("app-456", "photo.jpg", buffer);
 
-    expect(fs.mkdir).toHaveBeenCalledWith(path.join(process.cwd(), "storage", "temp", "files"), { recursive: true });
-
-    const expectedPath = path.join(process.cwd(), "storage", "temp", "files", "test-uuid-123.jpg");
-    expect(fs.writeFile).toHaveBeenCalledWith(expectedPath, fileBuffer);
-    expect(result).toBe(expectedPath);
+    // Assert
+    expect(result).toBe("app-456.jpg");
+    expect(uploadBlob).toHaveBeenCalledWith("app-456.jpg", buffer, "image/jpeg", CONTAINER.FILES);
   });
 
-  it("should preserve file extension from original filename", async () => {
-    const applicationId = "test-uuid-456";
-    const originalFileName = "id-card.png";
-    const fileBuffer = Buffer.from("test image");
+  it("should upload JPEG and return blob key", async () => {
+    // Arrange
+    const buffer = Buffer.from("jpeg-content");
 
-    await saveIdProofFile(applicationId, originalFileName, fileBuffer);
+    // Act
+    const result = await saveIdProofFile("app-789", "photo.JPEG", buffer);
 
-    expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-uuid-456.png"), fileBuffer);
+    // Assert
+    expect(result).toBe("app-789.jpeg");
+    expect(uploadBlob).toHaveBeenCalledWith("app-789.jpeg", buffer, "image/jpeg", CONTAINER.FILES);
   });
 
-  it("should handle uppercase extensions", async () => {
-    const applicationId = "test-uuid-789";
-    const originalFileName = "document.PDF";
-    const fileBuffer = Buffer.from("test pdf");
+  it("should upload PNG and return blob key", async () => {
+    // Arrange
+    const buffer = Buffer.from("png-content");
 
-    await saveIdProofFile(applicationId, originalFileName, fileBuffer);
+    // Act
+    const result = await saveIdProofFile("app-abc", "id.png", buffer);
 
-    expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-uuid-789.pdf"), fileBuffer);
+    // Assert
+    expect(result).toBe("app-abc.png");
+    expect(uploadBlob).toHaveBeenCalledWith("app-abc.png", buffer, "image/png", CONTAINER.FILES);
   });
 
-  it("should create directory if it does not exist", async () => {
-    const applicationId = "test-uuid-101";
-    const originalFileName = "press-card.jpeg";
-    const fileBuffer = Buffer.from("test jpeg");
+  it("should use octet-stream for unknown extension", async () => {
+    // Arrange
+    const buffer = Buffer.from("data");
 
-    await saveIdProofFile(applicationId, originalFileName, fileBuffer);
+    // Act
+    const result = await saveIdProofFile("app-xyz", "doc.tiff", buffer);
 
-    expect(fs.mkdir).toHaveBeenCalledWith(path.join(process.cwd(), "storage", "temp", "files"), { recursive: true });
+    // Assert
+    expect(result).toBe("app-xyz.tiff");
+    expect(uploadBlob).toHaveBeenCalledWith("app-xyz.tiff", buffer, "application/octet-stream", CONTAINER.FILES);
+  });
+
+  it("should use octet-stream and omit extension when originalName has no extension", async () => {
+    // Arrange
+    const buffer = Buffer.from("data");
+
+    // Act
+    const result = await saveIdProofFile("app-noext", "", buffer);
+
+    // Assert
+    expect(result).toBe("app-noext");
+    expect(uploadBlob).toHaveBeenCalledWith("app-noext", buffer, "application/octet-stream", CONTAINER.FILES);
   });
 });

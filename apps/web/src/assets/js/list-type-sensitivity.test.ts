@@ -107,13 +107,13 @@ describe("initListTypeSensitivity", () => {
     expect(sensitivitySelect.value).toBe("");
   });
 
-  it("should handle list type with no default sensitivity", () => {
+  it("should clear sensitivity when switching to list type with no default sensitivity", () => {
     document.body.innerHTML = `
       <form data-list-type-sensitivity='{"1": "PUBLIC"}'>
         <select name="listType">
           <option value="">Select</option>
           <option value="1">Civil Daily Cause List</option>
-          <option value="2">Crown Daily List</option>
+          <option value="2">Magistrates Public List</option>
         </select>
         <select name="sensitivity">
           <option value="">Select</option>
@@ -127,11 +127,14 @@ describe("initListTypeSensitivity", () => {
     const listTypeSelect = document.querySelector('select[name="listType"]') as HTMLSelectElement;
     const sensitivitySelect = document.querySelector('select[name="sensitivity"]') as HTMLSelectElement;
 
-    // Select list type without default sensitivity
+    // First select a list type that has a default sensitivity
+    listTypeSelect.value = "1";
+    listTypeSelect.dispatchEvent(new Event("change"));
+    expect(sensitivitySelect.value).toBe("PUBLIC");
+
+    // Switch to a list type with no default — sensitivity should be cleared
     listTypeSelect.value = "2";
     listTypeSelect.dispatchEvent(new Event("change"));
-
-    // Sensitivity should remain unchanged (current implementation doesn't set value if not in map)
     expect(sensitivitySelect.value).toBe("");
   });
 

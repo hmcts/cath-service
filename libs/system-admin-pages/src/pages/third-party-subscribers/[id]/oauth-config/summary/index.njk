@@ -1,0 +1,56 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block backLink %}
+  <a href="/third-party-subscribers/{{ userId }}/oauth-config{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: { text: destinationUrlLabel },
+          value: { text: config.destinationUrl },
+          actions: {
+            items: [{ href: "/third-party-subscribers/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: destinationUrlLabel }]
+          }
+        },
+        {
+          key: { text: tokenUrlLabel },
+          value: { text: config.tokenUrl },
+          actions: {
+            items: [{ href: "/third-party-subscribers/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: tokenUrlLabel }]
+          }
+        },
+        {
+          key: { text: scopeLabel },
+          value: { text: config.scope },
+          actions: {
+            items: [{ href: "/third-party-subscribers/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: scopeLabel }]
+          }
+        },
+        {
+          key: { text: clientIdLabel },
+          value: { text: config.clientId },
+          actions: {
+            items: [{ href: "/third-party-subscribers/" + userId + "/oauth-config" + lngParam, text: changeLink, visuallyHiddenText: clientIdLabel }]
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: confirmButton
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

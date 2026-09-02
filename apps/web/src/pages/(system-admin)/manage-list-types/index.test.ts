@@ -37,21 +37,6 @@ const mockDbListTypes = [
     updatedAt: new Date(),
     deletedAt: null,
     subJurisdictions: []
-  },
-  {
-    id: 3,
-    name: "CRIME_DAILY_LIST",
-    friendlyName: "Crime Daily List",
-    welshFriendlyName: null,
-    shortenedFriendlyName: null,
-    url: null,
-    defaultSensitivity: null,
-    allowedProvenance: "CRIME_IDAM",
-    isNonStrategic: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    deletedAt: null,
-    subJurisdictions: []
   }
 ];
 
@@ -133,7 +118,7 @@ describe("manage-list-types page", () => {
         expect(listType).toHaveProperty("id");
         expect(listType).toHaveProperty("name");
         expect(listType).toHaveProperty("configureUrl");
-        expect(listType.configureUrl).toMatch(/^\/list-search-config\/\d+$/);
+        expect(listType.configureUrl).toMatch(/^\/manage-list-type\?id=\d+$/);
       });
     });
 
@@ -154,7 +139,7 @@ describe("manage-list-types page", () => {
       const renderCall = (res.render as any).mock.calls[0];
       const listTypes = renderCall[1].listTypes;
 
-      expect(listTypes.length).toBe(mockDbListTypes.length);
+      expect(listTypes).toHaveLength(mockDbListTypes.length);
     });
   });
 });

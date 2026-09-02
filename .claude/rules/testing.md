@@ -1,6 +1,7 @@
 # Testing Strategy
 
 - **Unit/Integration Tests**: Vitest, co-located with source (`*.test.ts`)
+- **Template Tests**: Vitest with `@hmcts/test-support` render helpers (`*.njk.test.ts`)
 - **E2E Tests**: Playwright in `e2e-tests/`
 - **Accessibility Tests**: Axe-core with Playwright
 - **Test Scripts**: All packages must use `"test": "vitest run"`
@@ -227,6 +228,98 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 ```
+
+## Nunjucks Template Testing
+
+Test `.njk` templates by rendering them to HTML and asserting on **structure** with
+Cheerio — not by matching raw HTML strings. Use the shared helpers from
+`@hmcts/test-support`; never call `nunjucks.configure()` in a test.
+
+### Why the shared helper
+
+`createTestEnvironment` builds an **isolated** Nunjucks environment per test file.
+`nunjucks.configure()` mutates a single global environment, so concurrent test
+files clobber each other's template search paths — flaky, order-dependent failures.
+
+```typescript
+import { createTestEnvironment, render, assertErrorSummary, assertNoErrors } from "@hmcts/test-support";
+```
+
+- `createTestEnvironment(modulePaths, options?)` — isolated env; pass the template
+  dirs it needs (the test's own dir, plus any shared view dirs like
+  `libs/web-core/src/views`). GOV.UK Frontend is wired in for you.
+- `render(env, template, data)` — returns `{ html, $ }` where `$` is a Cheerio
+  instance for structural queries.
+- `assertNoErrors($)` / `assertErrorSummary($, messages)` — assert the GOV.UK
+  error summary is absent / contains the given messages.
+
+### Rules
+
+- **Assert on structure, not strings.** Query DOM (`$("#page-heading")`,
+  `$("td[colspan]")`, `$(".govuk-accordion__section")`) and assert text/attrs/counts.
+  Do not assert against slices of the raw HTML.
+- **Use `toHaveLength`**, not `.length` comparisons (`expect($(sel)).toHaveLength(1)`).
+- **No AAA comments** in template tests — the `describe`/`it` names carry intent.
+- **Layered fixture builders.** For deeply nested data (e.g.
+  `courtLists → courtHouse → courtRoom → session → sitting → hearing → case`),
+  write small `buildX()` helpers that each default to a realistic minimal shape and
+  accept overrides. Individual tests pass only the leaf field they vary.
+- **Column-index constants** for table assertions — name the columns
+  (`const COLUMN = { time: 0, caseRef: 1, ... }`) and index cells by name.
+- **Assert conditional rendering both ways** — present *and* absent (e.g. the
+  listing-notes column only when `hasListingNotes`, `colspan` 6 vs 5).
+- **Cover Welsh** by rendering with the `cy` locale object and asserting the
+  translated headings/labels appear.
+- **Check locale-key parity**: `expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort())`.
+
+### Pattern
+
+```typescript
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { myListCy as cy, myListEn as en } from "@hmcts/my-list-type";
+import { createTestEnvironment, render } from "@hmcts/test-support";
+import type { CheerioAPI } from "cheerio";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TEMPLATE = "my-list.njk";
+
+// Layered builders — deep tree stays out of individual tests.
+function buildCase(overrides = {}) {
+  return { caseNumber: "T123", defendants: "Defendant A", ...overrides };
+}
+function baseData(locale: typeof en | typeof cy = en) {
+  return { t: locale, en, cy, header: { locationName: "Test Court" } };
+}
+function renderList(courtLists: unknown[], overrides = {}, locale = en) {
+  return render(env, TEMPLATE, { ...baseData(locale), ...overrides, listData: { courtLists } });
+}
+
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  const webCoreViews = path.resolve(__dirname, "../../../../../../libs/web-core/src/views");
+  env = createTestEnvironment([__dirname, webCoreViews]);
+});
+
+describe("my-list template", () => {
+  it("should render the heading with the page title", () => {
+    const { $ } = renderList([]);
+    expect($("h1#page-heading").text()).toContain(en.pageTitle);
+  });
+
+  it("should render Welsh headings when the cy locale is used", () => {
+    const { $ } = renderList([], {}, cy);
+    expect($("h1#page-heading").text()).toContain(cy.pageTitle);
+  });
+});
+```
+
+See `apps/web/src/pages/(list-types)/crown-daily-cause-list/crown-daily-cause-list.njk.test.ts`
+for the reference implementation, and `libs/test-support/src/nunjucks-test-helper.ts`
+for the helpers.
 
 ## E2E Testing
 

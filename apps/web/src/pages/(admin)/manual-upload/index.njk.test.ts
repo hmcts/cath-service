@@ -1,14 +1,56 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const TEMPLATE = "(admin)/manual-upload/index.njk";
+
+type Content = typeof en;
+
+const baseData = (t: Content) => ({
+  ...t,
+  data: { locationName: "" },
+  locations: [],
+  listTypes: [{ value: "", text: t.listTypePlaceholder }],
+  sensitivityOptions: [{ value: "", text: "<Please choose a sensitivity>" }],
+  languageOptions: [{ value: "", text: "" }],
+  listTypeSensitivityMap: "{}",
+  locale: "en",
+  hideLanguageToggle: true
+});
+
+const allErrors = (t: Content) => [
+  { text: t.errorMessages.fileRequired, href: "#file" },
+  { text: t.errorMessages.fileType, href: "#file" },
+  { text: t.errorMessages.fileSize, href: "#file" },
+  { text: t.errorMessages.courtRequired, href: "#court" },
+  { text: t.errorMessages.courtTooShort, href: "#court" },
+  { text: t.errorMessages.listTypeRequired, href: "#listType" },
+  { text: t.errorMessages.hearingStartDateRequired, href: "#hearingStartDate" },
+  { text: t.errorMessages.hearingStartDateInvalid, href: "#hearingStartDate" },
+  { text: t.errorMessages.sensitivityRequired, href: "#sensitivity" },
+  { text: t.errorMessages.languageRequired, href: "#language" },
+  { text: t.errorMessages.displayFromRequired, href: "#displayFrom" },
+  { text: t.errorMessages.displayFromInvalid, href: "#displayFrom" },
+  { text: t.errorMessages.displayToRequired, href: "#displayTo" },
+  { text: t.errorMessages.displayToInvalid, href: "#displayTo" },
+  { text: t.errorMessages.displayToBeforeFrom, href: "#displayTo" }
+];
+
 describe("manual-upload template", () => {
+  let env: nunjucks.Environment;
+
+  beforeEach(() => {
+    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+  });
+
   describe("Template file", () => {
     it("should exist", () => {
       const templatePath = path.join(__dirname, "index.njk");
@@ -16,240 +58,220 @@ describe("manual-upload template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have page title", () => {
-      expect(en.title).toBe("Manual upload");
-      expect(en.pageTitle).toBe("Upload - Manual upload");
+  describe("Template rendering", () => {
+    it("should render the English page heading and warning", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(en.title);
+      expect($(".manual-upload-warning h2").text()).toContain(en.warningTitle);
+      expect($(".manual-upload-warning__text").text()).toContain(en.warningMessage);
     });
 
-    it("should have warning section", () => {
-      expect(en.warningTitle).toBe("Warning");
-      expect(en.warningMessage).toBeDefined();
-      expect(en.warningMessage.length).toBeGreaterThan(0);
+    it("should render the form with file upload, court field and continue button", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("form[method='post']").attr("enctype")).toBe("multipart/form-data");
+      expect($("input#file[name='file']")).toHaveLength(1);
+      expect($("label[for='file']").text()).toContain(en.fileUploadLabel);
+      expect($("input#court[name='locationId']")).toHaveLength(1);
+      expect($("button.govuk-button").text()).toContain(en.continueButton);
     });
 
-    it("should have file upload label", () => {
-      expect(en.fileUploadLabel).toBeDefined();
-      expect(en.fileUploadLabel).toContain("csv");
-      expect(en.fileUploadLabel).toContain("pdf");
-      expect(en.fileUploadLabel).toContain("2MB");
+    it("should render the list type, sensitivity and language selects", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("select#listType[name='listType']")).toHaveLength(1);
+      expect($("select#sensitivity[name='sensitivity']")).toHaveLength(1);
+      expect($("select#language[name='language']")).toHaveLength(1);
     });
 
-    it("should have court label", () => {
-      expect(en.courtLabel).toBe("Court name or Tribunal name");
+    it("should render the page help aside", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const aside = $("aside.app-related-items").text();
+      expect(aside).toContain(en.pageHelpTitle);
+      expect(aside).toContain(en.pageHelpSensitivityPublic);
+      expect($("a.back-to-top-link").text()).toContain(en.backToTop);
     });
 
-    it("should have list type fields", () => {
-      expect(en.listTypeLabel).toBe("List type");
-      expect(en.listTypePlaceholder).toBe("Please choose a list type");
+    it("should populate the court field from data", () => {
+      const data = { ...baseData(en), data: { locationName: "Test Court" } };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("input#court").attr("value")).toBe("Test Court");
     });
 
-    it("should have hearing start date fields", () => {
-      expect(en.hearingStartDateLabel).toBe("Hearing start date");
-      expect(en.hearingStartDateHint).toBe("For example, 16 01 2022");
+    it("should render the Welsh heading, warning and button", () => {
+      const data = baseData(cy);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(cy.title);
+      expect($(".manual-upload-warning h2").text()).toContain(cy.warningTitle);
+      expect($("button.govuk-button").text()).toContain(cy.continueButton);
     });
 
-    it("should have sensitivity label", () => {
-      expect(en.sensitivityLabel).toBe("Sensitivity");
+    it("should not render an error summary when there are no errors", () => {
+      const data = baseData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertNoErrors($);
     });
 
-    it("should have language label", () => {
-      expect(en.languageLabel).toBe("Language");
+    it("should render an error summary when errors are present", () => {
+      const data = {
+        ...baseData(en),
+        errors: [
+          { text: en.errorMessages.fileRequired, href: "#file" },
+          { text: en.errorMessages.courtRequired, href: "#court" }
+        ]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.errorMessages.fileRequired, en.errorMessages.courtRequired]);
+      expect($(".govuk-form-group--error label[for='file']")).toHaveLength(1);
     });
 
-    it("should have display date fields", () => {
-      expect(en.displayFromLabel).toBe("Display file from");
-      expect(en.displayFromHint).toBe("For example, 27 01 2022");
-      expect(en.displayToLabel).toBe("Display file to");
-      expect(en.displayToHint).toBe("For example, 18 02 2022");
+    it("should render the English page title, all field labels, hints and placeholder", () => {
+      const { html, $ } = render(env, TEMPLATE, baseData(en));
+
+      expect(html).toContain(en.pageTitle);
+      expect($("label[for='court']").text()).toContain(en.courtLabel);
+      expect($("label[for='listType']").text()).toContain(en.listTypeLabel);
+      expect(html).toContain(en.listTypePlaceholder);
+      expect($("label[for='sensitivity']").text()).toContain(en.sensitivityLabel);
+      expect($("label[for='language']").text()).toContain(en.languageLabel);
+      expect(html).toContain(en.hearingStartDateLabel);
+      expect(html).toContain(en.hearingStartDateHint);
+      expect(html).toContain(en.displayFromLabel);
+      expect(html).toContain(en.displayFromHint);
+      expect(html).toContain(en.displayToLabel);
+      expect(html).toContain(en.displayToHint);
+      expect(html).toContain(en.dayLabel);
+      expect(html).toContain(en.monthLabel);
+      expect(html).toContain(en.yearLabel);
     });
 
-    it("should have date input labels", () => {
-      expect(en.dayLabel).toBe("Day");
-      expect(en.monthLabel).toBe("Month");
-      expect(en.yearLabel).toBe("Year");
+    it("should render all English page help aside content", () => {
+      const { $ } = render(env, TEMPLATE, baseData(en));
+
+      const aside = $("aside.app-related-items").text();
+      expect(aside).toContain(en.pageHelpTitle);
+      expect(aside).toContain(en.pageHelpLists);
+      expect(aside).toContain(en.pageHelpListsText);
+      expect(aside).toContain(en.pageHelpSensitivity);
+      expect(aside).toContain(en.pageHelpSensitivityText);
+      expect(aside).toContain(en.pageHelpSensitivityPublicText);
+      expect(aside).toContain(en.pageHelpSensitivityPrivate);
+      expect(aside).toContain(en.pageHelpSensitivityPrivateText);
+      expect(aside).toContain(en.pageHelpSensitivityClassified);
+      expect(aside).toContain(en.pageHelpSensitivityClassifiedText);
+      expect(aside).toContain(en.pageHelpDisplayFrom);
+      expect(aside).toContain(en.pageHelpDisplayFromText);
+      expect(aside).toContain(en.pageHelpDisplayTo);
+      expect(aside).toContain(en.pageHelpDisplayToText);
     });
 
-    it("should have continue button text", () => {
-      expect(en.continueButton).toBe("Continue");
+    it("should render every English validation error in the error summary", () => {
+      const errors = allErrors(en);
+      const data = { ...baseData(en), errors };
+
+      const { html, $ } = render(env, TEMPLATE, data);
+
+      expect(html).toContain(en.errorSummaryTitle);
+      assertErrorSummary(
+        $,
+        errors.map((error) => error.text)
+      );
     });
 
-    it("should have error summary title", () => {
-      expect(en.errorSummaryTitle).toBe("There is a problem");
+    it("should render the Welsh page title, warning, field labels, hints and placeholder", () => {
+      const { html, $ } = render(env, TEMPLATE, baseData(cy));
+
+      const bodyText = $("body").text();
+      expect(html).toContain(cy.pageTitle);
+      expect($(".manual-upload-warning__text").text()).toContain(cy.warningMessage);
+      expect($("a.back-to-top-link").text()).toContain(cy.backToTop);
+      expect($("label[for='file']").text()).toContain(cy.fileUploadLabel);
+      expect($("label[for='court']").text()).toContain(cy.courtLabel);
+      expect($("label[for='listType']").text()).toContain(cy.listTypeLabel);
+      expect(bodyText).toContain(cy.listTypePlaceholder);
+      expect($("label[for='sensitivity']").text()).toContain(cy.sensitivityLabel);
+      expect($("label[for='language']").text()).toContain(cy.languageLabel);
+      expect(bodyText).toContain(cy.hearingStartDateLabel);
+      expect(bodyText).toContain(cy.hearingStartDateHint);
+      expect(bodyText).toContain(cy.displayFromLabel);
+      expect(bodyText).toContain(cy.displayFromHint);
+      expect(bodyText).toContain(cy.displayToLabel);
+      expect(bodyText).toContain(cy.displayToHint);
+      expect(bodyText).toContain(cy.dayLabel);
+      expect(bodyText).toContain(cy.monthLabel);
+      expect(bodyText).toContain(cy.yearLabel);
     });
 
-    it("should have page help section", () => {
-      expect(en.pageHelpTitle).toBe("Page help");
-      expect(en.pageHelpLists).toBe("Lists");
-      expect(en.pageHelpSensitivity).toBe("Sensitivity");
-      expect(en.pageHelpDisplayFrom).toBe("Display from");
-      expect(en.pageHelpDisplayTo).toBe("Display to");
+    it("should render all Welsh page help aside content", () => {
+      const { $ } = render(env, TEMPLATE, baseData(cy));
+
+      const aside = $("aside.app-related-items").text();
+      expect(aside).toContain(cy.pageHelpTitle);
+      expect(aside).toContain(cy.pageHelpLists);
+      expect(aside).toContain(cy.pageHelpSensitivity);
+      expect(aside).toContain(cy.pageHelpDisplayFrom);
+      expect(aside).toContain(cy.pageHelpDisplayTo);
     });
 
-    it("should have page help content", () => {
-      expect(en.pageHelpListsText).toBeDefined();
-      expect(en.pageHelpSensitivityText).toBeDefined();
-      expect(en.pageHelpDisplayFromText).toBeDefined();
-      expect(en.pageHelpDisplayToText).toBeDefined();
-    });
+    it("should render every Welsh validation error in the error summary", () => {
+      const errors = allErrors(cy);
+      const data = { ...baseData(cy), errors };
 
-    it("should have sensitivity help text", () => {
-      expect(en.pageHelpSensitivityPublic).toBe("Public");
-      expect(en.pageHelpSensitivityPublicText).toBeDefined();
-      expect(en.pageHelpSensitivityPrivate).toBe("Private");
-      expect(en.pageHelpSensitivityPrivateText).toBeDefined();
-      expect(en.pageHelpSensitivityClassified).toBe("Classified");
-      expect(en.pageHelpSensitivityClassifiedText).toBeDefined();
-    });
+      const { html, $ } = render(env, TEMPLATE, data);
 
-    it("should have back to top link", () => {
-      expect(en.backToTop).toBe("Back to top");
-    });
-
-    describe("Error messages", () => {
-      it("should have file error messages", () => {
-        expect(en.errorMessages.fileRequired).toBe("Please provide a file");
-        expect(en.errorMessages.fileType).toBe("Please upload a valid file format");
-        expect(en.errorMessages.fileSize).toBe("File too large, please upload file smaller than 2MB");
-      });
-
-      it("should have court error messages", () => {
-        expect(en.errorMessages.courtRequired).toBe("Please enter and select a valid court");
-        expect(en.errorMessages.courtTooShort).toBe("Court name must be three characters or more");
-      });
-
-      it("should have list type error message", () => {
-        expect(en.errorMessages.listTypeRequired).toBe("Please select a list type");
-      });
-
-      it("should have hearing start date error messages", () => {
-        expect(en.errorMessages.hearingStartDateRequired).toBe("Please enter a valid hearing start date");
-        expect(en.errorMessages.hearingStartDateInvalid).toBe("Please enter a valid hearing start date");
-      });
-
-      it("should have sensitivity error message", () => {
-        expect(en.errorMessages.sensitivityRequired).toBe("Please select a sensitivity");
-      });
-
-      it("should have language error message", () => {
-        expect(en.errorMessages.languageRequired).toBe("Select a language");
-      });
-
-      it("should have display date error messages", () => {
-        expect(en.errorMessages.displayFromRequired).toBe("Please enter a valid display file from date");
-        expect(en.errorMessages.displayFromInvalid).toBe("Please enter a valid display file from date");
-        expect(en.errorMessages.displayToRequired).toBe("Please enter a valid display file to date");
-        expect(en.errorMessages.displayToInvalid).toBe("Please enter a valid display file to date");
-        expect(en.errorMessages.displayToBeforeFrom).toBe("Display to date must be after display from date");
-      });
+      expect(html).toContain(cy.errorSummaryTitle);
+      assertErrorSummary(
+        $,
+        errors.map((error) => error.text)
+      );
     });
   });
 
-  describe("Welsh locale", () => {
-    it("should have page title", () => {
-      expect(cy.title).toBeDefined();
-      expect(cy.title.length).toBeGreaterThan(0);
-      expect(cy.pageTitle).toBeDefined();
-      expect(cy.pageTitle.length).toBeGreaterThan(0);
-    });
-
-    it("should have warning section", () => {
-      expect(cy.warningTitle).toBeDefined();
-      expect(cy.warningMessage).toBeDefined();
-      expect(cy.warningMessage.length).toBeGreaterThan(0);
-    });
-
-    it("should have file upload label", () => {
-      expect(cy.fileUploadLabel).toBeDefined();
-      expect(cy.fileUploadLabel.length).toBeGreaterThan(0);
-    });
-
-    it("should have court label", () => {
-      expect(cy.courtLabel).toBeDefined();
-      expect(cy.courtLabel.length).toBeGreaterThan(0);
-    });
-
-    it("should have list type fields", () => {
-      expect(cy.listTypeLabel).toBeDefined();
-      expect(cy.listTypePlaceholder).toBeDefined();
-    });
-
-    it("should have hearing start date fields", () => {
-      expect(cy.hearingStartDateLabel).toBeDefined();
-      expect(cy.hearingStartDateHint).toBeDefined();
-    });
-
-    it("should have sensitivity label", () => {
-      expect(cy.sensitivityLabel).toBeDefined();
-    });
-
-    it("should have language label", () => {
-      expect(cy.languageLabel).toBeDefined();
-    });
-
-    it("should have display date fields", () => {
-      expect(cy.displayFromLabel).toBeDefined();
-      expect(cy.displayFromHint).toBeDefined();
-      expect(cy.displayToLabel).toBeDefined();
-      expect(cy.displayToHint).toBeDefined();
-    });
-
-    it("should have date input labels", () => {
-      expect(cy.dayLabel).toBeDefined();
-      expect(cy.monthLabel).toBeDefined();
-      expect(cy.yearLabel).toBeDefined();
-    });
-
-    it("should have continue button text", () => {
-      expect(cy.continueButton).toBeDefined();
-    });
-
-    it("should have error summary title", () => {
-      expect(cy.errorSummaryTitle).toBeDefined();
-    });
-
-    it("should have page help section", () => {
-      expect(cy.pageHelpTitle).toBeDefined();
-      expect(cy.pageHelpLists).toBeDefined();
-      expect(cy.pageHelpSensitivity).toBeDefined();
-      expect(cy.pageHelpDisplayFrom).toBeDefined();
-      expect(cy.pageHelpDisplayTo).toBeDefined();
-    });
-
-    it("should have back to top link", () => {
-      expect(cy.backToTop).toBeDefined();
-    });
-
-    describe("Error messages", () => {
-      it("should have all file error messages", () => {
-        expect(cy.errorMessages.fileRequired).toBeDefined();
-        expect(cy.errorMessages.fileType).toBeDefined();
-        expect(cy.errorMessages.fileSize).toBeDefined();
-      });
-
-      it("should have all court error messages", () => {
-        expect(cy.errorMessages.courtRequired).toBeDefined();
-        expect(cy.errorMessages.courtTooShort).toBeDefined();
-      });
-
-      it("should have all required error messages", () => {
-        expect(cy.errorMessages.listTypeRequired).toBeDefined();
-        expect(cy.errorMessages.hearingStartDateRequired).toBeDefined();
-        expect(cy.errorMessages.hearingStartDateInvalid).toBeDefined();
-        expect(cy.errorMessages.sensitivityRequired).toBeDefined();
-        expect(cy.errorMessages.languageRequired).toBeDefined();
-        expect(cy.errorMessages.displayFromRequired).toBeDefined();
-        expect(cy.errorMessages.displayFromInvalid).toBeDefined();
-        expect(cy.errorMessages.displayToRequired).toBeDefined();
-        expect(cy.errorMessages.displayToInvalid).toBeDefined();
-        expect(cy.errorMessages.displayToBeforeFrom).toBeDefined();
-      });
+  describe("Content standards", () => {
+    it("should have the exact English validation messages", () => {
+      expect(en.errorMessages.fileRequired).toBe("Please provide a file");
+      expect(en.errorMessages.fileType).toBe("Please upload a valid file format");
+      expect(en.errorMessages.fileSize).toBe("File too large, please upload file smaller than 2MB");
+      expect(en.errorMessages.courtRequired).toBe("Please enter and select a valid court");
+      expect(en.errorMessages.courtTooShort).toBe("Court name must be three characters or more");
+      expect(en.errorMessages.listTypeRequired).toBe("Please select a list type");
+      expect(en.errorMessages.hearingStartDateRequired).toBe("Please enter a valid hearing start date");
+      expect(en.errorMessages.hearingStartDateInvalid).toBe("Please enter a valid hearing start date");
+      expect(en.errorMessages.sensitivityRequired).toBe("Please select a sensitivity");
+      expect(en.errorMessages.languageRequired).toBe("Select a language");
+      expect(en.errorMessages.displayFromRequired).toBe("Please enter a valid display file from date");
+      expect(en.errorMessages.displayFromInvalid).toBe("Please enter a valid display file from date");
+      expect(en.errorMessages.displayToRequired).toBe("Please enter a valid display file to date");
+      expect(en.errorMessages.displayToInvalid).toBe("Please enter a valid display file to date");
+      expect(en.errorMessages.displayToBeforeFrom).toBe("Display to date must be after display from date");
     });
   });
 
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+    });
+
+    it("should have same error message keys in English and Welsh", () => {
+      expect(Object.keys(en.errorMessages).sort()).toEqual(Object.keys(cy.errorMessages).sort());
     });
 
     it("should have all required keys", () => {
@@ -286,13 +308,6 @@ describe("manual-upload template", () => {
       });
     });
 
-    it("should have consistent error message keys", () => {
-      const errorKeys = Object.keys(en.errorMessages).sort();
-      const cyErrorKeys = Object.keys(cy.errorMessages).sort();
-
-      expect(errorKeys).toEqual(cyErrorKeys);
-    });
-
     it("should have all required error message keys", () => {
       const requiredErrorKeys = [
         "fileRequired",
@@ -315,20 +330,6 @@ describe("manual-upload template", () => {
       requiredErrorKeys.forEach((key) => {
         expect(en.errorMessages).toHaveProperty(key);
         expect(cy.errorMessages).toHaveProperty(key);
-      });
-    });
-
-    it("should have non-empty Welsh translations", () => {
-      Object.values(cy).forEach((value) => {
-        if (typeof value === "string") {
-          expect(value.length).toBeGreaterThan(0);
-        }
-      });
-    });
-
-    it("should have non-empty Welsh error messages", () => {
-      Object.values(cy.errorMessages).forEach((value) => {
-        expect(value.length).toBeGreaterThan(0);
       });
     });
   });

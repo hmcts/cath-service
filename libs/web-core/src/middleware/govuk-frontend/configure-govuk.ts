@@ -7,7 +7,7 @@ import type { AssetOptions } from "../../assets/assets.js";
 import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
-import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, time12Filter, timeFilter } from "./filters/index.js";
+import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, selectAttrFilter, time12Filter, timeFilter } from "./filters/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,8 +15,9 @@ const __dirname = path.dirname(__filename);
 export async function configureGovuk(app: Express, paths: string[], options: GovukSetupOptions): Promise<nunjucks.Environment> {
   const { mergedViewPaths, mergedI18nPaths } = mergeConfigs(paths);
   const govukFrontendPath = "../../node_modules/govuk-frontend/dist";
+  const mojFrontendPath = "../../node_modules/@ministryofjustice/frontend";
   const sharedViews = path.join(__dirname, "../../views");
-  const allViewPaths = [govukFrontendPath, sharedViews, ...mergedViewPaths];
+  const allViewPaths = [govukFrontendPath, mojFrontendPath, sharedViews, ...mergedViewPaths];
 
   const env = nunjucks.configure(allViewPaths, {
     autoescape: true,
@@ -56,6 +57,7 @@ function addFilters(env: nunjucks.Environment): void {
   env.addFilter("currency", currencyFilter);
   env.addFilter("kebabCase", kebabCaseFilter);
   env.addFilter("govukErrorSummary", govukErrorSummaryFilter);
+  env.addFilter("selectattr", selectAttrFilter);
 }
 
 function addGlobals(env: nunjucks.Environment, globals: Record<string, unknown> = {}): void {

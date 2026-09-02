@@ -142,13 +142,21 @@ describe("seed-data", () => {
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
       mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
+      mockPrisma.region.upsert.mockResolvedValue({});
+      mockPrisma.jurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.subJurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.location.upsert.mockResolvedValue({});
 
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
 
       expect(consoleLogSpy).toHaveBeenCalledWith("Checking if location data seeding is needed...");
       expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: Tables already contain data");
-      expect(mockPrisma.region.upsert).not.toHaveBeenCalled();
+      expect(mockPrisma.region.upsert).toHaveBeenCalledTimes(mockLocationData.regions.length);
+      expect(mockPrisma.jurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.jurisdictions.length);
+      expect(mockPrisma.subJurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.subJurisdictions.length);
+      expect(mockPrisma.location.upsert).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockSeedListTypes).toHaveBeenCalledTimes(1);
     });
 
     it("should return false when tables already contain data (jurisdiction not empty)", async () => {
@@ -158,12 +166,20 @@ describe("seed-data", () => {
       mockPrisma.jurisdiction.count.mockResolvedValue(1);
       mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(0);
+      mockPrisma.region.upsert.mockResolvedValue({});
+      mockPrisma.jurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.subJurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.location.upsert.mockResolvedValue({});
 
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
 
       expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: Tables already contain data");
-      expect(mockPrisma.region.upsert).not.toHaveBeenCalled();
+      expect(mockPrisma.region.upsert).toHaveBeenCalledTimes(mockLocationData.regions.length);
+      expect(mockPrisma.jurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.jurisdictions.length);
+      expect(mockPrisma.subJurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.subJurisdictions.length);
+      expect(mockPrisma.location.upsert).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockSeedListTypes).toHaveBeenCalledTimes(1);
     });
 
     it("should return false when tables already contain data (location not empty)", async () => {
@@ -173,12 +189,20 @@ describe("seed-data", () => {
       mockPrisma.jurisdiction.count.mockResolvedValue(0);
       mockPrisma.subJurisdiction.count.mockResolvedValue(0);
       mockPrisma.location.count.mockResolvedValue(1);
+      mockPrisma.region.upsert.mockResolvedValue({});
+      mockPrisma.jurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.subJurisdiction.upsert.mockResolvedValue({});
+      mockPrisma.location.upsert.mockResolvedValue({});
 
       const { seedLocationData } = await import("./seed-data.js");
       await seedLocationData();
 
       expect(consoleLogSpy).toHaveBeenCalledWith("Skipping seed: Tables already contain data");
-      expect(mockPrisma.region.upsert).not.toHaveBeenCalled();
+      expect(mockPrisma.region.upsert).toHaveBeenCalledTimes(mockLocationData.regions.length);
+      expect(mockPrisma.jurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.jurisdictions.length);
+      expect(mockPrisma.subJurisdiction.upsert).toHaveBeenCalledTimes(mockLocationData.subJurisdictions.length);
+      expect(mockPrisma.location.upsert).toHaveBeenCalledTimes(mockLocationData.locations.length);
+      expect(mockSeedListTypes).toHaveBeenCalledTimes(1);
     });
 
     it("should return true when all tables are empty", async () => {

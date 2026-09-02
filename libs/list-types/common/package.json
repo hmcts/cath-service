@@ -7,12 +7,26 @@
       "production": "./dist/index.js",
       "default": "./src/index.ts"
     },
+    "./list-type-data": {
+      "production": "./dist/list-type-data.js",
+      "default": "./src/list-type-data.ts"
+    },
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
     },
-    "./src/assets/js/sjp-filter-search.js": "./src/assets/js/sjp-filter-search.ts",
-    "./src/assets/js/table-search.js": "./src/assets/js/table-search.ts"
+    "./src/assets/js/sjp-filter-search.js": {
+      "production": "./dist/assets/js/sjp-filter-search.js",
+      "default": "./src/assets/js/sjp-filter-search.ts"
+    },
+    "./src/assets/js/table-search.js": {
+      "production": "./dist/assets/js/table-search.js",
+      "default": "./src/assets/js/table-search.ts"
+    },
+    "./src/assets/css/*": {
+      "production": "./dist/assets/css/*",
+      "default": "./src/assets/css/*"
+    }
   },
   "scripts": {
     "build": "tsc && yarn build:nunjucks",
@@ -26,15 +40,16 @@
   },
   "dependencies": {
     "@hmcts/azure-blob": "workspace:*",
-    "@hmcts/location": "workspace:*",
+    "@hmcts/pdf-generation": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "ajv": "8.20.0",
     "exceljs": "4.4.0",
+    "nunjucks": "3.2.4",
     "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/node": "24.10.4",
     "typescript": "6.0.3",
-    "vitest": "4.1.9"
+    "vitest": "4.1.10"
   }
 }

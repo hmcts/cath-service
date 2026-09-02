@@ -1,5 +1,6 @@
 export const en = {
-  flatFileTitle: "Blob Explorer – Flat file",
+  title: "Blob Explorer – Flat file",
+  header: "Blob Explorer – Flat file",
   flatFileResubmitButton: "Re-submit subscription",
   flatFileMetadataHeading: "Metadata",
   flatFileLinkToFile: "Link to file",

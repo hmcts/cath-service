@@ -1,7 +1,7 @@
 export const en = {
   title: "Subscription confirmed",
-  panelTitle: "Subscription confirmed",
-  panelTitlePlural: "Subscriptions confirmed",
+  panelTitle: "Subscription confirmation",
+  panelTitlePlural: "Subscription confirmation",
   continueText: "To continue, you can go to",
   yourAccountLink: "your account",
   inOrderTo: "in order to",

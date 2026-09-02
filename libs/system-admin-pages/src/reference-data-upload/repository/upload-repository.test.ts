@@ -109,6 +109,25 @@ describe("upsertLocations", () => {
     });
   });
 
+  it("should not set a deletedAt field when upserting a location", async () => {
+    const mockTx = {
+      subJurisdiction: { findMany: vi.fn().mockResolvedValue([]) },
+      region: { findMany: vi.fn().mockResolvedValue([]) },
+      location: { upsert: vi.fn().mockResolvedValue({}) },
+      locationSubJurisdiction: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) },
+      locationRegion: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) },
+      locationReference: { deleteMany: vi.fn().mockResolvedValue({}), createMany: vi.fn().mockResolvedValue({}) }
+    };
+
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(mockTx));
+
+    await upsertLocations([{ ...mockData[0], locationReferences: [] }]);
+
+    // Assert
+    const upsertArg = mockTx.location.upsert.mock.calls.at(-1)?.[0];
+    expect(upsertArg.update).not.toHaveProperty("deletedAt");
+  });
+
   it("should not call locationReference.createMany when locationReferences is empty", async () => {
     const dataWithNoRefs: ParsedLocationData[] = [{ ...mockData[0], locationReferences: [] }];
 

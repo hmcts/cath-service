@@ -47,12 +47,29 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 1) return Promise.resolve({ id: 1, friendlyName: "Test List Type", welshFriendlyName: "Test List Type CY" });
     if (id === 5) return Promise.resolve({ id: 5, friendlyName: "Magistrates Public List", welshFriendlyName: "Rhestr Gyhoeddus Ynadon" });
     if (id === 6) return Promise.resolve({ id: 6, friendlyName: "Crown Daily List", welshFriendlyName: "Rhestr Ddyddiol y Goron" });
+    if (id === 7)
+      return Promise.resolve({
+        id: 7,
+        name: "CIC_WEEKLY_HEARING_LIST",
+        friendlyName: "CIC Weekly Hearing List",
+        welshFriendlyName: "Rhestr Wythnosol CIC",
+        isNonStrategic: true
+      });
     return Promise.resolve(null);
   }),
   AuditLogAction: {
     NON_STRATEGIC_UPLOAD: "Non strategic upload"
   }
 }));
+
+vi.mock("@hmcts/list-types-common", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
+  return {
+    ...actual,
+    hasConverterForListTypeName: vi.fn(() => true),
+    convertExcelForListTypeName: vi.fn(() => Promise.resolve({ cases: [] }))
+  };
+});
 
 vi.mock("@hmcts/web-core", async () => {
   const actual = await vi.importActual("@hmcts/web-core");
@@ -73,18 +90,19 @@ vi.mock("@hmcts/admin-pages", async () => {
   };
 });
 
-vi.mock("@hmcts/publication", async () => {
-  const actual = await vi.importActual("@hmcts/publication");
-  return {
-    ...actual,
-    createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
-    processPublication: vi.fn(() => Promise.resolve({})),
-    updateArtefactFileExtension: vi.fn(() => Promise.resolve())
-  };
-});
+vi.mock("@hmcts/publication", () => ({
+  createArtefact: vi.fn(() => Promise.resolve({ artefactId: "artefact-id-123", isUpdate: false })),
+  processPublication: vi.fn(() => Promise.resolve({})),
+  updateSourceArtefactId: vi.fn(() => Promise.resolve()),
+  extractAndStoreArtefactSearch: vi.fn(() => Promise.resolve()),
+  Provenance: { MANUAL_UPLOAD: "MANUAL_UPLOAD" },
+  Sensitivity: { PUBLIC: "PUBLIC", PRIVATE: "PRIVATE", CLASSIFIED: "CLASSIFIED" },
+  Language: { ENGLISH: "ENGLISH", WELSH: "WELSH", BILINGUAL: "BILINGUAL" }
+}));
 
 import { getNonStrategicUpload, saveUploadedFile } from "@hmcts/admin-pages";
-import { createArtefact, processPublication } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, processPublication, updateSourceArtefactId } from "@hmcts/publication";
+import { findListTypeById } from "@hmcts/system-admin-pages";
 
 describe("non-strategic-upload-summary page", () => {
   beforeEach(() => {
@@ -157,7 +175,7 @@ describe("non-strategic-upload-summary page", () => {
       expect(res.render).toHaveBeenCalledWith(
         "non-strategic-upload-summary/index",
         expect.objectContaining({
-          heading: "File upload summary",
+          heading: "File Upload Summary",
           confirmButton: "Confirm"
         })
       );
@@ -189,6 +207,125 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.send).toHaveBeenCalledWith("Upload not found");
+    });
+
+    it("should use shortenedFriendlyName when list type has it set", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "1",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(findListTypeById).mockResolvedValueOnce({
+        id: 1,
+        friendlyName: "Test List Type",
+        welshFriendlyName: "Test List Type CY",
+        shortenedFriendlyName: "Short Name"
+      } as any);
+
+      const req = { query: { uploadId: "test-upload-id" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        locals: { locale: "en" }
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            listType: "Short Name"
+          })
+        })
+      );
+    });
+
+    it("should use Welsh display names when locale is cy", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+
+      const req = { query: { uploadId: "test-upload-id", lng: "cy" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        status: vi.fn().mockReturnThis(),
+        send: vi.fn()
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            courtName: "Test Crown Court CY",
+            listType: "Rhestr Ddyddiol y Goron"
+          })
+        })
+      );
+    });
+
+    it("should fall back to uploadData.listType when list type is not found", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from("test"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "99",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(findListTypeById).mockResolvedValueOnce(null);
+
+      const req = { query: { uploadId: "test-upload-id" } } as unknown as Request;
+      const res = {
+        render: vi.fn(),
+        locals: { locale: "en" }
+      } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "non-strategic-upload-summary/index",
+        expect.objectContaining({
+          data: expect.objectContaining({
+            listType: "99"
+          })
+        })
+      );
     });
   });
 
@@ -235,6 +372,7 @@ describe("non-strategic-upload-summary page", () => {
           provenance: "MANUAL_UPLOAD"
         })
       );
+      // Non-Excel JSON path: file saved directly to blob storage
       expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "test.xlsx", mockUploadData.file);
       expect(processPublication).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -249,6 +387,57 @@ describe("non-strategic-upload-summary page", () => {
         })
       );
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+    });
+
+    it("should still redirect to success when background publication processing fails", async () => {
+      // PDF generation + notifications run in the background (fire-and-forget), so a
+      // failure there must NOT block or fail the upload — the artefact is already
+      // persisted. The handler should redirect to the success page regardless.
+      const mockUploadData = {
+        file: Buffer.from("test file content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "6",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(processPublication).mockRejectedValueOnce(new Error("Publication service down"));
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const session = {
+        save: (callback: (err?: any) => void) => callback()
+      };
+
+      const req = {
+        query: { uploadId: "test-upload-id" },
+        session
+      } as unknown as Request;
+      const res = {
+        redirect: vi.fn(),
+        render: vi.fn()
+      } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      // Redirected to success even though the background processing rejected
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+      expect(res.render).not.toHaveBeenCalled();
+
+      // Flush the microtask queue so the background .catch runs and logs
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[Non-Strategic Upload] Background publication processing failed:",
+        expect.objectContaining({ artefactId: "artefact-id-123" })
+      );
+
+      consoleErrorSpy.mockRestore();
     });
 
     it("should call processPublication with Welsh locale when language is WELSH", async () => {
@@ -329,7 +518,7 @@ describe("non-strategic-upload-summary page", () => {
 
       expect(session.nonStrategicUploadForm).toBeUndefined();
       expect(session.nonStrategicUploadSubmitted).toBeUndefined();
-      expect(session.nonStrategicUploadConfirmed).toBe(true);
+      expect((session as any).nonStrategicUploadConfirmed).toBe(true);
     });
 
     it("should return 400 if uploadId is missing", async () => {
@@ -397,6 +586,74 @@ describe("non-strategic-upload-summary page", () => {
           errors: expect.arrayContaining([expect.objectContaining({ text: "Database error" })])
         })
       );
+    });
+
+    it("should convert Excel file and call extractAndStoreArtefactSearch for non-strategic list type", async () => {
+      const { hasConverterForListTypeName, convertExcelForListTypeName } = await import("@hmcts/list-types-common");
+
+      const mockUploadData = {
+        file: Buffer.from("excel content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      vi.mocked(hasConverterForListTypeName).mockReturnValue(true);
+      vi.mocked(convertExcelForListTypeName).mockResolvedValue({ cases: [] });
+      vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue(undefined);
+
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(extractAndStoreArtefactSearch).toHaveBeenCalledWith("artefact-id-123", 7, { cases: [] });
+      // Excel is NOT saved to blob — only the converted JSON is (blob name has no extension)
+      expect(saveUploadedFile).toHaveBeenCalledWith("artefact-id-123", "artefact-id-123", expect.any(Buffer));
+      expect(saveUploadedFile).not.toHaveBeenCalledWith("artefact-id-123", "test.xlsx", expect.anything());
+      // source_artefact_id stores the original Excel file name, not the synthetic JSON blob name
+      expect(updateSourceArtefactId).toHaveBeenCalledWith("artefact-id-123", "test.xlsx");
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+    });
+
+    it("should continue upload when extractAndStoreArtefactSearch throws after Excel conversion", async () => {
+      const { hasConverterForListTypeName, convertExcelForListTypeName } = await import("@hmcts/list-types-common");
+
+      const mockUploadData = {
+        file: Buffer.from("excel content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      vi.mocked(hasConverterForListTypeName).mockReturnValue(true);
+      vi.mocked(convertExcelForListTypeName).mockResolvedValue({ cases: [] });
+      vi.mocked(extractAndStoreArtefactSearch).mockRejectedValue(new Error("Search extraction failed"));
+
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      await callHandler(POST, req, res);
+
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
     });
 
     it("should redirect with language parameter when lng=cy", async () => {

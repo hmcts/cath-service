@@ -59,6 +59,63 @@ describe("excel-to-json", () => {
       expect(result[1]).toEqual({ name: "Jane Smith", email: "" });
     });
 
+    it("should treat optional fields as empty string when the column is absent from a row", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [
+          { header: "Name", fieldName: "name", required: true },
+          { header: "Notes", fieldName: "notes", required: false }
+        ]
+      };
+
+      // ExcelJS omits trailing empty cells, so "Notes" won't appear in the row data
+      const excelData = [
+        ["Name", "Notes"],
+        ["John Doe"] // no Notes cell
+      ];
+
+      const buffer = await createExcelBuffer(excelData);
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({ name: "John Doe", notes: "" });
+    });
+
+    it("should throw when a required column is missing from the header row", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [
+          { header: "Name", fieldName: "name", required: true },
+          { header: "Notes", fieldName: "notes", required: false }
+        ]
+      };
+
+      const excelData = [
+        ["Notes"], // header row missing "Name"
+        ["some note"]
+      ];
+
+      const buffer = await createExcelBuffer(excelData);
+      await expect(convertExcelToJson(buffer, config)).rejects.toThrow("Missing: Name");
+    });
+
+    it("should throw missing required field error when a required cell is empty in a row", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [
+          { header: "Name", fieldName: "name", required: true },
+          { header: "Notes", fieldName: "notes", required: false }
+        ]
+      };
+
+      // A row with only Notes filled — Name (required) is absent because ExcelJS omits empty leading/middle cells
+      // We simulate this by passing undefined for the Name cell position
+      const excelData = [
+        ["Name", "Notes"],
+        [undefined, "some note"]
+      ];
+
+      const buffer = await createExcelBuffer(excelData);
+      await expect(convertExcelToJson(buffer, config)).rejects.toThrow("Missing required field 'Name' in row 2");
+    });
+
     it("should apply validators to fields", async () => {
       const config: ExcelConverterConfig = {
         fields: [

@@ -1,0 +1,83 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    <p class="govuk-body"><a class="govuk-link" href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.listDate }} {{ header.contentDate }}</p>
+    <p class="govuk-body">{{ t.listUpdated }} {{ header.publishedDate }} {{ t.at }} {{ header.publishedTime }}</p>
+
+    <div class="govuk-grid restriction-list-section govuk-!-margin-bottom-5">
+      <div class="govuk-body">
+        <h3>{{ t.restrictionInformationHeading }}</h3>
+        <p class="govuk-body">{{ t.restrictionInformationP1 }}</p>
+        <div class="govuk-warning-text">
+          <span class="govuk-warning-text__icon" aria-hidden="true">!</span>
+          <strong class="govuk-warning-text__text">
+            {{ t.restrictionInformationBoldText }}
+          </strong>
+        </div>
+        <p class="govuk-body">{{ t.restrictionInformationP2 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP3 }}</p>
+        <p class="govuk-body">{{ t.restrictionInformationP4 }}</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>{{ t.restrictionBulletPoint1 }}</li>
+          <li>{{ t.restrictionBulletPoint2 }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="govuk-accordion" data-module="govuk-accordion" id="accordion-default">
+      {% for session in listData %}
+        <div class="govuk-accordion__section govuk-accordion__section--expanded">
+          <div class="govuk-accordion__section-header">
+            <h2 class="govuk-accordion__section-heading">
+              <span class="govuk-accordion__section-button">{{ session.courtName }}</span>
+            </h2>
+            <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-1">{{ t.sittingAt }} {{ t.courtRoom }} {{ session.courtRoom }}</p>
+            <p class="govuk-body govuk-!-margin-bottom-1">{{ t.lja }} {{ session.lja }}</p>
+            <p class="govuk-body">{{ t.sessionStart }} {{ session.sessionStartTime }}</p>
+          </div>
+          <div class="govuk-accordion__section-content">
+            <div class="parent-box overflow-table">
+              <table class="govuk-table overflow-table" data-module="moj-sortable-table">
+                <thead class="govuk-table__head">
+                  <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.listingTime }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.defendantName }}</th>
+                    <th scope="col" class="govuk-table__header" aria-sort="none">{{ t.caseNumber }}</th>
+                  </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                  {% for row in session.cases %}
+                    <tr class="govuk-table__row">
+                      <td class="govuk-table__cell">{{ row.blockStartTime }}</td>
+                      <td class="govuk-table__cell">{{ row.defendantName }}</td>
+                      <td class="govuk-table__cell">{{ row.caseNumber }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <p class="govuk-body govuk-!-margin-top-6" style="font-size: 14px;">
+      {{ t.dataSource }}: {{ dataSource }}
+    </p>
+
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
+        <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ t.backToTop }}</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

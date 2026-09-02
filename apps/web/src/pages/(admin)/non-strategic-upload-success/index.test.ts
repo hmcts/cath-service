@@ -61,7 +61,7 @@ describe("non-strategic-upload-success page", () => {
         "non-strategic-upload-success/index",
         expect.objectContaining({
           pageTitle: "Non-strategic upload - File upload successful - Court and tribunal hearings - GOV.UK",
-          title: "File upload successful",
+          title: "File Upload Successful",
           uploadedMessage: "Your file has been uploaded",
           nextStepsHeading: "What do you want to do next?",
           uploadAnotherLink: "Upload another file",

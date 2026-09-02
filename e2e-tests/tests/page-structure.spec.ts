@@ -32,8 +32,8 @@ test.describe("Page Structure", () => {
     await expect(feedbackLink).toBeVisible();
     await expect(feedbackLink).toContainText("feedback");
 
-    // Welsh toggle in service navigation
-    const languageToggle = page.locator('.govuk-service-navigation a:has-text("Cymraeg")');
+    // Welsh toggle in phase banner
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await expect(languageToggle).toHaveText("Cymraeg");
 
@@ -45,33 +45,24 @@ test.describe("Page Structure", () => {
     const footerMetaLinks = page.locator(".govuk-footer__meta .govuk-footer__inline-list-item");
     await expect(footerMetaLinks).toHaveCount(8);
 
-    // Links that should open in same tab
-    const sameTabLinks = [
+    // All footer meta links should open in the current tab
+    const footerLinks = [
       { text: "Help", href: "https://www.gov.uk/help" },
       { text: "Privacy policy", href: "https://www.gov.uk/help/privacy-notice" },
+      { text: "Cookies", href: "/cookie-policy" },
+      { text: "Accessibility statement", href: "/accessibility-statement" },
       { text: "Contact us", href: "https://www.gov.uk/contact" },
       { text: "Terms and conditions", href: "https://www.gov.uk/help/terms-conditions" },
       { text: "Welsh", href: "https://www.gov.uk/cymraeg" },
       { text: "Government Digital Service", href: "https://www.gov.uk/government/organisations/government-digital-service" }
     ];
 
-    for (const link of sameTabLinks) {
+    for (const link of footerLinks) {
       const footerLink = page.locator(`.govuk-footer__link[href="${link.href}"]`).first();
       await expect(footerLink).toBeVisible();
       const targetAttr = await footerLink.getAttribute("target");
       expect(targetAttr).not.toBe("_blank");
     }
-
-    // Cookie policy and accessibility statement should open in new tab
-    const cookiePolicyLink = page.locator('.govuk-footer__link[href="/cookie-policy"]').first();
-    await expect(cookiePolicyLink).toBeVisible();
-    await expect(cookiePolicyLink).toHaveAttribute("target", "_blank");
-    await expect(cookiePolicyLink).toHaveAttribute("rel", "noopener noreferrer");
-
-    const accessibilityLink = page.locator('.govuk-footer__link[href="/accessibility-statement"]').first();
-    await expect(accessibilityLink).toBeVisible();
-    await expect(accessibilityLink).toHaveAttribute("target", "_blank");
-    await expect(accessibilityLink).toHaveAttribute("rel", "noopener noreferrer");
 
     // Crown copyright link
     const copyrightLink = page.locator(".govuk-footer__copyright-logo");
@@ -117,8 +108,8 @@ test.describe("Page Structure", () => {
     const serviceNameLink = page.locator(".govuk-service-navigation__service-name a");
     await expect(serviceNameLink).toHaveText("Court and tribunal hearings");
 
-    // Switch to Welsh via service navigation toggle
-    const languageToggle = page.locator('.govuk-service-navigation a:has-text("Cymraeg")');
+    // Switch to Welsh via phase banner toggle
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toBeVisible();
     await languageToggle.click();
 
@@ -131,8 +122,9 @@ test.describe("Page Structure", () => {
     await expect(signInLink).toHaveText("Mewngofnodi");
 
     // Verify English toggle is available
-    const englishToggle = page.locator('.govuk-service-navigation a:has-text("English")');
+    const englishToggle = page.locator(".app-phase-banner__language");
     await expect(englishToggle).toBeVisible();
+    await expect(englishToggle).toHaveText("English");
 
     // Verify footer links are in Welsh
     const cookiesLink = page.locator('.govuk-footer__link[href="/cookie-policy"]');

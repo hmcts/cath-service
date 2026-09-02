@@ -1,14 +1,14 @@
 export const cy = {
-  pageTitle: "[Welsh] Non-strategic upload - File upload summary - Court and tribunal hearings - GOV.UK",
-  heading: "[Welsh] File upload summary",
-  subHeading: "[Welsh] Check upload details",
-  courtName: "[Welsh] Court name",
-  file: "[Welsh] File",
-  listType: "[Welsh] List type",
-  hearingStartDate: "[Welsh] Hearing start date",
-  sensitivity: "[Welsh] Sensitivity",
-  language: "[Welsh] Language",
-  displayFileDates: "[Welsh] Display file dates",
-  change: "[Welsh] Change",
-  confirmButton: "[Welsh] Confirm"
+  pageTitle: "Llwytho i fyny â llaw - Crynodeb lanlwytho ffeil - Gwrandawiadau llys a thribiwnlys - GOV.UK",
+  heading: "Crynodeb lanlwytho ffeil",
+  subHeading: "Gwirio manylion lanlwytho",
+  courtName: "Enw'r llys",
+  file: "Ffeil",
+  listType: "Math o restr",
+  hearingStartDate: "Dyddiad cychwyn y gwrandawiad",
+  sensitivity: "Sensitifrwydd",
+  language: "Iaith",
+  displayFileDates: "Dangos dyddiadau ffeil",
+  change: "Newid",
+  confirmButton: "Cadarnhau"
 };

@@ -3,10 +3,12 @@ import { createLocalMediaUser, splitName, updateLocalMediaUser } from "./service
 
 const mockCreateUser = vi.fn();
 const mockUpdateUser = vi.fn();
+const mockFindUserByProvenanceId = vi.fn();
 
 vi.mock("./query.js", () => ({
   createUser: (...args: unknown[]) => mockCreateUser(...args),
-  updateUser: (...args: unknown[]) => mockUpdateUser(...args)
+  updateUser: (...args: unknown[]) => mockUpdateUser(...args),
+  findUserByProvenanceId: (...args: unknown[]) => mockFindUserByProvenanceId(...args)
 }));
 
 describe("account repository service", () => {
@@ -60,16 +62,44 @@ describe("account repository service", () => {
   });
 
   describe("updateLocalMediaUser", () => {
-    it("should update user with provided firstName and surname", async () => {
-      await updateLocalMediaUser("azure-123", "Jane", "Smith");
+    it("should update user when local record exists", async () => {
+      // Arrange
+      mockFindUserByProvenanceId.mockResolvedValue({ userId: "local-123" });
 
+      // Act
+      await updateLocalMediaUser("jane@example.com", "azure-123", "Jane", "Smith");
+
+      // Assert
       expect(mockUpdateUser).toHaveBeenCalledWith("azure-123", { firstName: "Jane", surname: "Smith" });
+      expect(mockCreateUser).not.toHaveBeenCalled();
+    });
+
+    it("should create local record when Azure AD user has no local row", async () => {
+      // Arrange
+      mockFindUserByProvenanceId.mockResolvedValue(null);
+
+      // Act
+      await updateLocalMediaUser("jane@example.com", "azure-123", "Jane", "Smith");
+
+      // Assert
+      expect(mockCreateUser).toHaveBeenCalledWith({
+        email: "jane@example.com",
+        firstName: "Jane",
+        surname: "Smith",
+        userProvenance: "B2C_IDAM",
+        userProvenanceId: "azure-123",
+        role: "VERIFIED"
+      });
+      expect(mockUpdateUser).not.toHaveBeenCalled();
     });
 
     it("should propagate errors from updateUser", async () => {
+      // Arrange
+      mockFindUserByProvenanceId.mockResolvedValue({ userId: "local-123" });
       mockUpdateUser.mockRejectedValue(new Error("DB error"));
 
-      await expect(updateLocalMediaUser("azure-123", "Jane", "Smith")).rejects.toThrow("DB error");
+      // Act & Assert
+      await expect(updateLocalMediaUser("jane@example.com", "azure-123", "Jane", "Smith")).rejects.toThrow("DB error");
     });
   });
 });

@@ -1,5 +1,6 @@
 export const en = {
-  publicationsTitle: "Blob Explorer Publications",
+  title: "Blob Explorer Publications",
+  header: "Blob Explorer Publications",
   publicationsDescription: "Choose a publication from the list.",
   publicationsTableHeadingArtefactId: "Artefact ID",
   publicationsTableHeadingListType: "List type",

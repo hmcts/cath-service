@@ -7,7 +7,11 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     region: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
-      upsert: vi.fn()
+      upsert: vi.fn(),
+      deleteMany: vi.fn()
+    },
+    locationRegion: {
+      deleteMany: vi.fn()
     }
   }
 }));
@@ -96,9 +100,10 @@ describe("regions routes", () => {
           { regionId: 2, name: "Wales" }
         ]
       };
-      vi.mocked((prisma as any).region.upsert)
-        .mockResolvedValueOnce({ regionId: 1, name: "London", welshName: "Llundain" })
-        .mockResolvedValueOnce({ regionId: 2, name: "Wales", welshName: "Wales" });
+      vi.mocked(prisma.region.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.region.upsert)
+        .mockResolvedValueOnce({ regionId: 1, name: "London", welshName: "Llundain" } as any)
+        .mockResolvedValueOnce({ regionId: 2, name: "Wales", welshName: "Wales" } as any);
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);
@@ -109,6 +114,43 @@ describe("regions routes", () => {
         seeded: 2,
         regions: expect.any(Array)
       });
+    });
+
+    it("should delete stale regions with conflicting names before upserting", async () => {
+      // Arrange - stale regionId 10 has the same name as the incoming regionId 4
+      mockRequest.body = {
+        regions: [{ regionId: 4, name: "North West", welshName: "Gogledd Orllewin Lloegr" }]
+      };
+      const staleRegion = { regionId: 10 };
+      vi.mocked(prisma.region.findMany).mockResolvedValue([staleRegion] as any);
+      vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.region.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.region.upsert).mockResolvedValue({ regionId: 4, name: "North West", welshName: "Gogledd Orllewin Lloegr" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({ where: { regionId: { in: [10] } } });
+      expect(prisma.region.deleteMany).toHaveBeenCalledWith({ where: { regionId: { in: [10] } } });
+      expect(prisma.region.upsert).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should not delete anything when no stale regions exist", async () => {
+      // Arrange
+      mockRequest.body = {
+        regions: [{ regionId: 1, name: "London", welshName: "Llundain" }]
+      };
+      vi.mocked(prisma.region.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.region.upsert).mockResolvedValue({ regionId: 1, name: "London", welshName: "Llundain" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.locationRegion.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.region.deleteMany).not.toHaveBeenCalled();
     });
 
     it("should return 400 when regions is not an array", async () => {
@@ -160,7 +202,7 @@ describe("regions routes", () => {
     it("should return 500 on database error", async () => {
       // Arrange
       mockRequest.body = { regions: [{ regionId: 1, name: "London" }] };
-      vi.mocked((prisma as any).region.upsert).mockRejectedValue(new Error("DB error"));
+      vi.mocked(prisma.region.findMany).mockRejectedValue(new Error("DB error"));
 
       // Act
       await POST(mockRequest as Request, mockResponse as Response);

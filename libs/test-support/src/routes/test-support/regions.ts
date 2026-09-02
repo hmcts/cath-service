@@ -35,17 +35,28 @@ export const POST = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "Each region must have regionId and name" });
       }
 
-      const result = await (prisma as any).region.upsert({
-        where: { regionId: region.regionId },
-        create: {
-          regionId: region.regionId,
-          name: region.name,
-          welshName: region.welshName || region.name
+      const welshName = region.welshName || region.name;
+
+      // Remove stale regions that share the same name or welshName but a different ID.
+      // This handles cases where a previous deploy had different regionId assignments.
+      const staleRegions = await prisma.region.findMany({
+        where: {
+          regionId: { not: region.regionId },
+          OR: [{ name: region.name }, { welshName }]
         },
-        update: {
-          name: region.name,
-          welshName: region.welshName || region.name
-        }
+        select: { regionId: true }
+      });
+
+      if (staleRegions.length > 0) {
+        const staleIds = staleRegions.map((r) => r.regionId);
+        await prisma.locationRegion.deleteMany({ where: { regionId: { in: staleIds } } });
+        await prisma.region.deleteMany({ where: { regionId: { in: staleIds } } });
+      }
+
+      const result = await prisma.region.upsert({
+        where: { regionId: region.regionId },
+        create: { regionId: region.regionId, name: region.name, welshName },
+        update: { name: region.name, welshName }
       });
       results.push(result);
     }

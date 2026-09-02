@@ -23,7 +23,8 @@ describe("Hearing Lists Page Controller", () => {
     mockResponse = {
       locals: {},
       render: renderSpy,
-      status: statusSpy
+      status: statusSpy,
+      setHeader: vi.fn()
     };
   });
 
@@ -206,6 +207,36 @@ describe("Hearing Lists Page Controller", () => {
       });
     });
 
+    it("should return 403 for ACCESS_DENIED error and render errors/403 page", async () => {
+      // Arrange
+      const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusSpy).toHaveBeenCalledWith(403);
+      expect(renderSpy).toHaveBeenCalledWith("errors/403", {
+        en: expect.any(Object),
+        cy: expect.any(Object)
+      });
+    });
+
+    it("should not redirect to download endpoint when ACCESS_DENIED for non-PDF artefact", async () => {
+      // Arrange
+      mockResponse.redirect = vi.fn();
+      const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
+      vi.mocked(getFlatFileForDisplay).mockResolvedValue({ error: "ACCESS_DENIED" });
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+      expect(statusSpy).toHaveBeenCalledWith(403);
+    });
+
     it("should use Welsh error messages for errors when locale is cy", async () => {
       mockResponse.locals = { locale: "cy" };
       const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
@@ -236,7 +267,7 @@ describe("Hearing Lists Page Controller", () => {
       listTypeName: "Crown Daily List",
       contentDate: new Date("2025-01-15"),
       language: "ENGLISH",
-      fileExtension: ".pdf"
+      sourceArtefactId: "civil-daily-cause-list.pdf"
     };
 
     beforeEach(() => {
@@ -338,8 +369,8 @@ describe("Hearing Lists Page Controller", () => {
     it("should redirect to download for non-PDF files", async () => {
       const { getFlatFileForDisplay } = await import("@hmcts/public-pages");
 
-      for (const ext of [".docx", ".html", ".csv", ".DOCX"]) {
-        vi.mocked(getFlatFileForDisplay).mockResolvedValue({ ...mockSuccessResult, fileExtension: ext });
+      for (const fileName of ["document.docx", "list.html", "data.csv", "DOCUMENT.DOCX"]) {
+        vi.mocked(getFlatFileForDisplay).mockResolvedValue({ ...mockSuccessResult, sourceArtefactId: fileName });
 
         await GET(mockRequest as Request, mockResponse as Response);
 

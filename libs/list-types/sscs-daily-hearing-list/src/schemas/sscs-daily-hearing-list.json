@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SSCS Daily Hearing List",
+  "description": "Schema for Social Security and Child Support Tribunal Daily Hearing List",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["venue", "appealReferenceNumber", "hearingType", "appellant", "courtroom", "hearingTime", "tribunal", "respondent", "additionalInformation"],
+    "properties": {
+      "venue": {
+        "title": "Venue",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Manchester Tribunal Centre"]
+      },
+      "appealReferenceNumber": {
+        "title": "Appeal Reference Number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["SC/123/2025"]
+      },
+      "hearingType": {
+        "title": "Hearing Type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Oral Hearing"]
+      },
+      "appellant": {
+        "title": "Appellant",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Smith, John"]
+      },
+      "courtroom": {
+        "title": "Courtroom",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Room 1"]
+      },
+      "hearingTime": {
+        "title": "Hearing Time",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["10:00am"]
+      },
+      "tribunal": {
+        "title": "Tribunal",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["SSCS"]
+      },
+      "respondent": {
+        "title": "FTA/Respondent",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Secretary of State for Work and Pensions"]
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Video hearing"]
+      }
+    }
+  }
+}

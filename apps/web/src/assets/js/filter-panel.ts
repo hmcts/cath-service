@@ -1,5 +1,14 @@
+// Progressive enhancement for the filter sidebar that the MOJ filter component
+// does not provide (courts-tribunals-list, jurisdiction-data-list,
+// location-name-search): collapsible filter sections with a +/− toggle, plus
+// revealing a jurisdiction's sub-jurisdiction checkbox group when its parent is
+// ticked. Both run alongside the MOJ FilterToggleButton (whole-panel show/hide).
 export function initFilterPanel() {
-  // Handle jurisdiction sub-jurisdiction toggle
+  initSubJurisdictionReveal();
+  initCollapsibleSections();
+}
+
+function initSubJurisdictionReveal() {
   const jurisdictionCheckboxes = document.querySelectorAll<HTMLInputElement>('input[name="jurisdiction"]');
 
   jurisdictionCheckboxes.forEach((checkbox) => {
@@ -10,9 +19,9 @@ export function initFilterPanel() {
 
       if (subJurisdictionSection) {
         if (target.checked) {
-          subJurisdictionSection.style.display = "block";
+          subJurisdictionSection.hidden = false;
         } else {
-          subJurisdictionSection.style.display = "none";
+          subJurisdictionSection.hidden = true;
           const subCheckboxes = subJurisdictionSection.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
           subCheckboxes.forEach((subCheckbox) => {
             subCheckbox.checked = false;
@@ -21,8 +30,9 @@ export function initFilterPanel() {
       }
     });
   });
+}
 
-  // Handle collapsible filter sections
+function initCollapsibleSections() {
   const toggleButtons = document.querySelectorAll<HTMLElement>(".filter-section-toggle");
 
   toggleButtons.forEach((button) => {
@@ -35,51 +45,21 @@ export function initFilterPanel() {
       if (!content) return;
 
       const icon = target.querySelector(".filter-section-icon");
+      // Icon glyphs default to −/+ but can be overridden per toggle (e.g. the SJP
+      // lists use ▼/▶) via data-expanded-icon / data-collapsed-icon.
+      const expandedIcon = target.getAttribute("data-expanded-icon") || "−";
+      const collapsedIcon = target.getAttribute("data-collapsed-icon") || "+";
       const isExpanded = target.getAttribute("aria-expanded") === "true";
 
       if (isExpanded) {
         target.setAttribute("aria-expanded", "false");
         content.setAttribute("hidden", "");
-        if (icon) icon.textContent = "+";
+        if (icon) icon.textContent = collapsedIcon;
       } else {
         target.setAttribute("aria-expanded", "true");
         content.removeAttribute("hidden");
-        if (icon) icon.textContent = "−";
+        if (icon) icon.textContent = expandedIcon;
       }
     });
   });
-
-  // Mobile filter toggle functionality
-  initMobileFilterToggle();
-}
-
-function initMobileFilterToggle() {
-  const showFiltersBtn = document.getElementById("show-filters-btn");
-  const hideFiltersBtn = document.getElementById("hide-filters-btn");
-  const filterColumn = document.querySelector(".filter-column");
-  const courtsColumn = document.querySelector(".courts-column");
-
-  if (showFiltersBtn && hideFiltersBtn && filterColumn && courtsColumn) {
-    showFiltersBtn.addEventListener("click", () => {
-      filterColumn.classList.add("filter-visible");
-      courtsColumn.classList.add("filter-visible");
-      showFiltersBtn.style.display = "none";
-      hideFiltersBtn.style.display = "block";
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-
-    hideFiltersBtn.addEventListener("click", () => {
-      filterColumn.classList.remove("filter-visible");
-      courtsColumn.classList.remove("filter-visible");
-      showFiltersBtn.style.display = "block";
-      hideFiltersBtn.style.display = "none";
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    });
-  }
 }

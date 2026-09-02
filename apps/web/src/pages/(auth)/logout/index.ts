@@ -36,7 +36,7 @@ export const GET = async (req: Request, res: Response) => {
       }
 
       // B2C logout flow
-      if (userProvenance === "B2C") {
+      if (userProvenance === "PI_AAD") {
         const b2cConfig = getB2cConfig();
         const b2cBaseUrl = getB2cBaseUrl();
         const postLogoutRedirectUri = getPostLogoutRedirectUri(req);

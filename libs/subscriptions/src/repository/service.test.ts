@@ -6,6 +6,7 @@ import {
   createMultipleSubscriptions,
   createSubscription,
   deleteSubscriptionsByIds,
+  deleteSubscriptionsByLocationId,
   getAllSubscriptionsByUserId,
   getCaseSubscriptionsByUserId,
   getCourtSubscriptionsByUserId,
@@ -730,6 +731,27 @@ describe("Subscription Service", () => {
 
       expect(result).toBe(2);
       expect(listTypeService.pruneStaleListTypesForUser).toHaveBeenCalledWith(mockUserId, [100], []);
+    });
+  });
+
+  describe("deleteSubscriptionsByLocationId", () => {
+    it("should delete all subscriptions for a location regardless of owner", async () => {
+      vi.mocked(queries.findSubscriptionsByLocationId).mockResolvedValue([{ subscriptionId: "sub-1" }, { subscriptionId: "sub-2" }] as any);
+      vi.mocked(queries.deleteSubscriptionsByLocationIdRecord).mockResolvedValue(2);
+
+      const result = await deleteSubscriptionsByLocationId(123);
+
+      expect(queries.deleteSubscriptionsByLocationIdRecord).toHaveBeenCalledWith(123);
+      expect(result).toBe(2);
+    });
+
+    it("should be a no-op when the location has no subscriptions", async () => {
+      vi.mocked(queries.findSubscriptionsByLocationId).mockResolvedValue([] as any);
+
+      const result = await deleteSubscriptionsByLocationId(123);
+
+      expect(queries.deleteSubscriptionsByLocationIdRecord).not.toHaveBeenCalled();
+      expect(result).toBe(0);
     });
   });
 });

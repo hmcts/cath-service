@@ -407,6 +407,7 @@ interface UploadFlatFileInput {
   artefactId: string;
   content: Buffer | Uint8Array;
   extension?: string;
+  sourceArtefactId?: string;
 }
 
 interface UploadFlatFileResponse {
@@ -420,7 +421,8 @@ export async function uploadTestFlatFile(input: UploadFlatFileInput): Promise<Up
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
@@ -440,12 +442,28 @@ export async function checkFlatFileExists(artefactId: string): Promise<FlatFileI
   return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
 }
 
+export interface FlatFileListItem {
+  filename: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface FlatFileListResponse {
+  artefactId: string;
+  files: FlatFileListItem[];
+}
+
+export async function listFlatFiles(artefactId: string): Promise<FlatFileListResponse> {
+  return callTestSupportApi<FlatFileListResponse>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}&all=true`);
+}
+
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {
   const base64Content = Buffer.from(input.content).toString("base64");
   return callTestSupportApi<UploadFlatFileResponse>("POST", "/test-support/flat-files", {
     artefactId: input.artefactId,
     content: base64Content,
-    extension: input.extension || ".pdf"
+    extension: input.extension || ".pdf",
+    sourceArtefactId: input.sourceArtefactId
   });
 }
 
@@ -503,4 +521,48 @@ export async function createOrGetListType(input: CreateListTypeInput): Promise<L
   const created = (await getListTypeByName(input.name)) as ListTypeRecord;
   // Map 'id' to 'listTypeId' for backwards compatibility
   return { ...created, listTypeId: created.id };
+}
+
+// Third Party Users
+interface CreateThirdPartyUserInput {
+  name: string;
+}
+
+interface ThirdPartyUserRecord {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+interface ThirdPartyUserWithSubscriptions extends ThirdPartyUserRecord {
+  subscriptions: Array<{
+    id: string;
+    listType: string;
+    sensitivity: string;
+  }>;
+}
+
+export async function createTestThirdPartyUser(data: CreateThirdPartyUserInput): Promise<ThirdPartyUserRecord> {
+  return callTestSupportApi<ThirdPartyUserRecord>("POST", "/test-support/third-party-users", data);
+}
+
+export async function getTestThirdPartyUsers(): Promise<ThirdPartyUserRecord[]> {
+  return callTestSupportApi<ThirdPartyUserRecord[]>("GET", "/test-support/third-party-users");
+}
+
+export async function getTestThirdPartyUser(id: string): Promise<ThirdPartyUserWithSubscriptions> {
+  return callTestSupportApi<ThirdPartyUserWithSubscriptions>("GET", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUser(id: string): Promise<void> {
+  return callTestSupportApi<void>("DELETE", `/test-support/third-party-users/${id}`);
+}
+
+export async function deleteTestThirdPartyUsers(ids: string[]): Promise<{ deleted: number }> {
+  return callTestSupportApi<{ deleted: number }>("DELETE", "/test-support/third-party-users", { ids });
+}
+
+export async function findTestThirdPartyUserByName(name: string): Promise<ThirdPartyUserRecord | null> {
+  const users = await getTestThirdPartyUsers();
+  return (users.find((u) => u.name === name) as ThirdPartyUserRecord) || null;
 }

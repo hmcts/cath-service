@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SjpJson } from "./json-parser.js";
 import { determineListType, extractCaseCount, extractPressCases } from "./json-parser.js";
@@ -13,10 +12,10 @@ import {
   getUniqueProsecutors
 } from "./sjp-service.js";
 
-vi.mock("node:fs/promises");
 vi.mock("./json-parser.js");
 vi.mock("@hmcts/publication", () => ({
-  getLatestSjpArtefacts: vi.fn()
+  getLatestSjpArtefacts: vi.fn(),
+  getPublicationJson: vi.fn()
 }));
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
@@ -27,7 +26,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 }));
 
 import { prisma } from "@hmcts/postgres-prisma";
-import { getLatestSjpArtefacts } from "@hmcts/publication";
+import { getLatestSjpArtefacts, getPublicationJson } from "@hmcts/publication";
 
 const mockSjpJson: SjpJson = {
   document: {
@@ -111,7 +110,7 @@ describe("getLatestSjpLists", () => {
     ];
 
     vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
 
@@ -159,7 +158,7 @@ describe("getLatestSjpLists", () => {
     ];
 
     vi.mocked(getLatestSjpArtefacts).mockResolvedValue(mockArtefacts);
-    vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(mockSjpJson)).mockRejectedValueOnce(new Error("File not found"));
+    vi.mocked(getPublicationJson).mockResolvedValueOnce(mockSjpJson).mockResolvedValueOnce(null);
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
 
@@ -184,7 +183,7 @@ describe("getSjpListById", () => {
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
 
@@ -218,7 +217,7 @@ describe("getSjpListById", () => {
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
-    vi.mocked(readFile).mockRejectedValue(new Error("File not found"));
+    vi.mocked(getPublicationJson).mockResolvedValue(null);
 
     const result = await getSjpListById("list-1");
 
@@ -232,7 +231,7 @@ describe("getSjpPublicCases", () => {
   });
 
   it("should return public cases with pagination", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPublicCases("list-1", {}, 1);
@@ -256,7 +255,7 @@ describe("getSjpPublicCases", () => {
   });
 
   it("should apply postcode filter", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPublicCases("list-1", { postcodes: ["SW"] }, 1);
@@ -271,7 +270,7 @@ describe("getSjpPublicCases", () => {
       { ...mockPressCases[1], postcode: "M1" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(londonCases);
 
     const result = await getSjpPublicCases("list-1", { postcodes: ["LONDON_POSTCODES"] }, 1);
@@ -281,7 +280,7 @@ describe("getSjpPublicCases", () => {
   });
 
   it("should apply prosecutor filter", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPublicCases("list-1", { prosecutors: ["CPS"] }, 1);
@@ -297,7 +296,7 @@ describe("getSjpPublicCases", () => {
       name: `Person ${i}`
     }));
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(manyCases);
 
     const page1 = await getSjpPublicCases("list-1", {}, 1);
@@ -315,7 +314,7 @@ describe("getSjpPublicCases", () => {
       { ...mockPressCases[1], name: "Alice Smith" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(originalOrderCases);
 
     const result = await getSjpPublicCases("list-1", {}, 1);
@@ -330,7 +329,7 @@ describe("getSjpPublicCases", () => {
       { ...mockPressCases[1], name: "Alice Smith" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
 
     const result = await getSjpPublicCases("list-1", {}, 1, "name", "asc");
@@ -351,7 +350,7 @@ describe("getSjpPublicCases", () => {
       }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(multiOffenceCase);
 
     const result = await getSjpPublicCases("list-1", {}, 1);
@@ -365,7 +364,7 @@ describe("getSjpPublicCases", () => {
       { ...mockPressCases[1], name: "Zoe Brown" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(unsortedCases);
 
     const result = await getSjpPublicCases("list-1", {}, 1, "name", "desc");
@@ -381,7 +380,7 @@ describe("getSjpPressCases", () => {
   });
 
   it("should return press cases with all fields", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(mockPressCases);
 
     const result = await getSjpPressCases("list-1", {}, 1);
@@ -399,7 +398,7 @@ describe("getSjpPressCases", () => {
       { ...mockPressCases[1], name: "Alice Smith" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(cases);
 
     const result = await getSjpPressCases("list-1", {}, 1);
@@ -421,7 +420,7 @@ describe("getAllSjpPressCases", () => {
       name: `Person ${i.toString().padStart(3, "0")}`
     }));
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(manyCases);
 
     const result = await getAllSjpPressCases("list-1", {});
@@ -437,7 +436,7 @@ describe("getAllSjpPressCases", () => {
       { ...mockPressCases[0], name: "Bob Jones", caseId: "case-3" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(cases);
 
     const result = await getAllSjpPressCases("list-1", {});
@@ -445,62 +444,6 @@ describe("getAllSjpPressCases", () => {
     expect(result.cases[0].name).toBe("Zoe Brown");
     expect(result.cases[1].name).toBe("Alice Smith");
     expect(result.cases[2].name).toBe("Bob Jones");
-  });
-});
-
-describe("artefactId validation (path traversal protection)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("should reject artefactId with path traversal sequences", async () => {
-    await expect(getSjpListById("../../../etc/passwd")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("..\\..\\..\\windows\\system32")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("test/../secret")).rejects.toThrow("Invalid artefactId");
-  });
-
-  it("should reject artefactId with path separators", async () => {
-    await expect(getSjpListById("test/file")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("test\\file")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("/absolute/path")).rejects.toThrow("Invalid artefactId");
-  });
-
-  it("should reject artefactId with special characters", async () => {
-    await expect(getSjpListById("test<>file")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("test|file")).rejects.toThrow("Invalid artefactId");
-    await expect(getSjpListById("test&file")).rejects.toThrow("Invalid artefactId");
-  });
-
-  it("should accept valid artefactId with alphanumerics, hyphens, and underscores", async () => {
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
-    vi.mocked(determineListType).mockReturnValue("press");
-    vi.mocked(extractCaseCount).mockReturnValue(10);
-
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
-      artefactId: "test-123_abc",
-      locationId: "1",
-      contentDate: new Date("2025-01-20"),
-      listTypeId: 10,
-      provenance: "CFT_IDAM",
-      search: {},
-      lastReceivedDate: new Date("2025-01-20"),
-      displayFrom: new Date("2025-01-20"),
-      displayTo: new Date("2025-01-21"),
-      language: "ENGLISH",
-      locationName: "Test Court",
-      sensitivity: "PUBLIC",
-      version: "1.0",
-      listType: "SJP_PRESS_LIST",
-      createdDate: new Date("2025-01-20")
-    });
-
-    const result = await getSjpListById("test-123_abc");
-    expect(result).toBeDefined();
-    expect(result?.artefactId).toBe("test-123_abc");
-  });
-
-  it("should reject empty artefactId", async () => {
-    await expect(getSjpListById("")).rejects.toThrow("Invalid artefactId");
   });
 });
 
@@ -516,7 +459,7 @@ describe("getUniqueProsecutors", () => {
       { ...mockPressCases[0], prosecutor: "CPS" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(casesWithProsecutors);
 
     const result = await getUniqueProsecutors("list-1");
@@ -530,7 +473,7 @@ describe("getUniqueProsecutors", () => {
       { ...mockPressCases[1], prosecutor: null }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(casesWithNulls);
 
     const result = await getUniqueProsecutors("list-1");
@@ -551,7 +494,7 @@ describe("getUniquePostcodes", () => {
       { ...mockPressCases[0], postcode: "M1" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(casesWithPostcodes);
 
     const result = await getUniquePostcodes("list-1");
@@ -566,7 +509,7 @@ describe("getUniquePostcodes", () => {
       { ...mockPressCases[1], postcode: null }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(casesWithNulls);
 
     const result = await getUniquePostcodes("list-1");
@@ -581,7 +524,7 @@ describe("getUniquePostcodes", () => {
       { ...mockPressCases[0], postcode: "M1" }
     ];
 
-    vi.mocked(readFile).mockResolvedValue(JSON.stringify(mockSjpJson));
+    vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(extractPressCases).mockReturnValue(casesWithLondon);
 
     const result = await getUniquePostcodes("list-1");

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UTIAC Statutory Appeal Daily Hearing List",
+  "description": "Schema for Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["hearingTime", "appellant", "appealReferenceNumber", "judges", "hearingType", "location"],
+    "properties": {
+      "hearingTime": {
+        "title": "Hearing time",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["10:00am"]
+      },
+      "appellant": {
+        "title": "Appellant",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["John Smith"]
+      },
+      "representative": {
+        "title": "Representative",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Smith & Co Solicitors"]
+      },
+      "appealReferenceNumber": {
+        "title": "Appeal reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["IA/2025/001"]
+      },
+      "judges": {
+        "title": "Judge(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Judge Smith"]
+      },
+      "hearingType": {
+        "title": "Hearing type",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Substantive"]
+      },
+      "location": {
+        "title": "Location",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Field House"]
+      },
+      "additionalInformation": {
+        "title": "Additional information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$",
+        "examples": ["Remote hearing"]
+      }
+    }
+  }
+}

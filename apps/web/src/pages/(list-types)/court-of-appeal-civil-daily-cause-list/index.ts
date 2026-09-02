@@ -12,7 +12,7 @@ export const ROUTES = ["/court-of-appeal-civil-division-daily-cause-list"];
 
 const validate = createJsonValidator(schemaPath);
 
-const COURT_OF_APPEAL_CIVIL_LIST_TYPE_ID = 19;
+const SUPPORTED_LIST_TYPE = "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST";
 
 export const GET = createSimpleListTypeHandler<CourtOfAppealCivilData>({
   en,
@@ -20,7 +20,7 @@ export const GET = createSimpleListTypeHandler<CourtOfAppealCivilData>({
   validate,
   logPrefix: "court-of-appeal-civil-daily-cause-list",
   guardArtefact: (artefact, res) => {
-    if (artefact.listTypeId !== COURT_OF_APPEAL_CIVIL_LIST_TYPE_ID) {
+    if (artefact.listTypeName !== SUPPORTED_LIST_TYPE) {
       res.status(400).render("errors/common", {
         en,
         cy,

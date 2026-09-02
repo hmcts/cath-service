@@ -99,7 +99,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -129,7 +129,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -157,7 +157,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -176,7 +176,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -195,7 +195,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -215,7 +215,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -233,7 +233,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -251,7 +251,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -272,7 +272,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(false);
@@ -294,12 +294,12 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      listTypeId: 11,
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
       listTitle: "County Court at Central London Civil Daily Cause List",
       contentDate: contentDate,
       lastReceivedDate: expect.any(String)
@@ -320,7 +320,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locationId: "240",
       jsonData: mockHearingList,
       provenance: "MANUAL_UPLOAD",
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Manual Upload" }));
@@ -340,7 +340,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locationId: "240",
       jsonData: mockHearingList,
       provenance: "SNL",
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "SNL" }));
@@ -360,7 +360,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locationId: "240",
       jsonData: mockHearingList,
       provenance: "UNKNOWN_SOURCE",
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "UNKNOWN_SOURCE" }));
@@ -379,7 +379,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -400,7 +400,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-mkdir", pdfBuffer, 100);
@@ -419,10 +419,29 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
       locale: "cy",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeId: 11
+      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
     expect(renderStandardDailyCauseList).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locale: "cy" }));
+  });
+
+  it("should use default title for unknown listTypeName", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({
+      success: true,
+      pdfBuffer: Buffer.from("PDF"),
+      sizeBytes: 100
+    });
+
+    await generateRcjStandardDailyCauseListPdf({
+      artefactId: "unknown-list-type",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockHearingList,
+      listTypeName: "UNKNOWN_LIST_TYPE_NAME"
+    });
+
+    expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: "RCJ Standard Daily Cause List" }));
   });
 });

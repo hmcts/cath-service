@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t.pageTitle }} {{ header.locationName }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+  <style>
+    .warning-row {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px 0;
+    }
+    .warning-icon {
+      display: inline-block;
+      background-color: #0b0c0c;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 10px;
+      text-align: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+    .warning-text { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ t.pageTitle }} {{ header.locationName }}</h1>
+
+    <p class="bold header-date">{{ header.dateRange }}</p>
+    <p>{{ t.lastUpdated }} {{ header.lastUpdated }}</p>
+
+    {% if header.version | length %}
+      <p>{{ t.version }} {{ header.version }}</p>
+    {% endif %}
+
+    <div class="address">
+      {% for line in header.addressLines %}
+        <p>{{ line }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if header.weekCommencing | length %}
+    <p>{{ t.preStatementPrefix }} {{ header.weekCommencing }}</p>
+    <p>{{ t.preStatementSuffix2 }}</p>
+    <p>{{ t.preStatementSuffix3 }}</p>
+    <p>{{ t.preStatementSuffix4 }}</p>
+  {% endif %}
+
+  <div class="info-box">
+    <h3>{{ t.reportingRestrictionsTitle }}</h3>
+    <p>{{ t.reportingRestrictionsBodyIntro }}</p>
+    <div class="warning-row">
+      <span class="warning-icon" aria-hidden="true">!</span>
+      <span class="warning-text">{{ t.reportingRestrictionsWarning }}</span>
+    </div>
+    <p>{{ t.reportingRestrictionsBodySpecific }}</p>
+    <p>{{ t.reportingRestrictionsBodyHowever }}</p>
+    <p>{{ t.reportingRestrictionsBodyContact }}</p>
+    <ul>
+      <li>{{ t.reportingRestrictionsContactCourt }}</li>
+      <li>{{ t.reportingRestrictionsContactHmcts }}</li>
+    </ul>
+  </div>
+
+  {% for group in groupedCategories %}
+    <div class="court-section">
+      <h2>
+        {% if group.category == "TO_BE_ALLOCATED" %}
+          {{ t.toBeAllocated }}
+        {% else %}
+          {{ group.category }}
+        {% endif %}
+      </h2>
+      <table>
+        <thead>
+          <tr>
+            <th class="no-wrap">{{ t.fixedFor }}</th>
+            <th class="no-wrap">{{ t.caseRef }}</th>
+            <th>{{ t.defendant }}</th>
+            <th>{{ t.prosecutingAuthority }}</th>
+            <th>{{ t.linkedCases }}</th>
+            <th>{{ t.listingNotes }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for case in group.cases %}
+            <tr>
+              <td class="no-wrap">{{ case.fixedFor }}</td>
+              <td class="no-wrap">{{ case.caseNumber }}</td>
+              <td>{% if case.isInCustody %}*{% endif %}{{ case.defendants }}</td>
+              <td>{{ case.prosecutingAuthority }}</td>
+              <td>{{ case.linkedCases }}</td>
+              <td>{{ case.listingNotes }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

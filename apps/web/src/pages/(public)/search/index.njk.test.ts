@@ -1,12 +1,16 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import type nunjucks from "nunjucks";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const TEMPLATE = "(public)/search/index.njk";
 
 describe("search template", () => {
   describe("Template file", () => {
@@ -16,47 +20,88 @@ describe("search template", () => {
     });
   });
 
-  describe("English locale", () => {
-    it("should have required title", () => {
-      expect(en.title).toBe("What court or tribunal are you interested in?");
+  describe("Template rendering", () => {
+    let env: nunjucks.Environment;
+
+    beforeEach(() => {
+      env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
     });
 
-    it("should have error summary title", () => {
-      expect(en.errorSummaryTitle).toBe("There is a problem");
+    it("should render the English page heading, hint, button and A-Z link", () => {
+      const data = { ...en, locale: "en" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(en.title);
+      expect($(".govuk-hint").text()).toContain(en.searchHint);
+      expect($(".govuk-button").text()).toContain(en.continueButton);
+      const azLink = $('a[href="/courts-tribunals-list"]');
+      expect(azLink.text()).toContain(en.azListLink);
+      assertNoErrors($);
     });
 
-    it("should have error message", () => {
-      expect(en.errorMessage).toBe("There is nothing matching your criteria");
+    it("should render the search input with autocomplete data attributes", () => {
+      const data = { ...en, locale: "en" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const input = $("#location");
+      expect(input).toHaveLength(1);
+      expect(input.attr("name")).toBe("locationId");
+      expect(input.attr("data-autocomplete")).toBe("true");
+      expect(input.attr("data-locale")).toBe("en");
+      expect(input.attr("data-no-results-message")).toBe(en.noResultsFound);
     });
 
-    it("should have continue button text", () => {
-      expect(en.continueButton).toBe("Continue");
+    it("should render the Welsh page heading and content", () => {
+      const data = { ...cy, locale: "cy" };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("h1").text()).toContain(cy.title);
+      expect($(".govuk-hint").text()).toContain(cy.searchHint);
+      expect($(".govuk-button").text()).toContain(cy.continueButton);
+      expect($('a[href="/courts-tribunals-list"]').text()).toContain(cy.azListLink);
     });
 
-    it("should have A-Z list link text", () => {
-      expect(en.azListLink).toBe("Select from an A-Z list of courts and tribunals");
-    });
-  });
+    it("should prefill the input with the preselected location name in English", () => {
+      const preselectedLocation = { id: 123, name: "Oxford Combined Court Centre", welshName: "Canolfan Llys Rhydychen" };
+      const data = { ...en, locale: "en", preselectedLocation };
 
-  describe("Welsh locale", () => {
-    it("should have required title", () => {
-      expect(cy.title).toBe("Ym mha lys neu dribiwnlys y mae gennych ddiddordeb?");
-    });
+      const { $ } = render(env, TEMPLATE, data);
 
-    it("should have error summary title", () => {
-      expect(cy.errorSummaryTitle).toBe("Mae problem");
+      const input = $("#location");
+      expect(input.attr("value")).toBe("Oxford Combined Court Centre");
+      expect(input.attr("data-location-id")).toBe("123");
     });
 
-    it("should have error message", () => {
-      expect(cy.errorMessage).toBe("Nid oes dim sy'n cyfateb i'ch meini prawf");
+    it("should prefill the input with the preselected Welsh location name in Welsh", () => {
+      const preselectedLocation = { id: 123, name: "Oxford Combined Court Centre", welshName: "Canolfan Llys Rhydychen" };
+      const data = { ...cy, locale: "cy", preselectedLocation };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#location").attr("value")).toBe("Canolfan Llys Rhydychen");
     });
 
-    it("should have continue button text", () => {
-      expect(cy.continueButton).toBe("Parhau");
+    it("should render the error summary when errors are present", () => {
+      const errors = [{ text: en.errorMessage, href: "#location" }];
+      const data = { ...en, locale: "en", errors };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [en.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(en.errorSummaryTitle);
     });
 
-    it("should have A-Z list link text", () => {
-      expect(cy.azListLink).toBe("Dewis o restr A-Y o lysoedd a thribiwnlysoedd");
+    it("should render the Welsh error summary title and message when errors are present", () => {
+      const errors = [{ text: cy.errorMessage, href: "#location" }];
+      const data = { ...cy, locale: "cy", errors };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, [cy.errorMessage]);
+      expect($(".govuk-error-summary__title").text()).toContain(cy.errorSummaryTitle);
     });
   });
 

@@ -62,9 +62,9 @@ describe("manage-third-party-user page", () => {
     });
 
     it("should render user details in English", async () => {
-      req.query = { id: "user-123" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
       const mockUser = {
-        id: "user-123",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test User",
         subscriptions: [{ listTypeId: 1 }]
       };
@@ -73,7 +73,7 @@ describe("manage-third-party-user page", () => {
       const handler = GET[GET.length - 1];
       await handler(req as Request, res as Response, vi.fn());
 
-      expect(findThirdPartyUserById).toHaveBeenCalledWith("user-123");
+      expect(findThirdPartyUserById).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
       expect(res.render).toHaveBeenCalledWith(
         "manage-third-party-user/index",
         expect.objectContaining({
@@ -83,10 +83,10 @@ describe("manage-third-party-user page", () => {
     });
 
     it("should render user details in Welsh", async () => {
-      req.query = { id: "user-123" };
+      req.query = { id: "00000000-0000-0000-0000-000000000001" };
       (res as any).locals = { locale: "cy" };
       const mockUser = {
-        id: "user-123",
+        id: "00000000-0000-0000-0000-000000000001",
         name: "Test User",
         subscriptions: []
       };

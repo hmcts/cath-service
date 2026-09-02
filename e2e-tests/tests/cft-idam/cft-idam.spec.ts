@@ -78,7 +78,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await page.goto("/cft-rejected?lng=cy");
 
     // Verify language toggle shows English
-    const languageToggle = page.locator(".app-language-toggle a");
+    const languageToggle = page.locator(".app-phase-banner__language");
     await expect(languageToggle).toContainText("English");
 
     // Check for Welsh content

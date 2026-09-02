@@ -1,5 +1,11 @@
-import { type ValidationResult, validateJson } from "@hmcts/publication";
+import Ajv from "ajv";
 import schema from "../schemas/sjp-public-list.json" with { type: "json" };
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: unknown[];
+  schemaVersion: string;
+}
 
 /**
  * Validates SJP Public List JSON data
@@ -7,5 +13,13 @@ import schema from "../schemas/sjp-public-list.json" with { type: "json" };
  * @returns ValidationResult
  */
 export function validateSjpPublicList(jsonData: unknown): ValidationResult {
-  return validateJson(jsonData, schema, "1.0");
+  const ajv = new (Ajv as any)({ allErrors: true, strict: false, validateSchema: false });
+  const validate = ajv.compile(schema);
+  const isValid = validate(jsonData);
+
+  return {
+    isValid,
+    errors: validate.errors || [],
+    schemaVersion: "1.0"
+  };
 }

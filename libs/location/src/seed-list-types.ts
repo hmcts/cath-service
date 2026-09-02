@@ -1,5 +1,8 @@
+// Import from the dedicated subpath, not the package barrel: the barrel re-exports
+// PDF utilities that pull in nunjucks/exceljs, which are not installed in the focused
+// postgres deploy image and would crash the seed before any list type is upserted.
+import { listTypeData } from "@hmcts/list-types-common/list-type-data";
 import { prisma } from "@hmcts/postgres-prisma";
-import { listTypeData } from "./list-type-data.js";
 
 export async function seedListTypes() {
   console.log("Checking if list type data seeding is needed...");
@@ -52,7 +55,9 @@ export async function seedListTypes() {
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
           allowedProvenance: listType.provenance,
-          isNonStrategic: listType.isNonStrategic
+          isNonStrategic: listType.isNonStrategic,
+          // Re-activate a list type that was previously soft-deleted but re-added to listTypeData
+          deletedAt: null
         }
       });
 
@@ -78,6 +83,20 @@ export async function seedListTypes() {
   }
 
   console.log(`Seeded ${listTypeData.length} list types`);
+
+  // Reconcile removals: soft-delete any active list type no longer present in listTypeData
+  // (e.g. CRIME_DAILY_LIST). Test list types live outside listTypeData and must be preserved.
+  const activeNames = listTypeData.map((lt) => lt.name);
+  const { count } = await (prisma as any).listType.updateMany({
+    where: {
+      deletedAt: null,
+      name: { notIn: activeNames },
+      NOT: [{ name: { startsWith: "TEST_" } }, { name: { startsWith: "E2E_" } }]
+    },
+    data: { deletedAt: new Date() }
+  });
+  console.log(`Soft-deleted ${count} list types no longer in listTypeData`);
+
   console.log("List type seeding completed successfully");
 }
 

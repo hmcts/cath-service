@@ -2,33 +2,108 @@ import {
   extractCaseSummary as extractAdminCourtSummary,
   formatCaseSummaryForEmail as formatAdminCourtSummaryForEmail
 } from "@hmcts/administrative-court-daily-cause-list";
+import { extractCaseSummary as extractAstSummary, formatCaseSummaryForEmail as formatAstSummaryForEmail } from "@hmcts/ast-daily-hearing-list";
 import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
+import { extractCaseSummary as extractCicSummary, formatCaseSummaryForEmail as formatCicSummaryForEmail } from "@hmcts/cic-weekly-hearing-list";
 import {
   extractCaseSummary as extractCivilFamilySummary,
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
 import {
+  extractCaseSummary as extractCompaniesWindingUpChdSummary,
+  formatCaseSummaryForEmail as formatCompaniesWindingUpChdSummaryForEmail
+} from "@hmcts/companies-winding-up-chd-daily-cause-list";
+import { extractCaseSummary as extractCopSummary, formatCaseSummaryForEmail as formatCopSummaryForEmail } from "@hmcts/cop-daily-cause-list";
+import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
+import { extractCaseSummary as extractCrownFirmSummary, formatCaseSummaryForEmail as formatCrownFirmSummaryForEmail } from "@hmcts/crown-firm-list";
+import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEmail as formatCrownWarnedSummaryForEmail } from "@hmcts/crown-warned-list";
+import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
+import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
+import {
+  extractCaseSummary as extractFinancialListChdKbSummary,
+  formatCaseSummaryForEmail as formatFinancialListChdKbSummaryForEmail
+} from "@hmcts/financial-list-chd-kb-daily-cause-list";
+import {
+  extractCaseSummary as extractFttLrtSummary,
+  formatCaseSummaryForEmail as formatFttLrtSummaryForEmail
+} from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
+import { extractCaseSummary as extractFttRptSummary, formatCaseSummaryForEmail as formatFttRptSummaryForEmail } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import {
+  extractCaseSummary as extractFttTaxSummary,
+  formatCaseSummaryForEmail as formatFttTaxSummaryForEmail
+} from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
+import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
   formatCaseSummaryForEmail as formatLondonAdminSummaryForEmail
 } from "@hmcts/london-administrative-court-daily-cause-list";
+import {
+  extractMagistratesAdultCourtListCaseSummary as extractMagistratesAdultCourtListSummary,
+  formatMagistratesAdultCourtListCaseSummaryForEmail as formatMagistratesAdultCourtListSummaryForEmail
+} from "@hmcts/magistrates-adult-court-list";
+import {
+  extractMagistratesPublicAdultCourtListCaseSummary as extractMagistratesPublicAdultCourtSummary,
+  formatMagistratesPublicAdultCourtListCaseSummaryForEmail as formatMagistratesPublicAdultCourtSummaryForEmail
+} from "@hmcts/magistrates-public-adult-court-list";
+import {
+  extractMagistratesPublicListCaseSummary as extractMagistratesPublicSummary,
+  formatMagistratesPublicListCaseSummaryForEmail as formatMagistratesPublicSummaryForEmail
+} from "@hmcts/magistrates-public-list";
+import {
+  extractCaseSummary as extractMagistratesStandardSummary,
+  formatCaseSummaryForEmail as formatMagistratesStandardSummaryForEmail
+} from "@hmcts/magistrates-standard-list";
+import { extractCaseSummary as extractPhtSummary, formatCaseSummaryForEmail as formatPhtSummaryForEmail } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractCaseSummary as extractRcjSummary, formatCaseSummaryForEmail as formatRcjSummaryForEmail } from "@hmcts/rcj-standard-daily-cause-list";
+import { extractCaseSummary as extractSendSummary, formatCaseSummaryForEmail as formatSendSummaryForEmail } from "@hmcts/send-daily-hearing-list";
+import {
+  extractCaseSummary as extractSiacPoacPaacSummary,
+  formatCaseSummaryForEmail as formatSiacPoacPaacSummaryForEmail
+} from "@hmcts/siac-poac-paac-weekly-hearing-list";
+import { extractCaseSummary as extractSscsSummary, formatCaseSummaryForEmail as formatSscsSummaryForEmail } from "@hmcts/sscs-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtaacSummary,
+  formatCaseSummaryForEmail as formatUtaacSummaryForEmail
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtlcSummary,
+  formatCaseSummaryForEmail as formatUtlcSummaryForEmail
+} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtccSummary,
+  formatCaseSummaryForEmail as formatUtccSummaryForEmail
+} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtiacJrLeedsSummary,
+  extractLondonCaseSummary as extractUtiacJrLondonSummary,
+  formatCaseSummaryForEmail as formatUtiacJrLeedsSummaryForEmail
+} from "@hmcts/utiac-jr-daily-hearing-list";
+import {
+  extractCaseSummary as extractUtiacSaSummary,
+  formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
+} from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
-  getSubscriptionTemplateIdForListType,
+  getEnvName,
+  getSubscriptionTemplateId,
+  getSystemAdminTemplateId,
+  isSjpListType,
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -54,17 +129,31 @@ interface EmailBuilderConfig {
   format: SummaryFormatter;
 }
 
+const iacDailyConfig: EmailBuilderConfig = { extract: extractIacDailySummary as SummaryExtractor, format: formatIacDailySummaryForEmail };
 const rcjStandardConfig: EmailBuilderConfig = { extract: extractRcjSummary as SummaryExtractor, format: formatRcjSummaryForEmail };
 const adminCourtConfig: EmailBuilderConfig = { extract: extractAdminCourtSummary as SummaryExtractor, format: formatAdminCourtSummaryForEmail };
+const sscsConfig: EmailBuilderConfig = { extract: extractSscsSummary as SummaryExtractor, format: formatSscsSummaryForEmail };
 
 const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: {
     extract: extractCivilFamilySummary as SummaryExtractor,
     format: formatCivilFamilySummaryForEmail
   },
+  ET_DAILY_LIST: {
+    extract: extractEtDailySummary as SummaryExtractor,
+    format: formatEtDailySummaryForEmail
+  },
+  ET_FORTNIGHTLY_PRESS_LIST: {
+    extract: extractEtFortnightlySummary as SummaryExtractor,
+    format: formatEtFortnightlySummaryForEmail
+  },
   CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCivilSummary as SummaryExtractor,
     format: formatCivilSummaryForEmail
+  },
+  COP_DAILY_CAUSE_LIST: {
+    extract: extractCopSummary as SummaryExtractor,
+    format: formatCopSummaryForEmail
   },
   FAMILY_DAILY_CAUSE_LIST: {
     extract: extractFamilySummary as SummaryExtractor,
@@ -74,6 +163,24 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCareStandardsSummary as SummaryExtractor,
     format: formatCareStandardsSummaryForEmail
   },
+  SEND_DAILY_HEARING_LIST: {
+    extract: extractSendSummary as SummaryExtractor,
+    format: formatSendSummaryForEmail
+  },
+  CIC_WEEKLY_HEARING_LIST: {
+    extract: extractCicSummary as SummaryExtractor,
+    format: formatCicSummaryForEmail
+  },
+  AST_DAILY_HEARING_LIST: {
+    extract: extractAstSummary as SummaryExtractor,
+    format: formatAstSummaryForEmail
+  },
+  PHT_WEEKLY_HEARING_LIST: {
+    extract: extractPhtSummary as SummaryExtractor,
+    format: formatPhtSummaryForEmail
+  },
+  IAC_DAILY_LIST: iacDailyConfig,
+  IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyConfig,
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardConfig,
   COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardConfig,
@@ -90,10 +197,149 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
   },
+  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
+    extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
+    format: formatCompaniesWindingUpChdSummaryForEmail
+  },
+  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
+    extract: extractFinancialListChdKbSummary as SummaryExtractor,
+    format: formatFinancialListChdKbSummaryForEmail
+  },
+  CROWN_DAILY_LIST: {
+    extract: extractCrownDailySummary as SummaryExtractor,
+    format: formatCrownDailySummaryForEmail
+  },
+  CROWN_FIRM_LIST: {
+    extract: extractCrownFirmSummary as SummaryExtractor,
+    format: formatCrownFirmSummaryForEmail
+  },
+  CROWN_WARNED_LIST: {
+    extract: extractCrownWarnedSummary as SummaryExtractor,
+    format: formatCrownWarnedSummaryForEmail
+  },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  SSCS_LONDON_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsConfig,
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsConfig,
+  SIAC_WEEKLY_HEARING_LIST: {
+    extract: extractSiacPoacPaacSummary as SummaryExtractor,
+    format: formatSiacPoacPaacSummaryForEmail
+  },
+  POAC_WEEKLY_HEARING_LIST: {
+    extract: extractSiacPoacPaacSummary as SummaryExtractor,
+    format: formatSiacPoacPaacSummaryForEmail
+  },
+  PAAC_WEEKLY_HEARING_LIST: {
+    extract: extractSiacPoacPaacSummary as SummaryExtractor,
+    format: formatSiacPoacPaacSummaryForEmail
+  },
+  FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: {
+    extract: extractFttTaxSummary as SummaryExtractor,
+    format: formatFttTaxSummaryForEmail
+  },
+  FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: {
+    extract: extractFttLrtSummary as SummaryExtractor,
+    format: formatFttLrtSummaryForEmail
+  },
+  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: {
+    extract: extractFttRptSummary as SummaryExtractor,
+    format: formatFttRptSummaryForEmail
+  },
+  GRC_WEEKLY_HEARING_LIST: {
+    extract: extractGrcSummary as SummaryExtractor,
+    format: formatGrcSummaryForEmail
+  },
+  WPAFCC_WEEKLY_HEARING_LIST: {
+    extract: extractWpafccSummary as SummaryExtractor,
+    format: formatWpafccSummaryForEmail
+  },
+  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+    extract: extractUtiacSaSummary as SummaryExtractor,
+    format: formatUtiacSaSummaryForEmail
+  },
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLondonSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
+    extract: extractUtiacJrLeedsSummary as SummaryExtractor,
+    format: formatUtiacJrLeedsSummaryForEmail
+  },
+  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtccSummary as SummaryExtractor,
+    format: formatUtccSummaryForEmail
+  },
+  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtlcSummary as SummaryExtractor,
+    format: formatUtlcSummaryForEmail
+  },
+  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+    extract: extractUtaacSummary as SummaryExtractor,
+    format: formatUtaacSummaryForEmail
+  },
+  MAGISTRATES_STANDARD_LIST: {
+    extract: extractMagistratesStandardSummary as SummaryExtractor,
+    format: formatMagistratesStandardSummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_LIST: {
+    extract: extractMagistratesPublicSummary as SummaryExtractor,
+    format: formatMagistratesPublicSummaryForEmail
+  },
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: {
+    extract: extractMagistratesAdultCourtListSummary as SummaryExtractor,
+    format: formatMagistratesAdultCourtListSummaryForEmail
+  },
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: {
+    extract: extractMagistratesAdultCourtListSummary as SummaryExtractor,
+    format: formatMagistratesAdultCourtListSummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: {
+    extract: extractMagistratesPublicAdultCourtSummary as SummaryExtractor,
+    format: formatMagistratesPublicAdultCourtSummaryForEmail
+  },
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: {
+    extract: extractMagistratesPublicAdultCourtSummary as SummaryExtractor,
+    format: formatMagistratesPublicAdultCourtSummaryForEmail
+  }
 };
 
 export interface NotificationResult {
@@ -114,6 +360,44 @@ interface EmailTemplateData {
   templateParameters: TemplateParameters;
   templateId?: string;
   pdfBuffer?: Buffer;
+  excelBuffer?: Buffer;
+}
+
+export interface SystemAdminNotification {
+  requesterEmail: string;
+  changeType: string;
+  actionResult?: string;
+  additionalChangeDetail: string;
+}
+
+export async function sendSystemAdminNotification(adminEmails: string[], details: SystemAdminNotification): Promise<void> {
+  if (adminEmails.length === 0) {
+    return;
+  }
+
+  const templateId = getSystemAdminTemplateId();
+  const personalisation = {
+    requester_email: details.requesterEmail,
+    "attempted/succeeded": details.actionResult ?? "succeeded",
+    "change-type": details.changeType,
+    Additional_change_detail: details.additionalChangeDetail,
+    env_name: getEnvName()
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    adminEmails.map(async (emailAddress) => {
+      const result = await sendEmail({
+        emailAddress,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send system admin notification to ${emailAddress}: ${result.error}`);
+      }
+    })
+  );
 }
 
 async function processUserNotification(
@@ -142,7 +426,8 @@ async function processUserNotification(
       emailAddress: subscription.user.email!,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {
@@ -183,15 +468,19 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config, caseValue);
+    return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
   }
 
-  return buildFallbackEmailData(event, userName, caseValue);
+  return buildFallbackEmailData(event, userName, listTypeName, caseValue);
 }
 
-async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
-  const listTypeId = event.listTypeId!;
-
+async function buildEnhancedEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig,
+  listTypeName?: string,
+  caseValue?: string
+): Promise<EmailTemplateData> {
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
@@ -205,47 +494,57 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
       caseValue
     });
 
-    if (event.pdfFilePath) {
-      return await buildEmailDataWithPdf(event.pdfFilePath, templateParameters, listTypeId);
-    }
-
-    return {
-      templateParameters,
-      templateId: getSubscriptionTemplateIdForListType(listTypeId, false, false)
-    };
+    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName, caseValue);
+    return buildFallbackEmailData(event, userName, listTypeName, caseValue);
   }
 }
 
-async function buildEmailDataWithPdf(pdfBlobKey: string, templateParameters: TemplateParameters, listTypeId: number): Promise<EmailTemplateData> {
-  const pdfBuffer = await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS);
+async function buildEmailDataWithFiles(
+  artefactId: string,
+  pdfBlobKey: string | undefined,
+  listTypeName: string | undefined,
+  templateParameters: TemplateParameters
+): Promise<EmailTemplateData> {
+  const isSjp = listTypeName ? isSjpListType(listTypeName) : false;
 
-  if (!pdfBuffer) {
-    return { templateParameters, templateId: getSubscriptionTemplateIdForListType(listTypeId, true, false) };
-  }
+  const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
+  const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
 
-  const pdfUnder2MB = pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-  const templateId = getSubscriptionTemplateIdForListType(listTypeId, true, pdfUnder2MB);
+  const hasPdf = !!pdfBuffer;
+  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
 
-  if (pdfUnder2MB) {
-    return { templateParameters, templateId, pdfBuffer };
-  }
+  const hasExcel = !!excelBuffer;
+  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
 
-  return { templateParameters, templateId };
-}
+  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
 
-function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): EmailTemplateData {
+  const templateId = getSubscriptionTemplateId({
+    isSjp,
+    hasPdf: hasPdf && pdfUnder2MB,
+    hasExcel: hasExcel && excelUnder2MB,
+    filesUnder2MB
+  });
+
   return {
-    templateParameters: buildTemplateParameters({
-      userName,
-      hearingListName: event.hearingListName,
-      publicationDate: event.publicationDate,
-      locationName: event.locationName,
-      caseValue
-    })
+    templateParameters,
+    templateId,
+    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
+    excelBuffer: excelUnder2MB ? excelBuffer : undefined
   };
+}
+
+async function buildFallbackEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+  const templateParameters = buildTemplateParameters({
+    userName,
+    hearingListName: event.hearingListName,
+    publicationDate: event.publicationDate,
+    locationName: event.locationName,
+    caseValue
+  });
+
+  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
@@ -350,7 +649,8 @@ async function processListTypeUserNotification(
       emailAddress: subscriber.user.email,
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
-      pdfBuffer: emailData.pdfBuffer
+      pdfBuffer: emailData.pdfBuffer,
+      excelBuffer: emailData.excelBuffer
     });
 
     if (emailResult.success) {

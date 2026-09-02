@@ -1,4 +1,5 @@
 // Business logic exports
+
 export * from "./audit-log/logger.js";
 export * from "./audit-log/middleware.js";
 export * from "./audit-log/repository.js";
@@ -9,6 +10,9 @@ export {
   validateLocationSelected,
   validateRadioSelection as validateDeleteCourtRadioSelection
 } from "./delete-court/validation.js";
+export { isFeatureEnabled } from "./feature-flags/launch-darkly.js";
+export * from "./jurisdiction-management/queries.js";
+export * from "./jurisdiction-management/service.js";
 export * from "./list-type/queries.js";
 export * from "./list-type/service.js";
 export * from "./list-type/types.js";
@@ -18,6 +22,7 @@ export {
   validateListTypeDetails,
   validateSubJurisdictions
 } from "./list-type/validation.js";
+
 export type {
   CsvRow,
   EnrichedLocationData,
@@ -37,9 +42,10 @@ export * from "./reference-data-upload/validation/jurisdiction-validation.js";
 export * from "./reference-data-upload/validation/region-validation.js";
 export * from "./reference-data-upload/validation/sub-jurisdiction-validation.js";
 export { validateLocationData } from "./reference-data-upload/validation/validation.js";
+
 export * from "./services/formatting.js";
 export * from "./services/service.js";
-export type { LocationMetadataSession } from "./session-types.js";
+export type { JurisdictionDataSession, LocationMetadataSession } from "./session-types.js";
 export * from "./third-party-user/queries.js";
 
 export {

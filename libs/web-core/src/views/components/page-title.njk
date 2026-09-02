@@ -1,4 +1,6 @@
-{% if title %} 
+{% if pageTitle %}
+  {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% elif title %}
   {{ title }} - {{ serviceName }} - {{ govUk }}
 {% else %}
   {{ serviceName }} - {{ govUk }}

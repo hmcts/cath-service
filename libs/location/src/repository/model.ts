@@ -4,6 +4,7 @@ export interface Location {
   welshName: string;
   regions: number[];
   subJurisdictions: number[];
+  provenanceLocationType?: string;
 }
 
 export interface Region {

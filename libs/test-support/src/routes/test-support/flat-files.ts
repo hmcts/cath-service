@@ -1,4 +1,5 @@
 import { CONTAINER, deleteBlob, downloadBlob, uploadBlob } from "@hmcts/azure-blob";
+import { updateSourceArtefactId } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 export const GET = async (req: Request, res: Response) => {
@@ -26,10 +27,11 @@ export const GET = async (req: Request, res: Response) => {
 
 export const POST = async (req: Request, res: Response) => {
   try {
-    const { artefactId, content, extension } = req.body as {
+    const { artefactId, content, extension, sourceArtefactId } = req.body as {
       artefactId: string;
       content: string;
       extension: string;
+      sourceArtefactId?: string;
     };
 
     if (!artefactId || !content) {
@@ -41,6 +43,10 @@ export const POST = async (req: Request, res: Response) => {
     const buffer = Buffer.from(content, "base64");
 
     await uploadBlob(blobName, buffer, "application/pdf", CONTAINER.ARTEFACT);
+
+    if (sourceArtefactId) {
+      await updateSourceArtefactId(artefactId, sourceArtefactId);
+    }
 
     console.log(`[test-support] Uploaded flat file to blob storage: ${blobName} (${buffer.length} bytes)`);
 

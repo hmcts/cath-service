@@ -21,17 +21,6 @@ export const ROUTES = [
 
 const validate = createJsonValidator(schemaPath);
 
-const LIST_TYPE_ID_TO_NAME: Record<number, string> = {
-  10: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
-  11: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
-  12: "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
-  13: "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
-  14: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
-  15: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
-  16: "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
-  17: "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
-};
-
 const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: string }> = {
   CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: {
     en: en.CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST.pageTitle,
@@ -78,7 +67,6 @@ const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: strin
 const { guardArtefact, render } = createMultiListGuardAndRender<StandardHearingList>({
   en,
   cy,
-  listTypeIdToName: LIST_TYPE_ID_TO_NAME,
   listTypeConfig: LIST_TYPE_CONFIG,
   renderFn: renderStandardDailyCauseList,
   resolveTemplate: (listConfig) => listConfig.template

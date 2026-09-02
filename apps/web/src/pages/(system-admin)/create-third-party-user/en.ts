@@ -4,5 +4,6 @@ export const en = {
   continueButtonText: "Continue",
   errorSummaryTitle: "There is a problem",
   nameRequired: "Enter a name",
-  nameTooLong: "Name must be 255 characters or less"
+  nameTooLong: "Name must be 255 characters or less",
+  nameDuplicate: "A third party user with this name already exists"
 };

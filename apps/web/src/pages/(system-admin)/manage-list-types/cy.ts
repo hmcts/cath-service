@@ -3,5 +3,6 @@ export const cy = {
   heading: "Rheoli mathau rhestr",
   tableCaption: "Mathau rhestr",
   nameColumnHeading: "Enw",
-  configureLink: "Rheoli"
+  configureLink: "Rheoli",
+  addNewButton: "[WELSH TRANSLATION REQUIRED: 'Add new list type']"
 };

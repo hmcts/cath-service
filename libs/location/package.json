@@ -12,6 +12,10 @@
       "production": "./dist/config.js",
       "default": "./src/config.ts"
     },
+    "./location-data": {
+      "production": "./dist/location-data.js",
+      "default": "./src/location-data.ts"
+    },
     "./repository/queries": {
       "production": "./dist/repository/queries.js",
       "default": "./src/repository/queries.ts"
@@ -31,6 +35,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/list-types-common": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*"
   },
   "peerDependencies": {

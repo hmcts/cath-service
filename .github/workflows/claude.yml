@@ -44,6 +44,7 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -84,11 +85,9 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
-          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
-          MAX_THINKING_TOKENS: '1024'
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
@@ -117,6 +116,7 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -155,11 +155,9 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
-          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
-          MAX_THINKING_TOKENS: '1024'
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
@@ -204,6 +202,7 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -242,11 +241,9 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
-          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
-          MAX_THINKING_TOKENS: '1024'
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}
@@ -329,6 +326,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      id-token: write
     steps:
       - name: Generate GitHub App Token
         id: app-token
@@ -336,6 +334,7 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -383,11 +382,23 @@ jobs:
               body: `❌ Template \`${{ steps.parse.outputs.template }}\` not found.\n\nAvailable templates: ${templates}\n\nUsage: \`@spec [template-name]\``
             });
 
+      - name: Configure AWS credentials
+        if: steps.parse.outputs.valid == 'true'
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::313941174580:role/HMCTSClaudeGitHubActionsRole
+          aws-region: eu-west-1
+
       - name: Run Claude Code for spec generation
         if: steps.parse.outputs.valid == 'true'
         uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
         with:
-          anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
+          use_bedrock: "true"
+          show_full_output: true
           github_token: ${{ steps.app-token.outputs.token }}
           prompt: |
             Generate a technical specification for this GitHub issue using the specified template.
@@ -412,12 +423,16 @@ jobs:
             7. For Welsh translations, use markers: [TRANSLATE: "English text here"]
                - These markers will be processed by a translation script after generation
                - Use markers for ALL Welsh text - the script handles lookups and missing translations
-            8. Write the completed specification to /tmp/spec-output.md using the Write tool
+            8. Write the specification section by section to /tmp/spec-output.md:
+               - Write the first section using the Write tool (creates the file)
+               - Append each subsequent section using separate Edit or Write tool calls
+               - Never write the entire spec in a single tool call
+               - Confirm after each section is written before proceeding to the next
 
             Do not post comments directly. Do not create other files or make commits.
           claude_args: |
-            --allowedTools "Read,Glob,Grep,Write"
-            --append-system-prompt "You are generating a technical specification. Use the Write tool to write the spec to /tmp/spec-output.md. Do not post comments directly. For Welsh translations, use [TRANSLATE: \"English text\"] markers - a post-processing script will handle the actual translations."
+            --allowedTools "Read,Glob,Grep,Write,Edit"
+            --append-system-prompt "You are generating a technical specification. Write the spec to /tmp/spec-output.md section by section - use separate Write/Edit tool calls for each section rather than generating the entire document at once. This prevents API timeouts on large specs. Do not post comments directly. For Welsh translations, use [TRANSLATE: \"English text\"] markers - a post-processing script will handle the actual translations."
 
       - name: Process Welsh translations and post spec
         if: steps.parse.outputs.valid == 'true'
@@ -458,6 +473,7 @@ jobs:
         with:
           app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
           private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
 
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -474,11 +490,9 @@ jobs:
         id: claude-analysis
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-4-6-v1'
-          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-4-6'
+          ANTHROPIC_DEFAULT_OPUS_MODEL: 'eu.anthropic.claude-opus-5'
+          ANTHROPIC_DEFAULT_SONNET_MODEL: 'eu.anthropic.claude-sonnet-5'
           ANTHROPIC_DEFAULT_HAIKU_MODEL: 'eu.anthropic.claude-haiku-4-5-20251001-v1:0'
-          CLAUDE_CODE_MAX_OUTPUT_TOKENS: '4096'
-          MAX_THINKING_TOKENS: '1024'
         with:
           use_bedrock: "true"
           github_token: ${{ steps.app-token.outputs.token }}

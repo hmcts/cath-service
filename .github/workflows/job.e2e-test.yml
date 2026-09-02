@@ -125,6 +125,7 @@ jobs:
           path: e2e-tests/junit-results.xml
           reporter: java-junit
           fail-on-error: false
+          fail-on-empty: false
           search-files: filesystem
 
       # Upload artifacts on failure for debugging

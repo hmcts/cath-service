@@ -1,10 +1,18 @@
 {% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 
 {% block pageTitle %}
   {{ pageTitle }} - {{ serviceName }} - {{ govUk }}
+{% endblock %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: "/reference-data"
+  }) }}
 {% endblock %}
 
 {% block content %}

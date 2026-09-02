@@ -1,25 +1,4 @@
 {% extends "layouts/base-template.njk" %}
-{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
-{% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
-
-{% block beforeContent %}
-  {% set bannerHtml %}
-    {{ feedback.part1 }}<a class="govuk-link" aria-label="{{ feedback.ariaLabel }}" href="{{ feedback.link }}{{ pageUrl }}" target="_blank">{{ feedback.part2 }}</a>{{ feedback.part3 }}
-  {% endset %}
-  {{ govukPhaseBanner({
-    tag: {
-      text: phase
-    },
-    html: bannerHtml,
-    rebrand: true
-  }) }}
-  {% block backLink %}
-    {{ govukBackLink({
-      text: back,
-      href: "#"
-    }) }}
-  {% endblock %}
-{% endblock %}
 
 {% block page_content %}
 <div class="govuk-grid-row">

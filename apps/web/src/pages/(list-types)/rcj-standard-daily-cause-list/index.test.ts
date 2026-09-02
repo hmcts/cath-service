@@ -13,9 +13,19 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   };
 });
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: false }),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -53,11 +63,12 @@ describe("RCJ Standard Daily Cause List page controller", () => {
   });
 
   describe("GET handler", () => {
-    it("should render the list successfully for Civil Courts RCJ (listTypeId 10)", async () => {
+    it("should render the list successfully for Civil Courts RCJ", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -110,7 +121,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       expect(mockValidate).toHaveBeenCalledWith(mockJsonData);
       expect(renderStandardDailyCauseList).toHaveBeenCalledWith(mockJsonData, {
         locale: "en",
-        listTypeId: 10,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         listTitle: expect.any(String),
         contentDate: mockArtefact.contentDate,
         lastReceivedDate: mockArtefact.lastReceivedDate.toISOString()
@@ -124,15 +135,25 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       });
     });
 
-    it("should render the list successfully for all supported list type IDs (10-17)", async () => {
-      const listTypeIds = [10, 11, 12, 13, 14, 15, 16, 17];
+    it("should render the list successfully for all supported list type names", async () => {
+      const listTypeNames = [
+        "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+        "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
+        "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
+        "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
+        "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
+        "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
+        "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+        "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
+      ];
 
-      for (const listTypeId of listTypeIds) {
+      for (const listTypeName of listTypeNames) {
         vi.clearAllMocks();
 
         const mockArtefact = {
-          artefactId: `test-artefact-${listTypeId}`,
-          listTypeId,
+          artefactId: `test-artefact-${listTypeName}`,
+          listTypeId: 999,
+          listTypeName,
           displayFrom: new Date("2026-01-15"),
           displayTo: new Date("2026-01-15"),
           lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -149,7 +170,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
           hearings: []
         };
 
-        req.query = { artefactId: `test-artefact-${listTypeId}` };
+        req.query = { artefactId: `test-artefact-${listTypeName}` };
 
         vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
         vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
@@ -161,7 +182,7 @@ describe("RCJ Standard Daily Cause List page controller", () => {
         expect(renderStandardDailyCauseList).toHaveBeenCalledWith(
           mockJsonData,
           expect.objectContaining({
-            listTypeId
+            listTypeName: listTypeName
           })
         );
         expect(res.render).toHaveBeenCalled();
@@ -200,10 +221,11 @@ describe("RCJ Standard Daily Cause List page controller", () => {
       );
     });
 
-    it("should return 400 when list type is not supported (not 10-17)", async () => {
+    it("should return 400 when list type name is not supported", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         listTypeId: 1,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -229,7 +251,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should return 404 when JSON file is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -256,7 +279,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should return 400 when JSON validation fails", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -306,7 +330,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should use Welsh locale when specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -345,7 +370,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should default to English locale when locale is not specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -384,7 +410,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should use provenance label from PROVENANCE_LABELS", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -420,7 +447,8 @@ describe("RCJ Standard Daily Cause List page controller", () => {
     it("should fall back to raw provenance if label not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 10,
+        listTypeId: 999,
+        listTypeName: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),

@@ -1,6 +1,5 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-// @ts-expect-error - ExcelJS is a CommonJS module, TypeScript doesn't recognize default export but it works at runtime
 import ExcelJSPkg from "exceljs";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";

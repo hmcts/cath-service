@@ -2,9 +2,9 @@ export const en = {
   title: "System Admin Dashboard",
   tiles: [
     {
-      title: "Upload Reference Data",
-      description: "Upload CSV location reference data",
-      href: "/upload-reference-data"
+      title: "Reference Data",
+      description: "Upload CSV data, manage jurisdiction and location data",
+      href: "/reference-data"
     },
     {
       title: "Delete Court",
@@ -15,6 +15,11 @@ export const en = {
       title: "Manage Third Party Users",
       description: "View, create, update and remove third-party users and subscriptions",
       href: "/manage-third-party-users"
+    },
+    {
+      title: "Manage Third-Party Subscribers",
+      description: "View, create, update and remove third-party subscribers and their OAuth configuration",
+      href: "/third-party-subscribers"
     },
     {
       title: "User Management",
@@ -37,19 +42,14 @@ export const en = {
       href: "/audit-log-list"
     },
     {
-      title: "Manage Location Metadata",
-      description: "View, update and remove location metadata",
-      href: "/location-metadata-search"
-    },
-    {
       title: "Manage List Types",
       description: "View, create and update list type configuration",
       href: "/manage-list-types"
     },
     {
-      title: "Configure List Type",
-      description: "Add and manage list type configurations",
-      href: "/configure-list-type-enter-details"
+      title: "Manage Jurisdiction Data",
+      description: "View, create, update and remove jurisdictions and sub-jurisdictions",
+      href: "/jurisdiction-data"
     }
   ]
 };

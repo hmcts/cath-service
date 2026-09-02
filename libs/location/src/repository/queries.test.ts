@@ -8,7 +8,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       findFirst: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      delete: vi.fn()
     },
     jurisdiction: {
       findMany: vi.fn()
@@ -24,7 +25,14 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     },
     artefact: {
       count: vi.fn()
-    }
+    },
+    locationSubJurisdiction: {
+      deleteMany: vi.fn()
+    },
+    locationRegion: {
+      deleteMany: vi.fn()
+    },
+    $transaction: vi.fn((ops) => Promise.all(ops))
   }
 }));
 
@@ -338,25 +346,19 @@ describe("getSubJurisdictionsByJurisdiction", () => {
   });
 });
 
-describe("Soft delete filtering", () => {
-  it("getAllLocations should filter out soft-deleted locations", async () => {
+describe("Location read filters", () => {
+  it("getAllLocations should not filter on a deleted_at column", async () => {
     await getAllLocations("en");
-    expect(prisma.location.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          deletedAt: null
-        }
-      })
-    );
+    const call = vi.mocked(prisma.location.findMany).mock.calls.at(-1)?.[0];
+    expect(call?.where).not.toHaveProperty("deletedAt");
   });
 
-  it("getLocationById should filter out soft-deleted locations", async () => {
+  it("getLocationById should query by locationId only", async () => {
     await getLocationById(1);
     expect(prisma.location.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          locationId: 1,
-          deletedAt: null
+          locationId: 1
         }
       })
     );
@@ -412,7 +414,7 @@ describe("getLocationWithDetails", () => {
     });
   });
 
-  it("should filter out soft-deleted locations", async () => {
+  it("should query by locationId without a soft-delete filter", async () => {
     vi.mocked(prisma.location.findFirst).mockResolvedValue(null);
 
     const { getLocationWithDetails } = await import("./queries.js");
@@ -421,8 +423,7 @@ describe("getLocationWithDetails", () => {
     expect(prisma.location.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          locationId: 1,
-          deletedAt: null
+          locationId: 1
         }
       })
     );
@@ -510,17 +511,19 @@ describe("hasActiveArtefacts", () => {
   });
 });
 
-describe("softDeleteLocation", () => {
-  it("should update location with deletedAt timestamp", async () => {
-    vi.mocked(prisma.location.update).mockResolvedValue({} as any);
+describe("deleteLocation", () => {
+  it("should hard-delete location and remove junction rows in a transaction", async () => {
+    vi.mocked(prisma.locationSubJurisdiction.deleteMany).mockResolvedValue({ count: 1 } as any);
+    vi.mocked(prisma.locationRegion.deleteMany).mockResolvedValue({ count: 1 } as any);
+    vi.mocked(prisma.location.delete).mockResolvedValue({} as any);
 
-    const { softDeleteLocation } = await import("./queries.js");
-    await softDeleteLocation(1);
+    const { deleteLocation } = await import("./queries.js");
+    await deleteLocation(1);
 
-    expect(prisma.location.update).toHaveBeenCalledWith({
-      where: { locationId: 1 },
-      data: { deletedAt: expect.any(Date) }
-    });
+    expect(prisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({ where: { locationId: 1 } });
+    expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({ where: { locationId: 1 } });
+    expect(prisma.location.delete).toHaveBeenCalledWith({ where: { locationId: 1 } });
+    expect(prisma.location.update).not.toHaveBeenCalled();
   });
 });
 
@@ -552,7 +555,6 @@ describe("searchLocationsByName", () => {
     expect(prisma.location.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          deletedAt: null,
           name: {
             contains: "Oxford",
             mode: "insensitive"
@@ -589,7 +591,6 @@ describe("searchLocationsByName", () => {
     expect(prisma.location.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          deletedAt: null,
           welshName: {
             contains: "Caerdydd",
             mode: "insensitive"
@@ -626,19 +627,14 @@ describe("searchLocationsByName", () => {
     expect(results).toEqual([]);
   });
 
-  it("should filter out soft-deleted locations", async () => {
+  it("should search without a soft-delete filter", async () => {
     vi.mocked(prisma.location.findMany).mockResolvedValue([]);
 
     const { searchLocationsByName } = await import("./queries.js");
     await searchLocationsByName("Court", "en");
 
-    expect(prisma.location.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          deletedAt: null
-        })
-      })
-    );
+    const call = vi.mocked(prisma.location.findMany).mock.calls.at(-1)?.[0];
+    expect(call?.where).not.toHaveProperty("deletedAt");
   });
 });
 
@@ -659,8 +655,7 @@ describe("getLocationsByIds", () => {
         where: {
           locationId: {
             in: [1, 2, 3]
-          },
-          deletedAt: null
+          }
         }
       })
     );
@@ -684,19 +679,14 @@ describe("getLocationsByIds", () => {
     expect(results).toEqual([]);
   });
 
-  it("should filter out soft-deleted locations", async () => {
+  it("should query by ids without a soft-delete filter", async () => {
     vi.mocked(prisma.location.findMany).mockResolvedValue([]);
 
     const { getLocationsByIds } = await import("./queries.js");
     await getLocationsByIds([1, 2]);
 
-    expect(prisma.location.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          deletedAt: null
-        })
-      })
-    );
+    const call = vi.mocked(prisma.location.findMany).mock.calls.at(-1)?.[0];
+    expect(call?.where).not.toHaveProperty("deletedAt");
   });
 
   it("should return locations with all properties", async () => {

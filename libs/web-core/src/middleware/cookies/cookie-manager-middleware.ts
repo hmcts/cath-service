@@ -7,12 +7,13 @@ export async function configureCookieManager(app: Express, options: CookieManage
 
 function createCookieManagerMiddleware(options: CookieManagerOptions): RequestHandler {
   const cookiePath = options.preferencesPath || "/cookies";
+  const suppressPaths = [cookiePath, ...(options.policyPath ? [options.policyPath] : [])];
 
   return (req: Request, res: Response, next: NextFunction) => {
     const cookiePolicy = parseCookiePolicy(req.cookies?.[COOKIE_POLICY_NAME]);
     const bannerSeen = req.cookies?.[COOKIE_BANNER_SEEN] === "true";
 
-    const isOnCookiesPage = req.path === cookiePath || req.path?.startsWith(`${cookiePath}/`) || false;
+    const isOnCookiesPage = suppressPaths.some((p) => req.path === p || req.path?.startsWith(`${p}/`));
 
     const state: CookieManagerState = {
       cookiesAccepted: Object.keys(cookiePolicy).length > 0,
@@ -34,6 +35,7 @@ export interface CookieManagerOptions {
     [key: string]: string[] | undefined;
   };
   preferencesPath?: string;
+  policyPath?: string;
 }
 
 export interface CookiePreferences {

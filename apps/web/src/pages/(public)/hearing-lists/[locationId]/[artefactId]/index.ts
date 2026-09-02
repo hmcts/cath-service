@@ -1,3 +1,4 @@
+import path from "node:path";
 import { getFlatFileForDisplay } from "@hmcts/public-pages";
 import { getParam } from "@hmcts/web-core";
 import type { Request, Response } from "express";
@@ -24,9 +25,17 @@ export const GET = async (req: Request, res: Response) => {
     });
   }
 
-  const result = await getFlatFileForDisplay(artefactId, locationId, locale);
+  const result = await getFlatFileForDisplay(artefactId, locationId, locale, req.user);
 
   if ("error" in result) {
+    if (result.error === "ACCESS_DENIED") {
+      res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+      return res.status(403).render("errors/403", {
+        en: { title: en.error403Title, message: en.error403Message },
+        cy: { title: cy.error403Title, message: cy.error403Message }
+      });
+    }
+
     let statusCode = 404;
     let errorMessage = t.errorNotFound;
 
@@ -58,7 +67,7 @@ export const GET = async (req: Request, res: Response) => {
   }
 
   const downloadUrl = `/api/flat-file/${result.artefactId}/download`;
-  const fileExtension = result.fileExtension || ".pdf";
+  const fileExtension = path.extname(result.sourceArtefactId || "") || ".pdf";
   const isPdf = fileExtension.toLowerCase() === ".pdf";
 
   if (!isPdf) {

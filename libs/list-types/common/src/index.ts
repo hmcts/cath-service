@@ -12,6 +12,7 @@ export {
   convertExcelForListTypeName,
   createConverter,
   getConverterForListType,
+  getConverterForListTypeName,
   hasConverterForListType,
   hasConverterForListTypeName,
   type ListTypeConverter,
@@ -26,19 +27,52 @@ export {
   formatCaseSummaryForEmail,
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
+export { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
+export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
+export type {
+  CauseListCase,
+  CauseListData,
+  CourtHouse,
+  CourtRoom,
+  Hearing,
+  Party,
+  RenderOptions,
+  Session,
+  Sitting
+} from "./models/cause-list-types.js";
 export { PDF_BASE_STYLES, PDF_CIVIL_FAMILY_STYLES } from "./pdf/pdf-styles.js";
 export {
   type BasePdfGenerationOptions,
+  buildPdfFromRenderedList,
   configureNunjucks,
   createPdfErrorResult,
+  type FttSiacWeeklyHearingListPdfOptions,
+  generateFttSiacWeeklyHearingListPdf,
+  generateListPdf,
+  type ListPdfOptions,
   loadTranslations,
   MAX_PDF_SIZE_BYTES,
+  type PdfFromHtmlResult,
   type PdfGenerationResult,
+  type RenderedListData,
+  type RenderedPdfData,
   savePdfToStorage
 } from "./pdf/pdf-utilities.js";
-export { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
+export {
+  createPartyDetails,
+  extractPddaSittingsSummary,
+  formatContentDate,
+  formatCrownLastUpdated,
+  formatPddaCitizenName,
+  formatPddaDefendantName,
+  formatPddaSittingTime,
+  formatPublicationDateTime,
+  formatTime,
+  type PddaCitizenName
+} from "./rendering/crown-utilities.js";
+export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
 export { normaliseHearings } from "./rendering/hearing-normalisation.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";

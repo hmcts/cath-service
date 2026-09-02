@@ -1,6 +1,6 @@
 import { authenticateApi } from "@hmcts/blob-ingestion/middleware/oauth-middleware";
-import type { BlobIngestionRequest } from "@hmcts/blob-ingestion/repository/model";
-import { processBlobIngestion } from "@hmcts/blob-ingestion/repository/service";
+import type { BlobIngestionRequest, FlatFileIngestionRequest } from "@hmcts/blob-ingestion/repository/model";
+import { processBlobIngestion, processFlatFileBlobIngestion } from "@hmcts/blob-ingestion/repository/service";
 import { type PddaHtmlUploadResponse, uploadHtmlToS3, validatePddaHtmlUpload } from "@hmcts/pdda-html-upload";
 import type { Request, Response } from "express";
 import multer from "multer";
@@ -31,9 +31,31 @@ function isBlobIngestionRequest(body: unknown): body is BlobIngestionRequest {
   );
 }
 
+function isFlatFileIngestionRequest(body: unknown): body is FlatFileIngestionRequest {
+  if (typeof body !== "object" || body === null) {
+    return false;
+  }
+
+  const req = body as Record<string, unknown>;
+  return (
+    typeof req.court_id === "string" &&
+    typeof req.provenance === "string" &&
+    typeof req.content_date === "string" &&
+    typeof req.list_type === "string" &&
+    typeof req.sensitivity === "string" &&
+    typeof req.language === "string" &&
+    typeof req.display_from === "string" &&
+    typeof req.display_to === "string"
+  );
+}
+
 function isMultipartRequest(req: Request): boolean {
   const contentType = req.headers["content-type"];
   return contentType?.includes("multipart/form-data") || false;
+}
+
+function isPddaHtmlUpload(req: Request): boolean {
+  return typeof req.body?.type === "string";
 }
 
 async function handleJsonBlobIngestion(req: Request, res: Response) {
@@ -46,26 +68,22 @@ async function handleJsonBlobIngestion(req: Request, res: Response) {
   }
 
   const request = req.body;
-  // Use Content-Length header to get actual raw bytes received
   const contentLength = req.headers["content-length"];
   const rawBodySize = contentLength ? Number.parseInt(contentLength, 10) : Buffer.byteLength(JSON.stringify(req.body), "utf8");
 
   const result = await processBlobIngestion(request, rawBodySize);
 
   if (!result.success) {
-    // Check if this is a no_match scenario - treat as successful operation
     if ("no_match" in result && result.no_match) {
       return res.status(200).json(result);
     }
 
-    // Determine appropriate status code
     if (result.message === "Validation failed") {
       return res.status(400).json(result);
     }
     return res.status(500).json(result);
   }
 
-  // Success response - 201 Created since we created an artefact
   return res.status(201).json(result);
 }
 
@@ -109,6 +127,38 @@ async function handleHtmlFileUpload(req: Request, res: Response) {
   return res.status(201).json(response);
 }
 
+async function handleFlatFileUpload(req: Request, res: Response) {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "No file provided. Include a file in the 'file' field of the multipart form."
+    });
+  }
+
+  if (!isFlatFileIngestionRequest(req.body)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid request body structure. Missing or invalid required fields."
+    });
+  }
+
+  const request = req.body;
+  const result = await processFlatFileBlobIngestion(request, req.file.buffer, req.file.size);
+
+  if (!result.success) {
+    if ("no_match" in result && result.no_match) {
+      return res.status(200).json(result);
+    }
+
+    if (result.message === "Validation failed") {
+      return res.status(400).json(result);
+    }
+    return res.status(500).json(result);
+  }
+
+  return res.status(201).json(result);
+}
+
 // OAuth authentication is applied first in the middleware chain
 export const POST = [
   authenticateApi(),
@@ -122,9 +172,11 @@ export const POST = [
   },
   async (req: Request, res: Response) => {
     try {
-      // Route to appropriate handler based on content type
       if (isMultipartRequest(req)) {
-        return await handleHtmlFileUpload(req, res);
+        if (isPddaHtmlUpload(req)) {
+          return await handleHtmlFileUpload(req, res);
+        }
+        return await handleFlatFileUpload(req, res);
       }
       return await handleJsonBlobIngestion(req, res);
     } catch (error) {

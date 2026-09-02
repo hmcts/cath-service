@@ -242,6 +242,7 @@ export async function validateLocationData(data: ParsedLocationData[]): Promise<
 
       errors.push({
         text: `Sub-jurisdiction "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")})`,
+        html: `Sub-jurisdiction "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")}). <a href="/jurisdiction-data" class="govuk-link">Manage jurisdiction data</a>`,
         href: "#file"
       });
     }
@@ -272,6 +273,7 @@ export async function validateLocationData(data: ParsedLocationData[]): Promise<
 
       errors.push({
         text: `Region "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")})`,
+        html: `Region "${missing}" not found in reference data (rows: ${rowsWithMissing.join(", ")}). <a href="/region-data-create" class="govuk-link">Click here to add the region</a>`,
         href: "#file"
       });
     }

@@ -13,6 +13,7 @@ nodejs:
     ENVIRONMENT: '{{ .Values.global.environment }}'
     POSTGRES_DATABASE: cath
     REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
+    THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
     CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
@@ -21,8 +22,12 @@ nodejs:
     CRIME_IDAM_BASE_URL: https://login.sit.cjscp.org.uk
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL: 42f65ada-6de0-45da-822a-9632f6f682fd
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
+    GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
   keyVaults:
     cath:
       secrets:
@@ -64,6 +69,11 @@ nodejs:
           alias: AZURE_B2C_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
+        # B2C secrets for CaTH user sign-in
+        - name: auto-pip-stg-pip-frontend-stg-id
+          alias: B2C_CLIENT_ID
+        - name: auto-pip-stg-pip-frontend-stg-pwd
+          alias: B2C_CLIENT_SECRET
         # Azure Blob Storage
         - name: storageaccount-connection-string
           alias: AZURE_STORAGE_CONNECTION_STRING

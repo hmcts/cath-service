@@ -1,6 +1,6 @@
 export const en = {
   title: "Upload Excel file",
-  pageTitle: "Upload - Upload Excel file",
+  pageTitle: "Upload excel file - Excel file upload",
   warningTitle: "Warning",
   warningMessage:
     "Prior to upload you must ensure the file is suitable for publication e.g. redaction of personal data has been done during the production of this file.",

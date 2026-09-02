@@ -17,13 +17,6 @@ export const ROUTES = [
 
 const validate = createJsonValidator(schemaPath);
 
-const LIST_TYPE_ID_TO_NAME: Record<number, string> = {
-  20: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  21: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  22: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-  23: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
-};
-
 const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: string }> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     en: en.BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
@@ -50,7 +43,6 @@ const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: strin
 const { guardArtefact, render } = createMultiListGuardAndRender<AdministrativeCourtHearingList>({
   en,
   cy,
-  listTypeIdToName: LIST_TYPE_ID_TO_NAME,
   listTypeConfig: LIST_TYPE_CONFIG,
   renderFn: renderAdminCourt,
   resolveTemplate: () => "administrative-court-daily-cause-list"

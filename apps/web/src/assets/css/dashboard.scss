@@ -40,8 +40,16 @@
   }
 }
 
-.app-date-filter-narrow .govuk-date-input__item:last-child {
-  padding-top: 10px;
+// The audit-log filter/results layout is now provided by the MOJ filter-layout
+// object. Only these two content helpers remain: they style cells inside the
+// results table, not the filter panel.
+.audit-log-layout__word-break {
+  word-break: break-word;
+}
+
+.audit-log-layout__view-header {
+  white-space: nowrap;
+  width: 1%;
 }
 
 .admin-tile__description {

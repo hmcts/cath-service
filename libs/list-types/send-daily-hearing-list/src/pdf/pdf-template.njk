@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ header.listTitle }}</title>
+  <style>{{ pdfStyles | safe }}</style>
+</head>
+<body>
+  <div class="header-section">
+    <h1>{{ header.listTitle }}</h1>
+
+    <p><a href="{{ t.factLinkUrl }}">{{ t.factLinkText }}</a> {{ t.factAdditionalText }}</p>
+
+    <p class="header-date"><strong>{{ t.listForDate }} {{ header.listForDate }}</strong></p>
+    <p class="header-date">{{ t.lastUpdated }} {{ header.lastUpdatedDate }} {{ t.at }} {{ header.lastUpdatedTime }}</p>
+  </div>
+
+  <div class="info-box">
+    <h3>{{ t.importantInformationTitle }}</h3>
+    {% for paragraph in t.importantInformationParagraphs %}
+      <p>{{ paragraph }}</p>
+    {% endfor %}
+  </div>
+
+  {% if hearings.length > 0 %}
+    <table>
+      <thead>
+        <tr>
+          <th class="no-wrap">{{ t.tableHeaders.time }}</th>
+          <th>{{ t.tableHeaders.caseReferenceNumber }}</th>
+          <th>{{ t.tableHeaders.respondent }}</th>
+          <th class="no-wrap">{{ t.tableHeaders.hearingType }}</th>
+          <th>{{ t.tableHeaders.venue }}</th>
+          <th>{{ t.tableHeaders.timeEstimate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for hearing in hearings %}
+          <tr>
+            <td class="no-wrap">{{ hearing.time }}</td>
+            <td>{{ hearing.caseReferenceNumber }}</td>
+            <td>{{ hearing.respondent }}</td>
+            <td>{{ hearing.hearingType }}</td>
+            <td>{{ hearing.venue }}</td>
+            <td>{{ hearing.timeEstimate }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hearings scheduled.</p>
+  {% endif %}
+
+  <div class="footer">
+    {% if dataSource %}
+    <p>{{ t.dataSource }}: {{ dataSource }}</p>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -65,7 +65,7 @@ export function translationMiddleware(translations: Translations) {
     const locale = res.locals.locale || "en";
     const otherLocale = locale === "en" ? "cy" : "en";
 
-    const currentTranslations = translations[locale] || translations.en || {};
+    const { pageTitle: _pageTitle, title: _title, ...currentTranslations } = translations[locale] || translations.en || {};
 
     Object.assign(res.locals, currentTranslations);
 

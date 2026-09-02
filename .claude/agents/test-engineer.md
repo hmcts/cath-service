@@ -33,7 +33,8 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 - Test route handlers with proper HTTP status codes
 - Validate request/response data structures
 - Test middleware functionality and error handling
-- Verify template rendering with correct PageData
+- Verify template renders on routes
+- Test `.njk` templates with `@hmcts/test-support` render helpers and Cheerio structural assertions
 
 ## Key Testing Standards
 

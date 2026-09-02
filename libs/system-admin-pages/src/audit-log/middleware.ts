@@ -25,7 +25,7 @@ export function auditLogMiddleware() {
 
     // Only log if user is authenticated and has system admin role
     const user = req.user;
-    if (!user || user.role !== "SYSTEM_ADMIN") {
+    if (user?.role !== "SYSTEM_ADMIN") {
       return next();
     }
 

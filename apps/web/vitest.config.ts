@@ -17,7 +17,8 @@ export default defineConfig({
         "**/vite.build.ts",
         "**/vitest.config.ts",
         "**/server.ts",
-        "**/src/assets/**"
+        "**/src/assets/css/**",
+        "**/src/assets/vite-config/**"
       ]
     }
   }

@@ -3,7 +3,7 @@ import {
   DD_MM_YYYY_PATTERN,
   type ExcelConverterConfig,
   RCJ_EXCEL_CONFIG_SIMPLE_TIME,
-  registerConverter,
+  registerConverterByName,
   validateDateFormat,
   validateNoHtmlTags,
   validateTimeFormatSimple
@@ -74,8 +74,9 @@ const convertCivilAppealExcel = (buffer: Buffer) =>
     { worksheetName: "Notice for future judgments", worksheetIndex: 1, dataKey: "futureJudgments", config: FUTURE_JUDGMENTS_CONFIG }
   ]);
 
-// Register the converter with listTypeId 19
-registerConverter(19, {
+const converter = {
   config: DAILY_HEARINGS_CONFIG,
   convertExcelToJson: convertCivilAppealExcel as any
-});
+};
+
+registerConverterByName("COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST", converter);

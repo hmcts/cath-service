@@ -168,13 +168,15 @@ describe("validateLocationData", () => {
     expect(errors[0].text).toContain("already exists in the database");
   });
 
-  it("should return error for non-existent sub-jurisdiction", async () => {
+  it("should return error for non-existent sub-jurisdiction with link to jurisdiction data", async () => {
     vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
 
     const errors = await validateLocationData(mockData);
 
     expect(errors.length).toBeGreaterThan(0);
     expect(errors[0].text).toContain("not found in reference data");
+    expect(errors[0].html).toContain("/jurisdiction-data");
+    expect(errors[0].html).toContain("Manage jurisdiction data");
   });
 
   it("should return error for non-existent region", async () => {

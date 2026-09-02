@@ -1,13 +1,11 @@
+import path from "node:path";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { getLocationById } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { PROVENANCE_LABELS } from "../provenance.js";
-import type { Artefact } from "./model.js";
+import type { Artefact, ArtefactWithListType } from "./model.js";
 
-const SJP_PRESS_LIST_ID = 24;
-const SJP_PUBLIC_LIST_ID = 25;
-const SJP_DELTA_PRESS_LIST_ID = 26;
-const SJP_DELTA_PUBLIC_LIST_ID = 27;
+const SJP_LIST_TYPE_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRESS_LIST", "SJP_DELTA_PUBLIC_LIST"];
 
 export interface ArtefactSummary {
   artefactId: string;
@@ -80,6 +78,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
       language: data.language,
       displayFrom: data.displayFrom,
       displayTo: data.displayTo,
+      lastReceivedDate: data.lastReceivedDate ?? new Date(),
       isFlatFile: data.isFlatFile,
       provenance: data.provenance,
       noMatch: data.noMatch ?? false
@@ -88,14 +87,15 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
   return { artefactId: artefact.artefactId, isUpdate: false };
 }
 
-export async function getArtefactById(artefactId: string): Promise<Artefact | null> {
-  return prisma.artefact.findUnique({
+export async function getArtefactById(artefactId: string): Promise<ArtefactWithListType | null> {
+  const artefact = await prisma.artefact.findUnique({
     where: { artefactId },
     select: {
       artefactId: true,
       type: true,
       locationId: true,
       listTypeId: true,
+      listType: { select: { name: true } },
       contentDate: true,
       sensitivity: true,
       language: true,
@@ -108,6 +108,9 @@ export async function getArtefactById(artefactId: string): Promise<Artefact | nu
       noMatch: true
     }
   });
+  if (!artefact) return null;
+  const { listType, ...rest } = artefact;
+  return { ...rest, listTypeName: listType?.name };
 }
 
 export async function getArtefactsByLocation(locationId: string): Promise<Artefact[]> {
@@ -164,8 +167,32 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
 export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   const artefacts = await prisma.artefact.findMany({
     where: { artefactId: { in: artefactIds } },
-    select: { artefactId: true, fileExtension: true }
+    select: { artefactId: true, sourceArtefactId: true }
   });
+
+  for (const artefact of artefacts) {
+    // New blobs are stored without an extension (just the artefactId).
+    deleteBlob(artefact.artefactId, CONTAINER.ARTEFACT).catch((error) => {
+      console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
+    });
+    // Backward-compat: older blobs were stored with the extension appended — best-effort cleanup.
+    const extension = artefact.sourceArtefactId ? path.extname(artefact.sourceArtefactId) || ".pdf" : ".pdf";
+    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
+      // Silently ignore — legacy blob may not exist for new artefacts.
+    });
+    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
+      // 404 is expected if no PDF was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
+    deleteBlob(`${artefact.artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
+      // 404 is expected if no Excel file was generated for this artefact
+      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
+        console.error(`Failed to delete Excel blob for artefact ${artefact.artefactId}:`, error);
+      }
+    });
+  }
 
   await prisma.artefact.deleteMany({
     where: {
@@ -174,25 +201,22 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
       }
     }
   });
-
-  for (const artefact of artefacts) {
-    const extension = artefact.fileExtension ?? ".pdf";
-    deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch((error) => {
-      console.error(`Failed to delete blob for artefact ${artefact.artefactId}:`, error);
-    });
-    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
-      // 404 is expected if no PDF was generated for this artefact
-      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
-        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
-      }
-    });
-  }
 }
 
-export async function updateArtefactFileExtension(artefactId: string, fileExtension: string): Promise<void> {
+export async function deleteArtefactsByLocationId(locationId: string): Promise<number> {
+  const artefacts = await getArtefactsByLocation(locationId);
+  if (artefacts.length === 0) {
+    return 0;
+  }
+
+  await deleteArtefacts(artefacts.map((artefact) => artefact.artefactId));
+  return artefacts.length;
+}
+
+export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string | null): Promise<void> {
   await prisma.artefact.update({
     where: { artefactId },
-    data: { fileExtension }
+    data: { sourceArtefactId }
   });
 }
 
@@ -324,7 +348,7 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
 export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
   const artefacts = await prisma.artefact.findMany({
     where: {
-      listTypeId: { in: [SJP_PRESS_LIST_ID, SJP_PUBLIC_LIST_ID, SJP_DELTA_PRESS_LIST_ID, SJP_DELTA_PUBLIC_LIST_ID] }
+      listType: { name: { in: SJP_LIST_TYPE_NAMES } }
     },
     orderBy: { lastReceivedDate: "desc" },
     take: 10
@@ -347,26 +371,4 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       noMatch: artefact.noMatch
     })
   );
-}
-
-export async function createArtefactSearch(artefactId: string, caseNumber: string | null, caseName: string | null) {
-  return await prisma.artefactSearch.create({
-    data: {
-      artefactId,
-      caseNumber,
-      caseName
-    }
-  });
-}
-
-export async function findArtefactSearchByArtefactId(artefactId: string) {
-  return await prisma.artefactSearch.findFirst({
-    where: { artefactId }
-  });
-}
-
-export async function deleteArtefactSearchByArtefactId(artefactId: string) {
-  return await prisma.artefactSearch.deleteMany({
-    where: { artefactId }
-  });
 }

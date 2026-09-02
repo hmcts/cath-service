@@ -20,15 +20,6 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CRIME_DAILY_LIST",
-    friendlyName: "Crime Daily List",
-    welshFriendlyName: "Crime Daily List",
-    url: "crime-daily-list",
-    defaultSensitivity: "Public",
-    provenance: "CRIME_IDAM",
-    isNonStrategic: false
-  },
-  {
     name: "MAGISTRATES_PUBLIC_LIST",
     friendlyName: "Magistrates Public List",
     welshFriendlyName: "Magistrates Public List",

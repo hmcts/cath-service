@@ -13,6 +13,8 @@ export const configureListType = {
     welshFriendlyNameRow: "Welsh friendly name",
     shortenedFriendlyNameRow: "Shortened friendly name",
     urlRow: "URL",
+    caseNumberJsonFieldNameRow: "Case number JSON field name",
+    caseNameJsonFieldNameRow: "Case name JSON field name",
     defaultSensitivityRow: "Default sensitivity",
     allowedProvenanceRow: "Allowed provenance",
     isNonStrategicRow: "Is non-strategic",

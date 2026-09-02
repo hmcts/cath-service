@@ -1,0 +1,35 @@
+# Git history - not needed in Docker and causes lefthook to run during yarn install
+.git
+
+# Local environment and secrets
+.env
+.env.*.local
+.env.local
+certs/
+*.pem
+*.key
+
+# Development tooling
+.idea/
+.vscode/
+.claude/
+*.log
+.DS_Store
+
+# Test artefacts
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+e2e-tests/
+
+# Turborepo cache
+.turbo/
+
+# Build artefacts (rebuilt inside Docker)
+dist/
+build/
+*.tsbuildinfo
+
+# Docs
+docs/

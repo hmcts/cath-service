@@ -5,13 +5,13 @@ vi.mock("@hmcts/list-search-config", () => ({
   getConfigForListType: vi.fn()
 }));
 
-vi.mock("./repository/queries.js", () => ({
+vi.mock("./repository/artefact-search-queries.js", () => ({
   createArtefactSearch: vi.fn(),
   deleteArtefactSearchByArtefactId: vi.fn()
 }));
 
 const { getConfigForListType } = await import("@hmcts/list-search-config");
-const { createArtefactSearch, deleteArtefactSearchByArtefactId } = await import("./repository/queries.js");
+const { createArtefactSearch, deleteArtefactSearchByArtefactId } = await import("./repository/artefact-search-queries.js");
 
 describe("extractAndStoreArtefactSearch", () => {
   beforeEach(() => {

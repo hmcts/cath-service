@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CIC Weekly Hearing List",
+  "description": "Schema for Criminal Injuries Compensation Weekly Hearing List",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["date", "hearingTime", "caseReferenceNumber", "caseName", "venue/platform", "judges", "members", "additionalInformation"],
+    "properties": {
+      "date": {
+        "title": "Date",
+        "type": "string",
+        "pattern": "^\\d{2}/\\d{2}/\\d{4}$",
+        "examples": ["02/01/2025"]
+      },
+      "hearingTime": {
+        "title": "Hearing time",
+        "type": "string",
+        "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$",
+        "examples": ["10am", "2:30pm"]
+      },
+      "caseReferenceNumber": {
+        "title": "Case reference number",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "caseName": {
+        "title": "Case name",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "venue/platform": {
+        "title": "Venue or platform",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "judges": {
+        "title": "Judge(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "members": {
+        "title": "Member(s)",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      },
+      "additionalInformation": {
+        "title": "Additional information",
+        "type": "string",
+        "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+      }
+    }
+  }
+}

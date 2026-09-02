@@ -33,7 +33,7 @@ export const locationData: {
       name: "Royal Courts of Justice",
       welshName: "Llysoedd Barn Brenhinol",
       regions: [1],
-      subJurisdictions: [1, 4, 5]
+      subJurisdictions: [1, 5, 10, 11, 12]
     },
     {
       locationId: 5,
@@ -90,6 +90,114 @@ export const locationData: {
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
       subJurisdictions: [7]
+    },
+    {
+      locationId: 13,
+      name: "First-tier Tribunal (Special Educational Needs and Disability)",
+      welshName: "Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+      regions: [8],
+      subJurisdictions: [18]
+    },
+    {
+      locationId: 14,
+      name: "Criminal Injuries Compensation Tribunal",
+      welshName: "Tribiwnlys Iawndal am Anafiadau Troseddol",
+      regions: [8],
+      subJurisdictions: [14]
+    },
+    {
+      locationId: 15,
+      name: "East London Tribunal Service",
+      welshName: "Gwasanaeth Tribiwnlys Dwyrain Llundain",
+      regions: [1],
+      subJurisdictions: [13]
+    },
+    {
+      locationId: 16,
+      name: "Asylum Support Tribunal",
+      welshName: "Tribiwnlys Cefnogi Ceiswyr Lloches",
+      regions: [1],
+      subJurisdictions: [13],
+      provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 17,
+      name: "Midlands Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+      regions: [2],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 18,
+      name: "South East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+      regions: [3],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 19,
+      name: "Wales and South West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+      regions: [5, 13],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 20,
+      name: "Scotland Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+      regions: [12],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 21,
+      name: "North East Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+      regions: [9],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 22,
+      name: "North West Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+      regions: [4],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 23,
+      name: "London Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+      regions: [1],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 24,
+      name: "Liverpool Social Security and Child Support Tribunal",
+      welshName: "Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Lerpwl",
+      regions: [4],
+      subJurisdictions: [8]
+    },
+    {
+      locationId: 25,
+      name: "Primary Health Tribunal",
+      welshName: "Tribiwnlys Iechyd Sylfaenol",
+      regions: [8],
+      subJurisdictions: [22],
+      provenanceLocationType: "NATIONAL"
+    },
+    {
+      locationId: 26,
+      name: "Business and Property Courts Rolls Building",
+      welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
+      regions: [11],
+      subJurisdictions: [10]
+    },
+    {
+      locationId: 27,
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
+      regions: [8],
+      subJurisdictions: [24],
+      provenanceLocationType: "NATIONAL"
     }
   ],
   regions: [
@@ -268,7 +376,7 @@ export const locationData: {
     },
     {
       subJurisdictionId: 15,
-      name: "First-Tier Tribunal (Lands Registration Tribunal)",
+      name: "First-Tier Tribunal (Land Registration Tribunal)",
       welshName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
       jurisdictionId: 4
     },
@@ -322,8 +430,8 @@ export const locationData: {
     },
     {
       subJurisdictionId: 24,
-      name: "Residential Property Tribunal",
-      welshName: "Tribiwnlys Eiddo Preswyl",
+      name: "First-tier Tribunal (Property Chamber) - Residential Property Division",
+      welshName: "Tribiwnlys Haen Gyntaf (Siambr Eiddo) – Adran Eiddo Preswyl",
       jurisdictionId: 4
     },
     {

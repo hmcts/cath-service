@@ -118,9 +118,10 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
 
       // 5. Attempt to directly access a CLASSIFIED publication by URL
       // Create a CLASSIFIED artefact to test access denial
+      const civilAndFamilyListType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
       const classifiedArtefact = await createTestArtefact({
         locationId: "9",
-        listTypeId: 1, // Civil and Family Daily Cause List
+        listTypeId: civilAndFamilyListType.id,
         contentDate: new Date().toISOString(),
         sensitivity: "CLASSIFIED",
         language: "ENGLISH",

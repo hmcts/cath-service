@@ -8,5 +8,7 @@ export const en = {
   backMessage: "You can go back to the previous page to select a different hearing list.",
   backButton: "Back to previous page",
   downloadLinkText: "Download this PDF",
-  pdfNotSupportedMessage: "Your browser does not support PDF viewing."
+  pdfNotSupportedMessage: "Your browser does not support PDF viewing.",
+  error403Title: "Access Denied",
+  error403Message: "You do not have permission to view this publication."
 };

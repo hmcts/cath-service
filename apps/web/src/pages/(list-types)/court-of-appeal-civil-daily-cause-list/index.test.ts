@@ -13,9 +13,19 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   };
 });
 
+vi.mock("@hmcts/postgres-prisma", () => ({
+  prisma: {
+    listType: {
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+    }
+  }
+}));
+
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   getPublicationJson: vi.fn(),
+  canAccessPublicationData: vi.fn().mockReturnValue(true),
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, provenance: "CFT_IDAM", isNonStrategic: false }),
   PROVENANCE_LABELS: {
     MANUAL_UPLOAD: "Manual Upload",
     LIST_ASSIST: "List Assist"
@@ -57,7 +67,8 @@ describe("Court of Appeal Civil Division page controller", () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         locationId: "9001",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         contentDate: new Date("2026-01-15"),
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
@@ -174,10 +185,11 @@ describe("Court of Appeal Civil Division page controller", () => {
       );
     });
 
-    it("should return 400 when list type is not 19", async () => {
+    it("should return 400 when list type name does not match", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
         listTypeId: 1,
+        listTypeName: "UNKNOWN_LIST_TYPE",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -203,7 +215,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should return 404 when JSON file is not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -230,7 +243,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should return 400 when JSON validation fails", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -283,7 +297,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should use Welsh locale when specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -326,7 +341,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should default to English locale when locale is not specified", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -369,7 +385,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should use provenance label from PROVENANCE_LABELS", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),
@@ -409,7 +426,8 @@ describe("Court of Appeal Civil Division page controller", () => {
     it("should fall back to raw provenance if label not found", async () => {
       const mockArtefact = {
         artefactId: "test-artefact-123",
-        listTypeId: 19,
+        listTypeId: 999,
+        listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
         displayFrom: new Date("2026-01-15"),
         displayTo: new Date("2026-01-15"),
         lastReceivedDate: new Date("2026-01-14T12:00:00Z"),

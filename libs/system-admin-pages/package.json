@@ -25,13 +25,18 @@
     "express": "^5.2.0"
   },
   "dependencies": {
+    "@hmcts/account": "workspace:*",
     "@hmcts/auth": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
+    "@hmcts/notifications": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
+    "@hmcts/subscriptions": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
+    "@launchdarkly/node-server-sdk": "^9.7.0",
     "papaparse": "5.5.4"
   },
   "devDependencies": {

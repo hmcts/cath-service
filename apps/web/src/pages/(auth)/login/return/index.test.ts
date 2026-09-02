@@ -99,7 +99,7 @@ describe("B2C Callback Handler", () => {
           email: "test@example.com",
           displayName: "Test User",
           role: "VERIFIED",
-          provenance: "B2C"
+          provenance: "PI_AAD"
         }),
         expect.any(Function)
       );

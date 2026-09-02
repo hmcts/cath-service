@@ -1,5 +1,6 @@
 export const cy = {
-  jsonFileTitle: "Blob Explorer – JSON file",
+  title: "Blob Explorer – JSON file",
+  header: "Blob Explorer – JSON file",
   jsonFileResubmitButton: "Re-submit subscription",
   jsonFileMetadataHeading: "Metadata",
   jsonFileAccordionTitle: "View Raw JSON Content",

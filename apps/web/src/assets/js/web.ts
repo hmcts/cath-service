@@ -2,6 +2,7 @@ import cookieManager from "@hmcts/cookie-manager";
 import { initAll } from "govuk-frontend";
 import { initBackToTop } from "./back-to-top.js";
 import { initFilterPanel } from "./filter-panel.js";
+import { initFilterToggle } from "./filter-toggle.js";
 import { initListTypeSensitivity } from "./list-type-sensitivity.js";
 import { initSearchAutocomplete } from "./search-autocomplete.js";
 import { initSortableTable } from "./sortable-table.js";
@@ -18,6 +19,7 @@ if (document.readyState === "loading") {
       console.error("Error initializing search autocomplete:", error);
     });
     initFilterPanel();
+    initFilterToggle();
     initBackToTop();
     initListTypeSensitivity();
     initTableSearch();
@@ -29,6 +31,7 @@ if (document.readyState === "loading") {
     console.error("Error initializing search autocomplete:", error);
   });
   initFilterPanel();
+  initFilterToggle();
   initBackToTop();
   initListTypeSensitivity();
   initTableSearch();
@@ -98,3 +101,15 @@ cookieManager.on("CookieBannerAction", (eventData: any) => {
 });
 
 cookieManager.init(config);
+
+// When navigating back to this page via bfcache the cookie manager does not
+// re-initialise, so the confirmation panel can remain visible even though the
+// user has already made a choice. Hide the banner if a preference is already set.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && document.cookie.includes("cookie_policy")) {
+    const banner = document.querySelector<HTMLElement>(".govuk-cookie-banner");
+    if (banner) {
+      banner.hidden = true;
+    }
+  }
+});

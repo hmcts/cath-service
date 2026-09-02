@@ -1,5 +1,6 @@
 export interface ValidationError {
   text: string;
+  html?: string;
   href: string;
 }
 

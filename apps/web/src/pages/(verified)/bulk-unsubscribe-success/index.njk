@@ -13,7 +13,9 @@
     </h1>
   </div>
 
-  <p class="govuk-body">{{ successIntro }}</p>
+  <p class="govuk-body">
+    {{ successIntroBefore }} <a href="{{ linkAccountHome }}" class="govuk-link">{{ successAccountLink }}</a> {{ successIntroAfter }}
+  </p>
 
   <ul class="govuk-list govuk-list--bullet">
     <li>

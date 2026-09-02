@@ -3,21 +3,20 @@ import type { Request, Response } from "express";
 
 export const GET = async (_req: Request, res: Response) => {
   try {
-    // Check database connection
     await prisma.$connect();
 
-    // Check if migrations are complete by querying a core table
-    const migrationsComplete = await (prisma as any).jurisdiction
-      .findMany({ take: 1 })
-      .then(() => true)
-      .catch(() => false);
+    const rows = await prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) AS count FROM _prisma_migrations
+      WHERE finished_at IS NULL AND rolled_back_at IS NULL
+    `;
+    const pending = Number(rows[0].count);
 
-    if (!migrationsComplete) {
+    if (pending > 0) {
       return res.status(503).json({
         status: "unhealthy",
         database: "connected",
         migrations: "pending",
-        error: "Database migrations not yet applied"
+        error: `${pending} migration(s) still in progress`
       });
     }
 

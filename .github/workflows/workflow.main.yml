@@ -14,7 +14,7 @@ jobs:
     name: Detect Code Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^(yarn\\.lock|apps/|libs/|helm/|\\.github/workflows/)"
+      paths: "^(yarn\\.lock|apps/|libs/|helm/|docs/api/|\\.github/workflows/)"
       cache-key: code
 
   detect-infra-changes:
@@ -98,6 +98,13 @@ jobs:
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
       affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
+    secrets: inherit
+
+  publish-openapi:
+    name: Publish OpenAPI Spec
+    needs: [build-stage]
+    if: always() && needs.build-stage.result == 'success'
+    uses: ./.github/workflows/job.publish-openapi.yml
     secrets: inherit
 
   save-code-success:

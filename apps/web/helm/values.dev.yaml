@@ -10,6 +10,7 @@ nodejs:
   image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     REDIS_HOST: 'cath-{{ .Values.global.environment }}.redis.cache.windows.net'
+    THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-stg'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
     CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
@@ -17,6 +18,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: '1988bbdd-d223-49bf-912f-ed34cb43e35e'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT: '689c0183-0461-423e-a542-de513a93a5b7'
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT: '2b4ccd66-2b04-4d27-94e5-b7372f58be08'
+    GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: 'b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c'
     ENABLE_B2C: 'true'
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
