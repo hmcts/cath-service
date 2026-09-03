@@ -1,0 +1,71 @@
+name: One-Shot - Grant DTS PIP Non-Prod write access to cath-aat
+
+# Grants the DTS PIP Non-Prod AD group list/set/delete/recover on secrets in the
+# CNP cath-aat key vault, so the team can create the secrets the aat deployment
+# needs (see #977).
+#
+# Individual members cannot do this themselves: modifying a vault access policy
+# needs the control-plane action Microsoft.KeyVault/vaults/write, which the group
+# does not hold. The CFT-PREVIEW CI service principal does - terraform manages
+# access policies on this vault as that identity.
+#
+# Run once from VIBE-465, then delete this file. The equivalent change is made
+# permanent in infrastructure/keyvault.tf.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  grant:
+    name: Grant DTS PIP Non-Prod secret write access
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VAULT: cath-aat
+      SUB: 1c4f0704-a29e-403d-b719-b90c34ef14c9
+      # DTS PIP Non-Prod
+      GROUP_OBJECT_ID: 9c37fa4a-a75f-4b1d-918b-3c7248e2211b
+    steps:
+      - name: Azure Login (CFT-PREVIEW CI SP)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+
+      - name: Show existing access policies
+        run: |
+          set -euo pipefail
+          echo "Before:"
+          az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets}" -o table
+
+      - name: Grant access policy
+        run: |
+          set -euo pipefail
+          az keyvault set-policy \
+            --name "$VAULT" \
+            --subscription "$SUB" \
+            --object-id "$GROUP_OBJECT_ID" \
+            --secret-permissions list set delete recover \
+            --output none
+
+      - name: Verify
+        run: |
+          set -euo pipefail
+          echo "After:"
+          az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets}" -o table
+
+          PERMS=$(az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[?objectId=='${GROUP_OBJECT_ID}'].permissions.secrets | [0]" -o tsv)
+          if [ -z "$PERMS" ]; then
+            echo "::error::No access policy found for DTS PIP Non-Prod (${GROUP_OBJECT_ID})"
+            exit 1
+          fi
+          echo "DTS PIP Non-Prod secret permissions: ${PERMS}"
+
+          for p in list set delete recover; do
+            grep -qiw "$p" <<<"$PERMS" || { echo "::error::Missing permission: $p"; exit 1; }
+          done
+          echo "All four permissions confirmed."
