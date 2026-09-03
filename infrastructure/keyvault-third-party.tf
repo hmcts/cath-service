@@ -1,13 +1,16 @@
 module "third_party_key_vault" {
   source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
 
-  name                    = "${var.product}-tp-${var.env}"
-  product                 = var.product
-  env                     = var.env
-  object_id               = var.ci_service_principal_object_id
-  tenant_id               = var.tenant_id
-  resource_group_name     = azurerm_resource_group.shared.name
-  product_group_name      = "DTS CFT Developers"
+  name                = "${var.product}-tp-${var.env}"
+  product             = var.product
+  env                 = var.env
+  object_id           = var.ci_service_principal_object_id
+  tenant_id           = var.tenant_id
+  resource_group_name = azurerm_resource_group.shared.name
+
+  # Write access - see the note in infrastructure/keyvault.tf.
+  product_group_name = "DTS PIP Non-Prod"
+
   common_tags             = var.common_tags
   create_managed_identity = false
 }

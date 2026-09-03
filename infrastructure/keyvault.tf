@@ -7,7 +7,12 @@ module "key_vault" {
   object_id           = var.ci_service_principal_object_id
   resource_group_name = azurerm_resource_group.shared.name
 
-  product_group_name      = "DTS CFT Developers"
+  # Write access, so members can create the secrets the apps mount from this vault.
+  # Must not be "DTS CFT Developers": the module also grants that group read-only
+  # access via its developers_group default, and Azure allows one access policy per
+  # object id, so passing the same group here is silently overridden.
+  product_group_name = "DTS PIP Non-Prod"
+
   common_tags             = var.common_tags
   create_managed_identity = true
 }
