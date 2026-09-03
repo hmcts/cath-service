@@ -1,4 +1,5 @@
 @use "govuk-frontend/dist/govuk/index";
+@use "./auto-rebase-probe.scss";
 @use "./search-autocomplete.scss";
 @use "./filter-panel.scss";
 @use "./back-to-top.scss";

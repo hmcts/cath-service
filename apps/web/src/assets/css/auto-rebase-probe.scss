@@ -1,0 +1,6 @@
+// Throwaway stylesheet used to give the conflict-check workflow a deliberate,
+// harmless merge conflict to rebase. Safe to delete along with its @use in
+// web.scss once the auto-rebase pipeline has been verified end to end.
+.app-auto-rebase-probe {
+  display: none;
+}
