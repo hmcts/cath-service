@@ -1,7 +1,7 @@
 module "third_party_key_vault" {
   source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
 
-  name                    = "${var.product}-ss-tp-kv-${var.env}"
+  name                    = "${var.product}-tp-${var.env}"
   product                 = var.product
   env                     = var.env
   object_id               = var.ci_service_principal_object_id
