@@ -3,7 +3,7 @@ module "sa" {
 
   env                      = var.env
   storage_account_name     = "cathsa${var.env}"
-  resource_group_name      = azurerm_resource_group.rg.name
+  resource_group_name      = azurerm_resource_group.shared.name
   location                 = var.location
   account_kind             = var.sa_account_kind
   account_tier             = var.sa_account_tier

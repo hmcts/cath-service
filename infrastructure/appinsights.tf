@@ -3,9 +3,11 @@ module "application_insights" {
 
   env     = var.env
   product = var.product
-  name    = "${var.product}-${var.component}-appinsights"
 
-  resource_group_name = azurerm_resource_group.rg.name
+  # The module appends -${var.env} to this, so this yields cath-appinsights-aat.
+  name = "${var.product}-appinsights"
+
+  resource_group_name = azurerm_resource_group.shared.name
 
   common_tags = var.common_tags
 }

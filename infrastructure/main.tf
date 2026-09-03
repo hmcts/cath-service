@@ -10,15 +10,11 @@ provider "azurerm" {
   features {}
 }
 
+# Single resource group for everything this terraform manages: key vaults,
+# application insights and the storage account. Postgres and redis create their
+# own resource groups inside their modules.
 resource "azurerm_resource_group" "shared" {
   name     = "${var.product}-${var.env}"
-  location = var.location
-  tags     = var.common_tags
-}
-
-# Resource group for resources managed by this terraform
-resource "azurerm_resource_group" "rg" {
-  name     = "${var.product}-${var.env}-${var.component}"
   location = var.location
   tags     = var.common_tags
 }
