@@ -93,6 +93,50 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
+      # A cancelled or timed-out `helm upgrade --atomic` leaves the release in
+      # pending-upgrade, and every later deploy then fails with "another
+      # operation (install/upgrade/rollback) is in progress". Clear it first.
+      # The cluster/RG names match how cnp-githubactions-library/helm-deploy
+      # derives them: {environment}-aks and {environment}-rg.
+      - name: Set up Helm (stuck-release cleanup)
+        uses: azure/setup-helm@v5
+        with:
+          version: 'v4.2.3'
+
+      - name: Azure login for AKS (stuck-release cleanup)
+        uses: azure/login@v3
+        with:
+          creds: ${{ inputs.environment == 'aat' && secrets.AZURE_CREDENTIALS_CFT_AAT || secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+
+      - name: Get AKS credentials (stuck-release cleanup)
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-rg
+          cluster-name: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-aks
+          admin: 'true'
+
+      - name: Clear stuck Helm release
+        continue-on-error: true
+        run: |
+          STATUS=$(helm status "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
+          case "$STATUS" in
+            pending-install|pending-upgrade|pending-rollback)
+              echo "Release ${RELEASE_NAME} is stuck in status: ${STATUS}."
+              REVISIONS=$(helm history "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq 'length' || echo 0)
+              if [ "${REVISIONS:-0}" -gt 1 ]; then
+                echo "Rolling back to the last good revision instead of uninstalling."
+                helm rollback "${RELEASE_NAME}" -n "${TEAM_NAME}" --cleanup-on-fail --wait --timeout 5m || \
+                  helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --wait --timeout 5m
+              else
+                echo "Only one revision - no good state to roll back to, uninstalling."
+                helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --wait --timeout 5m
+              fi
+              ;;
+            *)
+              echo "Release status: ${STATUS:-not found}. No cleanup needed."
+              ;;
+          esac
+
       - name: Deploy to PREVIEW
         if: inputs.environment == 'preview'
         id: deploy-preview
