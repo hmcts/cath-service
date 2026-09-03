@@ -47,7 +47,9 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Must exceed the stuck-release cleanup budget plus the 15m0s helm timeout
+    # below, or the job is killed mid-install and leaves the release pending.
+    timeout-minutes: 35
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
@@ -117,6 +119,7 @@ jobs:
 
       - name: Clear stuck Helm release
         continue-on-error: true
+        timeout-minutes: 12
         run: |
           STATUS=$(helm status "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
           case "$STATUS" in
@@ -125,12 +128,16 @@ jobs:
               REVISIONS=$(helm history "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq 'length' || echo 0)
               if [ "${REVISIONS:-0}" -gt 1 ]; then
                 echo "Rolling back to the last good revision instead of uninstalling."
-                helm rollback "${RELEASE_NAME}" -n "${TEAM_NAME}" --cleanup-on-fail --wait --timeout 5m || \
-                  helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --wait --timeout 5m
+                helm rollback "${RELEASE_NAME}" -n "${TEAM_NAME}" --cleanup-on-fail --wait --timeout 4m && exit 0
+                echo "Rollback failed, falling back to uninstall."
               else
                 echo "Only one revision - no good state to roll back to, uninstalling."
-                helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --wait --timeout 5m
               fi
+              # --wait is deliberately omitted: ASO resources (blob service,
+              # flexible server database) sit in Terminating for minutes and
+              # `helm uninstall --wait` blocks on them for no benefit, since the
+              # release secret is already gone by then.
+              helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --timeout 4m || true
               ;;
             *)
               echo "Release status: ${STATUS:-not found}. No cleanup needed."
