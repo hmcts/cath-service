@@ -89,7 +89,7 @@ jobs:
         if: inputs.environment == 'dev'
         uses: azure/setup-helm@v4
         with:
-          version: 'v3.14.0'
+          version: 'v3.21.4'
 
       - name: Azure Login (cleanup)
         if: inputs.environment == 'dev'
