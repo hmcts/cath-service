@@ -43,11 +43,15 @@ jobs:
       - name: Grant access policy
         run: |
           set -euo pipefail
+          # Secrets have no update/create/import verb - `set` covers both create
+          # and update. Keys and certificates take the full verb list.
           az keyvault set-policy \
             --name "$VAULT" \
             --subscription "$SUB" \
             --object-id "$GROUP_OBJECT_ID" \
             --secret-permissions list set delete recover \
+            --key-permissions list update create import delete recover \
+            --certificate-permissions list update create import delete recover \
             --output none
 
       - name: Verify
@@ -55,17 +59,25 @@ jobs:
           set -euo pipefail
           echo "After:"
           az keyvault show --name "$VAULT" --subscription "$SUB" \
-            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets}" -o table
+            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets,keys:permissions.keys,certs:permissions.certificates}" -o table
 
-          PERMS=$(az keyvault show --name "$VAULT" --subscription "$SUB" \
-            --query "properties.accessPolicies[?objectId=='${GROUP_OBJECT_ID}'].permissions.secrets | [0]" -o tsv)
-          if [ -z "$PERMS" ]; then
-            echo "::error::No access policy found for DTS PIP Non-Prod (${GROUP_OBJECT_ID})"
-            exit 1
-          fi
-          echo "DTS PIP Non-Prod secret permissions: ${PERMS}"
+          check() {
+            local kind="$1" expected="$2"
+            local actual
+            # -o tsv on a list yields one tab-separated line
+            actual=$(az keyvault show --name "$VAULT" --subscription "$SUB" \
+              --query "properties.accessPolicies[?objectId=='${GROUP_OBJECT_ID}'].permissions.${kind} | [0] | join(' ', @)" -o tsv)
+            if [ -z "$actual" ]; then
+              echo "::error::No ${kind} permissions found for DTS PIP Non-Prod (${GROUP_OBJECT_ID})"
+              exit 1
+            fi
+            echo "${kind}: ${actual}"
+            for p in $expected; do
+              grep -qiw -- "$p" <<<"$actual" || { echo "::error::${kind} missing permission: $p"; exit 1; }
+            done
+          }
 
-          for p in list set delete recover; do
-            grep -qiw "$p" <<<"$PERMS" || { echo "::error::Missing permission: $p"; exit 1; }
-          done
-          echo "All four permissions confirmed."
+          check secrets      "list set delete recover"
+          check keys         "list update create import delete recover"
+          check certificates "list update create import delete recover"
+          echo "All permissions confirmed."
