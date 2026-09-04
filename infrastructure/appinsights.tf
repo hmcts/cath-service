@@ -36,8 +36,14 @@ resource "azurerm_application_insights" "shared" {
   # Module defaults, preserved so this is a like-for-like replacement.
   application_type     = "web"
   daily_data_cap_in_gb = 50
-  sampling_percentage  = 1 # nonprod default; prod would be 100
   workspace_id         = data.azurerm_log_analytics_workspace.shared.id
+
+  # Not the module's 1% non-prod default, which drops roughly 99 of every 100
+  # errors. Fine for traffic trends, useless for the "investigate every error"
+  # policy this instance is monitored under — see .github/watchdog.yml. Volume is
+  # a few hundred requests a day, so the ingestion cost of not sampling is
+  # negligible.
+  sampling_percentage = 100
 
   tags = var.common_tags
 }
@@ -46,4 +52,39 @@ resource "azurerm_key_vault_secret" "app_insights_connection_string" {
   name         = "app-insights-connection-string"
   value        = azurerm_application_insights.shared.connection_string
   key_vault_id = data.azurerm_key_vault.key_vault.id
+}
+
+# Lets the GitHub Actions OIDC app registration read telemetry, so scheduled
+# workflows can query this instance. The key vault access policies above only
+# cover secrets, not the App Insights data plane.
+resource "azurerm_role_assignment" "app_insights_reader_e2e_oidc_sp" {
+  scope                = azurerm_application_insights.shared.id
+  role_definition_name = "Monitoring Reader"
+  principal_id         = var.e2e_oidc_object_id
+}
+
+# Outside-in availability signal, so a wedged or unschedulable deployment is
+# visible even when no pod is reporting. Everything else in this instance is
+# self-reported by the apps.
+resource "azurerm_application_insights_standard_web_test" "web_availability" {
+  name                    = "${var.product}-web-availability-${var.env}"
+  resource_group_name     = azurerm_resource_group.shared.name
+  location                = var.location
+  application_insights_id = azurerm_application_insights.shared.id
+  # Five locations is the Azure-recommended minimum: it stops a single unhealthy
+  # test agent registering as an outage.
+  geo_locations = [
+    "emea-nl-ams-azr",
+    "emea-ru-msa-edge",
+    "emea-se-sto-edge",
+    "emea-gb-db3-azr",
+    "emea-fr-pra-edge"
+  ]
+  # The liveness probe rather than the homepage: it has no dependency on session,
+  # Redis or B2C, so this measures reachability rather than a full user journey.
+  request {
+    url = "https://cath-web.${var.env}.platform.hmcts.net/health/liveness"
+  }
+
+  tags = var.common_tags
 }
