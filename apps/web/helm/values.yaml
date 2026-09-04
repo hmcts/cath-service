@@ -6,21 +6,22 @@ nodejs:
   releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
-  # Must not be plain "cath": that name is a CNAME to Azure Front Door in the
-  # aat zone, and DNS forbids an A and a CNAME record at the same name. The
-  # public URL is https://cath.<env>.platform.hmcts.net via Front Door; the
-  # ingress answers on cath-web. See helm/cath-service/values.template.yaml.
+  # This chart is deployed by Flux (cnp-flux-config/apps/cath) as release cath-web,
+  # and owns the plain hostnames. The CI pipeline deploys the umbrella chart
+  # alongside it under release-scoped names - see helm/cath-service/values.template.yaml.
+  #
+  # ingressHost must not be plain "cath": that name is a CNAME to Azure Front Door,
+  # and DNS forbids an A and a CNAME record at the same name. additionalIngressHosts
+  # adds a host rule for it without creating a DNS record, which is what lets Front
+  # Door reach this service - it forwards the original Host header, and without a
+  # matching rule traefik 404s and Front Door reports 502.
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+  additionalIngressHosts:
+    - cath.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
     ENVIRONMENT: '{{ .Values.global.environment }}'
-    # Sets cloud_RoleName in Application Insights so web, api and crons are
-    # distinguishable. applicationinsights 3.x is OpenTelemetry-based and reads
-    # OTEL_SERVICE_NAME; it ignores APPLICATIONINSIGHTS_ROLE_NAME, which is what
-    # the `serviceName` config key feeds. Without this every role reports as
-    # "unknown_service:node".
-    OTEL_SERVICE_NAME: 'cath-web'
     POSTGRES_DATABASE: cath
     THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'

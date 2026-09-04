@@ -14,8 +14,6 @@ const chartPath = path.join(__dirname, "../helm/values.yaml");
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
 
-  // Imported after getPropertiesVolumeSecrets() so `config` reads the Key Vault
-  // values it sets rather than caching the defaults. Same reason as apps/web/src/app.ts.
   const { default: config } = await import("config");
 
   const app = express();

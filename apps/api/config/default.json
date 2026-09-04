@@ -2,6 +2,6 @@
   "applicationInsights": {
     "serviceName": "cath-api",
     "connectionString": "InstrumentationKey=your-instrumentation-key;IngestionEndpoint=https://dc.services.visualstudio.com/",
-    "enabled": false
+    "enabled": true
   }
 }

@@ -1,6 +1,6 @@
 {
   "applicationInsights": {
     "serviceName": "cath-crons",
-    "enabled": false
+    "enabled": true
   }
 }

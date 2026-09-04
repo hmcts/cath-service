@@ -24,6 +24,6 @@
   "applicationInsights": {
     "serviceName": "cath-web",
     "connectionString": "InstrumentationKey=your-instrumentation-key;IngestionEndpoint=https://dc.services.visualstudio.com/",
-    "enabled": false
+    "enabled": true
   }
 }

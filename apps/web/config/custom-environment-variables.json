@@ -8,7 +8,6 @@
     "secret": "SESSION_SECRET"
   },
   "applicationInsights": {
-    "serviceName": "OTEL_SERVICE_NAME",
     "connectionString": "APPLICATION_INSIGHTS_CONNECTION_STRING"
   },
   "SSO_CLIENT_ID": "SSO_CLIENT_ID",

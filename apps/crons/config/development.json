@@ -1,5 +1,5 @@
 {
   "applicationInsights": {
-    "enabled": true
+    "enabled": false
   }
 }
