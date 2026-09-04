@@ -422,15 +422,20 @@ jobs:
         run: |
           set -euo pipefail
           # From Key Vault via the OIDC session, so there is no new GitHub secret. The
-          # same pattern nightly.yml uses for its test credentials.
-          token=$(az keyvault secret show --vault-name cath-bootstrap-stg-kv \
-            --name slack-bot-token --query value -o tsv 2>/dev/null || true)
-          if [ -z "$token" ]; then
-            echo "::warning::no slack-bot-token in cath-bootstrap-stg-kv — skipping the Slack post"
-          else
-            echo "::add-mask::$token"
-            echo "SLACK_BOT_TOKEN=$token" >> "$GITHUB_ENV"
+          # same pattern nightly.yml uses for its test credentials. cath-aat is the
+          # vault terraform manages (module.key_vault in keyvault.tf) and the OIDC
+          # principal already has Get/List on it.
+          if ! token=$(az keyvault secret show --vault-name cath-aat \
+                --name slack-bot-token --query value -o tsv 2>&1); then
+            # Deliberately fatal. A findings run that cannot notify has to be a red
+            # run: a silent skip here is indistinguishable from a quiet channel, which
+            # is exactly the "nothing is wrong" / "nothing ran" confusion the whole
+            # watchdog is built to avoid.
+            echo "::error::could not read slack-bot-token from cath-aat: ${token}"
+            exit 1
           fi
+          echo "::add-mask::$token"
+          echo "SLACK_BOT_TOKEN=$token" >> "$GITHUB_ENV"
 
       - name: Post to Slack
         if: always() && env.SLACK_BOT_TOKEN != ''
@@ -470,10 +475,12 @@ jobs:
       - name: Load the Slack token
         run: |
           set -euo pipefail
-          token=$(az keyvault secret show --vault-name cath-bootstrap-stg-kv \
-            --name slack-bot-token --query value -o tsv 2>/dev/null || true)
-          if [ -z "$token" ]; then
-            echo "::warning::no slack-bot-token in cath-bootstrap-stg-kv — skipping the Slack post"
+          # Warn rather than fail, unlike the triage job: a missed recovery notice
+          # leaves a stale alert in the channel, which is annoying but not dangerous.
+          # A missed findings alert hides a live problem.
+          if ! token=$(az keyvault secret show --vault-name cath-aat \
+                --name slack-bot-token --query value -o tsv 2>&1); then
+            echo "::warning::could not read slack-bot-token from cath-aat — no recovery notice sent: ${token}"
           else
             echo "::add-mask::$token"
             echo "SLACK_BOT_TOKEN=$token" >> "$GITHUB_ENV"
