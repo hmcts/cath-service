@@ -17,15 +17,29 @@ crons:
 #
 # Hostnames deliberately omit ${TEAM_NAME} and {{ .Release.Name }}. Both are
 # "cath"-prefixed here (team cath, release cath-service-aat), so the previous
-# pattern produced cath-cath-service-aat-web. The web host must also match the
-# Front Door custom_domain provisioned for cath in hmcts/azure-platform-terraform,
-# which is cath.aat.platform.hmcts.net - Front Door forwards on the Host header,
-# so a mismatch means the public URL never reaches the ingress.
+# pattern produced cath-cath-service-aat-web.
+#
+# The ingress host must NOT be plain "cath": that name is already a CNAME to
+# Azure Front Door (hmcts-aat-dbdveha6dnc7ejdt.z01.azurefd.net), provisioned by
+# hmcts/azure-public-dns and hmcts/azure-platform-terraform. DNS forbids an A and
+# a CNAME record at the same name, so Register DNS for AAT fails with:
+#
+#   (Conflict) The record could not be created because a CNAME record with the
+#   same name already exists in this zone.
+#
+# Two distinct names is the intended shape - the template service does the same:
+#
+#   expressjs-monorepo-template-web                CNAME -> Front Door  (public)
+#   dtsse-expressjs-monorepo-template-staging-web  A     -> ingress IP  (internal)
+#
+# So the public URL stays https://cath.aat.platform.hmcts.net via Front Door,
+# while the ingress answers on cath-web.
 cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "cath.aat.platform.hmcts.net"
+    ingressHost: "cath-web.aat.platform.hmcts.net"
     environment:
+      # Public URL, not the ingress host - this is what users see in links.
       BASE_URL: "https://cath.aat.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
