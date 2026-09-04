@@ -1,0 +1,78 @@
+name: One-Shot - Remove out-of-band DTS PIP Non-Prod policy from cath-aat
+
+# Removes the DTS PIP Non-Prod access policy that one-shot.grant-pip-nonprod-kv-access.yml
+# created on cath-aat with `az keyvault set-policy`.
+#
+# That policy was applied outside terraform to unblock secret creation, so it is
+# not in terraform state. infrastructure/keyvault.tf now passes
+# product_group_name = "DTS PIP Non-Prod", so the module tries to create the same
+# policy and the apply fails with:
+#
+#   Error: a resource with the ID ".../vaults/cath-aat/objectId/9c37fa4a-..."
+#   already exists - to be managed via Terraform this resource needs to be imported
+#
+# Deleting the policy here lets terraform create and own it on the next apply,
+# with the same permissions the module grants (secrets list/set/delete/recover,
+# keys and certificates list/update/create/import/delete/recover plus the issuer
+# verbs). Access is therefore restored by the apply, not lost.
+#
+# Run once from master, immediately before re-running the Main pipeline. Then
+# delete this file and one-shot.grant-pip-nonprod-kv-access.yml.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  revoke:
+    name: Remove out-of-band access policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      VAULT: cath-aat
+      SUB: 1c4f0704-a29e-403d-b719-b90c34ef14c9
+      # DTS PIP Non-Prod
+      GROUP_OBJECT_ID: 9c37fa4a-a75f-4b1d-918b-3c7248e2211b
+    steps:
+      - name: Azure Login (CFT-PREVIEW CI SP)
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+
+      - name: Show existing access policies
+        run: |
+          set -euo pipefail
+          echo "Before:"
+          az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets}" -o table
+
+      - name: Remove access policy
+        run: |
+          set -euo pipefail
+          PERMS=$(az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[?objectId=='${GROUP_OBJECT_ID}'] | length(@)" -o tsv)
+          if [ "${PERMS:-0}" -eq 0 ]; then
+            echo "No policy for ${GROUP_OBJECT_ID} - nothing to remove."
+            exit 0
+          fi
+          az keyvault delete-policy \
+            --name "$VAULT" \
+            --subscription "$SUB" \
+            --object-id "$GROUP_OBJECT_ID" \
+            --output none
+
+      - name: Verify removed
+        run: |
+          set -euo pipefail
+          echo "After:"
+          az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[].{oid:objectId,secrets:permissions.secrets}" -o table
+
+          REMAINING=$(az keyvault show --name "$VAULT" --subscription "$SUB" \
+            --query "properties.accessPolicies[?objectId=='${GROUP_OBJECT_ID}'] | length(@)" -o tsv)
+          if [ "${REMAINING:-0}" -ne 0 ]; then
+            echo "::error::Policy for ${GROUP_OBJECT_ID} is still present"
+            exit 1
+          fi
+          echo "Policy removed. Terraform will recreate and own it on the next apply."
