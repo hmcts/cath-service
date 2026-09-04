@@ -26,7 +26,7 @@
     "@hmcts/list-types-common": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "24.10.4",
+    "@types/node": "24.13.3",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }
