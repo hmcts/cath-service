@@ -417,7 +417,7 @@ jobs:
               });
             }
 
-      - name: Load the Slack token
+      - name: Load the Slack webhook
         if: always()
         run: |
           set -euo pipefail
@@ -425,25 +425,33 @@ jobs:
           # same pattern nightly.yml uses for its test credentials. cath-aat is the
           # vault terraform manages (module.key_vault in keyvault.tf) and the OIDC
           # principal already has Get/List on it.
-          if ! token=$(az keyvault secret show --vault-name cath-aat \
-                --name slack-bot-token --query value -o tsv 2>&1); then
+          #
+          # A webhook rather than a bot token: the HMCTS gha_notifications app is a
+          # classic Slack app, so its bot token only ever carries incoming-webhook and
+          # cannot call chat.postMessage — Slack asks such tokens for the legacy
+          # chat:write:bot scope, which granular scopes cannot supply. Migrating that
+          # shared app would affect every pipeline using it.
+          #
+          # The cost is threading: the recovery notice below posts as its own message
+          # rather than replying to the alert, and the channel is fixed to whichever
+          # one the webhook was created for.
+          if ! webhook=$(az keyvault secret show --vault-name cath-aat \
+                --name slack-webhook-url --query value -o tsv 2>&1); then
             # Deliberately fatal. A findings run that cannot notify has to be a red
             # run: a silent skip here is indistinguishable from a quiet channel, which
             # is exactly the "nothing is wrong" / "nothing ran" confusion the whole
             # watchdog is built to avoid.
-            echo "::error::could not read slack-bot-token from cath-aat: ${token}"
+            echo "::error::could not read slack-webhook-url from cath-aat: ${webhook}"
             exit 1
           fi
-          echo "::add-mask::$token"
-          echo "SLACK_BOT_TOKEN=$token" >> "$GITHUB_ENV"
+          echo "::add-mask::$webhook"
+          echo "SLACK_WEBHOOK_URL=$webhook" >> "$GITHUB_ENV"
 
       - name: Post to Slack
-        if: always() && env.SLACK_BOT_TOKEN != ''
+        if: always() && env.SLACK_WEBHOOK_URL != ''
         uses: hmcts/cnp-githubactions-library/slack-notify@main
         with:
-          # A name rather than an ID, so this is readable in review. If the channel is
-          # ever renamed, switch to its ID — that survives a rename.
-          channel: '#pip-ai-coding'
+          # No channel input: a webhook posts only to the channel it was created for.
           text: |
             :rotating_light: *CaTH watchdog* — ${{ steps.claim.outputs.count }} finding(s): ${{ steps.claim.outputs.issues }}
             ${{ steps.pr.outputs.url && format('Draft fix: {0}', steps.pr.outputs.url) || 'No code change proposed.' }}
@@ -472,23 +480,22 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Load the Slack token
+      - name: Load the Slack webhook
         run: |
           set -euo pipefail
           # Warn rather than fail, unlike the triage job: a missed recovery notice
           # leaves a stale alert in the channel, which is annoying but not dangerous.
           # A missed findings alert hides a live problem.
-          if ! token=$(az keyvault secret show --vault-name cath-aat \
-                --name slack-bot-token --query value -o tsv 2>&1); then
-            echo "::warning::could not read slack-bot-token from cath-aat — no recovery notice sent: ${token}"
+          if ! webhook=$(az keyvault secret show --vault-name cath-aat \
+                --name slack-webhook-url --query value -o tsv 2>&1); then
+            echo "::warning::could not read slack-webhook-url from cath-aat — no recovery notice sent: ${webhook}"
           else
-            echo "::add-mask::$token"
-            echo "SLACK_BOT_TOKEN=$token" >> "$GITHUB_ENV"
+            echo "::add-mask::$webhook"
+            echo "SLACK_WEBHOOK_URL=$webhook" >> "$GITHUB_ENV"
           fi
 
       - name: Post to Slack
-        if: env.SLACK_BOT_TOKEN != ''
+        if: env.SLACK_WEBHOOK_URL != ''
         uses: hmcts/cnp-githubactions-library/slack-notify@main
         with:
-          channel: '#pip-ai-coding'
           text: ":white_check_mark: *CaTH watchdog* — recovered: `${{ join(fromJSON(needs.detect.outputs.resolved), '`, `') }}`"
