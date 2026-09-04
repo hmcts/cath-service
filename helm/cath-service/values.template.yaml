@@ -15,41 +15,26 @@ crons:
 
 # Web application configuration
 #
-# Hostnames deliberately omit ${TEAM_NAME} and {{ .Release.Name }}. Both are
-# "cath"-prefixed here (team cath, release cath-service-aat), so the previous
-# pattern produced cath-cath-service-aat-web.
+# Hostnames MUST stay release-scoped (${TEAM_NAME}-{{ .Release.Name }}-...).
 #
-# The ingress host must NOT be plain "cath": that name is already a CNAME to
-# Azure Front Door (hmcts-aat-dbdveha6dnc7ejdt.z01.azurefd.net), provisioned by
-# hmcts/azure-public-dns and hmcts/azure-platform-terraform. DNS forbids an A and
-# a CNAME record at the same name, so Register DNS for AAT fails with:
+# AAT is deployed twice, by design and as it was on SDS:
+#   - Flux (cnp-flux-config/apps/cath) owns the plain names cath-web / cath-api /
+#     cath-postgres, and the cath.aat.platform.hmcts.net Front Door route
+#   - this pipeline deploys release cath-service-aat alongside it
 #
-#   (Conflict) The record could not be created because a CNAME record with the
-#   same name already exists in this zone.
+# The release scoping is what keeps the two apart. Hardcoding the plain names here
+# makes both ingresses claim the same hosts, and traefik then load balances across
+# a healthy pod and a broken one, which surfaces as an intermittent 502. The
+# resulting names look redundant (cath-cath-service-aat-web) because team and
+# release are both cath-prefixed, but that is cosmetic - do not "tidy" it.
 #
-# Two distinct names is the intended shape - the template service does the same:
-#
-#   expressjs-monorepo-template-web                CNAME -> Front Door  (public)
-#   dtsse-expressjs-monorepo-template-staging-web  A     -> ingress IP  (internal)
-#
-# So the public URL stays https://cath.aat.platform.hmcts.net via Front Door,
-# while the ingress answers on cath-web and the DNS step registers an A record
-# for that name.
-#
-# additionalIngressHosts then adds a second host rule for the Front Door name to
-# the same ingress. Front Door forwards the original Host header
-# (cath.aat.platform.hmcts.net), and without a matching rule traefik returns 404,
-# which Front Door surfaces as 502 Bad Gateway. This adds no DNS record, so it
-# cannot clash with the existing CNAME.
+# The public URL is served by Flux's cath-web release, not by this one.
 cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "cath-web.aat.platform.hmcts.net"
-    additionalIngressHosts:
-      - "cath.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
     environment:
-      # Public URL, not the ingress host - this is what users see in links.
-      BASE_URL: "https://cath.aat.platform.hmcts.net"
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
@@ -57,7 +42,7 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "cath-api.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.aat.platform.hmcts.net"
     environment:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
@@ -74,7 +59,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "cath-postgres.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.aat.platform.hmcts.net"
 
 # Blob storage - DISABLED for stg/prod (managed by Terraform, accessed via Key Vault)
 blobstorage:
