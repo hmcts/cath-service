@@ -18,30 +18,18 @@ module "sa" {
     { name = "publications", access_type = "private" },
   ]
 
-  managed_identity_object_id = data.azurerm_user_assigned_identity.app_mi.principal_id
+  managed_identity_object_id = module.key_vault.managed_identity_objectid[0]
   role_assignments           = ["Storage Blob Data Contributor"]
 }
 
 resource "azurerm_key_vault_secret" "storageaccount_connection_string" {
   name         = "storageaccount-connection-string"
   value        = module.sa.storageaccount_primary_connection_string
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "storageaccount_name" {
   name         = "storageaccount-name"
   value        = module.sa.storageaccount_name
-  key_vault_id = module.application_key_vault.key_vault_id
-}
-
-resource "azurerm_key_vault_secret" "bootstrap_storageaccount_connection_string" {
-  name         = "storageaccount-connection-string"
-  value        = module.sa.storageaccount_primary_connection_string
-  key_vault_id = module.key_vault_bootstrap.key_vault_id
-}
-
-resource "azurerm_key_vault_secret" "bootstrap_shared_storageaccount_name" {
-  name         = "shared-storageaccount-name"
-  value        = module.sa.storageaccount_name
-  key_vault_id = module.key_vault_bootstrap.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }

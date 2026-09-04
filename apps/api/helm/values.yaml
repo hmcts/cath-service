@@ -3,7 +3,7 @@ nodejs:
   applicationPort: 3001
   aadIdentityName: cath
   ingressHost: cath-api.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/cath/cath-api:latest'
+  image: 'hmctsprod.azurecr.io/cath/cath-api:latest'
   environment:
     NODE_ENV: 'production'
     POSTGRES_DATABASE: cath
@@ -11,7 +11,7 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL: 42f65ada-6de0-45da-822a-9632f6f682fd
   keyVaults:
-    cath-ss-kv:
+    cath:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING

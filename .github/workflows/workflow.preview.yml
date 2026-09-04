@@ -54,6 +54,7 @@ jobs:
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
       affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
+      environment: preview
     secrets: inherit
 
   smoke-test-stage:

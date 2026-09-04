@@ -9,13 +9,13 @@
 #     if: needs.detect-infra-changes.outputs.has-changes == 'true'
 #     uses: ./.github/workflows/job.terraform.yml
 #     with:
-#       environment: stg
-#       subscription: DTS-SHAREDSERVICES-STG
-#       aks-subscription: DTS-SHAREDSERVICES-STG
+#       environment: aat
+#       subscription: DCD-CNP-DEV
+#       aks-subscription: DCD-CFTAPPS-STG
 #       storage-account: nonprod
 #       plan-only: true
 #     secrets:
-#       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+#       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
 
 name: Terraform
 
@@ -75,9 +75,7 @@ jobs:
       subscription: ${{ inputs.subscription }}
       aks-subscription: ${{ inputs.aks-subscription }}
       storage-account: ${{ inputs.storage-account }}
-      state-store-resource-group: jenkins-state-${{ inputs.environment }}
-      state-store-account-name: sdsstate${{ inputs.environment }}
-      state-store-container-name: ${{ inputs.state-store-container-name != '' && inputs.state-store-container-name || format('tfstate-{0}', inputs.environment) }}
+      state-store-container-name: ${{ inputs.state-store-container-name }}
       working-directory: ${{ inputs.working-directory }}
       plan-only: ${{ inputs.plan-only }}
       post-plan-to-pr: ${{ inputs.post-plan-to-pr }}

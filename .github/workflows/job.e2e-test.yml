@@ -36,9 +36,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Load e2e test credentials from bootstrap Key Vault
+      - name: Load e2e test credentials from Key Vault
         run: |
-          KV="cath-bootstrap-stg-kv"
+          KV="cath-aat"
           fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
 
           echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV

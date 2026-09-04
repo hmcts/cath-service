@@ -43,7 +43,7 @@ jobs:
     secrets: inherit
 
   deploy-stage:
-    name: Deploy to STG
+    name: Deploy to AAT
     needs: [build-stage, infrastructure-stage]
     if: |
       always() &&
@@ -51,12 +51,12 @@ jobs:
       (needs.infrastructure-stage.result == 'success' || needs.infrastructure-stage.result == 'skipped')
     uses: ./.github/workflows/stage.deploy.yml
     with:
-      change-id: staging
+      change-id: aat
       timestamp: ${{ needs.build-stage.outputs.timestamp }}
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
       affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
-      environment: stg
+      environment: aat
     secrets: inherit
 
   smoke-test-stage:
