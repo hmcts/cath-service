@@ -11,6 +11,12 @@ nodejs:
   environment:
     NODE_ENV: 'production'
     ENVIRONMENT: '{{ .Values.global.environment }}'
+    # Sets cloud_RoleName in Application Insights so web, api and crons are
+    # distinguishable. applicationinsights 3.x is OpenTelemetry-based and reads
+    # OTEL_SERVICE_NAME; it ignores APPLICATIONINSIGHTS_ROLE_NAME, which is what
+    # the `serviceName` config key feeds. Without this every role reports as
+    # "unknown_service:node".
+    OTEL_SERVICE_NAME: 'cath-web'
     POSTGRES_DATABASE: cath
     THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'

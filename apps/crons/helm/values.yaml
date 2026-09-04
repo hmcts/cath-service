@@ -9,6 +9,9 @@ job:
   aadIdentityName: cath
   environment:
     NODE_ENV: 'production'
+    # See the comment in apps/web/helm/values.yaml — applicationinsights 3.x reads
+    # OTEL_SERVICE_NAME, not APPLICATIONINSIGHTS_ROLE_NAME.
+    OTEL_SERVICE_NAME: 'cath-crons'
     SCRIPT_NAME: 'example'
     POSTGRES_DATABASE: cath
   keyVaults:
