@@ -14,12 +14,19 @@ crons:
   enabled: true
 
 # Web application configuration
+#
+# Hostnames deliberately omit ${TEAM_NAME} and {{ .Release.Name }}. Both are
+# "cath"-prefixed here (team cath, release cath-service-aat), so the previous
+# pattern produced cath-cath-service-aat-web. The web host must also match the
+# Front Door custom_domain provisioned for cath in hmcts/azure-platform-terraform,
+# which is cath.aat.platform.hmcts.net - Front Door forwards on the Host header,
+# so a mismatch means the public URL never reaches the ingress.
 cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
+    ingressHost: "cath.aat.platform.hmcts.net"
     environment:
-      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
+      BASE_URL: "https://cath.aat.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
@@ -27,7 +34,7 @@ cath-web:
 cath-api:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.aat.platform.hmcts.net"
+    ingressHost: "cath-api.aat.platform.hmcts.net"
     environment:
       ENABLE_TEST_SUPPORT: "true"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
@@ -44,7 +51,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.aat.platform.hmcts.net"
+    ingressHost: "cath-postgres.aat.platform.hmcts.net"
 
 # Blob storage - DISABLED for stg/prod (managed by Terraform, accessed via Key Vault)
 blobstorage:

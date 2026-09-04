@@ -3,6 +3,10 @@ name: Promote Images Job
 on:
   workflow_call:
     inputs:
+      change-id:
+        required: true
+        type: string
+        description: "Change identifier used to build the source image tag (<change-id>-<short-sha>). Must match the value build-stage used."
       short-sha:
         required: true
         type: string
@@ -74,7 +78,7 @@ jobs:
 
       - name: Promote image to prod and latest
         run: |
-          SOURCE_TAG="staging-${{ inputs.short-sha }}"
+          SOURCE_TAG="${{ inputs.change-id }}-${{ inputs.short-sha }}"
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           PROD_TAG="prod-${{ inputs.short-sha }}-${TIMESTAMP}"
           IMAGE="${{ env.REGISTRY }}/${{ steps.metadata.outputs.registry-prefix }}"
@@ -94,5 +98,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**App:** \`${{ matrix.app }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.REGISTRY }}/${{ steps.metadata.outputs.registry-prefix }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Source Tag:** \`staging-${{ inputs.short-sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Source Tag:** \`${{ inputs.change-id }}-${{ inputs.short-sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Target Tags:** \`${PROD_TAG}\`, \`latest\`" >> $GITHUB_STEP_SUMMARY

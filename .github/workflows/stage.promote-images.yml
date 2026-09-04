@@ -3,6 +3,10 @@ name: Promote Images Stage
 on:
   workflow_call:
     inputs:
+      change-id:
+        required: true
+        type: string
+        description: "Change identifier used to build the source image tag (<change-id>-<short-sha>). Must match the value build-stage used."
       short-sha:
         required: true
         type: string
@@ -21,6 +25,7 @@ jobs:
     name: Promote
     uses: ./.github/workflows/job.promote-images.yml
     with:
+      change-id: ${{ inputs.change-id }}
       short-sha: ${{ inputs.short-sha }}
       affected-apps: ${{ inputs.affected-apps }}
       helm-apps: ${{ inputs.helm-apps }}
