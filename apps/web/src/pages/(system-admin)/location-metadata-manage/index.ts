@@ -5,6 +5,10 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+const HTML_TAG_REGEX = /<[^<>]*>/;
+
+const MESSAGE_FIELDS = ["cautionMessage", "welshCautionMessage", "noListMessage", "welshNoListMessage"] as const;
+
 const getLanguage = (req: Request) => (req.query.lng === "cy" ? "cy" : "en");
 const getContent = (language: "cy" | "en") => (language === "cy" ? cy : en);
 const getLanguageParam = (language: "cy" | "en") => (language === "cy" ? "?lng=cy" : "");
@@ -23,6 +27,12 @@ const hasAtLeastOneMessage = (formData: ReturnType<typeof extractFormData>) =>
   hasNonEmptyValue(formData.welshCautionMessage) ||
   hasNonEmptyValue(formData.noListMessage) ||
   hasNonEmptyValue(formData.welshNoListMessage);
+
+const findFieldWithHtmlTag = (formData: ReturnType<typeof extractFormData>) =>
+  MESSAGE_FIELDS.find((field) => {
+    const value = formData[field];
+    return value && HTML_TAG_REGEX.test(value);
+  });
 
 const getHandler = async (req: Request, res: Response) => {
   const language = getLanguage(req);
@@ -66,7 +76,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   const formData = extractFormData(req.body);
 
-  const renderWithError = async (errorText: string) => {
+  const renderWithError = async (errorText: string, href = "#cautionMessage") => {
     const existingMetadata = await getLocationMetadataByLocationId(locationId);
     return res.render("location-metadata-manage/index", {
       ...content,
@@ -76,12 +86,17 @@ const postHandler = async (req: Request, res: Response) => {
       noListMessage: formData.noListMessage || "",
       welshNoListMessage: formData.welshNoListMessage || "",
       hasExistingMetadata: !!existingMetadata,
-      errors: [{ text: errorText, href: "#cautionMessage" }]
+      errors: [{ text: errorText, href }]
     });
   };
 
   if (!hasAtLeastOneMessage(formData)) {
     return renderWithError(content.atLeastOneMessageRequired);
+  }
+
+  const fieldWithHtmlTag = findFieldWithHtmlTag(formData);
+  if (fieldWithHtmlTag) {
+    return renderWithError(content.htmlTagsNotAllowed(content[`${fieldWithHtmlTag}Label`]), `#${fieldWithHtmlTag}`);
   }
 
   try {

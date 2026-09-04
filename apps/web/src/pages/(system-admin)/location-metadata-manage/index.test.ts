@@ -194,6 +194,55 @@ describe("location-metadata-manage page", () => {
       );
     });
 
+    it.each([
+      ["cautionMessage", "English caution message"],
+      ["welshCautionMessage", "Welsh caution message"],
+      ["noListMessage", "English no list message"],
+      ["welshNoListMessage", "Welsh no list message"]
+    ])("should reject %s when it contains HTML tags", async (field, label) => {
+      req.session = {
+        locationMetadata: {
+          locationId: 123,
+          locationName: "Test Court",
+          locationWelshName: "Llys Prawf"
+        }
+      } as any;
+      req.body = {
+        action: "create",
+        [field]: '<img src="x" onerror="alert(1)">'
+      };
+      (getLocationMetadataByLocationId as any).mockResolvedValue(null);
+
+      await postHandler(req as Request, res as Response);
+
+      expect(createLocationMetadata).not.toHaveBeenCalled();
+      expect(res.render).toHaveBeenCalledWith(
+        "location-metadata-manage/index",
+        expect.objectContaining({
+          errors: [{ text: `${label} contains HTML tags which are not allowed`, href: `#${field}` }]
+        })
+      );
+    });
+
+    it("should not update metadata when a message contains HTML tags", async () => {
+      req.session = {
+        locationMetadata: {
+          locationId: 123,
+          locationName: "Test Court",
+          locationWelshName: "Llys Prawf"
+        }
+      } as any;
+      req.body = {
+        action: "update",
+        cautionMessage: "<script>alert(1)</script>"
+      };
+      (getLocationMetadataByLocationId as any).mockResolvedValue({ cautionMessage: "Existing" });
+
+      await postHandler(req as Request, res as Response);
+
+      expect(updateLocationMetadata).not.toHaveBeenCalled();
+    });
+
     it("should create metadata and redirect to success page", async () => {
       req.session = {
         locationMetadata: {
