@@ -170,7 +170,7 @@ jobs:
           environment: cft-aat-00
           team-name: ${{ env.TEAM_NAME }}
           application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_AAT }}
           release-name: ${{ env.RELEASE_NAME }}
           namespace: ${{ env.TEAM_NAME }}
           chart: helm/${{ env.APPLICATION_NAME }}
