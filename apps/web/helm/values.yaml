@@ -6,18 +6,11 @@ nodejs:
   releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
-  # This chart is deployed by Flux (cnp-flux-config/apps/cath) as release cath-web,
-  # and owns the plain hostnames. The CI pipeline deploys the umbrella chart
-  # alongside it under release-scoped names - see helm/cath-service/values.template.yaml.
-  #
-  # ingressHost must not be plain "cath": that name is a CNAME to Azure Front Door,
-  # and DNS forbids an A and a CNAME record at the same name. additionalIngressHosts
-  # adds a host rule for it without creating a DNS record, which is what lets Front
-  # Door reach this service - it forwards the original Host header, and without a
-  # matching rule traefik 404s and Front Door reports 502.
+  # Must not be plain "cath": that name is a CNAME to Azure Front Door in the
+  # aat zone, and DNS forbids an A and a CNAME record at the same name. The
+  # public URL is https://cath.<env>.platform.hmcts.net via Front Door; the
+  # ingress answers on cath-web. See helm/cath-service/values.template.yaml.
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
-  additionalIngressHosts:
-    - cath.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
