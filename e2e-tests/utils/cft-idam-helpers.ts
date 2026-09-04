@@ -46,7 +46,7 @@ export async function loginWithCftIdam(page: Page, email: string, password: stri
   // Enter email
   console.log(`[CFT IDAM] Filling in username field`);
   const emailInput = page.locator('input[type="text"]#username, input[type="email"]#username, input[name="username"]');
-  await emailInput.waitFor({ state: "visible", timeout: 10000 });
+  await emailInput.waitFor({ state: "visible", timeout: 20000 });
   await emailInput.fill(email);
 
   // Enter password
