@@ -201,6 +201,19 @@ jobs:
             # Extract record name (hostname without zone suffix)
             RECORD_NAME="${HOST%.${ZONE}}"
 
+            # Some ingress hosts are Front Door entry points that already exist as
+            # CNAMEs in this zone (see additionalIngressHosts in the values
+            # template). DNS forbids an A and a CNAME at the same name, so creating
+            # one fails the whole step with:
+            #   (Conflict) The record could not be created because a CNAME record
+            #   with the same name already exists in this zone.
+            if az network private-dns record-set cname show \
+              -g "$RESOURCE_GROUP" -z "$ZONE" -n "$RECORD_NAME" \
+              --subscription "$SUBSCRIPTION" &>/dev/null; then
+              echo "Skipping ${RECORD_NAME}: already a CNAME (Front Door entry point)"
+              continue
+            fi
+
             echo "Registering DNS: ${RECORD_NAME} -> ${INGRESS_IP}"
 
             # Check if record exists

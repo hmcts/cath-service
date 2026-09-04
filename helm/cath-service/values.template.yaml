@@ -33,11 +33,20 @@ crons:
 #   dtsse-expressjs-monorepo-template-staging-web  A     -> ingress IP  (internal)
 #
 # So the public URL stays https://cath.aat.platform.hmcts.net via Front Door,
-# while the ingress answers on cath-web.
+# while the ingress answers on cath-web and the DNS step registers an A record
+# for that name.
+#
+# additionalIngressHosts then adds a second host rule for the Front Door name to
+# the same ingress. Front Door forwards the original Host header
+# (cath.aat.platform.hmcts.net), and without a matching rule traefik returns 404,
+# which Front Door surfaces as 502 Bad Gateway. This adds no DNS record, so it
+# cannot clash with the existing CNAME.
 cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
     ingressHost: "cath-web.aat.platform.hmcts.net"
+    additionalIngressHosts:
+      - "cath.aat.platform.hmcts.net"
     environment:
       # Public URL, not the ingress host - this is what users see in links.
       BASE_URL: "https://cath.aat.platform.hmcts.net"
