@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // Mock dependencies
 vi.mock("@hmcts-cft/cloud-native-platform", () => ({
   healthcheck: vi.fn(() => vi.fn()),
+  monitoringMiddleware: vi.fn(() => vi.fn()),
   getPropertiesVolumeSecrets: vi.fn(() => Promise.resolve({}))
 }));
 
@@ -34,6 +35,11 @@ describe("API Application", () => {
     it("should configure healthcheck middleware", async () => {
       const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
+    });
+
+    it("should configure monitoring middleware with the api service name", async () => {
+      const { monitoringMiddleware } = await import("@hmcts-cft/cloud-native-platform");
+      expect(monitoringMiddleware).toHaveBeenCalledWith(expect.objectContaining({ serviceName: "cath-api" }));
     });
 
     it("should configure routes using simple router", async () => {
