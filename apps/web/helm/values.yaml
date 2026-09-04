@@ -6,12 +6,11 @@ nodejs:
   releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
-  # Must match the custom_domain on the Front Door entry for cath in
-  # hmcts/azure-platform-terraform (environments/stg/stg.tfvars) and the CNAME in
-  # hmcts/azure-public-dns (environments/staging/aat.yml), both of which are
-  # provisioned as cath.<env>.platform.hmcts.net. Front Door forwards on the Host
-  # header, so a mismatch here means the public URL never reaches the ingress.
-  ingressHost: cath.{{ .Values.global.environment }}.platform.hmcts.net
+  # Must not be plain "cath": that name is a CNAME to Azure Front Door in the
+  # aat zone, and DNS forbids an A and a CNAME record at the same name. The
+  # public URL is https://cath.<env>.platform.hmcts.net via Front Door; the
+  # ingress answers on cath-web. See helm/cath-service/values.template.yaml.
+  ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
   image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
