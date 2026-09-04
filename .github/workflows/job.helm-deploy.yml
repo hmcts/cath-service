@@ -103,7 +103,7 @@ jobs:
       - name: Set up Helm (stuck-release cleanup)
         uses: azure/setup-helm@v5
         with:
-          version: 'v4.2.3'
+          version: 'v4.2.4'
 
       - name: Azure login for AKS (stuck-release cleanup)
         uses: azure/login@v3
