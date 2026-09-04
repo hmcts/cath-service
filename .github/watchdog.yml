@@ -1,0 +1,290 @@
+# CaTH watchdog configuration.
+#
+# Read by hmcts/cnp-githubactions-library/appinsights-health-check. The action runs
+# these queries and applies these rules; it has no queries of its own. Everything
+# service-specific lives here, next to the code it observes.
+#
+# {{window}} and {{baseline}} are substituted by the action (15m and 7d by default).
+#
+# Error checks are zero-threshold by policy: any error is worth a look, and the
+# suppression list at the bottom is how known-benign noise is silenced — explicitly,
+# with a reason, in git. Rate and ratio checks keep real thresholds, because zero is
+# not a meaningful floor for a latency percentile.
+#
+# Every query below was run against cath-appinsights-stg before being committed, and
+# the baseline observed at the time is recorded in a comment. Calibrated 2026-09-04
+# against roughly 775 non-health requests/day. Revisit when traffic changes materially.
+
+app-insights:
+  # The app's GUID, not the resource name:
+  #   az monitor app-insights component show -g <rg> --app <name> --query appId -o tsv
+  #
+  # This is cath-appinsights-stg in cath-ss-kv-stg-rg (DTS-SHAREDSERVICES-STG), which
+  # is where the running pods report today. The CNP migration provisioned
+  # cath-appinsights-aat in DCD-CNP-DEV, but nothing reports there yet — repoint this
+  # when the connection string moves.
+  app-id: 18e1ccec-b642-4b1a-acd8-c5ff7139e7c1
+
+defaults:
+  severity: medium
+  renotify-after: 6h
+
+checks:
+  # ---------------------------------------------------------------------------
+  # Errors — zero threshold. One row is enough.
+  # ---------------------------------------------------------------------------
+
+  # Observed: 2 distinct problemIds in a 2h window (BlobNotFound,
+  # ContainerAlreadyExists), both from blob ingestion.
+  - id: exceptions
+    severity: high
+    description: Any unhandled or tracked exception.
+    fingerprint-by: [problemId, cloud_RoleName]
+    rule: { rows: '> 0' }
+    query: |
+      exceptions
+      | where timestamp > ago({{window}})
+      | summarize occurrences = count(), sample = any(outerMessage)
+          by problemId, cloud_RoleName, type
+
+  # Observed: 0 over 24h.
+  - id: server-errors
+    severity: high
+    description: Any 5xx response. Health probes excluded — they are not user-facing.
+    fingerprint-by: [name, resultCode, cloud_RoleName]
+    rule: { rows: '> 0' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where toint(resultCode) >= 500
+      | where name !startswith 'GET /health'
+      | summarize occurrences = count(), p95_ms = percentile(duration, 95)
+          by name, resultCode, cloud_RoleName
+
+  # Postgres, Redis, Blob, Notify, IDAM and B2C all surface here. Observed: 0 rows,
+  # though the dependencies table was empty before VIBE-552 wired up the api.
+  - id: dependency-failures
+    severity: high
+    description: Any failed outbound call.
+    fingerprint-by: [type, target, cloud_RoleName]
+    rule: { rows: '> 0' }
+    query: |
+      dependencies
+      | where timestamp > ago({{window}})
+      | where success == false
+      | summarize failures = count(), sample = any(resultCode)
+          by type, target, cloud_RoleName
+
+  # Observed: 0 over 7d.
+  - id: error-traces
+    severity: medium
+    description: Any log line at Error or Critical.
+    fingerprint-by: [messageShape, cloud_RoleName]
+    rule: { rows: '> 0' }
+    query: |
+      traces
+      | where timestamp > ago({{window}})
+      | where severityLevel >= 3
+      | extend messageShape = replace_regex(tostring(message), @'\d+', 'N')
+      | summarize occurrences = count(), sample = any(message)
+          by messageShape, cloud_RoleName
+
+  # Depends on the standard web test added in VIBE-552.
+  - id: availability-failures
+    severity: high
+    description: Any failed availability test run.
+    fingerprint-by: [name, location]
+    rule: { rows: '> 0' }
+    query: |
+      availabilityResults
+      | where timestamp > ago({{window}})
+      | where success == false
+      | summarize failures = count() by name, location
+
+  # CaTH's crons ingest publications and send subscriber notifications, so a silent
+  # failure here has more user impact than a 500 on a page. Emitted by the runner in
+  # apps/crons/src/index.ts.
+  - id: cron-failures
+    severity: high
+    description: Any cron run that ended in an exception.
+    fingerprint-by: [scriptName]
+    rule: { rows: '> 0' }
+    query: |
+      exceptions
+      | where timestamp > ago({{window}})
+      | where cloud_RoleName == 'cath-crons'
+      | extend scriptName = tostring(customDimensions.scriptName)
+      | summarize failures = count(), sample = any(outerMessage) by scriptName
+
+  # ---------------------------------------------------------------------------
+  # Liveness — fires on an empty result.
+  # ---------------------------------------------------------------------------
+
+  # Catches a dead deployment, and the config regression that VIBE-552 fixed: before
+  # it, all three roles reported as "unknown_service:node" and this check would fire
+  # for every one of them.
+  - id: role-silent
+    severity: high
+    description: A role that should be reporting telemetry and is not.
+    fingerprint-by: [expected_role]
+    rule: { rows: '> 0' }
+    query: |
+      let expected = dynamic(['cath-web', 'cath-api', 'cath-crons']);
+      let seen = union isfuzzy=true requests, traces, customMetrics, exceptions, dependencies
+        | where timestamp > ago(1h)
+        | summarize by cloud_RoleName;
+      print expected_role = expected
+      | mv-expand expected_role to typeof(string)
+      | where expected_role !in ((seen | project cloud_RoleName))
+
+  # Up but serving nobody. Restricted to UK working hours: outside them, zero traffic
+  # on a staging environment is normal and would be pure noise.
+  - id: no-user-traffic
+    severity: medium
+    description: No successful non-health requests during working hours.
+    rule: { rows: '== 0' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where name !startswith 'GET /health'
+      | where success == true
+      | where hourofday(now()) between (7 .. 19)
+        and dayofweek(now()) between (1d .. 5d)
+      | take 1
+
+  # ---------------------------------------------------------------------------
+  # Rates and regressions — real thresholds, since zero is not a floor here.
+  # ---------------------------------------------------------------------------
+
+  # Observed: 1.8% over 24h (14 of 775). 20% is deliberately well clear of that; it is
+  # meant to catch broken routing or auth, not ordinary 404s.
+  - id: client-error-rate
+    severity: medium
+    description: 4xx responses as a share of non-health traffic.
+    fingerprint-by: [cloud_RoleName]
+    rule: { column: rate, value: '> 0.2' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where name !startswith 'GET /health'
+      | summarize total = count(),
+                  client_errors = countif(toint(resultCode) between (400 .. 499))
+          by cloud_RoleName
+      | where total >= 20
+      | extend rate = todouble(client_errors) / total
+
+  # Observed p95 by operation over 24h: GET /locations 996ms, POST /view-option 590ms,
+  # everything else below 470ms. Ratio-based rather than absolute so it adapts as the
+  # service changes; the row-count floors stop a handful of slow requests in a quiet
+  # window from registering as a regression.
+  - id: latency-p95-regression
+    severity: medium
+    description: Operation p95 more than double its trailing baseline.
+    fingerprint-by: [name]
+    rule: { column: ratio, value: '> 2' }
+    query: |
+      let base = requests
+        | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+        | where name !startswith 'GET /health'
+        | summarize p95_base = percentile(duration, 95), base_n = count() by name
+        | where base_n >= 20;
+      requests
+      | where timestamp > ago({{window}})
+      | where name !startswith 'GET /health'
+      | summarize p95_now = percentile(duration, 95), now_n = count() by name
+      | where now_n >= 5
+      | join kind=inner base on name
+      | where p95_base > 0
+      | extend ratio = p95_now / p95_base
+      | project name, p95_now, p95_base, ratio, now_n
+
+  # Absolute backstop for the case the ratio check cannot see: an operation that has
+  # always been slow has a baseline that makes its ratio look fine.
+  - id: latency-p99-absolute
+    severity: medium
+    description: Operation p99 above 5 seconds.
+    fingerprint-by: [name]
+    rule: { column: p99_ms, value: '> 5000' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where name !startswith 'GET /health'
+      | summarize p99_ms = percentile(duration, 99), n = count() by name
+      | where n >= 5
+
+  - id: dependency-latency-regression
+    severity: low
+    description: Dependency p95 more than double its trailing baseline.
+    fingerprint-by: [target, type]
+    rule: { column: ratio, value: '> 2' }
+    query: |
+      let base = dependencies
+        | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+        | summarize p95_base = percentile(duration, 95), base_n = count() by target, type
+        | where base_n >= 20;
+      dependencies
+      | where timestamp > ago({{window}})
+      | summarize p95_now = percentile(duration, 95), now_n = count() by target, type
+      | where now_n >= 5
+      | join kind=inner base on target, type
+      | where p95_base > 0
+      | extend ratio = p95_now / p95_base
+      | project target, type, p95_now, p95_base, ratio
+
+  # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
+  # afternoon would false-positive constantly. The expected_for_window floor of 4
+  # suppresses the check entirely when the baseline is too thin to judge, which is why
+  # it currently returns nothing on this instance.
+  - id: volume-drop
+    severity: medium
+    description: Non-health traffic well below the same slot on comparable days.
+    rule: { column: drop_ratio, value: '> 0.6' }
+    query: |
+      let current = toscalar(
+        requests
+        | where timestamp > ago({{window}})
+        | where name !startswith 'GET /health'
+        | count);
+      requests
+      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where name !startswith 'GET /health'
+      | where dayofweek(timestamp) == dayofweek(now())
+        and hourofday(timestamp) == hourofday(now())
+      | summarize per_day = count() by bin(timestamp, 1d)
+      | summarize baseline_per_hour = avg(per_day), days = count()
+      | extend expected_for_window = baseline_per_hour / 4.0
+      | where days >= 2 and expected_for_window >= 4.0
+      | extend current = current
+      | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
+
+  # Scraping, a runaway client, or a retry storm.
+  - id: volume-spike
+    severity: low
+    description: Non-health traffic far above the same slot on comparable days.
+    rule: { column: spike_ratio, value: '> 3' }
+    query: |
+      let current = toscalar(
+        requests
+        | where timestamp > ago({{window}})
+        | where name !startswith 'GET /health'
+        | count);
+      requests
+      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where name !startswith 'GET /health'
+      | where dayofweek(timestamp) == dayofweek(now())
+        and hourofday(timestamp) == hourofday(now())
+      | summarize per_day = count() by bin(timestamp, 1d)
+      | summarize baseline_per_hour = avg(per_day), days = count()
+      | extend expected_for_window = baseline_per_hour / 4.0
+      | where days >= 2 and expected_for_window >= 4.0
+      | extend current = current
+      | extend spike_ratio = todouble(current) / expected_for_window
+
+# Known-benign fingerprints. Every entry needs a reason — the action rejects the
+# config otherwise — because an unexplained suppression is an invisible blind spot.
+# Review periodically: anything that has not fired in 90 days is probably hiding
+# something that no longer happens, or that has changed shape.
+#
+# Deliberately empty at launch. The first fortnight is expected to be mostly about
+# populating it, and every addition should arrive as a reviewed PR.
+suppressions: []
