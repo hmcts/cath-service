@@ -364,22 +364,22 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
   SJP_PUBLIC_LIST: async (p) => {
-    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_DELTA_PUBLIC_LIST: async (p) => {
-    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_PRESS_LIST: async (p) => {
-    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_DELTA_PRESS_LIST: async (p) => {
-    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   }

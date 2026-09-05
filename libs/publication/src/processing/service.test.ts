@@ -1422,7 +1422,7 @@ describe("publication-processor", async () => {
 
       await processPublication({ ...baseParams, listTypeId: 25 });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith(baseParams.jsonData, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
     });
 
@@ -1432,7 +1432,7 @@ describe("publication-processor", async () => {
 
       await processPublication({ ...baseParams, listTypeId: 24 });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith(baseParams.jsonData, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
     });
 
@@ -1708,28 +1708,34 @@ describe("publication-processor", async () => {
     it("should generate and save Excel for SJP_PUBLIC_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-1", listTypeName: "SJP_PUBLIC_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-1", expect.any(Buffer));
     });
 
     it("should generate and save Excel for SJP_DELTA_PUBLIC_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-2", listTypeName: "SJP_DELTA_PUBLIC_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-2", expect.any(Buffer));
+    });
+
+    it("should generate Welsh Excel when locale is cy", async () => {
+      await generatePublicationExcel({ artefactId: "artefact-cy", listTypeName: "SJP_PUBLIC_LIST", jsonData: { courtLists: [] }, locale: "cy" });
+
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "cy");
     });
 
     it("should generate and save Excel for SJP_PRESS_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-3", listTypeName: "SJP_PRESS_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-3", expect.any(Buffer));
     });
 
     it("should generate and save Excel for SJP_DELTA_PRESS_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-4", listTypeName: "SJP_DELTA_PRESS_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-4", expect.any(Buffer));
     });
 
