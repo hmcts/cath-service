@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generatePublicationExcel, generatePublicationPdf, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
+import { generatePublicationExcel, generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
 
@@ -43,7 +43,8 @@ vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list", () 
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
-  generateCauseListPdf: vi.fn()
+  generateCauseListPdf: vi.fn(),
+  generateCivilAndFamilyDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
@@ -119,11 +120,13 @@ vi.mock("@hmcts/crown-warned-list", () => ({
 }));
 
 vi.mock("@hmcts/civil-daily-cause-list", () => ({
-  generateCivilDailyCauseListPdf: vi.fn()
+  generateCivilDailyCauseListPdf: vi.fn(),
+  generateCivilDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/family-daily-cause-list", () => ({
-  generateFamilyDailyCauseListPdf: vi.fn()
+  generateFamilyDailyCauseListPdf: vi.fn(),
+  generateFamilyDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
@@ -1286,6 +1289,52 @@ describe("publication-processor", async () => {
       });
     });
 
+    it("should set excelPath for a Shape A list type when its Excel generator succeeds", async () => {
+      const { generateCivilDailyCauseListPdf, generateCivilDailyCauseListExcel } = await import("@hmcts/civil-daily-cause-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateCivilDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCivilDailyCauseListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication(baseParams);
+
+      expect(generateCivilDailyCauseListExcel).toHaveBeenCalled();
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
+    it("should not block PDF or notifications when the Excel generator throws", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { generateCivilDailyCauseListPdf, generateCivilDailyCauseListExcel } = await import("@hmcts/civil-daily-cause-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateCivilDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCivilDailyCauseListExcel).mockRejectedValue(new Error("Excel crash"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 3,
+        sent: 3,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication(baseParams);
+
+      expect(result.pdfPath).toBe("/path/to/pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(result.notificationsSent).toBe(3);
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should call extractAndStoreArtefactSearch when jsonData is provided", async () => {
       vi.mocked(generateCauseListPdf).mockResolvedValue({
         success: true,
@@ -1578,6 +1627,22 @@ describe("publication-processor", async () => {
       expect(result.pdfPath).toBe("/path/to/mpl.pdf");
       expect(result.excelPath).toBeUndefined();
       consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe("listTypeHasExcel", () => {
+    const CIVIL_AND_FAMILY_EXCEL_LIST_TYPES = ["CIVIL_DAILY_CAUSE_LIST", "FAMILY_DAILY_CAUSE_LIST", "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"];
+
+    it.each(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES)("should return true for the in-scope list type %s", (listTypeName) => {
+      expect(listTypeHasExcel(listTypeName)).toBe(true);
+    });
+
+    it("should register exactly the 3 in-scope Civil and Family cause lists", () => {
+      expect(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES).toHaveLength(3);
+    });
+
+    it("should return false for an undefined list type name", () => {
+      expect(listTypeHasExcel(undefined)).toBe(false);
     });
   });
 
