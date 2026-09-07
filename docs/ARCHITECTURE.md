@@ -202,7 +202,7 @@ The platform provides seamless Azure Key Vault integration for secure secrets ma
 1. **Helm Chart Definition** (`apps/web/helm/values.yaml`):
    ```yaml
    keyVaults:
-     pip-ss-kv-{{ .Values.global.environment }}:
+     cath:
        secrets:
          - name: sso-client-id
            alias: SSO_CLIENT_ID
@@ -217,29 +217,37 @@ The platform provides seamless Azure Key Vault integration for secure secrets ma
 3. **Application Initialization**:
    ```typescript
    // apps/web/src/app.ts
-   await configurePropertiesVolume(config, {
-     chartPath: path.join(__dirname, "../helm/values.yaml")
-   });
+   const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+   const chartPath = path.join(__dirname, `../helm/${helmValues}`);
+
+   await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
    ```
 
 **Environment-Specific Behavior**:
-- **Local Development**: Reads from `.env` files via `process.env`
+- **Local Development**: `LOCAL_DEV=true` reads `values.dev.yaml` and fetches its secrets from Key Vault using your `az login` identity; anything else comes from the root `.env` via `process.env`
 - **CI/Testing**: Can optionally connect to Key Vault with Azure credentials
 - **Production (Kubernetes)**: Secrets mounted as files in `/mnt/secrets` by Helm chart
 - **Non-Production with chartPath**: Uses Azure credentials to fetch secrets directly from Key Vault
 
 **Key Vault Naming Convention**:
+
+The vault URI is built from the `keyVaults` key in the Helm values plus `VAULT_URI_SUFFIX`:
 ```
-pip-ss-kv-{environment}
+https://<keyVaults key>-<VAULT_URI_SUFFIX>.vault.azure.net/
 ```
-Where environment is: `demo`, `test`, `stg`, or `prod`
+The key is `cath`, so `VAULT_URI_SUFFIX=aat` resolves to the `cath-aat` application vault. This
+replaced the SDS-era `pip-ss-kv-{environment}` naming in the CNP migration; those vaults no
+longer exist.
+
+E2E test-account credentials live in a **separate** vault, `cath-bootstrap-aat`, so they are
+never mounted into running pods. It is read by `e2e-tests/run-with-credentials.js` locally and
+by `.github/workflows/job.e2e-test.yml` and `nightly.yml` in CI. See
+`infrastructure/keyvault-bootstrap.tf`.
 
 **Implementation**:
 ```typescript
 // Automatic configuration loading
-await configurePropertiesVolume(config, {
-  chartPath: path.join(__dirname, "../helm/values.yaml")
-});
+await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
 
 // Health check endpoints
 app.use(healthcheck()); // /health, /health/readiness, /health/liveness
