@@ -86,3 +86,9 @@ variable "sa_access_tier" {
   type        = string
   default     = "Cool"
 }
+
+variable "pip_nonprod_group_object_id" {
+  description = "Azure AD object ID of the DTS PIP Non-Prod group, granted full secret access on the bootstrap key vault"
+  type        = string
+  default     = "9c37fa4a-a75f-4b1d-918b-3c7248e2211b"
+}
