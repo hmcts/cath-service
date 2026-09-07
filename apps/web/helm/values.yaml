@@ -25,8 +25,14 @@ nodejs:
     POSTGRES_DATABASE: cath
     THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
+    # Public hostname, not the ingress host. OIDC redirect URIs are built from
+    # this (libs/auth/src/config/sso-config.ts, b2c-config.ts, crime-idam-config.ts),
+    # so it must match what is registered on the app registrations and what the
+    # browser can reach. Unset, it falls back to https://localhost:8080 and login
+    # fails with AADSTS50011 redirect_uri mismatch.
+    BASE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
-    CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+    CATH_SERVICE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
     MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
     CRIME_IDAM_BASE_URL: https://login.sit.cjscp.org.uk
