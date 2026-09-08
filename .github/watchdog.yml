@@ -320,3 +320,5 @@ checks:
 suppressions:
   - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
     reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
