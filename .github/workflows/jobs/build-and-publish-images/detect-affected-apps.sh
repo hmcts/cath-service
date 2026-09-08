@@ -118,11 +118,19 @@ main() {
   # Note: --affected and --filter cannot be used together
   #
   # A turbo crash must fall back to building everything, not to an empty list
-  # that is indistinguishable from "nothing changed".
-  if [ "$use_fallback" = "false" ] &&
-    ! affected_json=$(yarn turbo ls --affected --output=json 2>/dev/null); then
-    echo "turbo ls --affected failed - building all apps"
-    use_fallback="true"
+  # that is indistinguishable from "nothing changed". Turbo exiting 0 with
+  # unparseable or unshaped stdout has to take the same path: it would otherwise
+  # fail the jq below, inside a command substitution where errexit aborts the
+  # script. The shape is asserted here rather than defaulted to [] downstream,
+  # because an empty list would read as "nothing changed" and publish nothing.
+  if [ "$use_fallback" = "false" ]; then
+    if ! affected_json=$(yarn turbo ls --affected --output=json 2>/dev/null); then
+      echo "turbo ls --affected failed - building all apps"
+      use_fallback="true"
+    elif ! printf '%s' "$affected_json" | jq -e '(.packages.items | type) == "array"' >/dev/null 2>&1; then
+      echo "turbo ls --affected returned unexpected output - building all apps"
+      use_fallback="true"
+    fi
   fi
 
   if [ "$use_fallback" = "true" ]; then

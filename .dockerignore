@@ -16,17 +16,17 @@
 **/*.key
 
 # Development tooling
-.idea/
-.vscode/
-.claude/
-*.log
-.DS_Store
+**/.idea
+**/.vscode
+**/.claude
+**/*.log
+**/.DS_Store
 
 # Test artefacts
-test-results/
-playwright-report/
+**/test-results
+**/playwright-report
 **/coverage
-.nyc_output/
+**/.nyc_output
 e2e-tests/
 
 # Turborepo cache
