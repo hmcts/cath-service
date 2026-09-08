@@ -313,4 +313,10 @@ checks:
 # Known-benign fingerprints. Every entry needs a reason — the action rejects the
 # config otherwise. Review periodically: anything that has not fired in 90 days is
 # probably hiding something that no longer happens, or that has changed shape.
-suppressions: []
+#
+# Matching is exact string equality. The exceptions problemId carries the throw site
+# inside @azure/core-client, so a version bump moves the line number and quietly
+# stops these matching — recheck them after a Renovate bump of that package.
+suppressions:
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
