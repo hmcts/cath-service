@@ -322,3 +322,5 @@ suppressions:
     reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
   - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
     reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:BlobNotFound at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: downloadBlob and getBlobProperties treat 404 as absent and return null, and getFileBuffer probes up to three blob names by design, so a miss is an expected step rather than a failure — real blob loss still shows up under dependency-failures.
