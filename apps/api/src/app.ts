@@ -9,7 +9,8 @@ import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });

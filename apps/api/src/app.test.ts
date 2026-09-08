@@ -12,6 +12,19 @@ vi.mock("@hmcts-cft/simple-router", () => ({
   createSimpleRouter: vi.fn(() => Promise.resolve(vi.fn()))
 }));
 
+// app.ts resolves the helm chart path at module load, so the module has to be
+// re-imported after LOCAL_DEV changes for the new value to take effect.
+async function createAppWithLocalDev(localDev: string | undefined) {
+  if (localDev === undefined) {
+    vi.stubEnv("LOCAL_DEV", undefined);
+  } else {
+    vi.stubEnv("LOCAL_DEV", localDev);
+  }
+  vi.resetModules();
+  const { createApp } = await import("./app.js");
+  return createApp();
+}
+
 describe("API Application", () => {
   let app: Express;
 
@@ -22,6 +35,7 @@ describe("API Application", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.resetModules();
   });
 
@@ -70,6 +84,32 @@ describe("API Application", () => {
     it("should be configured with error handlers", () => {
       expect(app).toBeDefined();
       // Express app should have error handlers
+    });
+  });
+
+  describe("helm chart selection", () => {
+    it("should load the local development chart when LOCAL_DEV is true", async () => {
+      // Arrange
+      const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
+      vi.mocked(getPropertiesVolumeSecrets).mockClear();
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(getPropertiesVolumeSecrets).toHaveBeenCalledWith(expect.objectContaining({ chartPath: expect.stringContaining("helm/values.dev.yaml") }));
+    });
+
+    it("should load the deployment chart when LOCAL_DEV is not set", async () => {
+      // Arrange
+      const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
+      vi.mocked(getPropertiesVolumeSecrets).mockClear();
+
+      // Act
+      await createAppWithLocalDev(undefined);
+
+      // Assert
+      expect(getPropertiesVolumeSecrets).toHaveBeenCalledWith(expect.objectContaining({ chartPath: expect.stringContaining("helm/values.yaml") }));
     });
   });
 });

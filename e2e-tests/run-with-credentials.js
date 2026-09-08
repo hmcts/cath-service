@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from .env file in the parent directory
 config({ path: path.resolve(__dirname, '../.env') });
 
-const VAULT_NAME = 'cath-bootstrap-stg-kv';
+const VAULT_NAME = 'cath-bootstrap-aat';
 const VAULT_URL = `https://${VAULT_NAME}.vault.azure.net`;
 
 const SECRET_MAPPINGS = {
