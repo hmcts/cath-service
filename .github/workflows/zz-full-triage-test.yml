@@ -1,7 +1,6 @@
 # TEMPORARY. Runs the real detect and triage jobs from watchdog.yml, copied verbatim
-# except for the trigger, the evaluation window and the pull-request base. Proves the
-# write path that nothing else has exercised: tracking issues, Claude committing, the
-# outcome read from git, and the draft pull request.
+# except for the trigger, the window and the pull-request base. Proves the write path:
+# tracking issues, Claude committing, the outcome read from git, and the draft PR.
 #
 # Delete this file, and close whatever it opens, once the result is recorded.
 
@@ -10,7 +9,7 @@ name: zz Full triage test
 on:
   pull_request:
     paths:
-      - .github/workflows/zz-full-triage-test.yml
+      - '.github/workflows/zz-full-triage-test.yml'
   workflow_dispatch:
 
 concurrency:
@@ -59,7 +58,7 @@ jobs:
         uses: hmcts/cnp-githubactions-library/appinsights-health-check@feat/appinsights-health-check-and-slack-notify
         with:
           config-path: .github/watchdog.yml
-          window: 2h
+          window: 6h
           max-findings: 3
 
       # always(): a failed run must not lose the state, or the next run re-reports
@@ -449,6 +448,17 @@ jobs:
                 ...context.repo, issue_number: finding.issue, body,
               });
             }
+
+      # This job authenticates to AWS for Bedrock, which leaves it with no Azure
+      # session — the login in `detect` does not carry across jobs. Without this the
+      # step below fails with "Please run 'az login'", at the very end of the run.
+      - name: Azure login
+        if: always()
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
 
       - name: Load the Slack webhook
         if: always()
