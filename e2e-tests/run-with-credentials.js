@@ -43,9 +43,9 @@ const SECRET_MAPPINGS = {
   'sso-sg-admin-local': 'SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID',
   'cft-idam-client-secret': 'CFT_IDAM_CLIENT_SECRET',
   'app-tenant': 'AZURE_TENANT_ID',
-  'app-pip-data-management-id': 'AZURE_API_CLIENT_ID',
-  'app-pip-data-management-pwd': 'AZURE_API_CLIENT_SECRET',
-  'app-pip-data-management-scope': 'APP_PIP_DATA_MANAGEMENT_SCOPE',
+  'cath-service-api-client-id': 'CATH_SERVICE_API_CLIENT_ID',
+  'cath-service-api-client-secret': 'CATH_SERVICE_API_CLIENT_SECRET',
+  'cath-service-api-client-scope': 'CATH_SERVICE_API_CLIENT_SCOPE',
 };
 
 async function loadCredentialsFromAzure() {

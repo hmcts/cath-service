@@ -1,4 +1,3 @@
-import config from "config";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import jwksClient from "jwks-rsa";
@@ -52,24 +51,13 @@ export function authenticateApi() {
 }
 
 async function validateToken(token: string): Promise<any> {
-  // Try to get from config (Key Vault), fallback to environment variables
-  let tenantId: string | undefined;
-  let clientId: string | undefined;
-
-  try {
-    tenantId = config.get<string>("AZURE_TENANT_ID");
-    clientId = config.get<string>("AZURE_API_CLIENT_ID");
-  } catch {
-    // Config not found, use environment variables
-    tenantId = process.env.AZURE_TENANT_ID;
-    // Use AZURE_API_CLIENT_ID (CI/production) or fall back to AZURE_CLIENT_ID (local)
-    clientId = process.env.AZURE_API_CLIENT_ID || process.env.AZURE_CLIENT_ID;
-  }
+  // Key Vault secrets are injected into process.env by the properties volume,
+  // keyed by the alias declared in apps/api/helm/values.yaml
+  const tenantId = process.env.AZURE_TENANT_ID;
+  const clientId = process.env.CATH_SERVICE_API_CLIENT_ID;
 
   if (!tenantId || !clientId) {
-    throw new Error(
-      "Azure AD configuration not found. Ensure AZURE_TENANT_ID and AZURE_API_CLIENT_ID (or AZURE_CLIENT_ID) are set in Key Vault or environment variables."
-    );
+    throw new Error("Azure AD configuration not found. Ensure AZURE_TENANT_ID and CATH_SERVICE_API_CLIENT_ID are set in Key Vault or environment variables.");
   }
 
   // Create JWKS client to fetch Azure AD public keys

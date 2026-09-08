@@ -21,10 +21,10 @@ nodejs:
           alias: DATABASE_URL
         - name: app-tenant-id
           alias: AZURE_TENANT_ID
-        - name: app-pip-data-management-id
-          alias: AZURE_CLIENT_ID
-        - name: app-pip-data-management-scope
-          alias: AZURE_SCOPE
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-scope
+          alias: CATH_SERVICE_API_CLIENT_SCOPE
         - name: xhibit-s3-access-key
           alias: AWS_ACCESS_KEY_ID
         - name: xhibit-s3-access-key-secret

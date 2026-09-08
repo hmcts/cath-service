@@ -11,9 +11,9 @@ The following secrets must be configured in your GitHub repository settings (`Se
 | Secret Name | Description | Used By |
 |------------|-------------|---------|
 | `APP_TENANT_ID` | Azure AD Tenant ID | API authentication |
-| `APP_PIP_DATA_MANAGEMENT_ID` | Azure AD Application Client ID | API authentication |
-| `APP_PIP_DATA_MANAGEMENT_PWD` | Azure AD Application Client Secret | API authentication |
-| `APP_PIP_DATA_MANAGEMENT_SCOPE` | Azure AD Application Scope | API authentication |
+| `CATH_SERVICE_API_CLIENT_ID` | Azure AD Application Client ID | API authentication |
+| `CATH_SERVICE_API_CLIENT_SECRET` | Azure AD Application Client Secret | API authentication |
+| `CATH_SERVICE_API_CLIENT_SCOPE` | Azure AD Application Scope | API authentication |
 
 ### GOV.UK Notify (Email Notifications)
 
@@ -98,9 +98,9 @@ The secrets are mapped to the following environment variables in the GitHub Acti
 ```yaml
 # API Authentication
 AZURE_TENANT_ID: ${{ secrets.APP_TENANT_ID }}
-AZURE_API_CLIENT_ID: ${{ secrets.APP_PIP_DATA_MANAGEMENT_ID }}
-AZURE_API_CLIENT_SECRET: ${{ secrets.APP_PIP_DATA_MANAGEMENT_PWD }}
-APP_PIP_DATA_MANAGEMENT_SCOPE: ${{ secrets.APP_PIP_DATA_MANAGEMENT_SCOPE }}
+CATH_SERVICE_API_CLIENT_ID: ${{ secrets.CATH_SERVICE_API_CLIENT_ID }}
+CATH_SERVICE_API_CLIENT_SECRET: ${{ secrets.CATH_SERVICE_API_CLIENT_SECRET }}
+CATH_SERVICE_API_CLIENT_SCOPE: ${{ secrets.CATH_SERVICE_API_CLIENT_SCOPE }}
 
 # GOV.UK Notify
 GOVUK_NOTIFY_API_KEY: ${{ secrets.GOVUK_NOTIFY_API_KEY }}
