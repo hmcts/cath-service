@@ -1,0 +1,193 @@
+# TEMPORARY. Proves hmcts/cnp-githubactions-library#38 works on a real runner
+# before that PR is merged. Delete this file once it has served its purpose.
+#
+# Everything so far has been tested by running the action's script directly with
+# environment variables set by hand. That leaves the composite-action wrapper
+# unproven: the inputs-to-env mapping, GITHUB_ACTION_PATH resolution, acquiring the
+# Azure token on a runner, and output propagation to job outputs. This exercises
+# exactly those.
+
+name: zz Action smoke test
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/zz-action-smoke-test.yml'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  health-check:
+    name: appinsights-health-check
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      breached: ${{ steps.check.outputs.breached }}
+      deferred: ${{ steps.check.outputs.deferred-count }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Run the health check through the action
+        id: check
+        uses: hmcts/cnp-githubactions-library/appinsights-health-check@feat/appinsights-health-check-and-slack-notify
+        with:
+          config-path: .github/watchdog.yml
+          window: 2h
+          max-findings: 2
+
+      - name: Assert the action produced usable outputs
+        env:
+          BREACHED: ${{ steps.check.outputs.breached }}
+          FINDINGS: ${{ steps.check.outputs.findings }}
+          FINDINGS_PATH: ${{ steps.check.outputs.findings-path }}
+          DEFERRED: ${{ steps.check.outputs.deferred-count }}
+          RESOLVED: ${{ steps.check.outputs.resolved }}
+        run: |
+          set -euo pipefail
+
+          fail() { echo "::error::$1"; exit 1; }
+
+          echo "breached=$BREACHED deferred=$DEFERRED"
+
+          case "$BREACHED" in
+            true|false) ;;
+            *) fail "breached should be true or false, got '$BREACHED'" ;;
+          esac
+
+          jq -e 'type == "array"' <<<"$FINDINGS" >/dev/null \
+            || fail "findings is not a JSON array: $FINDINGS"
+          jq -e 'type == "array"' <<<"$RESOLVED" >/dev/null \
+            || fail "resolved is not a JSON array: $RESOLVED"
+
+          [ -s "$FINDINGS_PATH" ] || fail "no verdict artefact at '$FINDINGS_PATH'"
+
+          # The artefact is what the triage job feeds to Claude, so its shape matters.
+          jq -e '.verdicts | length == 14' "$FINDINGS_PATH" >/dev/null \
+            || fail "expected 14 verdicts, got $(jq '.verdicts | length' "$FINDINGS_PATH")"
+          jq -e '[.verdicts[] | select(.query == null or .rule == null)] | length == 0' "$FINDINGS_PATH" >/dev/null \
+            || fail "some verdicts are missing query or rule"
+
+          echo "Checks that fired:"
+          jq -r '.verdicts[] | select(.fired) | "  \(.id): \(.observed)"' "$FINDINGS_PATH"
+
+          echo "All outputs well-formed."
+
+  # A query that cannot run must fail the action rather than report healthy. That is
+  # the property the whole watchdog depends on, so it is worth proving on a runner
+  # and not only locally.
+  fails-loudly-on-a-bad-query:
+    name: fails on a broken query
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Write a config with invalid KQL
+        run: |
+          cat > /tmp/broken.yml <<'YAML'
+          app-insights:
+            app-id: 1d78d448-ad9c-4ea1-a052-08d685b4d6bc
+          checks:
+            - id: deliberately-broken
+              rule: { rows: '> 0' }
+              query: "this is not valid kql |||"
+          YAML
+
+      - name: Run the action, expecting failure
+        id: broken
+        continue-on-error: true
+        uses: hmcts/cnp-githubactions-library/appinsights-health-check@feat/appinsights-health-check-and-slack-notify
+        with:
+          config-path: /tmp/broken.yml
+
+      - name: Assert it failed and reported nothing as healthy
+        env:
+          OUTCOME: ${{ steps.broken.outcome }}
+          BREACHED: ${{ steps.broken.outputs.breached }}
+        run: |
+          set -euo pipefail
+          echo "outcome=$OUTCOME breached='$BREACHED'"
+          [ "$OUTCOME" = "failure" ] || { echo "::error::a broken query should fail the action, got '$OUTCOME'"; exit 1; }
+          [ -z "$BREACHED" ] || { echo "::error::a failed run must not emit breached, got '$BREACHED'"; exit 1; }
+          echo "Correctly failed without reporting a verdict."
+
+  slack-notify:
+    name: slack-notify
+    needs: [health-check]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Load the Slack webhook
+        run: |
+          set -euo pipefail
+          webhook=$(az keyvault secret show --vault-name cath-aat \
+            --name slack-webhook-url --query value -o tsv)
+          echo "::add-mask::$webhook"
+          echo "SLACK_WEBHOOK_URL=$webhook" >> "$GITHUB_ENV"
+
+      - name: Post through the action
+        id: post
+        uses: hmcts/cnp-githubactions-library/slack-notify@feat/appinsights-health-check-and-slack-notify
+        with:
+          text: |
+            :test_tube: Smoke test for the watchdog actions — please ignore.
+            Health check reported breached=${{ needs.health-check.outputs.breached }}, deferred=${{ needs.health-check.outputs.deferred }}.
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View the run>
+
+      - name: Assert delivery was reported
+        env:
+          DELIVERED: ${{ steps.post.outputs.delivered }}
+        run: |
+          set -euo pipefail
+          echo "delivered=$DELIVERED"
+          [ "$DELIVERED" = "true" ] || { echo "::error::slack-notify reported delivered='$DELIVERED'"; exit 1; }
+          echo "Message delivered."
+
+  # Missing credentials must not fail the job by default, and must report
+  # delivered=false rather than silently claiming success.
+  slack-notify-without-credentials:
+    name: slack-notify degrades without credentials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post with no token or webhook
+        id: post
+        uses: hmcts/cnp-githubactions-library/slack-notify@feat/appinsights-health-check-and-slack-notify
+        with:
+          text: 'should not be delivered'
+
+      - name: Assert it reported failure without failing the job
+        env:
+          DELIVERED: ${{ steps.post.outputs.delivered }}
+        run: |
+          set -euo pipefail
+          echo "delivered=$DELIVERED"
+          [ "$DELIVERED" = "false" ] || { echo "::error::expected delivered=false, got '$DELIVERED'"; exit 1; }
+          echo "Degraded correctly."
