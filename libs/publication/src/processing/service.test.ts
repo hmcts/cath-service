@@ -1558,6 +1558,82 @@ describe("publication-processor", async () => {
       );
     });
 
+    it("should skip PDF generation but still generate Excel when source payload exceeds the PDF limit only", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(generateMagistratesPublicListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // ~3MB source: over the 2MB PDF gate, under the 10MB Excel gate
+      const oversizedForPdf = { big: "x".repeat(3 * 1024 * 1024) };
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999, jsonData: oversizedForPdf });
+
+      expect(generateMagistratesPublicListPdf).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBeUndefined();
+      expect(generateMagistratesPublicListExcel).toHaveBeenCalled();
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("PDF skipped generation: source payload"), { artefactId: "test-artefact-id" });
+      consoleLogSpy.mockRestore();
+    });
+
+    it("should skip both PDF and Excel generation when source payload exceeds the Excel limit and still send notifications", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 3,
+        sent: 3,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // ~11MB source: over both the PDF and Excel gates
+      const oversizedForExcel = { big: "x".repeat(11 * 1024 * 1024) };
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999, jsonData: oversizedForExcel });
+
+      expect(generateMagistratesPublicListPdf).not.toHaveBeenCalled();
+      expect(generateMagistratesPublicListExcel).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBeUndefined();
+      expect(result.excelPath).toBeUndefined();
+      expect(result.notificationsSent).toBe(3);
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("Excel skipped generation: source payload"), { artefactId: "test-artefact-id" });
+      consoleLogSpy.mockRestore();
+    });
+
+    it("should generate both PDF and Excel when source payload is within both limits", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(generateMagistratesPublicListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/mpl.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateMagistratesPublicListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      expect(generateMagistratesPublicListPdf).toHaveBeenCalled();
+      expect(generateMagistratesPublicListExcel).toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/path/to/mpl.pdf");
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
     it("should not fail when Excel generation returns an error", async () => {
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);

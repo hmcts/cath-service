@@ -51,6 +51,7 @@ import {
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -617,35 +618,50 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       });
     }
 
-    const pdfResult = await generatePublicationPdf({
-      artefactId,
-      listTypeId,
-      contentDate,
-      locale,
-      locationId,
-      jsonData,
-      provenance,
-      displayFrom,
-      displayTo,
-      logPrefix
-    });
+    const payloadBytes = payloadSizeBytes(jsonData);
 
-    result.pdfPath = pdfResult.pdfPath;
-    result.pdfSizeBytes = pdfResult.sizeBytes;
-    result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+    let listTypeName = "";
 
-    const excelResult = await generatePublicationExcel({
-      artefactId,
-      listTypeName: pdfResult.listTypeName ?? "",
-      contentDate,
-      locale,
-      locationId,
-      jsonData,
-      logPrefix
-    });
+    if (payloadBytes < MAX_PDF_PAYLOAD_BYTES) {
+      const pdfResult = await generatePublicationPdf({
+        artefactId,
+        listTypeId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData,
+        provenance,
+        displayFrom,
+        displayTo,
+        logPrefix
+      });
 
-    if (excelResult.hasExcel) {
-      result.excelPath = `${artefactId}.xlsx`;
+      result.pdfPath = pdfResult.pdfPath;
+      result.pdfSizeBytes = pdfResult.sizeBytes;
+      result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+      listTypeName = pdfResult.listTypeName ?? "";
+    } else {
+      console.log(`${logPrefix} PDF skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_PDF_PAYLOAD_BYTES}`, { artefactId });
+      const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+      listTypeName = listType?.name ?? "";
+    }
+
+    if (payloadBytes < MAX_EXCEL_PAYLOAD_BYTES) {
+      const excelResult = await generatePublicationExcel({
+        artefactId,
+        listTypeName,
+        contentDate,
+        locale,
+        locationId,
+        jsonData,
+        logPrefix
+      });
+
+      if (excelResult.hasExcel) {
+        result.excelPath = `${artefactId}.xlsx`;
+      }
+    } else {
+      console.log(`${logPrefix} Excel skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_EXCEL_PAYLOAD_BYTES}`, { artefactId });
     }
   }
 
