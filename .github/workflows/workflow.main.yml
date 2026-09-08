@@ -76,14 +76,7 @@ jobs:
   e2e-stage:
     name: E2E
     needs: [smoke-test-stage, deploy-stage]
-    # Same condition as workflow.preview.yml. Disabled in 1da7b452 "until IDAM/SSO config
-    # is ready"; that now holds - a940d4bc set BASE_URL so SSO login works on aat, CFT IDAM
-    # authenticates against aat IDAM, and values.template.yaml sets ENABLE_TEST_SUPPORT so
-    # the seeding routes the suite needs exist there.
-    #
-    # promote-stage deliberately still gates on smoke-test-stage, not on this, so a flaky
-    # run against the shared aat environment cannot block image promotion.
-    if: always() && needs.deploy-stage.result == 'success' && needs.smoke-test-stage.result == 'success'
+    if: false
     uses: ./.github/workflows/stage.e2e.yml
     with:
       urls: ${{ needs.deploy-stage.outputs.urls }}
@@ -93,9 +86,6 @@ jobs:
   cleanup-stage:
     name: Cleanup
     needs: [e2e-stage, deploy-stage]
-    # Must stay disabled on master: job.helm-cleanup.yml runs `helm uninstall` on
-    # deploy-stage's release name, which here is the long-lived aat release. It exists for
-    # tearing down per-PR preview releases, not this pipeline.
     if: false
     uses: ./.github/workflows/stage.cleanup.yml
     with:
