@@ -23,13 +23,13 @@ nodejs:
   keyVaults:
     cath:
       secrets:
-        # Azure AD app registration for the pip-data-management API
+        # Azure AD app registration for the CaTH API (cath-service-api-non-prod)
         - name: app-tenant-id
           alias: AZURE_TENANT_ID
-        - name: app-pip-data-management-id
-          alias: AZURE_CLIENT_ID
-        - name: app-pip-data-management-scope
-          alias: AZURE_SCOPE
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-scope
+          alias: CATH_SERVICE_API_CLIENT_SCOPE
         # Xhibit S3 ingestion
         - name: xhibit-s3-access-key
           alias: AWS_ACCESS_KEY_ID
