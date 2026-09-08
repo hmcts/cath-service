@@ -316,12 +316,43 @@ jobs:
 
             Always write /tmp/watchdog/report.md, whether you changed anything or not.
             For each finding give: the fingerprint, your conclusion from the list above,
-            the reasoning, and what you changed. Keep it short enough to read in Slack —
-            a few lines per finding.
+            the reasoning, and what you changed. This goes on the tracking issues, so
+            length is not a concern here.
+
+            Then write /tmp/watchdog/notify.json. YOU decide whether this is worth
+            interrupting the team for, and you write what they read:
+
+              {
+                "notify": true,
+                "reason": "why you did or did not notify — for the run log, not Slack",
+                "message": "the Slack message"
+              }
+
+            Set notify to false when nothing here warrants a human's attention right
+            now: everything was noise, or a known upstream problem, or a bad query you
+            have already corrected. A quiet channel is what a healthy service looks
+            like, and every message that did not need sending makes the next real one
+            easier to ignore. Say so in `reason` and the run log will record it.
+
+            Set notify to true when someone should look. Then write `message` as if you
+            were the engineer who just investigated — because you are:
+
+            - Lead with what is actually wrong and what it means for users. Not
+              "3 findings, breached=true".
+            - Say what you concluded and why, in a sentence or two per problem.
+            - If it needs a human decision, say what the decision is.
+            - Link the tracking issues and any draft PR.
+            - Slack mrkdwn, not Markdown: *bold*, `code`, <url|link text>. No headings.
+            - Aim for something readable in ten seconds. Six lines is plenty; the
+              tracking issue holds the detail.
+            - No emoji beyond one leading severity marker if it helps.
+
+            Do not describe the watchdog's own mechanics — nobody needs the window size
+            or the check count. Report the service, not the tool.
           claude_args: |
             --dangerously-skip-permissions
             --max-turns 60
-            --append-system-prompt "You are triaging a production monitoring alert in a GitHub Action with no human present. Read @CLAUDE.md. Nobody can answer questions — if you are stuck, write the report and stop. Never push, never force, never merge. Changing nothing is preferable to guessing. Always write /tmp/watchdog/report.md."
+            --append-system-prompt "You are triaging a production monitoring alert in a GitHub Action with no human present. Read @CLAUDE.md. Nobody can answer questions — if you are stuck, write the report and stop. Never push, never force, never merge. Changing nothing is preferable to guessing. Always write /tmp/watchdog/report.md and /tmp/watchdog/notify.json."
             --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git status:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git rev-parse:*),Bash(git ls-files:*),Bash(jq:*),Bash(cat /tmp/watchdog/*)"
 
       - name: Determine outcome
@@ -447,15 +478,90 @@ jobs:
           echo "::add-mask::$webhook"
           echo "SLACK_WEBHOOK_URL=$webhook" >> "$GITHUB_ENV"
 
+      # Claude decides whether to notify and writes the message. This step only reads
+      # that decision, and falls back to a mechanical message when it cannot — a
+      # crashed or throttled triage must not pass for a quiet channel.
+      - name: Resolve the Slack message
+        id: message
+        if: always() && steps.claim.outputs.count != '0'
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          ISSUES: ${{ steps.claim.outputs.issues }}
+          COUNT: ${{ steps.claim.outputs.count }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+          CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+        run: |
+          set -uo pipefail
+
+          fallback() {
+            echo "::warning::posting a fallback message: $1"
+            {
+              echo "notify=true"
+              echo "text<<SLACKEOF"
+              printf ':rotating_light: *CaTH watchdog* — %s finding(s) on %s, but triage did not produce a summary (%s).\n' \
+                "$COUNT" "$ISSUES" "$1"
+              [ -n "${PR_URL:-}" ] && printf 'Draft fix: %s\n' "$PR_URL"
+              printf '<%s|View the run>\n' "$RUN_URL"
+              echo "SLACKEOF"
+            } >> "$GITHUB_OUTPUT"
+          }
+
+          if [ "$CLAUDE_OUTCOME" != "success" ]; then
+            fallback "triage exited $CLAUDE_OUTCOME"
+            exit 0
+          fi
+
+          if [ ! -s /tmp/watchdog/notify.json ]; then
+            fallback "no notify.json was written"
+            exit 0
+          fi
+
+          if ! jq -e '.notify | type == "boolean"' /tmp/watchdog/notify.json >/dev/null 2>&1; then
+            fallback "notify.json is malformed"
+            exit 0
+          fi
+
+          reason=$(jq -r '.reason // "(none given)"' /tmp/watchdog/notify.json)
+
+          if [ "$(jq -r .notify /tmp/watchdog/notify.json)" != "true" ]; then
+            echo "notify=false" >> "$GITHUB_OUTPUT"
+            echo "Not notifying. Claude's reason: ${reason}"
+            {
+              echo "### Watchdog: not notifying"
+              echo ""
+              echo "${reason}"
+              echo ""
+              echo "Findings are still recorded on ${ISSUES}."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          text=$(jq -r '.message // ""' /tmp/watchdog/notify.json)
+          if [ -z "$text" ]; then
+            fallback "notify was true but message was empty"
+            exit 0
+          fi
+
+          # Slack rejects very long text outright, so cap it. The tracking issue holds
+          # the full report either way.
+          if [ "${#text}" -gt 2500 ]; then
+            text="${text:0:2500}"$'\n'"_(truncated — full detail on ${ISSUES})_"
+          fi
+
+          {
+            echo "notify=true"
+            echo "text<<SLACKEOF"
+            printf '%s\n' "$text"
+            echo "SLACKEOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Notifying. Claude's reason: ${reason}"
+
       - name: Post to Slack
-        if: always() && env.SLACK_WEBHOOK_URL != ''
+        if: always() && env.SLACK_WEBHOOK_URL != '' && steps.message.outputs.notify == 'true'
         uses: hmcts/cnp-githubactions-library/slack-notify@main
         with:
           # No channel input: a webhook posts only to the channel it was created for.
-          text: |
-            :rotating_light: *CaTH watchdog* — ${{ steps.claim.outputs.count }} finding(s): ${{ steps.claim.outputs.issues }}
-            ${{ steps.pr.outputs.url && format('Draft fix: {0}', steps.pr.outputs.url) || 'No code change proposed.' }}
-            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View the run>
+          text: ${{ steps.message.outputs.text }}
 
       - name: Fail on an incomplete attempt
         # A dirty tree is worth a red run. no-change is a legitimate outcome and stays
