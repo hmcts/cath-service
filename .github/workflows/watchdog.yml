@@ -170,6 +170,17 @@ jobs:
             const resolved = new Set(JSON.parse(process.env.RESOLVED || '[]'));
             const { owner, repo } = context.repo;
 
+            // Created up front rather than relying on issues.create to invent it, so
+            // the label query below cannot silently match nothing on a fresh repo.
+            try {
+              await github.rest.issues.createLabel({
+                owner, repo, name: 'claude:watchdog',
+                color: 'D93F0B', description: 'Tracked by the Application Insights watchdog',
+              });
+            } catch (error) {
+              if (error.status !== 422) throw error;   // 422 = already exists
+            }
+
             // One tracking issue per fingerprint is the dedup gate for triage, in the
             // same spirit as renovate-autofix's label. The detect job already applies a
             // re-notify window; this stops two concurrent runs both triaging the same
@@ -403,6 +414,13 @@ jobs:
             echo
             echo '⚠️ Speculative, written unattended from telemetry alone. Verify the diagnosis before merging, not just the diff.'
           } > /tmp/watchdog/pr-body.md
+
+          # gh refuses a label that does not exist, and it refuses it after Claude has
+          # already done the work, so create it idempotently rather than lose the run
+          # to repo configuration.
+          gh label create "claude:watchdog-fix" --repo "$REPO" \
+            --color B60205 --description "Speculative fix opened by the watchdog" \
+            2>/dev/null || true
 
           # Draft, always: branch protection is the gate this must not pass.
           url=$(gh pr create --repo "$REPO" --draft \
