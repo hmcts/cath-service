@@ -123,7 +123,7 @@ describe("validateLocationMetadataInput", () => {
     ["welshCautionMessage", "Welsh caution message"],
     ["noListMessage", "English no list message"],
     ["welshNoListMessage", "Welsh no list message"]
-  ])("should return invalid when %s contains HTML tags", (field, label) => {
+  ])("should return invalid when %s contains a tag outside the allowlist", (field, label) => {
     const result = validateLocationMetadataInput({
       locationId: 1,
       [field]: '<img src="x" onerror="alert(1)">'
@@ -131,36 +131,54 @@ describe("validateLocationMetadataInput", () => {
 
     expect(result).toEqual({
       valid: false,
-      error: `${label} contains HTML tags which are not allowed`
+      error: `${label} contains HTML tags which cannot be used: img`
     });
   });
 
-  it("should return invalid when a script tag is embedded in otherwise valid text", () => {
+  it("should name every disallowed tag in the message", () => {
     const result = validateLocationMetadataInput({
       locationId: 1,
-      cautionMessage: "Please note <script>alert(1)</script> the court is closed"
+      cautionMessage: "<div>Please note <script>alert(1)</script> the court is closed</div>"
     });
 
     expect(result).toEqual({
       valid: false,
-      error: "English caution message contains HTML tags which are not allowed"
+      error: "English caution message contains HTML tags which cannot be used: div, script"
     });
   });
 
-  it("should return invalid when a field other than the first contains HTML tags", () => {
+  it("should return invalid when a field other than the first contains a disallowed tag", () => {
     const result = validateLocationMetadataInput({
       locationId: 1,
       cautionMessage: "Plain text caution",
-      welshNoListMessage: "<b>Dim rhestr</b>"
+      welshNoListMessage: "<marquee>Dim rhestr</marquee>"
     });
 
     expect(result).toEqual({
       valid: false,
-      error: "Welsh no list message contains HTML tags which are not allowed"
+      error: "Welsh no list message contains HTML tags which cannot be used: marquee"
     });
   });
 
-  it("should return valid for plain text containing punctuation but no angle brackets", () => {
+  // The formatting legacy CaTH courts already use. Rejecting it would strip the bold text
+  // and paragraph breaks that migrated location_metadata rows depend on.
+  it.each([
+    ["bold", "<strong>Court closed</strong>"],
+    ["legacy bold", "<b>Court closed</b>"],
+    ["paragraphs", "<p>Closed today</p><p>Reopens Monday</p>"],
+    ["line breaks", "Closed today<br />Reopens Monday"],
+    ["lists", "<ul><li>Monday</li><li>Tuesday</li></ul>"],
+    ["links", '<a href="https://www.gov.uk">Find a court</a>']
+  ])("should return valid for %s", (_label, markup) => {
+    const result = validateLocationMetadataInput({
+      locationId: 1,
+      cautionMessage: markup
+    });
+
+    expect(result).toEqual({ valid: true });
+  });
+
+  it("should return valid for plain text containing punctuation", () => {
     const result = validateLocationMetadataInput({
       locationId: 1,
       cautionMessage: "Hearings start at 10am. Contact the court on 0300 123 4567 (option 2)."
@@ -169,18 +187,15 @@ describe("validateLocationMetadataInput", () => {
     expect(result).toEqual({ valid: true });
   });
 
-  // Matches the HTML_TAG_REGEX behaviour already applied to jurisdiction, region and
-  // list-type names: any angle-bracket pair is rejected rather than parsed as markup.
-  it("should return invalid when a message contains an angle bracket pair that is not real markup", () => {
+  // A bare "<" followed by a space is not how a browser opens a tag, so admins are not
+  // blocked from writing comparisons in prose.
+  it("should return valid when a message uses angle brackets as comparison operators", () => {
     const result = validateLocationMetadataInput({
       locationId: 1,
       cautionMessage: "Hearings start at < 10am and finish > 4pm"
     });
 
-    expect(result).toEqual({
-      valid: false,
-      error: "English caution message contains HTML tags which are not allowed"
-    });
+    expect(result).toEqual({ valid: true });
   });
 
   it("should work with UpdateLocationMetadataInput (no locationId)", () => {

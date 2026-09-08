@@ -1,11 +1,10 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { createLocationMetadata, getLocationMetadataByLocationId, updateLocationMetadata } from "@hmcts/location";
 import type { LocationMetadataSession } from "@hmcts/system-admin-pages";
+import { findDisallowedHtmlTags } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
-
-const HTML_TAG_REGEX = /<[^<>]*>/;
 
 const MESSAGE_FIELDS = ["cautionMessage", "welshCautionMessage", "noListMessage", "welshNoListMessage"] as const;
 
@@ -28,11 +27,18 @@ const hasAtLeastOneMessage = (formData: ReturnType<typeof extractFormData>) =>
   hasNonEmptyValue(formData.noListMessage) ||
   hasNonEmptyValue(formData.welshNoListMessage);
 
-const findFieldWithHtmlTag = (formData: ReturnType<typeof extractFormData>) =>
-  MESSAGE_FIELDS.find((field) => {
+const findDisallowedTags = (formData: ReturnType<typeof extractFormData>) => {
+  for (const field of MESSAGE_FIELDS) {
     const value = formData[field];
-    return value && HTML_TAG_REGEX.test(value);
-  });
+    const tags = value ? findDisallowedHtmlTags(value) : [];
+
+    if (tags.length > 0) {
+      return { field, tags };
+    }
+  }
+
+  return undefined;
+};
 
 const getHandler = async (req: Request, res: Response) => {
   const language = getLanguage(req);
@@ -94,9 +100,9 @@ const postHandler = async (req: Request, res: Response) => {
     return renderWithError(content.atLeastOneMessageRequired);
   }
 
-  const fieldWithHtmlTag = findFieldWithHtmlTag(formData);
-  if (fieldWithHtmlTag) {
-    return renderWithError(content.htmlTagsNotAllowed(content[`${fieldWithHtmlTag}Label`]), `#${fieldWithHtmlTag}`);
+  const disallowed = findDisallowedTags(formData);
+  if (disallowed) {
+    return renderWithError(content.htmlTagsNotAllowed(content[`${disallowed.field}Label`], disallowed.tags), `#${disallowed.field}`);
   }
 
   try {

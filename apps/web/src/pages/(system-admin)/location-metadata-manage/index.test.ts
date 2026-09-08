@@ -199,7 +199,8 @@ describe("location-metadata-manage page", () => {
       ["welshCautionMessage", "Welsh caution message"],
       ["noListMessage", "English no list message"],
       ["welshNoListMessage", "Welsh no list message"]
-    ])("should reject %s when it contains HTML tags", async (field, label) => {
+    ])("should reject %s when it contains a tag outside the allowlist", async (field, label) => {
+      // Arrange
       req.session = {
         locationMetadata: {
           locationId: 123,
@@ -213,18 +214,21 @@ describe("location-metadata-manage page", () => {
       };
       (getLocationMetadataByLocationId as any).mockResolvedValue(null);
 
+      // Act
       await postHandler(req as Request, res as Response);
 
+      // Assert
       expect(createLocationMetadata).not.toHaveBeenCalled();
       expect(res.render).toHaveBeenCalledWith(
         "location-metadata-manage/index",
         expect.objectContaining({
-          errors: [{ text: `${label} contains HTML tags which are not allowed`, href: `#${field}` }]
+          errors: [{ text: `${label} contains HTML tags which cannot be used: img`, href: `#${field}` }]
         })
       );
     });
 
-    it("should not update metadata when a message contains HTML tags", async () => {
+    it("should not update metadata when a message contains a disallowed tag", async () => {
+      // Arrange
       req.session = {
         locationMetadata: {
           locationId: 123,
@@ -238,9 +242,59 @@ describe("location-metadata-manage page", () => {
       };
       (getLocationMetadataByLocationId as any).mockResolvedValue({ cautionMessage: "Existing" });
 
+      // Act
       await postHandler(req as Request, res as Response);
 
+      // Assert
       expect(updateLocationMetadata).not.toHaveBeenCalled();
+    });
+
+    it("should store allowed formatting exactly as authored", async () => {
+      // Arrange
+      req.session = {
+        locationMetadata: {
+          locationId: 123,
+          locationName: "Test Court",
+          locationWelshName: "Llys Prawf"
+        }
+      } as any;
+      req.body = {
+        action: "create",
+        cautionMessage: "<p><strong>Court closed</strong></p><p>Reopens Monday</p>"
+      };
+      (getLocationMetadataByLocationId as any).mockResolvedValue(null);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(createLocationMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cautionMessage: "<p><strong>Court closed</strong></p><p>Reopens Monday</p>"
+        })
+      );
+    });
+
+    it("should accept a message using angle brackets as comparison operators", async () => {
+      // Arrange
+      req.session = {
+        locationMetadata: {
+          locationId: 123,
+          locationName: "Test Court",
+          locationWelshName: "Llys Prawf"
+        }
+      } as any;
+      req.body = {
+        action: "create",
+        cautionMessage: "Hearings start at < 10am and finish > 4pm"
+      };
+      (getLocationMetadataByLocationId as any).mockResolvedValue(null);
+
+      // Act
+      await postHandler(req as Request, res as Response);
+
+      // Assert
+      expect(createLocationMetadata).toHaveBeenCalled();
     });
 
     it("should create metadata and redirect to success page", async () => {

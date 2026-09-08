@@ -1,6 +1,5 @@
+import { findDisallowedHtmlTags } from "@hmcts/web-core";
 import type { CreateLocationMetadataInput, UpdateLocationMetadataInput } from "../repository/model.js";
-
-const HTML_TAG_REGEX = /<[^<>]*>/;
 
 const MESSAGE_FIELD_LABELS: Record<MessageField, string> = {
   cautionMessage: "English caution message",
@@ -24,19 +23,26 @@ export function validateLocationMetadataInput(data: CreateLocationMetadataInput 
     };
   }
 
-  // These messages are rendered on the public summary-of-publications page. Rejecting
-  // tags on write keeps stored data plain text, so the template's autoescaping is not
-  // the only thing standing between an admin-authored string and a script execution.
-  const fieldWithTag = MESSAGE_FIELDS.find((field) => {
+  // These messages are rendered as markup on the public summary-of-publications page,
+  // where the sanitiseHtml filter discards anything outside the allowlist. Rejecting here
+  // as well means admins are told their markup will not appear, rather than having it
+  // silently dropped at render time. Nothing is rewritten — the stored value stays exactly
+  // as authored, so widening the allowlist later brings existing content back.
+  for (const field of MESSAGE_FIELDS) {
     const value = data[field];
-    return value && HTML_TAG_REGEX.test(value);
-  });
 
-  if (fieldWithTag) {
-    return {
-      valid: false,
-      error: `${MESSAGE_FIELD_LABELS[fieldWithTag]} contains HTML tags which are not allowed`
-    };
+    if (!value) {
+      continue;
+    }
+
+    const disallowedTags = findDisallowedHtmlTags(value);
+
+    if (disallowedTags.length > 0) {
+      return {
+        valid: false,
+        error: `${MESSAGE_FIELD_LABELS[field]} contains HTML tags which cannot be used: ${disallowedTags.join(", ")}`
+      };
+    }
   }
 
   return { valid: true };
