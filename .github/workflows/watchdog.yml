@@ -466,6 +466,17 @@ jobs:
               });
             }
 
+      # This job authenticates to AWS for Bedrock, which leaves it with no Azure
+      # session — the login in `detect` does not carry across jobs. Without this the
+      # step below fails with "Please run 'az login'", at the very end of the run.
+      - name: Azure login
+        if: always()
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
       - name: Load the Slack webhook
         if: always()
         run: |
