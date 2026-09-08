@@ -15,7 +15,10 @@ jobs:
     name: Detect Code Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^(yarn\\.lock|apps/|libs/|helm/)"
+      # e2e-tests/ is included because the E2E stage can only run against a
+      # deployed preview environment, and Deploy cascades off Build. Without it a
+      # PR that only changes an E2E test skips the very tests it changed.
+      paths: "^(yarn\\.lock|apps/|libs/|helm/|e2e-tests/)"
       cache-key: code-pr-${{ github.event.pull_request.number }}
 
   detect-infra-changes:

@@ -44,6 +44,12 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
+  # This list is duplicated in helm/cath-service/values.preview.template.yaml, which the
+  # preview deploy uses. Helm replaces arrays rather than merging them, so preview has to
+  # restate the whole list to swap SSO_CLIENT_ID/SSO_CLIENT_SECRET for their -dev
+  # equivalents. Add or remove an entry here and you must do the same there;
+  # values.yaml.test.ts fails the build otherwise. Never use a -dev secret in this file:
+  # it is what aat and Flux deploy from.
   keyVaults:
     cath:
       secrets:
