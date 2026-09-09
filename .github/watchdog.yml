@@ -313,4 +313,16 @@ checks:
 # Known-benign fingerprints. Every entry needs a reason — the action rejects the
 # config otherwise. Review periodically: anything that has not fired in 90 days is
 # probably hiding something that no longer happens, or that has changed shape.
-suppressions: []
+#
+# Matching is exact string equality, and the exceptions problemId carries the throw
+# site inside @azure/core-client, so a version bump moves the line number and quietly
+# stops these matching. Recheck them after a Renovate bump of that package.
+suppressions:
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:BlobNotFound at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: downloadBlob and getBlobProperties treat 404 as absent and return null, and getFileBuffer probes up to three blob names by design, so a miss is an expected step rather than a failure — real blob loss still shows up under dependency-failures.
+  - fingerprint: "exceptions:BlobNotFound at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
+    reason: Same as the web entry above — the api hits the same exists-check paths. Not in the triage that produced the other three, because it happened not to fire in that window.
