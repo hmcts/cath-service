@@ -58,14 +58,19 @@ jobs:
           allow-no-subscriptions: true
 
       # Deduplication is what stands between the team and 96 Slack messages a day, and
-      # it only works if state survives between runs. The key is per-run so the save
-      # always succeeds; the restore-keys prefix is what actually finds the last one.
+      # it only works if state survives between runs. The key is per-attempt so the save
+      # never collides; the restore-keys prefix is what actually finds the last one.
+      #
+      # run_attempt as well as run_id, because re-running a workflow reuses run_id and
+      # caches are immutable — without it a re-run cannot persist what it newly found.
+      # The prefix is scoped to this monitor so a second one added later cannot read
+      # this one's state and report its fingerprints as resolved.
       - name: Restore watchdog state
         uses: actions/cache/restore@v5
         with:
           path: .watchdog-state.json
-          key: watchdog-state-${{ github.run_id }}
-          restore-keys: watchdog-state-
+          key: watchdog-state-aat-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: watchdog-state-aat-
 
       - name: Run health checks
         id: check
@@ -85,13 +90,13 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: .watchdog-state.json
-          key: watchdog-state-${{ github.run_id }}
+          key: watchdog-state-aat-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload the verdict artefact
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: watchdog-findings-${{ github.run_id }}
+          name: watchdog-findings-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.check.outputs.findings-path }}
           if-no-files-found: ignore
           retention-days: 14
@@ -141,7 +146,7 @@ jobs:
       - name: Download the verdict artefact
         uses: actions/download-artifact@v6
         with:
-          name: watchdog-findings-${{ github.run_id }}
+          name: watchdog-findings-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/watchdog
 
       # Written to a file rather than interpolated into the prompt. Exception messages
