@@ -74,10 +74,10 @@ jobs:
 
       - name: Run health checks
         id: check
-        # TODO: repin to a tag once the library PR is merged and released. Running a
-        # scheduled job off a moving ref means someone else's merge can change what
-        # this does.
-        uses: hmcts/cnp-githubactions-library/appinsights-health-check@main
+        # Pinned to a commit, not @main. cnp-githubactions-library has no tags yet, and
+        # a scheduled job on a moving ref means someone else's merge silently changes
+        # what this does. Bump deliberately when there is a reason to.
+        uses: hmcts/cnp-githubactions-library/appinsights-health-check@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
           config-path: .github/watchdog.yml
           window: ${{ inputs.window || '15m' }}
@@ -592,7 +592,7 @@ jobs:
 
       - name: Post to Slack
         if: always() && env.SLACK_WEBHOOK_URL != '' && steps.message.outputs.notify == 'true'
-        uses: hmcts/cnp-githubactions-library/slack-notify@main
+        uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
           # No channel input: a webhook posts only to the channel it was created for.
           text: ${{ steps.message.outputs.text }}
@@ -636,6 +636,6 @@ jobs:
 
       - name: Post to Slack
         if: env.SLACK_WEBHOOK_URL != ''
-        uses: hmcts/cnp-githubactions-library/slack-notify@main
+        uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
           text: ":white_check_mark: *CaTH watchdog* — recovered: `${{ join(fromJSON(needs.detect.outputs.resolved), '`, `') }}`"
