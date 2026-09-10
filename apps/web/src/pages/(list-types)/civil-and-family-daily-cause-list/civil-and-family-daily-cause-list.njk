@@ -76,12 +76,6 @@
               <p class="govuk-body">{{ line }}</p>
             {% endif %}
           {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.town }}</p>
-          {% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}
-            <p class="govuk-body">{{ courtHouse.courtHouseAddress.county }}</p>
-          {% endif %}
           {% if courtHouse.courtHouseAddress.postCode | length %}
             <p class="govuk-body">{{ courtHouse.courtHouseAddress.postCode }}</p>
           {% endif %}
