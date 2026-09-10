@@ -525,10 +525,10 @@ describe("publication-processor", async () => {
       expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-firm.pdf", sizeBytes: 2048, exceedsMaxSize: false }));
     });
 
-    it("should generate PDF for Crown Warned List", async () => {
+    it("should generate PDF for Crown Advance List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CROWN_WARNED_LIST",
-        friendlyName: "Crown Warned List"
+        name: "CROWN_ADVANCED_PDDA_LIST",
+        friendlyName: "Crown Advance List"
       } as any);
       vi.mocked(generateCrownWarnedListPdf).mockResolvedValue({
         success: true,

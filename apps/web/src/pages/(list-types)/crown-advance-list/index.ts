@@ -12,7 +12,7 @@ export const GET = createListTypeHandler<CrownWarnedListData>({
   en,
   cy,
   validate: validateCrownWarnedList,
-  logPrefix: "crown-warned-list",
+  logPrefix: "crown-advance-list",
   checkAccess: true,
   render: async ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
@@ -22,6 +22,6 @@ export const GET = createListTypeHandler<CrownWarnedListData>({
       locale
     });
     const dataSource = PROVENANCE_LABELS[artefact.provenance] || artefact.provenance;
-    res.render("crown-warned-list", { en, cy, pageTitle: t.title, header, openJustice, groupedCategories, dataSource, t });
+    res.render("crown-advance-list", { en, cy, pageTitle: t.title, header, openJustice, groupedCategories, dataSource, t });
   }
 });

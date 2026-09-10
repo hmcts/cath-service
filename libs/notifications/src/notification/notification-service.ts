@@ -213,7 +213,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCrownFirmSummary as SummaryExtractor,
     format: formatCrownFirmSummaryForEmail
   },
-  CROWN_WARNED_LIST: {
+  CROWN_ADVANCED_PDDA_LIST: {
     extract: extractCrownWarnedSummary as SummaryExtractor,
     format: formatCrownWarnedSummaryForEmail
   },

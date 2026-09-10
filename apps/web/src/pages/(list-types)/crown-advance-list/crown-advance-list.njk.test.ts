@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TEMPLATE = "crown-warned-list.njk";
+const TEMPLATE = "crown-advance-list.njk";
 const webCoreViews = path.join(webCoreModuleRoot, "views");
 
 interface CaseOverrides {
@@ -88,7 +88,7 @@ beforeEach(() => {
   env = createTestEnvironment([__dirname, webCoreViews]);
 });
 
-describe("crown-warned-list template", () => {
+describe("crown-advance-list template", () => {
   describe("Locale consistency", () => {
     it("should have the same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());

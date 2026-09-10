@@ -71,7 +71,7 @@ describe("generateCrownWarnedListPdf", () => {
 
     vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
     mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
-    mockLoadTranslations.mockResolvedValue({ pageTitle: "Crown Warned List" });
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Crown Advance List" });
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",

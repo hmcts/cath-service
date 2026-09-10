@@ -1,5 +1,24 @@
 # Technical Plan — #957: Changes to Crown Warned list (Go-Live 1st Oct 2026)
 
+> **SCOPE NARROWED — 10 Sep 2026.** The ticket owner confirmed the service is not live, so
+> there is no data to preserve and no migration is needed. Scope was cut to the rename only:
+>
+> - **Done:** list type name, English and Welsh friendly names and `urlPath` in
+>   `list-type-data.ts`; the page's display titles; the page directory and template renamed to
+>   `crown-advance-list` so the new URL resolves; every name-keyed registration repointed
+>   (PDF generator registry, notification summary config, E2E seed, test fixtures).
+> - **Dropped:** the in-place SQL migration in §2.2 — the seeder soft-deletes the old row and
+>   inserts a new one, which is acceptable with no data. `list_types.id` therefore **changes**
+>   (verified locally: id 4 soft-deleted, new row at a new id).
+> - **Dropped:** the package/symbol rename in §2.3. `libs/list-types/crown-warned-list`,
+>   `@hmcts/crown-warned-list` and all exported symbols still carry the old name.
+> - **Dropped:** removing the "week commencing" opening sentence (AC 3) — left for a follow-up.
+> - **Untouched:** hearing types (AC 4), which were never specified.
+>
+> Sections below are kept as originally written for reference; where they conflict with the
+> list above, the list above is what shipped.
+
+
 ## 1. Technical Approach
 
 Three separable changes, all of which must ship in the **same release**:
