@@ -150,7 +150,7 @@ describe("select-account template", () => {
       const { $ } = render(env, TEMPLATE, { ...en });
 
       const linkParagraph = $(CREATE_ACCOUNT_LINK).parent();
-      expect(linkParagraph.is("p.govuk-body")).toBe(true);
+      expect(linkParagraph.is("p")).toBe(true);
       expect(linkParagraph.text().trim()).toBe(en.createAccountLink);
     });
 
@@ -165,7 +165,7 @@ describe("select-account template", () => {
     it("should render the user research notice in bold inside a paragraph", () => {
       const { $ } = render(env, TEMPLATE, { ...en });
 
-      const notice = $("p.govuk-body strong");
+      const notice = contentColumn($).find("p > strong");
       expect(notice).toHaveLength(1);
       expect(notice.text().trim()).toBe(en.userResearchText);
     });
@@ -194,7 +194,7 @@ describe("select-account template", () => {
       expect(contentColumn($).find("h2").text().trim()).toBe(cy.createAccountText);
       const createLink = $(CREATE_ACCOUNT_LINK);
       expect(createLink.text().trim()).toBe(cy.createAccountLink);
-      expect($("p.govuk-body strong").text().trim()).toBe(cy.userResearchText);
+      expect(contentColumn($).find("p > strong").text().trim()).toBe(cy.userResearchText);
     });
 
     it("should still render the heading, link and notice in the error state", () => {
@@ -209,7 +209,7 @@ describe("select-account template", () => {
       assertErrorSummary($, [en.errorMessage]);
       expect(contentColumn($).children("h2").text().trim()).toBe(en.createAccountText);
       expect($(CREATE_ACCOUNT_LINK).text().trim()).toBe(en.createAccountLink);
-      expect($("p.govuk-body strong").text().trim()).toBe(en.userResearchText);
+      expect(contentColumn($).find("p > strong").text().trim()).toBe(en.userResearchText);
     });
 
     it.each(["en", "cy"])("should not render any of the replaced create-account copy in %s", (locale) => {

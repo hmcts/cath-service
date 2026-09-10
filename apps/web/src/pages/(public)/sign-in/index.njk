@@ -54,13 +54,19 @@
       }) }}
     </form>
 
-    <h2 class="govuk-heading-s">{{ createAccountText }}</h2>
+    {# Typography matches the reference page, where all three lines render at
+       16px: the prompt and notice via govuk-body-s, and the link because it is a
+       bare <a> and govuk-link sets no font-size, so it inherits the 16px browser
+       default rather than the 19px of govuk-body. The govuk-!-font-weight-bold
+       is required because govuk-body-s sets font-weight:400, which would
+       otherwise strip the h2's bold. #}
+    <h2 class="govuk-body-s govuk-!-font-weight-bold">{{ createAccountText }}</h2>
 
-    <p class="govuk-body">
+    <p class="govuk-body-s">
       <a href="/create-media-account" class="govuk-link">{{ createAccountLink }}</a>
     </p>
 
-    <p class="govuk-body">
+    <p class="govuk-body-s">
       <strong>{{ userResearchText }}</strong>
     </p>
 
