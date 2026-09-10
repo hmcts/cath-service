@@ -1,0 +1,40 @@
+# Local Development Helm Values
+# This file is used when LOCAL_DEV=true is set in .env (local development only)
+# It references the cath-aat Key Vault (VAULT_URI_SUFFIX=aat in .env): the vault
+# URI is built as https://<keyVaults key>-<VAULT_URI_SUFFIX>.vault.azure.net/
+# For pipeline deployments, see values.yaml
+#
+# Deliberately omitted compared with values.yaml, because local infrastructure
+# (docker-compose) provides these and the root .env points at it:
+#   - postgres-url            -> local Postgres on localhost:5433
+#   - redis-url               -> local Redis on localhost:6380
+#   - storageaccount-*        -> Azurite on localhost:10000
+#   - app-insights-connection-string (no telemetry from local runs)
+# Pulling the storage secrets locally makes the API write blobs to the real AAT
+# storage account while the web app still reads Azurite, which breaks E2E tests.
+
+nodejs:
+  applicationPort: 3001
+  aadIdentityName: cath
+  environment:
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION: 5b5c31d0-27a3-466b-b750-bd1a858cd50f
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY: ac63ed12-c179-416d-b9af-83b2b37752bf
+    GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL: 42f65ada-6de0-45da-822a-9632f6f682fd
+  keyVaults:
+    cath:
+      secrets:
+        # Azure AD app registration for the CaTH API (cath-service-api-non-prod)
+        - name: app-tenant-id
+          alias: AZURE_TENANT_ID
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-scope
+          alias: CATH_SERVICE_API_CLIENT_SCOPE
+        # Xhibit S3 ingestion
+        - name: xhibit-s3-access-key
+          alias: AWS_ACCESS_KEY_ID
+        - name: xhibit-s3-access-key-secret
+          alias: AWS_SECRET_ACCESS_KEY
+        # GOV.UK Notify - test key so local runs never send real emails
+        - name: gov-uk-notify-test-api-key
+          alias: GOVUK_NOTIFY_API_KEY

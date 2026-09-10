@@ -131,15 +131,13 @@ test.describe
       await expect(page.locator(".govuk-error-summary")).toBeVisible();
       await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
 
-      // Step 7: Test "No" option redirects back to dashboard
+      // Step 7: Test "No" option redirects back to the delete-court page
       await page.click('input[value="no"]');
       await page.click('button:has-text("Continue")');
-      await page.waitForURL("**/system-admin-dashboard");
-      await expect(page.locator("h1")).toHaveText("System Admin Dashboard");
-
-      // Step 8: Navigate back to delete court and search again
-      await page.click('a:has-text("Delete Court")');
       await page.waitForURL("**/delete-court");
+      await expect(page.locator("h1")).toHaveText("Find the court to remove");
+
+      // Step 8: Search again
       const courtInput2 = page.getByRole("combobox", { name: /court or tribunal name/i });
       await courtInput2.fill("Delete Test Court B");
 
@@ -191,10 +189,10 @@ test.describe
       expect(successAccessibility.violations).toEqual([]);
     });
 
-    test("should block deletion of court with active subscriptions", async ({ page }) => {
+    test("user can clear blocking publications and subscriptions then delete the court", async ({ page }) => {
       // Create a dedicated test court with active data
-      const courtName = "Delete Test Court With Subs";
-      const courtWelshName = "Llys Prawf Dileu Gyda Thanysgrifiadau";
+      const courtName = "Delete Test Court With Data";
+      const courtWelshName = "Llys Prawf Dileu Gyda Data";
       const courtLocationId = await createTestCourt(courtName, courtWelshName);
       const prefixedCourtName = prefixName(courtName);
 
@@ -229,39 +227,72 @@ test.describe
         provenance: "MANUAL_UPLOAD"
       });
 
-      // Navigate to delete court
-      await page.click('a:has-text("Delete Court")');
-      await page.waitForURL("**/delete-court");
+      // Helper to search and reach the confirm page
+      const goToConfirm = async () => {
+        await page.click('a:has-text("Delete Court")');
+        await page.waitForURL("**/delete-court");
+        const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
+        await courtInput.waitFor({ state: "visible", timeout: 10000 });
+        await courtInput.fill(prefixedCourtName);
+        await selectAutocompleteOption(page, prefixedCourtName);
+        await page.click('button:has-text("Continue")');
+        await page.waitForURL("**/delete-court-confirm");
+        await page.click('input[value="yes"]');
+        await page.click('button:has-text("Continue")');
+      };
 
-      // Search for the test court (use prefixed name as that's how it was created)
-      const courtInput = page.getByRole("combobox", { name: /court or tribunal name/i });
-      await courtInput.waitFor({ state: "visible", timeout: 10000 });
-      await courtInput.fill(prefixedCourtName);
+      // Step 1: Publications block first (artefacts checked before subscriptions)
+      await goToConfirm();
+      await expect(page.locator(".govuk-error-summary__body")).toContainText("There are active artefacts for the given location");
 
-      // Wait for autocomplete to load and select option
-      await selectAutocompleteOption(page, prefixedCourtName);
+      // Accessibility on the blocked confirm page
+      const blockedAccessibility = await axeCheck(page).analyze();
+      expect(blockedAccessibility.violations).toEqual([]);
 
-      await page.click('button:has-text("Continue")');
-      await page.waitForURL("**/delete-court-confirm");
-
-      // Confirm deletion
+      // Step 2: Follow the delete-publications link and confirm deletion
+      await page.click('a:has-text("Delete all the publications for")');
+      await page.waitForURL("**/delete-court-publications");
       await page.click('input[value="yes"]');
       await page.click('button:has-text("Continue")');
 
-      // Should show error about active subscriptions or artefacts
-      await expect(page.locator(".govuk-error-summary")).toBeVisible();
+      // Lands on the publications success page with a confirmation panel
+      await page.waitForURL("**/delete-court-publications-success");
+      await expect(page.locator(".govuk-panel--confirmation")).toContainText("Court publication(s) has been deleted");
 
-      // Error should be one of these
-      const errorText = await page.locator(".govuk-error-summary__body").textContent();
-      const hasExpectedError =
-        errorText?.includes("There are active subscriptions for the given location") ||
-        errorText?.includes("There are active artefacts for the given location");
+      // Follow "Continue deletion of {court}" back to the confirm page
+      await page.click('a:has-text("Continue deletion of")');
+      await page.waitForURL("**/delete-court-confirm");
 
-      expect(hasExpectedError).toBe(true);
+      // Step 3: Now subscriptions block
+      await page.click('input[value="yes"]');
+      await page.click('button:has-text("Continue")');
+      await expect(page.locator(".govuk-error-summary__body")).toContainText("There are active subscriptions for the given location");
 
-      // Radio buttons should NOT be highlighted (no red border)
-      const radioError = page.locator(".govuk-radios .govuk-form-group--error");
-      await expect(radioError).not.toBeVisible();
+      // Step 4: Follow the delete-subscriptions link and confirm deletion
+      await page.click('a:has-text("Delete all the subscriptions for")');
+      await page.waitForURL("**/delete-court-subscriptions");
+
+      // Welsh check on the subscriptions confirmation page
+      await page.click('a:has-text("Cymraeg")');
+      await expect(page.locator("h1")).toBeVisible();
+      await page.click('a:has-text("English")');
+
+      await page.click('input[value="yes"]');
+      await page.click('button:has-text("Continue")');
+
+      // Lands on the subscriptions success page with a confirmation panel
+      await page.waitForURL("**/delete-court-subscriptions-success");
+      await expect(page.locator(".govuk-panel--confirmation")).toContainText("Court subscription(s) has been deleted");
+
+      // Follow "Continue deletion of {court}" back to the confirm page
+      await page.click('a:has-text("Continue deletion of")');
+      await page.waitForURL("**/delete-court-confirm");
+
+      // Step 5: With blockers cleared the court can now be deleted
+      await page.click('input[value="yes"]');
+      await page.click('button:has-text("Continue")');
+      await page.waitForURL("**/delete-court-success");
+      await expect(page.locator("h1")).toHaveText("Delete successful");
     });
 
     test("should maintain keyboard navigation throughout journey @nightly", async ({ page }) => {

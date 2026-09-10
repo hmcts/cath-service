@@ -1,5 +1,15 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import { USER_ROLES } from "../roles.js";
 import type { UpdateUserInput, User } from "./model.js";
+
+export async function findSystemAdminEmails(): Promise<string[]> {
+  const admins = await prisma.user.findMany({
+    where: { role: USER_ROLES.SYSTEM_ADMIN },
+    select: { email: true }
+  });
+
+  return admins.map((admin) => admin.email);
+}
 
 export async function createUser(input: User) {
   return await prisma.user.create({

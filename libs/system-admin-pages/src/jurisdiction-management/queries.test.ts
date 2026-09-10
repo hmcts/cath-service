@@ -264,7 +264,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(prisma.locationSubJurisdiction.deleteMany).toHaveBeenCalledWith({
-        where: { subJurisdictionId: 10, location: { deletedAt: { not: null } } }
+        where: { subJurisdictionId: 10 }
       });
       expect(prisma.subJurisdiction.delete).toHaveBeenCalledWith({ where: { subJurisdictionId: 10 } });
     });
@@ -280,7 +280,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(prisma.locationRegion.deleteMany).toHaveBeenCalledWith({
-        where: { regionId: 5, location: { deletedAt: { not: null } } }
+        where: { regionId: 5 }
       });
       expect(prisma.region.delete).toHaveBeenCalledWith({ where: { regionId: 5 } });
     });
@@ -320,7 +320,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(result).toBe("locations");
-      expect(prisma.location.count).toHaveBeenCalledWith({ where: { deletedAt: null, locationSubJurisdictions: { some: { subJurisdictionId: 10 } } } });
+      expect(prisma.location.count).toHaveBeenCalledWith({ where: { locationSubJurisdictions: { some: { subJurisdictionId: 10 } } } });
     });
 
     it("should return 'list-types' when sub-jurisdiction is linked to list types but no active locations", async () => {
@@ -357,7 +357,7 @@ describe("jurisdiction-management-queries", () => {
 
       // Assert
       expect(result).toBe("locations");
-      expect(prisma.location.count).toHaveBeenCalledWith({ where: { deletedAt: null, locationRegions: { some: { regionId: 5 } } } });
+      expect(prisma.location.count).toHaveBeenCalledWith({ where: { locationRegions: { some: { regionId: 5 } } } });
     });
 
     it("should return null when region has no active location links", async () => {

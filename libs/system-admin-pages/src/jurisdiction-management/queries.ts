@@ -148,15 +148,12 @@ export async function hardDeleteJurisdictionRecord(id: number, type: Jurisdictio
       break;
     case "Sub-Jurisdiction":
       await prisma.$transaction([
-        prisma.locationSubJurisdiction.deleteMany({ where: { subJurisdictionId: id, location: { deletedAt: { not: null } } } }),
+        prisma.locationSubJurisdiction.deleteMany({ where: { subJurisdictionId: id } }),
         prisma.subJurisdiction.delete({ where: { subJurisdictionId: id } })
       ]);
       break;
     case "Region":
-      await prisma.$transaction([
-        prisma.locationRegion.deleteMany({ where: { regionId: id, location: { deletedAt: { not: null } } } }),
-        prisma.region.delete({ where: { regionId: id } })
-      ]);
+      await prisma.$transaction([prisma.locationRegion.deleteMany({ where: { regionId: id } }), prisma.region.delete({ where: { regionId: id } })]);
       break;
   }
 }
@@ -207,7 +204,7 @@ export async function deleteLocationJurisdictions(locationId: number): Promise<v
 
 export async function findLocationsByRegionId(regionId: number) {
   return prisma.location.findMany({
-    where: { deletedAt: null, locationRegions: { some: { regionId } } },
+    where: { locationRegions: { some: { regionId } } },
     select: { locationId: true, name: true },
     orderBy: { name: "asc" }
   });
@@ -223,7 +220,7 @@ export async function getDependencyType(id: number, type: JurisdictionDataType):
     }
     case "Sub-Jurisdiction": {
       const [locationCount, listTypeCount] = await Promise.all([
-        prisma.location.count({ where: { deletedAt: null, locationSubJurisdictions: { some: { subJurisdictionId: id } } } }),
+        prisma.location.count({ where: { locationSubJurisdictions: { some: { subJurisdictionId: id } } } }),
         prisma.listTypeSubJurisdiction.count({ where: { subJurisdictionId: id } })
       ]);
       if (locationCount > 0) return "locations";
@@ -231,7 +228,7 @@ export async function getDependencyType(id: number, type: JurisdictionDataType):
       return null;
     }
     case "Region": {
-      const count = await prisma.location.count({ where: { deletedAt: null, locationRegions: { some: { regionId: id } } } });
+      const count = await prisma.location.count({ where: { locationRegions: { some: { regionId: id } } } });
       return count > 0 ? "locations" : null;
     }
   }

@@ -6,6 +6,7 @@ import {
   createSubscriptionRecord,
   deleteSubscriptionRecord,
   deleteSubscriptionsByIds,
+  deleteSubscriptionsByLocationIdRecord,
   findCaseSubscriptionsByUserId,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
@@ -593,6 +594,19 @@ describe("Subscription Queries", () => {
       vi.mocked(prisma.$transaction).mockImplementation(mockTransaction);
 
       await expect(deleteSubscriptionsByIds(subscriptionIds, userId)).rejects.toThrow("Database error");
+    });
+  });
+
+  describe("deleteSubscriptionsByLocationIdRecord", () => {
+    it("should delete all location subscriptions for a location and return the count", async () => {
+      vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 3 } as any);
+
+      const result = await deleteSubscriptionsByLocationIdRecord(123);
+
+      expect(prisma.subscription.deleteMany).toHaveBeenCalledWith({
+        where: { searchType: "LOCATION_ID", searchValue: "123" }
+      });
+      expect(result).toBe(3);
     });
   });
 });

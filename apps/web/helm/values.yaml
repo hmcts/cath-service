@@ -6,17 +6,33 @@ nodejs:
   releaseNameOverride: "{{ .Release.Name }}-web"
   applicationPort: 8080
   aadIdentityName: cath
+  # This chart is deployed by Flux (cnp-flux-config/apps/cath) as release cath-web,
+  # and owns the plain hostnames. The CI pipeline deploys the umbrella chart
+  # alongside it under release-scoped names - see helm/cath-service/values.template.yaml.
+  #
+  # ingressHost must not be plain "cath": that name is a CNAME to Azure Front Door,
+  # and DNS forbids an A and a CNAME record at the same name. additionalIngressHosts
+  # adds a host rule for it without creating a DNS record, which is what lets Front
+  # Door reach this service - it forwards the original Host header, and without a
+  # matching rule traefik 404s and Front Door reports 502.
   ingressHost: cath-web.{{ .Values.global.environment }}.platform.hmcts.net
-  image: 'hmctspublic.azurecr.io/cath/cath-web:latest'
+  additionalIngressHosts:
+    - cath.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctsprod.azurecr.io/cath/cath-web:latest'
   environment:
     NODE_ENV: 'production'
     ENVIRONMENT: '{{ .Values.global.environment }}'
     POSTGRES_DATABASE: cath
-    REDIS_HOST: 'cath-redis-{{ .Values.global.environment }}.redis.cache.windows.net'
-    THIRD_PARTY_KEY_VAULT: 'cath-ss-tp-kv-{{ .Values.global.environment }}'
+    THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
+    # Public hostname, not the ingress host. OIDC redirect URIs are built from
+    # this (libs/auth/src/config/sso-config.ts, b2c-config.ts, crime-idam-config.ts),
+    # so it must match what is registered on the app registrations and what the
+    # browser can reach. Unset, it falls back to https://localhost:8080 and login
+    # fails with AADSTS50011 redirect_uri mismatch.
+    BASE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
     CFT_IDAM_URL: https://idam-web-public.{{ .Values.global.environment }}.platform.hmcts.net
-    CATH_SERVICE_URL: https://cath-web.{{ .Values.global.environment }}.platform.hmcts.net
+    CATH_SERVICE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
     MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
     CRIME_IDAM_BASE_URL: https://login.sit.cjscp.org.uk
@@ -25,10 +41,17 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL: 42f65ada-6de0-45da-822a-9632f6f682fd
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
+    GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
+  # This list is duplicated in helm/cath-service/values.preview.template.yaml, which the
+  # preview deploy uses. Helm replaces arrays rather than merging them, so preview has to
+  # restate the whole list to swap SSO_CLIENT_ID/SSO_CLIENT_SECRET for their -dev
+  # equivalents. Add or remove an entry here and you must do the same there;
+  # values.yaml.test.ts fails the build otherwise. Never use a -dev secret in this file:
+  # it is what aat and Flux deploy from.
   keyVaults:
-    cath-ss-kv:
+    cath:
       secrets:
         - name: app-insights-connection-string
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING

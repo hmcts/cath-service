@@ -6,10 +6,12 @@ import {
   createSubscriptionRecord,
   deleteSubscriptionRecord,
   deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
+  deleteSubscriptionsByLocationIdRecord,
   findCaseSubscriptionsByUserId,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
   findSubscriptionsByIds,
+  findSubscriptionsByLocationId,
   findSubscriptionsByUserId,
   findSubscriptionsWithLocationByIds,
   findSubscriptionsWithLocationByUserId,
@@ -81,6 +83,15 @@ export async function createSubscription(userId: string, locationId: string) {
 
 export async function getSubscriptionById(subscriptionId: string, userId: string) {
   return findSubscriptionById(subscriptionId, userId);
+}
+
+export async function deleteSubscriptionsByLocationId(locationId: number): Promise<number> {
+  const subscriptions = await findSubscriptionsByLocationId(locationId);
+  if (subscriptions.length === 0) {
+    return 0;
+  }
+
+  return deleteSubscriptionsByLocationIdRecord(locationId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {

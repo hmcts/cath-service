@@ -94,7 +94,7 @@ const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
+  if (!sessionData?.locationId) {
     const lng = locale === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }
@@ -126,7 +126,7 @@ const postHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId) {
+  if (!sessionData?.locationId) {
     const lng = locale === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }

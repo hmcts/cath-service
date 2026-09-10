@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getPropertiesVolumeSecrets, healthcheck } from "@hmcts-cft/cloud-native-platform";
+import { getPropertiesVolumeSecrets, healthcheck, monitoringMiddleware } from "@hmcts-cft/cloud-native-platform";
 import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import compression from "compression";
 import cors from "cors";
@@ -9,14 +9,18 @@ import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const chartPath = path.join(__dirname, "../helm/values.yaml");
+const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
 
+  const { default: config } = await import("config");
+
   const app = express();
 
   app.use(healthcheck());
+  app.use(monitoringMiddleware(config.get("applicationInsights")));
 
   app.use(compression());
   app.use(

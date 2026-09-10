@@ -156,21 +156,28 @@ To work with SSO locally, you need to authenticate with Azure to access Key Vaul
 
 3. **Set the correct subscription**:
    ```bash
-   az account set --subscription <subscription-id>
+   az account set --subscription DCD-CNP-DEV
    ```
-   Replace `<subscription-id>` with your HMCTS subscription ID (ask your team lead if unsure).
+   This is the subscription holding the `cath-aat` and `cath-bootstrap-aat` key vaults.
 
 4. **Verify your setup**:
    ```bash
    az account show
    ```
 
-5. **Start the application**:
+5. **Create your `.env`**:
+   ```bash
+   cp apps/web/.env.example .env
+   ```
+   Note the `.env` lives at the **repository root**, not in `apps/web` — that is the path
+   both `yarn dev` and the E2E runner load it from.
+
+6. **Start the application**:
    ```bash
    yarn dev
    ```
 
-**Note**: SSO secrets (client ID, client secret, group IDs, etc.) are automatically loaded from Azure Key Vault (`pip-ss-kv-stg`) when you run the application. You must be authenticated via `az login` for this to work.
+**Note**: SSO secrets (client ID, client secret, group IDs, etc.) are automatically loaded from the `cath-aat` Azure Key Vault when you run the application. You must be authenticated via `az login` for this to work. The vault name is built from the `keyVaults` key in `apps/web/helm/values.dev.yaml` (`cath`) plus `VAULT_URI_SUFFIX` from your `.env` (`aat`), so leave `VAULT_URI_SUFFIX=aat` set.
 
 ### HTTPS Local Development Setup
 
@@ -305,7 +312,9 @@ For local development, configuration is split between Azure Key Vault (for sensi
 
 **Local configuration in `.env` files**:
 ```bash
-# apps/web/.env
+# .env (repository root — copy from apps/web/.env.example)
+LOCAL_DEV=true
+VAULT_URI_SUFFIX=aat
 PORT=8080
 BASE_URL=https://localhost:8080
 SESSION_SECRET=your-session-secret
@@ -321,12 +330,17 @@ SSO_ALLOW_HTTP_REDIRECT=true
 #### 2. Azure Key Vault Configuration
 
 **Local Development:**
-- Vault: `pip-ss-kv-stg`
-- Secrets: Uses `-dev` suffixed secret names (e.g., `sso-client-id-dev`)
-- Authentication: Requires `az login` with appropriate subscription
+- Vault: `cath-aat` (from `keyVaults: cath` in `apps/web/helm/values.dev.yaml` + `VAULT_URI_SUFFIX=aat`)
+- Secrets: Uses `-dev` suffixed secret names for SSO (e.g., `sso-client-id-dev`)
+- Authentication: Requires `az login` against `DCD-CNP-DEV`
 
-**Deployed Environments (demo, test, stg, prod):**
-- Vault: `pip-ss-kv-{ENV}` (e.g., `pip-ss-kv-prod`)
+**E2E test credentials (local and pipeline):**
+- Vault: `cath-bootstrap-aat`
+- Read by `e2e-tests/run-with-credentials.js` locally and by `job.e2e-test.yml` in CI
+- Kept separate from `cath-aat` so test-account credentials are never mounted into running pods
+
+**Deployed Environments:**
+- Vault: `cath-{ENV}` (e.g., `cath-aat`)
 - Secrets: Uses production secret names (e.g., `sso-client-id`)
 - Authentication: Automatic via managed identity
 
@@ -379,11 +393,11 @@ BASE_URL=https://cath-web.prod.platform.hmcts.net
 
 To add a new secret to the Key Vault integration:
 
-1. Add the secret to each Key Vault (demo, test, stg, prod)
+1. Add the secret to the `cath-{env}` Key Vault (currently `cath-aat`)
 2. Update `apps/web/helm/values.yaml`:
 ```yaml
 keyVaults:
-  pip-ss-kv-{{ .Values.global.environment }}:
+  cath:
     secrets:
       - name: my-secret-name      # Key Vault secret name
         alias: MY_ENV_VAR         # Environment variable name
