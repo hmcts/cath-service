@@ -1,11 +1,11 @@
 # #957: Changes to Crown warned list (Go-Live 1st Oct 2026)
 
 **State:** OPEN
-**Assignees:** None
+**Assignees:** junaidiqbalmoj
 **Author:** OgechiOkelu
 **Labels:** None
 **Created:** 2026-08-18T12:01:16Z
-**Updated:** 2026-08-18T12:34:37Z
+**Updated:** 2026-09-10T12:36:29Z
 
 ## Description
 
@@ -42,11 +42,13 @@ The prosecuting authority is the Crown Prosecution Service unless otherwise stat
 **Welsh translation:**
 Crown Advance List - Rhestr Ymlaen Llaw Llys y Goron
 
+
+
 ## Comments
 
 ### Comment by OgechiOkelu on 2026-08-18T12:27:19Z
 
-@spec
+@spec 
 
 ### Comment by hmctsclaudecode on 2026-08-18T12:33:49Z
 
@@ -548,7 +550,48 @@ E2E (Playwright — extend the existing Crown list journey rather than adding ne
 * **Third-party subscribers:** third-party API subscriptions are keyed on `list_type_id` and survive, but any external consumer matching on the `CROWN_WARNED_LIST` name string will break. Does anything outside this repo consume that name, and do third parties need notifying before 1 October?
 * **Legacy redirect lifetime:** confirm a follow-up ticket to delete the `/crown-warned-list` stub, and the agreed retention period (suggest 3 months).
 
+
 ### Comment by OgechiOkelu on 2026-08-18T12:34:37Z
 
-@plan
+@plan 
+
+### Comment by hmctsclaudecode on 2026-08-18T12:40:45Z
+
+## Technical plan ready — `feature/957-crown-advance-list-rename`
+
+Plan committed to `docs/tickets/957/` ([plan.md](https://github.com/hmcts/cath-service/blob/feature/957-crown-advance-list-rename/docs/tickets/957/plan.md), [tasks.md](https://github.com/hmcts/cath-service/blob/feature/957-crown-advance-list-rename/docs/tickets/957/tasks.md)).
+
+### Three things the codebase check turned up that change the shape of this work
+
+**1. "Cosmetic changes so subscriptions aren't lost" is not automatic — it needs a SQL migration.**
+
+The deploy seeder (`apps/postgres/prisma/generate-seed-sql.ts`) upserts `list_types` with `ON CONFLICT (name)` and soft-deletes any active row whose name is absent from `listTypeData`. If we just swap the entry in `listTypeData`, the seeder inserts a **new row with a new autoincrement `id`** and soft-deletes the old one. Everything downstream keys on that `id`, not the name:
+
+| Table | Column |
+|---|---|
+| `subscription_list_type` | `list_type_ids Int[]` |
+| `artefact` | `list_type_id` |
+| `third_party_user_list_type` | `list_type_id` |
+| `list_search_config` | `list_type_id` |
+| `list_types_sub_jurisdictions` | `list_type_id` |
+
+So every existing subscription would be silently orphaned. The plan adds an idempotent in-place `UPDATE` migration that preserves `list_types.id`, running before the seed (`start.sh` order: `migrate deploy` → seed).
+
+**2. The lib package has to be renamed, not just the DB row.** `validateListTypeJson` resolves the validator via `await import("@hmcts/" + kebabCase(list_types.name))`. If the DB rename and the package rename land out of step, manual JSON uploads fail with "No JSON schema available for Crown Advance List". Both must ship in the same release.
+
+**3. The Xhibit hearing-type change needs no code work.** `HearingDescription` is a free-text `"type": "string"` in the schema (no enum) and is used verbatim as the accordion section heading. New hearing types render as new sections automatically — see question 1 below.
+
+### Questions
+
+1. **Hearing types — the only genuinely unspecified item.** The AC says "some changes will be made to the Hearing types from Xhibit" but not what they are. Our read is that no code change is needed (free-text field). Can Crime supply the actual before/after list so we can confirm: (a) nothing downstream relies on a fixed set, (b) whether the new types need a defined display order rather than the payload order they currently follow, and (c) whether Welsh display names are wanted — today hearing types render **untranslated** in both locales.
+2. **Payload contract.** Confirming our assumption: the PDDA JSON root key stays `WarnedList` and `DocumentType` stays `crown_warned_pdda_list`. If Crime is also renaming the payload, the schema, types, renderer, summary builder and every fixture change too — materially larger work than this ticket describes.
+3. **Welsh for the page heading.** The ticket gives the list name (`Rhestr Ymlaen Llaw Llys y Goron`). Please confirm `Rhestr Ymlaen Llaw Llys y Goron ar gyfer` for the "… for {court name}" heading, following the existing `cy.ts` pattern.
+4. **Historic artefacts.** Rendering is not versioned, so Crown Warned artefacts published *before* go-live will retrospectively display under the new name and without the week-commencing sentence. We assume that's fine as the change is described as cosmetic — please confirm with Crime.
+5. **Already-generated PDFs.** PDFs generated before the rename keep the old title and the removed sentence. Do we regenerate PDFs for in-window artefacts at go-live, or accept that pre-1-October publications keep the old wording?
+6. **Third-party consumers.** Third-party API subscriptions survive (they key on `list_type_id`), but any external consumer matching on the `CROWN_WARNED_LIST` **name string** will break. Does anything outside this repo consume that name, and do third parties need notifying before 1 October?
+7. **Go-live mechanics.** We recommend a scheduled merge in the 1 Oct 2026 window rather than a feature flag — flagging would mean maintaining two locale sets, two URLs and two registry keys, which is more risk than the merge timing it avoids. Please confirm the release window and who owns STG verification on the day.
+8. **URL and legacy links.** We're changing the page URL to `/crown-advance-list` (it's user-visible, and `list_types.url` drives every generated link). Old emails and bookmarks get a `301` from `/crown-warned-list`. OK to raise a follow-up ticket to delete that redirect stub ~3 months after go-live?
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
 
