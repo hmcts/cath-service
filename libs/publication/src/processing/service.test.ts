@@ -532,7 +532,7 @@ describe("publication-processor", async () => {
       } as any);
       vi.mocked(generateCrownAdvanceListPdf).mockResolvedValue({
         success: true,
-        pdfPath: "/path/to/crown-warned.pdf",
+        pdfPath: "/path/to/crown-advance.pdf",
         sizeBytes: 3072,
         exceedsMaxSize: false
       });
@@ -540,7 +540,7 @@ describe("publication-processor", async () => {
       const result = await generatePublicationPdf({ ...baseParams, listTypeId: 22 });
 
       expect(generateCrownAdvanceListPdf).toHaveBeenCalled();
-      expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-warned.pdf", sizeBytes: 3072, exceedsMaxSize: false }));
+      expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-advance.pdf", sizeBytes: 3072, exceedsMaxSize: false }));
     });
 
     it("should generate PDF for SSCS North East Daily Hearing List with English friendly name", async () => {

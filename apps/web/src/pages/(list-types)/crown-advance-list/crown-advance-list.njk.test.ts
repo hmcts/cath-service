@@ -201,7 +201,7 @@ describe("crown-advance-list template", () => {
     it("should render the accordion container with no sections when there are no categories", () => {
       const { $ } = renderList([]);
 
-      const accordion = $("#accordion-warned-list.govuk-accordion");
+      const accordion = $("#accordion-advance-list.govuk-accordion");
       expect(accordion).toHaveLength(1);
       expect(accordion.attr("data-module")).toBe("govuk-accordion");
       expect($(".govuk-accordion__section")).toHaveLength(0);

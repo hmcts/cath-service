@@ -153,7 +153,7 @@ describe("crown-advance-list controller", () => {
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
 
-  it("should successfully render warned list in English", async () => {
+  it("should successfully render advance list in English", async () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "en" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
@@ -176,7 +176,7 @@ describe("crown-advance-list controller", () => {
     expect(renderCall[1]).toHaveProperty("t");
   });
 
-  it("should successfully render warned list in Welsh", async () => {
+  it("should successfully render advance list in Welsh", async () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "cy" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);

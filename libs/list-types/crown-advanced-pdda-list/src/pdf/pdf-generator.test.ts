@@ -93,13 +93,13 @@ describe("generateCrownAdvanceListPdf", () => {
     });
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
-      pdfPath: "/storage/temp/uploads/warned-artefact-123.pdf",
+      pdfPath: "/storage/temp/uploads/advance-artefact-123.pdf",
       sizeBytes: 1024,
       exceedsMaxSize: false
     });
 
     const result = await generateCrownAdvanceListPdf({
-      artefactId: "warned-artefact-123",
+      artefactId: "advance-artefact-123",
       contentDate: new Date("2025-11-10"),
       locale: "en",
       locationId: "102",
@@ -107,8 +107,8 @@ describe("generateCrownAdvanceListPdf", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.pdfPath).toContain("warned-artefact-123.pdf");
-    expect(mockSavePdfToStorage).toHaveBeenCalledWith("warned-artefact-123", pdfBuffer, 1024);
+    expect(result.pdfPath).toContain("advance-artefact-123.pdf");
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("advance-artefact-123", pdfBuffer, 1024);
   });
 
   it("should pass groupedCategories to template", async () => {
