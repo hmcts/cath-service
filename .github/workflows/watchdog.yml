@@ -365,10 +365,20 @@ jobs:
 
             Do not describe the watchdog's own mechanics — nobody needs the window size
             or the check count. Report the service, not the tool.
+          # --dangerously-skip-permissions is needed because nothing can answer a
+          # permission prompt here, and it makes --allowedTools advisory rather than
+          # enforcing: in bypass mode every tool is auto-approved. Deny rules are still
+          # evaluated, so --disallowedTools is what actually holds. The allowlist is kept
+          # as a statement of what this job is expected to need.
+          #
+          # The real guarantee that nothing reaches master is not any of this: the App
+          # token cannot push to a protected branch, every PR is opened as a draft, and
+          # branch protection requires review.
           claude_args: |
             --dangerously-skip-permissions
             --max-turns 60
             --append-system-prompt "You are triaging a production monitoring alert in a GitHub Action with no human present. Read @CLAUDE.md. Nobody can answer questions — if you are stuck, write the report and stop. Never push, never force, never merge. Changing nothing is preferable to guessing. Always write /tmp/watchdog/report.md and /tmp/watchdog/notify.json."
+            --disallowedTools "Bash(git push:*),Bash(git remote:*),Bash(gh:*),Bash(curl:*),Bash(wget:*),Bash(nc:*),Bash(ssh:*),Bash(az:*),Bash(aws:*),Bash(kubectl:*),Bash(helm:*),Bash(rm:*),Bash(sudo:*),Bash(chmod:*),Bash(npm publish:*),Bash(yarn publish:*),WebFetch,WebSearch"
             --allowedTools "Read,Glob,Grep,Write,Edit,Bash(corepack:*),Bash(yarn:*),Bash(git status:*),Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git rev-parse:*),Bash(git ls-files:*),Bash(jq:*),Bash(cat /tmp/watchdog/*)"
 
       - name: Determine outcome

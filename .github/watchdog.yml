@@ -153,20 +153,27 @@ checks:
       | mv-expand expected_app to typeof(string)
       | where expected_app !in ((seen | project app))
 
-  # Up but serving nobody. Restricted to UK working hours: outside them, zero traffic
-  # is normal and would be pure noise.
+  # Up but serving nobody, measured over a day rather than the usual window.
+  #
+  # AAT gets very little real traffic: 544 non-health requests in 24h on web and none
+  # at all on api, mostly static assets from someone loading a page. A 15-minute window
+  # is empty most of the time, so this looks for a day with no traffic — which does mean
+  # a genuine outage is not caught here until it has lasted hours. app-silent and the
+  # availability test are the checks that notice quickly; this one is a backstop for
+  # "reachable but serving nothing", and only has meaning once there is real traffic.
+  #
+  # No time-of-day condition, so there is nothing that can filter the result away and
+  # accidentally fire the check — an empty result here means exactly what it says.
   - id: no-user-traffic
-    severity: medium
-    description: No successful non-health requests during working hours.
+    severity: low
+    description: No successful non-health requests in a day.
     rule: { rows: '== 0' }
     query: |
       requests
-      | where timestamp > ago({{window}})
+      | where timestamp > ago(24h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | where success == true
-      | where hourofday(now()) between (7 .. 19)
-        and dayofweek(now()) between (1d .. 5d)
       | take 1
 
   # ---------------------------------------------------------------------------
@@ -280,7 +287,7 @@ checks:
         and hourofday(timestamp) == hourofday(now())
       | summarize per_day = count() by bin(timestamp, 1d)
       | summarize baseline_per_hour = avg(per_day), days = count()
-      | extend expected_for_window = baseline_per_hour / 4.0
+      | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
       | where days >= 2 and expected_for_window >= 4.0
       | extend current = current
       | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
@@ -305,7 +312,7 @@ checks:
         and hourofday(timestamp) == hourofday(now())
       | summarize per_day = count() by bin(timestamp, 1d)
       | summarize baseline_per_hour = avg(per_day), days = count()
-      | extend expected_for_window = baseline_per_hour / 4.0
+      | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
       | where days >= 2 and expected_for_window >= 4.0
       | extend current = current
       | extend spike_ratio = todouble(current) / expected_for_window
