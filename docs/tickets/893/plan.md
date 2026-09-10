@@ -85,6 +85,20 @@ the exact flat-file accessibility failure the accessibility statement already li
 
 ## 2. Implementation Details
 
+**TEMPLATE SOURCE: migrate from pip-frontend publishing-policy**
+
+pip-frontend already ships this page — `src/main/views/publishing-policy.njk`, with
+`PublishingPolicyController.ts`, a route, and locale entries in
+`src/main/resources/locales/{en,cy}/template.json`. Per the repo default for a new rendered
+page, the `.njk` is migrated from there rather than written from scratch, and adapted to this
+repo's conventions as set out in 2.5-2.6.
+
+The **copy is the exception**: it comes from `source-content.md` in this folder, not from
+pip-frontend's locale files. The policy text was amended for the RPSI change (see the Word
+comment noted in the clarifications), so pip's strings are out of date. Use pip-frontend for
+the markup structure and the list/heading scaffolding; use `source-content.md` for every
+user-facing string.
+
 ### 2.1 Files to create
 
 | File | Purpose |
@@ -104,7 +118,7 @@ the exact flat-file accessibility failure the accessibility statement already li
 | `libs/web-core/src/index.ts` | Add `publishingPolicyCy` / `publishingPolicyEn` exports, preserving the existing alphabetical ordering Biome enforces (they sort after `cookiePreferences*` and before `export { cy }`) |
 | `libs/web-core/src/locales/en.ts` | Add `publishingPolicy` and `publishingPolicyAriaLabel` to `footer`, immediately after `governmentDigitalService` |
 | `libs/web-core/src/locales/cy.ts` | Same two keys, same position, Welsh values |
-| `libs/web-core/src/views/components/site-footer.njk` | Add a ninth `meta.items` entry after the Government Digital Service entry (currently lines 44–47) |
+| `libs/web-core/src/views/components/site-footer.njk` | Add a ninth `meta.items` entry after the Government Digital Service entry (currently lines 35-38; there are 8 meta items today, the 9th `text:` in the file is the Crown copyright line) |
 | `libs/web-core/src/locales/en.test.ts` | Assert the two new `footer` keys in the existing "should have footer object with required properties" test |
 | `libs/web-core/src/locales/cy.test.ts` | Assert the Welsh equivalents in the existing footer test |
 | `apps/web/src/assets/css/web.scss` | `@use "./publishing-policy.scss";` |

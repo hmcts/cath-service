@@ -5,7 +5,7 @@
 **Author:** OgechiOkelu
 **Labels:** None
 **Created:** 2026-07-28T13:32:47Z
-**Updated:** 2026-07-28T13:56:00Z
+**Updated:** 2026-07-28T14:11:58Z
 
 ## Description
 
@@ -538,3 +538,54 @@ Per the repo E2E guidance, these fold into the existing page-structure journey t
 ### Comment by OgechiOkelu on 2026-07-28T13:56:00Z
 
 @plan 
+
+### Comment by hmctsclaudecode on 2026-07-28T14:11:58Z
+
+## Technical plan ready — #893
+
+Plan committed to branch [`feature/893-publishing-policy-footer-link`](https://github.com/hmcts/cath-service/tree/feature/893-publishing-policy-footer-link):
+
+- `docs/tickets/893/plan.md` — technical specification
+- `docs/tickets/893/tasks.md` — implementation checklist
+- `docs/tickets/893/source-content.md` — full English and Welsh policy copy plus every hyperlink target, extracted from the three attachments
+
+**The content transcription is resolved.** An earlier spec comment on this issue flagged the three `.docx` attachments as unreadable and treated transcribing the policy copy as a blocker. All three have now been read and the text extracted verbatim into `source-content.md`, so implementation is not blocked on that.
+
+### Approach in brief
+
+A ninth footer meta link plus one static page at `/publishing-policy`, built the same way as the accessibility statement: shared content in `libs/web-core/src/locales/publishing-policy/{en,cy}.ts`, page at `apps/web/src/pages/(core)/publishing-policy/`. "Pop-up page" is delivered as `target="_blank" rel="noopener noreferrer"` — a new browser tab, matching the existing accessibility statement and cookie policy footer links. A JavaScript modal would break without JS and would not be directly linkable. No database, API, or dependency changes.
+
+The mock-up confirms placement: `Publishing Policy` as the ninth link, immediately after `Government Digital Service`.
+
+### Clarifications needed
+
+Reading the two policy documents side by side surfaced places where the English and Welsh versions **do not say the same thing**. These are substantive, not translation style, so I have not guessed at them.
+
+**Blocking — the locale files cannot be finalised until these are answered**
+
+1. **Contact email mismatch.** English section 10's visible text is `thirdpartydatalicence@justice.gov.uk`, but the underlying `mailto:` hyperlink in the same document points to `ratioapplications@justice.gov.uk`. The Welsh document uses `thirdpartydatalicence@justice.gov.uk` throughout. Which address is correct?
+
+2. **Page heading — "Publication Policy" or "Publishing policy"?** The English document titles itself "Publication Policy". The issue, the footer mock-up, and the Welsh document ("Polisi Cyhoeddi") all say publishing. Recommendation: use "Publishing policy" and treat the document title as a drafting slip. Please confirm.
+
+3. **Four EN/CY divergences:**
+   - **6.2 permitted uses** — English lists three (open justice; professional or academic activity; other purposes approved by HMCTS). Welsh lists four, adding `budd y cyhoedd` (public interest). Is public interest a permitted use?
+   - **Section 8 delegated authority** — English names only the Keeper of the Public Record at The National Archives. Welsh names three parties: the Lord Chancellor and Secretary of State for Justice, the Keeper of Public Records, and HMCTS' Senior Information Risk Officer. Which is correct?
+   - **Section 10 team name** — English "Data Access & Governance Team"; Welsh `Tîm Gwasanaethau Mynediad at Ddata` ("Data Access Services Team"). The Welsh postal block then says `Tîm Mynediad at Ddata a Llywodraethu`, so the Welsh document is internally inconsistent too. What is the team's actual name?
+   - **Welsh 4.1** adds `– Panel Llywodraethu Trwydded Llys a Thribiwnlys i Drydydd Parti`, absent from the English. Add to English, or remove from Welsh?
+
+4. **Missing link in Welsh 5.2.** The Welsh text ends "Mae mwy o wybodaeth ar sut i wneud cais ar gael yma:" with no link and no link text — the apply-for-a-licence link present in English 5.2 is missing. Please supply the Welsh link text. The URL is unchanged. Until it is supplied a Welsh user reaches a sentence that trails off with nothing after the colon.
+
+5. **Is the amended copy approved?** A Word comment from @manishatakhtar-hmcts states "all text coloured in red has been added/amended from the original policy in light of the RPSI change". Please confirm this is final signed-off copy, not a draft under review, before it goes live on a public service.
+
+**Non-blocking — proceeding on the stated recommendation unless told otherwise**
+
+6. **Footer link case.** The mock-up shows "Publishing Policy" in title case, but every other footer link is sentence case ("Terms and conditions", "Accessibility statement") per GDS house style. Recommendation: "Publishing policy".
+7. **Welsh footer link text** — assuming "Polisi Cyhoeddi". This appears on every Welsh page in the service, so worth settling early.
+8. **URL** — `/publishing-policy`, consistent with `/cookie-policy` and `/accessibility-statement`.
+9. **"Last updated" date.** The source document carries no date, though section 10 says the policy "will be reviewed and updated as required". Licence documents normally show one, and the accessibility statement carries a preparation date. Can the policy owner supply a last-updated date and review cycle?
+10. **Should the document's cover line** "HMCTS Court and Tribunal Hearings Service (CaTH)" be rendered? It duplicates the service name already in the service navigation. Recommendation: drop it.
+11. **Anywhere else?** Should the policy also be linked from search results or hearing list pages, where data re-use is most likely? Out of scope here — raise separately if wanted.
+
+Ready to implement once 1–5 are answered.
+
+
