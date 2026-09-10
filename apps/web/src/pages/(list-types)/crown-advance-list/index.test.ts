@@ -1,4 +1,4 @@
-import { renderCrownWarnedListData, validateCrownWarnedList } from "@hmcts/crown-warned-list";
+import { renderCrownAdvanceListData, validateCrownAdvanceList } from "@hmcts/crown-advanced-pdda-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
@@ -21,7 +21,7 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     canAccessPublicationData: vi.fn()
   };
 });
-vi.mock("@hmcts/crown-warned-list");
+vi.mock("@hmcts/crown-advanced-pdda-list");
 
 describe("crown-advance-list controller", () => {
   let req: Partial<Request>;
@@ -119,8 +119,8 @@ describe("crown-advance-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
@@ -143,11 +143,11 @@ describe("crown-advance-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
 
     await GET(req as Request, res as Response);
 
-    expect(validateCrownWarnedList).toHaveBeenCalled();
+    expect(validateCrownAdvanceList).toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-advance-list] Validation errors:", ["Validation error"]);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
@@ -158,12 +158,12 @@ describe("crown-advance-list controller", () => {
     res.locals = { locale: "en" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(mockJsonData, {
       locationId: "100",
       contentDate: mockArtefact.contentDate,
       locale: "en"
@@ -181,12 +181,12 @@ describe("crown-advance-list controller", () => {
     res.locals = { locale: "cy" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(mockJsonData, {
       locationId: "100",
       contentDate: mockArtefact.contentDate,
       locale: "cy"

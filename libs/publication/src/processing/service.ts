@@ -7,9 +7,9 @@ import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPd
 import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { type CrownAdvanceListData, generateCrownAdvanceListPdf } from "@hmcts/crown-advanced-pdda-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
 import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
-import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/crown-warned-list";
 import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } from "@hmcts/et-daily-list";
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
@@ -200,7 +200,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SJP_DELTA_PRESS_LIST: sjpPressGenerator,
   CROWN_DAILY_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
   CROWN_FIRM_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
-  CROWN_ADVANCED_PDDA_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
+  CROWN_ADVANCED_PDDA_LIST: (p) => generateCrownAdvanceListPdf({ ...p, jsonData: p.jsonData as CrownAdvanceListData }),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),

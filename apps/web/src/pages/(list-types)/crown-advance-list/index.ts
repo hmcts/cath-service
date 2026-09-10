@@ -1,22 +1,22 @@
 import {
-  type CrownWarnedListData,
-  crownWarnedListCy as cy,
-  crownWarnedListEn as en,
-  renderCrownWarnedListData,
-  validateCrownWarnedList
-} from "@hmcts/crown-warned-list";
+  type CrownAdvanceListData,
+  crownAdvanceListCy as cy,
+  crownAdvanceListEn as en,
+  renderCrownAdvanceListData,
+  validateCrownAdvanceList
+} from "@hmcts/crown-advanced-pdda-list";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
 import { createListTypeHandler } from "../list-type-handler.js";
 
-export const GET = createListTypeHandler<CrownWarnedListData>({
+export const GET = createListTypeHandler<CrownAdvanceListData>({
   en,
   cy,
-  validate: validateCrownWarnedList,
+  validate: validateCrownAdvanceList,
   logPrefix: "crown-advance-list",
   checkAccess: true,
   render: async ({ artefact, jsonData, locale, res }) => {
     const t = locale === "cy" ? cy : en;
-    const { header, openJustice, groupedCategories } = await renderCrownWarnedListData(jsonData, {
+    const { header, openJustice, groupedCategories } = await renderCrownAdvanceListData(jsonData, {
       locationId: artefact.locationId,
       contentDate: artefact.contentDate,
       locale

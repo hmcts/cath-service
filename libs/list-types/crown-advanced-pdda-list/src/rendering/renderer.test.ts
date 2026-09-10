@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { renderCrownWarnedListData, TO_BE_ALLOCATED_KEY } from "./renderer.js";
+import { renderCrownAdvanceListData, TO_BE_ALLOCATED_KEY } from "./renderer.js";
 
 vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
@@ -28,14 +28,14 @@ const baseInput = {
   }
 };
 
-describe("renderCrownWarnedListData", () => {
+describe("renderCrownAdvanceListData", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   });
 
   it("should render header with location name from CrownCourt", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -47,7 +47,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should format lastUpdated with date and time from PublishedTime", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -57,7 +57,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should set weekCommencing from contentDate option when date is a Monday", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -67,7 +67,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should move weekCommencing back to the previous Monday when contentDate is a Wednesday", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-12"),
       locale: "en"
@@ -77,7 +77,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should move weekCommencing back to the previous Monday when contentDate is a Sunday", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-09"),
       locale: "en"
@@ -87,7 +87,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should return empty groupedCategories when no court lists", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -132,7 +132,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -174,7 +174,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -213,7 +213,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -262,7 +262,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -307,7 +307,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -351,7 +351,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -388,7 +388,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -426,7 +426,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -437,7 +437,7 @@ describe("renderCrownWarnedListData", () => {
   });
 
   it("should use Welsh dateSeparator 'i' when locale is cy", async () => {
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "cy"
@@ -449,7 +449,7 @@ describe("renderCrownWarnedListData", () => {
   it("should use location name from getLocationById when available", async () => {
     (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 102, name: "Birmingham Crown Court", welshName: null });
 
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -461,7 +461,7 @@ describe("renderCrownWarnedListData", () => {
   it("should use Welsh location name when locale is cy and welshName is available", async () => {
     (getLocationById as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 102, name: "Birmingham Crown Court", welshName: "Llys y Goron Birmingham" });
 
-    const result = await renderCrownWarnedListData(baseInput, {
+    const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "cy"
@@ -483,7 +483,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -504,7 +504,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -548,7 +548,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -591,7 +591,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -612,7 +612,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -655,7 +655,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -703,7 +703,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -753,7 +753,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -791,7 +791,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -823,7 +823,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -855,7 +855,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"
@@ -893,7 +893,7 @@ describe("renderCrownWarnedListData", () => {
       }
     };
 
-    const result = await renderCrownWarnedListData(input, {
+    const result = await renderCrownAdvanceListData(input, {
       locationId: "102",
       contentDate: new Date("2025-11-10"),
       locale: "en"

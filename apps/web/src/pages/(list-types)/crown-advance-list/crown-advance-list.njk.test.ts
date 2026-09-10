@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { crownWarnedListCy as cy, crownWarnedListEn as en } from "@hmcts/crown-warned-list";
+import { crownAdvanceListCy as cy, crownAdvanceListEn as en } from "@hmcts/crown-advanced-pdda-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import type { CheerioAPI } from "cheerio";
