@@ -1,6 +1,7 @@
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { generateCivilAndFamilyDailyCauseListExcel } from "./excel/excel-generator.js";
 export { cy as civilAndFamilyDailyCauseListCy } from "./locales/cy.js";
 export { en as civilAndFamilyDailyCauseListEn } from "./locales/en.js";
 export * from "./models/types.js";

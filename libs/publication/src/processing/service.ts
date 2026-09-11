@@ -2,8 +2,8 @@ import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCa
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
-import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
-import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
+import { type CauseListData, generateCauseListPdf, generateCivilAndFamilyDailyCauseListExcel } from "@hmcts/civil-and-family-daily-cause-list";
+import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListExcel, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
@@ -13,7 +13,7 @@ import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/cro
 import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } from "@hmcts/et-daily-list";
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
-import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
+import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListExcel, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { type FinancialListChdKbHearingList, generateFinancialListChdKbDailyCauseListPdf } from "@hmcts/financial-list-chd-kb-daily-cause-list";
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
@@ -363,6 +363,9 @@ type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorRes
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListExcel({ ...p, jsonData: p.jsonData as CivilCauseListData }),
+  FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
+  CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCivilAndFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as CauseListData }),
   SJP_PUBLIC_LIST: async (p) => {
     const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
     await saveExcelFile(p.artefactId, buffer);
