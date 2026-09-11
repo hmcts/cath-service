@@ -1,0 +1,725 @@
+[
+  {
+    "name": "SJP_PUBLIC_LIST",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SJP_DELTA_PUBLIC_LIST",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SJP_PRESS_LIST",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SJP_DELTA_PRESS_LIST",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SJP_PRESS_REGISTER",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CROWN_DAILY_LIST",
+    "provs": [
+      "CRIME_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "CROWN_FIRM_LIST",
+    "provs": [
+      "CRIME_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "CROWN_WARNED_LIST",
+    "provs": [
+      "CRIME_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "MAGISTRATES_PUBLIC_LIST",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAGISTRATES_STANDARD_LIST",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CIVIL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FAMILY_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COP_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "ET_FORTNIGHTLY_PRESS_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "ET_DAILY_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_DAILY_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_DAILY_LIST_ADDITIONAL_HEARINGS",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "IAC_DAILY_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "IAC_DAILY_LIST_ADDITIONAL_CASES",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CARE_STANDARDS_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "PRIMARY_HEALTH_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "CIC_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": true
+  },
+  {
+    "name": "CST_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PHT_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "GRC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "WPAFCC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SIAC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "POAC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PAAC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FTT_TAX_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FTT_LR_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_T_AND_CC_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_LC_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "UT_AAC_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "RPT_LONDON_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "RPT_EASTERN_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "RPT_MIDLANDS_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "RPT_NORTHERN_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "RPT_SOUTHERN_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "AST_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_MIDLANDS_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_SOUTH_EAST_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_SCOTLAND_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_NORTH_WEST_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SSCS_LONDON_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST",
+    "provs": [
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CRIME_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "INTELLECTUAL_PROPERTY_AND_ENTERPRISE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "INTELLECTUAL_PROPERTY_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "LONDON_CIRCUIT_COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PATENTS_COURT_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PENSIONS_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PROPERTY_TRUSTS_PROBATE_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "REVENUE_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "TECHNOLOGY_AND_CONSTRUCTION_COURT_KB_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "ADMIRALTY_COURT_KB_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "BUSINESS_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CHANCERY_APPEALS_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COMPETITION_LIST_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "INSOLVENCY_AND_COMPANIES_COURT_CHD_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "PCOL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "SEND_DAILY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CIC_WEEKLY_HEARING_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CROWN_DAILY_PDDA_LIST",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CROWN_FIRM_PDDA_LIST",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CROWN_WARNED_PDDA_LIST",
+    "provs": [
+      "CRIME_IDAM",
+      "PI_AAD"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "HIGH_COURT_CIVIL_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "HIGH_COURT_FAMILY_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  },
+  {
+    "name": "TECHNOLOGY_AND_CONSTRUCTION_COURT_DAILY_CAUSE_LIST",
+    "provs": [
+      "CFT_IDAM"
+    ],
+    "deprecated": false
+  }
+]
