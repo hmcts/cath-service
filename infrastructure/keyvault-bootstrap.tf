@@ -24,7 +24,7 @@
 # hand is done as a member of DTS CFT Developers. The E2E workflow reads via the
 # OIDC service principal policy below, so pipeline runs are unaffected.
 module "bootstrap_key_vault" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
 
   name                    = "${var.product}-bootstrap-${var.env}"
   product                 = var.product
