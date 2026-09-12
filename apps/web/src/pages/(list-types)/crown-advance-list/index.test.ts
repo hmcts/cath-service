@@ -1,4 +1,4 @@
-import { renderCrownWarnedListData, validateCrownWarnedList } from "@hmcts/crown-warned-list";
+import { renderCrownAdvanceListData, validateCrownAdvanceList } from "@hmcts/crown-advanced-pdda-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import type { Request, Response } from "express";
@@ -21,9 +21,9 @@ vi.mock("@hmcts/publication", async (importOriginal) => {
     canAccessPublicationData: vi.fn()
   };
 });
-vi.mock("@hmcts/crown-warned-list");
+vi.mock("@hmcts/crown-advanced-pdda-list");
 
-describe("crown-warned-list controller", () => {
+describe("crown-advance-list controller", () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -119,8 +119,8 @@ describe("crown-warned-list controller", () => {
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
@@ -143,55 +143,55 @@ describe("crown-warned-list controller", () => {
     req.query = { artefactId: "test-artefact-123" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: false, errors: ["Validation error"] } as any);
 
     await GET(req as Request, res as Response);
 
-    expect(validateCrownWarnedList).toHaveBeenCalled();
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-warned-list] Validation errors:", ["Validation error"]);
+    expect(validateCrownAdvanceList).toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-advance-list] Validation errors:", ["Validation error"]);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });
 
-  it("should successfully render warned list in English", async () => {
+  it("should successfully render advance list in English", async () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "en" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(mockJsonData, {
       locationId: "100",
       contentDate: mockArtefact.contentDate,
       locale: "en"
     });
     const renderCall = vi.mocked(res.render!).mock.calls[0]!;
-    expect(renderCall[0]).toBe("crown-warned-list");
+    expect(renderCall[0]).toBe("crown-advance-list");
     expect(renderCall[1]).toHaveProperty("en");
     expect(renderCall[1]).toHaveProperty("cy");
     expect(renderCall[1]).toHaveProperty("groupedCategories");
     expect(renderCall[1]).toHaveProperty("t");
   });
 
-  it("should successfully render warned list in Welsh", async () => {
+  it("should successfully render advance list in Welsh", async () => {
     req.query = { artefactId: "test-artefact-123" };
     res.locals = { locale: "cy" };
     vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
     vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
-    vi.mocked(validateCrownWarnedList).mockReturnValue({ isValid: true, errors: [] } as any);
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(validateCrownAdvanceList).mockReturnValue({ isValid: true, errors: [] } as any);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
 
     await GET(req as Request, res as Response);
 
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(mockJsonData, {
       locationId: "100",
       contentDate: mockArtefact.contentDate,
       locale: "cy"
     });
-    expect(res.render).toHaveBeenCalledWith("crown-warned-list", expect.any(Object));
+    expect(res.render).toHaveBeenCalledWith("crown-advance-list", expect.any(Object));
   });
 
   it("should return 500 on unexpected error", async () => {
@@ -200,7 +200,7 @@ describe("crown-warned-list controller", () => {
 
     await GET(req as Request, res as Response);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-warned-list] Unexpected error:", expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[crown-advance-list] Unexpected error:", expect.any(Error));
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.render).toHaveBeenCalledWith("errors/common", expect.any(Object));
   });

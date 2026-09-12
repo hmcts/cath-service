@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { crownWarnedListCy as cy, crownWarnedListEn as en } from "@hmcts/crown-warned-list";
+import { crownAdvanceListCy as cy, crownAdvanceListEn as en } from "@hmcts/crown-advanced-pdda-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import type { CheerioAPI } from "cheerio";
@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TEMPLATE = "crown-warned-list.njk";
+const TEMPLATE = "crown-advance-list.njk";
 const webCoreViews = path.join(webCoreModuleRoot, "views");
 
 interface CaseOverrides {
@@ -88,7 +88,7 @@ beforeEach(() => {
   env = createTestEnvironment([__dirname, webCoreViews]);
 });
 
-describe("crown-warned-list template", () => {
+describe("crown-advance-list template", () => {
   describe("Locale consistency", () => {
     it("should have the same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
@@ -201,7 +201,7 @@ describe("crown-warned-list template", () => {
     it("should render the accordion container with no sections when there are no categories", () => {
       const { $ } = renderList([]);
 
-      const accordion = $("#accordion-warned-list.govuk-accordion");
+      const accordion = $("#accordion-advance-list.govuk-accordion");
       expect(accordion).toHaveLength(1);
       expect(accordion.attr("data-module")).toBe("govuk-accordion");
       expect($(".govuk-accordion__section")).toHaveLength(0);

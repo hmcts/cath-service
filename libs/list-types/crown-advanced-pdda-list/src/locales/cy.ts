@@ -1,6 +1,6 @@
 export const cy = {
-  title: "Rhestr Rybuddiol y Goron",
-  pageTitle: "Rhestr Rybuddiol y Goron ar gyfer",
+  title: "Rhestr Ymlaen Llaw Llys y Goron",
+  pageTitle: "Rhestr Ymlaen Llaw Llys y Goron ar gyfer",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText: "Dewch o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
   factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",

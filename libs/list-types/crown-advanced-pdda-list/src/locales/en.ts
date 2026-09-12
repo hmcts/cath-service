@@ -1,6 +1,6 @@
 export const en = {
-  title: "Crown Warned List",
-  pageTitle: "Crown Warned List for",
+  title: "Crown Advance List",
+  pageTitle: "Crown Advance List for",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
   factLinkText: "Find contact details and other information about courts and tribunals",
   factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",

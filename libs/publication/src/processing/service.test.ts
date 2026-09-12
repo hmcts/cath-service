@@ -114,8 +114,8 @@ vi.mock("@hmcts/crown-firm-list", () => ({
   generateCrownFirmListPdf: vi.fn()
 }));
 
-vi.mock("@hmcts/crown-warned-list", () => ({
-  generateCrownWarnedListPdf: vi.fn()
+vi.mock("@hmcts/crown-advanced-pdda-list", () => ({
+  generateCrownAdvanceListPdf: vi.fn()
 }));
 
 vi.mock("@hmcts/civil-daily-cause-list", () => ({
@@ -190,7 +190,7 @@ describe("publication-processor", async () => {
   const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
   const { generateCrownDailyListPdf } = await import("@hmcts/crown-daily-list");
   const { generateCrownFirmListPdf } = await import("@hmcts/crown-firm-list");
-  const { generateCrownWarnedListPdf } = await import("@hmcts/crown-warned-list");
+  const { generateCrownAdvanceListPdf } = await import("@hmcts/crown-advanced-pdda-list");
   const { generateSendDailyHearingListPdf } = await import("@hmcts/send-daily-hearing-list");
   const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
   const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
@@ -525,22 +525,22 @@ describe("publication-processor", async () => {
       expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-firm.pdf", sizeBytes: 2048, exceedsMaxSize: false }));
     });
 
-    it("should generate PDF for Crown Warned List", async () => {
+    it("should generate PDF for Crown Advance List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CROWN_WARNED_LIST",
-        friendlyName: "Crown Warned List"
+        name: "CROWN_ADVANCED_PDDA_LIST",
+        friendlyName: "Crown Advance List"
       } as any);
-      vi.mocked(generateCrownWarnedListPdf).mockResolvedValue({
+      vi.mocked(generateCrownAdvanceListPdf).mockResolvedValue({
         success: true,
-        pdfPath: "/path/to/crown-warned.pdf",
+        pdfPath: "/path/to/crown-advance.pdf",
         sizeBytes: 3072,
         exceedsMaxSize: false
       });
 
       const result = await generatePublicationPdf({ ...baseParams, listTypeId: 22 });
 
-      expect(generateCrownWarnedListPdf).toHaveBeenCalled();
-      expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-warned.pdf", sizeBytes: 3072, exceedsMaxSize: false }));
+      expect(generateCrownAdvanceListPdf).toHaveBeenCalled();
+      expect(result).toEqual(expect.objectContaining({ pdfPath: "/path/to/crown-advance.pdf", sizeBytes: 3072, exceedsMaxSize: false }));
     });
 
     it("should generate PDF for SSCS North East Daily Hearing List with English friendly name", async () => {
