@@ -404,8 +404,9 @@ test.describe("Subscription Notifications", () => {
 
   test("notification delivery to single and multiple subscribers", async ({ request }) => {
     // PDF generation via Puppeteer can take 40-60+ seconds on cold start in CI.
-    // Notifications are only sent after PDF generation completes, so we need a longer timeout.
-    test.setTimeout(120_000);
+    // Notifications are only sent after PDF generation completes, so we need a longer timeout
+    // covering both the notification wait below and the PDF-existence poll further down.
+    test.setTimeout(180_000);
 
     // PART 1: Test single subscriber notification with email content verification
     const testUser1 = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -438,8 +439,11 @@ test.describe("Subscription Notifications", () => {
     const sentNotification = notifications.find((n) => n.status === "Sent" || n.status === "Failed");
     expect(sentNotification).toBeDefined();
 
-    // Verify PDF was generated for the publication (may take time as it's async)
-    const pdfInfo = await waitForPdfGeneration(result.artefact_id);
+    // Verify PDF was generated for the publication (may take time as it's async).
+    // The notification reaching a terminal status above does not guarantee the PDF has
+    // finished writing to storage yet, so poll for up to the documented 40-60+s cold-start
+    // window rather than the helper's 15s default (previously a flaky race under CI load).
+    const pdfInfo = await waitForPdfGeneration(result.artefact_id, 75, 1000);
     expect(pdfInfo.exists).toBe(true);
     expect(pdfInfo.filename).toContain(result.artefact_id);
     expect(pdfInfo.sizeBytes).toBeGreaterThan(0);
