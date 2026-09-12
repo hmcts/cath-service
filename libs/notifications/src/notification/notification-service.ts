@@ -44,6 +44,10 @@ import {
 } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
 import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
+import {
+  extractCaseSummary as extractInterimApplicationsChdSummary,
+  formatCaseSummaryForEmail as formatInterimApplicationsChdSummaryForEmail
+} from "@hmcts/interim-applications-chd-daily-cause-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -200,6 +204,10 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
     extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
     format: formatCompaniesWindingUpChdSummaryForEmail
+  },
+  INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST: {
+    extract: extractInterimApplicationsChdSummary as SummaryExtractor,
+    format: formatInterimApplicationsChdSummaryForEmail
   },
   FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
     extract: extractFinancialListChdKbSummary as SummaryExtractor,
