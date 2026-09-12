@@ -3,6 +3,7 @@ export {
   extractCaseSummary as extractMagistratesAdultCourtListCaseSummary,
   formatCaseSummaryForEmail as formatMagistratesAdultCourtListCaseSummaryForEmail
 } from "./email-summary/summary-builder.js";
+export { generateMagistratesAdultCourtListExcel } from "./excel/excel-generator.js";
 export { cyDaily as magistratesAdultCourtListDailyCy, cyFuture as magistratesAdultCourtListFutureCy } from "./locales/cy.js";
 export { enDaily as magistratesAdultCourtListDailyEn, enFuture as magistratesAdultCourtListFutureEn } from "./locales/en.js";
 export * from "./pdf/pdf-generator.js";
