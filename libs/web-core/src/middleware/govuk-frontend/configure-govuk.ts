@@ -7,7 +7,16 @@ import type { AssetOptions } from "../../assets/assets.js";
 import { configureAssets } from "../../assets/configure-assets.js";
 import { localeMiddleware, renderInterceptorMiddleware, translationMiddleware } from "../i18n/locale-middleware.js";
 import { loadTranslationsFromMultiplePaths } from "../i18n/translation-loader.js";
-import { currencyFilter, dateFilter, govukErrorSummaryFilter, kebabCaseFilter, selectAttrFilter, time12Filter, timeFilter } from "./filters/index.js";
+import {
+  currencyFilter,
+  dateFilter,
+  govukErrorSummaryFilter,
+  kebabCaseFilter,
+  sanitiseHtmlFilter,
+  selectAttrFilter,
+  time12Filter,
+  timeFilter
+} from "./filters/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -56,6 +65,7 @@ function addFilters(env: nunjucks.Environment): void {
   env.addFilter("time12", time12Filter);
   env.addFilter("currency", currencyFilter);
   env.addFilter("kebabCase", kebabCaseFilter);
+  env.addFilter("sanitiseHtml", sanitiseHtmlFilter);
   env.addFilter("govukErrorSummary", govukErrorSummaryFilter);
   env.addFilter("selectattr", selectAttrFilter);
 }

@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertErrorSummary, assertNoErrors, createTestEnvironment, render } from "@hmcts/test-support";
+import { sanitiseHtmlFilter } from "@hmcts/web-core";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
@@ -32,6 +33,10 @@ describe("summary-of-publications template", () => {
 
   beforeEach(() => {
     env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+    // Registered as the real filter rather than a stub — it is the control that stops
+    // admin-authored markup executing on this page, so stubbing it would make the
+    // assertions below meaningless.
+    env.addFilter("sanitiseHtml", sanitiseHtmlFilter);
   });
 
   describe("Template file", () => {
@@ -70,7 +75,7 @@ describe("summary-of-publications template", () => {
     });
 
     it("should not show the no publications message when a noListMessage is present", () => {
-      const data = buildData(en, { noListMessage: "<p>Custom no list message</p>" });
+      const data = buildData(en, { noListMessage: "Custom no list message" });
 
       const { $ } = render(env, TEMPLATE, data);
 
@@ -79,7 +84,7 @@ describe("summary-of-publications template", () => {
     });
 
     it("should render the caution message when present", () => {
-      const data = buildData(en, { cautionMessage: "<strong>Caution notice</strong>" });
+      const data = buildData(en, { cautionMessage: "Caution notice" });
 
       const { $ } = render(env, TEMPLATE, data);
 
@@ -123,6 +128,31 @@ describe("summary-of-publications template", () => {
       expect($('a[href="/publication/fallback-artefact"]')).toHaveLength(1);
       expect($("ul.govuk-list li")).toHaveLength(3);
       expect($("body").text()).not.toContain(en.noPublicationsMessage);
+    });
+
+    it.each([["cautionMessage"], ["noListMessage"]])("should render allowed formatting in %s as markup", (field) => {
+      const data = buildData(en, { [field]: "<p><strong>Court closed</strong></p><p>Reopens Monday</p>" });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const message = $("div.govuk-body");
+      expect(message.find("strong").text()).toBe("Court closed");
+      expect(message.find("p")).toHaveLength(2);
+    });
+
+    it.each([["cautionMessage"], ["noListMessage"]])("should discard unsafe markup in %s while keeping allowed formatting", (field) => {
+      const data = buildData(en, {
+        [field]: '<strong>Court closed</strong><script>alert(1)</script><img src="x" onerror="alert(2)">'
+      });
+
+      const { html, $ } = render(env, TEMPLATE, data);
+
+      const message = $("div.govuk-body");
+      expect(message.find("strong").text()).toBe("Court closed");
+      expect(message.find("script")).toHaveLength(0);
+      expect(message.find("img")).toHaveLength(0);
+      expect(html).not.toContain("alert(1)");
+      expect(html).not.toContain("onerror");
     });
 
     it("should render an error summary when an error is present", () => {
