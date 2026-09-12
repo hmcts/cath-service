@@ -59,6 +59,11 @@ const baseConfig: UserConfig = {
         loadPaths: [path.resolve(__dirname, "../.."), "node_modules"]
       }
     },
+    lightningcss: {
+      // govuk-frontend ships the legacy IE `@media (min-width: 0\0)` hack, which the
+      // LightningCSS minifier Vite 8 defaults to rejects as invalid syntax.
+      errorRecovery: true
+    },
     devSourcemap: true
   },
   resolve: {
