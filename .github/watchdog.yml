@@ -1,0 +1,335 @@
+# CaTH watchdog configuration.
+#
+# Read by hmcts/cnp-githubactions-library/appinsights-health-check. The action runs
+# these queries and applies these rules; it has no queries of its own.
+#
+# {{window}} and {{baseline}} are substituted by the action (15m and 7d by default).
+#
+# Error checks are zero-threshold: any error is worth a look, and the suppressions
+# list at the bottom is how known-benign noise gets silenced. Rate and ratio checks
+# keep real thresholds, because zero is not a meaningful floor for a percentile.
+#
+# Two things every query needs, and the reason they are repeated rather than shared:
+# each query is standalone KQL, so there is nowhere to put a common prelude.
+#
+#   app     — which application a row came from, taken from cloud_RoleInstance.
+#             cloud_RoleName reports "unknown_service:node" for every app, so it
+#             cannot be used to tell them apart. Pod names can: they are
+#             cath-<app>-<hash>, cath-service-aat-<app>-<hash> or
+#             cath-service-pr-<n>-<app>-<hash>.
+#
+#   !has '-pr-' — excludes preview deployments. They report to the same instance and
+#             currently produce more telemetry than the real deployment, so without
+#             this the watchdog mostly alerts on other people's open pull requests.
+#
+# Thresholds calibrated 2026-09-04 against cath-appinsights-aat: roughly 1800
+# non-health requests/day. Revisit when traffic changes materially.
+
+app-insights:
+  # cath-appinsights-aat in cath-aat (DCD-CNP-DEV). The GUID, not the resource name:
+  #   az monitor app-insights component show -g <rg> --app <name> --query appId -o tsv
+  app-id: 1d78d448-ad9c-4ea1-a052-08d685b4d6bc
+
+defaults:
+  severity: medium
+  renotify-after: 6h
+
+checks:
+  # ---------------------------------------------------------------------------
+  # Errors — zero threshold. One row is enough.
+  # ---------------------------------------------------------------------------
+
+  - id: exceptions
+    severity: high
+    description: Any unhandled or tracked exception.
+    fingerprint-by: [problemId, app]
+    rule: { rows: '> 0' }
+    query: |
+      exceptions
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | summarize occurrences = count(), sample = any(outerMessage)
+          by problemId, app, type
+
+  - id: server-errors
+    severity: high
+    description: Any 5xx response, health probes excluded.
+    fingerprint-by: [name, resultCode, app]
+    rule: { rows: '> 0' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where toint(resultCode) >= 500
+      | where name !startswith 'GET /health'
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | summarize occurrences = count(), p95_ms = percentile(duration, 95)
+          by name, resultCode, app
+
+  # Grouped by the SDK's operation name rather than target: blob targets carry the
+  # artefact GUID and object path, so fingerprinting on them turns one underlying
+  # problem into a new finding per object and nothing ever dedupes. Observed doing
+  # exactly that — 17 findings from a single blob issue.
+  - id: dependency-failures
+    severity: high
+    description: Any failed outbound call.
+    fingerprint-by: [type, operation, app]
+    rule: { rows: '> 0' }
+    query: |
+      dependencies
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where success == false
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | extend operation = trim_end(@':\d+$', tostring(name))
+      | summarize failures = count(),
+                  sample = any(resultCode),
+                  sample_target = any(target)
+          by type, operation, app
+
+  - id: error-traces
+    severity: medium
+    description: Any log line at Error or Critical.
+    fingerprint-by: [messageShape, app]
+    rule: { rows: '> 0' }
+    query: |
+      traces
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where severityLevel >= 3
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      // First line only, digits masked: a stack trace makes the fingerprint
+      // unreadable, and line numbers would make it churn on every deploy.
+      | extend messageShape = replace_regex(tostring(split(message, '\n')[0]), @'\d+', 'N')
+      | summarize occurrences = count(), sample = any(message)
+          by messageShape, app
+
+  # Depends on the standard web test added in VIBE-552.
+  - id: availability-failures
+    severity: high
+    description: Any failed availability test run.
+    fingerprint-by: [name, location]
+    rule: { rows: '> 0' }
+    query: |
+      availabilityResults
+      | where timestamp > ago({{window}})
+      | where success == false
+      | summarize failures = count() by name, location
+
+  # CaTH's crons ingest publications and send subscriber notifications, so a silent
+  # failure here has more user impact than a 500 on a page.
+  - id: cron-failures
+    severity: high
+    description: Any cron run that ended in an exception.
+    fingerprint-by: [problemId]
+    rule: { rows: '> 0' }
+    query: |
+      exceptions
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where cloud_RoleInstance has '-crons-'
+      | summarize failures = count(), sample = any(outerMessage) by problemId
+
+  # ---------------------------------------------------------------------------
+  # Liveness — fires on an empty result.
+  # ---------------------------------------------------------------------------
+
+  # Catches a dead or unschedulable deployment. crons is deliberately absent: it is a
+  # CronJob, so no pod exists between runs and its silence is not a fault. Its health
+  # is covered by cron-failures instead.
+  - id: app-silent
+    severity: high
+    description: An application that should be reporting telemetry and is not.
+    fingerprint-by: [expected_app]
+    rule: { rows: '> 0' }
+    query: |
+      let expected = dynamic(['web', 'api']);
+      let seen = union isfuzzy=true requests, traces, customMetrics, exceptions, dependencies
+        | where timestamp > ago(1h)
+        | where cloud_RoleInstance !has '-pr-'
+        | summarize by app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance);
+      print expected_app = expected
+      | mv-expand expected_app to typeof(string)
+      | where expected_app !in ((seen | project app))
+
+  # Up but serving nobody, measured over a day rather than the usual window.
+  #
+  # AAT gets very little real traffic: 544 non-health requests in 24h on web and none
+  # at all on api, mostly static assets from someone loading a page. A 15-minute window
+  # is empty most of the time, so this looks for a day with no traffic — which does mean
+  # a genuine outage is not caught here until it has lasted hours. app-silent and the
+  # availability test are the checks that notice quickly; this one is a backstop for
+  # "reachable but serving nothing", and only has meaning once there is real traffic.
+  #
+  # No time-of-day condition, so there is nothing that can filter the result away and
+  # accidentally fire the check — an empty result here means exactly what it says.
+  - id: no-user-traffic
+    severity: low
+    description: No successful non-health requests in a day.
+    rule: { rows: '== 0' }
+    query: |
+      requests
+      | where timestamp > ago(24h)
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | where success == true
+      | take 1
+
+  # ---------------------------------------------------------------------------
+  # Rates and regressions — real thresholds, since zero is not a floor here.
+  # ---------------------------------------------------------------------------
+
+  # Observed: 1% over 24h (18 of 1800). 20% is deliberately well clear of that; it is
+  # meant to catch broken routing or auth, not ordinary 404s.
+  - id: client-error-rate
+    severity: medium
+    description: 4xx responses as a share of non-health traffic.
+    fingerprint-by: [app]
+    rule: { column: rate, value: '> 0.2' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | summarize total = count(),
+                  client_errors = countif(toint(resultCode) between (400 .. 499))
+          by app
+      | where total >= 20
+      | extend rate = todouble(client_errors) / total
+
+  # Observed p95 by operation over 24h: GET /cft-login/return 1257ms,
+  # POST /subscription-confirmation-preview 1213ms, POST /v1/publication 952ms,
+  # everything else below 660ms. Ratio-based rather than absolute so it adapts as the
+  # service changes; the row-count floors stop a handful of slow requests in a quiet
+  # window from registering as a regression.
+  - id: latency-p95-regression
+    severity: medium
+    description: Operation p95 more than double its trailing baseline.
+    fingerprint-by: [name]
+    rule: { column: ratio, value: '> 2' }
+    query: |
+      let base = requests
+        | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+        | where cloud_RoleInstance !has '-pr-'
+        | where name !startswith 'GET /health'
+        | summarize p95_base = percentile(duration, 95), base_n = count() by name
+        | where base_n >= 20;
+      requests
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | summarize p95_now = percentile(duration, 95), now_n = count() by name
+      | where now_n >= 5
+      | join kind=inner base on name
+      | where p95_base > 0
+      | extend ratio = p95_now / p95_base
+      | project name, p95_now, p95_base, ratio, now_n
+
+  # Absolute backstop for the case the ratio check cannot see: an operation that has
+  # always been slow has a baseline that makes its ratio look fine.
+  - id: latency-p99-absolute
+    severity: medium
+    description: Operation p99 above 5 seconds.
+    fingerprint-by: [name]
+    rule: { column: p99_ms, value: '> 5000' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | summarize p99_ms = percentile(duration, 99), n = count() by name
+      | where n >= 5
+
+  - id: dependency-latency-regression
+    severity: low
+    description: Dependency p95 more than double its trailing baseline.
+    fingerprint-by: [operation, type]
+    rule: { column: ratio, value: '> 2' }
+    query: |
+      let base = dependencies
+        | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+        | where cloud_RoleInstance !has '-pr-'
+        | extend operation = trim_end(@':\d+$', tostring(name))
+        | summarize p95_base = percentile(duration, 95), base_n = count() by operation, type
+        | where base_n >= 20;
+      dependencies
+      | where timestamp > ago({{window}})
+      | where cloud_RoleInstance !has '-pr-'
+      | extend operation = trim_end(@':\d+$', tostring(name))
+      | summarize p95_now = percentile(duration, 95), now_n = count() by operation, type
+      | where now_n >= 5
+      | join kind=inner base on operation, type
+      | where p95_base > 0
+      | extend ratio = p95_now / p95_base
+      | project operation, type, p95_now, p95_base, ratio
+
+  # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
+  # afternoon would false-positive constantly. The expected_for_window floor
+  # suppresses the check entirely when the baseline is too thin to judge.
+  - id: volume-drop
+    severity: medium
+    description: Non-health traffic well below the same slot on comparable days.
+    rule: { column: drop_ratio, value: '> 0.6' }
+    query: |
+      let current = toscalar(
+        requests
+        | where timestamp > ago({{window}})
+        | where cloud_RoleInstance !has '-pr-'
+        | where name !startswith 'GET /health'
+        | count);
+      requests
+      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | where dayofweek(timestamp) == dayofweek(now())
+        and hourofday(timestamp) == hourofday(now())
+      | summarize per_day = count() by bin(timestamp, 1d)
+      | summarize baseline_per_hour = avg(per_day), days = count()
+      | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
+      | where days >= 2 and expected_for_window >= 4.0
+      | extend current = current
+      | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
+
+  # Scraping, a runaway client, or a retry storm.
+  - id: volume-spike
+    severity: low
+    description: Non-health traffic far above the same slot on comparable days.
+    rule: { column: spike_ratio, value: '> 3' }
+    query: |
+      let current = toscalar(
+        requests
+        | where timestamp > ago({{window}})
+        | where cloud_RoleInstance !has '-pr-'
+        | where name !startswith 'GET /health'
+        | count);
+      requests
+      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where cloud_RoleInstance !has '-pr-'
+      | where name !startswith 'GET /health'
+      | where dayofweek(timestamp) == dayofweek(now())
+        and hourofday(timestamp) == hourofday(now())
+      | summarize per_day = count() by bin(timestamp, 1d)
+      | summarize baseline_per_hour = avg(per_day), days = count()
+      | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
+      | where days >= 2 and expected_for_window >= 4.0
+      | extend current = current
+      | extend spike_ratio = todouble(current) / expected_for_window
+
+# Known-benign fingerprints. Every entry needs a reason — the action rejects the
+# config otherwise. Review periodically: anything that has not fired in 90 days is
+# probably hiding something that no longer happens, or that has changed shape.
+#
+# Matching is exact string equality, and the exceptions problemId carries the throw
+# site inside @azure/core-client, so a version bump moves the line number and quietly
+# stops these matching. Recheck them after a Renovate bump of that package.
+suppressions:
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:ContainerAlreadyExists at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: uploadBlob calls createIfNotExists() on every upload and Terraform pre-creates the containers, so the SDK swallows this 409 itself and no upload fails.
+  - fingerprint: "exceptions:BlobNotFound at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):web"
+    reason: downloadBlob and getBlobProperties treat 404 as absent and return null, and getFileBuffer probes up to three blob names by design, so a miss is an expected step rather than a failure — real blob loss still shows up under dependency-failures.
+  - fingerprint: "exceptions:BlobNotFound at handleErrorResponse (/opt/app/node_modules/@azure/core-client/dist/commonjs/deserializationPolicy.js:146:19):api"
+    reason: Same as the web entry above — the api hits the same exists-check paths. Not in the triage that produced the other three, because it happened not to fire in that window.
