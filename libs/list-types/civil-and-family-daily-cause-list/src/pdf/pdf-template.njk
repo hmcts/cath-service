@@ -40,8 +40,6 @@
           {% for line in courtHouse.courtHouseAddress.line %}
             {% if line | length %}{{ line }}<br>{% endif %}
           {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
           {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
         </div>
       {% endif %}
