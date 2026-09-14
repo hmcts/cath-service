@@ -186,15 +186,29 @@ jobs:
               if (error.status !== 422) throw error;   // 422 = already exists
             }
 
-            // One tracking issue per fingerprint is the dedup gate for triage, in the
-            // same spirit as renovate-autofix's label. The detect job already applies a
+            // One tracking issue per problem is the dedup gate for triage, in the same
+            // spirit as renovate-autofix's label. The detect job already applies a
             // re-notify window; this stops two concurrent runs both triaging the same
             // thing, and gives a human somewhere to comment.
+            //
+            // Only open issues are consulted. A problem that recurs after someone closed
+            // its issue is news, and deserves a new one rather than reopening a thread
+            // that was deliberately ended.
             const open = await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: 'open', labels: 'claude:watchdog', per_page: 100,
             });
 
-            const marker = (fp) => `<!-- watchdog-fingerprint: ${fp} -->`;
+            // Matching is on a normalised fingerprint, not the exact one. An exceptions
+            // problemId carries the throw site — including the absolute path and the
+            // line:column — so a dependency bump moves it and an already-tracked problem
+            // would otherwise look new. Dropping the path and the position keeps the
+            // exception type and the function, which is what identifies the problem.
+            const similar = (fp) => fp
+              .replace(/\(([^)]*\/)?([^/)]+?):\d+:\d+\)/g, '($2)')
+              .replace(/\s+/g, ' ')
+              .trim();
+            const marker = (fp) => `<!-- watchdog-problem: ${similar(fp)} -->`;
+
             const claimed = [];
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.fingerprint)));
@@ -204,7 +218,7 @@ jobs:
               }
               const issue = await github.rest.issues.create({
                 owner, repo,
-                title: `Watchdog: ${finding.checkId} — ${finding.fingerprint}`,
+                title: `Watchdog: ${finding.checkId} — ${similar(finding.fingerprint)}`,
                 labels: ['claude:watchdog'],
                 body: [
                   marker(finding.fingerprint),
@@ -213,6 +227,9 @@ jobs:
                   `- **Check:** \`${finding.checkId}\``,
                   `- **Severity:** ${finding.severity}`,
                   `- **Rule:** \`${finding.rule}\``,
+                  // The exact fingerprint, because a suppressions entry has to match it
+                  // character for character.
+                  `- **Fingerprint:** \`${finding.fingerprint}\``,
                   '',
                   '```json',
                   JSON.stringify(finding.row, null, 2),
