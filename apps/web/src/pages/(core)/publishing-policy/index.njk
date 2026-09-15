@@ -1,0 +1,157 @@
+{% extends "layouts/base-template.njk" %}
+
+{% block page_content %}
+  <h1 class="govuk-heading-l">{{ cy.title if locale == "cy" else en.title }}</h1>
+
+  <h2 class="govuk-heading-m">{{ section1.heading }}</h2>
+  <p class="govuk-body">{{ section1.text1Prefix }} <a href="{{ section1.link.href }}" class="govuk-link">{{ section1.link.text }}</a>{{ section1.text1Suffix }}</p>
+  <p class="govuk-body">{{ section1.text2 }}</p>
+
+  <h2 class="govuk-heading-m">{{ section2.heading }}</h2>
+  <p class="govuk-body">{{ section2.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section2.list1 %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section2.text2 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section2.list2 %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section2.text3 }}</p>
+
+  <h2 class="govuk-heading-m">{{ section3.heading }}</h2>
+  <p class="govuk-body">{{ section3.text1 }}</p>
+
+  <h3 class="govuk-heading-s">{{ section3.section31.heading }}</h3>
+  <p class="govuk-body">{{ section3.section31.text }}</p>
+
+  <h3 class="govuk-heading-s">{{ section3.section32.heading }}</h3>
+  <p class="govuk-body">{{ section3.section32.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section3.section32.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="govuk-heading-m">{{ section4.heading }}</h2>
+
+  <h3 class="govuk-heading-s">{{ section4.section41.heading }}</h3>
+  <p class="govuk-body">{{ section4.section41.text1 }}</p>
+  <p class="govuk-body">{{ section4.section41.text2 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section4.section41.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section4.section41.text3Prefix }}<a href="{{ section4.section41.link.href }}" class="govuk-link">{{ section4.section41.link.text }}</a>{{ section4.section41.text3Suffix }}</p>
+
+  <h3 class="govuk-heading-s">{{ section4.section42.heading }}</h3>
+  <p class="govuk-body">{{ section4.section42.text1 }}</p>
+  <p class="govuk-body">{{ section4.section42.text2 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section4.section42.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3 class="govuk-heading-s">{{ section4.section43.heading }}</h3>
+  <p class="govuk-body">{{ section4.section43.text1 }}</p>
+  <blockquote class="govuk-body">{{ section4.section43.quote }}</blockquote>
+
+  <h3 class="govuk-heading-s">{{ section4.section44.heading }}</h3>
+  <p class="govuk-body">{{ section4.section44.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section4.section44.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="govuk-heading-m">{{ section5.heading }}</h2>
+
+  <h3 class="govuk-heading-s">{{ section5.section51.heading }}</h3>
+  <p class="govuk-body">{{ section5.section51.text1 }}</p>
+  <p class="govuk-body">{{ section5.section51.text2 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section5.section51.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section5.section51.text3 }}</p>
+
+  <h3 class="govuk-heading-s">{{ section5.section52.heading }}</h3>
+  <p class="govuk-body">{{ section5.section52.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section5.section52.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section5.section52.text2 }}</p>
+  <p class="govuk-body">{{ section5.section52.text3 }} <a href="{{ section5.section52.link.href }}" class="govuk-link">{{ section5.section52.link.text }}</a></p>
+
+  <h2 class="govuk-heading-m">{{ section6.heading }}</h2>
+
+  <h3 class="govuk-heading-s">{{ section6.section61.heading }}</h3>
+  <p class="govuk-body">{{ section6.section61.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for entry in section6.section61.linkedList %}
+      <li>{{ entry.prefix }} <a href="{{ entry.link.href }}" class="govuk-link">{{ entry.link.text }}</a>{{ entry.suffix }}</li>
+    {% endfor %}
+    {% for item in section6.section61.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  <p class="govuk-body">{{ section6.section61.text2 }}</p>
+
+  <h3 class="govuk-heading-s">{{ section6.section62.heading }}</h3>
+  <p class="govuk-body">{{ section6.section62.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section6.section62.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3 class="govuk-heading-s">{{ section6.section63.heading }}</h3>
+  <p class="govuk-body">{{ section6.section63.text1 }}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    {% for item in section6.section63.list %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="govuk-heading-m">{{ section7.heading }}</h2>
+  {% for paragraph in section7.text %}
+    <p class="govuk-body">{{ paragraph }}</p>
+  {% endfor %}
+
+  <h2 class="govuk-heading-m">{{ section8.heading }}</h2>
+  {% for paragraph in section8.text %}
+    <p class="govuk-body">{{ paragraph }}</p>
+  {% endfor %}
+
+  <h2 class="govuk-heading-m">{{ section9.heading }}</h2>
+  {% for paragraph in section9.text %}
+    <p class="govuk-body">{{ paragraph }}</p>
+  {% endfor %}
+
+  <h2 class="govuk-heading-m">{{ section10.heading }}</h2>
+  {% for paragraph in section10.text %}
+    <p class="govuk-body">{{ paragraph }}</p>
+  {% endfor %}
+  <p class="govuk-body">
+    {% for line in section10.address %}
+      {{ line }}<br>
+    {% endfor %}
+  </p>
+
+  <p class="govuk-body back-to-top-link">
+    <a href="#" class="govuk-link govuk-link--no-underline govuk-!-font-size-19 with-background">
+      <svg focusable="false" class="app-back-to-top__icon" xmlns="http://www.w3.org/2000/svg" width="13" height="17" viewBox="0 0 13 17">
+        <path fill="currentColor" d="M6.5 0 L0 6.5 1.4 8l4-4v12.7h2V4l4.3 4L13 6.4z"></path>
+      </svg>
+      {{ backToTop }}
+    </a>
+  </p>
+{% endblock %}

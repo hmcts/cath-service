@@ -17,6 +17,7 @@ export const cy = {
     contactUs: "Cysylltwch",
     language: "Cymraeg",
     governmentDigitalService: "Gwasanaeth Digidol y Llywodraeth",
+    publishingPolicy: "Polisi cyhoeddi",
     openGovernmentLicence: "Open Government Licence",
     contentLicence: {
       text: "All content is available under the",
