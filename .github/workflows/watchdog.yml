@@ -1,40 +1,18 @@
 name: Watchdog
 
-# Runs every 15 minutes while AAT is up, queries Application Insights for anything
-# wrong, and hands what it finds to Claude to triage. Claude decides what to do — fix,
-# escalate, classify, or suppress as noise — and posts the outcome to Slack. Any code
-# change arrives as a draft PR for review; nothing here can merge.
+# Runs every 15 minutes, queries Application Insights for anything wrong, and hands
+# what it finds to Claude to triage. Claude decides what to do — fix, escalate,
+# classify, or suppress as noise — and posts the outcome to Slack. Any code change
+# arrives as a draft PR for review; nothing here can merge.
 #
-# Detection is deterministic and contains no LLM: it must stay cheap and boring at 45
-# runs a weekday. The checks and thresholds live in .github/watchdog.yml, not in this
-# file.
+# Detection is deterministic and contains no LLM: it must stay cheap and boring at 96
+# runs a day. The checks and thresholds live in .github/watchdog.yml, not in this file.
 #
 # Note that `schedule` only ever runs the default branch's copy of this file, so edits
 # do nothing until merged. workflow_dispatch is there to exercise it on a branch.
 
 on:
   schedule:
-    # AAT is shut down outside working hours and all weekend. With no telemetry every
-    # check fires at once, so a scheduled shutdown is indistinguishable from total
-    # failure — running out of hours only produces false alerts.
-    #
-    # The environment runs 07:00–20:00 Europe/London, Monday to Friday:
-    # https://hmcts.github.io/cloud-native-platform/environments/auto-shutdown.html
-    #
-    # GitHub cron is UTC and has no timezone field, so the window cannot be written in
-    # London time. These hours are the part of it that holds under both BST and GMT,
-    # which is what makes them safe to leave alone across a clock change:
-    #
-    #   BST   07:30–18:30 UTC = 08:30–19:30 London
-    #   GMT   07:30–18:30 UTC = 07:30–18:30 London
-    #
-    # Both sit inside 07:00–20:00 London with half an hour to spare at each end, so the
-    # watchdog never queries an environment that is still starting or already stopping.
-    # The cost is an hour of coverage a day, at whichever end the clocks put it.
-    #
-    # Teams can extend an environment's uptime for a day via hmcts/auto-shutdown; on
-    # those days this is narrower than reality, which costs detection latency out of
-    # hours and cannot cause a false alert.
     - cron: '30,45 7 * * 1-5'
     - cron: '*/15 8-17 * * 1-5'
     - cron: '0,15,30 18 * * 1-5'
