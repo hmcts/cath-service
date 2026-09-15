@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CrownWarnedListData } from "../models/types.js";
+import type { CrownAdvanceListData } from "../models/types.js";
 import { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./summary-builder.js";
 
-const buildTestData = (overrides?: Partial<CrownWarnedListData["WarnedList"]>): CrownWarnedListData => ({
+const buildTestData = (overrides?: Partial<CrownAdvanceListData["WarnedList"]>): CrownAdvanceListData => ({
   WarnedList: {
     DocumentID: { UniqueID: "CWL-2025-001", DocumentType: "crown_warned_pdda_list" },
     ListHeader: { StartDate: "2025-01-27" },
