@@ -34,6 +34,23 @@ defaults:
   severity: medium
   renotify-after: 6h
 
+# AAT is shut down outside working hours and all weekend, so out of hours every check
+# fires at once: no telemetry is indistinguishable from total failure. Outside this
+# window the action runs no queries.
+#
+# The published schedule is a 20:00 shutdown and a 07:00 start
+# (https://hmcts.github.io/cloud-native-platform/environments/auto-shutdown.html).
+# The bounds here sit inside it so the environment is serving rather than still
+# starting or already stopping.
+#
+# Teams can extend an environment's uptime for a day via hmcts/auto-shutdown, and on
+# those days this window is narrower than reality. That costs detection latency out of
+# hours; it cannot cause a false alert.
+schedule:
+  timezone: Europe/London
+  active: '07:30-19:45'
+  days: mon-fri
+
 checks:
   # ---------------------------------------------------------------------------
   # Errors — zero threshold. One row is enough.
