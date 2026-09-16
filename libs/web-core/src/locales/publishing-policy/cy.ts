@@ -1,4 +1,5 @@
 export const cy = {
+  titleCaption: "Gwasanaeth Gwrandawiadau'r Llysoedd a'r Tribiwnlysoedd (CaTH)",
   title: "Polisi Cyhoeddi",
   backToTop: "Yn ôl i frig y dudalen",
   section1: {

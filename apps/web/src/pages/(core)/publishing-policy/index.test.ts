@@ -22,7 +22,7 @@ describe("publishing-policy page", () => {
         "publishing-policy/index",
         expect.objectContaining({
           en: expect.objectContaining({
-            title: "Publication policy",
+            title: "Publication Policy",
             backToTop: "Back to top"
           }),
           cy: expect.objectContaining({

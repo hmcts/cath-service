@@ -1,5 +1,6 @@
 export const en = {
-  title: "Publication policy",
+  titleCaption: "HMCTS Court and Tribunal Hearings Service (CaTH)",
+  title: "Publication Policy",
   backToTop: "Back to top",
   section1: {
     heading: "1. Scope and aim",
