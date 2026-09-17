@@ -1,5 +1,5 @@
 module "third_party_key_vault" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
 
   name                = "${var.product}-tp-${var.env}"
   product             = var.product
