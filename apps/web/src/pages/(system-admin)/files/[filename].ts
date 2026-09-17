@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
+import { getFileBuffer } from "@hmcts/publication";
 import { getParam } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 
@@ -26,8 +26,8 @@ const getHandler = async (req: Request, res: Response) => {
 
   try {
     const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
-    const container = ext === ".pdf" ? CONTAINER.PUBLICATIONS : CONTAINER.ARTEFACT;
-    const fileContent = await downloadBlob(filename, container);
+    const artefactId = filename.slice(0, filename.lastIndexOf("."));
+    const fileContent = await getFileBuffer(artefactId);
 
     if (!fileContent) {
       return res.status(404).send("File not found");
