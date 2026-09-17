@@ -1,35 +1,44 @@
 # Git history - not needed in Docker and causes lefthook to run during yarn install
 .git
 
-# Local environment and secrets
-.env
-.env.*.local
-.env.local
-certs/
-*.pem
-*.key
+# Dependencies - installed inside the image.
+**/node_modules
+.yarn/cache
+.yarn/install-state.gz
+
+# Local environment and secrets.
+**/.env
+**/.env.local
+**/.env.*.local
+**/certs
+**/certs.*
+**/*.pem
+**/*.key
 
 # Development tooling
-.idea/
-.vscode/
-.claude/
-*.log
-.DS_Store
+**/.idea
+**/.vscode
+**/.claude
+**/*.log
+**/.DS_Store
 
 # Test artefacts
-test-results/
-playwright-report/
-coverage/
-.nyc_output/
+**/test-results
+**/playwright-report
+**/coverage
+**/.nyc_output
 e2e-tests/
 
 # Turborepo cache
-.turbo/
+**/.turbo
 
 # Build artefacts (rebuilt inside Docker)
-dist/
-build/
-*.tsbuildinfo
+**/dist
+# Vendored, no build script - its exports point at the committed dist/.
+!libs/simple-router/dist
+**/build
+**/generated
+**/*.tsbuildinfo
 
 # Docs
 docs/
