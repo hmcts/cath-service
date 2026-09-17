@@ -42,15 +42,8 @@ on:
 env:
   CHANGE_ID: ${{ inputs.change-id }}
   REGISTRY: hmctsprod.azurecr.io
-  # Helm's Kubernetes client is client-side rate limited. HELM_QPS defaults to 0,
-  # which falls through to client-go's 5 requests/sec. Polling readiness across the
-  # parent chart plus four subcharts, redis and postgresql starves that token bucket,
-  # and the wait dies with "client rate limiter Wait returned an error: context
-  # deadline exceeded" - not because anything is unhealthy.
-  # helm reads both of these from the environment (pkg/cli/environment.go), so they
-  # apply to the `helm upgrade` hardcoded inside
-  # hmcts/cnp-githubactions-library/helm-deploy without forking it. Set at workflow
-  # level, not step level: step-level env is not propagated into composite actions.
+  # Workflow level, not step level: step-level env on a `uses:` step is not passed
+  # into a composite action, and the `helm upgrade` is inside helm-deploy.
   HELM_QPS: "50"
   HELM_BURST_LIMIT: "300"
 
