@@ -92,3 +92,7 @@ variable "pip_nonprod_group_object_id" {
   type        = string
   default     = "9c37fa4a-a75f-4b1d-918b-3c7248e2211b"
 }
+
+variable "dummy" {
+  default = null
+}
