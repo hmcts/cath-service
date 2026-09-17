@@ -24,7 +24,7 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurerm_key_vault_access_policy" "e2e_oidc_sp" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
   tenant_id    = var.tenant_id
   object_id    = var.e2e_oidc_object_id
 
