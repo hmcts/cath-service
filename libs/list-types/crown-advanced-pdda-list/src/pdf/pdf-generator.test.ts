@@ -21,7 +21,7 @@ vi.mock("@hmcts/pdf-generation", () => ({
 }));
 
 vi.mock("../rendering/renderer.js", () => ({
-  renderCrownWarnedListData: vi.fn()
+  renderCrownAdvanceListData: vi.fn()
 }));
 
 vi.mock("@hmcts/publication", () => ({
@@ -32,8 +32,8 @@ vi.mock("@hmcts/publication", () => ({
 }));
 
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { renderCrownWarnedListData } from "../rendering/renderer.js";
-import { generateCrownWarnedListPdf } from "./pdf-generator.js";
+import { renderCrownAdvanceListData } from "../rendering/renderer.js";
+import { generateCrownAdvanceListPdf } from "./pdf-generator.js";
 
 const mockRenderedData = {
   header: {
@@ -61,7 +61,7 @@ const mockJsonData = {
   }
 };
 
-describe("generateCrownWarnedListPdf", () => {
+describe("generateCrownAdvanceListPdf", () => {
   const mockNunjucksEnv = {
     render: vi.fn().mockReturnValue("<html>PDF HTML</html>")
   };
@@ -69,9 +69,9 @@ describe("generateCrownWarnedListPdf", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mocked(renderCrownWarnedListData).mockResolvedValue(mockRenderedData);
+    vi.mocked(renderCrownAdvanceListData).mockResolvedValue(mockRenderedData);
     mockConfigureNunjucks.mockReturnValue(mockNunjucksEnv);
-    mockLoadTranslations.mockResolvedValue({ pageTitle: "Crown Warned List" });
+    mockLoadTranslations.mockResolvedValue({ pageTitle: "Crown Advance List" });
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",
@@ -93,13 +93,13 @@ describe("generateCrownWarnedListPdf", () => {
     });
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
-      pdfPath: "/storage/temp/uploads/warned-artefact-123.pdf",
+      pdfPath: "/storage/temp/uploads/advance-artefact-123.pdf",
       sizeBytes: 1024,
       exceedsMaxSize: false
     });
 
-    const result = await generateCrownWarnedListPdf({
-      artefactId: "warned-artefact-123",
+    const result = await generateCrownAdvanceListPdf({
+      artefactId: "advance-artefact-123",
       contentDate: new Date("2025-11-10"),
       locale: "en",
       locationId: "102",
@@ -107,8 +107,8 @@ describe("generateCrownWarnedListPdf", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.pdfPath).toContain("warned-artefact-123.pdf");
-    expect(mockSavePdfToStorage).toHaveBeenCalledWith("warned-artefact-123", pdfBuffer, 1024);
+    expect(result.pdfPath).toContain("advance-artefact-123.pdf");
+    expect(mockSavePdfToStorage).toHaveBeenCalledWith("advance-artefact-123", pdfBuffer, 1024);
   });
 
   it("should pass groupedCategories to template", async () => {
@@ -118,7 +118,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 100
     });
 
-    await generateCrownWarnedListPdf({
+    await generateCrownAdvanceListPdf({
       artefactId: "test",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -135,7 +135,7 @@ describe("generateCrownWarnedListPdf", () => {
       error: "Puppeteer crashed"
     });
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "failed-pdf",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -150,7 +150,7 @@ describe("generateCrownWarnedListPdf", () => {
   it("should return default error when PDF generation fails without error message", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: false });
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "failed-pdf",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -169,7 +169,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 0
     });
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "no-buffer",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -182,9 +182,9 @@ describe("generateCrownWarnedListPdf", () => {
   });
 
   it("should handle renderer errors gracefully", async () => {
-    vi.mocked(renderCrownWarnedListData).mockRejectedValue(new Error("Renderer failed"));
+    vi.mocked(renderCrownAdvanceListData).mockRejectedValue(new Error("Renderer failed"));
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "renderer-error",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -197,9 +197,9 @@ describe("generateCrownWarnedListPdf", () => {
   });
 
   it("should handle non-Error exceptions", async () => {
-    vi.mocked(renderCrownWarnedListData).mockRejectedValue("String error");
+    vi.mocked(renderCrownAdvanceListData).mockRejectedValue("String error");
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "string-error",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -219,7 +219,7 @@ describe("generateCrownWarnedListPdf", () => {
     });
     mockSavePdfToStorage.mockRejectedValue(new Error("Disk full"));
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "fs-error",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -240,7 +240,7 @@ describe("generateCrownWarnedListPdf", () => {
 
     const contentDate = new Date("2025-11-10");
 
-    await generateCrownWarnedListPdf({
+    await generateCrownAdvanceListPdf({
       artefactId: "test-options",
       contentDate,
       locale: "cy",
@@ -248,7 +248,7 @@ describe("generateCrownWarnedListPdf", () => {
       jsonData: mockJsonData as any
     });
 
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(mockJsonData, {
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(mockJsonData, {
       contentDate,
       locale: "cy",
       locationId: "999"
@@ -262,7 +262,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 100
     });
 
-    await generateCrownWarnedListPdf({
+    await generateCrownAdvanceListPdf({
       artefactId: "provenance-test",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -281,7 +281,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 100
     });
 
-    await generateCrownWarnedListPdf({
+    await generateCrownAdvanceListPdf({
       artefactId: "unknown-provenance",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -300,7 +300,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 100
     });
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "no-provenance",
       contentDate: new Date("2025-11-10"),
       locale: "en",
@@ -319,7 +319,7 @@ describe("generateCrownWarnedListPdf", () => {
       sizeBytes: 100
     });
 
-    const result = await generateCrownWarnedListPdf({
+    const result = await generateCrownAdvanceListPdf({
       artefactId: "welsh-pdf",
       contentDate: new Date("2025-11-10"),
       locale: "cy",
@@ -328,6 +328,6 @@ describe("generateCrownWarnedListPdf", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(renderCrownWarnedListData).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locale: "cy" }));
+    expect(renderCrownAdvanceListData).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locale: "cy" }));
   });
 });

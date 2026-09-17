@@ -42,11 +42,11 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [7]
   },
   {
-    name: "CROWN_WARNED_LIST",
-    englishFriendlyName: "Crown Warned List",
-    welshFriendlyName: "Crown Warned List",
+    name: "CROWN_ADVANCED_PDDA_LIST",
+    englishFriendlyName: "Crown Advance List",
+    welshFriendlyName: "Rhestr Ymlaen Llaw Llys y Goron",
     provenance: "CRIME_IDAM",
-    urlPath: "crown-warned-list",
+    urlPath: "crown-advance-list",
     isNonStrategic: false,
     defaultSensitivity: "Classified",
     subJurisdictionIds: [4]

@@ -11,9 +11,9 @@ import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-
 import { moduleRoot as companiesWindingUpChdModuleRoot } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
 import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as crownAdvanceListModuleRoot } from "@hmcts/crown-advanced-pdda-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
 import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
-import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-list/config";
 import { moduleRoot as etDailyListModuleRoot } from "@hmcts/et-daily-list/config";
 import { moduleRoot as etFortnightlyListModuleRoot } from "@hmcts/et-fortnightly-list/config";
 import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
@@ -150,7 +150,7 @@ export async function createApp(): Promise<Express> {
     magistratesAdultCourtListModuleRoot,
     crownDailyListModuleRoot,
     crownFirmListModuleRoot,
-    crownWarnedListModuleRoot,
+    crownAdvanceListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     grcWeeklyHearingListModuleRoot,
