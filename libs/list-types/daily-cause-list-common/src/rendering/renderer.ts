@@ -51,14 +51,8 @@ function formatAddress(address: CauseListData["venue"]["venueAddress"]): string[
     }
   }
 
-  if (address.town && address.town.length > 0) {
-    parts.push(address.town);
-  }
-
-  if (address.county && address.county.length > 0) {
-    parts.push(address.county);
-  }
-
+  // Town and county are deliberately not emitted: the published list must show only the
+  // address lines and postcode, even when the payload supplies them.
   if (address.postCode && address.postCode.length > 0) {
     parts.push(address.postCode);
   }
@@ -173,7 +167,9 @@ export async function renderCauseListData(jsonData: CauseListData, options: Rend
   };
 
   const openJustice = {
-    venueName: jsonData.venue.venueName,
+    // The open justice statement must name the court resolved from the location table, not the
+    // JSON venue name, so readers are told the court they can actually apply to observe at.
+    venueName: locationName,
     email: jsonData.venue.venueContact?.venueEmail || "",
     phone: jsonData.venue.venueContact?.venueTelephone || ""
   };
