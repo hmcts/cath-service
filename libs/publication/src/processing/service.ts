@@ -24,8 +24,16 @@ import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
-import { generateMagistratesAdultCourtListPdf, type MagistratesAdultCourtListData } from "@hmcts/magistrates-adult-court-list";
-import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdultCourtListData } from "@hmcts/magistrates-public-adult-court-list";
+import {
+  generateMagistratesAdultCourtListExcel,
+  generateMagistratesAdultCourtListPdf,
+  type MagistratesAdultCourtListData
+} from "@hmcts/magistrates-adult-court-list";
+import {
+  generateMagistratesPublicAdultCourtListExcel,
+  generateMagistratesPublicAdultCourtListPdf,
+  type MagistratesPublicAdultCourtListData
+} from "@hmcts/magistrates-public-adult-court-list";
 import { generateMagistratesPublicListExcel, generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListExcel, generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
@@ -363,6 +371,12 @@ type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorRes
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesPublicAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesPublicAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicAdultCourtListData }),
   SJP_PUBLIC_LIST: async (p) => {
     const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
     await saveExcelFile(p.artefactId, buffer);
