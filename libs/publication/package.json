@@ -43,6 +43,7 @@
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*",
     "@hmcts/grc-weekly-hearing-list": "workspace:*",
     "@hmcts/iac-daily-list": "workspace:*",
+    "@hmcts/insolvency-and-companies-court-chd-daily-cause-list": "workspace:*",
     "@hmcts/legacy-third-party-fulfilment": "workspace:*",
     "@hmcts/list-search-config": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
