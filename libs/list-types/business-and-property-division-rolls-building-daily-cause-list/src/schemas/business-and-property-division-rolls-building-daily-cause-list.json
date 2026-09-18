@@ -1,0 +1,618 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Business and Property Division Rolls Building Daily Cause List",
+  "description": "Schema for the 16-section Business and Property Division Rolls Building Daily Cause List",
+  "type": "object",
+  "required": [
+    "appealList",
+    "businessList",
+    "commercialCourt",
+    "financialList",
+    "insolvencyAndCompaniesCourt",
+    "intellectualPropertyAndEnterpriseCourt",
+    "intellectualPropertyList",
+    "londonCircuitCommercialCourt",
+    "patentsCourt",
+    "propertyTrustsAndProbateList",
+    "technologyAndConstructionCourt",
+    "admiraltyCourt",
+    "companiesWindingUp",
+    "competitionList",
+    "pensionsList",
+    "revenueList"
+  ],
+  "properties": {
+    "appealList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "businessList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "commercialCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "financialList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "insolvencyAndCompaniesCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "intellectualPropertyAndEnterpriseCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "intellectualPropertyList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "londonCircuitCommercialCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "patentsCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "propertyTrustsAndProbateList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "technologyAndConstructionCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "admiraltyCourt": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "companiesWindingUp": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "competitionList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "pensionsList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    },
+    "revenueList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "properties": {
+          "judge": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+          },
+          "venue": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseNumber": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "caseName": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          },
+          "additionalInformation": {
+            "type": "string",
+            "pattern": "^(?!(.|\\r|\\n)*<[^>]+>)(.|\\r|\\n)*$"
+          }
+        }
+      }
+    }
+  }
+}

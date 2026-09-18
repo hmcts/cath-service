@@ -9,6 +9,9 @@ export const TIME_PATTERN = /^(\d{1,2})([:.]\d{2})?\s*[ap]m\s*$/i;
 // Matches dd/MM/yyyy date format
 export const DD_MM_YYYY_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
 
+// Basic email format: non-space chars, single @, domain with a dot
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /**
  * Validates time format with hour validation (1-12)
  * Format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)
@@ -32,5 +35,15 @@ export function validateTimeFormat(value: string, rowNumber: number): void {
 export function validateTimeFormatSimple(value: string, rowNumber: number): void {
   if (!TIME_PATTERN.test(value)) {
     throw new Error(`Invalid time format '${value}' in row ${rowNumber}. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)`);
+  }
+}
+
+/**
+ * Validates email address format
+ * Format: local@domain.tld (e.g., clerk@justice.gov.uk)
+ */
+export function validateEmailFormat(value: string, rowNumber: number): void {
+  if (!EMAIL_PATTERN.test(value)) {
+    throw new Error(`Invalid email format '${value}' in row ${rowNumber}. Expected a valid email address (e.g., clerk@justice.gov.uk)`);
   }
 }
