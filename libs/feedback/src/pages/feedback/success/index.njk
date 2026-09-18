@@ -1,0 +1,23 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
+
+{% block pageTitle %}{{ t.successTitle }} - Court and Tribunal Hearings{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {{ govukPanel({
+      titleText: t.successTitle,
+      html: t.successMessage
+    }) }}
+
+    <p class="govuk-body">{{ t.successMessage }}</p>
+
+    <p class="govuk-body">
+      <a href="/" class="govuk-link">{{ t.successLink }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}
