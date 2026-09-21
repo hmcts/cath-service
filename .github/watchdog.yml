@@ -308,6 +308,14 @@ checks:
       | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
 
   # Scraping, a runaway client, or a retry storm.
+  #
+  # The ratio alone is not trustworthy here, hence the absolute floor on current below.
+  # The day-of-week condition leaves only clipped partial hours in the baseline — one of
+  # them the current hour's own earlier minutes — and bin(timestamp, 1d) counts each as a
+  # whole hour, so expected_for_window comes out low and the ratio high. 100 requests in
+  # 15 minutes is 400/hour against an observed 18-75/hour: past anything browsing produces,
+  # well inside what a scraper or retry storm reaches. Fixing the baseline arithmetic needs
+  # a longer baseline than 7d to have two real comparable days — see issue #1046.
   - id: volume-spike
     severity: low
     description: Non-health traffic far above the same slot on comparable days.
@@ -330,6 +338,7 @@ checks:
       | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
       | where days >= 2 and expected_for_window >= 4.0
       | extend current = current
+      | where current >= 100
       | extend spike_ratio = todouble(current) / expected_for_window
 
 # Known-benign fingerprints. Every entry needs a reason — the action rejects the
