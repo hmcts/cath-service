@@ -269,29 +269,12 @@ checks:
   # afternoon would false-positive constantly. The expected_for_window floor
   # suppresses the check entirely when the baseline is too thin to judge.
   #
-  # The baseline is whole past days over 28d rather than ago({{baseline}}), and the
-  # floor is 20 rather than 4, both because this check fired on a healthy service
-  # (issue #1034):
-  #
-  #   Whole past days — ago(7d) .. ago({{window}}) both start and end mid-hour, so the
-  #   only two hour buckets it could match were partial slices at the edges, and the
-  #   later one was *today*, ending a quarter of an hour before the window being
-  #   judged. Half the baseline was the traffic immediately preceding the drop it was
-  #   supposed to be measured against.
-  #
-  #   28d — with a same-day-of-week filter, seven days of whole days contain exactly
-  #   one comparable day, so `days >= 2` was only ever satisfied by those partial edge
-  #   slices. 28d gives the four comparable days the rule already assumed it had, and
-  #   whole days make per_day a real hourly count rather than a fragment of one.
-  #
-  #   Floor of 20 — a page load is a burst, not a request: the HTML, the stylesheet,
-  #   the script bundle, the fonts and the favicons all arrive as separate non-health
-  #   requests. 4 per 15 minutes sits well inside one visitor, so a slot that saw a
-  #   couple of page loads on comparable days counted as judgeable and any quarter
-  #   hour without a visitor then read as an ~88% drop. 20 per 15 minutes means
-  #   traffic spread through the window rather than one arrival. This does keep the
-  #   check quiet on AAT until a slot genuinely sustains traffic — deliberately, in
-  #   the same spirit as no-user-traffic above. Lower it if earlier warning is wanted.
+  # Baseline is whole past days rather than ago({{baseline}}): a range starting and ending
+  # mid-hour only matches clipped fragments at its two edges, and the later one is today —
+  # the traffic the drop would be measured against. 28d because the same-day-of-week filter
+  # leaves only one comparable day in 7. The floor is 20 rather than 4 because assets are
+  # counted individually, so 4 requests per 15 minutes sits inside a single page load; this
+  # keeps the check quiet until a slot sustains real traffic.
   - id: volume-drop
     severity: medium
     description: Non-health traffic well below the same slot on comparable days.
