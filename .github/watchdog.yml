@@ -183,23 +183,11 @@ checks:
   # Observed: 1% over 24h (18 of 1800). 20% is deliberately well clear of that; it is
   # meant to catch broken routing or auth, not ordinary 404s.
   #
-  # Measured over a day rather than {{window}}, like no-user-traffic above. web serves
-  # around 544 non-health requests in 24h — under six per 15 minutes — so the old
-  # `total >= 20` floor could only be crossed by a burst, and the rate then described
-  # that burst rather than the service. It fired on 2026-09-16 at 85% (29 of 34) while
-  # every other check in the same window was clean: no 5xx, no exceptions, no failed
-  # dependency, no failed availability run, and all five requests for `/` served in
-  # 24ms. No single route appeared five times, so the 4xx were spread thinly over eight
-  # or more distinct paths — nothing this app serves was failing. Over a day the same 29
-  # are 5%, while broken routing or auth persists and still clears 20%.
-  #
-  # The 20-request floor came from the 1800/day figure at the top of this file, which the
-  # 544/day above contradicts. 200 keeps the check evaluating on an ordinary day and
-  # stops it judging a share of almost nothing; raise it when AAT carries real traffic.
-  #
-  # sample_4xx names the routes. Without it a finding says only "85% of web requests were
-  # 4xx", which cannot distinguish a broken route from someone probing the hostname —
-  # which is why the 2026-09-16 firing could not be settled either way.
+  # Measured over a day rather than {{window}}, like no-user-traffic above: web serves
+  # around 544 non-health requests in 24h, so a 15-minute denominator is too small for a
+  # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
+  # names the routes, without which a firing cannot distinguish a broken route from
+  # someone probing the hostname.
   - id: client-error-rate
     severity: medium
     description: 4xx responses as a share of non-health traffic over a day.
