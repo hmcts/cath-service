@@ -268,6 +268,13 @@ checks:
   # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
   # afternoon would false-positive constantly. The expected_for_window floor
   # suppresses the check entirely when the baseline is too thin to judge.
+  #
+  # Baseline is whole past days rather than ago({{baseline}}): a range starting and ending
+  # mid-hour only matches clipped fragments at its two edges, and the later one is today —
+  # the traffic the drop would be measured against. 28d because the same-day-of-week filter
+  # leaves only one comparable day in 7. The floor is 20 rather than 4 because assets are
+  # counted individually, so 4 requests per 15 minutes sits inside a single page load; this
+  # keeps the check quiet until a slot sustains real traffic.
   - id: volume-drop
     severity: medium
     description: Non-health traffic well below the same slot on comparable days.
@@ -280,7 +287,7 @@ checks:
         | where name !startswith 'GET /health'
         | count);
       requests
-      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where timestamp between (startofday(ago(28d)) .. startofday(now()))
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | where dayofweek(timestamp) == dayofweek(now())
@@ -288,7 +295,7 @@ checks:
       | summarize per_day = count() by bin(timestamp, 1d)
       | summarize baseline_per_hour = avg(per_day), days = count()
       | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
-      | where days >= 2 and expected_for_window >= 4.0
+      | where days >= 2 and expected_for_window >= 20.0
       | extend current = current
       | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
 
