@@ -182,21 +182,29 @@ checks:
 
   # Observed: 1% over 24h (18 of 1800). 20% is deliberately well clear of that; it is
   # meant to catch broken routing or auth, not ordinary 404s.
+  #
+  # Measured over a day rather than {{window}}, like no-user-traffic above: web serves
+  # around 544 non-health requests in 24h, so a 15-minute denominator is too small for a
+  # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
+  # names the routes, without which a firing cannot distinguish a broken route from
+  # someone probing the hostname.
   - id: client-error-rate
     severity: medium
-    description: 4xx responses as a share of non-health traffic.
+    description: 4xx responses as a share of non-health traffic over a day.
     fingerprint-by: [app]
     rule: { column: rate, value: '> 0.2' }
     query: |
       requests
-      | where timestamp > ago({{window}})
+      | where timestamp > ago(24h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | extend is_client_error = toint(resultCode) between (400 .. 499)
       | summarize total = count(),
-                  client_errors = countif(toint(resultCode) between (400 .. 499))
+                  client_errors = countif(is_client_error),
+                  sample_4xx = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 10)
           by app
-      | where total >= 20
+      | where total >= 200
       | extend rate = todouble(client_errors) / total
 
   # Observed p95 by operation over 24h: GET /cft-login/return 1257ms,
