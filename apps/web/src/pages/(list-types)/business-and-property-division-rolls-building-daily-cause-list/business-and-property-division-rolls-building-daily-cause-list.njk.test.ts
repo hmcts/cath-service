@@ -118,6 +118,17 @@ describe("Business and Property Division Rolls Building template", () => {
       expect(headings).toEqual(SECTIONS.map((s) => s.en));
     });
 
+    it("should render section headings with the word 'and', never an ampersand", () => {
+      const { $ } = renderList();
+      const headings = $(".hearings-section h2")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(headings).toContain("Insolvency and Companies Court");
+      for (const heading of headings) {
+        expect(heading).not.toContain("&");
+      }
+    });
+
     it("should render a table for a populated section and place fields in the correct columns", () => {
       const { $ } = renderList({ populated: { appealList: [buildHearing()] } });
       const cells = $("#section-appealList tbody tr")

@@ -8,13 +8,13 @@
     "businessList",
     "commercialCourt",
     "financialList",
-    "insolvencyAndCompaniesCourt",
-    "intellectualPropertyAndEnterpriseCourt",
+    "insolvency&CompaniesCourt",
+    "ip&EnterpriseCourt",
     "intellectualPropertyList",
     "londonCircuitCommercialCourt",
     "patentsCourt",
-    "propertyTrustsAndProbateList",
-    "technologyAndConstructionCourt",
+    "property,Trusts&ProbateList",
+    "technology&ConstructionCourt",
     "admiraltyCourt",
     "companiesWindingUp",
     "competitionList",
@@ -26,7 +26,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -34,7 +34,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -63,7 +63,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -71,7 +71,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -100,7 +100,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -108,7 +108,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -137,7 +137,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -145,7 +145,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -170,11 +170,11 @@
         }
       }
     },
-    "insolvencyAndCompaniesCourt": {
+    "insolvency&CompaniesCourt": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -182,7 +182,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -207,11 +207,11 @@
         }
       }
     },
-    "intellectualPropertyAndEnterpriseCourt": {
+    "ip&EnterpriseCourt": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -219,7 +219,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -248,7 +248,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -256,7 +256,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -285,7 +285,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -293,7 +293,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -322,7 +322,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -330,7 +330,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -355,11 +355,11 @@
         }
       }
     },
-    "propertyTrustsAndProbateList": {
+    "property,Trusts&ProbateList": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -367,7 +367,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -392,11 +392,11 @@
         }
       }
     },
-    "technologyAndConstructionCourt": {
+    "technology&ConstructionCourt": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -404,7 +404,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -433,7 +433,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -441,7 +441,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -470,7 +470,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -478,7 +478,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -507,7 +507,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -515,7 +515,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -544,7 +544,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -552,7 +552,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",
@@ -581,7 +581,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName"],
+        "required": ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"],
         "properties": {
           "judge": {
             "type": "string",
@@ -589,7 +589,7 @@
           },
           "time": {
             "type": "string",
-            "pattern": "^\\d{1,2}([:.]\\d{2})?[ap]m\\s*$"
+            "pattern": "^\\d{1,2}([:.]\\d{2})?[aApP][mM]\\s*$"
           },
           "venue": {
             "type": "string",

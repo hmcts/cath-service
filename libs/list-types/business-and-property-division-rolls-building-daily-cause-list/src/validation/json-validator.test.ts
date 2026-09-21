@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SECTIONS } from "../sections.js";
 import { validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList } from "./json-validator.js";
 
-const REQUIRED_FIELDS = ["judge", "time", "venue", "type", "caseNumber", "caseName"] as const;
+const REQUIRED_FIELDS = ["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"] as const;
 
 function validHearing() {
   return {
@@ -29,6 +29,25 @@ describe("validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList", () =>
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toHaveLength(0);
+  });
+
+  it.each(["12:30Pm", "9AM", "10.15pm", "2pm"])("should accept case-insensitive am/pm time %s", (time) => {
+    const data = JSON.parse(JSON.stringify(buildValidData()));
+    data.appealList[0].time = time;
+
+    const result = validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList(data);
+
+    expect(result.isValid).toBe(true);
+  });
+
+  it("should return invalid when time does not match the am/pm pattern", () => {
+    const data = JSON.parse(JSON.stringify(buildValidData()));
+    data.appealList[0].time = "1330";
+
+    const result = validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList(data);
+
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 
   describe.each(SECTIONS.map((s) => s.key))("section %s", (sectionKey) => {

@@ -37,7 +37,7 @@ export const en = {
     caseName: "Case Name",
     additionalInformation: "Additional Information"
   },
-  noHearingsMessage: "No hearings scheduled for this day",
+  noHearingsMessage: "No hearings scheduled for this day.",
   dataSource: "Data source",
   backToTop: "Back to top",
   listFor: "List for",

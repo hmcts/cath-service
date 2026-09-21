@@ -37,7 +37,7 @@ export const cy = {
     caseName: "Enw'r achos",
     additionalInformation: "Gwybodaeth ychwanegol"
   },
-  noHearingsMessage: "Dim gwrandawiadau wedi'u trefnu ar gyfer y diwrnod hwn",
+  noHearingsMessage: "Dim gwrandawiadau wedi'u trefnu ar gyfer y diwrnod hwn.",
   dataSource: "Ffynhonnell data",
   backToTop: "Yn ôl i frig y dudalen",
   listFor: "Rhestr ar gyfer",

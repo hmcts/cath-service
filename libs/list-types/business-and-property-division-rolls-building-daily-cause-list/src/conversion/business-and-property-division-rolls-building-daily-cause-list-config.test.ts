@@ -1,9 +1,15 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { convertExcelToJson, getConverterForListTypeName, hasConverterForListTypeName } from "@hmcts/list-types-common";
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { SECTIONS } from "../sections.js";
+import { validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList } from "../validation/json-validator.js";
 import { STANDARD_CONFIG } from "./business-and-property-division-rolls-building-daily-cause-list-config.js";
 import "./business-and-property-division-rolls-building-daily-cause-list-config.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const LIST_TYPE_NAME = "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST";
 const HEADERS = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
@@ -27,8 +33,8 @@ describe("Business and Property Division Rolls Building converter registration",
   it("should convert a 16-tab workbook into a section-keyed object", async () => {
     const buffer = await createWorkbook(
       SECTIONS.map((section, index) => ({
-        name: section.en,
-        rows: [HEADERS, ["Mr Justice Smith", "10am", `Court ${index + 1}`, "Trial", `CR-2026-${index}`, `Case ${section.key}`, ""]]
+        name: section.worksheetName,
+        rows: [HEADERS, ["Mr Justice Smith", "10am", `Court ${index + 1}`, "Trial", `CR-2026-${index}`, `Case ${section.key}`, "Listed for 1 day"]]
       }))
     );
 
@@ -43,7 +49,7 @@ describe("Business and Property Division Rolls Building converter registration",
 
   it("should yield an empty array for a missing section tab", async () => {
     const buffer = await createWorkbook([
-      { name: SECTIONS[0].en, rows: [HEADERS, ["Mr Justice Smith", "10am", "Court 1", "Trial", "CR-2026-1", "Acme v Widgets", ""]] }
+      { name: SECTIONS[0].worksheetName, rows: [HEADERS, ["Mr Justice Smith", "10am", "Court 1", "Trial", "CR-2026-1", "Acme v Widgets", "Listed for 1 day"]] }
     ]);
 
     const converter = getConverterForListTypeName(LIST_TYPE_NAME);
@@ -70,9 +76,9 @@ describe("STANDARD_CONFIG", () => {
     expect(STANDARD_CONFIG.fields.map((f) => f.fieldName)).toEqual(["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"]);
   });
 
-  it("should mark only additionalInformation as optional", () => {
+  it("should mark all fields as required", () => {
     for (const field of STANDARD_CONFIG.fields) {
-      expect(field.required).toBe(field.fieldName !== "additionalInformation");
+      expect(field.required).toBe(true);
     }
   });
 
@@ -80,14 +86,12 @@ describe("STANDARD_CONFIG", () => {
     expect(STANDARD_CONFIG.minRows).toBe(0);
   });
 
-  it("should accept an empty additional information cell", async () => {
+  it("should reject an empty additional information cell", async () => {
     const buffer = await createWorkbook([
       { name: "Sheet1", rows: [HEADERS, ["Mr Justice Smith", "2pm", "Court 2", "Hearing", "CR-2026-000456", "Beta v Gamma", ""]] }
     ]);
 
-    const result = await convertExcelToJson(buffer, STANDARD_CONFIG);
-
-    expect(result[0].additionalInformation).toBe("");
+    await expect(convertExcelToJson(buffer, STANDARD_CONFIG)).rejects.toThrow(/Missing required field 'Additional Information'/);
   });
 
   it("should reject an invalid time format", async () => {
@@ -104,5 +108,38 @@ describe("STANDARD_CONFIG", () => {
     ]);
 
     await expect(convertExcelToJson(buffer, STANDARD_CONFIG)).rejects.toThrow(/HTML tags are not allowed/);
+  });
+});
+
+// Round-trips the real source workbook (tabs use "&", e.g. "IP & Enterprise Court"). Fabricated
+// workbooks built from section.worksheetName cannot catch a drift between the configured tab name
+// and the actual tab, so this exercises the genuine file end to end.
+describe("real source workbook", () => {
+  const buffer = readFileSync(path.join(__dirname, "__fixtures__/businessAndPropertyDivisionRollsBuildingDailyCauseList.xlsx"));
+
+  // Ampersand-named tabs in the fixture that carry data rows. These would silently resolve empty
+  // if worksheetName drifted from the real tab name (the bug this test guards against). The
+  // "IP & Enterprise Court" tab is header-only in the fixture, so it is legitimately empty and
+  // excluded here.
+  const POPULATED_AMPERSAND_SECTION_KEYS = ["insolvency&CompaniesCourt", "property,Trusts&ProbateList", "technology&ConstructionCourt"];
+
+  it("should map ampersand-named tabs to their sections", async () => {
+    const converter = getConverterForListTypeName(LIST_TYPE_NAME);
+    const result = (await converter?.convertExcelToJson(Buffer.from(buffer))) as unknown as Record<string, unknown[]>;
+
+    expect(Object.keys(result)).toEqual(SECTIONS.map((s) => s.key));
+    for (const key of POPULATED_AMPERSAND_SECTION_KEYS) {
+      expect(result[key].length).toBeGreaterThan(0);
+    }
+  });
+
+  it("should produce JSON that validates against the schema", async () => {
+    const converter = getConverterForListTypeName(LIST_TYPE_NAME);
+    const result = await converter?.convertExcelToJson(Buffer.from(buffer));
+
+    const validation = validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList(result);
+
+    expect(validation.isValid).toBe(true);
+    expect(validation.errors).toHaveLength(0);
   });
 });
