@@ -263,6 +263,21 @@ checks:
       | summarize p99_ms = percentile(duration, 99), n = count() by name
       | where n >= 5
 
+  # Same absolute floor as latency-p95-regression above, and for the same reason: at
+  # now_n >= 5, percentile(duration, 95) is the slowest of five rows rather than a
+  # percentile, so the ratio fires on a single slow call.
+  #
+  # pg-pool.connect is the worst case for a bare ratio, because its latency is bimodal
+  # by construction. Handing back an idle connection is sub-millisecond; opening a new
+  # one is a TCP plus TLS plus auth round trip to Postgres and costs hundreds of ms. The
+  # 7-day baseline p95 is therefore dominated by cheap reuse, while any window holding a
+  # cold connect — a deploy, a scale event, an idle pool aging out — has p95 equal to
+  # that connect. Observed at 478.1ms against a 92.1ms baseline, ratio 5.2, with zero
+  # dependency failures in the same window. The ratio there is reporting what share of
+  # acquisitions were cold, not whether Postgres is healthy.
+  #
+  # now_n is projected so a future triage can see the sample count without re-running
+  # the query; the requests check above already exposes it.
   - id: dependency-latency-regression
     severity: low
     description: Dependency p95 more than double its trailing baseline.
@@ -284,7 +299,8 @@ checks:
       | join kind=inner base on operation, type
       | where p95_base > 0
       | extend ratio = p95_now / p95_base
-      | project operation, type, p95_now, p95_base, ratio
+      | where p95_now > 1000
+      | project operation, type, p95_now, p95_base, ratio, now_n
 
   # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
   # afternoon would false-positive constantly. The expected_for_window floor
