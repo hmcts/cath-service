@@ -1,11 +1,5 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { listTypeData } from "./list-type-data.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REFERENCE_PATH = path.resolve(__dirname, "../../../../docs/tickets/698/reference-list-types.json");
 
 interface ReferenceEntry {
   name: string;
@@ -13,8 +7,117 @@ interface ReferenceEntry {
   isDeprecated: boolean;
 }
 
-const reference: { listTypes: ReferenceEntry[] } = JSON.parse(readFileSync(REFERENCE_PATH, "utf8"));
-const referenceByName = new Map(reference.listTypes.map((e) => [e.name, e]));
+// Snapshot of the shared model — pip-data-models ListType.java (102 entries).
+// `allowedProvenances` is the 2nd constructor arg (List.of(...)); `isDeprecated` the 4th
+// positional boolean. Embedded here (rather than read from disk) so the test is self-contained
+// and cannot break on a missing planning artifact. Update in lock-step with the upstream enum.
+// Source: https://github.com/hmcts/pip-data-models/blob/master/src/main/java/uk/gov/hmcts/reform/pip/model/publication/ListType.java
+const REFERENCE_LIST_TYPES: ReferenceEntry[] = [
+  { name: "SJP_PUBLIC_LIST", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "SJP_DELTA_PUBLIC_LIST", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "SJP_PRESS_LIST", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "SJP_DELTA_PRESS_LIST", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "SJP_PRESS_REGISTER", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "CROWN_DAILY_LIST", allowedProvenances: ["CRIME_IDAM"], isDeprecated: true },
+  { name: "CROWN_FIRM_LIST", allowedProvenances: ["CRIME_IDAM"], isDeprecated: true },
+  { name: "CROWN_WARNED_LIST", allowedProvenances: ["CRIME_IDAM"], isDeprecated: true },
+  { name: "MAGISTRATES_PUBLIC_LIST", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "MAGISTRATES_STANDARD_LIST", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "CIVIL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "FAMILY_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COP_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "ET_FORTNIGHTLY_PRESS_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "ET_DAILY_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_DAILY_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_DAILY_LIST_ADDITIONAL_HEARINGS", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "IAC_DAILY_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "IAC_DAILY_LIST_ADDITIONAL_CASES", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CARE_STANDARDS_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: true },
+  { name: "PRIMARY_HEALTH_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: true },
+  { name: "CIC_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: true },
+  { name: "CST_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PHT_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "GRC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "WPAFCC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SIAC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "POAC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PAAC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "FTT_TAX_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "FTT_LR_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_T_AND_CC_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_LC_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "UT_AAC_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "RPT_LONDON_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "RPT_EASTERN_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "RPT_MIDLANDS_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "RPT_NORTHERN_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "RPT_SOUTHERN_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "AST_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_MIDLANDS_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_SOUTH_EAST_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_SCOTLAND_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_NORTH_WEST_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SSCS_LONDON_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "MENTAL_HEALTH_TRIBUNAL_HEARING_LIST", allowedProvenances: ["PI_AAD"], isDeprecated: false },
+  { name: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST", allowedProvenances: ["CRIME_IDAM"], isDeprecated: false },
+  { name: "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "INTELLECTUAL_PROPERTY_AND_ENTERPRISE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "INTELLECTUAL_PROPERTY_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "LONDON_CIRCUIT_COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PATENTS_COURT_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PENSIONS_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PROPERTY_TRUSTS_PROBATE_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "REVENUE_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "TECHNOLOGY_AND_CONSTRUCTION_COURT_KB_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "ADMIRALTY_COURT_KB_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "BUSINESS_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CHANCERY_APPEALS_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COMMERCIAL_COURT_KB_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COMPETITION_LIST_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "INSOLVENCY_AND_COMPANIES_COURT_CHD_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "PCOL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "SEND_DAILY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CIC_WEEKLY_HEARING_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "MAGISTRATES_ADULT_COURT_LIST_DAILY", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "CROWN_DAILY_PDDA_LIST", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "CROWN_FIRM_PDDA_LIST", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "CROWN_WARNED_PDDA_LIST", allowedProvenances: ["CRIME_IDAM", "PI_AAD"], isDeprecated: false },
+  { name: "HIGH_COURT_CIVIL_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "HIGH_COURT_FAMILY_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false },
+  { name: "TECHNOLOGY_AND_CONSTRUCTION_COURT_DAILY_CAUSE_LIST", allowedProvenances: ["CFT_IDAM"], isDeprecated: false }
+];
+
+const referenceByName = new Map(REFERENCE_LIST_TYPES.map((e) => [e.name, e]));
 
 // 19 name divergences: ours -> shared-model name. All agree on CFT_IDAM.
 // Doubles as the rename-follow-up checklist (out of scope for this ticket; name is the stable key).
