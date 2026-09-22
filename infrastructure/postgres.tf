@@ -3,7 +3,7 @@ module "postgresql" {
     azurerm.postgres_network = azurerm.postgres_network
   }
 
-  source = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
+  source = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=DTSPO-30107-additional-postgres-admins"
 
   # The module appends -${var.env} to this, so pass the product alone to get cath-aat.
   name          = var.product
@@ -22,39 +22,40 @@ module "postgresql" {
     }
   ]
 
-  pgsql_sku            = "GP_Standard_D2ds_v4"
-  pgsql_version        = "16"
-  pgsql_storage_mb     = 65536
-  auto_grow_enabled    = true
-  admin_user_object_id = var.ci_service_principal_object_id
+  pgsql_sku                     = "GP_Standard_D2ds_v4"
+  pgsql_version                 = "16"
+  pgsql_storage_mb              = 65536
+  auto_grow_enabled             = true
+  admin_user_object_id          = var.ci_service_principal_object_id
+  preserve_legacy_jenkins_admin = false
 }
 
 resource "azurerm_key_vault_secret" "postgres_host" {
   name         = "postgres-host"
   value        = module.postgresql.fqdn
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_user" {
   name         = "postgres-user"
   value        = module.postgresql.username
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_password" {
   name         = "postgres-password"
   value        = module.postgresql.password
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_port" {
   name         = "postgres-port"
   value        = "5432"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_url" {
   name         = "postgres-url"
   value        = "postgresql://${module.postgresql.username}:${module.postgresql.password}@${module.postgresql.fqdn}:5432/cath?sslmode=require"
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
 }

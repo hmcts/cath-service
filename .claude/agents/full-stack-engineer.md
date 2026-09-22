@@ -655,7 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
-import { createSimpleRouter } from "@hmcts/simple-router";
+import { createSimpleRouter } from "@hmcts-cft/simple-router";
 import { createErrorHandler } from "@hmcts/error-handling";
 
 const app = express();

@@ -47,8 +47,9 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    # Must exceed the stuck-release cleanup budget plus the 15m0s helm timeout
-    # below, or the job is killed mid-install and leaves the release pending.
+    # Must exceed the 15m0s helm timeout below plus the recovery-timeout that
+    # helm-deploy allows itself, or the job is killed mid-install and leaves the
+    # release pending, which is the state the recovery then has to clean up.
     timeout-minutes: 35
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
@@ -95,55 +96,9 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
-      # A cancelled or timed-out `helm upgrade --atomic` leaves the release in
-      # pending-upgrade, and every later deploy then fails with "another
-      # operation (install/upgrade/rollback) is in progress". Clear it first.
-      # The cluster/RG names match how cnp-githubactions-library/helm-deploy
-      # derives them: {environment}-aks and {environment}-rg.
-      - name: Set up Helm (stuck-release cleanup)
-        uses: azure/setup-helm@v5
-        with:
-          version: 'v4.2.3'
-
-      - name: Azure login for AKS (stuck-release cleanup)
-        uses: azure/login@v3
-        with:
-          creds: ${{ inputs.environment == 'aat' && secrets.AZURE_CREDENTIALS_CFT_AAT || secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
-
-      - name: Get AKS credentials (stuck-release cleanup)
-        uses: azure/aks-set-context@v4
-        with:
-          resource-group: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-rg
-          cluster-name: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-aks
-          admin: 'true'
-
-      - name: Clear stuck Helm release
-        continue-on-error: true
-        timeout-minutes: 12
-        run: |
-          STATUS=$(helm status "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
-          case "$STATUS" in
-            pending-install|pending-upgrade|pending-rollback)
-              echo "Release ${RELEASE_NAME} is stuck in status: ${STATUS}."
-              REVISIONS=$(helm history "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq 'length' || echo 0)
-              if [ "${REVISIONS:-0}" -gt 1 ]; then
-                echo "Rolling back to the last good revision instead of uninstalling."
-                helm rollback "${RELEASE_NAME}" -n "${TEAM_NAME}" --cleanup-on-fail --wait --timeout 4m && exit 0
-                echo "Rollback failed, falling back to uninstall."
-              else
-                echo "Only one revision - no good state to roll back to, uninstalling."
-              fi
-              # --wait is deliberately omitted: ASO resources (blob service,
-              # flexible server database) sit in Terminating for minutes and
-              # `helm uninstall --wait` blocks on them for no benefit, since the
-              # release secret is already gone by then.
-              helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --timeout 4m || true
-              ;;
-            *)
-              echo "Release status: ${STATUS:-not found}. No cleanup needed."
-              ;;
-          esac
-
+      # helm-deploy clears a release left in pending-upgrade by an interrupted
+      # deploy before it upgrades, which is why there is no cleanup step here.
+      # recover-stuck-release defaults to true; set it to false to opt out.
       - name: Deploy to PREVIEW
         if: inputs.environment == 'preview'
         id: deploy-preview
