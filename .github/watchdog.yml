@@ -210,8 +210,20 @@ checks:
   # Observed p95 by operation over 24h: GET /cft-login/return 1257ms,
   # POST /subscription-confirmation-preview 1213ms, POST /v1/publication 952ms,
   # everything else below 660ms. Ratio-based rather than absolute so it adapts as the
-  # service changes; the row-count floors stop a handful of slow requests in a quiet
-  # window from registering as a regression.
+  # service changes.
+  #
+  # The ratio needs an absolute floor as well, because now_n >= 5 is not enough samples
+  # for percentile(duration, 95) to be a percentile: at n = 5 KQL returns the slowest of
+  # the five. Without a floor this compares one slow request against a real 7-day p95 and
+  # fires on any cold start or GC pause. Observed doing exactly that — GET / at 397.7ms
+  # against a 90.6ms baseline, ratio 4.4, where latency-p99-absolute reported the
+  # identical 397.7ms as p99 over the same 5 rows, proving both were one observation.
+  #
+  # 1000ms sits above every observed baseline except the login and preview routes, so a
+  # route now has to be both slow enough for a user to notice and twice its baseline.
+  # Raising now_n would be the statistically clean fix instead, but AAT serves ~66
+  # non-health requests per 15 minutes and no single route reaches 20, so that would
+  # silence the check outright — see issue #1061.
   - id: latency-p95-regression
     severity: medium
     description: Operation p95 more than double its trailing baseline.
@@ -233,6 +245,7 @@ checks:
       | join kind=inner base on name
       | where p95_base > 0
       | extend ratio = p95_now / p95_base
+      | where p95_now > 1000
       | project name, p95_now, p95_base, ratio, now_n
 
   # Absolute backstop for the case the ratio check cannot see: an operation that has
