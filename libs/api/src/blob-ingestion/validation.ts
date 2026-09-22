@@ -1,14 +1,21 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { getLocationById, getLocationByProvenanceLocationId } from "@hmcts/location";
-import { buildNoMatchLocationId, Language, Sensitivity } from "@hmcts/publication";
+import { buildNoMatchLocationId } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
-import type { BlobIngestionRequest, BlobValidationResult, FlatFileIngestionRequest, ValidationError } from "./repository/model.js";
+import type { PublicationMetadata } from "./publication-headers.js";
+import type { BlobValidationResult, ValidationError } from "./repository/model.js";
 
-const MAX_BLOB_SIZE = 100 * 1024 * 1024; // 100MB default
+export const MAX_BLOB_SIZE = 100 * 1024 * 1024; // 100MB default
 const ALLOWED_PROVENANCES = ["MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
 const EXTERNAL_PROVENANCES = ["SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
 
-async function validateCommonFields(request: FlatFileIngestionRequest, payloadSize: number): Promise<BlobValidationResult> {
+/**
+ * Semantic checks that need the database or cross-field rules. Presence, enum and date-format
+ * checks for the `x-*` headers already happened in parsePublicationHeaders, so this never
+ * re-reports a missing header. Errors are keyed by header name so the joined `Message` body
+ * is meaningful to a publisher.
+ */
+export async function validatePublicationMetadata(metadata: PublicationMetadata, payloadSize: number): Promise<BlobValidationResult> {
   const errors: ValidationError[] = [];
 
   if (payloadSize > MAX_BLOB_SIZE) {
@@ -18,155 +25,105 @@ async function validateCommonFields(request: FlatFileIngestionRequest, payloadSi
     });
   }
 
-  if (!request.court_id) {
-    errors.push({ field: "court_id", message: "court_id is required" });
-  }
-
-  if (!request.provenance) {
-    errors.push({ field: "provenance", message: "provenance is required" });
-  } else if (!ALLOWED_PROVENANCES.includes(request.provenance)) {
+  if (!ALLOWED_PROVENANCES.includes(metadata.provenance)) {
     errors.push({
-      field: "provenance",
-      message: `Invalid provenance. Allowed values: ${ALLOWED_PROVENANCES.join(", ")}`
+      field: "x-provenance",
+      message: `Invalid x-provenance. Allowed values: ${ALLOWED_PROVENANCES.join(", ")}`
     });
   }
 
-  if (!request.content_date) {
-    errors.push({ field: "content_date", message: "content_date is required" });
-  } else if (!isValidISODate(request.content_date)) {
-    errors.push({
-      field: "content_date",
-      message: "content_date must be a valid ISO 8601 date"
-    });
-  }
-
-  if (!request.list_type) {
-    errors.push({ field: "list_type", message: "list_type is required" });
-  }
-
-  let listTypeId: string | undefined;
+  let listTypeId: number | undefined;
   let listTypeLocationType: string | undefined;
-  const listTypes = await findAllListTypes();
-  if (request.list_type) {
-    const listType = listTypes.find((lt) => lt.name === request.list_type);
+
+  // LCSU carries no x-list-type (see parsePublicationHeaders), so there is nothing to resolve.
+  if (metadata.listType !== null) {
+    const listTypes = await findAllListTypes();
+    const listType = listTypes.find((lt) => lt.name === metadata.listType);
+
     if (!listType) {
       errors.push({
-        field: "list_type",
-        message: `Invalid list type. Allowed values: ${listTypes.map((lt) => lt.name).join(", ")}`
+        field: "x-list-type",
+        message: `Invalid x-list-type. Allowed values: ${listTypes.map((lt) => lt.name).join(", ")}`
       });
     } else {
-      listTypeId = listType.id.toString();
+      listTypeId = listType.id;
       listTypeLocationType = listType.locationType ?? undefined;
     }
   }
 
-  if (!request.sensitivity) {
-    errors.push({ field: "sensitivity", message: "sensitivity is required" });
-  } else if (!Object.values(Sensitivity).includes(request.sensitivity as Sensitivity)) {
-    errors.push({
-      field: "sensitivity",
-      message: `Invalid sensitivity. Allowed values: ${Object.values(Sensitivity).join(", ")}`
-    });
-  }
+  // Only applies when both dates are supplied — either may be omitted.
+  if (metadata.displayFrom && metadata.displayTo) {
+    const fromDate = new Date(metadata.displayFrom);
+    const toDate = new Date(metadata.displayTo);
 
-  if (!request.language) {
-    errors.push({ field: "language", message: "language is required" });
-  } else if (!Object.values(Language).includes(request.language as Language)) {
-    errors.push({
-      field: "language",
-      message: `Invalid language. Allowed values: ${Object.values(Language).join(", ")}`
-    });
-  }
-
-  if (!request.display_from) {
-    errors.push({ field: "display_from", message: "display_from is required" });
-  } else if (!isValidISODateTime(request.display_from)) {
-    errors.push({
-      field: "display_from",
-      message: "display_from must be a valid ISO 8601 datetime"
-    });
-  }
-
-  if (!request.display_to) {
-    errors.push({ field: "display_to", message: "display_to is required" });
-  } else if (!isValidISODateTime(request.display_to)) {
-    errors.push({
-      field: "display_to",
-      message: "display_to must be a valid ISO 8601 datetime"
-    });
-  }
-
-  if (request.display_from && request.display_to) {
-    const fromDate = new Date(request.display_from);
-    const toDate = new Date(request.display_to);
-
-    if (!Number.isNaN(fromDate.getTime()) && !Number.isNaN(toDate.getTime())) {
-      if (toDate < fromDate) {
-        errors.push({
-          field: "display_to",
-          message: "display_to must be after display_from"
-        });
-      }
+    if (toDate < fromDate) {
+      errors.push({
+        field: "x-display-to",
+        message: "x-display-to must be after x-display-from"
+      });
     }
   }
 
+  // An unresolvable court id is not an error — the publication is still accepted, with the
+  // submitted id carried behind the "NoMatch" prefix so downstream code can tell it apart.
   let resolvedLocationId: string | undefined;
 
-  if (request.court_id) {
-    if (EXTERNAL_PROVENANCES.includes(request.provenance)) {
-      const location = await getLocationByProvenanceLocationId(request.provenance, request.court_id, listTypeLocationType);
-      resolvedLocationId = location ? location.locationId.toString() : buildNoMatchLocationId(request.court_id);
+  if (EXTERNAL_PROVENANCES.includes(metadata.provenance)) {
+    const location = await getLocationByProvenanceLocationId(metadata.provenance, metadata.courtId, listTypeLocationType);
+    resolvedLocationId = location ? location.locationId.toString() : buildNoMatchLocationId(metadata.courtId);
+  } else {
+    const locationId = Number.parseInt(metadata.courtId, 10);
+    if (Number.isNaN(locationId)) {
+      errors.push({ field: "x-court-id", message: "x-court-id must be a valid number" });
     } else {
-      const locationId = Number.parseInt(request.court_id, 10);
-      if (Number.isNaN(locationId)) {
-        errors.push({ field: "court_id", message: "court_id must be a valid number" });
-      } else {
-        const location = await getLocationById(locationId);
-        resolvedLocationId = location ? locationId.toString() : buildNoMatchLocationId(request.court_id);
-      }
+      const location = await getLocationById(locationId);
+      resolvedLocationId = location ? locationId.toString() : buildNoMatchLocationId(metadata.courtId);
     }
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined,
+    listTypeId,
     resolvedLocationId
   };
 }
 
-export async function validateBlobRequest(request: BlobIngestionRequest, rawBodySize: number): Promise<BlobValidationResult> {
-  const result = await validateCommonFields(request, rawBodySize);
+/**
+ * The JSON body *is* the publication payload — there is no metadata envelope and no
+ * `hearing_list` wrapper.
+ */
+export async function validateBlobRequest(metadata: PublicationMetadata, payload: unknown, rawBodySize: number): Promise<BlobValidationResult> {
+  const result = await validatePublicationMetadata(metadata, rawBodySize);
   const errors = [...result.errors];
 
-  if (!request.hearing_list) {
-    errors.push({ field: "hearing_list", message: "hearing_list is required" });
+  if (isEmptyPayload(payload)) {
+    errors.push({ field: "body", message: "Request body is required and must be the publication payload" });
   }
 
-  const listTypes = await findAllListTypes();
-  const listTypeId = result.listTypeId;
+  if (result.listTypeId && !isEmptyPayload(payload) && errors.length === 0) {
+    const listTypes = await findAllListTypes();
 
-  if (listTypeId && request.hearing_list && errors.length === 0) {
     try {
       const listTypesInfo = listTypes.map((lt) => ({
         id: lt.id,
         name: lt.name,
         friendlyName: lt.friendlyName
       }));
-      const validationResult = await validateListTypeJson(listTypeId.toString(), request.hearing_list, listTypesInfo);
+      const validationResult = await validateListTypeJson(result.listTypeId.toString(), payload, listTypesInfo);
 
       if (!validationResult.isValid) {
         for (const error of validationResult.errors) {
           errors.push({
-            field: "hearing_list",
-            message: (error as { message?: string }).message || "Invalid hearing_list structure"
+            field: "body",
+            message: (error as { message?: string }).message || "Invalid publication payload"
           });
         }
       }
     } catch (_error) {
       errors.push({
-        field: "hearing_list",
-        message: "Failed to validate hearing_list against schema"
+        field: "body",
+        message: "Failed to validate the publication payload against the schema"
       });
     }
   }
@@ -178,16 +135,22 @@ export async function validateBlobRequest(request: BlobIngestionRequest, rawBody
   };
 }
 
-export async function validateFlatFileRequest(request: FlatFileIngestionRequest, fileSize: number): Promise<BlobValidationResult> {
-  return validateCommonFields(request, fileSize);
+export async function validateFlatFileRequest(metadata: PublicationMetadata, fileSize: number): Promise<BlobValidationResult> {
+  return validatePublicationMetadata(metadata, fileSize);
 }
 
-function isValidISODate(dateString: string): boolean {
-  const date = new Date(dateString);
-  return !Number.isNaN(date.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(dateString);
-}
+function isEmptyPayload(payload: unknown): boolean {
+  if (payload === null || payload === undefined) {
+    return true;
+  }
 
-function isValidISODateTime(dateString: string): boolean {
-  const date = new Date(dateString);
-  return !Number.isNaN(date.getTime()) && dateString.includes("T");
+  if (Array.isArray(payload)) {
+    return payload.length === 0;
+  }
+
+  if (typeof payload === "object") {
+    return Object.keys(payload).length === 0;
+  }
+
+  return false;
 }

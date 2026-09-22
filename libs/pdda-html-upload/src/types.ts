@@ -8,10 +8,3 @@ export interface S3UploadResult {
   s3Key: string;
   bucketName: string;
 }
-
-export interface PddaHtmlUploadResponse {
-  success: boolean;
-  message: string;
-  s3_key?: string;
-  correlation_id?: string;
-}

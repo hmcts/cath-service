@@ -42,8 +42,9 @@ export const GET = async (req: Request, res: Response) => {
   const allArtefacts = await prisma.artefact.findMany({
     where: {
       locationId: locationId.toString(),
-      displayFrom: { lte: new Date() },
-      displayTo: { gte: new Date() }
+      // A null display date means the window is unbounded at that end. Prisma excludes
+      // NULL from lte/gte comparisons, so those rows need an explicit OR branch.
+      AND: [{ OR: [{ displayFrom: null }, { displayFrom: { lte: new Date() } }] }, { OR: [{ displayTo: null }, { displayTo: { gte: new Date() } }] }]
     },
     orderBy: [{ lastReceivedDate: "desc" }]
   });

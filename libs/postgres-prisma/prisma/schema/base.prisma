@@ -16,8 +16,8 @@ model Artefact {
   contentDate       DateTime          @map("content_date") @db.Date
   sensitivity       String
   language          String
-  displayFrom       DateTime          @map("display_from")
-  displayTo         DateTime          @map("display_to")
+  displayFrom       DateTime?         @map("display_from")
+  displayTo         DateTime?         @map("display_to")
   lastReceivedDate  DateTime          @default(now()) @map("last_received_date")
   isFlatFile        Boolean           @map("is_flat_file")
   provenance        String
