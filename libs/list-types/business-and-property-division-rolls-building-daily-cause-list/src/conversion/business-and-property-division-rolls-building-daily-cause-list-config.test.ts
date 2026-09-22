@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { convertExcelToJson, getConverterForListTypeName, hasConverterForListTypeName } from "@hmcts/list-types-common";
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
@@ -8,8 +5,6 @@ import { SECTIONS } from "../sections.js";
 import { validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList } from "../validation/json-validator.js";
 import { STANDARD_CONFIG } from "./business-and-property-division-rolls-building-daily-cause-list-config.js";
 import "./business-and-property-division-rolls-building-daily-cause-list-config.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const LIST_TYPE_NAME = "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST";
 const HEADERS = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
@@ -111,31 +106,50 @@ describe("STANDARD_CONFIG", () => {
   });
 });
 
-// Round-trips the real source workbook (tabs use "&", e.g. "IP & Enterprise Court"). Fabricated
-// workbooks built from section.worksheetName cannot catch a drift between the configured tab name
-// and the actual tab, so this exercises the genuine file end to end.
-describe("real source workbook", () => {
-  const buffer = readFileSync(path.join(__dirname, "__fixtures__/businessAndPropertyDivisionRollsBuildingDailyCauseList.xlsx"));
+// Exercises the converter against a workbook whose tab names are the REAL source-workbook tabs
+// (with "&", e.g. "IP & Enterprise Court"), hardcoded here rather than derived from SECTIONS. That
+// independence is the point: if a section's worksheetName drifts from the real tab name, the
+// converter won't find the tab and the mapped section resolves empty — which these tests catch.
+describe("real source workbook tab names", () => {
+  // The real tabs and the section key each maps to. Names are the literal source-workbook tabs.
+  const REAL_TABS: { name: string; key: string; populated: boolean }[] = [
+    { name: "Appeal List", key: "appealList", populated: true },
+    { name: "Business List", key: "businessList", populated: true },
+    { name: "Commercial Court", key: "commercialCourt", populated: true },
+    { name: "Financial List", key: "financialList", populated: true },
+    { name: "Insolvency & Companies Court", key: "insolvency&CompaniesCourt", populated: true },
+    { name: "IP & Enterprise Court", key: "ip&EnterpriseCourt", populated: false },
+    { name: "Intellectual Property List", key: "intellectualPropertyList", populated: true },
+    { name: "London Circuit Commercial Court", key: "londonCircuitCommercialCourt", populated: true },
+    { name: "Patents Court", key: "patentsCourt", populated: true },
+    { name: "Property, Trusts & Probate List", key: "property,Trusts&ProbateList", populated: true },
+    { name: "Technology & Construction Court", key: "technology&ConstructionCourt", populated: true },
+    { name: "Admiralty Court", key: "admiraltyCourt", populated: true },
+    { name: "Companies Winding Up", key: "companiesWindingUp", populated: true },
+    { name: "Competition List", key: "competitionList", populated: true },
+    { name: "Pensions List", key: "pensionsList", populated: true },
+    { name: "Revenue List", key: "revenueList", populated: false }
+  ];
 
-  // Ampersand-named tabs in the fixture that carry data rows. These would silently resolve empty
-  // if worksheetName drifted from the real tab name (the bug this test guards against). The
-  // "IP & Enterprise Court" tab is header-only in the fixture, so it is legitimately empty and
-  // excluded here.
-  const POPULATED_AMPERSAND_SECTION_KEYS = ["insolvency&CompaniesCourt", "property,Trusts&ProbateList", "technology&ConstructionCourt"];
+  const dataRow = ["Mr Justice Smith", "10:30am", "Court 1", "Trial", "1234", "This is case name", "This is additional information"];
 
-  it("should map ampersand-named tabs to their sections", async () => {
+  async function createRealWorkbook(): Promise<Buffer> {
+    return createWorkbook(REAL_TABS.map((tab) => ({ name: tab.name, rows: tab.populated ? [HEADERS, dataRow] : [HEADERS] })));
+  }
+
+  it("should map every real ampersand-named tab to its section", async () => {
     const converter = getConverterForListTypeName(LIST_TYPE_NAME);
-    const result = (await converter?.convertExcelToJson(Buffer.from(buffer))) as unknown as Record<string, unknown[]>;
+    const result = (await converter?.convertExcelToJson(await createRealWorkbook())) as unknown as Record<string, unknown[]>;
 
     expect(Object.keys(result)).toEqual(SECTIONS.map((s) => s.key));
-    for (const key of POPULATED_AMPERSAND_SECTION_KEYS) {
-      expect(result[key].length).toBeGreaterThan(0);
+    for (const tab of REAL_TABS.filter((t) => t.name.includes("&") && t.populated)) {
+      expect(result[tab.key].length).toBeGreaterThan(0);
     }
   });
 
   it("should produce JSON that validates against the schema", async () => {
     const converter = getConverterForListTypeName(LIST_TYPE_NAME);
-    const result = await converter?.convertExcelToJson(Buffer.from(buffer));
+    const result = await converter?.convertExcelToJson(await createRealWorkbook());
 
     const validation = validateBusinessAndPropertyDivisionRollsBuildingDailyCauseList(result);
 
