@@ -13,7 +13,6 @@ export interface Artefact {
   isFlatFile: boolean;
   provenance: string;
   supersededCount?: number;
-  noMatch: boolean;
 }
 
 // Only getArtefactById performs the listType join that populates listTypeName.

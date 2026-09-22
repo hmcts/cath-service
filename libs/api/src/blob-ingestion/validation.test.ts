@@ -1,3 +1,4 @@
+import { buildNoMatchLocationId } from "@hmcts/publication";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BlobIngestionRequest, FlatFileIngestionRequest } from "./repository/model.js";
 import { validateBlobRequest, validateFlatFileRequest } from "./validation.js";
@@ -59,7 +60,7 @@ describe("validateBlobRequest", () => {
 
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual([]);
-    expect(result.locationExists).toBe(true);
+    expect(result.resolvedLocationId).toBe("123");
   });
 
   it("should reject request with missing court_id", async () => {
@@ -225,12 +226,12 @@ describe("validateBlobRequest", () => {
     });
   });
 
-  it("should set locationExists=false when court_id not found", async () => {
+  it("should set resolvedLocationId to a NoMatch-prefixed value when court_id not found", async () => {
     const request = { ...validRequest, court_id: "999" };
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.isValid).toBe(true);
-    expect(result.locationExists).toBe(false);
+    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
   });
 
   it("should reject request with non-numeric court_id", async () => {
@@ -251,7 +252,7 @@ describe("validateBlobRequest", () => {
     const result = await validateBlobRequest(request, 1000);
 
     // This test FAILS before the fix because Promise is truthy
-    expect(result.locationExists).toBe(false);
+    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
     expect(getLocationById).toHaveBeenCalledWith(999);
   });
 
@@ -269,7 +270,7 @@ describe("validateBlobRequest", () => {
     const request = { ...validRequest, court_id: "123" };
     const result = await validateBlobRequest(request, 1000);
 
-    expect(result.locationExists).toBe(true);
+    expect(result.resolvedLocationId).toBe("123");
   });
 
   it("should accept CP_CATH as a valid provenance", async () => {
@@ -305,12 +306,11 @@ describe("validateBlobRequest", () => {
     const request = { ...validRequest, provenance: "SNL", court_id: "snl-456" };
     const result = await validateBlobRequest(request, 1000);
 
-    expect(result.locationExists).toBe(true);
     expect(result.resolvedLocationId).toBe("456");
     expect(getLocationByProvenanceLocationId).toHaveBeenCalledWith("SNL", "snl-456", "VENUE");
   });
 
-  it("should set locationExists=false when external provenance location ID not found", async () => {
+  it("should set resolvedLocationId to a NoMatch-prefixed value when external provenance location ID not found", async () => {
     const { getLocationByProvenanceLocationId } = await import("@hmcts/location");
     vi.mocked(getLocationByProvenanceLocationId).mockResolvedValue(undefined);
 
@@ -318,8 +318,7 @@ describe("validateBlobRequest", () => {
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.isValid).toBe(true);
-    expect(result.locationExists).toBe(false);
-    expect(result.resolvedLocationId).toBeUndefined();
+    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("unknown-snl-id"));
   });
 
   it("should not call getLocationById for external provenances", async () => {
@@ -392,7 +391,7 @@ describe("validateFlatFileRequest", () => {
     // Assert
     expect(result.isValid).toBe(true);
     expect(result.errors).toEqual([]);
-    expect(result.locationExists).toBe(true);
+    expect(result.resolvedLocationId).toBe("123");
   });
 
   it("should not require hearing_list", async () => {
@@ -500,7 +499,7 @@ describe("validateFlatFileRequest", () => {
     expect(result.errors).toContainEqual({ field: "body", message: "Payload too large. Maximum size is 100MB" });
   });
 
-  it("should set locationExists=false when court_id not found", async () => {
+  it("should set resolvedLocationId to a NoMatch-prefixed value when court_id not found", async () => {
     // Arrange
     const request = { ...validRequest, court_id: "999" };
 
@@ -509,7 +508,7 @@ describe("validateFlatFileRequest", () => {
 
     // Assert
     expect(result.isValid).toBe(true);
-    expect(result.locationExists).toBe(false);
+    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
   });
 
   it("should resolve external provenance location when provenance is SNL", async () => {
@@ -528,7 +527,6 @@ describe("validateFlatFileRequest", () => {
     const result = await validateFlatFileRequest(request, 1000);
 
     // Assert
-    expect(result.locationExists).toBe(true);
     expect(result.resolvedLocationId).toBe("456");
   });
 });

@@ -15,6 +15,7 @@ export const en = {
   metadataProvenance: "Provenance",
   metadataLanguage: "Language",
   metadataSensitivity: "Sensitivity",
+
   metadataContentDate: "Content Date",
   metadataDisplayFrom: "Display From",
   metadataDisplayTo: "Display To"
