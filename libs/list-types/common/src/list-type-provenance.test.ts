@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance, USER_PROVENANCES } from "./list-type-provenance.js";
+import { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance } from "./list-type-provenance.js";
 
 describe("formatProvenance", () => {
   it("should join a single valid provenance", () => {
@@ -98,13 +98,15 @@ describe("round-trip", () => {
 });
 
 describe("constants", () => {
-  it("should not include MANUAL_UPLOAD in USER_PROVENANCES", () => {
-    expect(USER_PROVENANCES as readonly string[]).not.toContain("MANUAL_UPLOAD");
+  it("should not include MANUAL_UPLOAD in PUBLISHER_PROVENANCES", () => {
+    expect(PUBLISHER_PROVENANCES as readonly string[]).not.toContain("MANUAL_UPLOAD");
   });
 
-  it("should only offer publisher provenances that are valid user provenances", () => {
-    for (const p of PUBLISHER_PROVENANCES) {
-      expect(USER_PROVENANCES as readonly string[]).toContain(p);
-    }
+  it("should not include SSO in PUBLISHER_PROVENANCES (a login provenance, never a list-type publisher)", () => {
+    expect(PUBLISHER_PROVENANCES as readonly string[]).not.toContain("SSO");
+  });
+
+  it("should offer exactly the three publisher provenances", () => {
+    expect([...PUBLISHER_PROVENANCES].sort()).toEqual(["CFT_IDAM", "CRIME_IDAM", "PI_AAD"]);
   });
 });
