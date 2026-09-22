@@ -94,7 +94,7 @@ test.describe("POST /publication - flat file publication", () => {
     expect(body.artefactId).toBeTruthy();
     expect(body.isFlatFile).toBe(true);
     expect(body.type).toBe("LIST");
-    expect(body.courtId).toBe("1");
+    expect(body.locationId).toBe("1");
     expect(body.contentDate).toBe("2024-01-15T00:00:00.000Z");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.sensitivity).toBe("PUBLIC");
@@ -126,7 +126,10 @@ test.describe("POST /publication - flat file publication", () => {
     expect(response.status()).toBe(201);
     body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    expect(body.courtId).toBe("9001");
+    // locationId is the *resolved* id, so the exact value depends on the seeded SNL/9001
+    // location reference. A NoMatch prefix would mean missing reference data, not an API fault.
+    expect(body.locationId).toBeTruthy();
+    expect(body.locationId).not.toMatch(/^NoMatch/);
   });
 
   test("rejects a flat file with a missing file part or invalid headers @nightly", async ({ request }) => {

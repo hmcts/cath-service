@@ -35,12 +35,12 @@ const VALID_HEADERS = {
 const CREATED_ARTEFACT = {
   artefactId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   contentDate: "2026-09-14T00:00:00.000Z",
-  courtId: "1",
   displayFrom: null,
   displayTo: null,
   isFlatFile: false,
   language: "ENGLISH",
   listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+  locationId: "1",
   payload: "https://account.blob.core.windows.net/artefact/3fa85f64",
   provenance: "SNL",
   sensitivity: "PUBLIC",

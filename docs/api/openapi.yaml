@@ -601,12 +601,12 @@ components:
               value:
                 artefactId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
                 contentDate: "2026-09-14T00:00:00.000Z"
-                courtId: "1"
                 displayFrom: null
                 displayTo: null
                 isFlatFile: false
                 language: ENGLISH
                 listType: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+                locationId: "1"
                 payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
                 provenance: SNL
                 search:
@@ -621,12 +621,12 @@ components:
               value:
                 artefactId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
                 contentDate: "2026-09-14T00:00:00.000Z"
-                courtId: "1"
                 displayFrom: "2026-09-14T00:00:00.000Z"
                 displayTo: "2026-09-20T00:00:00.000Z"
                 isFlatFile: true
                 language: ENGLISH
                 listType: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+                locationId: "1"
                 payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
                 provenance: SNL
                 sensitivity: PUBLIC
@@ -637,12 +637,12 @@ components:
               value:
                 artefactId: ""
                 contentDate: "2026-09-14T00:00:00.000Z"
-                courtId: "1"
                 displayFrom: null
                 displayTo: null
                 isFlatFile: true
                 language: ENGLISH
                 listType: null
+                locationId: "1"
                 provenance: PDDA
                 sensitivity: PUBLIC
                 sourceArtefactId: null
@@ -777,20 +777,27 @@ components:
     Artefact:
       type: object
       description: |
-        The created publication, in camelCase. `courtId` echoes the submitted `x-court-id`
-        rather than the resolved internal location ID, so a publisher can correlate it with
-        what it sent.
+        The created publication, in camelCase, mirroring the incumbent's `Artefact`
+        (`ArtefactView.External`) field for field.
+
+        Note the field is **`locationId`**, not `courtId`. The pinned swagger names it `courtId`,
+        but the incumbent's Java model declares `locationId` with no `@JsonProperty` rename, so
+        `locationId` is what is actually serialised — the swagger is stale here, in the same way
+        it is for the `x-court-id` / `x-location-id` request header.
+
+        `lastReceivedDate`, `supersededCount` and `payloadSize` are `ArtefactView.Internal` on
+        the incumbent and so are deliberately absent from this response.
 
         For an LCSU upload nothing is persisted, so `artefactId` is the empty string and
-        `payload`, `search` and `isFlatFile` are absent.
+        `payload` and `search` are absent (`isFlatFile` is still `true`).
       required:
         - artefactId
         - contentDate
-        - courtId
         - displayFrom
         - displayTo
         - language
         - listType
+        - locationId
         - provenance
         - sensitivity
         - sourceArtefactId
@@ -806,10 +813,6 @@ components:
           type: string
           format: date-time
           example: "2026-09-14T00:00:00.000Z"
-        courtId:
-          type: string
-          description: Echo of the submitted `x-court-id`.
-          example: "1"
         displayFrom:
           type: string
           format: date-time
@@ -837,6 +840,13 @@ components:
           nullable: true
           description: "`null` for an `LCSU` upload that omitted `x-list-type`."
           example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+        locationId:
+          type: string
+          description: |
+            The persisted location ID. Prefixed with `NoMatch` when the submitted `x-court-id`
+            could not be resolved against reference data — the publication is still accepted,
+            so this is how a publisher sees that the court was not recognised.
+          example: "1"
         payload:
           type: string
           format: uri

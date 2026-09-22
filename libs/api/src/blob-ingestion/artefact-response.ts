@@ -19,7 +19,7 @@ export function buildArtefactResponse(params: BuildArtefactResponseParams): Arte
     // The persisted location id, which carries the "NoMatch" prefix when reference data had no
     // match. The incumbent returns the prefixed value too — its functional test asserts
     // getLocationId() *contains* the submitted court id rather than equalling it.
-    courtId: locationId ?? metadata.courtId,
+    locationId: locationId ?? metadata.courtId,
     displayFrom: metadata.displayFrom ? new Date(metadata.displayFrom).toISOString() : null,
     displayTo: metadata.displayTo ? new Date(metadata.displayTo).toISOString() : null,
     isFlatFile,
@@ -54,7 +54,7 @@ export function buildLcsuArtefactResponse(metadata: PublicationMetadata): Artefa
   return {
     artefactId: "",
     contentDate: new Date(metadata.contentDate).toISOString(),
-    courtId: metadata.courtId,
+    locationId: metadata.courtId,
     displayFrom: metadata.displayFrom ? new Date(metadata.displayFrom).toISOString() : null,
     displayTo: metadata.displayTo ? new Date(metadata.displayTo).toISOString() : null,
     isFlatFile: true,
@@ -85,15 +85,24 @@ interface BuildArtefactResponseParams {
   locationId?: string;
 }
 
+/**
+ * Mirrors the incumbent's `Artefact` (ArtefactView.External) field-for-field. The pinned swagger
+ * calls this field `courtId`, but the Java model declares `locationId` with no @JsonProperty
+ * rename, so `locationId` is what actually goes on the wire — the swagger is stale here, the
+ * same way it is for the x-court-id / x-location-id request header.
+ *
+ * lastReceivedDate, supersededCount and payloadSize are ArtefactView.Internal and so are
+ * deliberately absent — a publisher never sees them.
+ */
 export interface ArtefactResponse {
   artefactId: string;
   contentDate: string;
-  courtId: string;
   displayFrom: string | null;
   displayTo: string | null;
   isFlatFile?: boolean;
   language: string;
   listType: string | null;
+  locationId: string;
   payload?: string;
   provenance: string;
   search?: { cases: CaseData[] };

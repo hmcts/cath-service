@@ -82,7 +82,7 @@ test.describe("POST /publication - JSON publication", () => {
     expect(response.status()).toBe(201);
     let body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    expect(body.courtId).toBe("1");
+    expect(body.locationId).toBe("1");
     expect(body.contentDate).toBe("2024-01-15T00:00:00.000Z");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.language).toBe("ENGLISH");
@@ -138,8 +138,11 @@ test.describe("POST /publication - JSON publication", () => {
     expect(response.status()).toBe(201);
     body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    // courtId echoes what was submitted, not the resolved internal location id
-    expect(body.courtId).toBe("9001");
+    // locationId is the *resolved* id, so its exact value depends on the seeded location
+    // reference for SNL/9001. Asserting only that it resolved rather than hardcoding an id:
+    // a NoMatch prefix here would mean the reference data is missing, not that the API is wrong.
+    expect(body.locationId).toBeTruthy();
+    expect(body.locationId).not.toMatch(/^NoMatch/);
   });
 
   test("rejects invalid headers and payloads with a Message body @nightly", async ({ request }) => {

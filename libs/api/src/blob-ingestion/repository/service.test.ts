@@ -79,12 +79,12 @@ describe("processBlobIngestion", async () => {
     expect(result.artefact).toEqual({
       artefactId: "test-artefact-id",
       contentDate: new Date("2025-01-25").toISOString(),
-      courtId: "123",
       displayFrom: new Date("2025-01-25T09:00:00Z").toISOString(),
       displayTo: new Date("2025-01-25T17:00:00Z").toISOString(),
       isFlatFile: false,
       language: "ENGLISH",
       listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+      locationId: "123",
       payload: BLOB_URL,
       provenance: "MANUAL_UPLOAD",
       sensitivity: "PUBLIC",
@@ -315,7 +315,7 @@ describe("processBlobIngestion", async () => {
     const result = await processBlobIngestion(metadata({ provenance: "SNL", courtId: "snl-ext-id" }), PAYLOAD, 1000);
 
     // Assert
-    expect(result.artefact?.courtId).toBe("456");
+    expect(result.artefact?.locationId).toBe("456");
   });
 
   it("should report the NoMatch-prefixed location id in the response when unresolved", async () => {
@@ -327,8 +327,8 @@ describe("processBlobIngestion", async () => {
     const result = await processBlobIngestion(metadata({ provenance: "SNL", courtId: "snl-ext-id" }), PAYLOAD, 1000);
 
     // Assert
-    expect(result.artefact?.courtId).toBe("NoMatchsnl-ext-id");
-    expect(result.artefact?.courtId).toContain("snl-ext-id");
+    expect(result.artefact?.locationId).toBe("NoMatchsnl-ext-id");
+    expect(result.artefact?.locationId).toContain("snl-ext-id");
   });
 
   it("should keep the ingestion successful when processPublication rejects", async () => {

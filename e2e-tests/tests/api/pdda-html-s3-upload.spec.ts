@@ -98,7 +98,7 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
     // search. isFlatFile is still true — the incumbent sets it even though the file goes to S3.
     expect(body.artefactId).toBe("");
     expect(body.type).toBe("LCSU");
-    expect(body.courtId).toBe("1");
+    expect(body.locationId).toBe("1");
     expect(body.provenance).toBe("PDDA");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.sensitivity).toBe("PUBLIC");
