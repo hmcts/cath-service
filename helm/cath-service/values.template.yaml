@@ -1,5 +1,11 @@
-# Base values template for production-like environments (aat, prod)
+# Base values template for production-like environments (aat, demo, ithc, perftest)
 # Database and cache infrastructure is managed by Terraform, not Helm
+#
+# This is deliberately ONE template for every non-preview environment. The DNS
+# zone is derived from global.environment rather than hardcoded, so there are no
+# per-environment copies of this file to keep in sync. Only preview has its own
+# template (values.preview.template.yaml), because it needs the -dev SSO app
+# registration and the ASO blob storage.
 global:
   environment: ${ENVIRONMENT:-aat}
 
@@ -17,10 +23,10 @@ crons:
 #
 # Hostnames MUST stay release-scoped (${TEAM_NAME}-{{ .Release.Name }}-...).
 #
-# AAT is deployed twice, by design and as it was on SDS:
+# Each environment is deployed twice, by design and as it was on SDS:
 #   - Flux (cnp-flux-config/apps/cath) owns the plain names cath-web / cath-api /
-#     cath-postgres, and the cath.aat.platform.hmcts.net Front Door route
-#   - this pipeline deploys release cath-service-aat alongside it
+#     cath-postgres, and the cath.{env}.platform.hmcts.net Front Door route
+#   - this pipeline deploys release cath-service-{env} alongside it
 #
 # The release scoping is what keeps the two apart. Hardcoding the plain names here
 # makes both ingresses claim the same hosts, and traefik then load balances across
@@ -32,19 +38,21 @@ crons:
 cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.aat.platform.hmcts.net"
-      ENABLE_TEST_SUPPORT: "true"
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
+      # false on demo (production-like), true elsewhere. Resolved by
+      # job.helm-deploy.yml; the :-true default keeps aat behaviour if unset.
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # API application configuration
 cath-api:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      ENABLE_TEST_SUPPORT: "true"
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Crons application configuration
@@ -59,7 +67,7 @@ cath-crons:
 cath-postgres:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.aat.platform.hmcts.net"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.{{ .Values.global.environment }}.platform.hmcts.net"
 
 # Blob storage - DISABLED for stg/prod (managed by Terraform, accessed via Key Vault)
 blobstorage:
