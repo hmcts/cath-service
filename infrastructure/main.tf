@@ -10,6 +10,16 @@ provider "azurerm" {
   features {}
 }
 
+# The core-infra vnet that holds the Redis private endpoint is in a different
+# subscription for ithc and perftest than for aat and demo. Falls back to
+# var.subscription so the alias is always configured; it is only read where
+# local.redis_subnet_override is true.
+provider "azurerm" {
+  alias           = "core_infra"
+  subscription_id = local.core_infra_subscription_id != null ? local.core_infra_subscription_id : var.subscription
+  features {}
+}
+
 # Key vaults and application insights.
 resource "azurerm_resource_group" "shared" {
   name     = "${var.product}-${var.env}"

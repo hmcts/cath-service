@@ -15,15 +15,29 @@ locals {
     # stg vnet is full - a stg-specific fact. The demo, ithc and perftest vnets
     # have their own subnets, so they take the module default. null (rather than
     # "") means "argument not set", so the module's own default applies.
-    aat      = { subnet_suffix = "expanded" }
-    demo     = { subnet_suffix = null }
-    ithc     = { subnet_suffix = null }
-    perftest = { subnet_suffix = null }
+    # core_infra_subscription_id is non-null only where the core-infra vnet is NOT
+    # in var.subscription. aat and demo leave it null so cnp-module-redis keeps
+    # doing its own lookup, exactly as today - their vnets are in DCD-CNP-DEV.
+    # Every entry carries the same attributes, including the explicit nulls: a map
+    # of objects with differing attribute sets fails type unification.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c" }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c" }
   }
 
   # Unknown environments fall back to the module defaults rather than failing on
   # a missing map key.
   postgres_subnet_suffix = try(local.env_config[var.env].subnet_suffix, null)
+
+  # cnp-module-redis looks up core-infra-vnet-<env> with the DEFAULT provider,
+  # i.e. var.subscription. That is where aat's and demo's core-infra vnets live,
+  # but ithc's and perftest's are in a different subscription, so the lookup
+  # inside the module fails with "Subnet ... was not found". When this is set we
+  # resolve the subnet ourselves against that subscription and hand the module an
+  # explicit id, which makes it skip its own lookup entirely.
+  core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
+  redis_subnet_override      = local.core_infra_subscription_id != null
 
   # aat's storage account predates the consolidation in #978. Changing
   # resource_group_name on an existing azurerm_storage_account is ForceNew, which
