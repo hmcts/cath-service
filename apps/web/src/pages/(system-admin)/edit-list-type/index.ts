@@ -1,9 +1,14 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { PUBLISHER_PROVENANCES, parseProvenance } from "@hmcts/list-types-common/user-provenance";
 import type { ListTypeFormData, ListTypeSession } from "@hmcts/system-admin-pages";
 import { findListTypeById, findListTypeByName, validateListTypeDetails } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+function buildProvenanceOptions(selected: string[]) {
+  return PUBLISHER_PROVENANCES.map((value) => ({ value, text: value, checked: selected.includes(value) }));
+}
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
@@ -36,7 +41,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseNumberJsonFieldName: existingListType.caseNumberJsonFieldName || null,
       caseNameJsonFieldName: existingListType.caseNameJsonFieldName || null,
       defaultSensitivity: existingListType.defaultSensitivity || "",
-      allowedProvenance: existingListType.allowedProvenance.split(","),
+      allowedProvenance: parseProvenance(existingListType.allowedProvenance),
       isNonStrategic: existingListType.isNonStrategic,
       subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdiction.subJurisdictionId),
       editId: id
@@ -44,16 +49,10 @@ const getHandler = async (req: Request, res: Response) => {
     session.configureListType = formData;
   }
 
-  const checkedProvenance = {
-    CFT_IDAM: formData.allowedProvenance?.includes("CFT_IDAM") || false,
-    PI_AAD: formData.allowedProvenance?.includes("PI_AAD") || false,
-    CRIME_IDAM: formData.allowedProvenance?.includes("CRIME_IDAM") || false
-  };
-
   res.render("edit-list-type/index", {
     t,
     data: formData,
-    checkedProvenance
+    provenanceOptions: buildProvenanceOptions(formData.allowedProvenance ?? [])
   });
 };
 
@@ -122,16 +121,10 @@ const postHandler = async (req: Request, res: Response) => {
       {} as Record<string, { text: string }>
     );
 
-    const checkedProvenance = {
-      CFT_IDAM: allowedProvenance.includes("CFT_IDAM"),
-      PI_AAD: allowedProvenance.includes("PI_AAD"),
-      CRIME_IDAM: allowedProvenance.includes("CRIME_IDAM")
-    };
-
     return res.render("edit-list-type/index", {
       t,
       data: formData,
-      checkedProvenance,
+      provenanceOptions: buildProvenanceOptions(allowedProvenance),
       errors: errorMap,
       errorList: errors.map((error) => ({ text: error.message, href: error.href }))
     });

@@ -199,6 +199,18 @@ describe("canAccessPublication", () => {
       const listType = createListType("CRIME_IDAM,PI_AAD");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
+
+    it("should match a spaced legacy row after trimming (CRIME_IDAM, PI_AAD)", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      const listType = createListType("CRIME_IDAM, PI_AAD");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
+
+    it("should match the first provenance of a spaced legacy row after trimming", () => {
+      const user = createUser("VERIFIED", "CRIME_IDAM");
+      const listType = createListType(" CRIME_IDAM , PI_AAD ");
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
+    });
   });
 
   describe("Missing sensitivity", () => {

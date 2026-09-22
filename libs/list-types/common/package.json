@@ -11,6 +11,10 @@
       "production": "./dist/list-type-data.js",
       "default": "./src/list-type-data.ts"
     },
+    "./user-provenance": {
+      "production": "./dist/user-provenance.js",
+      "default": "./src/user-provenance.ts"
+    },
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"

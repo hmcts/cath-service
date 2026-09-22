@@ -1,3 +1,4 @@
+import { parseProvenance } from "@hmcts/list-types-common/user-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 
@@ -27,7 +28,7 @@ export function createRequireVerifiedWithProvenance(opts: { allowSystemAdmin?: b
     }
 
     const dbListType = await prisma.listType.findUnique({ where: { id: artefact.listTypeId } });
-    if (!dbListType?.allowedProvenance.split(",").includes(req.user.provenance)) {
+    if (!dbListType || !parseProvenance(dbListType.allowedProvenance).includes(req.user.provenance)) {
       req.session.returnTo = req.originalUrl;
       return res.redirect("/sign-in");
     }

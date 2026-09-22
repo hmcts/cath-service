@@ -2,6 +2,7 @@
 // PDF utilities that pull in nunjucks/exceljs, which are not installed in the focused
 // postgres deploy image and would crash the seed before any list type is upserted.
 import { listTypeData } from "@hmcts/list-types-common/list-type-data";
+import { formatProvenance } from "@hmcts/list-types-common/user-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function seedListTypes() {
@@ -45,7 +46,7 @@ export async function seedListTypes() {
           shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
-          allowedProvenance: listType.provenance,
+          allowedProvenance: formatProvenance(listType.provenance),
           isNonStrategic: listType.isNonStrategic
         },
         update: {
@@ -54,7 +55,7 @@ export async function seedListTypes() {
           shortenedFriendlyName: listType.shortenedFriendlyName ?? listType.englishFriendlyName,
           url: listType.urlPath || "",
           defaultSensitivity: listType.defaultSensitivity,
-          allowedProvenance: listType.provenance,
+          allowedProvenance: formatProvenance(listType.provenance),
           isNonStrategic: listType.isNonStrategic,
           // Re-activate a list type that was previously soft-deleted but re-added to listTypeData
           deletedAt: null

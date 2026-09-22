@@ -67,7 +67,32 @@ describe("edit-list-type page", () => {
         "edit-list-type/index",
         expect.objectContaining({
           t: expect.objectContaining({ title: "Edit list type" }),
-          data: expect.objectContaining({ name: "TEST_LIST", editId: 1 })
+          data: expect.objectContaining({ name: "TEST_LIST", editId: 1 }),
+          provenanceOptions: [
+            { value: "CFT_IDAM", text: "CFT_IDAM", checked: true },
+            { value: "PI_AAD", text: "PI_AAD", checked: false },
+            { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: false }
+          ]
+        })
+      );
+    });
+
+    it("should parse a comma-delimited provenance from the DB into checked options", async () => {
+      // Arrange
+      vi.mocked(queries.findListTypeById).mockResolvedValue({ ...mockListType, allowedProvenance: "CRIME_IDAM,PI_AAD" } as any);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "edit-list-type/index",
+        expect.objectContaining({
+          provenanceOptions: [
+            { value: "CFT_IDAM", text: "CFT_IDAM", checked: false },
+            { value: "PI_AAD", text: "PI_AAD", checked: true },
+            { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: true }
+          ]
         })
       );
     });

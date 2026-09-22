@@ -1,3 +1,4 @@
+import { formatProvenance } from "@hmcts/list-types-common/user-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function findAllListTypes() {
@@ -116,7 +117,7 @@ export async function createListType(data: CreateListTypeData) {
         caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
         caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
         defaultSensitivity: data.defaultSensitivity,
-        allowedProvenance: data.allowedProvenance.join(","),
+        allowedProvenance: formatProvenance(data.allowedProvenance),
         isNonStrategic: data.isNonStrategic,
         deletedAt: null,
         subJurisdictions: {
@@ -139,7 +140,7 @@ export async function createListType(data: CreateListTypeData) {
       caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
       caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
       defaultSensitivity: data.defaultSensitivity,
-      allowedProvenance: data.allowedProvenance.join(","),
+      allowedProvenance: formatProvenance(data.allowedProvenance),
       isNonStrategic: data.isNonStrategic,
       subJurisdictions: {
         create: data.subJurisdictionIds.map((subJurisdictionId) => ({
@@ -167,7 +168,7 @@ export async function updateListType(id: number, data: UpdateListTypeData) {
         caseNumberJsonFieldName: data.caseNumberJsonFieldName ?? null,
         caseNameJsonFieldName: data.caseNameJsonFieldName ?? null,
         defaultSensitivity: data.defaultSensitivity,
-        allowedProvenance: data.allowedProvenance.join(","),
+        allowedProvenance: formatProvenance(data.allowedProvenance),
         isNonStrategic: data.isNonStrategic,
         subJurisdictions: {
           create: data.subJurisdictionIds.map((subJurisdictionId) => ({
