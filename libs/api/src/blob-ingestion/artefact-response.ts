@@ -35,10 +35,10 @@ export function buildArtefactResponse(params: BuildArtefactResponseParams): Arte
     response.payload = payload;
   }
 
-  // Flat files extract nothing, so `search` is omitted rather than sent empty.
-  if (cases && cases.length > 0) {
-    response.search = { cases };
-  }
+  // Always present, so a publisher can read `search.cases` without a null check. Empty when the
+  // list type has no `list_search_config` row (nothing to extract) or for a flat file, which
+  // carries no case data at all.
+  response.search = { cases: cases ?? [] };
 
   return response;
 }

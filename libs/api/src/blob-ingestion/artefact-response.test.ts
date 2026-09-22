@@ -70,12 +70,22 @@ describe("buildArtefactResponse", () => {
     expect(result.displayTo).toBeNull();
   });
 
-  it("should omit search when no cases were extracted", () => {
+  // A list type with no list_search_config row extracts nothing, but `search` stays present so
+  // a publisher can always read `search.cases` as an array.
+  it("should emit an empty search when no cases were extracted", () => {
     // Act
     const result = buildArtefactResponse({ metadata: metadata(), artefactId: "abc", isFlatFile: true, cases: [] });
 
     // Assert
-    expect(result).not.toHaveProperty("search");
+    expect(result.search).toEqual({ cases: [] });
+  });
+
+  it("should emit an empty search when no cases were supplied at all", () => {
+    // Act
+    const result = buildArtefactResponse({ metadata: metadata(), artefactId: "abc", isFlatFile: true });
+
+    // Assert
+    expect(result.search).toEqual({ cases: [] });
   });
 
   it("should omit payload when no blob url is supplied", () => {

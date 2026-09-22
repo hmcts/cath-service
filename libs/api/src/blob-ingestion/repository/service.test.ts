@@ -87,6 +87,7 @@ describe("processBlobIngestion", async () => {
       locationId: "123",
       payload: BLOB_URL,
       provenance: "MANUAL_UPLOAD",
+      search: { cases: [] },
       sensitivity: "PUBLIC",
       sourceArtefactId: null,
       type: "LIST"
@@ -395,13 +396,13 @@ describe("processFlatFileBlobIngestion", async () => {
     expect(result.artefact?.payload).toBe("https://account.blob.core.windows.net/artefact/flat-artefact-id");
   });
 
-  it("should never extract search data for a flat file", async () => {
+  it("should never extract search data for a flat file but still report an empty search", async () => {
     // Act
     const result = await processFlatFileBlobIngestion(metadata(), fileBuffer, fileBuffer.length);
 
     // Assert
     expect(extractAndStoreArtefactSearch).not.toHaveBeenCalled();
-    expect(result.artefact).not.toHaveProperty("search");
+    expect(result.artefact?.search).toEqual({ cases: [] });
   });
 
   it("should set isFlatFile on the persisted artefact", async () => {
