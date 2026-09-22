@@ -13,7 +13,7 @@ module "key_vault" {
   # object id, so passing the same group here is silently overridden.
   product_group_name = "DTS PIP Non-Prod"
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = true
 }
 

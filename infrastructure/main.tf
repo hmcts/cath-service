@@ -24,7 +24,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "shared" {
   name     = "${var.product}-${var.env}"
   location = var.location
-  tags     = var.common_tags
+  tags     = local.common_tags
 }
 
 # Storage account for aat only. Kept separate from the shared group purely
@@ -42,7 +42,7 @@ resource "azurerm_resource_group" "rg" {
 
   name     = "${var.product}-${var.env}-${var.component}"
   location = var.location
-  tags     = var.common_tags
+  tags     = local.common_tags
 }
 
 # Adding the count above changes the address from `rg` to `rg[0]`. aat's group

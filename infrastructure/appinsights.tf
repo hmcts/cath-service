@@ -40,7 +40,7 @@ resource "azurerm_application_insights" "shared" {
 
   sampling_percentage = 100
 
-  tags = var.common_tags
+  tags = local.common_tags
 }
 
 resource "azurerm_key_vault_secret" "app_insights_connection_string" {
@@ -73,5 +73,5 @@ resource "azurerm_application_insights_standard_web_test" "web_availability" {
     url = "https://cath-web.${var.env}.platform.hmcts.net/health/liveness"
   }
 
-  tags = var.common_tags
+  tags = local.common_tags
 }
