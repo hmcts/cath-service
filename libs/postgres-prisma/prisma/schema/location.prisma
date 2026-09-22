@@ -51,7 +51,7 @@ model ListType {
   shortenedFriendlyName   String?   @map("shortened_friendly_name") @db.VarChar(255)
   url                     String?   @db.VarChar(255)
   defaultSensitivity      String?   @map("default_sensitivity") @db.VarChar(50)
-  allowedProvenance       String    @map("allowed_provenance") @db.VarChar(255)
+  allowedProvenance       String    @map("allowed_provenance") @db.VarChar(50)
   isNonStrategic          Boolean   @default(false) @map("is_non_strategic")
   locationType            String?   @map("location_type") @db.VarChar(50)
   caseNumberJsonFieldName String?   @map("case_number_json_field_name") @db.VarChar(255)
