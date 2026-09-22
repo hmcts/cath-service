@@ -51,16 +51,25 @@ jobs:
           # Must match the storage-account input passed to job.terraform.yml
           # below; the library builds both names off this same postfix.
           STORAGE_ACCOUNT_POSTFIX: nonprod
+          # Must match the subscription passed to job.terraform.yml below.
+          STATE_STORE_SUBSCRIPTION: DCD-CNP-DEV
         run: |
           set -euo pipefail
 
           ACCOUNT_NAME="mgmtstatestore${STORAGE_ACCOUNT_POSTFIX}"
           RESOURCE_GROUP="mgmt-state-store-${STORAGE_ACCOUNT_POSTFIX}"
 
-          # Key-based auth, as the Jenkins script does. The service principal can
-          # already list these keys - the library does it on every run - so this
-          # needs no extra role. `az storage container create --auth-mode login`
-          # would instead need Storage Blob Data Contributor on the account.
+          # azure/login leaves the credentials' own subscription active, which is
+          # a management subscription where this principal cannot list storage
+          # keys - it fails with AuthorizationFailed rather than NotFound,
+          # because ARM checks access before existence. The library sets the
+          # subscription before reading the key for the same reason.
+          az account set --subscription "${STATE_STORE_SUBSCRIPTION}"
+
+          # Key-based auth, as the Jenkins script does. The library lists this
+          # same key on every run, so no extra role is needed. `az storage
+          # container create --auth-mode login` would instead require Storage
+          # Blob Data Contributor on the account.
           KEY=$(az storage account keys list \
             --account-name "${ACCOUNT_NAME}" \
             --resource-group "${RESOURCE_GROUP}" \
