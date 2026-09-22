@@ -40,7 +40,12 @@ jobs:
       # demo/ithc/perftest a caller passing '["aat"]' would silently plan all
       # four. Overriding one environment here is still a one-line change.
       subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-DEV","perftest":"DCD-CNP-DEV"}')[matrix.environment] }}
-      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-PERFTEST"}')[matrix.environment] }}
+      # The environment name does NOT match the CFTAPPS subscription name for two
+      # of these: aat's network lives in DCD-CFTAPPS-STG and perftest's in
+      # DCD-CFTAPPS-TEST. Only demo and ithc line up. DCD-CFTAPPS-PERFTEST does
+      # not exist - az fails with "Subscription not found" - so this is a real
+      # mapping, not a typo to be tidied up.
+      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-TEST"}')[matrix.environment] }}
       storage-account: nonprod
       plan-only: ${{ inputs.plan-only }}
       # One comment per PR, not one per environment. All four plans are still in
