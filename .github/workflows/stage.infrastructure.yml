@@ -13,10 +13,10 @@ on:
         type: string
         default: '["aat"]'
         description: >-
-          JSON array of environments to run Terraform for. Defaults to aat only,
-          which is what pull requests want: planning all four quadruples runtime
-          and posts four plan comments per PR (job.terraform.yml post-plan-to-pr
-          defaults to true). Master passes the full list.
+          JSON array of environments to run Terraform for. Both callers pass the
+          full list: master to plan and apply, pull requests to plan only, so
+          every environment master will apply has been reviewed first. The aat
+          default is only a fallback for a caller that omits this.
 
 jobs:
   terraform-fmt:
@@ -43,5 +43,8 @@ jobs:
       aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-PERFTEST"}')[matrix.environment] }}
       storage-account: nonprod
       plan-only: ${{ inputs.plan-only }}
+      # One comment per PR, not one per environment. All four plans are still in
+      # the Actions logs; four comments would bury the review discussion.
+      post-plan-to-pr: ${{ matrix.environment == 'aat' }}
     secrets:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
