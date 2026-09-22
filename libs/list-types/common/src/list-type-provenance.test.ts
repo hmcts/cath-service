@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance, USER_PROVENANCES } from "./user-provenance.js";
+import { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance, USER_PROVENANCES } from "./list-type-provenance.js";
 
 describe("formatProvenance", () => {
   it("should join a single valid provenance", () => {

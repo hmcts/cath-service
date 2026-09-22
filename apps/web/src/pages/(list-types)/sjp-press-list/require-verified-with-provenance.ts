@@ -1,4 +1,4 @@
-import { parseProvenance } from "@hmcts/list-types-common/user-provenance";
+import { parseProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 

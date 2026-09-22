@@ -2,7 +2,7 @@
 // PDF utilities that pull in nunjucks/exceljs, which are not installed in the focused
 // postgres deploy image and would crash the seed before any list type is upserted.
 import { listTypeData } from "@hmcts/list-types-common/list-type-data";
-import { formatProvenance } from "@hmcts/list-types-common/user-provenance";
+import { formatProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function seedListTypes() {

@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { PUBLISHER_PROVENANCES, parseProvenance } from "@hmcts/list-types-common/user-provenance";
+import { PUBLISHER_PROVENANCES, parseProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import type { ListTypeFormData, ListTypeSession } from "@hmcts/system-admin-pages";
 import { findListTypeById, findListTypeByName, validateListTypeDetails } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";

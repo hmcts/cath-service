@@ -29,6 +29,7 @@ export {
 } from "./email-summary/case-summary-formatter.js";
 export { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
+export { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance, USER_PROVENANCES } from "./list-type-provenance.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export type {
@@ -77,6 +78,5 @@ export { normaliseHearings } from "./rendering/hearing-normalisation.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";
-export { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance, USER_PROVENANCES } from "./user-provenance.js";
 export { createJsonValidator, type ValidationResult } from "./validation/json-validator.js";
 export { convertListTypeNameToKebabCase, type ListTypeInfo, validateListTypeJson } from "./validation/list-type-validator.js";

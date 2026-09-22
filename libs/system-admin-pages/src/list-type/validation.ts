@@ -1,4 +1,4 @@
-import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/user-provenance";
+import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
 
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
 

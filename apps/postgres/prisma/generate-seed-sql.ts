@@ -4,7 +4,7 @@
 // not installed in the focused postgres deploy image.
 
 import { type ListTypeData, listTypeData } from "@hmcts/list-types-common/list-type-data";
-import { formatProvenance } from "@hmcts/list-types-common/user-provenance";
+import { formatProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { locationData } from "@hmcts/location/location-data";
 
 const LOCATION_REFERENCE_PROVENANCE = "SNL";

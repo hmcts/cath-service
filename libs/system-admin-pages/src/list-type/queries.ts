@@ -1,4 +1,4 @@
-import { formatProvenance } from "@hmcts/list-types-common/user-provenance";
+import { formatProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 
 export async function findAllListTypes() {

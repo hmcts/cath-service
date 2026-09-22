@@ -1,5 +1,5 @@
 import type { UserProfile } from "@hmcts/auth";
-import { parseProvenance } from "@hmcts/list-types-common/user-provenance";
+import { parseProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
