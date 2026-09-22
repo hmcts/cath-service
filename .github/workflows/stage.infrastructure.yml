@@ -8,10 +8,15 @@ on:
         type: boolean
         default: false
         description: "Run plan only, skip apply"
-    outputs:
-      plan-exitcode:
-        description: "Terraform plan exit code (0=no changes, 2=changes)"
-        value: ${{ jobs.terraform.outputs.plan-exitcode }}
+      environments:
+        required: false
+        type: string
+        default: '["aat"]'
+        description: >-
+          JSON array of environments to run Terraform for. Defaults to aat only,
+          which is what pull requests want: planning all four quadruples runtime
+          and posts four plan comments per PR (job.terraform.yml post-plan-to-pr
+          defaults to true). Master passes the full list.
 
 jobs:
   terraform-fmt:
@@ -19,13 +24,23 @@ jobs:
     uses: ./.github/workflows/job.terraform-fmt.yml
 
   terraform:
-    name: Terraform
+    name: Terraform ${{ matrix.environment }}
     needs: [terraform-fmt]
+    # fail-fast: false so a broken perftest plan cannot cancel the aat apply.
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(inputs.environments) }}
     uses: ./.github/workflows/job.terraform.yml
     with:
-      environment: aat
-      subscription: DCD-CNP-DEV
-      aks-subscription: DCD-CFTAPPS-STG
+      environment: ${{ matrix.environment }}
+      # Per-environment values are inline fromJson lookups rather than a matrix
+      # `include:`. An include entry that overrides an existing matrix key does
+      # not annotate the combination, it ADDS one, so with include entries for
+      # demo/ithc/perftest a caller passing '["aat"]' would silently plan all
+      # four. Overriding one environment here is still a one-line change.
+      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-DEV","perftest":"DCD-CNP-DEV"}')[matrix.environment] }}
+      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-PERFTEST"}')[matrix.environment] }}
       storage-account: nonprod
       plan-only: ${{ inputs.plan-only }}
     secrets:
