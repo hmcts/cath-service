@@ -29,7 +29,7 @@ export {
 } from "./email-summary/case-summary-formatter.js";
 export { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
-export { formatProvenance, PUBLISHER_PROVENANCES, parseProvenance } from "./list-type-provenance.js";
+export { assertValidProvenances, PUBLISHER_PROVENANCES } from "./list-type-provenance.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export type {

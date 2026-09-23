@@ -19,7 +19,7 @@ const mockListType = {
   caseNumberJsonFieldName: "caseNo",
   caseNameJsonFieldName: "caseName",
   defaultSensitivity: "Public",
-  allowedProvenance: "CFT_IDAM",
+  allowedProvenance: ["CFT_IDAM"],
   isNonStrategic: false,
   deletedAt: null,
   subJurisdictions: [{ subJurisdiction: { subJurisdictionId: 1, name: "Civil", welshName: "Sifil", jurisdictionId: 1 } }]
@@ -77,9 +77,9 @@ describe("edit-list-type page", () => {
       );
     });
 
-    it("should parse a comma-delimited provenance from the DB into checked options", async () => {
+    it("should map the DB provenance array into checked options", async () => {
       // Arrange
-      vi.mocked(queries.findListTypeById).mockResolvedValue({ ...mockListType, allowedProvenance: "CRIME_IDAM,PI_AAD" } as any);
+      vi.mocked(queries.findListTypeById).mockResolvedValue({ ...mockListType, allowedProvenance: ["CRIME_IDAM", "PI_AAD"] } as any);
 
       // Act
       await getHandler(req as Request, res as Response);

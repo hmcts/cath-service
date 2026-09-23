@@ -1,5 +1,5 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
-import { PUBLISHER_PROVENANCES, parseProvenance } from "@hmcts/list-types-common/list-type-provenance";
+import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
 import type { ListTypeFormData, ListTypeSession } from "@hmcts/system-admin-pages";
 import { findListTypeById, findListTypeByName, validateListTypeDetails } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
@@ -41,7 +41,7 @@ const getHandler = async (req: Request, res: Response) => {
       caseNumberJsonFieldName: existingListType.caseNumberJsonFieldName || null,
       caseNameJsonFieldName: existingListType.caseNameJsonFieldName || null,
       defaultSensitivity: existingListType.defaultSensitivity || "",
-      allowedProvenance: parseProvenance(existingListType.allowedProvenance),
+      allowedProvenance: existingListType.allowedProvenance,
       isNonStrategic: existingListType.isNonStrategic,
       subJurisdictionIds: existingListType.subJurisdictions.map((sj) => sj.subJurisdiction.subJurisdictionId),
       editId: id

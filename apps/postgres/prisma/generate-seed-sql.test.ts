@@ -120,7 +120,7 @@ describe("generateSeedSql", () => {
 
     // ET_FORTNIGHTLY_PRESS_LIST has null sensitivity; the value must be unquoted NULL,
     // sitting immediately before the provenance/is_non_strategic columns.
-    expect(sql).toContain("NULL, 'CFT_IDAM', TRUE");
+    expect(sql).toContain("NULL, ARRAY['CFT_IDAM']::text[], TRUE");
     expect(sql).not.toContain("'null'");
   });
 

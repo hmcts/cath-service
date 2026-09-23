@@ -1,12 +1,11 @@
 import type { UserProfile } from "@hmcts/auth";
-import { parseProvenance } from "@hmcts/list-types-common/list-type-provenance";
 import { prisma } from "@hmcts/postgres-prisma";
 import type { Artefact } from "../repository/model.js";
 import { Sensitivity } from "../sensitivity.js";
 
 export interface ListType {
   id: number;
-  provenance: string;
+  provenance: string[];
   isNonStrategic: boolean;
 }
 
@@ -32,7 +31,7 @@ export function canAccessPublication(user: UserProfile | undefined, artefact: Ar
   if (sensitivity === Sensitivity.CLASSIFIED) {
     if (!isVerifiedUser(user)) return false;
     if (!listType) return false;
-    return !!user.provenance && parseProvenance(listType.provenance).includes(user.provenance);
+    return !!user.provenance && listType.provenance.includes(user.provenance);
   }
 
   return false;

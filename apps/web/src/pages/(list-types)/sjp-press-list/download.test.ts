@@ -241,7 +241,7 @@ describe("Download requireVerifiedWithProvenance middleware", () => {
     const res = mockResponse();
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
     await middleware(req, res, mockNext);
 
@@ -256,7 +256,7 @@ describe("Download requireVerifiedWithProvenance middleware", () => {
     const res = mockResponse();
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "12345678-1234-1234-1234-123456789abc", listTypeId: 24 } as never);
-    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
     await middleware(req, res, mockNext);
 

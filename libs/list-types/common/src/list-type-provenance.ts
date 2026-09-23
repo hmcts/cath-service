@@ -4,18 +4,11 @@
 // libs/publication/src/provenance.ts and must never be used as a list-type provenance.
 export const PUBLISHER_PROVENANCES = ["CFT_IDAM", "PI_AAD", "CRIME_IDAM"] as const;
 
-export function formatProvenance(provenances: string[]): string {
+export function assertValidProvenances(provenances: string[]): string[] {
   for (const p of provenances) {
     if (!(PUBLISHER_PROVENANCES as readonly string[]).includes(p)) {
       throw new Error(`Invalid provenance "${p}". Expected one of: ${PUBLISHER_PROVENANCES.join(", ")}`);
     }
   }
-  return provenances.join(",");
-}
-
-export function parseProvenance(value: string): string[] {
-  return value
-    .split(",")
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
+  return provenances;
 }
