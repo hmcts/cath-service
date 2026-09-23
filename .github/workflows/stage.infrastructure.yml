@@ -30,11 +30,16 @@ jobs:
   # with "404 The specified container does not exist" and needs someone to create
   # the container by hand. Remove this job if the library gains the equivalent.
   #
-  # One job rather than a matrix leg per environment, so this is a single Azure
-  # login rather than four, and a failure in one environment does not skip the
-  # terraform legs for the others.
+  # Matrixed rather than one job looping the environments, because the state store
+  # is per subscription: aat and demo use mgmtstatestorenonprod in DCD-CNP-DEV,
+  # ithc and perftest use mgmtstatestoreqa in DCD-CNP-QA. One leg per environment
+  # keeps the az subscription context to one value per leg.
   state-store-init:
-    name: State Store Init
+    name: State Store ${{ matrix.environment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(inputs.environments) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,26 +50,28 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
 
-      - name: Create any missing terraform state containers
+      - name: Create the terraform state container if it is missing
         env:
-          ENVIRONMENTS: ${{ inputs.environments }}
-          # Must match the storage-account input passed to job.terraform.yml
-          # below; the library builds both names off this same postfix.
-          STORAGE_ACCOUNT_POSTFIX: nonprod
-          # Must match the subscription passed to job.terraform.yml below.
-          STATE_STORE_SUBSCRIPTION: DCD-CNP-DEV
+          ENVIRONMENT: ${{ matrix.environment }}
+          # These two must stay in step with the subscription and storage-account
+          # inputs passed to job.terraform.yml below - the library derives the
+          # state store from them, and it reads the key in the application
+          # subscription's context, so a mismatch fails with ResourceGroupNotFound.
+          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
         run: |
           set -euo pipefail
 
           ACCOUNT_NAME="mgmtstatestore${STORAGE_ACCOUNT_POSTFIX}"
           RESOURCE_GROUP="mgmt-state-store-${STORAGE_ACCOUNT_POSTFIX}"
+          CONTAINER="mgmtstatestorecontainer${ENVIRONMENT}"
 
           # azure/login leaves the credentials' own subscription active, which is
           # a management subscription where this principal cannot list storage
           # keys - it fails with AuthorizationFailed rather than NotFound,
           # because ARM checks access before existence. The library sets the
           # subscription before reading the key for the same reason.
-          az account set --subscription "${STATE_STORE_SUBSCRIPTION}"
+          az account set --subscription "${SUBSCRIPTION}"
 
           # Key-based auth, as the Jenkins script does. The library lists this
           # same key on every run, so no extra role is needed. `az storage
@@ -76,20 +83,16 @@ jobs:
             --query '[0].value' -o tsv)
           echo "::add-mask::${KEY}"
 
-          for ENVIRONMENT in $(echo "${ENVIRONMENTS}" | jq -r '.[]'); do
-            CONTAINER="mgmtstatestorecontainer${ENVIRONMENT}"
+          # create is idempotent without --fail-on-exist: it reports
+          # "created": false when the container is already there.
+          CREATED=$(az storage container create \
+            --name "${CONTAINER}" \
+            --account-name "${ACCOUNT_NAME}" \
+            --account-key "${KEY}" \
+            --public-access off \
+            --query created -o tsv)
 
-            # create is idempotent without --fail-on-exist: it reports
-            # "created": false when the container is already there.
-            CREATED=$(az storage container create \
-              --name "${CONTAINER}" \
-              --account-name "${ACCOUNT_NAME}" \
-              --account-key "${KEY}" \
-              --public-access off \
-              --query created -o tsv)
-
-            echo "${CONTAINER}: created=${CREATED}"
-          done
+          echo "${ACCOUNT_NAME}/${CONTAINER}: created=${CREATED}"
 
   terraform:
     name: Terraform ${{ matrix.environment }}
@@ -120,7 +123,13 @@ jobs:
       # not exist - az fails with "Subscription not found" - so this is a real
       # mapping, not a typo to be tidied up.
       aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-TEST"}')[matrix.environment] }}
-      storage-account: nonprod
+      # The state store lives in the same subscription as the application
+      # resources, so this tracks the subscription above: DCD-CNP-DEV has
+      # mgmtstatestorenonprod, DCD-CNP-QA has mgmtstatestoreqa. The library reads
+      # the key in the application subscription's context with no way to override
+      # it, so pointing ithc/perftest at QA while leaving this on nonprod fails
+      # with "ResourceGroupNotFound: mgmt-state-store-nonprod".
+      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
       plan-only: ${{ inputs.plan-only }}
       # One comment per PR, not one per environment. All four plans are still in
       # the Actions logs; four comments would bury the review discussion.
