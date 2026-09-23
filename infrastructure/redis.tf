@@ -18,7 +18,7 @@ module "redis" {
   name          = "${var.product}-${var.env}"
   location      = var.location
   env           = var.env
-  common_tags   = var.common_tags
+  common_tags   = local.common_tags
   business_area = "cft"
 
   private_endpoint_enabled      = true

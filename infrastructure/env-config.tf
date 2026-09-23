@@ -20,10 +20,18 @@ locals {
     # doing its own lookup, exactly as today - their vnets are in DCD-CNP-DEV.
     # Every entry carries the same attributes, including the explicit nulls: a map
     # of objects with differing attribute sets fails type unification.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c" }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c" }
+    # environment_tag overrides only the `environment` TAG, never var.env, so
+    # resource names are unaffected. The HMCTS tagging policy denies any value
+    # outside allowedEnvironmentNames in
+    # hmcts/azure-policy/policies/tagging/policy.json - currently sandbox,
+    # development, testing, demo, ITHC, staging, production, preview. "demo" and
+    # "ITHC" are on that list so those environments need no override; "perftest"
+    # is not, and every taggable resource in it was rejected with
+    # RequestDisallowedByPolicy until this mapped it to "testing".
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing" }
   }
 
   # Unknown environments fall back to the module defaults rather than failing on
@@ -38,6 +46,20 @@ locals {
   # explicit id, which makes it skip its own lookup entirely.
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
   redis_subnet_override      = local.core_infra_subscription_id != null
+
+  # The subscription holding the shared hmcts-nonprod Log Analytics workspace, per
+  # the nonprod entry in terraform-module-log-analytics-workspace-id. Every
+  # environment this module runs for maps to that workspace, and it does not move
+  # when the application resources do - see appinsights.tf.
+  log_analytics_subscription_id = "1c4f0704-a29e-403d-b719-b90c34ef14c9"
+
+  # Use local.common_tags everywhere instead of var.common_tags. Identical to
+  # var.common_tags unless the environment needs a tag override, so aat, demo and
+  # ithc see no diff.
+  environment_tag = try(local.env_config[var.env].environment_tag, null)
+  common_tags = local.environment_tag == null ? var.common_tags : merge(
+    var.common_tags, { environment = local.environment_tag }
+  )
 
   # aat's storage account predates the consolidation in #978. Changing
   # resource_group_name on an existing azurerm_storage_account is ForceNew, which
