@@ -2,6 +2,7 @@
 
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { generateCrownAdvanceListExcel } from "./excel/excel-generator.js";
 export { cy as crownAdvanceListCy } from "./locales/cy.js";
 export { en as crownAdvanceListEn } from "./locales/en.js";
 export * from "./models/types.js";
