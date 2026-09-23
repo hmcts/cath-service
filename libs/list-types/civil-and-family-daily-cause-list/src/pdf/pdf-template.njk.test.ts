@@ -94,7 +94,7 @@ describe("civil-and-family-daily-cause-list pdf-template", () => {
   });
 
   describe("Court house address", () => {
-    it("should render the address lines and postcode but neither the town nor the county", () => {
+    it("should render the address lines, town, county and postcode", () => {
       const { $ } = renderPdf([
         buildCourtHouse({
           courtHouseAddress: { line: ["1 Court Street", "Building B"], town: "London", county: "Greater London", postCode: "SW1A 1AA" }
@@ -102,18 +102,14 @@ describe("civil-and-family-daily-cause-list pdf-template", () => {
       ]);
 
       expect($(".court-section h2").text()).toContain("Main Court House");
-      expect(addressEntries($, ".court-section .address")).toEqual(["1 Court Street", "Building B", "SW1A 1AA"]);
-      expect($(".court-section").text()).not.toContain("London");
-      expect($(".court-section").text()).not.toContain("Greater London");
+      expect(addressEntries($, ".court-section .address")).toEqual(["1 Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
     });
 
-    it("should render the court house name with an empty address when only a town and county are supplied", () => {
+    it("should render the town and county when only a town and county are supplied", () => {
       const { $ } = renderPdf([buildCourtHouse({ courtHouseAddress: { town: "Leeds", county: "West Yorkshire" } })]);
 
       expect($(".court-section h2").text()).toContain("Main Court House");
-      expect(addressEntries($, ".court-section .address")).toEqual([]);
-      expect($(".court-section").text()).not.toContain("Leeds");
-      expect($(".court-section").text()).not.toContain("West Yorkshire");
+      expect(addressEntries($, ".court-section .address")).toEqual(["Leeds", "West Yorkshire"]);
     });
 
     it("should skip empty address lines", () => {

@@ -250,7 +250,7 @@ describe("family-daily-cause-list template", () => {
   });
 
   describe("Court house address", () => {
-    it("should render the court house name and address lines without the town or county", () => {
+    it("should render the court house name, address lines, town and county", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Main Family Court House",
@@ -265,12 +265,10 @@ describe("family-daily-cause-list template", () => {
         .find("p.govuk-body")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(paragraphs).toEqual(["1 Family Court Street", "Building B", "SW1A 1AA"]);
-      expect($("#court-lists-container").text()).not.toContain("London");
-      expect($("#court-lists-container").text()).not.toContain("Greater London");
+      expect(paragraphs).toEqual(["1 Family Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
     });
 
-    it("should render only the address lines and postcode when a partial address supplies a town", () => {
+    it("should render the address lines, town and postcode when no county is supplied", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Branch Family Court",
@@ -284,11 +282,10 @@ describe("family-daily-cause-list template", () => {
         .find("p.govuk-body")
         .map((_, el) => $(el).text().trim())
         .get();
-      expect(paragraphs).toEqual(["2 Branch Family Road", "M1 1AA"]);
-      expect($("#court-lists-container").text()).not.toContain("Manchester");
+      expect(paragraphs).toEqual(["2 Branch Family Road", "Manchester", "M1 1AA"]);
     });
 
-    it("should render the court house name with no address paragraphs when only a town and county are supplied", () => {
+    it("should render the town and county when no address lines or postcode are supplied", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Town Only Family Court",
@@ -299,9 +296,11 @@ describe("family-daily-cause-list template", () => {
 
       const block = $("#court-lists-container > div.govuk-\\!-margin-bottom-6");
       expect(block.find("h2.govuk-heading-l").text()).toContain("Town Only Family Court");
-      expect(block.find("p.govuk-body")).toHaveLength(0);
-      expect($("#court-lists-container").text()).not.toContain("Leeds");
-      expect($("#court-lists-container").text()).not.toContain("West Yorkshire");
+      const paragraphs = block
+        .find("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      expect(paragraphs).toEqual(["Leeds", "West Yorkshire"]);
     });
 
     it("should skip empty address lines", () => {
