@@ -31,9 +31,9 @@ jobs:
   # the container by hand. Remove this job if the library gains the equivalent.
   #
   # Matrixed rather than one job looping the environments, because the state store
-  # is per subscription: aat and demo use mgmtstatestorenonprod in DCD-CNP-DEV,
-  # ithc and perftest use mgmtstatestoreqa in DCD-CNP-QA. One leg per environment
-  # keeps the az subscription context to one value per leg.
+  # is per subscription: aat, demo and ithc use mgmtstatestorenonprod in
+  # DCD-CNP-DEV, perftest uses mgmtstatestoreqa in DCD-CNP-QA. One leg per
+  # environment keeps the az subscription context to one value per leg.
   state-store-init:
     name: State Store ${{ matrix.environment }}
     strategy:
@@ -57,8 +57,8 @@ jobs:
           # inputs passed to job.terraform.yml below - the library derives the
           # state store from them, and it reads the key in the application
           # subscription's context, so a mismatch fails with ResourceGroupNotFound.
-          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
-          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
+          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-DEV","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"nonprod","perftest":"qa"}')[matrix.environment] }}
         run: |
           set -euo pipefail
 
@@ -110,13 +110,21 @@ jobs:
       # not annotate the combination, it ADDS one, so with include entries for
       # demo/ithc/perftest a caller passing '["aat"]' would silently plan all
       # four. Overriding one environment here is still a one-line change.
-      # ithc and perftest application resources belong in DCD-CNP-QA, not
-      # DCD-CNP-DEV - the same layout FaCT uses for factithc and factperftest.
-      # Applying them into DCD-CNP-DEV is what produced
-      # "RequestDisallowedByPolicy: Resource doesn't meet the tagging
-      # requirements" for perftest: that subscription's HMCTS Tagging assignment
-      # does not allow a perftest environment tag.
-      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+      # Only perftest sits in DCD-CNP-QA. DCD-CNP-DEV's HMCTS Tagging assignment
+      # does not allow a perftest environment tag, so every taggable resource
+      # there was rejected with RequestDisallowedByPolicy. aat, demo and ithc are
+      # all allowed and build cleanly in DEV.
+      #
+      # ithc was briefly moved to QA as well, to match how FaCT places factithc.
+      # Reverted: its cath-tp-ithc and cath-bootstrap-ithc vaults already exist in
+      # DEV, key vault names are globally unique, and both were created with
+      # purge protection enabled - so they can be soft-deleted but not purged for
+      # 90 days, leaving those names unusable in QA. Renaming them was the only
+      # alternative, and cath-tp-<env> is read by the application itself
+      # (THIRD_PARTY_KEY_VAULT in apps/web/helm/values.yaml), so a rename would
+      # have to be mirrored there too. Whether ithc should ultimately live in QA
+      # is still open.
+      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-DEV","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
       # The environment name does NOT match the CFTAPPS subscription name for two
       # of these: aat's network lives in DCD-CFTAPPS-STG and perftest's in
       # DCD-CFTAPPS-TEST. Only demo and ithc line up. DCD-CFTAPPS-PERFTEST does
@@ -127,9 +135,9 @@ jobs:
       # resources, so this tracks the subscription above: DCD-CNP-DEV has
       # mgmtstatestorenonprod, DCD-CNP-QA has mgmtstatestoreqa. The library reads
       # the key in the application subscription's context with no way to override
-      # it, so pointing ithc/perftest at QA while leaving this on nonprod fails
-      # with "ResourceGroupNotFound: mgmt-state-store-nonprod".
-      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
+      # it, so pointing perftest at QA while leaving this on nonprod fails with
+      # "ResourceGroupNotFound: mgmt-state-store-nonprod".
+      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"nonprod","perftest":"qa"}')[matrix.environment] }}
       plan-only: ${{ inputs.plan-only }}
       # One comment per PR, not one per environment. All four plans are still in
       # the Actions logs; four comments would bury the review discussion.
