@@ -54,9 +54,14 @@ const npmDep = (overrides) => ({
 
 const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "devDependencies", ...overrides });
 
+// The policy is: everything automerges except npm majors. Cases expecting false are
+// therefore the npm majors, and the rest assert the permissive default really does reach
+// them - including the categories that used to be carved out, so a silent re-narrowing
+// shows up here as a failure.
+//
 // [description, expected automerge, upgrade]
 const CASES = [
-  // Non-breaking npm updates automerge (the point of the change).
+  // Non-breaking npm updates.
   [
     "npm minor, dependency",
     true,
@@ -65,21 +70,91 @@ const CASES = [
   ["npm minor, caret range", true, npmDep({ depName: "express", currentValue: "^5.2.0", currentVersion: "5.2.0", newValue: "^5.3.0", updateType: "minor" })],
   ["npm patch, devDependency", true, devDep({ depName: "vitest", currentValue: "4.1.8", currentVersion: "4.1.8", newValue: "4.1.10", updateType: "patch" })],
 
-  // The original incident: a devDependency major that broke the GOV.UK assets.
+  // npm majors are the sole exclusion. The original incident, PR #753, was a
+  // devDependency major that broke the GOV.UK assets, so the rule must stay depType-blind.
   [
     "npm major, the PR #753 bump",
     false,
     devDep({ depName: "vite-plugin-static-copy", currentValue: "3.4.0", currentVersion: "3.4.0", newValue: "4.1.1", updateType: "major" })
   ],
   ["npm major, dependency", false, npmDep({ depName: "vite", currentValue: "7.3.6", currentVersion: "7.3.6", newValue: "8.0.0", updateType: "major" })],
+  [
+    "npm major, resolutions entry",
+    false,
+    npmDep({
+      depName: "axios",
+      depTypes: ["resolutions"],
+      depType: "resolutions",
+      currentValue: "1.18.1",
+      currentVersion: "1.18.1",
+      newValue: "2.0.0",
+      updateType: "major"
+    })
+  ],
+  [
+    "npm major, packageManager",
+    false,
+    npmDep({
+      depName: "yarn",
+      depTypes: ["packageManager"],
+      depType: "packageManager",
+      currentValue: "4.17.0",
+      currentVersion: "4.17.0",
+      newValue: "5.0.0",
+      updateType: "major"
+    })
+  ],
+  [
+    "npm major out of a pre-1.0.0 package",
+    false,
+    npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "1.0.0", updateType: "major" })
+  ],
 
-  // Pre-1.0.0: a 0.x minor may break, but Renovate still calls it minor. Both matcher
-  // forms are needed - neither covers every value shape on its own.
-  ["pre-1.0.0 pin, minor", false, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })],
-  ["pre-1.0.0 pin, patch", false, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.7.1", updateType: "patch" })],
+  // Majors in every other manager DO automerge - only npm majors are excluded.
+  [
+    "github-actions major",
+    true,
+    {
+      versioning: "docker",
+      manager: "github-actions",
+      depName: "actions/checkout",
+      currentValue: "v7.0.0",
+      currentVersion: "v7.0.0",
+      newValue: "v8.0.0",
+      updateType: "major"
+    }
+  ],
+  [
+    "terraform major",
+    true,
+    {
+      versioning: "semver",
+      manager: "terraform",
+      depName: "azurerm",
+      currentValue: "4.10.0",
+      currentVersion: "4.10.0",
+      newValue: "5.0.0",
+      updateType: "major"
+    }
+  ],
+  [
+    "helmv3 major",
+    true,
+    { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "4.0.0", updateType: "major" }
+  ],
+  [
+    "dockerfile major",
+    true,
+    { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "17.0", updateType: "major" }
+  ],
+
+  // Pre-1.0.0 npm bumps now automerge: under semver a 0.x minor may break, but Renovate
+  // classifies it as minor and the policy only stops majors.
+  ["pre-1.0.0 pin, minor", true, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })],
+  ["pre-1.0.0 pin, patch", true, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.7.1", updateType: "patch" })],
   [
     "pre-1.0.0 caret range, peerDependency",
-    false,
+    true,
     npmDep({
       depName: "passport",
       depTypes: ["peerDependencies"],
@@ -91,7 +166,7 @@ const CASES = [
   ],
   [
     "pre-1.0.0 tilde range",
-    false,
+    true,
     npmDep({
       depName: "passport",
       depTypes: ["peerDependencies"],
@@ -103,20 +178,16 @@ const CASES = [
   ],
   [
     "pre-1.0.0 compound range",
-    false,
+    true,
     npmDep({ depName: "hypothetical", currentValue: ">=0.5.0 <1.0.0", currentVersion: "0.5.0", newValue: ">=0.6.0 <1.0.0", updateType: "minor" })
   ],
-  ["pre-1.0.0 bare major range", false, npmDep({ depName: "hypothetical", currentValue: "0", currentVersion: "0.9.0", newValue: "1", updateType: "minor" })],
-  [
-    "1.x is not caught by the pre-1.0.0 rules",
-    true,
-    npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })
-  ],
+  ["pre-1.0.0 bare major range", true, npmDep({ depName: "hypothetical", currentValue: "0", currentVersion: "0.9.0", newValue: "1", updateType: "minor" })],
+  ["1.x minor", true, npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })],
 
-  // Toolchain and deliberate pins.
+  // Toolchain and deliberate pins automerge below major.
   [
     "packageManager minor",
-    false,
+    true,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],
@@ -129,7 +200,7 @@ const CASES = [
   ],
   [
     "packageManager patch",
-    false,
+    true,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],
@@ -142,7 +213,7 @@ const CASES = [
   ],
   [
     "resolutions minor",
-    false,
+    true,
     npmDep({
       depName: "axios",
       depTypes: ["resolutions"],
@@ -155,7 +226,7 @@ const CASES = [
   ],
   [
     "resolutions patch",
-    false,
+    true,
     npmDep({
       depName: "tar",
       depTypes: ["resolutions"],
@@ -166,16 +237,11 @@ const CASES = [
       updateType: "patch"
     })
   ],
-  [
-    "the same package as a plain dependency still automerges",
-    true,
-    npmDep({ depName: "axios", currentValue: "1.18.1", currentVersion: "1.18.1", newValue: "1.19.0", updateType: "minor" })
-  ],
-
-  // Node moves .nvmrc, the root Dockerfile base image and three workflow files at once.
+  // Node moves .nvmrc, the root Dockerfile base image and three workflow files together,
+  // and now automerges with them. Neither manager is npm, so even a major is allowed.
   [
     "node via nvm",
-    false,
+    true,
     {
       versioning: "node",
       manager: "nvm",
@@ -189,7 +255,7 @@ const CASES = [
   ],
   [
     "node via custom regex manager",
-    false,
+    true,
     {
       versioning: "node",
       manager: "regex",
@@ -201,11 +267,25 @@ const CASES = [
       updateType: "patch"
     }
   ],
+  [
+    "node major via nvm",
+    true,
+    {
+      versioning: "node",
+      manager: "nvm",
+      depName: "node",
+      datasource: "node-version",
+      currentValue: "22.17.0",
+      currentVersion: "22.17.0",
+      newValue: "24.0.0",
+      updateType: "major"
+    }
+  ],
 
-  // Only npm is in scope; every other manager stays manual.
+  // Every other manager automerges below major too.
   [
     "terraform minor",
-    false,
+    true,
     {
       versioning: "semver",
       manager: "terraform",
@@ -218,7 +298,7 @@ const CASES = [
   ],
   [
     "github-actions minor",
-    false,
+    true,
     {
       versioning: "docker",
       manager: "github-actions",
@@ -231,21 +311,21 @@ const CASES = [
   ],
   [
     "helmv3 minor",
-    false,
+    true,
     { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "3.2.0", updateType: "minor" }
   ],
   [
     "dockerfile minor",
-    false,
+    true,
     { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "16.2", updateType: "minor" }
   ],
 
-  // Update types outside minor/patch fall through to the top-level automerge: false.
-  ["pin", false, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
-  ["digest", false, { versioning: "docker", manager: "dockerfile", depName: "node", currentValue: "22-alpine", newValue: "22-alpine", updateType: "digest" }],
-  ["rollback", false, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
-  ["replacement", false, npmDep({ depName: "somepkg", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.0.0", updateType: "replacement" })],
-  ["lockFileMaintenance", false, { manager: "npm", updateType: "lockFileMaintenance", isLockFileMaintenance: true }]
+  // Update types other than major reach the permissive default.
+  ["pin", true, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
+  ["digest", true, { versioning: "docker", manager: "dockerfile", depName: "node", currentValue: "22-alpine", newValue: "22-alpine", updateType: "digest" }],
+  ["rollback", true, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
+  ["replacement", true, npmDep({ depName: "somepkg", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.0.0", updateType: "replacement" })],
+  ["lockFileMaintenance", true, { manager: "npm", updateType: "lockFileMaintenance", isLockFileMaintenance: true }]
 ];
 
 // A grouped branch takes the AND of its members, so one denied upgrade holds the branch.
@@ -259,7 +339,7 @@ const GROUP_CASES = [
     ]
   ],
   [
-    "minor grouped with a major",
+    "minor grouped with an npm major",
     false,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
@@ -267,8 +347,24 @@ const GROUP_CASES = [
     ]
   ],
   [
+    "npm minor grouped with a non-npm major still automerges",
+    true,
+    [
+      npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
+      {
+        versioning: "docker",
+        manager: "github-actions",
+        depName: "actions/setup-node",
+        currentValue: "v6.0.0",
+        currentVersion: "v6.0.0",
+        newValue: "v7.0.0",
+        updateType: "major"
+      }
+    ]
+  ],
+  [
     "minor grouped with a pre-1.0.0",
-    false,
+    true,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
       npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })
@@ -276,7 +372,7 @@ const GROUP_CASES = [
   ],
   [
     "minor grouped with a resolutions bump",
-    false,
+    true,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
       npmDep({
