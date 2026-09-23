@@ -20,6 +20,12 @@ const HEADER = {
  * Converts the inbound `x-*` headers into validated publication metadata. This is the only
  * module that knows the wire header names — nothing downstream reads the request.
  *
+ * Reports at most ONE error. The incumbent throws on the first failure
+ * (ValidationService#validateRequiredHeader, and Spring's own MissingRequestHeaderException for
+ * an absent header), so its `Message` body always carries a single sentence rather than a joined
+ * list. Note the precedence when several headers are wrong is not guaranteed to match exactly —
+ * there it falls out of Spring's argument-resolution order.
+ *
  * Database-backed checks (list type existence, location resolution) deliberately stay in
  * validation.ts so the LCSU path can reuse them without duplicating queries.
  */
@@ -79,7 +85,7 @@ export function parsePublicationHeaders(headers: IncomingHttpHeaders): ParsedPub
   }
 
   if (errors.length > 0) {
-    return { errors };
+    return { errors: errors.slice(0, 1) };
   }
 
   return {
@@ -106,9 +112,12 @@ function readHeader(headers: IncomingHttpHeaders, name: string): string | undefi
   return trimmed === "" ? undefined : trimmed;
 }
 
+// Matches the incumbent verbatim: both EmptyRequestHeaderException and the
+// MissingRequestHeaderException handler format the message this way, so an absent header and an
+// empty one are indistinguishable to a publisher.
 function requirePresent(errors: ValidationError[], field: string, value: string | undefined) {
   if (!value) {
-    errors.push({ field, message: `${field} is required` });
+    errors.push({ field, message: `${field} is mandatory however an empty value is provided` });
   }
 }
 

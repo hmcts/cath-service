@@ -648,17 +648,20 @@ components:
       description: |
         Missing or invalid header, unrecognised `x-type`, `LCSU` sent as
         `application/json`, missing `file` part, non-HTML LCSU file, JSON schema failure, or
-        an over-size payload. Field-level failures are joined into the single `message`
-        string.
+        an over-size payload.
+
+        A header failure reports **one** header, matching the incumbent, which throws on the
+        first one it finds rather than collecting them. JSON schema failures are the exception:
+        those are joined into the single `message` with `, `.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Message"
           examples:
             missingHeader:
-              summary: Required header omitted
+              summary: Required header omitted or empty
               value:
-                message: x-court-id is required; x-language is required
+                message: x-court-id is mandatory however an empty value is provided
                 timestamp: "2026-09-14T09:12:33.101Z"
             unknownType:
               summary: Unrecognised x-type
@@ -873,9 +876,10 @@ components:
         message:
           type: string
           description: |
-            Human-readable failure description. Field-level validation failures are joined
-            with `; `.
-          example: "x-court-id is required; x-language must be one of ENGLISH, WELSH, BILINGUAL"
+            Human-readable failure description. A missing or empty required header reports a
+            single header, phrased exactly as the incumbent does — an absent header and an empty
+            one are indistinguishable. JSON schema failures are joined with `, `.
+          example: "x-court-id is mandatory however an empty value is provided"
         timestamp:
           type: string
           format: date-time

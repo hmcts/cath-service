@@ -164,7 +164,7 @@ describe("processBlobIngestion", async () => {
 
     // Assert
     expect(result.outcome).toBe("VALIDATION_ERROR");
-    expect(result.message).toBe("x-court-id must be a valid number; Invalid x-list-type. Allowed values: A");
+    expect(result.message).toBe("x-court-id must be a valid number, Invalid x-list-type. Allowed values: A");
     expect(result.errors).toHaveLength(2);
     expect(createArtefact).not.toHaveBeenCalled();
     expect(createIngestionLog).toHaveBeenCalledWith(expect.objectContaining({ status: "VALIDATION_ERROR" }));

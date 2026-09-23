@@ -152,15 +152,24 @@ describe("buildMessage", () => {
 });
 
 describe("joinValidationMessages", () => {
-  it("should join the messages with a semicolon", () => {
+  // The incumbent joins payload-schema failures with ", ".
+  it("should join the messages with a comma", () => {
     // Act
     const result = joinValidationMessages([
-      { field: "x-court-id", message: "x-court-id is required" },
-      { field: "x-language", message: "x-language must be one of ENGLISH, WELSH" }
+      { field: "body", message: "$.courtLists: is missing but it is required" },
+      { field: "body", message: "$.venue: is missing but it is required" }
     ]);
 
     // Assert
-    expect(result).toBe("x-court-id is required; x-language must be one of ENGLISH, WELSH");
+    expect(result).toBe("$.courtLists: is missing but it is required, $.venue: is missing but it is required");
+  });
+
+  it("should return the message unchanged for a single error", () => {
+    // Act
+    const result = joinValidationMessages([{ field: "x-court-id", message: "x-court-id is mandatory however an empty value is provided" }]);
+
+    // Assert
+    expect(result).toBe("x-court-id is mandatory however an empty value is provided");
   });
 
   it("should return an empty string when there are no errors", () => {

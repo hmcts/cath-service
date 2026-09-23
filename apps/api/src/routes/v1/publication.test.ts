@@ -247,7 +247,10 @@ describe("POST /publication", () => {
 
         // Assert
         expect(statusMock).toHaveBeenCalledWith(400);
-        expect(jsonMock).toHaveBeenCalledWith({ message: expect.stringContaining(`${header} is required`), timestamp: expect.any(String) });
+        expect(jsonMock).toHaveBeenCalledWith({
+          message: expect.stringContaining(`${header} is mandatory however an empty value is provided`),
+          timestamp: expect.any(String)
+        });
         expect(processBlobIngestion).not.toHaveBeenCalled();
       }
     );

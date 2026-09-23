@@ -123,7 +123,7 @@ describe("parsePublicationHeaders", () => {
 
     // Assert
     expect(result.metadata).toBeUndefined();
-    expect(result.errors).toEqual([{ field: "x-list-type", message: "x-list-type is required" }]);
+    expect(result.errors).toEqual([{ field: "x-list-type", message: "x-list-type is mandatory however an empty value is provided" }]);
   });
 
   it.each([["x-provenance"], ["x-court-id"], ["x-content-date"], ["x-list-type"], ["x-language"], ["x-type"]])(
@@ -138,7 +138,7 @@ describe("parsePublicationHeaders", () => {
 
       // Assert
       expect(result.metadata).toBeUndefined();
-      expect(result.errors).toEqual(expect.arrayContaining([{ field: header, message: `${header} is required` }]));
+      expect(result.errors).toEqual([{ field: header, message: `${header} is mandatory however an empty value is provided` }]);
     }
   );
 
@@ -148,7 +148,7 @@ describe("parsePublicationHeaders", () => {
 
     // Assert
     expect(result.metadata).toBeUndefined();
-    expect(result.errors).toEqual([{ field: "x-provenance", message: "x-provenance is required" }]);
+    expect(result.errors).toEqual([{ field: "x-provenance", message: "x-provenance is mandatory however an empty value is provided" }]);
   });
 
   it("should trim header values", () => {
@@ -255,12 +255,13 @@ describe("parsePublicationHeaders", () => {
     expect(result.errors).toEqual([{ field: "x-display-to", message: "x-display-to must be a valid ISO 8601 date-time" }]);
   });
 
-  it("should report every missing required header at once", () => {
+  // The incumbent throws on the first failure, so only one message is ever reported.
+  it("should report a single error even when every required header is missing", () => {
     // Act
     const result = parsePublicationHeaders({});
 
     // Assert
-    // x-list-type is checked after x-type because whether it is required depends on x-type.
-    expect(result.errors.map((error) => error.field)).toEqual(["x-provenance", "x-court-id", "x-content-date", "x-language", "x-type", "x-list-type"]);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toEqual({ field: "x-provenance", message: "x-provenance is mandatory however an empty value is provided" });
   });
 });

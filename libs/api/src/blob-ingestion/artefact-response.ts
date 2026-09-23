@@ -66,8 +66,11 @@ export function buildMessage(message: string): SpecMessage {
   return { message, timestamp: new Date().toISOString() };
 }
 
+// The incumbent joins its payload-schema failures with ", " (ValidationService, which throws
+// PayloadValidationException(String.join(", ", errors))). Header failures arrive here as a
+// single-element array, so this is a no-op for them.
 export function joinValidationMessages(errors: { field: string; message: string }[]): string {
-  return errors.map((error) => error.message).join("; ");
+  return errors.map((error) => error.message).join(", ");
 }
 
 interface BuildArtefactResponseParams {

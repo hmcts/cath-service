@@ -178,7 +178,7 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
 
     expect(response.status()).toBe(400);
     body = await response.json();
-    expect(body.message).toContain("x-court-id is required");
+    expect(body.message).toContain("x-court-id is mandatory however an empty value is provided");
     expect(await verifyFileExistsInS3(bucketName, `${S3_PREFIX}${missingHeaderFilename}`)).toBe(false);
 
     // STEP 3: An unrecognised x-type is rejected rather than treated as LIST or LCSU

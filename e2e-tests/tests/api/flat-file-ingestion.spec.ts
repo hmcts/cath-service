@@ -156,7 +156,7 @@ test.describe("POST /publication - flat file publication", () => {
 
       expect(response.status()).toBe(400);
       body = await response.json();
-      expect(body.message).toContain(`${header} is required`);
+      expect(body.message).toContain(`${header} is mandatory however an empty value is provided`);
     }
 
     // STEP 3: Invalid header values

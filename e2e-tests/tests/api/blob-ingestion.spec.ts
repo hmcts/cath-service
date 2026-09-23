@@ -158,7 +158,7 @@ test.describe("POST /publication - JSON publication", () => {
 
       expect(response.status()).toBe(400);
       const body = await response.json();
-      expect(body.message).toContain(`${header} is required`);
+      expect(body.message).toContain(`${header} is mandatory however an empty value is provided`);
       expect(body.timestamp).toBeTruthy();
       expect(body).not.toHaveProperty("errors");
     }
