@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 describe("payload-limits constants", () => {
-  it("should expose the PDF gate as 2MB in bytes", () => {
+  it("should expose the PDF gate as 256KB in bytes", () => {
     // Assert
-    expect(MAX_PDF_PAYLOAD_BYTES).toBe(2 * 1024 * 1024);
+    expect(MAX_PDF_PAYLOAD_BYTES).toBe(256 * 1024);
   });
 
   it("should expose the Excel gate as 10MB in bytes", () => {

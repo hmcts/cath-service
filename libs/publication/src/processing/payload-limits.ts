@@ -14,7 +14,7 @@
  * back to the defaults below when unset.
  */
 
-export const MAX_PDF_PAYLOAD_BYTES = Number.parseInt(process.env.MAX_PDF_PAYLOAD_KB || "2048", 10) * 1024; // default 2 MB
+export const MAX_PDF_PAYLOAD_BYTES = Number.parseInt(process.env.MAX_PDF_PAYLOAD_KB || "256", 10) * 1024; // default 256 KB
 export const MAX_EXCEL_PAYLOAD_BYTES = Number.parseInt(process.env.MAX_EXCEL_PAYLOAD_KB || "10240", 10) * 1024; // default 10 MB
 
 export function payloadSizeBytes(jsonData: unknown): number {
