@@ -43,7 +43,6 @@ const CREATED_ARTEFACT = {
   locationId: "1",
   payload: "https://account.blob.core.windows.net/artefact/3fa85f64",
   provenance: "SNL",
-  search: { cases: [] },
   sensitivity: "PUBLIC",
   sourceArtefactId: null,
   type: "LIST"

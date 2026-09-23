@@ -42,7 +42,9 @@ export async function processBlobIngestion(metadata: PublicationMetadata, payloa
     const jsonBuffer = Buffer.from(JSON.stringify(payload));
     const blobUrl = await saveUploadedFile(artefactId, "upload.json", jsonBuffer);
     await updateSourceArtefactId(artefactId, metadata.sourceArtefactId);
-    const cases = await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, payload);
+    // Persists artefact_search rows used by subscription case matching. Not surfaced in the
+    // response — the Artefact body carries no search field.
+    await extractAndStoreArtefactSearch(artefactId, validation.listTypeId, payload);
 
     await logIngestionResult({ sourceSystem: metadata.provenance, courtId: metadata.courtId, status: "SUCCESS", artefactId });
 
@@ -54,7 +56,7 @@ export async function processBlobIngestion(metadata: PublicationMetadata, payloa
 
     return {
       outcome: "CREATED",
-      artefact: buildArtefactResponse({ metadata, artefactId, isFlatFile: false, payload: blobUrl, cases, locationId })
+      artefact: buildArtefactResponse({ metadata, artefactId, isFlatFile: false, payload: blobUrl, locationId })
     };
   } catch (error) {
     return handleIngestionError(metadata, error);

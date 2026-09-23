@@ -1,4 +1,4 @@
-export { type CaseData, extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
+export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
 export { ArtefactType } from "./artefact-type.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {

@@ -87,7 +87,6 @@ describe("processBlobIngestion", async () => {
       locationId: "123",
       payload: BLOB_URL,
       provenance: "MANUAL_UPLOAD",
-      search: { cases: [] },
       sensitivity: "PUBLIC",
       sourceArtefactId: null,
       type: "LIST"
@@ -101,17 +100,6 @@ describe("processBlobIngestion", async () => {
     // Assert
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", Buffer.from(JSON.stringify(PAYLOAD)));
     expect(createIngestionLog).toHaveBeenCalledWith(expect.objectContaining({ status: "SUCCESS", sourceSystem: "MANUAL_UPLOAD", courtId: "123" }));
-  });
-
-  it("should include the extracted cases as search in the response", async () => {
-    // Arrange
-    vi.mocked(extractAndStoreArtefactSearch).mockResolvedValue([{ caseNumber: "T1", caseName: "R v Smith" }]);
-
-    // Act
-    const result = await processBlobIngestion(metadata(), PAYLOAD, 1000);
-
-    // Assert
-    expect(result.artefact?.search).toEqual({ cases: [{ caseNumber: "T1", caseName: "R v Smith" }] });
   });
 
   it("should persist null display dates when the optional headers were omitted", async () => {
@@ -396,13 +384,12 @@ describe("processFlatFileBlobIngestion", async () => {
     expect(result.artefact?.payload).toBe("https://account.blob.core.windows.net/artefact/flat-artefact-id");
   });
 
-  it("should never extract search data for a flat file but still report an empty search", async () => {
+  it("should never extract search data for a flat file", async () => {
     // Act
-    const result = await processFlatFileBlobIngestion(metadata(), fileBuffer, fileBuffer.length);
+    await processFlatFileBlobIngestion(metadata(), fileBuffer, fileBuffer.length);
 
     // Assert
     expect(extractAndStoreArtefactSearch).not.toHaveBeenCalled();
-    expect(result.artefact?.search).toEqual({ cases: [] });
   });
 
   it("should set isFlatFile on the persisted artefact", async () => {

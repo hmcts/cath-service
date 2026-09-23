@@ -101,8 +101,8 @@ test.describe("POST /publication - flat file publication", () => {
     expect(body.displayFrom).toBeNull();
     expect(body.displayTo).toBeNull();
     expect(body.sourceArtefactId).toBe("civil-daily-cause-list.pdf");
-    // Flat files extract no case data, but search is still present and simply empty
-    expect(body.search).toEqual({ cases: [] });
+    // The Artefact body carries no search field
+    expect(body).not.toHaveProperty("search");
     expect(body).not.toHaveProperty("artefact_id");
 
     // STEP 2: A `type` form field is ignored — metadata only ever comes from headers,

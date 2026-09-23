@@ -609,10 +609,6 @@ components:
                 locationId: "1"
                 payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
                 provenance: SNL
-                search:
-                  cases:
-                    - caseNumber: T20250001
-                      caseName: R v Smith
                 sensitivity: PUBLIC
                 sourceArtefactId: null
                 type: LIST
@@ -629,8 +625,6 @@ components:
                 locationId: "1"
                 payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
                 provenance: SNL
-                search:
-                  cases: []
                 sensitivity: PUBLIC
                 sourceArtefactId: null
                 type: LIST
@@ -790,8 +784,11 @@ components:
         `lastReceivedDate`, `supersededCount` and `payloadSize` are `ArtefactView.Internal` on
         the incumbent and so are deliberately absent from this response.
 
+        There is no `search` field: case data is extracted and persisted for subscription
+        matching, but is not surfaced to the publisher.
+
         For an LCSU upload nothing is persisted, so `artefactId` is the empty string and
-        `payload` and `search` are absent (`isFlatFile` is still `true`).
+        `payload` is absent (`isFlatFile` is still `true`).
       required:
         - artefactId
         - contentDate
@@ -858,33 +855,6 @@ components:
         provenance:
           type: string
           example: SNL
-        search:
-          type: object
-          description: |
-            Cases extracted from a JSON payload for case search. Always present for a `LIST`
-            publication, so `search.cases` can be read without a null check — it is simply an
-            empty array when nothing was extracted. That is the case for a flat file (no case
-            data at all) and for any list type with no `list_search_config` row, since the
-            fields to extract are named by that configuration.
-
-            `caseNumber` is the value of the field named by `list_search_config.case_number_field_name`,
-            and `caseName` the field named by `case_name_field_name`. Both are searched for at any
-            nesting depth in the payload.
-
-            Absent entirely for `LCSU`, which persists nothing.
-          required: [cases]
-          properties:
-            cases:
-              type: array
-              items:
-                type: object
-                properties:
-                  caseNumber:
-                    type: string
-                    nullable: true
-                  caseName:
-                    type: string
-                    nullable: true
         sensitivity:
           type: string
           enum: [PUBLIC, PRIVATE, CLASSIFIED]

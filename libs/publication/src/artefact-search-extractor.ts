@@ -1,7 +1,7 @@
 import { getConfigForListType } from "@hmcts/list-search-config";
 import * as artefactSearchRepository from "./repository/artefact-search-queries.js";
 
-export interface CaseData {
+interface CaseData {
   caseNumber: string | null;
   caseName: string | null;
 }
@@ -141,7 +141,7 @@ function extractCases(jsonPayload: unknown, caseNumberFieldName: string, caseNam
   return cases;
 }
 
-export async function extractAndStoreArtefactSearch(artefactId: string, listTypeId: number, jsonPayload: unknown): Promise<CaseData[]> {
+export async function extractAndStoreArtefactSearch(artefactId: string, listTypeId: number, jsonPayload: unknown): Promise<void> {
   try {
     const config = await getConfigForListType(listTypeId);
 
@@ -158,12 +158,8 @@ export async function extractAndStoreArtefactSearch(artefactId: string, listType
           await artefactSearchRepository.createArtefactSearch(artefactId, caseData.caseNumber, caseData.caseName);
         }
       }
-
-      return cases;
     }
   } catch (error) {
     console.error(`[ArtefactSearch] Failed to extract/store for artefact ${artefactId}:`, error);
   }
-
-  return [];
 }

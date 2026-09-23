@@ -94,8 +94,8 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
 
     expect(response.status()).toBe(201);
     let body = await response.json();
-    // Nothing is persisted for LCSU, so the artefact id is blank and there is no payload or
-    // search. isFlatFile is still true — the incumbent sets it even though the file goes to S3.
+    // Nothing is persisted for LCSU, so the artefact id is blank and there is no payload.
+    // isFlatFile is still true — the incumbent sets it even though the file goes to S3.
     expect(body.artefactId).toBe("");
     expect(body.type).toBe("LCSU");
     expect(body.locationId).toBe("1");

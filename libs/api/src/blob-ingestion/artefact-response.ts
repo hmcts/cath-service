@@ -1,4 +1,4 @@
-import { ArtefactType, type CaseData, Language } from "@hmcts/publication";
+import { ArtefactType, Language } from "@hmcts/publication";
 import type { PublicationMetadata } from "./publication-headers.js";
 
 // The spec's response enum spells bilingual with an underscore; our inbound enum does not.
@@ -11,20 +11,20 @@ export function toSpecLanguage(language: string): string {
 }
 
 export function buildArtefactResponse(params: BuildArtefactResponseParams): ArtefactResponse {
-  const { metadata, artefactId, isFlatFile, payload, cases, locationId } = params;
+  const { metadata, artefactId, isFlatFile, payload, locationId } = params;
 
   const response: ArtefactResponse = {
     artefactId,
     contentDate: new Date(metadata.contentDate).toISOString(),
-    // The persisted location id, which carries the "NoMatch" prefix when reference data had no
-    // match. The incumbent returns the prefixed value too — its functional test asserts
-    // getLocationId() *contains* the submitted court id rather than equalling it.
-    locationId: locationId ?? metadata.courtId,
     displayFrom: metadata.displayFrom ? new Date(metadata.displayFrom).toISOString() : null,
     displayTo: metadata.displayTo ? new Date(metadata.displayTo).toISOString() : null,
     isFlatFile,
     language: toSpecLanguage(metadata.language),
     listType: metadata.listType,
+    // The persisted location id, which carries the "NoMatch" prefix when reference data had no
+    // match. The incumbent returns the prefixed value too — its functional test asserts
+    // getLocationId() *contains* the submitted court id rather than equalling it.
+    locationId: locationId ?? metadata.courtId,
     provenance: metadata.provenance,
     sensitivity: metadata.sensitivity,
     sourceArtefactId: metadata.sourceArtefactId,
@@ -35,17 +35,12 @@ export function buildArtefactResponse(params: BuildArtefactResponseParams): Arte
     response.payload = payload;
   }
 
-  // Always present, so a publisher can read `search.cases` without a null check. Empty when the
-  // list type has no `list_search_config` row (nothing to extract) or for a flat file, which
-  // carries no case data at all.
-  response.search = { cases: cases ?? [] };
-
   return response;
 }
 
 /**
  * LCSU is a pass-through to S3 — nothing is persisted, so the artefact carries a blank
- * artefactId and no payload or search. `isFlatFile` is true because the incumbent builds the
+ * artefactId and no payload. `isFlatFile` is true because the incumbent builds the
  * LCSU metadata with the flat-file flag set (PublicationControllerTest#testUploadHtmlFile-
  * ToS3BucketSuccess and PublicationTest#testPublicationEndpointWithHtmlFileUploadToS3Bucket
  * both assert it), even though the file never reaches blob storage.
@@ -54,12 +49,12 @@ export function buildLcsuArtefactResponse(metadata: PublicationMetadata): Artefa
   return {
     artefactId: "",
     contentDate: new Date(metadata.contentDate).toISOString(),
-    locationId: metadata.courtId,
     displayFrom: metadata.displayFrom ? new Date(metadata.displayFrom).toISOString() : null,
     displayTo: metadata.displayTo ? new Date(metadata.displayTo).toISOString() : null,
     isFlatFile: true,
     language: toSpecLanguage(metadata.language),
     listType: metadata.listType,
+    locationId: metadata.courtId,
     provenance: metadata.provenance,
     sensitivity: metadata.sensitivity,
     sourceArtefactId: metadata.sourceArtefactId,
@@ -80,7 +75,6 @@ interface BuildArtefactResponseParams {
   artefactId: string;
   isFlatFile: boolean;
   payload?: string;
-  cases?: CaseData[];
   /** Persisted location id — may carry the "NoMatch" prefix. Falls back to the submitted court id. */
   locationId?: string;
 }
@@ -105,7 +99,6 @@ export interface ArtefactResponse {
   locationId: string;
   payload?: string;
   provenance: string;
-  search?: { cases: CaseData[] };
   sensitivity: string;
   sourceArtefactId: string | null;
   type: string;

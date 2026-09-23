@@ -38,8 +38,7 @@ describe("buildArtefactResponse", () => {
       metadata: metadata({ displayFrom: "2026-09-14T00:00:00.000Z", displayTo: "2026-09-20T00:00:00.000Z", sourceArtefactId: "src-1" }),
       artefactId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       isFlatFile: false,
-      payload: "https://account.blob.core.windows.net/artefact/3fa85f64",
-      cases: [{ caseNumber: "T20250001", caseName: "R v Smith" }]
+      payload: "https://account.blob.core.windows.net/artefact/3fa85f64"
     });
 
     // Assert
@@ -54,7 +53,6 @@ describe("buildArtefactResponse", () => {
       locationId: "1",
       payload: "https://account.blob.core.windows.net/artefact/3fa85f64",
       provenance: "SNL",
-      search: { cases: [{ caseNumber: "T20250001", caseName: "R v Smith" }] },
       sensitivity: "PUBLIC",
       sourceArtefactId: "src-1",
       type: "LIST"
@@ -68,24 +66,6 @@ describe("buildArtefactResponse", () => {
     // Assert
     expect(result.displayFrom).toBeNull();
     expect(result.displayTo).toBeNull();
-  });
-
-  // A list type with no list_search_config row extracts nothing, but `search` stays present so
-  // a publisher can always read `search.cases` as an array.
-  it("should emit an empty search when no cases were extracted", () => {
-    // Act
-    const result = buildArtefactResponse({ metadata: metadata(), artefactId: "abc", isFlatFile: true, cases: [] });
-
-    // Assert
-    expect(result.search).toEqual({ cases: [] });
-  });
-
-  it("should emit an empty search when no cases were supplied at all", () => {
-    // Act
-    const result = buildArtefactResponse({ metadata: metadata(), artefactId: "abc", isFlatFile: true });
-
-    // Assert
-    expect(result.search).toEqual({ cases: [] });
   });
 
   it("should omit payload when no blob url is supplied", () => {
@@ -122,7 +102,7 @@ describe("buildArtefactResponse", () => {
 });
 
 describe("buildLcsuArtefactResponse", () => {
-  it("should return an unpersisted artefact with a blank id, isFlatFile true and no payload or search", () => {
+  it("should return an unpersisted artefact with a blank id, isFlatFile true and no payload", () => {
     // Act
     const result = buildLcsuArtefactResponse(metadata({ type: ArtefactType.LCSU }));
 
