@@ -20,6 +20,14 @@ provider "azurerm" {
   features {}
 }
 
+# The shared hmcts-nonprod Log Analytics workspace sits in one subscription for
+# every environment, which is not the application subscription for perftest.
+provider "azurerm" {
+  alias           = "log_analytics"
+  subscription_id = local.log_analytics_subscription_id
+  features {}
+}
+
 # Key vaults and application insights.
 resource "azurerm_resource_group" "shared" {
   name     = "${var.product}-${var.env}"

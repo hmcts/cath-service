@@ -47,6 +47,12 @@ locals {
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
   redis_subnet_override      = local.core_infra_subscription_id != null
 
+  # The subscription holding the shared hmcts-nonprod Log Analytics workspace, per
+  # the nonprod entry in terraform-module-log-analytics-workspace-id. Every
+  # environment this module runs for maps to that workspace, and it does not move
+  # when the application resources do - see appinsights.tf.
+  log_analytics_subscription_id = "1c4f0704-a29e-403d-b719-b90c34ef14c9"
+
   # Use local.common_tags everywhere instead of var.common_tags. Identical to
   # var.common_tags unless the environment needs a tag override, so aat, demo and
   # ithc see no diff.

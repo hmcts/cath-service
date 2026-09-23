@@ -14,8 +14,17 @@
 # read access to the action group.
 #
 # Workspace: the module resolved this via terraform-module-log-analytics-workspace-id,
-# which maps env "aat" to hmcts-nonprod in this same subscription.
+# which maps every environment we run - aat, demo, ithc and perftest - to the
+# nonprod workspace hmcts-nonprod. That workspace lives in one subscription
+# whatever subscription the application resources are in, so the lookup is pinned
+# to it rather than using the default provider. With the default provider it
+# resolves for aat, demo and ithc only because that happens to be their
+# subscription too, and fails for perftest in DCD-CNP-QA with
+# "log analytics workspaces hmcts-nonprod (Resource Group oms-automation) was not
+# found".
 data "azurerm_log_analytics_workspace" "shared" {
+  provider = azurerm.log_analytics
+
   name                = "hmcts-nonprod"
   resource_group_name = "oms-automation"
 }
