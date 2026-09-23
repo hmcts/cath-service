@@ -653,6 +653,10 @@ components:
         A header failure reports **one** header, matching the incumbent, which throws on the
         first one it finds rather than collecting them. JSON schema failures are the exception:
         those are joined into the single `message` with `, `.
+
+        Schema failures are phrased as the incumbent phrases them — the failing instance location
+        as a JSON Pointer, then the problem, e.g.
+        `/document: required property 'publicationDate' not found`.
       content:
         application/json:
           schema:
@@ -686,7 +690,7 @@ components:
             schemaFailure:
               summary: Payload failed the list type schema
               value:
-                message: must have required property 'courtLists'
+                message: "/document: required property 'publicationDate' not found"
                 timestamp: "2026-09-14T09:12:33.101Z"
 
     PublicationUnauthorised:

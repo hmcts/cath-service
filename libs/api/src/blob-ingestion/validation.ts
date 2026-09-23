@@ -4,6 +4,7 @@ import { buildNoMatchLocationId } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { PublicationMetadata } from "./publication-headers.js";
 import type { BlobValidationResult, ValidationError } from "./repository/model.js";
+import { formatSchemaError } from "./schema-error-message.js";
 
 export const MAX_BLOB_SIZE = 100 * 1024 * 1024; // 100MB default
 const ALLOWED_PROVENANCES = ["MANUAL_UPLOAD", "SNL", "COMMON_PLATFORM", "CP_CATH", "PDDA"];
@@ -114,10 +115,7 @@ export async function validateBlobRequest(metadata: PublicationMetadata, payload
 
       if (!validationResult.isValid) {
         for (const error of validationResult.errors) {
-          errors.push({
-            field: "body",
-            message: (error as { message?: string }).message || "Invalid publication payload"
-          });
+          errors.push({ field: "body", message: formatSchemaError(error) });
         }
       }
     } catch (_error) {

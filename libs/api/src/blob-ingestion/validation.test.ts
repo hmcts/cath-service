@@ -237,12 +237,21 @@ describe("validateBlobRequest", () => {
     expect(result.errors).toContainEqual({ field: "body", message: "Request body is required and must be the publication payload" });
   });
 
-  it("should report schema failures against the body field", async () => {
+  // Ajv's raw wording is translated into the incumbent's, so a publisher sees the same text it
+  // would get from pip-data-management.
+  it("should report schema failures against the body field in the incumbent's wording", async () => {
     // Arrange
     const { validateListTypeJson } = await import("@hmcts/list-types-common");
     vi.mocked(validateListTypeJson).mockResolvedValue({
       isValid: false,
-      errors: [{ message: "must have required property 'courtLists'" }],
+      errors: [
+        {
+          instancePath: "/document",
+          keyword: "required",
+          message: "must have required property 'publicationDate'",
+          params: { missingProperty: "publicationDate" }
+        }
+      ],
       schemaVersion: "1.0"
     } as never);
 
@@ -251,7 +260,7 @@ describe("validateBlobRequest", () => {
 
     // Assert
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContainEqual({ field: "body", message: "must have required property 'courtLists'" });
+    expect(result.errors).toContainEqual({ field: "body", message: "/document: required property 'publicationDate' not found" });
   });
 
   it("should report a schema lookup failure against the body field", async () => {
