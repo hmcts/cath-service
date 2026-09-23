@@ -8,64 +8,135 @@ on:
         type: boolean
         default: false
         description: "Run plan only, skip apply"
-    outputs:
-      plan-exitcode:
-        description: "Terraform plan exit code (0=no changes, 2=changes)"
-        value: ${{ jobs.terraform.outputs.plan-exitcode }}
+      environments:
+        required: false
+        type: string
+        default: '["aat"]'
+        description: >-
+          JSON array of environments to run Terraform for. Both callers pass the
+          full list: master to plan and apply, pull requests to plan only, so
+          every environment master will apply has been reviewed first. The aat
+          default is only a fallback for a caller that omits this.
 
 jobs:
   terraform-fmt:
     name: Terraform Format
     uses: ./.github/workflows/job.terraform-fmt.yml
 
-  terraform-demo:
-    name: Terraform Demo
-    needs: [terraform-fmt]
-    uses: ./.github/workflows/job.terraform.yml
-    with:
-      environment: demo
-      subscription: DTS-SHAREDSERVICES-DEMO
-      aks-subscription: DTS-SHAREDSERVICES-DEMO
-      storage-account: nonprod
-      plan-only: ${{ inputs.plan-only }}
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_DEMO }}
+  # cnp-githubactions-library resolves the state store names but never creates the
+  # container, unlike the Jenkins library every other CNP service uses - see
+  # stateStoreInit.groovy and resources/uk/gov/hmcts/contino/stateStoreInit.sh in
+  # cnp-jenkins-library. Without this, adding an environment fails terraform init
+  # with "404 The specified container does not exist" and needs someone to create
+  # the container by hand. Remove this job if the library gains the equivalent.
+  #
+  # Matrixed rather than one job looping the environments, because the state store
+  # is per subscription: aat and demo use mgmtstatestorenonprod in DCD-CNP-DEV,
+  # perftest uses mgmtstatestoreqa in DCD-CNP-QA. One leg per environment keeps
+  # the az subscription context to one value per leg.
+  state-store-init:
+    name: State Store ${{ matrix.environment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(inputs.environments) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
 
-  terraform-test:
-    name: Terraform Test
-    needs: [terraform-fmt]
-    uses: ./.github/workflows/job.terraform.yml
-    with:
-      environment: test
-      subscription: DTS-SHAREDSERVICES-TEST
-      aks-subscription: DTS-SHAREDSERVICES-TEST
-      storage-account: nonprod
-      plan-only: ${{ inputs.plan-only }}
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_TEST }}
+      - name: Create the terraform state container if it is missing
+        env:
+          ENVIRONMENT: ${{ matrix.environment }}
+          # These two must stay in step with the subscription and storage-account
+          # inputs passed to job.terraform.yml below - the library derives the
+          # state store from them, and it reads the key in the application
+          # subscription's context, so a mismatch fails with ResourceGroupNotFound.
+          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
+        run: |
+          set -euo pipefail
 
-  terraform-ithc:
-    name: Terraform ITHC
-    needs: [terraform-fmt]
-    uses: ./.github/workflows/job.terraform.yml
-    with:
-      environment: ithc
-      subscription: DTS-SHAREDSERVICES-ITHC
-      aks-subscription: DTS-SHAREDSERVICES-ITHC
-      storage-account: nonprod
-      plan-only: ${{ inputs.plan-only }}
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_ITHC }}
+          ACCOUNT_NAME="mgmtstatestore${STORAGE_ACCOUNT_POSTFIX}"
+          RESOURCE_GROUP="mgmt-state-store-${STORAGE_ACCOUNT_POSTFIX}"
+          CONTAINER="mgmtstatestorecontainer${ENVIRONMENT}"
+
+          # azure/login leaves the credentials' own subscription active, which is
+          # a management subscription where this principal cannot list storage
+          # keys - it fails with AuthorizationFailed rather than NotFound,
+          # because ARM checks access before existence. The library sets the
+          # subscription before reading the key for the same reason.
+          az account set --subscription "${SUBSCRIPTION}"
+
+          # Key-based auth, as the Jenkins script does. The library lists this
+          # same key on every run, so no extra role is needed. `az storage
+          # container create --auth-mode login` would instead require Storage
+          # Blob Data Contributor on the account.
+          KEY=$(az storage account keys list \
+            --account-name "${ACCOUNT_NAME}" \
+            --resource-group "${RESOURCE_GROUP}" \
+            --query '[0].value' -o tsv)
+          echo "::add-mask::${KEY}"
+
+          # create is idempotent without --fail-on-exist: it reports
+          # "created": false when the container is already there.
+          CREATED=$(az storage container create \
+            --name "${CONTAINER}" \
+            --account-name "${ACCOUNT_NAME}" \
+            --account-key "${KEY}" \
+            --public-access off \
+            --query created -o tsv)
+
+          echo "${ACCOUNT_NAME}/${CONTAINER}: created=${CREATED}"
 
   terraform:
-    name: Terraform STG
-    needs: [terraform-fmt]
+    name: Terraform ${{ matrix.environment }}
+    needs: [terraform-fmt, state-store-init]
+    # fail-fast: false so a broken perftest plan cannot cancel the aat apply.
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(inputs.environments) }}
     uses: ./.github/workflows/job.terraform.yml
     with:
-      environment: stg
-      subscription: DTS-SHAREDSERVICES-STG
-      aks-subscription: DTS-SHAREDSERVICES-STG
-      storage-account: nonprod
+      environment: ${{ matrix.environment }}
+      # Per-environment values are inline fromJson lookups rather than a matrix
+      # `include:`. An include entry that overrides an existing matrix key does
+      # not annotate the combination, it ADDS one, so with include entries for
+      # demo/ithc/perftest a caller passing '["aat"]' would silently plan all
+      # four. Overriding one environment here is still a one-line change.
+      # aat and demo are in DCD-CNP-DEV. perftest is in DCD-CNP-QA because
+      # DCD-CNP-DEV's HMCTS Tagging assignment does not allow a perftest
+      # environment tag - every taggable resource there was rejected with
+      # RequestDisallowedByPolicy.
+      #
+      # ithc belongs in DCD-CNP-QA too: its core-infra vnet lives there, and
+      # managed-identities-ithc-rg does not exist in DEV, so a DEV apply fails on
+      # both a cross-subscription private endpoint and a missing resource group.
+      # It is currently parked - see workflow.main.yml - so this value is not
+      # exercised, but it is the correct one for when it is re-enabled.
+      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+      # The environment name does NOT match the CFTAPPS subscription name for two
+      # of these: aat's network lives in DCD-CFTAPPS-STG and perftest's in
+      # DCD-CFTAPPS-TEST. Only demo and ithc line up. DCD-CFTAPPS-PERFTEST does
+      # not exist - az fails with "Subscription not found" - so this is a real
+      # mapping, not a typo to be tidied up.
+      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-TEST"}')[matrix.environment] }}
+      # The state store lives in the same subscription as the application
+      # resources, so this tracks the subscription above: DCD-CNP-DEV has
+      # mgmtstatestorenonprod, DCD-CNP-QA has mgmtstatestoreqa. The library reads
+      # the key in the application subscription's context with no way to override
+      # it, so pointing perftest at QA while leaving this on nonprod fails with
+      # "ResourceGroupNotFound: mgmt-state-store-nonprod".
+      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
       plan-only: ${{ inputs.plan-only }}
+      # One comment per PR, not one per environment. Every plan is still in the
+      # Actions logs; a comment each would bury the review discussion.
+      post-plan-to-pr: ${{ matrix.environment == 'aat' }}
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_SDS_STG }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}

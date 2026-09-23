@@ -1,0 +1,101 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-xl">{{ pageTitle }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: {
+            text: tableHeadings.courtName
+          },
+          value: {
+            text: locationName
+          }
+        },
+        {
+          key: {
+            text: tableHeadings.locationType
+          },
+          value: {
+            text: locationType
+          }
+        },
+        {
+          key: {
+            text: tableHeadings.jurisdiction
+          },
+          value: {
+            text: jurisdiction
+          }
+        },
+        {
+          key: {
+            text: tableHeadings.region
+          },
+          value: {
+            text: region
+          }
+        }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+
+      {% set radioError = false %}
+      {% if errors %}
+        {% for error in errors %}
+          {% if error.href == "#confirm-delete" %}
+            {% set radioError = true %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {{ govukRadios({
+        idPrefix: "confirm-delete",
+        name: "confirmDelete",
+        classes: "govuk-radios--inline",
+        fieldset: {
+          legend: {
+            text: radioLegend,
+            isPageHeading: false,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        errorMessage: {
+          text: noRadioSelected
+        } if radioError else undefined,
+        items: [
+          {
+            value: "yes",
+            text: radioYes
+          },
+          {
+            value: "no",
+            text: radioNo
+          }
+        ]
+      }) }}
+
+      {{ govukButton({
+        text: continueButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

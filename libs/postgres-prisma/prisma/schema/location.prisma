@@ -72,7 +72,6 @@ model Location {
   welshName   String    @unique @map("welsh_name")
   email       String?
   contactNo   String?   @map("contact_no")
-  deletedAt   DateTime? @map("deleted_at")
 
   locationRegions          LocationRegion[]
   locationSubJurisdictions LocationSubJurisdiction[]

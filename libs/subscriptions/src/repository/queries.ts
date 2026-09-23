@@ -180,3 +180,14 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
     return deleteResult.count;
   });
 }
+
+export async function deleteSubscriptionsByLocationIdRecord(locationId: number) {
+  const result = await prisma.subscription.deleteMany({
+    where: {
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
+    }
+  });
+
+  return result.count;
+}

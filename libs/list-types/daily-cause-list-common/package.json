@@ -21,10 +21,11 @@
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/pdf-generation": "workspace:*",
+    "exceljs": "4.4.0",
     "luxon": "3.7.2"
   },
   "devDependencies": {
-    "@types/luxon": "3.7.4",
+    "@types/luxon": "3.7.5",
     "@types/node": "24.10.4",
     "typescript": "6.0.3",
     "vitest": "4.1.10"

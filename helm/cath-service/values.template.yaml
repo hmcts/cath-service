@@ -1,7 +1,13 @@
-# Base values template for production-like environments (stg, prod)
+# Base values template for production-like environments (aat, demo, ithc, perftest)
 # Database and cache infrastructure is managed by Terraform, not Helm
+#
+# This is deliberately ONE template for every non-preview environment. The DNS
+# zone is derived from global.environment rather than hardcoded, so there are no
+# per-environment copies of this file to keep in sync. Only preview has its own
+# template (values.preview.template.yaml), because it needs the -dev SSO app
+# registration and the ASO blob storage.
 global:
-  environment: ${ENVIRONMENT:-stg}
+  environment: ${ENVIRONMENT:-aat}
 
 # Enable/disable subcharts
 postgres:
@@ -14,28 +20,45 @@ crons:
   enabled: true
 
 # Web application configuration
+#
+# Hostnames MUST stay release-scoped (${TEAM_NAME}-{{ .Release.Name }}-...).
+#
+# Each environment is deployed twice, by design and as it was on SDS:
+#   - Flux (cnp-flux-config/apps/cath) owns the plain names cath-web / cath-api /
+#     cath-postgres, and the cath.{env}.platform.hmcts.net Front Door route
+#   - this pipeline deploys release cath-service-{env} alongside it
+#
+# The release scoping is what keeps the two apart. Hardcoding the plain names here
+# makes both ingresses claim the same hosts, and traefik then load balances across
+# a healthy pod and a broken one, which surfaces as an intermittent 502. The
+# resulting names look redundant (cath-cath-service-aat-web) because team and
+# release are both cath-prefixed, but that is cosmetic - do not "tidy" it.
+#
+# The public URL is served by Flux's cath-web release, not by this one.
 cath-web:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-web:${WEB_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.staging.platform.hmcts.net"
-      ENABLE_TEST_SUPPORT: "true"
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
+      # false on demo (production-like), true elsewhere. Resolved by
+      # job.helm-deploy.yml; the :-true default keeps aat behaviour if unset.
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # API application configuration
 cath-api:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-api:${API_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.staging.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-api:${API_IMAGE}"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-api.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      ENABLE_TEST_SUPPORT: "true"
+      ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Crons application configuration
 cath-crons:
   job:
-    image: "hmctspublic.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
@@ -43,8 +66,8 @@ cath-crons:
 # Postgres Prisma Studio service configuration
 cath-postgres:
   nodejs:
-    image: "hmctspublic.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.staging.platform.hmcts.net"
+    image: "hmctsprod.azurecr.io/cath/cath-postgres:${POSTGRES_IMAGE}"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-postgres.{{ .Values.global.environment }}.platform.hmcts.net"
 
 # Blob storage - DISABLED for stg/prod (managed by Terraform, accessed via Key Vault)
 blobstorage:
