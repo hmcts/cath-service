@@ -258,6 +258,7 @@ jobs:
             fs.writeFileSync('/tmp/watchdog/claimed.json', JSON.stringify(claimed, null, 2));
             core.setOutput('count', String(claimed.length));
             core.setOutput('issues', claimed.map(c => `#${c.issue}`).join(', '));
+            core.setOutput('numbers', JSON.stringify(claimed.map(c => c.issue)));
 
       - name: Enable Corepack
         if: steps.claim.outputs.count != '0'
@@ -620,11 +621,34 @@ jobs:
           echo "Notifying. Claude's reason: ${reason}"
 
       - name: Post to Slack
+        id: slack
         if: always() && env.SLACK_WEBHOOK_URL != '' && steps.message.outputs.notify == 'true'
         uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
           # No channel input: a webhook posts only to the channel it was created for.
           text: ${{ steps.message.outputs.text }}
+
+      # Only problems the channel was told about get a recovery notice.
+      - name: Mark the issues as alerted
+        if: always() && steps.slack.outputs.delivered == 'true'
+        uses: actions/github-script@v9
+        env:
+          NUMBERS: ${{ steps.claim.outputs.numbers }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            try {
+              await github.rest.issues.createLabel({
+                owner, repo, name: 'claude:watchdog-alerted',
+                color: 'FBCA04', description: 'The watchdog posted this problem to Slack',
+              });
+            } catch (error) {
+              if (error.status !== 422) throw error;
+            }
+            for (const issue_number of JSON.parse(process.env.NUMBERS || '[]')) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels: ['claude:watchdog-alerted'] });
+            }
 
       - name: Fail on an incomplete attempt
         # A dirty tree is worth a red run. no-change is a legitimate outcome and stays
@@ -641,8 +665,44 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      issues: write
     steps:
+      - name: Find the recoveries that were alerted
+        id: alerted
+        uses: actions/github-script@v9
+        env:
+          RESOLVED: ${{ needs.detect.outputs.resolved }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const similar = (fp) => fp
+              .replace(/\(([^)]*\/)?([^/)]+?):\d+:\d+\)/g, '($2)')
+              .replace(/\s+/g, ' ')
+              .trim();
+            const marker = (fp) => `<!-- watchdog-problem: ${similar(fp)} -->`;
+
+            const alerted = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'all', labels: 'claude:watchdog-alerted', per_page: 100,
+            });
+
+            const recovered = [];
+            for (const fingerprint of JSON.parse(process.env.RESOLVED || '[]')) {
+              const issue = alerted.find(i => i.body?.includes(marker(fingerprint)));
+              if (!issue) {
+                core.info(`${fingerprint}: never posted to Slack — no recovery notice`);
+                continue;
+              }
+              await github.rest.issues.removeLabel({
+                owner, repo, issue_number: issue.number, name: 'claude:watchdog-alerted',
+              });
+              recovered.push(`\`${similar(fingerprint)}\` (#${issue.number})`);
+            }
+            core.setOutput('text', recovered.length
+              ? `:white_check_mark: *CaTH watchdog* — recovered: ${recovered.join(', ')}`
+              : '');
+
       - name: Azure login
+        if: steps.alerted.outputs.text != ''
         uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -650,6 +710,7 @@ jobs:
           allow-no-subscriptions: true
 
       - name: Load the Slack webhook
+        if: steps.alerted.outputs.text != ''
         run: |
           set -euo pipefail
           # Warn rather than fail, unlike the triage job: a missed recovery notice
@@ -664,7 +725,7 @@ jobs:
           fi
 
       - name: Post to Slack
-        if: env.SLACK_WEBHOOK_URL != ''
+        if: steps.alerted.outputs.text != '' && env.SLACK_WEBHOOK_URL != ''
         uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
-          text: ":white_check_mark: *CaTH watchdog* — recovered: `${{ join(fromJSON(needs.detect.outputs.resolved), '`, `') }}`"
+          text: ${{ steps.alerted.outputs.text }}
