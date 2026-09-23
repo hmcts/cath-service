@@ -107,7 +107,13 @@ jobs:
       # not annotate the combination, it ADDS one, so with include entries for
       # demo/ithc/perftest a caller passing '["aat"]' would silently plan all
       # four. Overriding one environment here is still a one-line change.
-      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-DEV","perftest":"DCD-CNP-DEV"}')[matrix.environment] }}
+      # ithc and perftest application resources belong in DCD-CNP-QA, not
+      # DCD-CNP-DEV - the same layout FaCT uses for factithc and factperftest.
+      # Applying them into DCD-CNP-DEV is what produced
+      # "RequestDisallowedByPolicy: Resource doesn't meet the tagging
+      # requirements" for perftest: that subscription's HMCTS Tagging assignment
+      # does not allow a perftest environment tag.
+      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
       # The environment name does NOT match the CFTAPPS subscription name for two
       # of these: aat's network lives in DCD-CFTAPPS-STG and perftest's in
       # DCD-CFTAPPS-TEST. Only demo and ithc line up. DCD-CFTAPPS-PERFTEST does
