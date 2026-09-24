@@ -47,12 +47,22 @@
       "description": "Group all Node.js version updates",
       "groupName": "Node.js version",
       "matchPackageNames": ["node"],
-      "matchManagers": ["regex", "nvm"],
+      "matchManagers": ["custom.regex", "nvm"],
       "matchDatasources": ["node-version", "docker"],
       "enabled": true
     },
     {
-      "description": "Never automerge npm major updates - the only exception to the automerge: true default. Renovate merges via its own automerge path (platformAutomerge is false) so a branch must still be green first. This must stay last so it wins for any grouped branch whose resolved updateType is major; a grouped branch automerges only if every upgrade in it does. Applies equally to dependencies and devDependencies: PR #753 was a devDependency major that broke the production GOV.UK assets, so depType is not a risk signal here.",
+      "description": "Never automerge what the preview pipeline cannot verify. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master has no required status checks to backstop it - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). A github-actions bump touches only .github/workflows/ and a packageManager bump only root package.json, so both fall outside it entirely and cannot test themselves. terraform is worse than untested: master applies it for real (plan-only: false over aat, demo and perftest in workflow.main.yml), and only aat posts a plan comment nobody reads on a self-merging PR.",
+      "matchManagers": ["github-actions", "terraform"],
+      "automerge": false
+    },
+    {
+      "description": "Never automerge the yarn packageManager version. It changes the toolchain for every workspace and CI job, and touches only root package.json - not yarn.lock - so it misses the code gate above and merges with nothing run against it.",
+      "matchDepTypes": ["packageManager"],
+      "automerge": false
+    },
+    {
+      "description": "Never automerge npm major updates - the other exception to the automerge: true default. Renovate merges via its own automerge path (platformAutomerge is false) so a branch must still be green first. This must stay last so it wins for any grouped branch whose resolved updateType is major; a grouped branch automerges only if every upgrade in it does. Applies equally to dependencies and devDependencies: PR #753 was a devDependency major that broke the production GOV.UK assets, so depType is not a risk signal here.",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "automerge": false

@@ -14,6 +14,14 @@
 // negative on matchCurrentVersion that went unnoticed precisely because nothing was
 // committed. Hence this file.
 //
+// LIMIT OF THIS HARNESS: it proves what automerge RESOLVES to, not that merging is safe.
+// It cannot see CI coverage. Renovate scores a branch green when every check run is
+// skipped (getBranchStatus in modules/platform/github treats skipped, neutral and success
+// alike) and master has no required status checks to backstop that, so "all assertions
+// passed" says nothing about whether any job actually ran. Whether a manager's PR is
+// covered at all depends on the detect-code-changes path gate in workflow.preview.yml -
+// see the packageRules descriptions in renovate.json. Read this as a resolution test only.
+//
 // Renovate is not a devDependency here - the package tree is ~333MB and it updates itself.
 // The workflow installs it into a scratch prefix and passes the path in RENOVATE_MODULE.
 // Locally: npm i --prefix /tmp/rv renovate
@@ -54,10 +62,10 @@ const npmDep = (overrides) => ({
 
 const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "devDependencies", ...overrides });
 
-// The policy is: everything automerges except npm majors. Cases expecting false are
-// therefore the npm majors, and the rest assert the permissive default really does reach
-// them - including the categories that used to be carved out, so a silent re-narrowing
-// shows up here as a failure.
+// The policy: automerge by default, excluding (a) npm majors, and (b) anything the
+// preview pipeline cannot verify - github-actions, terraform and the yarn packageManager,
+// whose PRs fall outside the detect-code-changes path gate and so would merge with every
+// check run skipped. Cases expecting false are those exclusions.
 //
 // [description, expected automerge, upgrade]
 const CASES = [
@@ -70,8 +78,8 @@ const CASES = [
   ["npm minor, caret range", true, npmDep({ depName: "express", currentValue: "^5.2.0", currentVersion: "5.2.0", newValue: "^5.3.0", updateType: "minor" })],
   ["npm patch, devDependency", true, devDep({ depName: "vitest", currentValue: "4.1.8", currentVersion: "4.1.8", newValue: "4.1.10", updateType: "patch" })],
 
-  // npm majors are the sole exclusion. The original incident, PR #753, was a
-  // devDependency major that broke the GOV.UK assets, so the rule must stay depType-blind.
+  // npm majors. The original incident, PR #753, was a devDependency major that broke the
+  // GOV.UK assets, so the rule must stay depType-blind.
   [
     "npm major, the PR #753 bump",
     false,
@@ -110,10 +118,11 @@ const CASES = [
     npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "1.0.0", updateType: "major" })
   ],
 
-  // Majors in every other manager DO automerge - only npm majors are excluded.
+  // github-actions and terraform never automerge at any update type: a workflow bump
+  // cannot test itself, and terraform is applied for real by master.
   [
     "github-actions major",
-    true,
+    false,
     {
       versioning: "docker",
       manager: "github-actions",
@@ -126,7 +135,7 @@ const CASES = [
   ],
   [
     "terraform major",
-    true,
+    false,
     {
       versioning: "semver",
       manager: "terraform",
@@ -187,7 +196,7 @@ const CASES = [
   // Toolchain and deliberate pins automerge below major.
   [
     "packageManager minor",
-    true,
+    false,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],
@@ -200,7 +209,7 @@ const CASES = [
   ],
   [
     "packageManager patch",
-    true,
+    false,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],
@@ -237,8 +246,9 @@ const CASES = [
       updateType: "patch"
     })
   ],
-  // Node moves .nvmrc, the root Dockerfile base image and three workflow files together,
-  // and now automerges with them. Neither manager is npm, so even a major is allowed.
+  // Node moves .nvmrc, the root Dockerfile base image and three workflow files together.
+  // The group rule must use custom.regex - Renovate registers custom managers under that
+  // name, so the legacy "regex" spelling silently matches nothing.
   [
     "node via nvm",
     true,
@@ -246,6 +256,7 @@ const CASES = [
       versioning: "node",
       manager: "nvm",
       depName: "node",
+      packageName: "node",
       datasource: "node-version",
       currentValue: "24.17.0",
       currentVersion: "24.17.0",
@@ -258,8 +269,9 @@ const CASES = [
     true,
     {
       versioning: "node",
-      manager: "regex",
+      manager: "custom.regex",
       depName: "node",
+      packageName: "node",
       datasource: "docker",
       currentValue: "22.1.0",
       currentVersion: "22.1.0",
@@ -274,6 +286,7 @@ const CASES = [
       versioning: "node",
       manager: "nvm",
       depName: "node",
+      packageName: "node",
       datasource: "node-version",
       currentValue: "22.17.0",
       currentVersion: "22.17.0",
@@ -282,10 +295,10 @@ const CASES = [
     }
   ],
 
-  // Every other manager automerges below major too.
+  // Remaining managers automerge below major.
   [
     "terraform minor",
-    true,
+    false,
     {
       versioning: "semver",
       manager: "terraform",
@@ -298,7 +311,7 @@ const CASES = [
   ],
   [
     "github-actions minor",
-    true,
+    false,
     {
       versioning: "docker",
       manager: "github-actions",
@@ -320,7 +333,9 @@ const CASES = [
     { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "16.2", updateType: "minor" }
   ],
 
-  // Update types other than major reach the permissive default.
+  // Update types other than major reach the permissive default. pin, rollback and
+  // lockFileMaintenance are disabled under config:recommended, so these assert resolution
+  // for paths Renovate does not currently exercise.
   ["pin", true, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
   ["digest", true, { versioning: "docker", manager: "dockerfile", depName: "node", currentValue: "22-alpine", newValue: "22-alpine", updateType: "digest" }],
   ["rollback", true, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
@@ -347,8 +362,8 @@ const GROUP_CASES = [
     ]
   ],
   [
-    "npm minor grouped with a non-npm major still automerges",
-    true,
+    "npm minor grouped with a non-npm major is held by the github-actions exclusion",
+    false,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
       {
