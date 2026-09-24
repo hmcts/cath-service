@@ -1,5 +1,5 @@
 import { ArtefactType } from "@hmcts/publication";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildArtefactResponse, buildLcsuArtefactResponse, buildMessage, joinValidationMessages, toSpecLanguage } from "./artefact-response.js";
 import type { PublicationMetadata } from "./publication-headers.js";
 
@@ -141,13 +141,39 @@ describe("buildLcsuArtefactResponse", () => {
 });
 
 describe("buildMessage", () => {
-  it("should return the message with an ISO timestamp", () => {
+  it("should return the message with a local ISO date-time carrying no zone suffix", () => {
     // Act
-    const result = buildMessage("x-court-id is required");
+    const result = buildMessage("x-court-id is mandatory however an empty value is provided");
 
     // Assert
-    expect(result.message).toBe("x-court-id is required");
-    expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(result.message).toBe("x-court-id is mandatory however an empty value is provided");
+    expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}$/);
+  });
+
+  // The incumbent's timestamp is a Java LocalDateTime, so it carries no offset at all.
+  it("should not append a Z or a numeric offset", () => {
+    // Act
+    const { timestamp } = buildMessage("any");
+
+    // Assert
+    expect(timestamp).not.toMatch(/Z$/);
+    expect(timestamp).not.toMatch(/[+-]\d{2}:\d{2}$/);
+  });
+
+  // LocalDateTime is the local wall clock, not UTC — so in a non-UTC zone the rendered hour
+  // differs from toISOString(). Pinned with a fixed clock so it holds wherever this runs.
+  it("should report the local wall clock rather than UTC", () => {
+    // Arrange
+    const fixed = new Date(2026, 8, 24, 11, 56, 27, 611);
+    vi.useFakeTimers();
+    vi.setSystemTime(fixed);
+
+    // Act
+    const { timestamp } = buildMessage("any");
+
+    // Assert
+    expect(timestamp).toBe("2026-09-24T11:56:27.611");
+    vi.useRealTimers();
   });
 });
 

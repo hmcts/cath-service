@@ -666,32 +666,32 @@ components:
               summary: Required header omitted or empty
               value:
                 message: x-court-id is mandatory however an empty value is provided
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
             unknownType:
               summary: Unrecognised x-type
               value:
                 message: "x-type must be one of LIST, LCSU"
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
             lcsuOverJson:
               summary: LCSU sent as application/json
               value:
                 message: LCSU publications must be sent as multipart/form-data
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
             lcsuWrongFormat:
               summary: LCSU file is not .htm or .html
               value:
                 message: File format is not supported for LCSU.
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
             noFile:
               summary: Multipart request with no file part
               value:
                 message: No file provided. Include a file in the 'file' field of the multipart form.
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
             schemaFailure:
               summary: Payload failed the list type schema
               value:
                 message: "/document: required property 'publicationDate' not found"
-                timestamp: "2026-09-14T09:12:33.101Z"
+                timestamp: "2026-09-24T11:56:27.611"
 
     PublicationUnauthorised:
       description: Missing, malformed, or expired bearer token.
@@ -728,7 +728,7 @@ components:
             $ref: "#/components/schemas/Message"
           example:
             message: A publication with these details is already being created
-            timestamp: "2026-09-14T09:12:33.101Z"
+            timestamp: "2026-09-24T11:56:27.611"
 
     PublicationServerError:
       description: Ingestion failed.
@@ -738,7 +738,7 @@ components:
             $ref: "#/components/schemas/Message"
           example:
             message: Internal server error during ingestion
-            timestamp: "2026-09-14T09:12:33.101Z"
+            timestamp: "2026-09-24T11:56:27.611"
 
   headers:
     NoStore:
@@ -886,8 +886,14 @@ components:
           example: "x-court-id is mandatory however an empty value is provided"
         timestamp:
           type: string
-          format: date-time
-          example: "2026-09-14T09:12:33.101Z"
+          description: |
+            Local date-time with **no** zone suffix, matching the incumbent, where this is a Java
+            `LocalDateTime` from `LocalDateTime.now()`. Fractional digits are emitted in groups of
+            three as the value needs them, so a JVM may report nanoseconds
+            (`2026-09-24T11:56:27.611289331`) where this service reports milliseconds — a JS
+            `Date` has no finer resolution. Deliberately not `format: date-time`, which would
+            require an offset.
+          example: "2026-09-24T11:56:27.611"
 
     AuthErrorResponse:
       type: object

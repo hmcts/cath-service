@@ -63,7 +63,29 @@ export function buildLcsuArtefactResponse(metadata: PublicationMetadata): Artefa
 }
 
 export function buildMessage(message: string): SpecMessage {
-  return { message, timestamp: new Date().toISOString() };
+  return { message, timestamp: localDateTimeNow() };
+}
+
+/**
+ * Formats the current time the way the incumbent's `Message.timestamp` appears on the wire.
+ *
+ * There it is a Java `LocalDateTime` set from `LocalDateTime.now()` and serialised by Jackson as
+ * ISO local date-time: no offset and no trailing `Z`, and the local wall clock rather than UTC.
+ * `Date.prototype.toISOString` gives neither, so the components are read locally and assembled.
+ *
+ * Fractional digits: Jackson emits as many as the value needs, in groups of three — so a JVM
+ * reports nanoseconds (`.611289331`) only because its clock has that resolution. A JS `Date` is
+ * millisecond-resolution, so three digits is the faithful equivalent, and is exactly what the
+ * incumbent itself prints when the nanoseconds land on a millisecond boundary. Zero-padding to
+ * nine would look more like a JVM sample without being any more accurate.
+ */
+function localDateTimeNow(now = new Date()): string {
+  const pad = (value: number, width = 2) => String(value).padStart(width, "0");
+
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  return `${date}T${time}.${pad(now.getMilliseconds(), 3)}`;
 }
 
 // The incumbent joins its payload-schema failures with ", " (ValidationService, which throws
