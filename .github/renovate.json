@@ -1,8 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Everything automerges except npm majors, pre-1.0.0 packages, Node.js, and managers whose PRs the preview pipeline cannot verify (github-actions, terraform, docker-compose, the yarn packageManager). packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
+  "description": "Automerge is an allowlist: only the npm and helmv3 managers automerge, and within them npm majors, pre-1.0.0 packages and the yarn packageManager do not. packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
   "extends": ["config:recommended"],
-  "automerge": true,
+  "automerge": false,
   "platformAutomerge": false,
   "ignoreTests": false,
   "node": {
@@ -52,8 +52,13 @@
       "enabled": true
     },
     {
-      "description": "Hold npm releases for 3 days before Renovate raises them. With automerge on, a compromised release would otherwise reach master with no human in the loop, and most malicious publishes are caught and unpublished inside that window. Scoped to npm because other datasources do not always report release timestamps, and a missing timestamp would hold the update indefinitely.",
-      "matchManagers": ["npm"],
+      "description": "Automerge only what the preview pipeline verifies. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master's branch protection has required status checks switched off - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). npm bumps move yarn.lock and helmv3 bumps move Chart.yaml under apps/ or helm/, so both are inside it. Every other manager stays manual because the default is automerge: false: github-actions and devcontainer touch only .github/ and .devcontainer/; docker-compose touches only docker-compose.yml and a postgres major strands local data volumes; terraform and terraform-version touch only infrastructure/, which master applies for real over aat, demo and perftest; nvm and the custom.regex Node pins touch .nvmrc and workflows; and the only image the dockerfile manager finds is the production Node base image. A new manager must be checked against that path gate before it is added here. resolutions entries are deliberately included below major: every current entry is an exact security pin, and moving it within its major is what the pin is for.",
+      "matchManagers": ["npm", "helmv3"],
+      "automerge": true
+    },
+    {
+      "description": "Hold anything from the npm registry for 3 days before Renovate raises it. With automerge on, a compromised release would otherwise reach master with no human in the loop, and most malicious publishes are caught and unpublished inside that window. Matched on datasource, not manager, so it also covers npm packages found by other managers - the corepack pin in the Dockerfile arrives via custom.regex. Other datasources are left alone because they do not always report release timestamps, and a missing timestamp would hold the update indefinitely.",
+      "matchDatasources": ["npm"],
       "minimumReleaseAge": "3 days"
     },
     {
@@ -67,18 +72,8 @@
       "automerge": false
     },
     {
-      "description": "Never automerge what the preview pipeline cannot verify. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master has no required status checks to backstop it - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). A github-actions bump touches only .github/workflows/ and a docker-compose bump only docker-compose.yml files, so both fall outside it entirely and cannot test themselves; a docker-compose major also strands local data volumes, since postgres will not start a new major on an old data directory. terraform is worse than untested: master applies it for real (plan-only: false over aat, demo and perftest in workflow.main.yml), and only aat posts a plan comment nobody reads on a self-merging PR.",
-      "matchManagers": ["github-actions", "terraform", "docker-compose"],
-      "automerge": false
-    },
-    {
-      "description": "Never automerge the yarn packageManager version. It changes the toolchain for every workspace and CI job, and touches only root package.json - not yarn.lock - so it misses the code gate above and merges with nothing run against it.",
+      "description": "Never automerge the yarn packageManager version. It changes the toolchain for every workspace and CI job, and touches only root package.json - not yarn.lock - so it misses the preview path gate and merges with nothing run against it, even though the npm manager is allowlisted above.",
       "matchDepTypes": ["packageManager"],
-      "automerge": false
-    },
-    {
-      "description": "Never automerge Node.js. It arrives by two routes: the group above (.nvmrc via nvm, the Dockerfile and workflow node-version pins via custom.regex), and the dockerfile manager, which extracts the production base image as hmctspublic.azurecr.io/base/node outside that group. A non-major group branch touches only .nvmrc and .github/workflows/ - the Dockerfile pin is on its own major track - so it misses the code gate and would merge with every check skipped, while .nvmrc sets the runtime for most CI jobs. The base image is the production runtime.",
-      "matchPackageNames": ["node", "hmctspublic.azurecr.io/base/node"],
       "automerge": false
     },
     {

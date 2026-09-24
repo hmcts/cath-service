@@ -17,7 +17,7 @@
 // LIMIT OF THIS HARNESS: it proves what automerge RESOLVES to, not that merging is safe.
 // It cannot see CI coverage. Renovate scores a branch green when every check run is
 // skipped (getBranchStatus in modules/platform/github treats skipped, neutral and success
-// alike) and master has no required status checks to backstop that, so "all assertions
+// alike) and master's branch protection has required status checks switched off, so "all assertions
 // passed" says nothing about whether any job actually ran. Whether a manager's PR is
 // covered at all depends on the detect-code-changes path gate in workflow.preview.yml -
 // see the packageRules descriptions in renovate.json. Read this as a resolution test only.
@@ -55,6 +55,7 @@ const base = { automerge: config.automerge, packageRules: config.packageRules };
 const npmDep = (overrides) => ({
   versioning: "npm",
   manager: "npm",
+  datasource: "npm",
   depTypes: ["dependencies"],
   depType: "dependencies",
   ...overrides
@@ -62,11 +63,11 @@ const npmDep = (overrides) => ({
 
 const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "devDependencies", ...overrides });
 
-// The policy: automerge by default, excluding (a) npm majors, (b) pre-1.0.0 packages,
-// (c) Node.js, and (d) anything the preview pipeline cannot verify - github-actions,
-// terraform, docker-compose and the yarn packageManager, whose PRs fall outside the
-// detect-code-changes path gate and so would merge with every check run skipped. Cases
-// expecting false are those exclusions.
+// The policy is an allowlist: only the npm and helmv3 managers automerge, because theirs
+// are the only PRs inside the detect-code-changes path gate. Within npm, majors, pre-1.0.0
+// packages and the yarn packageManager are held back. Every other manager falls through to
+// automerge: false - the cases for them exist so a manager added to the allowlist without
+// checking the path gate breaks this harness.
 //
 // [description, expected automerge, upgrade]
 const CASES = [
@@ -119,8 +120,8 @@ const CASES = [
     npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "1.0.0", updateType: "major" })
   ],
 
-  // github-actions, terraform and docker-compose never automerge at any update type: a
-  // workflow or compose bump cannot test itself, and terraform is applied for real by master.
+  // Managers outside the allowlist never automerge at any update type. Their PRs touch only
+  // paths the preview pipeline skips, and terraform is applied for real by master.
   [
     "github-actions major",
     false,
@@ -158,9 +159,47 @@ const CASES = [
     { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "4.0.0", updateType: "major" }
   ],
   [
-    "dockerfile major",
-    true,
-    { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "17.0", updateType: "major" }
+    "terraform-version minor",
+    false,
+    { versioning: "hashicorp", manager: "terraform-version", depName: "hashicorp/terraform", currentValue: "1.15.8", newValue: "1.16.0", updateType: "minor" }
+  ],
+  [
+    "devcontainer feature major",
+    false,
+    {
+      versioning: "docker",
+      manager: "devcontainer",
+      depName: "ghcr.io/devcontainers/features/docker-in-docker",
+      currentValue: "2",
+      newValue: "3",
+      updateType: "major"
+    }
+  ],
+  [
+    "devcontainer image",
+    false,
+    {
+      versioning: "docker",
+      manager: "devcontainer",
+      depName: "mcr.microsoft.com/devcontainers/base",
+      currentValue: "ubuntu",
+      newValue: "ubuntu",
+      updateType: "digest"
+    }
+  ],
+  [
+    "corepack via custom regex manager",
+    false,
+    {
+      versioning: "npm",
+      manager: "custom.regex",
+      depName: "corepack",
+      datasource: "npm",
+      currentValue: "0.36.0",
+      currentVersion: "0.36.0",
+      newValue: "0.37.0",
+      updateType: "minor"
+    }
   ],
 
   // Pre-1.0.0: a 0.x minor may break, but Renovate still calls it minor. Both matcher
@@ -256,9 +295,9 @@ const CASES = [
       updateType: "patch"
     })
   ],
-  // Node never automerges, by either route: the group (nvm and custom.regex - Renovate
+  // Node never automerges by any route: the group (nvm and custom.regex - Renovate
   // registers custom managers as custom.regex, so the legacy "regex" spelling silently
-  // matches nothing) or the dockerfile manager's extraction of the production base image.
+  // matches nothing) or the dockerfile manager, whose only image is the production Node base.
   [
     "node via nvm",
     false,
@@ -357,17 +396,12 @@ const CASES = [
     false,
     { versioning: "docker", manager: "docker-compose", depName: "redis", currentValue: "8-alpine", newValue: "8.2-alpine", updateType: "minor" }
   ],
-  [
-    "dockerfile minor",
-    true,
-    { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "16.2", updateType: "minor" }
-  ],
 
-  // Update types other than major reach the permissive default. pin, rollback and
+  // npm update types other than major reach the allowlist. pin, rollback and
   // lockFileMaintenance are disabled under config:recommended, so these assert resolution
-  // for paths Renovate does not currently exercise.
+  // for paths Renovate does not currently exercise. digest is absent: it only applies to
+  // docker images, and no allowlisted manager raises one.
   ["pin", true, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
-  ["digest", true, { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", newValue: "16.1", updateType: "digest" }],
   ["rollback", true, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
   ["replacement", true, npmDep({ depName: "somepkg", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.0.0", updateType: "replacement" })],
   ["lockFileMaintenance", true, { manager: "npm", updateType: "lockFileMaintenance", isLockFileMaintenance: true }]
@@ -392,7 +426,7 @@ const GROUP_CASES = [
     ]
   ],
   [
-    "npm minor grouped with a non-npm major is held by the github-actions exclusion",
+    "npm minor grouped with a github-actions major is held because github-actions is not allowlisted",
     false,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
@@ -437,9 +471,23 @@ const GROUP_CASES = [
 const RELEASE_AGE_CASES = [
   ["npm dependency is held", "3 days", npmDep({ depName: "express", currentValue: "5.2.0", currentVersion: "5.2.0", newValue: "5.3.0", updateType: "minor" })],
   [
+    "npm datasource under another manager is held",
+    "3 days",
+    { versioning: "npm", manager: "custom.regex", depName: "corepack", datasource: "npm", currentValue: "0.36.0", newValue: "0.37.0", updateType: "minor" }
+  ],
+  [
     "non-npm is not held",
     undefined,
-    { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "3.2.0", updateType: "minor" }
+    {
+      versioning: "semver",
+      manager: "helmv3",
+      depName: "nodejs",
+      datasource: "helm",
+      currentValue: "3.1.0",
+      currentVersion: "3.1.0",
+      newValue: "3.2.0",
+      updateType: "minor"
+    }
   ]
 ];
 
