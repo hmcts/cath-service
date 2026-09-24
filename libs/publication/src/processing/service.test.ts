@@ -108,15 +108,18 @@ vi.mock("@hmcts/notifications", () => ({
 }));
 
 vi.mock("@hmcts/crown-daily-list", () => ({
-  generateCrownDailyListPdf: vi.fn()
+  generateCrownDailyListPdf: vi.fn(),
+  generateCrownDailyListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/crown-firm-list", () => ({
-  generateCrownFirmListPdf: vi.fn()
+  generateCrownFirmListPdf: vi.fn(),
+  generateCrownFirmListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/crown-advanced-pdda-list", () => ({
-  generateCrownAdvanceListPdf: vi.fn()
+  generateCrownAdvanceListPdf: vi.fn(),
+  generateCrownAdvanceListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/civil-daily-cause-list", () => ({
@@ -191,9 +194,9 @@ describe("publication-processor", async () => {
   const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
   const { generateSjpPublicListPdf } = await import("@hmcts/sjp-public-list");
   const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
-  const { generateCrownDailyListPdf } = await import("@hmcts/crown-daily-list");
-  const { generateCrownFirmListPdf } = await import("@hmcts/crown-firm-list");
-  const { generateCrownAdvanceListPdf } = await import("@hmcts/crown-advanced-pdda-list");
+  const { generateCrownDailyListPdf, generateCrownDailyListExcel } = await import("@hmcts/crown-daily-list");
+  const { generateCrownFirmListPdf, generateCrownFirmListExcel } = await import("@hmcts/crown-firm-list");
+  const { generateCrownAdvanceListPdf, generateCrownAdvanceListExcel } = await import("@hmcts/crown-advanced-pdda-list");
   const { generateSendDailyHearingListPdf } = await import("@hmcts/send-daily-hearing-list");
   const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
   const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
@@ -1628,20 +1631,67 @@ describe("publication-processor", async () => {
       expect(result.excelPath).toBeUndefined();
       consoleWarnSpy.mockRestore();
     });
+
+    it("should call Excel generator for CROWN_DAILY_LIST and derive excelPath", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CROWN_DAILY_LIST", friendlyName: "Crown Daily List" } as any);
+      vi.mocked(generateCrownDailyListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/crown-daily.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCrownDailyListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      expect(generateCrownDailyListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-artefact-id", listTypeName: "CROWN_DAILY_LIST" }));
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
+    it("should still complete with the PDF path when a Crown Excel generator reports failure", async () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CROWN_FIRM_LIST", friendlyName: "Crown Firm List" } as any);
+      vi.mocked(generateCrownFirmListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/crown-firm.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCrownFirmListExcel).mockResolvedValue({ success: false, error: "Excel generation failed" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      expect(result.pdfPath).toBe("/path/to/crown-firm.pdf");
+      expect(result.excelPath).toBeUndefined();
+      consoleWarnSpy.mockRestore();
+    });
   });
 
   describe("listTypeHasExcel", () => {
-    const CIVIL_AND_FAMILY_EXCEL_LIST_TYPES = ["CIVIL_DAILY_CAUSE_LIST", "FAMILY_DAILY_CAUSE_LIST", "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"];
-
-    it.each(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES)("should return true for the in-scope list type %s", (listTypeName) => {
+    it.each([
+      "CROWN_DAILY_LIST",
+      "CROWN_FIRM_LIST",
+      "CROWN_ADVANCED_PDDA_LIST",
+      "CIVIL_DAILY_CAUSE_LIST",
+      "FAMILY_DAILY_CAUSE_LIST",
+      "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"
+    ])("should return true for %s", (listTypeName) => {
       expect(listTypeHasExcel(listTypeName)).toBe(true);
     });
 
-    it("should register exactly the 3 in-scope Civil and Family cause lists", () => {
-      expect(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES).toHaveLength(3);
+    it("should return false for a list type without an Excel generator", () => {
+      expect(listTypeHasExcel("COP_DAILY_CAUSE_LIST")).toBe(false);
     });
 
-    it("should return false for an undefined list type name", () => {
+    it("should return false when listTypeName is undefined", () => {
       expect(listTypeHasExcel(undefined)).toBe(false);
     });
   });
@@ -1687,6 +1737,54 @@ describe("publication-processor", async () => {
         jsonData: {}
       });
 
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_DAILY_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownDailyListExcel).mockResolvedValue({ success: true, excelPath: "crown-daily.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_DAILY_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownDailyListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_DAILY_LIST" }));
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_FIRM_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownFirmListExcel).mockResolvedValue({ success: true, excelPath: "crown-firm.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_FIRM_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownFirmListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_FIRM_LIST" }));
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_ADVANCED_PDDA_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownAdvanceListExcel).mockResolvedValue({ success: true, excelPath: "crown-advance.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_ADVANCED_PDDA_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownAdvanceListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_ADVANCED_PDDA_LIST" }));
       expect(result).toEqual({ hasExcel: true });
     });
 
