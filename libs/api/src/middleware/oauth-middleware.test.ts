@@ -53,7 +53,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Missing or invalid Authorization header"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -68,7 +68,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Missing or invalid Authorization header"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -86,7 +86,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Invalid or expired token"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -243,7 +243,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Invalid or expired token"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -266,7 +266,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Invalid or expired token"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -299,7 +299,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Invalid or expired token"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });
@@ -339,7 +339,7 @@ describe("authenticateApi", () => {
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
       success: false,
-      message: "Invalid or expired token"
+      message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
   });

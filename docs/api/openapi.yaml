@@ -694,20 +694,19 @@ components:
                 timestamp: "2026-09-24T11:56:27.611"
 
     PublicationUnauthorised:
-      description: Missing, malformed, or expired bearer token.
+      description: |
+        Missing, malformed, unverifiable or expired bearer token.
+
+        Every one of those reports the same message. Publishers reach CaTH through APIM, which
+        phrases OAuth rejections this way, so a token problem reads the same whether it was
+        rejected at the gateway or here. Which check failed is logged, not returned.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/AuthErrorResponse"
-          examples:
-            missingHeader:
-              value:
-                success: false
-                message: Missing or invalid Authorization header
-            invalidToken:
-              value:
-                success: false
-                message: Invalid or expired token
+          example:
+            success: false
+            message: Access denied due to invalid OAuth information
 
     PublicationForbidden:
       description: Token is valid but lacks the `api.publisher.user` app role.

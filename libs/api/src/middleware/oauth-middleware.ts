@@ -4,6 +4,12 @@ import jwksClient from "jwks-rsa";
 
 const REQUIRED_ROLE = "api.publisher.user";
 
+// One message for every way a bearer token can fail — absent, malformed, unverifiable or
+// expired. Publishers reach CaTH through APIM, which phrases OAuth rejections this way, so a
+// token problem reads the same whether it was caught at the gateway or here. Deliberately says
+// nothing about *which* check failed: that detail is logged, not returned.
+const OAUTH_FAILURE_MESSAGE = "Access denied due to invalid OAuth information";
+
 /**
  * Middleware to authenticate API requests using OAuth 2.0
  * Validates bearer token and checks for required app role
@@ -16,7 +22,7 @@ export function authenticateApi() {
       if (!authHeader?.startsWith("Bearer ")) {
         return res.status(401).json({
           success: false,
-          message: "Missing or invalid Authorization header"
+          message: OAUTH_FAILURE_MESSAGE
         });
       }
 
@@ -44,7 +50,7 @@ export function authenticateApi() {
       console.error("API authentication error");
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token"
+        message: OAUTH_FAILURE_MESSAGE
       });
     }
   };
