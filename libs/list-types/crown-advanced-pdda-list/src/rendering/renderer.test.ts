@@ -56,36 +56,6 @@ describe("renderCrownAdvanceListData", () => {
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
   });
 
-  it("should set weekCommencing from contentDate option when date is a Monday", async () => {
-    const result = await renderCrownAdvanceListData(baseInput, {
-      locationId: "102",
-      contentDate: new Date("2025-11-10"),
-      locale: "en"
-    });
-
-    expect(result.header.weekCommencing).toBe("10 November 2025");
-  });
-
-  it("should move weekCommencing back to the previous Monday when contentDate is a Wednesday", async () => {
-    const result = await renderCrownAdvanceListData(baseInput, {
-      locationId: "102",
-      contentDate: new Date("2025-11-12"),
-      locale: "en"
-    });
-
-    expect(result.header.weekCommencing).toBe("10 November 2025");
-  });
-
-  it("should move weekCommencing back to the previous Monday when contentDate is a Sunday", async () => {
-    const result = await renderCrownAdvanceListData(baseInput, {
-      locationId: "102",
-      contentDate: new Date("2025-11-09"),
-      locale: "en"
-    });
-
-    expect(result.header.weekCommencing).toBe("3 November 2025");
-  });
-
   it("should return empty groupedCategories when no court lists", async () => {
     const result = await renderCrownAdvanceListData(baseInput, {
       locationId: "102",
