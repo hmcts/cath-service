@@ -61,8 +61,7 @@ describe("crown-advance-list controller", () => {
       locationName: "Crown Court at Leeds",
       addressLines: [],
       contentDate: "15 January 2025",
-      lastUpdated: "14 January 2025",
-      weekCommencing: "20 January 2025"
+      lastUpdated: "14 January 2025"
     },
     openJustice: { venueName: "Crown Court at Leeds", email: "", phone: "" },
     groupedCategories: []

@@ -41,7 +41,6 @@ const mockRenderedData = {
     addressLines: ["Newton Street", "B4 7NA"],
     dateRange: "10 November 2025 to 11 November 2025",
     lastUpdated: "12 November 2025",
-    weekCommencing: "10 November 2025",
     version: "1.0"
   },
   openJustice: {

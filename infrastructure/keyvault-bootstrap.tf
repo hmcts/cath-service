@@ -24,7 +24,7 @@
 # hand is done as a member of DTS CFT Developers. The E2E workflow reads via the
 # OIDC service principal policy below, so pipeline runs are unaffected.
 module "bootstrap_key_vault" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
 
   name                    = "${var.product}-bootstrap-${var.env}"
   product                 = var.product
@@ -34,7 +34,7 @@ module "bootstrap_key_vault" {
   resource_group_name     = azurerm_resource_group.shared.name
   product_group_object_id = var.pip_nonprod_group_object_id
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = false
 }
 

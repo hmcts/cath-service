@@ -43,7 +43,8 @@ vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list", () 
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
-  generateCauseListPdf: vi.fn()
+  generateCauseListPdf: vi.fn(),
+  generateCivilAndFamilyDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
@@ -122,11 +123,13 @@ vi.mock("@hmcts/crown-advanced-pdda-list", () => ({
 }));
 
 vi.mock("@hmcts/civil-daily-cause-list", () => ({
-  generateCivilDailyCauseListPdf: vi.fn()
+  generateCivilDailyCauseListPdf: vi.fn(),
+  generateCivilDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/family-daily-cause-list", () => ({
-  generateFamilyDailyCauseListPdf: vi.fn()
+  generateFamilyDailyCauseListPdf: vi.fn(),
+  generateFamilyDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
@@ -1289,6 +1292,52 @@ describe("publication-processor", async () => {
       });
     });
 
+    it("should set excelPath for a Shape A list type when its Excel generator succeeds", async () => {
+      const { generateCivilDailyCauseListPdf, generateCivilDailyCauseListExcel } = await import("@hmcts/civil-daily-cause-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateCivilDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCivilDailyCauseListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication(baseParams);
+
+      expect(generateCivilDailyCauseListExcel).toHaveBeenCalled();
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
+    it("should not block PDF or notifications when the Excel generator throws", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { generateCivilDailyCauseListPdf, generateCivilDailyCauseListExcel } = await import("@hmcts/civil-daily-cause-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateCivilDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCivilDailyCauseListExcel).mockRejectedValue(new Error("Excel crash"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 3,
+        sent: 3,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication(baseParams);
+
+      expect(result.pdfPath).toBe("/path/to/pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(result.notificationsSent).toBe(3);
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should call extractAndStoreArtefactSearch when jsonData is provided", async () => {
       vi.mocked(generateCauseListPdf).mockResolvedValue({
         success: true,
@@ -1425,7 +1474,7 @@ describe("publication-processor", async () => {
 
       await processPublication({ ...baseParams, listTypeId: 25 });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith(baseParams.jsonData, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
     });
 
@@ -1435,7 +1484,7 @@ describe("publication-processor", async () => {
 
       await processPublication({ ...baseParams, listTypeId: 24 });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith(baseParams.jsonData);
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith(baseParams.jsonData, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("test-artefact-id", expect.any(Buffer));
     });
 
@@ -1627,12 +1676,19 @@ describe("publication-processor", async () => {
   });
 
   describe("listTypeHasExcel", () => {
-    it.each(["CROWN_DAILY_LIST", "CROWN_FIRM_LIST", "CROWN_ADVANCED_PDDA_LIST"])("should return true for %s", (listTypeName) => {
+    it.each([
+      "CROWN_DAILY_LIST",
+      "CROWN_FIRM_LIST",
+      "CROWN_ADVANCED_PDDA_LIST",
+      "CIVIL_DAILY_CAUSE_LIST",
+      "FAMILY_DAILY_CAUSE_LIST",
+      "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"
+    ])("should return true for %s", (listTypeName) => {
       expect(listTypeHasExcel(listTypeName)).toBe(true);
     });
 
     it("should return false for a list type without an Excel generator", () => {
-      expect(listTypeHasExcel("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
+      expect(listTypeHasExcel("COP_DAILY_CAUSE_LIST")).toBe(false);
     });
 
     it("should return false when listTypeName is undefined", () => {
@@ -1815,28 +1871,34 @@ describe("publication-processor", async () => {
     it("should generate and save Excel for SJP_PUBLIC_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-1", listTypeName: "SJP_PUBLIC_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-1", expect.any(Buffer));
     });
 
     it("should generate and save Excel for SJP_DELTA_PUBLIC_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-2", listTypeName: "SJP_DELTA_PUBLIC_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-2", expect.any(Buffer));
+    });
+
+    it("should generate Welsh Excel when locale is cy", async () => {
+      await generatePublicationExcel({ artefactId: "artefact-cy", listTypeName: "SJP_PUBLIC_LIST", jsonData: { courtLists: [] }, locale: "cy" });
+
+      expect(generateSjpPublicListExcel).toHaveBeenCalledWith({ courtLists: [] }, "cy");
     });
 
     it("should generate and save Excel for SJP_PRESS_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-3", listTypeName: "SJP_PRESS_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-3", expect.any(Buffer));
     });
 
     it("should generate and save Excel for SJP_DELTA_PRESS_LIST", async () => {
       await generatePublicationExcel({ artefactId: "artefact-4", listTypeName: "SJP_DELTA_PRESS_LIST", jsonData: { courtLists: [] } });
 
-      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] });
+      expect(generateSjpPressListExcel).toHaveBeenCalledWith({ courtLists: [] }, "en");
       expect(saveExcelFile).toHaveBeenCalledWith("artefact-4", expect.any(Buffer));
     });
 

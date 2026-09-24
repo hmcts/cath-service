@@ -1,5 +1,5 @@
 module "third_party_key_vault" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
 
   name                = "${var.product}-tp-${var.env}"
   product             = var.product
@@ -11,7 +11,7 @@ module "third_party_key_vault" {
   # Write access - see the note in infrastructure/keyvault.tf.
   product_group_name = "DTS PIP Non-Prod"
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = false
 }
 
