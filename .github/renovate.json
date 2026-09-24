@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Automerge is an allowlist: only the npm and helmv3 managers automerge, and within them npm majors, pre-1.0.0 packages, the yarn packageManager and Node (engines/volta) do not. packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
+  "description": "Automerge is an allowlist (npm and helmv3), with exceptions below it. packageRules are last-match-wins, so order matters. Run scripts/verify-renovate-automerge.mjs after editing; CI runs it in renovate-config.yml.",
   "extends": ["config:recommended"],
   "automerge": false,
   "platformAutomerge": false,
@@ -52,38 +52,38 @@
       "enabled": true
     },
     {
-      "description": "Automerge only what the preview pipeline verifies. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master's branch protection has required status checks switched off - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). npm bumps move yarn.lock and helmv3 bumps move Chart.yaml under apps/ or helm/, so both are inside it. Every other manager stays manual because the default is automerge: false: github-actions and devcontainer touch only .github/ and .devcontainer/; docker-compose touches only docker-compose.yml and a postgres major strands local data volumes; terraform and terraform-version touch only infrastructure/, which master applies for real over aat, demo and perftest; nvm and the custom.regex Node pins touch .nvmrc and workflows; and the only image the dockerfile manager finds is the production Node base image. A new manager must be checked against that path gate before it is added here. resolutions entries are deliberately included below major: every current entry is an exact security pin, and moving it within its major is what the pin is for.",
+      "description": "Automerge only managers whose PRs the preview pipeline tests. master has no required status checks and Renovate treats all-skipped as green, so a PR outside the detect-code-changes paths (yarn.lock, apps/, libs/, helm/, e2e-tests/, Dockerfile) merges untested. npm and helmv3 are inside them; everything else stays manual. Check a new manager against those paths before adding it. resolutions pins automerge below major on purpose.",
       "matchManagers": ["npm", "helmv3"],
       "automerge": true
     },
     {
-      "description": "Hold anything from the npm registry for 3 days before Renovate raises it. With automerge on, a compromised release would otherwise reach master with no human in the loop, and most malicious publishes are caught and unpublished inside that window. Matched on datasource, not manager, so it also covers npm packages found by other managers - the corepack pin in the Dockerfile arrives via custom.regex. Other datasources are left alone because they do not always report release timestamps, and a missing timestamp would hold the update indefinitely.",
+      "description": "Hold npm-registry releases for 3 days so a compromised publish can't automerge before it's pulled. Matched on datasource so it also covers corepack (found by custom.regex). Not applied to other datasources, which may lack release timestamps and would be held indefinitely.",
       "matchDatasources": ["npm"],
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Never automerge pre-1.0.0 packages, part 1 of 2. Under semver a 0.x minor bump may break, but Renovate still classifies it as minor. This form catches anything whose resolved currentVersion is below 1.0.0, including range values like '>=0.5.0 <1.0.0' and bare '0'. It cannot match ranges that have no single resolved version, which is why the sibling rule below exists.",
+      "description": "Never automerge pre-1.0.0 packages: under semver a 0.x minor may break. Catches resolved versions below 1.0.0, including ranges like '>=0.5.0 <1.0.0'.",
       "matchCurrentVersion": "<1.0.0",
       "automerge": false
     },
     {
-      "description": "Never automerge pre-1.0.0 packages, part 2 of 2. Catches caret and tilde ranges such as the '^0.7.0' passport peerDependency, where matchCurrentVersion has no single version to compare against. The two rules are complementary, not alternatives - neither covers every 0.x value form on its own.",
+      "description": "Never automerge pre-1.0.0 packages: catches caret/tilde ranges like '^0.7.0', which have no single version for the rule above to compare.",
       "matchCurrentValue": "/^\\^?~?0\\./",
       "automerge": false
     },
     {
-      "description": "Never automerge the yarn packageManager version. It changes the toolchain for every workspace and CI job, and touches only root package.json - not yarn.lock - so it misses the preview path gate and merges with nothing run against it, even though the npm manager is allowlisted above.",
+      "description": "Never automerge the yarn packageManager. It changes the toolchain for every job and touches only root package.json, so no checks run.",
       "matchDepTypes": ["packageManager"],
       "automerge": false
     },
     {
-      "description": "Never automerge Node.js through the npm manager. The allowlist lets npm through, and the npm manager extracts engines.node and volta.node from package.json as dep node. A bump there changes the declared runtime but touches only package.json - not yarn.lock - so from the root package.json it misses the preview path gate entirely. No package.json declares either today; this keeps the rest of the Node policy true if one is added.",
+      "description": "Never automerge Node found by the npm manager (engines/volta). It changes the declared runtime and touches only package.json, so no checks run.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["node"],
       "automerge": false
     },
     {
-      "description": "Never automerge npm major updates. Renovate merges via its own automerge path (platformAutomerge is false) so a branch must still be green first. This must stay last so it wins for any grouped branch whose resolved updateType is major; a grouped branch automerges only if every upgrade in it does. Applies equally to dependencies and devDependencies: PR #753 was a devDependency major that broke the production GOV.UK assets, so depType is not a risk signal here.",
+      "description": "Never automerge npm majors, whatever the depType: PR #753 was a devDependency major that broke the production GOV.UK assets.",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "automerge": false
