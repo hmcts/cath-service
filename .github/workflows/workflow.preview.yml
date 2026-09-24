@@ -44,6 +44,12 @@ jobs:
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
       plan-only: true
+      # Plan every environment master will apply. Reviewing only aat here would
+      # mean the first sight of a demo/ithc/perftest plan is the master run that
+      # is already applying it. Only aat posts a PR comment - see
+      # post-plan-to-pr in stage.infrastructure.yml.
+      # ithc is parked - see the note in workflow.main.yml.
+      environments: '["aat","demo","perftest"]'
     secrets: inherit
 
   deploy-stage:

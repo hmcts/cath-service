@@ -6,8 +6,8 @@ import {
 } from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
-import { type CauseListData, generateCauseListPdf } from "@hmcts/civil-and-family-daily-cause-list";
-import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
+import { type CauseListData, generateCauseListPdf, generateCivilAndFamilyDailyCauseListExcel } from "@hmcts/civil-and-family-daily-cause-list";
+import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListExcel, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
@@ -16,7 +16,7 @@ import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/cro
 import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } from "@hmcts/et-daily-list";
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
-import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
+import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListExcel, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
@@ -366,23 +366,26 @@ type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorRes
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListExcel({ ...p, jsonData: p.jsonData as CivilCauseListData }),
+  FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
+  CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCivilAndFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as CauseListData }),
   SJP_PUBLIC_LIST: async (p) => {
-    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_DELTA_PUBLIC_LIST: async (p) => {
-    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_PRESS_LIST: async (p) => {
-    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   },
   SJP_DELTA_PRESS_LIST: async (p) => {
-    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson);
+    const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
   }

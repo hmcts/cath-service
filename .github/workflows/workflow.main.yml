@@ -44,6 +44,14 @@ jobs:
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
       plan-only: false
+      # Every non-prod environment is applied from master. Each gets its own
+      # terraform state container (tfstate-{environment}) and the legs are
+      # independent - fail-fast is off, so a demo failure cannot cancel aat.
+      # ithc is parked - its cath-ithc key vault name is held by a soft-deleted
+      # vault with purge protection until 2026-12-21. Re-add it here and in
+      # workflow.preview.yml once that passes; the per-environment lookups in
+      # stage.infrastructure.yml already carry the correct values for it.
+      environments: '["aat","demo","perftest"]'
     secrets: inherit
 
   deploy-stage:

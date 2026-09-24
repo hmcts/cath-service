@@ -1,0 +1,131 @@
+name: Resolve Promoted Images Job
+
+# Resolves the image tag the master build already pushed, so the demo, ithc and
+# perftest deploys reuse it instead of rebuilding.
+#
+# Why aat-<short-sha> and not the promote stage's tags:
+#   - prod-<sha>-<timestamp> (job.promote-images.yml) generates the timestamp
+#     inside the step and never emits it, so the tag cannot be reconstructed here
+#   - `latest` and the floating `aat` tag are mutable, so redeploying them
+#     produces an identical pod spec and Kubernetes performs no rollout at all -
+#     the deploy silently no-ops
+#
+# Per #1020 the demo/ithc/perftest branches are synced from master, so github.sha
+# is the same commit master built, promoted and smoke-tested, and aat-<short-sha>
+# names exactly that image and changes on every promotion.
+
+on:
+  workflow_call:
+    outputs:
+      helm-apps:
+        description: "JSON array of all apps with Helm charts"
+        value: ${{ jobs.resolve.outputs.helm-apps }}
+      image-tag:
+        description: "Bare image tag, or a JSON object of app -> tag when apps differ"
+        value: ${{ jobs.resolve.outputs.image-tag }}
+      short-sha:
+        description: "Short git SHA"
+        value: ${{ jobs.resolve.outputs.short-sha }}
+      timestamp:
+        description: "Deploy timestamp, for parity with the build stage outputs"
+        value: ${{ jobs.resolve.outputs.timestamp }}
+
+env:
+  REGISTRY_NAME: hmctsprod
+  # Must match the change-id workflow.main.yml passes to stage.build.yml - that
+  # is what the image tag prefix is built from.
+  SOURCE_CHANGE_ID: aat
+
+jobs:
+  resolve:
+    name: Resolve Promoted Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      helm-apps: ${{ steps.apps.outputs.helm-apps }}
+      image-tag: ${{ steps.tags.outputs.image-tag }}
+      short-sha: ${{ steps.meta.outputs.short-sha }}
+      timestamp: ${{ steps.meta.outputs.timestamp }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Generate metadata
+        id: meta
+        run: |
+          echo "timestamp=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
+          echo "short-sha=$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Find Helm apps
+        id: apps
+        run: |
+          # Same derivation as detect-affected-apps.sh, so the two cannot drift.
+          HELM_APPS=$(find apps/*/helm -name Chart.yaml 2>/dev/null \
+            | sed 's|apps/\([^/]*\)/helm/Chart.yaml|\1|' \
+            | jq -R -s -c 'split("\n") | map(select(. != ""))')
+
+          if [ "${HELM_APPS}" = "[]" ]; then
+            echo "::error::No apps with Helm charts found under apps/*/helm"
+            exit 1
+          fi
+
+          echo "helm-apps=${HELM_APPS}" >> "$GITHUB_OUTPUT"
+          echo "Helm apps: ${HELM_APPS}"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Resolve image tag per app
+        id: tags
+        env:
+          HELM_APPS: ${{ steps.apps.outputs.helm-apps }}
+          SHORT_SHA: ${{ steps.meta.outputs.short-sha }}
+        run: |
+          SHA_TAG="${SOURCE_CHANGE_ID}-${SHORT_SHA}"
+          RESOLVED='{}'
+
+          for app in $(echo "${HELM_APPS}" | jq -r '.[]'); do
+            CHART="apps/${app}/helm/Chart.yaml"
+            TEAM=$(grep -A 1 'annotations:' "${CHART}" | grep 'team:' | awk '{print $2}' | tr -d '"')
+            CHART_NAME=$(grep '^name:' "${CHART}" | awk '{print $2}' | tr -d '"')
+            REPO="${TEAM}/${CHART_NAME}"
+
+            TAGS=$(az acr repository show-tags \
+              --name "${REGISTRY_NAME}" \
+              --repository "${REPO}" \
+              --orderby time_desc --top 500 -o json 2>/dev/null || echo '[]')
+
+            # master only builds the apps it detected as affected, so the sha tag
+            # exists for those and only the older floating tag exists for the
+            # rest. Without the fallback the unchanged apps ImagePullBackOff.
+            if echo "${TAGS}" | jq -e --arg t "${SHA_TAG}" 'index($t)' > /dev/null; then
+              TAG="${SHA_TAG}"
+              echo "✓ ${app}: ${REPO}:${TAG}"
+            elif echo "${TAGS}" | jq -e --arg t "${SOURCE_CHANGE_ID}" 'index($t)' > /dev/null; then
+              TAG="${SOURCE_CHANGE_ID}"
+              echo "::warning::${REPO}:${SHA_TAG} not found - falling back to the floating ${REPO}:${TAG}"
+            else
+              echo "::error::Neither ${REPO}:${SHA_TAG} nor ${REPO}:${SOURCE_CHANGE_ID} exists in ${REGISTRY_NAME}. Did the master build for this commit succeed?"
+              exit 1
+            fi
+
+            RESOLVED=$(echo "${RESOLVED}" | jq -c --arg app "${app}" --arg tag "${TAG}" '. + {($app): $tag}')
+          done
+
+          # A bare tag when every app agrees, otherwise the per-app map.
+          # set-image-variables.sh accepts either form.
+          if [ "$(echo "${RESOLVED}" | jq -r '[.[]] | unique | length')" = "1" ]; then
+            IMAGE_TAG=$(echo "${RESOLVED}" | jq -r '[.[]][0]')
+          else
+            IMAGE_TAG="${RESOLVED}"
+          fi
+
+          echo "image-tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Resolved image tag: ${IMAGE_TAG}"
