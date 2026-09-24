@@ -144,7 +144,7 @@ test.describe("POST /publication - flat file publication", () => {
 
     expect(response.status()).toBe(400);
     let body = await response.json();
-    expect(body.message).toContain("No file provided");
+    expect(body.message).toBe("Empty file provided, please provide a valid file");
     expect(body.timestamp).toBeTruthy();
 
     // STEP 2: Each required header is individually enforced, before the file is looked at

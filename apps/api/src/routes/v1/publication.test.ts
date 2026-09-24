@@ -296,10 +296,19 @@ describe("POST /publication", () => {
 
       // Assert
       expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        message: "No file provided. Include a file in the 'file' field of the multipart form.",
-        timestamp: expect.any(String)
-      });
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
+      expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
+    });
+
+    // The incumbent's MultipartFile#isEmpty is true for a zero-byte part too, not just a
+    // missing one, so both report the same message.
+    it("should return 400 when the file part is present but zero bytes", async () => {
+      // Act
+      await handler()(multipartRequest({}, multerFile({ size: 0, buffer: Buffer.alloc(0) })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
       expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
     });
 
@@ -407,6 +416,19 @@ describe("POST /publication", () => {
       expect(statusMock).toHaveBeenCalledWith(400);
       expect(uploadHtmlToS3).not.toHaveBeenCalled();
       expect(validatePddaHtmlUpload).not.toHaveBeenCalled();
+    });
+
+    // The empty-file check is shared with the flat-file path and runs before the extension
+    // check, so an empty LCSU upload reports the generic message rather than the HTML one.
+    it("should reject an empty LCSU file before the extension is inspected", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }, multerFile({ size: 0, buffer: Buffer.alloc(0) })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
+      expect(validatePddaHtmlUpload).not.toHaveBeenCalled();
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
     });
 
     it("should reject a non-HTML file with the unsupported format message and no S3 upload", async () => {

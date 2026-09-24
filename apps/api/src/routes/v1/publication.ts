@@ -18,7 +18,9 @@ import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
 
 const LCSU_JSON_REJECTION = "LCSU publications must be sent as multipart/form-data";
-const MISSING_FILE_MESSAGE = "No file provided. Include a file in the 'file' field of the multipart form.";
+// Verbatim from the incumbent's FlatFileException. Its check is MultipartFile#isEmpty, which is
+// true for an absent part *and* for a zero-byte one, so both report this.
+const EMPTY_FILE_MESSAGE = "Empty file provided, please provide a valid file";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -41,6 +43,11 @@ export const POST = [
       }
 
       if (isMultipartRequest(req)) {
+        // Checked once for both modes, as the incumbent does before it branches on the type.
+        if (isEmptyUpload(req.file)) {
+          return res.status(400).json(buildMessage(EMPTY_FILE_MESSAGE));
+        }
+
         return metadata.type === ArtefactType.LCSU ? await handleLcsuUpload(req, res, metadata, correlationId) : await handleFlatFileUpload(req, res, metadata);
       }
 
@@ -83,11 +90,8 @@ async function handleJsonPublication(req: Request, res: Response, metadata: Publ
 }
 
 async function handleFlatFileUpload(req: Request, res: Response, metadata: PublicationMetadata) {
-  if (!req.file) {
-    return res.status(400).json(buildMessage(MISSING_FILE_MESSAGE));
-  }
-
-  const result = await processFlatFileBlobIngestion(metadata, req.file.buffer, req.file.size);
+  const file = req.file as Express.Multer.File;
+  const result = await processFlatFileBlobIngestion(metadata, file.buffer, file.size);
   return respondToIngestion(res, result);
 }
 
@@ -135,6 +139,10 @@ function respondToIngestion(res: Response, result: PublicationIngestionResult) {
     default:
       return res.status(500).json(buildMessage(result.message ?? "Internal server error"));
   }
+}
+
+function isEmptyUpload(file: Express.Multer.File | undefined): boolean {
+  return !file || file.size === 0;
 }
 
 function isMultipartRequest(req: Request): boolean {

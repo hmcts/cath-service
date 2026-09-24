@@ -647,8 +647,8 @@ components:
     PublicationBadRequest:
       description: |
         Missing or invalid header, unrecognised `x-type`, `LCSU` sent as
-        `application/json`, missing `file` part, non-HTML LCSU file, JSON schema failure, or
-        an over-size payload.
+        `application/json`, a missing or empty `file` part, non-HTML LCSU file, JSON schema
+        failure, or an over-size payload.
 
         A header failure reports **one** header, matching the incumbent, which throws on the
         first one it finds rather than collecting them. JSON schema failures are the exception:
@@ -682,10 +682,10 @@ components:
               value:
                 message: File format is not supported for LCSU.
                 timestamp: "2026-09-24T11:56:27.611"
-            noFile:
-              summary: Multipart request with no file part
+            emptyFile:
+              summary: Multipart request with a missing or zero-byte file part
               value:
-                message: No file provided. Include a file in the 'file' field of the multipart form.
+                message: Empty file provided, please provide a valid file
                 timestamp: "2026-09-24T11:56:27.611"
             schemaFailure:
               summary: Payload failed the list type schema
@@ -773,8 +773,10 @@ components:
           format: binary
           description: |
             For `x-type: LIST` the list document (any format). For `x-type: LCSU` an `.htm`
-            or `.html` file, non-empty, no larger than `PDDA_HTML_MAX_FILE_SIZE`
-            (default 10 MB).
+            or `.html` file, no larger than `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
+
+            Must be present and non-empty for either type: a missing part and a zero-byte one
+            are both rejected with `400` and the same message.
 
     Artefact:
       type: object
