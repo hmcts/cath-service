@@ -705,7 +705,7 @@ components:
           schema:
             $ref: "#/components/schemas/AuthErrorResponse"
           example:
-            success: false
+            statusCode: 401
             message: Access denied due to invalid OAuth information
 
     PublicationForbidden:
@@ -715,7 +715,7 @@ components:
           schema:
             $ref: "#/components/schemas/AuthErrorResponse"
           example:
-            success: false
+            statusCode: 403
             message: "Insufficient permissions. Required role: api.publisher.user"
 
     PublicationConflict:
@@ -897,12 +897,17 @@ components:
     AuthErrorResponse:
       type: object
       description: |
-        Body returned by the OAuth middleware. Deliberately not a `Message` — the spec
-        declares no schema for `401`/`403`, and this shape predates the contract alignment.
-      required: [success, message]
+        Body returned by the OAuth middleware, mirroring the shape APIM returns for the same
+        failures so a publisher cannot tell whether the request was rejected at the gateway or
+        by the service. Deliberately not a `Message` — it carries `statusCode` instead of a
+        `timestamp`, and the spec declares no schema for `401`/`403`.
+      required: [statusCode, message]
       properties:
-        success:
-          type: boolean
+        statusCode:
+          type: integer
+          description: Repeats the HTTP status from the status line.
+          enum: [401, 403]
+          example: 401
         message:
           type: string
 

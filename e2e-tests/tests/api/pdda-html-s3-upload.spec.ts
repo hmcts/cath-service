@@ -216,6 +216,6 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
   });
 });

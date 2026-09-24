@@ -52,7 +52,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -67,7 +67,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -85,7 +85,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -177,7 +177,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 403,
       message: "Insufficient permissions. Required role: api.publisher.user"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -242,7 +242,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -265,7 +265,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -298,7 +298,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -338,7 +338,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 401,
       message: "Access denied due to invalid OAuth information"
     });
     expect(mockNext).not.toHaveBeenCalled();
@@ -382,7 +382,7 @@ describe("authenticateApi", () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      success: false,
+      statusCode: 403,
       message: "Insufficient permissions. Required role: api.publisher.user"
     });
     expect(mockNext).not.toHaveBeenCalled();

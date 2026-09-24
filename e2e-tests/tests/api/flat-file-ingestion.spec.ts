@@ -38,7 +38,7 @@ test.describe("POST /publication - flat file publication", () => {
 
     expect(response.status()).toBe(401);
     let body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
     expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 2: Invalid Authorization format
@@ -49,7 +49,7 @@ test.describe("POST /publication - flat file publication", () => {
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
 
     // STEP 3: Invalid Bearer token
     response = await request.post(ENDPOINT, {
@@ -59,7 +59,7 @@ test.describe("POST /publication - flat file publication", () => {
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
     expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 4: Empty Bearer token

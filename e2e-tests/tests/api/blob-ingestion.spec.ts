@@ -24,7 +24,7 @@ test.describe("POST /publication - JSON publication", () => {
 
     expect(response.status()).toBe(401);
     let body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
     expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 2: Test invalid Authorization format
@@ -35,7 +35,7 @@ test.describe("POST /publication - JSON publication", () => {
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
 
     // STEP 3: Test invalid Bearer token
     response = await request.post(ENDPOINT, {
@@ -45,7 +45,7 @@ test.describe("POST /publication - JSON publication", () => {
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
     expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 4: Test empty Bearer token
