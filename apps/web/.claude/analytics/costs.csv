@@ -1,1 +1,0 @@
-session_id,user_id,turn_number,message_id,model,input_tokens,output_tokens,total_tokens,input_cost_usd,output_cost_usd,total_cost_usd,timestamp
