@@ -103,6 +103,23 @@ describe("generateSjpPressListExcel", () => {
     expect(headerRow.getCell(1).font?.bold).toBe(true);
   });
 
+  it("should generate Welsh headers when locale is cy", async () => {
+    const buffer = await generateSjpPressListExcel(FIXTURE, "cy");
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+
+    const worksheet = workbook.getWorksheet("SJP Press List");
+    const headerRow = worksheet!.getRow(1);
+    expect(headerRow.getCell(1).value).toBe("Cyfeiriad");
+    expect(headerRow.getCell(2).value).toBe("Cyfeirnod yr achos");
+    expect(headerRow.getCell(3).value).toBe("Dyddiad geni");
+    expect(headerRow.getCell(4).value).toBe("Enw'r diffynnydd");
+    expect(headerRow.getCell(5).value).toBe("Gofynnwyd am gyfyngiad i'r wasg parthed y drosedd 1");
+    expect(headerRow.getCell(6).value).toBe("Teitl y drosedd 1");
+    expect(headerRow.getCell(7).value).toBe("Geiriad y drosedd 1");
+    expect(headerRow.getCell(11).value).toBe("Enw'r erlynydd");
+  });
+
   it("should format DOB as dd/MM/yyyy (age)", async () => {
     const buffer = await generateSjpPressListExcel(FIXTURE);
     const workbook = new ExcelJS.Workbook();

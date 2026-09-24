@@ -296,7 +296,7 @@ export const GET = async (req, res) => {
 ```typescript
 // apps/web/src/app.ts
 const modulePaths = getModulePaths(); // Auto-discover modules
-const routeMounts = modulePaths.map((dir) => ({ pagesDir: `${dir}/pages` }));
+const routeMounts = modulePaths.map((dir) => ({ path: `${dir}/pages` }));
 app.use(await createSimpleRouter(...routeMounts)); // Mount all module routes
 ```
 

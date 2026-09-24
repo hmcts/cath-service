@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "@hmcts/list-types-common": "workspace:*",
-    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/web-core": "workspace:*"
   },
   "peerDependencies": {
     "@prisma/client": "*"

@@ -26,8 +26,23 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (preview or aat)"
+        description: "Deployment environment (preview, aat, demo, ithc or perftest)"
         default: "preview"
+      image-tag:
+        required: false
+        type: string
+        default: ""
+        description: >-
+          Deploy an already-built image tag instead of deriving one from
+          change-id. Either a bare tag or a JSON object of app -> tag. Used by
+          the demo/ithc/perftest workflows, which do not build.
+      cluster-suffix:
+        required: false
+        type: string
+        default: "00"
+        description: >-
+          CNP cluster ordinal. CNP provides 00 and 01 for demo, ithc and
+          perftest; only ever target one, or two traefiks claim the same host.
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"
@@ -47,8 +62,9 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    # Must exceed the stuck-release cleanup budget plus the 15m0s helm timeout
-    # below, or the job is killed mid-install and leaves the release pending.
+    # Must exceed the 15m0s helm timeout below plus the recovery-timeout that
+    # helm-deploy allows itself, or the job is killed mid-install and leaves the
+    # release pending, which is the state the recovery then has to clean up.
     timeout-minutes: 35
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
@@ -63,6 +79,67 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # Everything that varies per environment is derived here, once. Deliberately
+      # not five if:-guarded deploy steps: byte-identical steps that differ by
+      # three values drift, which is how preview ended up mounting the aat vault.
+      - name: Resolve environment configuration
+        env:
+          AZURE_CREDENTIALS: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+        run: |
+          ENVIRONMENT="${{ inputs.environment }}"
+          SECRET_NAME="AZURE_CREDENTIALS_CFT_$(echo "$ENVIRONMENT" | tr '[:lower:]' '[:upper:]')"
+
+          # An absent repository secret resolves to an empty string, and
+          # azure/login then fails with a generic JSON parse error rather than
+          # saying which secret is missing.
+          if [ -z "${AZURE_CREDENTIALS}" ]; then
+            echo "::error::${SECRET_NAME} is not set as a repository secret"
+            exit 1
+          fi
+
+          case "$ENVIRONMENT" in
+            preview)
+              # There is no cath-preview key vault, so preview mounts the aat one.
+              GLOBAL_ENVIRONMENT="aat"
+              VALUES_TEMPLATE="values.preview.template.yaml"
+              ENABLE_TEST_SUPPORT="true"
+              ;;
+            demo)
+              # demo is production-like: no test-support endpoints.
+              GLOBAL_ENVIRONMENT="demo"
+              VALUES_TEMPLATE="values.template.yaml"
+              ENABLE_TEST_SUPPORT="false"
+              ;;
+            aat|ithc|perftest)
+              GLOBAL_ENVIRONMENT="$ENVIRONMENT"
+              VALUES_TEMPLATE="values.template.yaml"
+              ENABLE_TEST_SUPPORT="true"
+              ;;
+            *)
+              echo "::error::Unsupported environment '${ENVIRONMENT}'"
+              exit 1
+              ;;
+          esac
+
+          # CNP cluster and resource group names are a pure function of the
+          # environment, so no lookup table is needed.
+          CLUSTER="cft-${ENVIRONMENT}-${{ inputs.cluster-suffix }}"
+
+          {
+            echo "ENVIRONMENT=${ENVIRONMENT}"
+            echo "CLUSTER=${CLUSTER}"
+            echo "GLOBAL_ENVIRONMENT=${GLOBAL_ENVIRONMENT}"
+            echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
+            echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
+            echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
+          } >> "$GITHUB_ENV"
+
+          echo "Environment:        ${ENVIRONMENT}"
+          echo "Cluster:            ${CLUSTER}"
+          echo "Global environment: ${GLOBAL_ENVIRONMENT}"
+          echo "Values template:    ${VALUES_TEMPLATE}"
+          echo "Test support:       ${ENABLE_TEST_SUPPORT}"
+
       - name: Set environment variables
         run: |
           # Read metadata from root Helm chart
@@ -74,16 +151,18 @@ jobs:
           echo "APPLICATION_NAME=${APPLICATION_NAME}" >> $GITHUB_ENV
           echo "TIMESTAMP=${{ inputs.timestamp }}" >> $GITHUB_ENV
           echo "SHORT_SHA=${{ inputs.short-sha }}" >> $GITHUB_ENV
-          echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
 
-          # Set dynamic image variables and release name
+          # Set dynamic image variables and release name. change-id still drives
+          # the release name; image-tag, when supplied, drives the image tags
+          # only - see set-image-variables.sh for why the two are decoupled.
           .github/workflows/jobs/build-and-publish-images/set-image-variables.sh \
             '${{ inputs.affected-apps }}' \
             '${{ inputs.helm-apps }}' \
             '${{ env.CHANGE_ID }}' \
             '${{ inputs.short-sha }}' \
             '${{ inputs.timestamp }}' \
-            "${APPLICATION_NAME}"
+            "${APPLICATION_NAME}" \
+            '${{ inputs.image-tag }}'
 
       - name: Azure login for ACR (OIDC)
         uses: azure/login@v3
@@ -95,100 +174,40 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
-      # A cancelled or timed-out `helm upgrade --atomic` leaves the release in
-      # pending-upgrade, and every later deploy then fails with "another
-      # operation (install/upgrade/rollback) is in progress". Clear it first.
-      # The cluster/RG names match how cnp-githubactions-library/helm-deploy
-      # derives them: {environment}-aks and {environment}-rg.
-      - name: Set up Helm (stuck-release cleanup)
-        uses: azure/setup-helm@v5
-        with:
-          version: 'v4.2.3'
-
-      - name: Azure login for AKS (stuck-release cleanup)
-        uses: azure/login@v3
-        with:
-          creds: ${{ inputs.environment == 'aat' && secrets.AZURE_CREDENTIALS_CFT_AAT || secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
-
-      - name: Get AKS credentials (stuck-release cleanup)
-        uses: azure/aks-set-context@v4
-        with:
-          resource-group: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-rg
-          cluster-name: ${{ inputs.environment == 'aat' && 'cft-aat-00' || 'cft-preview-00' }}-aks
-          admin: 'true'
-
-      - name: Clear stuck Helm release
-        continue-on-error: true
-        timeout-minutes: 12
-        run: |
-          STATUS=$(helm status "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq -r '.info.status // empty' || true)
-          case "$STATUS" in
-            pending-install|pending-upgrade|pending-rollback)
-              echo "Release ${RELEASE_NAME} is stuck in status: ${STATUS}."
-              REVISIONS=$(helm history "${RELEASE_NAME}" -n "${TEAM_NAME}" -o json 2>/dev/null | jq 'length' || echo 0)
-              if [ "${REVISIONS:-0}" -gt 1 ]; then
-                echo "Rolling back to the last good revision instead of uninstalling."
-                helm rollback "${RELEASE_NAME}" -n "${TEAM_NAME}" --cleanup-on-fail --wait --timeout 4m && exit 0
-                echo "Rollback failed, falling back to uninstall."
-              else
-                echo "Only one revision - no good state to roll back to, uninstalling."
-              fi
-              # --wait is deliberately omitted: ASO resources (blob service,
-              # flexible server database) sit in Terminating for minutes and
-              # `helm uninstall --wait` blocks on them for no benefit, since the
-              # release secret is already gone by then.
-              helm uninstall "${RELEASE_NAME}" -n "${TEAM_NAME}" --timeout 4m || true
-              ;;
-            *)
-              echo "Release status: ${STATUS:-not found}. No cleanup needed."
-              ;;
-          esac
-
-      - name: Deploy to PREVIEW
-        if: inputs.environment == 'preview'
-        id: deploy-preview
+      # helm-deploy clears a release left in pending-upgrade by an interrupted
+      # deploy before it upgrades, which is why there is no cleanup step here.
+      # recover-stuck-release defaults to true; set it to false to opt out.
+      - name: Deploy
+        id: deploy
         uses: hmcts/cnp-githubactions-library/helm-deploy@main
         with:
-          environment: cft-preview-00
+          environment: ${{ env.CLUSTER }}
           team-name: ${{ env.TEAM_NAME }}
           application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+          azure-credentials: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
           release-name: ${{ env.RELEASE_NAME }}
           namespace: ${{ env.TEAM_NAME }}
           chart: helm/${{ env.APPLICATION_NAME }}
-          values-template: helm/${{ env.APPLICATION_NAME }}/values.preview.template.yaml
+          values-template: helm/${{ env.APPLICATION_NAME }}/${{ env.VALUES_TEMPLATE }}
           subchart-paths: apps/*/helm
-          global-environment: aat
+          global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
           business-area: Cross-Cutting
           timeout: 15m0s
 
-      - name: Deploy to AAT
-        if: inputs.environment == 'aat'
-        id: deploy-aat
-        uses: hmcts/cnp-githubactions-library/helm-deploy@main
-        with:
-          environment: cft-aat-00
-          team-name: ${{ env.TEAM_NAME }}
-          application-name: ${{ env.APPLICATION_NAME }}
-          azure-credentials: ${{ secrets.AZURE_CREDENTIALS_CFT_AAT }}
-          release-name: ${{ env.RELEASE_NAME }}
-          namespace: ${{ env.TEAM_NAME }}
-          chart: helm/${{ env.APPLICATION_NAME }}
-          values-template: helm/${{ env.APPLICATION_NAME }}/values.template.yaml
-          subchart-paths: apps/*/helm
-          global-environment: aat
-          business-area: Cross-Cutting
-          timeout: 15m0s
-
-      - name: Register DNS for AAT
-        if: inputs.environment == 'aat'
+      # Preview hosts are registered by the preview platform, not here. Without
+      # this step the release-scoped hosts have no A record and the smoke test
+      # fails with HTTP 000, which reads like an app failure but is DNS.
+      - name: Register DNS
+        if: inputs.environment != 'preview'
         run: |
           # Get Traefik ingress IP
           INGRESS_IP=$(kubectl get svc traefik -n admin -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-          # DNS config (matches Jenkins private-dns-config.yml)
+          # DNS config (matches Jenkins private-dns-config.yml). The resource
+          # group and subscription hold every CNP non-prod private zone; only the
+          # zone itself is per-environment.
           RESOURCE_GROUP="core-infra-intsvc-rg"
-          ZONE="aat.platform.hmcts.net"
+          ZONE="${DNS_ZONE}"
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
