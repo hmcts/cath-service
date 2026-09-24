@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Everything automerges except npm major updates. packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
+  "description": "Everything automerges except npm majors, pre-1.0.0 packages, Node.js, and managers whose PRs the preview pipeline cannot verify (github-actions, terraform, docker-compose, the yarn packageManager). packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
   "extends": ["config:recommended"],
   "automerge": true,
   "platformAutomerge": false,
@@ -52,8 +52,23 @@
       "enabled": true
     },
     {
-      "description": "Never automerge what the preview pipeline cannot verify. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master has no required status checks to backstop it - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). A github-actions bump touches only .github/workflows/ and a packageManager bump only root package.json, so both fall outside it entirely and cannot test themselves. terraform is worse than untested: master applies it for real (plan-only: false over aat, demo and perftest in workflow.main.yml), and only aat posts a plan comment nobody reads on a self-merging PR.",
-      "matchManagers": ["github-actions", "terraform"],
+      "description": "Hold npm releases for 3 days before Renovate raises them. With automerge on, a compromised release would otherwise reach master with no human in the loop, and most malicious publishes are caught and unpublished inside that window. Scoped to npm because other datasources do not always report release timestamps, and a missing timestamp would hold the update indefinitely.",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Never automerge pre-1.0.0 packages, part 1 of 2. Under semver a 0.x minor bump may break, but Renovate still classifies it as minor. This form catches anything whose resolved currentVersion is below 1.0.0, including range values like '>=0.5.0 <1.0.0' and bare '0'. It cannot match ranges that have no single resolved version, which is why the sibling rule below exists.",
+      "matchCurrentVersion": "<1.0.0",
+      "automerge": false
+    },
+    {
+      "description": "Never automerge pre-1.0.0 packages, part 2 of 2. Catches caret and tilde ranges such as the '^0.7.0' passport peerDependency, where matchCurrentVersion has no single version to compare against. The two rules are complementary, not alternatives - neither covers every 0.x value form on its own.",
+      "matchCurrentValue": "/^\\^?~?0\\./",
+      "automerge": false
+    },
+    {
+      "description": "Never automerge what the preview pipeline cannot verify. Renovate scores a branch green when every check run is skipped (getBranchStatus in modules/platform/github: skipped, neutral and success all count), and master has no required status checks to backstop it - so an unverified PR self-merges. detect-code-changes in workflow.preview.yml only runs Build/Deploy/E2E for ^(yarn.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|.dockerignore). A github-actions bump touches only .github/workflows/ and a docker-compose bump only docker-compose.yml files, so both fall outside it entirely and cannot test themselves; a docker-compose major also strands local data volumes, since postgres will not start a new major on an old data directory. terraform is worse than untested: master applies it for real (plan-only: false over aat, demo and perftest in workflow.main.yml), and only aat posts a plan comment nobody reads on a self-merging PR.",
+      "matchManagers": ["github-actions", "terraform", "docker-compose"],
       "automerge": false
     },
     {
@@ -62,7 +77,12 @@
       "automerge": false
     },
     {
-      "description": "Never automerge npm major updates - the other exception to the automerge: true default. Renovate merges via its own automerge path (platformAutomerge is false) so a branch must still be green first. This must stay last so it wins for any grouped branch whose resolved updateType is major; a grouped branch automerges only if every upgrade in it does. Applies equally to dependencies and devDependencies: PR #753 was a devDependency major that broke the production GOV.UK assets, so depType is not a risk signal here.",
+      "description": "Never automerge Node.js. It arrives by two routes: the group above (.nvmrc via nvm, the Dockerfile and workflow node-version pins via custom.regex), and the dockerfile manager, which extracts the production base image as hmctspublic.azurecr.io/base/node outside that group. A non-major group branch touches only .nvmrc and .github/workflows/ - the Dockerfile pin is on its own major track - so it misses the code gate and would merge with every check skipped, while .nvmrc sets the runtime for most CI jobs. The base image is the production runtime.",
+      "matchPackageNames": ["node", "hmctspublic.azurecr.io/base/node"],
+      "automerge": false
+    },
+    {
+      "description": "Never automerge npm major updates. Renovate merges via its own automerge path (platformAutomerge is false) so a branch must still be green first. This must stay last so it wins for any grouped branch whose resolved updateType is major; a grouped branch automerges only if every upgrade in it does. Applies equally to dependencies and devDependencies: PR #753 was a devDependency major that broke the production GOV.UK assets, so depType is not a risk signal here.",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["major"],
       "automerge": false

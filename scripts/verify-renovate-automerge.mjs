@@ -62,10 +62,11 @@ const npmDep = (overrides) => ({
 
 const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "devDependencies", ...overrides });
 
-// The policy: automerge by default, excluding (a) npm majors, and (b) anything the
-// preview pipeline cannot verify - github-actions, terraform and the yarn packageManager,
-// whose PRs fall outside the detect-code-changes path gate and so would merge with every
-// check run skipped. Cases expecting false are those exclusions.
+// The policy: automerge by default, excluding (a) npm majors, (b) pre-1.0.0 packages,
+// (c) Node.js, and (d) anything the preview pipeline cannot verify - github-actions,
+// terraform, docker-compose and the yarn packageManager, whose PRs fall outside the
+// detect-code-changes path gate and so would merge with every check run skipped. Cases
+// expecting false are those exclusions.
 //
 // [description, expected automerge, upgrade]
 const CASES = [
@@ -118,8 +119,8 @@ const CASES = [
     npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "1.0.0", updateType: "major" })
   ],
 
-  // github-actions and terraform never automerge at any update type: a workflow bump
-  // cannot test itself, and terraform is applied for real by master.
+  // github-actions, terraform and docker-compose never automerge at any update type: a
+  // workflow or compose bump cannot test itself, and terraform is applied for real by master.
   [
     "github-actions major",
     false,
@@ -147,6 +148,11 @@ const CASES = [
     }
   ],
   [
+    "docker-compose major",
+    false,
+    { versioning: "docker", manager: "docker-compose", depName: "postgres", currentValue: "18-alpine", newValue: "19-alpine", updateType: "major" }
+  ],
+  [
     "helmv3 major",
     true,
     { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "4.0.0", updateType: "major" }
@@ -157,13 +163,13 @@ const CASES = [
     { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "17.0", updateType: "major" }
   ],
 
-  // Pre-1.0.0 npm bumps now automerge: under semver a 0.x minor may break, but Renovate
-  // classifies it as minor and the policy only stops majors.
-  ["pre-1.0.0 pin, minor", true, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })],
-  ["pre-1.0.0 pin, patch", true, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.7.1", updateType: "patch" })],
+  // Pre-1.0.0: a 0.x minor may break, but Renovate still calls it minor. Both matcher
+  // forms are needed - neither covers every value shape on its own.
+  ["pre-1.0.0 pin, minor", false, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })],
+  ["pre-1.0.0 pin, patch", false, npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.7.1", updateType: "patch" })],
   [
     "pre-1.0.0 caret range, peerDependency",
-    true,
+    false,
     npmDep({
       depName: "passport",
       depTypes: ["peerDependencies"],
@@ -175,7 +181,7 @@ const CASES = [
   ],
   [
     "pre-1.0.0 tilde range",
-    true,
+    false,
     npmDep({
       depName: "passport",
       depTypes: ["peerDependencies"],
@@ -187,13 +193,17 @@ const CASES = [
   ],
   [
     "pre-1.0.0 compound range",
-    true,
+    false,
     npmDep({ depName: "hypothetical", currentValue: ">=0.5.0 <1.0.0", currentVersion: "0.5.0", newValue: ">=0.6.0 <1.0.0", updateType: "minor" })
   ],
-  ["pre-1.0.0 bare major range", true, npmDep({ depName: "hypothetical", currentValue: "0", currentVersion: "0.9.0", newValue: "1", updateType: "minor" })],
-  ["1.x minor", true, npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })],
+  ["pre-1.0.0 bare major range", false, npmDep({ depName: "hypothetical", currentValue: "0", currentVersion: "0.9.0", newValue: "1", updateType: "minor" })],
+  [
+    "1.x is not caught by the pre-1.0.0 rules",
+    true,
+    npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })
+  ],
 
-  // Toolchain and deliberate pins automerge below major.
+  // The yarn packageManager never automerges; resolutions pins automerge below major.
   [
     "packageManager minor",
     false,
@@ -246,12 +256,12 @@ const CASES = [
       updateType: "patch"
     })
   ],
-  // Node moves .nvmrc, the root Dockerfile base image and three workflow files together.
-  // The group rule must use custom.regex - Renovate registers custom managers under that
-  // name, so the legacy "regex" spelling silently matches nothing.
+  // Node never automerges, by either route: the group (nvm and custom.regex - Renovate
+  // registers custom managers as custom.regex, so the legacy "regex" spelling silently
+  // matches nothing) or the dockerfile manager's extraction of the production base image.
   [
     "node via nvm",
-    true,
+    false,
     {
       versioning: "node",
       manager: "nvm",
@@ -266,7 +276,7 @@ const CASES = [
   ],
   [
     "node via custom regex manager",
-    true,
+    false,
     {
       versioning: "node",
       manager: "custom.regex",
@@ -281,7 +291,7 @@ const CASES = [
   ],
   [
     "node major via nvm",
-    true,
+    false,
     {
       versioning: "node",
       manager: "nvm",
@@ -295,7 +305,22 @@ const CASES = [
     }
   ],
 
-  // Remaining managers automerge below major.
+  [
+    "node base image via dockerfile manager",
+    false,
+    {
+      versioning: "docker",
+      manager: "dockerfile",
+      depName: "hmctspublic.azurecr.io/base/node",
+      packageName: "hmctspublic.azurecr.io/base/node",
+      datasource: "docker",
+      currentValue: "22-alpine",
+      newValue: "24-alpine",
+      updateType: "major"
+    }
+  ],
+
+  // Minor bumps across the remaining managers.
   [
     "terraform minor",
     false,
@@ -328,6 +353,11 @@ const CASES = [
     { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "3.2.0", updateType: "minor" }
   ],
   [
+    "docker-compose minor",
+    false,
+    { versioning: "docker", manager: "docker-compose", depName: "redis", currentValue: "8-alpine", newValue: "8.2-alpine", updateType: "minor" }
+  ],
+  [
     "dockerfile minor",
     true,
     { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", currentVersion: "16.1", newValue: "16.2", updateType: "minor" }
@@ -337,7 +367,7 @@ const CASES = [
   // lockFileMaintenance are disabled under config:recommended, so these assert resolution
   // for paths Renovate does not currently exercise.
   ["pin", true, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
-  ["digest", true, { versioning: "docker", manager: "dockerfile", depName: "node", currentValue: "22-alpine", newValue: "22-alpine", updateType: "digest" }],
+  ["digest", true, { versioning: "docker", manager: "dockerfile", depName: "postgres", currentValue: "16.1", newValue: "16.1", updateType: "digest" }],
   ["rollback", true, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
   ["replacement", true, npmDep({ depName: "somepkg", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.0.0", updateType: "replacement" })],
   ["lockFileMaintenance", true, { manager: "npm", updateType: "lockFileMaintenance", isLockFileMaintenance: true }]
@@ -379,7 +409,7 @@ const GROUP_CASES = [
   ],
   [
     "minor grouped with a pre-1.0.0",
-    true,
+    false,
     [
       npmDep({ depName: "a", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.1.0", updateType: "minor" }),
       npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "0.8.0", updateType: "minor" })
@@ -400,6 +430,16 @@ const GROUP_CASES = [
         updateType: "minor"
       })
     ]
+  ]
+];
+
+// [description, expected minimumReleaseAge, upgrade]
+const RELEASE_AGE_CASES = [
+  ["npm dependency is held", "3 days", npmDep({ depName: "express", currentValue: "5.2.0", currentVersion: "5.2.0", newValue: "5.3.0", updateType: "minor" })],
+  [
+    "non-npm is not held",
+    undefined,
+    { versioning: "semver", manager: "helmv3", depName: "nodejs", currentValue: "3.1.0", currentVersion: "3.1.0", newValue: "3.2.0", updateType: "minor" }
   ]
 ];
 
@@ -424,10 +464,17 @@ for (const [description, expected, members] of GROUP_CASES) {
   }
 }
 
-const total = CASES.length + GROUP_CASES.length;
+for (const [description, expected, upgrade] of RELEASE_AGE_CASES) {
+  const resolved = await applyPackageRules({ ...base, ...upgrade });
+  if (resolved.minimumReleaseAge !== expected) {
+    failures.push(`${description}: expected minimumReleaseAge ${expected}, got ${resolved.minimumReleaseAge}`);
+  }
+}
+
+const total = CASES.length + GROUP_CASES.length + RELEASE_AGE_CASES.length;
 
 if (failures.length > 0) {
-  console.error(`${failures.length} of ${total} renovate automerge assertions failed:\n`);
+  console.error(`${failures.length} of ${total} renovate assertions failed:\n`);
   for (const failure of failures) {
     console.error(`  - ${failure}`);
   }
@@ -435,4 +482,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`All ${total} renovate automerge assertions passed.`);
+console.log(`All ${total} renovate assertions passed.`);
