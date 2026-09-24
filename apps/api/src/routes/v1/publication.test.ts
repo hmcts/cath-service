@@ -261,7 +261,10 @@ describe("POST /publication", () => {
 
       // Assert
       expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({ message: "x-type must be one of LIST, LCSU", timestamp: expect.any(String) });
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)",
+        timestamp: expect.any(String)
+      });
       expect(processBlobIngestion).not.toHaveBeenCalled();
       expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
       expect(uploadHtmlToS3).not.toHaveBeenCalled();

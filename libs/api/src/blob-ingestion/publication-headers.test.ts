@@ -194,7 +194,12 @@ describe("parsePublicationHeaders", () => {
 
     // Assert
     expect(result.metadata).toBeUndefined();
-    expect(result.errors).toEqual([{ field: "x-type", message: "x-type must be one of LIST, LCSU" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-type",
+        message: "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   it("should reject an unrecognised x-language", () => {
@@ -202,7 +207,13 @@ describe("parsePublicationHeaders", () => {
     const result = parsePublicationHeaders(validHeaders({ "x-language": "FRENCH" }));
 
     // Assert
-    expect(result.errors).toEqual([{ field: "x-language", message: "x-language must be one of ENGLISH, WELSH, BILINGUAL" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-language",
+        message:
+          "Unable to parse x-language. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   it("should accept BILINGUAL as an inbound language", () => {
@@ -219,7 +230,13 @@ describe("parsePublicationHeaders", () => {
     const result = parsePublicationHeaders(validHeaders({ "x-sensitivity": "SECRET" }));
 
     // Assert
-    expect(result.errors).toEqual([{ field: "x-sensitivity", message: "x-sensitivity must be one of PUBLIC, PRIVATE, CLASSIFIED" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-sensitivity",
+        message:
+          "Unable to parse x-sensitivity. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   it("should accept a date-only x-content-date", () => {
@@ -236,7 +253,13 @@ describe("parsePublicationHeaders", () => {
     const result = parsePublicationHeaders(validHeaders({ "x-content-date": "14/09/2026" }));
 
     // Assert
-    expect(result.errors).toEqual([{ field: "x-content-date", message: "x-content-date must be a valid ISO 8601 date or date-time" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-content-date",
+        message:
+          "Unable to parse x-content-date. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   it("should reject a malformed x-display-from", () => {
@@ -244,7 +267,13 @@ describe("parsePublicationHeaders", () => {
     const result = parsePublicationHeaders(validHeaders({ "x-display-from": "2026-09-14" }));
 
     // Assert
-    expect(result.errors).toEqual([{ field: "x-display-from", message: "x-display-from must be a valid ISO 8601 date-time" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-display-from",
+        message:
+          "Unable to parse x-display-from. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   it("should reject a malformed x-display-to", () => {
@@ -252,7 +281,13 @@ describe("parsePublicationHeaders", () => {
     const result = parsePublicationHeaders(validHeaders({ "x-display-to": "not-a-date" }));
 
     // Assert
-    expect(result.errors).toEqual([{ field: "x-display-to", message: "x-display-to must be a valid ISO 8601 date-time" }]);
+    expect(result.errors).toEqual([
+      {
+        field: "x-display-to",
+        message:
+          "Unable to parse x-display-to. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+      }
+    ]);
   });
 
   // The incumbent throws on the first failure, so only one message is ever reported.

@@ -670,7 +670,7 @@ components:
             unknownType:
               summary: Unrecognised x-type
               value:
-                message: "x-type must be one of LIST, LCSU"
+                message: "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
                 timestamp: "2026-09-24T11:56:27.611"
             lcsuOverJson:
               summary: LCSU sent as application/json

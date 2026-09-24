@@ -59,29 +59,29 @@ export function parsePublicationHeaders(headers: IncomingHttpHeaders): ParsedPub
   }
 
   if (contentDate && !isValidISODate(contentDate)) {
-    errors.push({ field: HEADER.contentDate, message: `${HEADER.contentDate} must be a valid ISO 8601 date or date-time` });
+    errors.push({ field: HEADER.contentDate, message: unparseable(HEADER.contentDate) });
   }
 
   if (language && !isEnumValue(Language, language)) {
-    errors.push({ field: HEADER.language, message: `${HEADER.language} must be one of ${Object.values(Language).join(", ")}` });
+    errors.push({ field: HEADER.language, message: unparseable(HEADER.language) });
   }
 
   if (sensitivity && !isEnumValue(Sensitivity, sensitivity)) {
-    errors.push({ field: HEADER.sensitivity, message: `${HEADER.sensitivity} must be one of ${Object.values(Sensitivity).join(", ")}` });
+    errors.push({ field: HEADER.sensitivity, message: unparseable(HEADER.sensitivity) });
   }
 
   // Case-sensitive, matching the incumbent's Java enum resolution. An unknown value is
   // rejected rather than silently defaulting to LIST.
   if (rawType && !isEnumValue(ArtefactType, rawType)) {
-    errors.push({ field: HEADER.type, message: `${HEADER.type} must be one of ${Object.values(ArtefactType).join(", ")}` });
+    errors.push({ field: HEADER.type, message: unparseable(HEADER.type) });
   }
 
   if (displayFrom && !isValidISODateTime(displayFrom)) {
-    errors.push({ field: HEADER.displayFrom, message: `${HEADER.displayFrom} must be a valid ISO 8601 date-time` });
+    errors.push({ field: HEADER.displayFrom, message: unparseable(HEADER.displayFrom) });
   }
 
   if (displayTo && !isValidISODateTime(displayTo)) {
-    errors.push({ field: HEADER.displayTo, message: `${HEADER.displayTo} must be a valid ISO 8601 date-time` });
+    errors.push({ field: HEADER.displayTo, message: unparseable(HEADER.displayTo) });
   }
 
   if (errors.length > 0) {
@@ -110,6 +110,16 @@ function readHeader(headers: IncomingHttpHeaders, name: string): string | undefi
   const value = Array.isArray(raw) ? raw[0] : raw;
   const trimmed = typeof value === "string" ? value.trim() : "";
   return trimmed === "" ? undefined : trimmed;
+}
+
+/**
+ * Verbatim from the incumbent's MethodArgumentTypeMismatchException handler. There every one of
+ * these headers is bound to a Java enum or a LocalDateTime, so any value Spring cannot convert
+ * produces this one sentence — it never names the permitted values. The same phrasing therefore
+ * covers x-type, x-language, x-sensitivity and the three date headers.
+ */
+function unparseable(field: string): string {
+  return `Unable to parse ${field}. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)`;
 }
 
 // Matches the incumbent verbatim: both EmptyRequestHeaderException and the

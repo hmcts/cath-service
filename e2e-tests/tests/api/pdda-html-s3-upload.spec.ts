@@ -191,7 +191,9 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
 
     expect(response.status()).toBe(400);
     body = await response.json();
-    expect(body.message).toBe("x-type must be one of LIST, LCSU");
+    expect(body.message).toBe(
+      "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+    );
     expect(await verifyFileExistsInS3(bucketName, `${S3_PREFIX}${badTypeFilename}`)).toBe(false);
 
     // STEP 4: x-type LIST with an HTML file is a flat-file publication and never reaches S3

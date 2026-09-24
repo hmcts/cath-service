@@ -171,7 +171,9 @@ test.describe("POST /publication - JSON publication", () => {
 
     expect(response.status()).toBe(400);
     let body = await response.json();
-    expect(body.message).toBe("x-type must be one of LIST, LCSU");
+    expect(body.message).toBe(
+      "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+    );
 
     // STEP 3: LCSU is file-only
     response = await request.post(ENDPOINT, {
