@@ -65,7 +65,7 @@ const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "
 
 // The policy is an allowlist: only the npm and helmv3 managers automerge, because theirs
 // are the only PRs inside the detect-code-changes path gate. Within npm, majors, pre-1.0.0
-// packages and the yarn packageManager are held back. Every other manager falls through to
+// packages, the yarn packageManager and Node (engines/volta) are held back. Every other manager falls through to
 // automerge: false - the cases for them exist so a manager added to the allowlist without
 // checking the path gate breaks this harness.
 //
@@ -357,6 +357,37 @@ const CASES = [
       newValue: "24-alpine",
       updateType: "major"
     }
+  ],
+  [
+    "node via npm engines",
+    false,
+    npmDep({
+      depName: "node",
+      packageName: "node",
+      depTypes: ["engines"],
+      depType: "engines",
+      datasource: "node-version",
+      versioning: "node",
+      currentValue: "^22.0.0",
+      newValue: "^22.1.0",
+      updateType: "minor"
+    })
+  ],
+  [
+    "node via npm volta",
+    false,
+    npmDep({
+      depName: "node",
+      packageName: "node",
+      depTypes: ["volta"],
+      depType: "volta",
+      datasource: "node-version",
+      versioning: "node",
+      currentValue: "22.17.0",
+      currentVersion: "22.17.0",
+      newValue: "22.18.0",
+      updateType: "minor"
+    })
   ],
 
   // Minor bumps across the remaining managers.

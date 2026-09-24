@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Automerge is an allowlist: only the npm and helmv3 managers automerge, and within them npm majors, pre-1.0.0 packages and the yarn packageManager do not. packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
+  "description": "Automerge is an allowlist: only the npm and helmv3 managers automerge, and within them npm majors, pre-1.0.0 packages, the yarn packageManager and Node (engines/volta) do not. packageRules are order-dependent and last-match-wins, so a rule's position matters as much as its content. Changes here are asserted by scripts/verify-renovate-automerge.mjs, which resolves this file through Renovate's own applyPackageRules; it runs in .github/workflows/renovate-config.yml. Run it after editing.",
   "extends": ["config:recommended"],
   "automerge": false,
   "platformAutomerge": false,
@@ -74,6 +74,12 @@
     {
       "description": "Never automerge the yarn packageManager version. It changes the toolchain for every workspace and CI job, and touches only root package.json - not yarn.lock - so it misses the preview path gate and merges with nothing run against it, even though the npm manager is allowlisted above.",
       "matchDepTypes": ["packageManager"],
+      "automerge": false
+    },
+    {
+      "description": "Never automerge Node.js through the npm manager. The allowlist lets npm through, and the npm manager extracts engines.node and volta.node from package.json as dep node. A bump there changes the declared runtime but touches only package.json - not yarn.lock - so from the root package.json it misses the preview path gate entirely. No package.json declares either today; this keeps the rest of the Node policy true if one is added.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["node"],
       "automerge": false
     },
     {
