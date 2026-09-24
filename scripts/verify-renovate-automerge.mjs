@@ -14,13 +14,8 @@
 // negative on matchCurrentVersion that went unnoticed precisely because nothing was
 // committed. Hence this file.
 //
-// LIMIT OF THIS HARNESS: it proves what automerge RESOLVES to, not that merging is safe.
-// It cannot see CI coverage. Renovate scores a branch green when every check run is
-// skipped (getBranchStatus in modules/platform/github treats skipped, neutral and success
-// alike) and master's branch protection has required status checks switched off, so "all assertions
-// passed" says nothing about whether any job actually ran. Whether a manager's PR is
-// covered at all depends on the detect-code-changes path gate in workflow.preview.yml -
-// see the packageRules descriptions in renovate.json. Read this as a resolution test only.
+// This proves what automerge resolves to, not that merging is safe: it cannot see whether
+// CI actually ran on a PR. See the allowlist rule in renovate.json for why that matters.
 //
 // Renovate is not a devDependency here - the package tree is ~333MB and it updates itself.
 // The workflow installs it into a scratch prefix and passes the path in RENOVATE_MODULE.
@@ -63,11 +58,8 @@ const npmDep = (overrides) => ({
 
 const devDep = (overrides) => npmDep({ depTypes: ["devDependencies"], depType: "devDependencies", ...overrides });
 
-// The policy is an allowlist: only the npm and helmv3 managers automerge, because theirs
-// are the only PRs inside the detect-code-changes path gate. Within npm, majors, pre-1.0.0
-// packages, the yarn packageManager and Node (engines/volta) are held back. Every other manager falls through to
-// automerge: false - the cases for them exist so a manager added to the allowlist without
-// checking the path gate breaks this harness.
+// Only npm and helmv3 automerge, less the exceptions in renovate.json. The cases for other
+// managers catch one being allowlisted without checking it against the preview paths.
 //
 // [description, expected automerge, upgrade]
 const CASES = [
@@ -120,8 +112,7 @@ const CASES = [
     npmDep({ depName: "passport", currentValue: "0.7.0", currentVersion: "0.7.0", newValue: "1.0.0", updateType: "major" })
   ],
 
-  // Managers outside the allowlist never automerge at any update type. Their PRs touch only
-  // paths the preview pipeline skips, and terraform is applied for real by master.
+  // Managers outside the allowlist, at any update type.
   [
     "github-actions major",
     false,
@@ -242,7 +233,7 @@ const CASES = [
     npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })
   ],
 
-  // The yarn packageManager never automerges; resolutions pins automerge below major.
+  // packageManager is held; resolutions automerge below major.
   [
     "packageManager minor",
     false,
@@ -295,9 +286,7 @@ const CASES = [
       updateType: "patch"
     })
   ],
-  // Node never automerges by any route: the group (nvm and custom.regex - Renovate
-  // registers custom managers as custom.regex, so the legacy "regex" spelling silently
-  // matches nothing) or the dockerfile manager, whose only image is the production Node base.
+  // Node, by every manager that finds it. Custom managers are named custom.regex, not regex.
   [
     "node via nvm",
     false,
@@ -390,7 +379,7 @@ const CASES = [
     })
   ],
 
-  // Minor bumps across the remaining managers.
+  // Minors across managers.
   [
     "terraform minor",
     false,
@@ -428,10 +417,8 @@ const CASES = [
     { versioning: "docker", manager: "docker-compose", depName: "redis", currentValue: "8-alpine", newValue: "8.2-alpine", updateType: "minor" }
   ],
 
-  // npm update types other than major reach the allowlist. pin, rollback and
-  // lockFileMaintenance are disabled under config:recommended, so these assert resolution
-  // for paths Renovate does not currently exercise. digest is absent: it only applies to
-  // docker images, and no allowlisted manager raises one.
+  // Other npm update types. pin, rollback and lockFileMaintenance are off under
+  // config:recommended, so these only assert resolution.
   ["pin", true, npmDep({ depName: "somepkg", currentValue: "^1.2.0", currentVersion: "1.2.0", newValue: "1.2.3", updateType: "pin" })],
   ["rollback", true, npmDep({ depName: "somepkg", currentValue: "2.0.0", currentVersion: "2.0.0", newValue: "1.9.0", updateType: "rollback" })],
   ["replacement", true, npmDep({ depName: "somepkg", currentValue: "1.0.0", currentVersion: "1.0.0", newValue: "1.0.0", updateType: "replacement" })],
