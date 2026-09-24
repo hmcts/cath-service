@@ -746,7 +746,7 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
   },
-  // Business and Property Division Rolls Building (venue 26) — Excel non-strategic multi-tab lists
+  // Business and Property Division Rolls Building — Excel non-strategic multi-tab lists
   {
     name: "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST",
     englishFriendlyName: "Business and Property Division Rolls Building Daily Cause List",
@@ -768,6 +768,16 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [10]
   },
   // High Court flat-file daily cause lists (manual upload)
+  {
+    name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Business & Property Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Busnes ac Eiddo",
+    provenance: "CFT_IDAM",
+    urlPath: "business-and-property-daily-list",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
   {
     name: "CIRCUIT_COMMERCIAL_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Circuit Commercial Court Daily Cause List",
