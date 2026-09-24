@@ -26,6 +26,12 @@
       <div class="govuk-body">{{ cautionMessage | sanitiseHtml }}</div>
     {% endif %}
 
+    {% if isSjpVenue %}
+      <p class="govuk-body" id="sjp-publishing-advisory">
+        <strong>{{ sjpAdvisoryPrefix }}</strong> {{ sjpAdvisoryMessage }}
+      </p>
+    {% endif %}
+
     {% if publications.length > 0 %}
       <p class="govuk-body">{{ selectListMessage }}</p>
       <ul class="govuk-list">
