@@ -6,9 +6,11 @@ info:
   description: |
     Court and Tribunal Hearings (CaTH) JSON API.
 
-    The primary consumer-facing operation is `POST /v1/publication`, used by upstream
-    source systems (SNL, Common Platform, CP_CATH, PDDA) to publish hearing lists into
-    CaTH. All other operations are read-only.
+    The primary consumer-facing operation is `POST /publication` (also served at
+    `POST /v1/publication`), used by upstream source systems (SNL, Common Platform,
+    CP_CATH, PDDA) to publish hearing lists into CaTH. It implements the CaTH Inbound
+    Publication API contract: all metadata travels in `x-*` request headers and the body
+    carries only the payload. All other operations are read-only.
 
     This document is maintained by hand. It is not generated from the router, so if you
     change a route or a request/response shape in `apps/api` or `libs/public-pages`,
@@ -121,158 +123,112 @@ paths:
               example:
                 error: Failed to fetch locations
 
+  /publication:
+    post:
+      tags: [Publication]
+      summary: Publish a hearing list
+      description: |
+        Root path form of the CaTH Inbound Publication API, matching the incumbent
+        `pip-data-management` contract exactly. Identical behaviour to
+        `POST /v1/publication` — see that operation for the full description.
+      operationId: createPublicationAtRoot
+      security:
+        - azureAd: []
+      parameters:
+        - $ref: "#/components/parameters/Provenance"
+        - $ref: "#/components/parameters/CourtId"
+        - $ref: "#/components/parameters/ContentDate"
+        - $ref: "#/components/parameters/ListType"
+        - $ref: "#/components/parameters/PublicationLanguage"
+        - $ref: "#/components/parameters/ArtefactTypeHeader"
+        - $ref: "#/components/parameters/SensitivityHeader"
+        - $ref: "#/components/parameters/DisplayFrom"
+        - $ref: "#/components/parameters/DisplayTo"
+        - $ref: "#/components/parameters/SourceArtefactIdHeader"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        $ref: "#/components/requestBodies/Publication"
+      responses:
+        "201":
+          $ref: "#/components/responses/PublicationCreated"
+        "400":
+          $ref: "#/components/responses/PublicationBadRequest"
+        "401":
+          $ref: "#/components/responses/PublicationUnauthorised"
+        "403":
+          $ref: "#/components/responses/PublicationForbidden"
+        "409":
+          $ref: "#/components/responses/PublicationConflict"
+        "500":
+          $ref: "#/components/responses/PublicationServerError"
+
   /v1/publication:
     post:
       tags: [Publication]
       summary: Publish a hearing list
       description: |
-        Ingests a hearing list into CaTH. A single path serves three distinct request
-        shapes, selected at runtime:
+        Ingests a hearing list into CaTH. All publication metadata travels in `x-*` request
+        headers; the body carries only the payload. One path serves three modes, selected by
+        `Content-Type` and then by `x-type`:
 
-        1. **JSON list** — `Content-Type: application/json`. The `hearing_list` property
-           carries the list payload, validated against the JSON Schema registered for the
-           given `list_type`.
-        2. **Flat file** — `Content-Type: multipart/form-data` with a `file` part and the
-           metadata fields as form fields. Used when the list is supplied as a document
-           rather than structured JSON.
-        3. **PDDA HTML** — also `multipart/form-data`, distinguished *only* by the presence
-           of a `type` field. If `type` is present the request is treated as a PDDA HTML
-           upload; `type` must be `LCSU`, the file must be `.htm` or `.html` and non-empty,
-           and the response is a `PddaHtmlUploadResponse` rather than the usual
-           `BlobIngestionResponse`.
+        | `Content-Type` | `x-type` | Behaviour |
+        |---|---|---|
+        | `application/json` | `LIST` | Body **is** the publication payload, validated against the JSON Schema registered for `x-list-type`. Stored in blob storage, artefact persisted. |
+        | `multipart/form-data` | `LIST` | A single part named `file`. Stored in blob storage, artefact persisted with `isFlatFile: true`. |
+        | `multipart/form-data` | `LCSU` | An `.htm`/`.html` file. Uploaded to the AWS S3 bucket. **No artefact is persisted**, so the `201` body carries a blank `artefactId` (with `isFlatFile: true`). `x-list-type` is not required. |
+        | `application/json` | `LCSU` | Rejected with `400` — LCSU is file-only. |
+        | either | anything else | Rejected with `400`. `x-type` is never defaulted. |
 
-        Note that shape 3 is selected by field *presence*, not by value, so sending a
-        `type` field on a flat-file upload will route it down the PDDA path.
+        `x-type` is matched case-sensitively. For every mode the full `x-*` header set is
+        validated *before* any file or database work, so an LCSU request with a missing
+        header is rejected before anything reaches S3.
 
-        Maximum payload is 100 MB for JSON and flat-file requests. PDDA HTML uploads are
-        capped separately by `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
+        There is no `hearing_list` wrapper, and no metadata is ever read from multipart form
+        fields — a `type` form field is ignored.
+
+        `x-sensitivity` defaults to `PUBLIC`. `x-display-from` and `x-display-to` are
+        optional and persist as `null` when omitted; when both are supplied `x-display-to`
+        must not be earlier than `x-display-from`.
+
+        A publication supersedes an existing one when `x-court-id`, `x-content-date`,
+        `x-language`, `x-list-type` and `x-provenance` all match.
+
+        When `x-court-id` cannot be resolved against reference data the request is still
+        accepted with `201`; the artefact is retained but PDF generation and subscriber
+        notifications are skipped.
+
+        Maximum payload is 100 MB. LCSU uploads are capped separately by
+        `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
       operationId: createPublication
       security:
         - azureAd: []
       parameters:
+        - $ref: "#/components/parameters/Provenance"
+        - $ref: "#/components/parameters/CourtId"
+        - $ref: "#/components/parameters/ContentDate"
+        - $ref: "#/components/parameters/ListType"
+        - $ref: "#/components/parameters/PublicationLanguage"
+        - $ref: "#/components/parameters/ArtefactTypeHeader"
+        - $ref: "#/components/parameters/SensitivityHeader"
+        - $ref: "#/components/parameters/DisplayFrom"
+        - $ref: "#/components/parameters/DisplayTo"
+        - $ref: "#/components/parameters/SourceArtefactIdHeader"
         - $ref: "#/components/parameters/CorrelationId"
       requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/BlobIngestionRequest"
-          multipart/form-data:
-            schema:
-              oneOf:
-                - $ref: "#/components/schemas/FlatFileUpload"
-                - $ref: "#/components/schemas/PddaHtmlUpload"
-            encoding:
-              file:
-                contentType: application/octet-stream
+        $ref: "#/components/requestBodies/Publication"
       responses:
         "201":
-          description: |
-            Ingested. Also returned when `no_match` is `true` — see the `no_match` property.
-          content:
-            application/json:
-              schema:
-                anyOf:
-                  - $ref: "#/components/schemas/BlobIngestionResponse"
-                  - $ref: "#/components/schemas/PddaHtmlUploadResponse"
-              examples:
-                published:
-                  summary: Ingested and published
-                  value:
-                    success: true
-                    artefact_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-                    no_match: false
-                    message: Blob ingested and published successfully
-                noMatch:
-                  summary: Ingested, but the court could not be resolved
-                  description: |
-                    The artefact is stored but PDF generation and subscriber notifications
-                    are skipped. This is a 201, not an error.
-                  value:
-                    success: true
-                    artefact_id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-                    no_match: true
-                    message: Blob ingested but location not found in reference data
-                pddaHtml:
-                  summary: PDDA HTML upload accepted
-                  value:
-                    success: true
-                    message: Upload accepted and stored
-                    s3_key: lcsu/2026-07-29/list.html
-                    correlation_id: 8f14e45f-ceea-467a-9f39-1a9cd1b0c2a4
+          $ref: "#/components/responses/PublicationCreated"
         "400":
-          description: |
-            Validation failure. Either the body is structurally invalid (missing or
-            wrongly-typed required fields), or field-level validation failed, in which case
-            `errors` lists each offending field.
-          content:
-            application/json:
-              schema:
-                anyOf:
-                  - $ref: "#/components/schemas/BlobIngestionResponse"
-                  - $ref: "#/components/schemas/PddaHtmlUploadResponse"
-              examples:
-                malformed:
-                  summary: Structurally invalid body
-                  value:
-                    success: false
-                    message: Invalid request body structure. Missing or invalid required fields.
-                fieldErrors:
-                  summary: Field-level validation failure
-                  value:
-                    success: false
-                    message: Validation failed
-                    errors:
-                      - field: provenance
-                        message: "Invalid provenance. Allowed values: MANUAL_UPLOAD, SNL, COMMON_PLATFORM, CP_CATH, PDDA"
-                      - field: display_to
-                        message: display_to must be after display_from
-                noFile:
-                  summary: Multipart request with no file part
-                  value:
-                    success: false
-                    message: No file provided. Include a file in the 'file' field of the multipart form.
-                pddaInvalid:
-                  summary: PDDA HTML upload rejected
-                  value:
-                    success: false
-                    message: The uploaded file must be an HTM or HTML file
-                    correlation_id: 8f14e45f-ceea-467a-9f39-1a9cd1b0c2a4
+          $ref: "#/components/responses/PublicationBadRequest"
         "401":
-          description: Missing, malformed, or expired bearer token.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BlobIngestionResponse"
-              examples:
-                missingHeader:
-                  value:
-                    success: false
-                    message: Missing or invalid Authorization header
-                invalidToken:
-                  value:
-                    success: false
-                    message: Invalid or expired token
+          $ref: "#/components/responses/PublicationUnauthorised"
         "403":
-          description: Token is valid but lacks the `api.publisher.user` app role.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BlobIngestionResponse"
-              example:
-                success: false
-                message: "Insufficient permissions. Required role: api.publisher.user"
+          $ref: "#/components/responses/PublicationForbidden"
+        "409":
+          $ref: "#/components/responses/PublicationConflict"
         "500":
-          description: Ingestion failed.
-          content:
-            application/json:
-              schema:
-                anyOf:
-                  - $ref: "#/components/schemas/BlobIngestionResponse"
-                  - $ref: "#/components/schemas/PddaHtmlUploadResponse"
-              example:
-                success: false
-                message: Internal server error during ingestion
+          $ref: "#/components/responses/PublicationServerError"
 
   /api/flat-file/{artefactId}/download:
     get:
@@ -343,7 +299,7 @@ paths:
                   value:
                     error: File not found in storage
         "410":
-          description: Outside the artefact's `display_from`–`display_to` window.
+          description: Outside the artefact's display window. An absent display date is unbounded at that end.
           content:
             application/json:
               schema:
@@ -400,7 +356,7 @@ paths:
                   value:
                     error: PDF not found
         "410":
-          description: Outside the artefact's display window.
+          description: Outside the artefact's display window. An absent display date is unbounded at that end.
           content:
             application/json:
               schema:
@@ -492,11 +448,297 @@ components:
       in: header
       required: false
       description: |
-        Caller-supplied correlation identifier. Echoed back as `correlation_id` on PDDA
-        HTML upload responses and on unexpected errors, and included in server logs.
+        Caller-supplied correlation identifier. Not persisted and not echoed in the response
+        body; used for server-side logging and passed to S3 object metadata for LCSU uploads.
       schema:
         type: string
       example: 8f14e45f-ceea-467a-9f39-1a9cd1b0c2a4
+    Provenance:
+      name: x-provenance
+      in: header
+      required: true
+      description: Source system publishing the list.
+      schema:
+        type: string
+        enum: [MANUAL_UPLOAD, SNL, COMMON_PLATFORM, CP_CATH, PDDA]
+      example: SNL
+    CourtId:
+      name: x-court-id
+      in: header
+      required: true
+      description: |
+        Court identifier. For the external provenances (`SNL`, `COMMON_PLATFORM`, `CP_CATH`,
+        `PDDA`) this is the provenance's own location ID and is resolved against CaTH
+        reference data. For `MANUAL_UPLOAD` it must be a numeric CaTH location ID.
+
+        If the court cannot be resolved the request still succeeds with `201`; the artefact
+        is stored but PDF generation and subscriber notifications are skipped.
+
+        `x-location-id` is accepted as a fallback when `x-court-id` is absent. When both are
+        sent, `x-court-id` wins.
+      schema:
+        type: string
+      example: "1"
+    ContentDate:
+      name: x-content-date
+      in: header
+      required: true
+      description: |
+        Date the list content relates to, as an ISO 8601 date or date-time. Any time
+        component is truncated on persist.
+      schema:
+        type: string
+      example: "2026-09-14T14:00:00.001Z"
+    ListType:
+      name: x-list-type
+      in: header
+      required: false
+      description: |
+        List type name. Valid values are held in reference data rather than fixed in code,
+        and the JSON Schema used to validate a JSON payload is selected from it. An
+        unrecognised value returns `400` with the permitted values in the message.
+
+        **Required for `x-type: LIST`; optional for `x-type: LCSU`.** The spec marks this
+        header required but notes "Only set when x-type is set to 'LIST'", and the incumbent's
+        own functional test uploads an LCSU file without it. When omitted the `Artefact`
+        response reports `listType: null`.
+      schema:
+        type: string
+      example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+    PublicationLanguage:
+      name: x-language
+      in: header
+      required: true
+      description: |
+        Publication language. Note the asymmetry with the response: `BILINGUAL` is accepted
+        inbound but reported as `BI_LINGUAL` on the `Artefact` body.
+      schema:
+        type: string
+        enum: [ENGLISH, WELSH, BILINGUAL]
+      example: ENGLISH
+    ArtefactTypeHeader:
+      name: x-type
+      in: header
+      required: true
+      description: |
+        Routing discriminator. `LIST` publishes to blob storage and persists an artefact;
+        `LCSU` uploads the file to the AWS S3 bucket and persists nothing. Matched
+        case-sensitively; an unrecognised value is rejected rather than defaulted.
+      schema:
+        type: string
+        enum: [LIST, LCSU]
+      example: LIST
+    SensitivityHeader:
+      name: x-sensitivity
+      in: header
+      required: false
+      description: Defaults to `PUBLIC` when omitted.
+      schema:
+        type: string
+        enum: [PUBLIC, PRIVATE, CLASSIFIED]
+        default: PUBLIC
+    DisplayFrom:
+      name: x-display-from
+      in: header
+      required: false
+      description: |
+        Start of the window during which the artefact is publicly visible. Omit for an
+        unbounded start; the stored value is then `null`.
+      schema:
+        type: string
+        format: date-time
+      example: "2026-09-14T00:00:00.000Z"
+    DisplayTo:
+      name: x-display-to
+      in: header
+      required: false
+      description: |
+        End of the visibility window. Omit for an unbounded end. When both display headers
+        are supplied this must not be earlier than `x-display-from`.
+      schema:
+        type: string
+        format: date-time
+      example: "2026-09-20T00:00:00.000Z"
+    SourceArtefactIdHeader:
+      name: x-source-artefact-id
+      in: header
+      required: false
+      description: Optional identifier from the source system, retained for traceability.
+      schema:
+        type: string
+      example: SNL-2026-09-14-001
+
+  requestBodies:
+    Publication:
+      required: true
+      description: |
+        For `application/json` the body **is** the publication payload — an object or an
+        array, depending on the list type. For `multipart/form-data` exactly one part named
+        `file`; no metadata form fields are read.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PublicationPayload"
+        multipart/form-data:
+          schema:
+            $ref: "#/components/schemas/PublicationFileUpload"
+          encoding:
+            file:
+              contentType: application/octet-stream
+
+  responses:
+    PublicationCreated:
+      description: |
+        Created, or superseded. Also returned when `x-court-id` could not be resolved — the
+        artefact is stored but PDF generation and notifications are skipped.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Artefact"
+          examples:
+            jsonPublication:
+              summary: JSON publication
+              value:
+                artefactId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                contentDate: "2026-09-14T00:00:00.000Z"
+                displayFrom: null
+                displayTo: null
+                isFlatFile: false
+                language: ENGLISH
+                listType: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+                locationId: "1"
+                payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
+                provenance: SNL
+                sensitivity: PUBLIC
+                sourceArtefactId: null
+                type: LIST
+            flatFilePublication:
+              summary: Flat-file publication
+              value:
+                artefactId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                contentDate: "2026-09-14T00:00:00.000Z"
+                displayFrom: "2026-09-14T00:00:00.000Z"
+                displayTo: "2026-09-20T00:00:00.000Z"
+                isFlatFile: true
+                language: ENGLISH
+                listType: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+                locationId: "1"
+                payload: https://cathsa.blob.core.windows.net/artefact/3fa85f64-5717-4562-b3fc-2c963f66afa6
+                provenance: SNL
+                sensitivity: PUBLIC
+                sourceArtefactId: null
+                type: LIST
+            lcsuUpload:
+              summary: LCSU HTML upload — nothing persisted, so artefactId is blank
+              value:
+                artefactId: ""
+                contentDate: "2026-09-14T00:00:00.000Z"
+                displayFrom: null
+                displayTo: null
+                isFlatFile: true
+                language: ENGLISH
+                listType: null
+                locationId: "1"
+                payload: null
+                provenance: PDDA
+                sensitivity: PUBLIC
+                sourceArtefactId: null
+                type: LCSU
+
+    PublicationBadRequest:
+      description: |
+        Missing or invalid header, unrecognised `x-type`, `LCSU` sent as
+        `application/json`, a missing or empty `file` part, non-HTML LCSU file, JSON schema
+        failure, or an over-size payload.
+
+        A header failure reports **one** header, matching the incumbent, which throws on the
+        first one it finds rather than collecting them. JSON schema failures are the exception:
+        those are joined into the single `message` with `, `.
+
+        Schema failures are phrased as the incumbent phrases them — the failing instance location
+        as a JSON Pointer, then the problem, e.g.
+        `/document: required property 'publicationDate' not found`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+          examples:
+            missingHeader:
+              summary: Required header omitted or empty
+              value:
+                message: x-court-id is mandatory however an empty value is provided
+                timestamp: "2026-09-24T11:56:27.611"
+            unknownType:
+              summary: Unrecognised x-type
+              value:
+                message: "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+                timestamp: "2026-09-24T11:56:27.611"
+            lcsuOverJson:
+              summary: LCSU sent as application/json
+              value:
+                message: LCSU publications must be sent as multipart/form-data
+                timestamp: "2026-09-24T11:56:27.611"
+            lcsuWrongFormat:
+              summary: LCSU file is not .htm or .html
+              value:
+                message: File format is not supported for LCSU.
+                timestamp: "2026-09-24T11:56:27.611"
+            emptyFile:
+              summary: Multipart request with a missing or zero-byte file part
+              value:
+                message: Empty file provided, please provide a valid file
+                timestamp: "2026-09-24T11:56:27.611"
+            schemaFailure:
+              summary: Payload failed the list type schema
+              value:
+                message: "/document: required property 'publicationDate' not found"
+                timestamp: "2026-09-24T11:56:27.611"
+
+    PublicationUnauthorised:
+      description: |
+        Missing, malformed, unverifiable or expired bearer token.
+
+        Every one of those reports the same message. Publishers reach CaTH through APIM, which
+        phrases OAuth rejections this way, so a token problem reads the same whether it was
+        rejected at the gateway or here. Which check failed is logged, not returned.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthErrorResponse"
+          example:
+            statusCode: 401
+            message: Access denied due to invalid OAuth information
+
+    PublicationForbidden:
+      description: Token is valid but lacks the `api.publisher.user` app role.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthErrorResponse"
+          example:
+            statusCode: 403
+            message: "Insufficient permissions. Required role: api.publisher.user"
+
+    PublicationConflict:
+      description: |
+        A concurrent create for the same publication hit a unique-constraint violation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+          example:
+            message: A publication with these details is already being created
+            timestamp: "2026-09-24T11:56:27.611"
+
+    PublicationServerError:
+      description: Ingestion failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Message"
+          example:
+            message: Internal server error during ingestion
+            timestamp: "2026-09-24T11:56:27.611"
 
   headers:
     NoStore:
@@ -506,171 +748,173 @@ components:
         example: private, max-age=0, no-cache, no-store, must-revalidate
 
   schemas:
-    PublicationMetadata:
-      type: object
-      description: Metadata common to every publication request shape.
-      required:
-        - court_id
-        - provenance
-        - content_date
-        - list_type
-        - sensitivity
-        - language
-        - display_from
-        - display_to
-      properties:
-        court_id:
-          type: string
-          description: |
-            Court identifier. For the external provenances (`SNL`, `COMMON_PLATFORM`,
-            `CP_CATH`, `PDDA`) this is the provenance's own location ID and is resolved
-            against CaTH reference data. For `MANUAL_UPLOAD` it must be a numeric CaTH
-            location ID.
-
-            If the court cannot be resolved the request still succeeds, with `no_match`
-            set to `true` on the response.
-          example: "123"
-        provenance:
-          type: string
-          description: Source system publishing the list.
-          enum:
-            - MANUAL_UPLOAD
-            - SNL
-            - COMMON_PLATFORM
-            - CP_CATH
-            - PDDA
-          example: SNL
-        content_date:
-          type: string
-          format: date
-          description: Date the list content relates to, as an ISO 8601 date.
-          example: "2026-07-29"
-        list_type:
-          type: string
-          description: |
-            List type name. Valid values are held in reference data rather than fixed in
-            code, and the JSON Schema used to validate `hearing_list` is selected from it.
-            An unrecognised value returns 400 with the permitted values in the message.
-          example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
-        sensitivity:
-          type: string
-          enum: [PUBLIC, PRIVATE, CLASSIFIED]
-          example: PUBLIC
-        language:
-          type: string
-          enum: [ENGLISH, WELSH, BILINGUAL]
-          example: ENGLISH
-        display_from:
-          type: string
-          format: date-time
-          description: Start of the window during which the artefact is publicly visible.
-          example: "2026-07-29T00:00:00Z"
-        display_to:
-          type: string
-          format: date-time
-          description: End of the visibility window. Must not be earlier than `display_from`.
-          example: "2026-07-30T00:00:00Z"
-        source_artefact_id:
-          type: string
-          description: Optional identifier from the source system, retained for traceability.
-          example: SNL-2026-07-29-001
-
-    BlobIngestionRequest:
-      description: JSON hearing list. Total request size must not exceed 100 MB.
-      allOf:
-        - $ref: "#/components/schemas/PublicationMetadata"
-        - type: object
-          required: [hearing_list]
-          properties:
-            hearing_list:
-              type: object
-              description: |
-                The hearing list payload. Its structure depends entirely on `list_type` and
-                is validated against that list type's JSON Schema — see
-                `libs/list-types/*/src/schemas/*.json` for the authoritative definitions.
-              additionalProperties: true
-
-    FlatFileUpload:
+    PublicationPayload:
       description: |
-        Flat-file publication. Metadata fields are sent as form fields alongside the file.
-        Do not send a `type` field: its presence routes the request to the PDDA HTML path.
-      allOf:
-        - $ref: "#/components/schemas/PublicationMetadata"
+        The publication payload itself. Its structure depends entirely on `x-list-type` and
+        is validated against that list type's JSON Schema — see
+        `libs/list-types/*/src/schemas/*.json` for the authoritative definitions. Some list
+        types are objects, others arrays. Total request size must not exceed 100 MB.
+      oneOf:
         - type: object
-          required: [file]
-          properties:
-            file:
-              type: string
-              format: binary
-              description: The list document.
+          additionalProperties: true
+        - type: array
+          items:
+            type: object
+            additionalProperties: true
 
-    PddaHtmlUpload:
+    PublicationFileUpload:
       type: object
-      description: PDDA HTML publication, identified by the presence of `type`.
-      required: [type, file]
+      description: |
+        Multipart form carrying exactly one part named `file`. All metadata comes from the
+        `x-*` headers; form fields are never read.
+      required: [file]
       properties:
-        type:
-          type: string
-          description: Artefact type. Must be `LCSU`; any other value is rejected with 400.
-          enum: [LCSU]
         file:
           type: string
           format: binary
           description: |
-            An `.htm` or `.html` file, non-empty, no larger than
-            `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
+            For `x-type: LIST` the list document (any format). For `x-type: LCSU` an `.htm`
+            or `.html` file, no larger than `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
 
-    BlobIngestionResponse:
+            Must be present and non-empty for either type: a missing part and a zero-byte one
+            are both rejected with `400` and the same message.
+
+    Artefact:
       type: object
-      required: [success, message]
+      description: |
+        The created publication, in camelCase, mirroring the incumbent's `Artefact`
+        (`ArtefactView.External`) field for field.
+
+        Note the field is **`locationId`**, not `courtId`. The pinned swagger names it `courtId`,
+        but the incumbent's Java model declares `locationId` with no `@JsonProperty` rename, so
+        `locationId` is what is actually serialised — the swagger is stale here, in the same way
+        it is for the `x-court-id` / `x-location-id` request header.
+
+        `lastReceivedDate`, `supersededCount` and `payloadSize` are `ArtefactView.Internal` on
+        the incumbent and so are deliberately absent from this response.
+
+        There is no `search` field: case data is extracted and persisted for subscription
+        matching, but is not surfaced to the publisher.
+
+        For an LCSU upload nothing is persisted, so `artefactId` is the empty string and
+        `payload` is `null` (`isFlatFile` is still `true`).
+      required:
+        - artefactId
+        - contentDate
+        - displayFrom
+        - displayTo
+        - language
+        - listType
+        - locationId
+        - provenance
+        - sensitivity
+        - sourceArtefactId
+        - type
       properties:
-        success:
-          type: boolean
-        artefact_id:
+        artefactId:
           type: string
-          format: uuid
-          description: Identifier assigned to the stored artefact. Present on success.
-        no_match:
+          description: |
+            Identifier assigned to the stored artefact. Empty string for `x-type: LCSU`,
+            which is a pass-through to S3 and persists nothing.
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        contentDate:
+          type: string
+          format: date-time
+          example: "2026-09-14T00:00:00.000Z"
+        displayFrom:
+          type: string
+          format: date-time
+          nullable: true
+          description: "`null` when `x-display-from` was omitted."
+        displayTo:
+          type: string
+          format: date-time
+          nullable: true
+          description: "`null` when `x-display-to` was omitted."
+        isFlatFile:
           type: boolean
           description: |
-            `true` when the artefact was stored but `court_id` could not be resolved
-            against reference data. The artefact is retained; PDF generation and
-            subscriber notifications are skipped. This is reported on a successful (201)
-            response, not an error.
-        message:
+            `true` for a multipart `LIST` publication, `false` for a JSON publication, and
+            `true` for `LCSU` — the incumbent builds the LCSU metadata with the flat-file flag
+            set even though the file goes to S3 rather than blob storage.
+        language:
           type: string
-        errors:
-          type: array
-          description: Field-level validation failures. Present when `message` is `Validation failed`.
-          items:
-            $ref: "#/components/schemas/ValidationError"
+          enum: [ENGLISH, WELSH, BI_LINGUAL]
+          description: |
+            Note the spelling: an inbound `x-language` of `BILINGUAL` is reported here as
+            `BI_LINGUAL`.
+        listType:
+          type: string
+          nullable: true
+          description: "`null` for an `LCSU` upload that omitted `x-list-type`."
+          example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST
+        locationId:
+          type: string
+          description: |
+            The persisted location ID. Prefixed with `NoMatch` when the submitted `x-court-id`
+            could not be resolved against reference data — the publication is still accepted,
+            so this is how a publisher sees that the court was not recognised.
+          example: "1"
+        payload:
+          type: string
+          format: uri
+          nullable: true
+          description: |
+            Blob storage URL the payload was written to. `null` for `LCSU`, which goes to S3 and
+            is not addressable through this API — present as an explicit null rather than
+            omitted, matching the incumbent, whose `Artefact` declares no `@JsonInclude`.
+        provenance:
+          type: string
+          example: SNL
+        sensitivity:
+          type: string
+          enum: [PUBLIC, PRIVATE, CLASSIFIED]
+        sourceArtefactId:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [LIST, LCSU]
 
-    ValidationError:
+    Message:
       type: object
-      required: [field, message]
+      description: Error body used for `400`, `409` and `500`.
+      required: [message, timestamp]
       properties:
-        field:
-          type: string
-          description: Offending field name, or `body` for whole-payload problems such as size.
-          example: provenance
         message:
           type: string
-          example: "Invalid provenance. Allowed values: MANUAL_UPLOAD, SNL, COMMON_PLATFORM, CP_CATH, PDDA"
+          description: |
+            Human-readable failure description. A missing or empty required header reports a
+            single header, phrased exactly as the incumbent does — an absent header and an empty
+            one are indistinguishable. JSON schema failures are joined with `, `.
+          example: "x-court-id is mandatory however an empty value is provided"
+        timestamp:
+          type: string
+          description: |
+            Local date-time with **no** zone suffix, matching the incumbent, where this is a Java
+            `LocalDateTime` from `LocalDateTime.now()`. Fractional digits are emitted in groups of
+            three as the value needs them, so a JVM may report nanoseconds
+            (`2026-09-24T11:56:27.611289331`) where this service reports milliseconds — a JS
+            `Date` has no finer resolution. Deliberately not `format: date-time`, which would
+            require an offset.
+          example: "2026-09-24T11:56:27.611"
 
-    PddaHtmlUploadResponse:
+    AuthErrorResponse:
       type: object
-      required: [success, message]
+      description: |
+        Body returned by the OAuth middleware, mirroring the shape APIM returns for the same
+        failures so a publisher cannot tell whether the request was rejected at the gateway or
+        by the service. Deliberately not a `Message` — it carries `statusCode` instead of a
+        `timestamp`, and the spec declares no schema for `401`/`403`.
+      required: [statusCode, message]
       properties:
-        success:
-          type: boolean
+        statusCode:
+          type: integer
+          description: Repeats the HTTP status from the status line.
+          enum: [401, 403]
+          example: 401
         message:
           type: string
-        s3_key:
-          type: string
-          description: Key the HTML file was stored under. Present on success.
-        correlation_id:
-          type: string
-          description: Echo of the request's `x-correlation-id`, when one was supplied.
 
     Location:
       type: object

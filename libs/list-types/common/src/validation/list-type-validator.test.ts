@@ -14,7 +14,10 @@ const testListTypes: ListTypeInfo[] = [
   { id: 60, name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", friendlyName: "Magistrates Public Adult Court List - Future" },
   { id: 70, name: "IAC_DAILY_LIST", friendlyName: "Immigration and Asylum Chamber Daily List" },
   { id: 71, name: "IAC_DAILY_LIST_ADDITIONAL_CASES", friendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases" },
-  { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" }
+  { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" },
+  { id: 100, name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List" },
+  { id: 101, name: "CROWN_FIRM_PDDA_LIST", friendlyName: "Crown Firm List" },
+  { id: 102, name: "CROWN_WARNED_PDDA_LIST", friendlyName: "Crown Warned List" }
 ];
 
 // Mock the dynamic import for @hmcts/civil-daily-cause-list
@@ -73,6 +76,31 @@ vi.mock("@hmcts/magistrates-public-adult-court-list", () => ({
   })
 }));
 
+// Mock the dynamic imports for the Crown packages, reached via the CROWN_*_PDDA_LIST aliases
+vi.mock("@hmcts/crown-daily-list", () => ({
+  validateCrownDailyList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/crown-firm-list", () => ({
+  validateCrownFirmList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
+vi.mock("@hmcts/crown-warned-list", () => ({
+  validateCrownWarnedList: vi.fn().mockReturnValue({
+    isValid: true,
+    errors: [],
+    schemaVersion: "1.0"
+  })
+}));
+
 // Mock the dynamic import for @hmcts/iac-daily-list (used by both IAC_DAILY_LIST and IAC_DAILY_LIST_ADDITIONAL_CASES)
 vi.mock("@hmcts/iac-daily-list", () => ({
   validateIacDailyList: vi.fn().mockReturnValue({
@@ -91,9 +119,9 @@ describe("list-type-validator", () => {
       expect(result).toBe("civil-and-family-daily-cause-list");
     });
 
-    it("should convert CROWN_DAILY_LIST to kebab-case", () => {
-      const result = convertListTypeNameToKebabCase("CROWN_DAILY_LIST");
-      expect(result).toBe("crown-daily-list");
+    it("should convert CROWN_DAILY_PDDA_LIST to kebab-case", () => {
+      const result = convertListTypeNameToKebabCase("CROWN_DAILY_PDDA_LIST");
+      expect(result).toBe("crown-daily-pdda-list");
     });
 
     it("should convert single word names", () => {
@@ -175,7 +203,10 @@ describe("list-type-validator", () => {
       ["58", "MAGISTRATES_ADULT_COURT_LIST_FUTURE", "magistrates-adult-court-list"],
       ["59", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", "magistrates-public-adult-court-list"],
       ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"],
-      ["71", "IAC_DAILY_LIST_ADDITIONAL_CASES", "iac-daily-list"]
+      ["71", "IAC_DAILY_LIST_ADDITIONAL_CASES", "iac-daily-list"],
+      ["100", "CROWN_DAILY_PDDA_LIST", "crown-daily-list"],
+      ["101", "CROWN_FIRM_PDDA_LIST", "crown-firm-list"],
+      ["102", "CROWN_WARNED_PDDA_LIST", "crown-warned-list"]
     ])("should validate %s (%s) using the %s package alias", async (id) => {
       const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
 

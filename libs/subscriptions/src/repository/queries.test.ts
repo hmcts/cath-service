@@ -409,8 +409,10 @@ describe("Subscription Queries", () => {
           caseName: { contains: "Smith", mode: "insensitive" },
           artefact: {
             listTypeId: { in: [1, 2] },
-            displayFrom: { lte: expect.any(Date) },
-            displayTo: { gte: expect.any(Date) }
+            AND: [
+              { OR: [{ displayFrom: null }, { displayFrom: { lte: expect.any(Date) } }] },
+              { OR: [{ displayTo: null }, { displayTo: { gte: expect.any(Date) } }] }
+            ]
           }
         },
         select: { caseNumber: true, caseName: true },

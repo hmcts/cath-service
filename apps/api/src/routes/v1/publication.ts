@@ -1,112 +1,120 @@
-import { authenticateApi } from "@hmcts/blob-ingestion/middleware/oauth-middleware";
-import type { BlobIngestionRequest, FlatFileIngestionRequest } from "@hmcts/blob-ingestion/repository/model";
-import { processBlobIngestion, processFlatFileBlobIngestion } from "@hmcts/blob-ingestion/repository/service";
-import { type PddaHtmlUploadResponse, uploadHtmlToS3, validatePddaHtmlUpload } from "@hmcts/pdda-html-upload";
-import type { Request, Response } from "express";
+import {
+  authenticateApi,
+  buildLcsuArtefactResponse,
+  buildMessage,
+  joinValidationMessages,
+  logIngestionResult,
+  MAX_BLOB_SIZE,
+  type PublicationIngestionResult,
+  type PublicationMetadata,
+  parsePublicationHeaders,
+  processBlobIngestion,
+  processFlatFileBlobIngestion,
+  validatePublicationMetadata
+} from "@hmcts/blob-ingestion";
+import { uploadHtmlToS3, validatePddaHtmlUpload } from "@hmcts/pdda-html-upload";
+import { ArtefactType } from "@hmcts/publication";
+import type { NextFunction, Request, Response } from "express";
 import multer from "multer";
+
+const LCSU_JSON_REJECTION = "LCSU publications must be sent as multipart/form-data";
+// Verbatim from the incumbent's FlatFileException. Its check is MultipartFile#isEmpty, which is
+// true for an absent part *and* for a zero-byte one, so both report this.
+const EMPTY_FILE_MESSAGE = "Empty file provided, please provide a valid file";
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: {
-    fileSize: Number.parseInt(process.env.PDDA_HTML_MAX_FILE_SIZE || "10485760", 10)
-  }
+  limits: { fileSize: MAX_BLOB_SIZE }
 });
 
-function isBlobIngestionRequest(body: unknown): body is BlobIngestionRequest {
-  if (typeof body !== "object" || body === null) {
-    return false;
-  }
+// OAuth authentication is applied first in the middleware chain.
+export const POST = [
+  authenticateApi(),
+  conditionalMulter,
+  async (req: Request, res: Response) => {
+    const correlationId = readCorrelationId(req);
 
-  const req = body as Record<string, unknown>;
-  return (
-    typeof req.court_id === "string" &&
-    typeof req.provenance === "string" &&
-    typeof req.content_date === "string" &&
-    typeof req.list_type === "string" &&
-    typeof req.sensitivity === "string" &&
-    typeof req.language === "string" &&
-    typeof req.display_from === "string" &&
-    typeof req.display_to === "string" &&
-    req.hearing_list !== undefined
-  );
-}
+    try {
+      const { metadata, errors } = parsePublicationHeaders(req.headers);
 
-function isFlatFileIngestionRequest(body: unknown): body is FlatFileIngestionRequest {
-  if (typeof body !== "object" || body === null) {
-    return false;
-  }
+      // Headers are validated before any branch, so LCSU is checked exactly like a flat file.
+      if (!metadata) {
+        return res.status(400).json(buildMessage(joinValidationMessages(errors)));
+      }
 
-  const req = body as Record<string, unknown>;
-  return (
-    typeof req.court_id === "string" &&
-    typeof req.provenance === "string" &&
-    typeof req.content_date === "string" &&
-    typeof req.list_type === "string" &&
-    typeof req.sensitivity === "string" &&
-    typeof req.language === "string" &&
-    typeof req.display_from === "string" &&
-    typeof req.display_to === "string"
-  );
-}
+      if (isMultipartRequest(req)) {
+        // Checked once for both modes, as the incumbent does before it branches on the type.
+        if (isEmptyUpload(req.file)) {
+          return res.status(400).json(buildMessage(EMPTY_FILE_MESSAGE));
+        }
 
-function isMultipartRequest(req: Request): boolean {
-  const contentType = req.headers["content-type"];
-  return contentType?.includes("multipart/form-data") || false;
-}
+        return metadata.type === ArtefactType.LCSU ? await handleLcsuUpload(req, res, metadata, correlationId) : await handleFlatFileUpload(req, res, metadata);
+      }
 
-function isPddaHtmlUpload(req: Request): boolean {
-  return typeof req.body?.type === "string";
-}
+      if (metadata.type === ArtefactType.LCSU) {
+        return res.status(400).json(buildMessage(LCSU_JSON_REJECTION));
+      }
 
-async function handleJsonBlobIngestion(req: Request, res: Response) {
-  if (!isBlobIngestionRequest(req.body)) {
-    console.error("Invalid request body structure");
-    return res.status(400).json({
-      success: false,
-      message: "Invalid request body structure. Missing or invalid required fields."
-    });
-  }
-
-  const request = req.body;
-  const contentLength = req.headers["content-length"];
-  const rawBodySize = contentLength ? Number.parseInt(contentLength, 10) : Buffer.byteLength(JSON.stringify(req.body), "utf8");
-
-  const result = await processBlobIngestion(request, rawBodySize);
-
-  if (!result.success) {
-    if (result.message === "Validation failed") {
-      return res.status(400).json(result);
+      return await handleJsonPublication(req, res, metadata);
+    } catch (error) {
+      console.error("Unexpected error in publication endpoint:", {
+        name: error instanceof Error ? error.name : "Unknown",
+        message: error instanceof Error ? error.message : "Unknown error",
+        code: error instanceof Error && "code" in error ? error.code : undefined,
+        correlationId
+      });
+      return res.status(500).json(buildMessage("Internal server error"));
     }
-    return res.status(500).json(result);
+  }
+];
+
+function conditionalMulter(req: Request, res: Response, next: NextFunction) {
+  if (!isMultipartRequest(req)) {
+    return next();
   }
 
-  return res.status(201).json(result);
+  upload.single("file")(req, res, (error: unknown) => {
+    if (error instanceof multer.MulterError) {
+      return res.status(400).json(buildMessage(error.message));
+    }
+    return next(error as Error | undefined);
+  });
 }
 
-async function handleHtmlFileUpload(req: Request, res: Response) {
-  const correlationId = req.headers["x-correlation-id"] as string | undefined;
+async function handleJsonPublication(req: Request, res: Response, metadata: PublicationMetadata) {
+  const contentLength = req.headers["content-length"];
+  const rawBodySize = contentLength ? Number.parseInt(contentLength, 10) : Buffer.byteLength(JSON.stringify(req.body ?? null), "utf8");
 
-  const { type } = req.body;
-  const file = req.file;
+  const result = await processBlobIngestion(metadata, req.body, rawBodySize);
+  return respondToIngestion(res, result);
+}
 
-  const validation = validatePddaHtmlUpload(type, file);
-  if (!validation.valid) {
-    const response: PddaHtmlUploadResponse = {
-      success: false,
-      message: validation.error || "Validation failed",
-      correlation_id: correlationId
-    };
-    return res.status(400).json(response);
+async function handleFlatFileUpload(req: Request, res: Response, metadata: PublicationMetadata) {
+  const file = req.file as Express.Multer.File;
+  const result = await processFlatFileBlobIngestion(metadata, file.buffer, file.size);
+  return respondToIngestion(res, result);
+}
+
+/**
+ * LCSU is a pass-through to S3: the metadata is validated exactly as for a publication,
+ * but nothing is persisted — no artefact row, no blob, no PDF, no notifications.
+ */
+async function handleLcsuUpload(req: Request, res: Response, metadata: PublicationMetadata, correlationId: string | undefined) {
+  const fileValidation = validatePddaHtmlUpload(req.file);
+  if (!fileValidation.valid) {
+    return res.status(400).json(buildMessage(fileValidation.error ?? "Validation failed"));
   }
 
-  // TypeScript doesn't know validation ensures file exists
-  if (!file) {
-    throw new Error("File missing after validation - this should never happen");
+  const file = req.file as Express.Multer.File;
+
+  const metadataValidation = await validatePublicationMetadata(metadata, file.size);
+  if (!metadataValidation.isValid) {
+    return res.status(400).json(buildMessage(joinValidationMessages(metadataValidation.errors)));
   }
 
   const uploadResult = await uploadHtmlToS3(file.buffer, file.originalname, correlationId);
 
-  console.info("PDDA HTML upload successful", {
+  console.info("LCSU HTML upload successful", {
     s3Key: uploadResult.s3Key,
     bucketName: uploadResult.bucketName,
     correlationId,
@@ -114,76 +122,34 @@ async function handleHtmlFileUpload(req: Request, res: Response) {
     fileSize: file.size
   });
 
-  const response: PddaHtmlUploadResponse = {
-    success: true,
-    message: "Upload accepted and stored",
-    s3_key: uploadResult.s3Key,
-    correlation_id: correlationId
-  };
-  return res.status(201).json(response);
+  // Traceability only — the publisher sees nothing of this and no artefact is created.
+  await logIngestionResult({ sourceSystem: metadata.provenance, courtId: metadata.courtId, status: "SUCCESS" });
+
+  return res.status(201).json(buildLcsuArtefactResponse(metadata));
 }
 
-async function handleFlatFileUpload(req: Request, res: Response) {
-  if (!req.file) {
-    return res.status(400).json({
-      success: false,
-      message: "No file provided. Include a file in the 'file' field of the multipart form."
-    });
+function respondToIngestion(res: Response, result: PublicationIngestionResult) {
+  switch (result.outcome) {
+    case "CREATED":
+      return res.status(201).json(result.artefact);
+    case "VALIDATION_ERROR":
+      return res.status(400).json(buildMessage(result.message ?? "Validation failed"));
+    case "CONFLICT":
+      return res.status(409).json(buildMessage(result.message ?? "Conflict"));
+    default:
+      return res.status(500).json(buildMessage(result.message ?? "Internal server error"));
   }
-
-  if (!isFlatFileIngestionRequest(req.body)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid request body structure. Missing or invalid required fields."
-    });
-  }
-
-  const request = req.body;
-  const result = await processFlatFileBlobIngestion(request, req.file.buffer, req.file.size);
-
-  if (!result.success) {
-    if (result.message === "Validation failed") {
-      return res.status(400).json(result);
-    }
-    return res.status(500).json(result);
-  }
-
-  return res.status(201).json(result);
 }
 
-// OAuth authentication is applied first in the middleware chain
-export const POST = [
-  authenticateApi(),
-  // Conditionally apply multer only for multipart requests
-  (req: Request, res: Response, next: () => void) => {
-    if (isMultipartRequest(req)) {
-      upload.single("file")(req, res, next);
-    } else {
-      next();
-    }
-  },
-  async (req: Request, res: Response) => {
-    try {
-      if (isMultipartRequest(req)) {
-        if (isPddaHtmlUpload(req)) {
-          return await handleHtmlFileUpload(req, res);
-        }
-        return await handleFlatFileUpload(req, res);
-      }
-      return await handleJsonBlobIngestion(req, res);
-    } catch (error) {
-      const correlationId = req.headers["x-correlation-id"] as string | undefined;
-      console.error("Unexpected error in publication endpoint:", {
-        name: error instanceof Error ? error.name : "Unknown",
-        message: error instanceof Error ? error.message : "Unknown error",
-        code: error instanceof Error && "code" in error ? error.code : undefined,
-        correlationId
-      });
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error",
-        correlation_id: correlationId
-      });
-    }
-  }
-];
+function isEmptyUpload(file: Express.Multer.File | undefined): boolean {
+  return !file || file.size === 0;
+}
+
+function isMultipartRequest(req: Request): boolean {
+  return req.headers["content-type"]?.includes("multipart/form-data") ?? false;
+}
+
+function readCorrelationId(req: Request): string | undefined {
+  const raw = req.headers["x-correlation-id"];
+  return Array.isArray(raw) ? raw[0] : raw;
+}

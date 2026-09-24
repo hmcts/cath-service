@@ -104,3 +104,4 @@ infrastructure/.terraform/
 
 # Lefthook local overrides
 .lefthook-local.yml
+/apps/web/.claude/analytics
