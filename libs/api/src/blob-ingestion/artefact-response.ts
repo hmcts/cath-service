@@ -40,10 +40,13 @@ export function buildArtefactResponse(params: BuildArtefactResponseParams): Arte
 
 /**
  * LCSU is a pass-through to S3 — nothing is persisted, so the artefact carries a blank
- * artefactId and no payload. `isFlatFile` is true because the incumbent builds the
+ * artefactId and a null payload. `isFlatFile` is true because the incumbent builds the
  * LCSU metadata with the flat-file flag set (PublicationControllerTest#testUploadHtmlFile-
  * ToS3BucketSuccess and PublicationTest#testPublicationEndpointWithHtmlFileUploadToS3Bucket
  * both assert it), even though the file never reaches blob storage.
+ *
+ * `payload` is present and null rather than absent: the incumbent's Artefact declares no
+ * @JsonInclude, so Jackson's default applies and an unset field serialises as null.
  */
 export function buildLcsuArtefactResponse(metadata: PublicationMetadata): ArtefactResponse {
   return {
@@ -55,6 +58,7 @@ export function buildLcsuArtefactResponse(metadata: PublicationMetadata): Artefa
     language: toSpecLanguage(metadata.language),
     listType: metadata.listType,
     locationId: metadata.courtId,
+    payload: null,
     provenance: metadata.provenance,
     sensitivity: metadata.sensitivity,
     sourceArtefactId: metadata.sourceArtefactId,
@@ -99,7 +103,7 @@ interface BuildArtefactResponseParams {
   metadata: PublicationMetadata;
   artefactId: string;
   isFlatFile: boolean;
-  payload?: string;
+  payload?: string | null;
   /** Persisted location id — may carry the "NoMatch" prefix. Falls back to the submitted court id. */
   locationId?: string;
 }
@@ -122,7 +126,7 @@ export interface ArtefactResponse {
   language: string;
   listType: string | null;
   locationId: string;
-  payload?: string;
+  payload?: string | null;
   provenance: string;
   sensitivity: string;
   sourceArtefactId: string | null;

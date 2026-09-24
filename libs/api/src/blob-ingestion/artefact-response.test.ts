@@ -102,7 +102,7 @@ describe("buildArtefactResponse", () => {
 });
 
 describe("buildLcsuArtefactResponse", () => {
-  it("should return an unpersisted artefact with a blank id, isFlatFile true and no payload", () => {
+  it("should return an unpersisted artefact with a blank id, isFlatFile true and a null payload", () => {
     // Act
     const result = buildLcsuArtefactResponse(metadata({ type: ArtefactType.LCSU }));
 
@@ -116,6 +116,7 @@ describe("buildLcsuArtefactResponse", () => {
       language: "ENGLISH",
       listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       locationId: "1",
+      payload: null,
       provenance: "SNL",
       sensitivity: "PUBLIC",
       sourceArtefactId: null,

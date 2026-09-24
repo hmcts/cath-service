@@ -342,13 +342,15 @@ describe("POST /publication", () => {
       expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "", type: "LCSU" }));
     });
 
-    it("should not include a payload or search in the LCSU response", async () => {
+    // payload is present and null, not absent: the incumbent's Artefact declares no
+    // @JsonInclude, so an unset field serialises as null.
+    it("should report a null payload and no search in the LCSU response", async () => {
       // Act
       await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
 
       // Assert
       const body = jsonMock.mock.calls[0][0];
-      expect(body).not.toHaveProperty("payload");
+      expect(body).toHaveProperty("payload", null);
       expect(body).not.toHaveProperty("search");
     });
 

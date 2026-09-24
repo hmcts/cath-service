@@ -639,6 +639,7 @@ components:
                 language: ENGLISH
                 listType: null
                 locationId: "1"
+                payload: null
                 provenance: PDDA
                 sensitivity: PUBLIC
                 sourceArtefactId: null
@@ -796,7 +797,7 @@ components:
         matching, but is not surfaced to the publisher.
 
         For an LCSU upload nothing is persisted, so `artefactId` is the empty string and
-        `payload` is absent (`isFlatFile` is still `true`).
+        `payload` is `null` (`isFlatFile` is still `true`).
       required:
         - artefactId
         - contentDate
@@ -857,9 +858,11 @@ components:
         payload:
           type: string
           format: uri
+          nullable: true
           description: |
-            Blob storage URL the payload was written to. Absent for `LCSU`, which goes to S3
-            and is not addressable through this API.
+            Blob storage URL the payload was written to. `null` for `LCSU`, which goes to S3 and
+            is not addressable through this API — present as an explicit null rather than
+            omitted, matching the incumbent, whose `Artefact` declares no `@JsonInclude`.
         provenance:
           type: string
           example: SNL
