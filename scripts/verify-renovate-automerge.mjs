@@ -233,10 +233,10 @@ const CASES = [
     npmDep({ depName: "lodash", currentValue: "4.18.1", currentVersion: "4.18.1", newValue: "4.19.0", updateType: "minor" })
   ],
 
-  // packageManager is held; resolutions automerge below major.
+  // packageManager and resolutions automerge below major.
   [
     "packageManager minor",
-    false,
+    true,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],
@@ -249,7 +249,7 @@ const CASES = [
   ],
   [
     "packageManager patch",
-    false,
+    true,
     npmDep({
       depName: "yarn",
       depTypes: ["packageManager"],

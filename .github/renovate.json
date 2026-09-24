@@ -52,7 +52,7 @@
       "enabled": true
     },
     {
-      "description": "Automerge only managers whose PRs the preview pipeline tests. master has no required status checks and Renovate treats all-skipped as green, so a PR outside the detect-code-changes paths (yarn.lock, apps/, libs/, helm/, e2e-tests/, Dockerfile) merges untested. npm and helmv3 are inside them; everything else stays manual. Check a new manager against those paths before adding it. resolutions pins automerge below major on purpose.",
+      "description": "Automerge only managers whose PRs the preview pipeline tests. master has no required status checks and Renovate treats all-skipped as green, so a PR outside the detect-code-changes paths (yarn.lock, root package.json, apps/, libs/, helm/, e2e-tests/, Dockerfile) merges untested. npm and helmv3 are inside them; everything else stays manual. Check a new manager against those paths before adding it. resolutions pins automerge below major on purpose.",
       "matchManagers": ["npm", "helmv3"],
       "automerge": true
     },
@@ -72,12 +72,7 @@
       "automerge": false
     },
     {
-      "description": "Never automerge the yarn packageManager. It changes the toolchain for every job and touches only root package.json, so no checks run.",
-      "matchDepTypes": ["packageManager"],
-      "automerge": false
-    },
-    {
-      "description": "Never automerge Node found by the npm manager (engines/volta). It changes the declared runtime and touches only package.json, so no checks run.",
+      "description": "Never automerge Node found by the npm manager (engines/volta). It changes the declared runtime, but CI runs the .nvmrc version, so nothing tests it.",
       "matchManagers": ["npm"],
       "matchPackageNames": ["node"],
       "automerge": false
