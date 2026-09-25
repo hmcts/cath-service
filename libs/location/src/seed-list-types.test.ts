@@ -25,7 +25,7 @@ const mockListTypeData = [
     shortenedFriendlyName: "LT1",
     urlPath: "list-type-1",
     defaultSensitivity: "Public",
-    provenance: "CFT_IDAM",
+    provenance: ["CFT_IDAM"],
     isNonStrategic: false,
     subJurisdictionIds: [1]
   },
@@ -35,7 +35,7 @@ const mockListTypeData = [
     welshFriendlyName: "Math Rhestr 2",
     urlPath: "list-type-2",
     defaultSensitivity: "Private",
-    provenance: "CRIME_IDAM",
+    provenance: ["CRIME_IDAM"],
     isNonStrategic: true,
     subJurisdictionIds: [2]
   }

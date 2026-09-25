@@ -26,7 +26,7 @@ const createArtefact = (sensitivity: Sensitivity): Artefact => ({
   noMatch: false
 });
 
-const createListType = (provenance: string): ListType => ({
+const createListType = (provenance: string[]): ListType => ({
   id: 1,
   listType: "test-list",
   englishFriendlyName: "Test List",
@@ -125,7 +125,7 @@ describe("canAccessPublication", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
 
     it("should deny unauthenticated users", () => {
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(undefined, classifiedArtefact, listType)).toBe(false);
     });
 
@@ -136,67 +136,67 @@ describe("canAccessPublication", () => {
 
     it("should allow system admin regardless of provenance", () => {
       const user = createUser("SYSTEM_ADMIN", "SSO");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should allow verified user with matching provenance", () => {
       const user = createUser("VERIFIED", "CFT_IDAM");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should deny verified user with non-matching provenance", () => {
       const user = createUser("VERIFIED", "PI_AAD");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny local admin (they can only see PUBLIC on public pages)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny CTSC admin (they can only see PUBLIC on public pages)", () => {
       const user = createUser("INTERNAL_ADMIN_CTSC", "SSO");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should deny public users", () => {
       const user = createUser("PUBLIC", "PUBLIC");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should handle B2C_IDAM with CRIME_IDAM list type", () => {
       const user = createUser("VERIFIED", "PI_AAD");
-      const listType = createListType("CRIME_IDAM");
+      const listType = createListType(["CRIME_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
     it("should handle CRIME_IDAM with CRIME_IDAM list type", () => {
       const user = createUser("VERIFIED", "CRIME_IDAM");
-      const listType = createListType("CRIME_IDAM");
+      const listType = createListType(["CRIME_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should allow CRIME_IDAM user when list allows CRIME_IDAM,PI_AAD", () => {
       const user = createUser("VERIFIED", "CRIME_IDAM");
-      const listType = createListType("CRIME_IDAM,PI_AAD");
+      const listType = createListType(["CRIME_IDAM", "PI_AAD"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should allow PI_AAD user when list allows CRIME_IDAM,PI_AAD", () => {
       const user = createUser("VERIFIED", "PI_AAD");
-      const listType = createListType("CRIME_IDAM,PI_AAD");
+      const listType = createListType(["CRIME_IDAM", "PI_AAD"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should deny CFT_IDAM user when list allows only CRIME_IDAM,PI_AAD", () => {
       const user = createUser("VERIFIED", "CFT_IDAM");
-      const listType = createListType("CRIME_IDAM,PI_AAD");
+      const listType = createListType(["CRIME_IDAM", "PI_AAD"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
   });
@@ -205,7 +205,7 @@ describe("canAccessPublication", () => {
     it("should default to CLASSIFIED (fail closed)", () => {
       const artefact = { ...createArtefact(Sensitivity.PUBLIC), sensitivity: "" };
       const user = createUser("VERIFIED", "PI_AAD");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
 
       // Should deny access without provenance match since it defaults to CLASSIFIED
       expect(canAccessPublication(user, artefact, listType)).toBe(false);
@@ -214,7 +214,7 @@ describe("canAccessPublication", () => {
     it("should allow access when provenance matches after defaulting to CLASSIFIED", () => {
       const artefact = { ...createArtefact(Sensitivity.PUBLIC), sensitivity: "" };
       const user = createUser("VERIFIED", "CFT_IDAM");
-      const listType = createListType("CFT_IDAM");
+      const listType = createListType(["CFT_IDAM"]);
 
       // Should allow access with provenance match since it defaults to CLASSIFIED
       expect(canAccessPublication(user, artefact, listType)).toBe(true);
@@ -271,7 +271,7 @@ describe("canAccessPublicationData", () => {
 
   describe("CLASSIFIED publications", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
-    const listType = createListType("CFT_IDAM");
+    const listType = createListType(["CFT_IDAM"]);
 
     it("should deny local admin (metadata only)", () => {
       const user = createUser("INTERNAL_ADMIN_LOCAL", "SSO");
@@ -344,7 +344,7 @@ describe("canAccessPublicationMetadata", () => {
 
   describe("CLASSIFIED publications", () => {
     const classifiedArtefact = createArtefact(Sensitivity.CLASSIFIED);
-    const listType = createListType("CFT_IDAM");
+    const listType = createListType(["CFT_IDAM"]);
 
     it("should deny unauthenticated users", () => {
       expect(canAccessPublicationMetadata(undefined, classifiedArtefact, listType)).toBe(false);
@@ -382,7 +382,7 @@ describe("filterAccessiblePublications", () => {
   const privateArtefact = { ...createArtefact(Sensitivity.PRIVATE), artefactId: "private-id" };
   const classifiedArtefact = { ...createArtefact(Sensitivity.CLASSIFIED), artefactId: "classified-id" };
 
-  const listTypes = [createListType("CFT_IDAM"), { ...createListType("CRIME_IDAM"), id: 2 }];
+  const listTypes = [createListType(["CFT_IDAM"]), { ...createListType(["CRIME_IDAM"]), id: 2 }];
 
   const artefacts = [
     publicArtefact,
@@ -456,7 +456,7 @@ describe("filterPublicationsForSummary", () => {
   const privateArtefact = { ...createArtefact(Sensitivity.PRIVATE), artefactId: "private-id" };
   const classifiedArtefact = { ...createArtefact(Sensitivity.CLASSIFIED), artefactId: "classified-id" };
 
-  const listTypes = [createListType("CFT_IDAM"), { ...createListType("CRIME_IDAM"), id: 2 }];
+  const listTypes = [createListType(["CFT_IDAM"]), { ...createListType(["CRIME_IDAM"]), id: 2 }];
 
   const artefacts = [
     publicArtefact,
