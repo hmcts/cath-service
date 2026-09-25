@@ -20,11 +20,15 @@ vi.mock("@hmcts/publication", () => ({
     if (ext === ".pdf") return "application/pdf";
     if (ext === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     return "application/octet-stream";
-  })
+  }),
+  getArtefactById: vi.fn(),
+  resolveListType: vi.fn(),
+  canAccessPublicationData: vi.fn()
 }));
 
 import { downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 
 const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
@@ -47,6 +51,12 @@ describe("Download Route", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getArtefactById).mockResolvedValue({
+      artefactId: "12345678-1234-1234-1234-123456789abc",
+      listTypeId: 999,
+      sensitivity: "CLASSIFIED"
+    } as never);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
   });
 
   it("should return 400 when artefactId is missing", async () => {
@@ -57,6 +67,21 @@ describe("Download Route", () => {
 
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid request" });
+  });
+
+  it("should return 403 without streaming the blob when the user cannot access the artefact", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: "12345678-1234-1234-1234-123456789abc", type: "pdf" } });
+    const res = mockResponse();
+    vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: "Access denied" });
+    expect(downloadBlob).not.toHaveBeenCalled();
   });
 
   it("should return 400 when artefactId is not a valid UUID", async () => {

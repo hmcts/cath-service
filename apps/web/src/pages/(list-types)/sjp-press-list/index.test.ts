@@ -38,7 +38,8 @@ vi.mock("@hmcts/publication", () => ({
     PDDA: "PDDA"
   },
   canAccessPublicationData: vi.fn().mockReturnValue(true),
-  resolveListType: vi.fn().mockResolvedValue({ id: 1, name: "SJP_PRESS_LIST", provenance: "PI_AAD", isNonStrategic: false })
+  resolveListType: vi.fn().mockResolvedValue({ id: 1, name: "SJP_PRESS_LIST", provenance: "PI_AAD", isNonStrategic: false }),
+  getArtefactById: vi.fn()
 }));
 vi.mock("@hmcts/azure-blob", () => ({
   getBlobProperties: vi.fn()
@@ -184,7 +185,11 @@ describe("SJP Press List Controller", () => {
       await getHandler(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.render).toHaveBeenCalledWith("errors/403", expect.objectContaining({ locale: "en" }));
+      expect(res.render).toHaveBeenCalledWith(
+        "errors/403",
+        expect.objectContaining({ t: expect.objectContaining({ title: "Access Denied", defaultMessage: expect.any(String) }) })
+      );
+      expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should render 404 error when list type is not press", async () => {

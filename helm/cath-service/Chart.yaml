@@ -8,19 +8,19 @@ annotations:
 home: https://github.com/hmcts/cath-service
 dependencies:
   - name: cath-postgres
-    version: 0.0.1
+    version: 0.1.0
     repository: "file://../../apps/postgres/helm"
     condition: postgres.enabled
   - name: cath-web
-    version: 0.0.3
+    version: 0.1.0
     repository: "file://../../apps/web/helm"
     condition: web.enabled
   - name: cath-api
-    version: 0.0.2
+    version: 0.1.0
     repository: "file://../../apps/api/helm"
     condition: api.enabled
   - name: cath-crons
-    version: 0.0.1
+    version: 0.1.0
     repository: "file://../../apps/crons/helm"
     condition: crons.enabled
   - name: redis

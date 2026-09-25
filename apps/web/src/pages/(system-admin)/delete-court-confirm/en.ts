@@ -14,5 +14,7 @@ export const en = {
   noRadioSelected: "Select yes or no to continue",
   activeSubscriptions: "There are active subscriptions for the given location.",
   activeArtefacts: "There are active artefacts for the given location.",
-  locationNotFound: "Court or tribunal not found in session"
+  locationNotFound: "Court or tribunal not found in session",
+  deletePublicationsLinkText: "Delete all the publications for",
+  deleteSubscriptionsLinkText: "Delete all the subscriptions for"
 };

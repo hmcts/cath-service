@@ -5,6 +5,7 @@ import { canAccessPublicationData, getPublicationJson, PROVENANCE_LABELS, resolv
 import { sjpPressListCy as cy, sjpPressListEn as en, validateSjpPressList } from "@hmcts/sjp-press-list";
 import type { Request, RequestHandler, Response } from "express";
 import type { ParsedQs } from "qs";
+import { renderAccessDenied } from "../publication-access.js";
 import { createRequireVerifiedWithProvenance } from "./require-verified-with-provenance.js";
 
 const CASES_PER_PAGE = 1000;
@@ -28,8 +29,7 @@ const getHandler = async (req: Request, res: Response) => {
     }
 
     if (!canAccessPublicationData(req.user, artefact, await resolveListType(artefact.listTypeId))) {
-      res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
-      return res.status(403).render("errors/403", { en, cy, locale });
+      return renderAccessDenied(res, locale);
     }
 
     const jsonData = await loadJsonData(artefactId);

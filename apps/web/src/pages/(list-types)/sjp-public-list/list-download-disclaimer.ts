@@ -1,5 +1,6 @@
 import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
+import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound } from "../publication-access.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -15,6 +16,13 @@ const getHandler = async (req: Request, res: Response) => {
 
   if (!artefactId || !UUID_REGEX.test(artefactId)) {
     return res.status(400).render("errors/400", { en, cy, locale });
+  }
+
+  const access = await checkArtefactDataAccess(req.user, artefactId);
+  if (access.reason === AccessReason.ACCESS_DENIED) {
+    return renderAccessDenied(res, locale);
+  } else if (!access.allowed) {
+    return renderNotFound(res, locale, { en, cy });
   }
 
   const t = locale === "cy" ? cy.disclaimer : en.disclaimer;
@@ -36,6 +44,13 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!artefactId || !UUID_REGEX.test(artefactId)) {
     return res.status(400).render("errors/400", { en, cy, locale });
+  }
+
+  const access = await checkArtefactDataAccess(req.user, artefactId);
+  if (access.reason === AccessReason.ACCESS_DENIED) {
+    return renderAccessDenied(res, locale);
+  } else if (!access.allowed) {
+    return renderNotFound(res, locale, { en, cy });
   }
 
   const t = locale === "cy" ? cy.disclaimer : en.disclaimer;

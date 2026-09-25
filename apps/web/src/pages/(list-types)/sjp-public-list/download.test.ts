@@ -10,10 +10,16 @@ vi.mock("@hmcts/publication", () => ({
     if (ext === ".pdf") return "application/pdf";
     if (ext === ".xlsx") return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     return "application/octet-stream";
-  })
+  }),
+  getArtefactById: vi.fn(),
+  resolveListType: vi.fn(),
+  canAccessPublicationData: vi.fn()
 }));
 
 import { downloadBlob } from "@hmcts/azure-blob";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+
+const ARTEFACT_ID = "12345678-1234-1234-1234-123456789abc";
 
 const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
@@ -36,6 +42,8 @@ describe("Download Route", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getArtefactById).mockResolvedValue({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "PUBLIC" } as never);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
   });
 
   it("should return 400 when artefactId is missing", async () => {
@@ -92,6 +100,37 @@ describe("Download Route", () => {
 
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({ error: "File not found" });
+  });
+
+  it("should return 403 without streaming the blob when the user cannot access the artefact", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: ARTEFACT_ID, type: "pdf" } });
+    const res = mockResponse();
+    vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({ error: "Access denied" });
+    expect(res.setHeader).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
+    expect(downloadBlob).not.toHaveBeenCalled();
+  });
+
+  it("should return 404 without streaming the blob when the artefact does not exist", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: ARTEFACT_ID, type: "pdf" } });
+    const res = mockResponse();
+    vi.mocked(getArtefactById).mockResolvedValue(null);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ error: "File not found" });
+    expect(downloadBlob).not.toHaveBeenCalled();
   });
 });
 
