@@ -1688,6 +1688,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -2368,6 +2369,7 @@ __metadata:
   dependencies:
     "@hmcts/account": "workspace:*"
     "@hmcts/auth": "workspace:*"
+    "@hmcts/excel-generation": "workspace:*"
     "@hmcts/list-search-config": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"

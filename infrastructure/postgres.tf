@@ -11,10 +11,11 @@ module "postgresql" {
   product       = var.product
   component     = var.component
   business_area = "cft"
-  common_tags   = var.common_tags
+  common_tags   = local.common_tags
 
-  # Use expanded subnet - original postgresql subnet is full
-  subnet_suffix = "expanded"
+  # Per-environment - see infrastructure/env-config.tf. aat uses the expanded
+  # subnet because the original postgresql subnet in the stg vnet is full.
+  subnet_suffix = local.postgres_subnet_suffix
 
   pgsql_databases = [
     {

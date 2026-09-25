@@ -11,7 +11,7 @@ module "third_party_key_vault" {
   # Write access - see the note in infrastructure/keyvault.tf.
   product_group_name = "DTS PIP Non-Prod"
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = false
 }
 

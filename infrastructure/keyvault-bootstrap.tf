@@ -34,7 +34,7 @@ module "bootstrap_key_vault" {
   resource_group_name     = azurerm_resource_group.shared.name
   product_group_object_id = var.pip_nonprod_group_object_id
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = false
 }
 
