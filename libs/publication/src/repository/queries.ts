@@ -203,6 +203,16 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
   });
 }
 
+export async function deleteArtefactsByLocationId(locationId: string): Promise<number> {
+  const artefacts = await getArtefactsByLocation(locationId);
+  if (artefacts.length === 0) {
+    return 0;
+  }
+
+  await deleteArtefacts(artefacts.map((artefact) => artefact.artefactId));
+  return artefacts.length;
+}
+
 export async function updateSourceArtefactId(artefactId: string, sourceArtefactId: string | null): Promise<void> {
   await prisma.artefact.update({
     where: { artefactId },

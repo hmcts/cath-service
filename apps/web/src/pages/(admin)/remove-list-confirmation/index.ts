@@ -81,7 +81,7 @@ const getHandler = async (req: Request, res: Response) => {
   const locale = req.query.lng === "cy" ? "cy" : "en";
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
+  if (!sessionData?.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
     const lng = req.query.lng === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }
@@ -94,7 +94,7 @@ const postHandler = async (req: Request, res: Response) => {
   const locale = req.query.lng === "cy" ? "cy" : "en";
 
   const sessionData = req.session.removalData;
-  if (!sessionData || !sessionData.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
+  if (!sessionData?.locationId || !sessionData.selectedArtefacts || sessionData.selectedArtefacts.length === 0) {
     const lng = req.query.lng === "cy" ? "?lng=cy" : "";
     return res.redirect(`/remove-list-search${lng}`);
   }

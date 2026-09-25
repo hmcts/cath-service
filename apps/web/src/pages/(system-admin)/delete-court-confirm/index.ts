@@ -49,12 +49,29 @@ function getLocalizedJurisdictions(location: LocationDetails, language: Language
   return location.subJurisdictions.map((sj) => (language === "cy" ? sj.jurisdictionWelshName : sj.jurisdictionName)).join(", ");
 }
 
+interface DeletionLink {
+  href: string;
+  text: string;
+}
+
+function getDeletionLinkForValidationCode(errorCode: string | undefined, content: Content, language: Language): DeletionLink | undefined {
+  const lng = language === "cy" ? "?lng=cy" : "";
+  if (errorCode === VALIDATION_ERROR_CODES.ACTIVE_ARTEFACTS) {
+    return { href: `/delete-court-publications${lng}`, text: content.deletePublicationsLinkText };
+  }
+  if (errorCode === VALIDATION_ERROR_CODES.ACTIVE_SUBSCRIPTIONS) {
+    return { href: `/delete-court-subscriptions${lng}`, text: content.deleteSubscriptionsLinkText };
+  }
+  return undefined;
+}
+
 function renderConfirmationPage(
   res: Response,
   content: Content,
   location: LocationDetails,
   language: Language,
-  errors?: Array<{ text: string; href?: string }>
+  errors?: Array<{ text: string; href?: string }>,
+  deletionLink?: DeletionLink
 ) {
   res.render("delete-court-confirm/index", {
     ...content,
@@ -62,7 +79,8 @@ function renderConfirmationPage(
     locationType: "Court",
     jurisdiction: getLocalizedJurisdictions(location, language) || "N/A",
     region: getLocalizedRegions(location, language) || "N/A",
-    errors
+    errors,
+    deletionLink
   });
 }
 
@@ -98,7 +116,8 @@ async function handleLocationValidationError(
   }
 
   const errorText = getErrorTextForValidationCode(validationResult.errorCode, content);
-  renderConfirmationPage(res, content, location, language, [{ text: errorText }]);
+  const deletionLink = getDeletionLinkForValidationCode(validationResult.errorCode, content, language);
+  renderConfirmationPage(res, content, location, language, [{ text: errorText }], deletionLink);
 }
 
 const getHandler = async (req: Request, res: Response) => {
@@ -137,7 +156,7 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (confirmDelete === "no") {
     delete session.deleteCourt;
-    return res.redirect(buildRedirectUrl("/system-admin-dashboard", language));
+    return res.redirect(buildRedirectUrl("/delete-court", language));
   }
 
   const validationResult = await validateLocationForDeletion(session.deleteCourt.locationId);
@@ -146,7 +165,7 @@ const postHandler = async (req: Request, res: Response) => {
     return await handleLocationValidationError(res, content, session, language, validationResult);
   }
 
-  await performLocationDeletion(session.deleteCourt.locationId);
+  await performLocationDeletion(session.deleteCourt.locationId, session.deleteCourt.name, req.user?.email ?? "unknown");
 
   // Set audit log flag
   req.auditMetadata = {

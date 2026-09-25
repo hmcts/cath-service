@@ -52,13 +52,14 @@ node run-with-credentials.js manual-upload
 
 ### Environment Variables
 
-The following credentials are automatically fetched from Azure Key Vault (`pip-bootstrap-stg-kv`):
+The following credentials are automatically fetched from Azure Key Vault (`cath-bootstrap-aat`):
 
 | Secret Name | Environment Variable | Purpose |
 |-------------|---------------------|---------|
-| `app-tenant-id` | `AZURE_TENANT_ID` | Azure AD tenant ID |
-| `app-pip-data-management-id` | `AZURE_API_CLIENT_ID` | API client ID |
-| `app-pip-data-management-pwd` | `AZURE_API_CLIENT_SECRET` | API client secret |
+| `app-tenant` | `AZURE_TENANT_ID` | Azure AD tenant ID |
+| `cath-service-api-client-id` | `CATH_SERVICE_API_CLIENT_ID` | API client ID |
+| `cath-service-api-client-secret` | `CATH_SERVICE_API_CLIENT_SECRET` | API client secret |
+| `cath-service-api-client-scope` | `CATH_SERVICE_API_CLIENT_SCOPE` | API scope |
 
 ### Optional: GOV.UK Notify Email Verification
 
@@ -118,8 +119,8 @@ sent_at TIMESTAMP
 
 **Solution**:
 1. Verify `az login` is successful
-2. Check access to `pip-bootstrap-stg-kv` Key Vault
-3. Verify secrets `app-pip-data-management-id` and `app-pip-data-management-pwd` exist
+2. Check access to `cath-bootstrap-aat` Key Vault
+3. Verify secrets `cath-service-api-client-id` and `cath-service-api-client-secret` exist
 
 ### "401 Unauthorized" on API Tests
 

@@ -3,17 +3,19 @@ module "postgresql" {
     azurerm.postgres_network = azurerm.postgres_network
   }
 
-  source              = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=master"
-  name                = "flexible-cath"
-  resource_group_name = azurerm_resource_group.postgres_rg.name
-  env                 = var.env
-  product             = var.product
-  component           = var.component
-  business_area       = "sds"
-  common_tags         = var.common_tags
+  source = "git::https://github.com/hmcts/terraform-module-postgresql-flexible?ref=DTSPO-30107-additional-postgres-admins"
 
-  # Use expanded subnet - original postgresql subnet is full
-  subnet_suffix = "expanded"
+  # The module appends -${var.env} to this, so pass the product alone to get cath-aat.
+  name          = var.product
+  env           = var.env
+  product       = var.product
+  component     = var.component
+  business_area = "cft"
+  common_tags   = local.common_tags
+
+  # Per-environment - see infrastructure/env-config.tf. aat uses the expanded
+  # subnet because the original postgresql subnet in the stg vnet is full.
+  subnet_suffix = local.postgres_subnet_suffix
 
   pgsql_databases = [
     {
@@ -21,39 +23,40 @@ module "postgresql" {
     }
   ]
 
-  pgsql_sku            = "GP_Standard_D2ds_v4"
-  pgsql_version        = "16"
-  pgsql_storage_mb     = 65536
-  auto_grow_enabled    = true
-  admin_user_object_id = var.ci_service_principal_object_id
+  pgsql_sku                     = "GP_Standard_D2ds_v4"
+  pgsql_version                 = "16"
+  pgsql_storage_mb              = 65536
+  auto_grow_enabled             = true
+  admin_user_object_id          = var.ci_service_principal_object_id
+  preserve_legacy_jenkins_admin = false
 }
 
 resource "azurerm_key_vault_secret" "postgres_host" {
   name         = "postgres-host"
   value        = module.postgresql.fqdn
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_user" {
   name         = "postgres-user"
   value        = module.postgresql.username
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_password" {
   name         = "postgres-password"
   value        = module.postgresql.password
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_port" {
   name         = "postgres-port"
   value        = "5432"
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "postgres_url" {
   name         = "postgres-url"
   value        = "postgresql://${module.postgresql.username}:${module.postgresql.password}@${module.postgresql.fqdn}:5432/cath?sslmode=require"
-  key_vault_id = module.application_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }

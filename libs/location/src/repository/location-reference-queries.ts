@@ -10,10 +10,7 @@ export async function getLocationByProvenanceLocationId(
     where: {
       provenance,
       provenanceLocationId,
-      ...(locationType ? { provenanceLocationType: locationType } : {}),
-      location: {
-        deletedAt: null
-      }
+      ...(locationType ? { provenanceLocationType: locationType } : {})
     },
     include: {
       location: {
