@@ -5,7 +5,11 @@ import { GET } from "./list-download-files.js";
 vi.mock("@hmcts/azure-blob", () => ({
   getBlobProperties: vi.fn()
 }));
-vi.mock("@hmcts/publication", () => ({}));
+vi.mock("@hmcts/publication", () => ({
+  getArtefactById: vi.fn(),
+  resolveListType: vi.fn(),
+  canAccessPublicationData: vi.fn()
+}));
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -19,6 +23,9 @@ vi.mock("@hmcts/postgres-prisma", () => ({
 
 import { getBlobProperties } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
+import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
+
+const ARTEFACT_ID = "12345678-1234-1234-1234-123456789abc";
 
 const middleware = GET[0] as RequestHandler;
 const handler = GET[GET.length - 1] as RequestHandler;
@@ -35,6 +42,7 @@ describe("List Download Files Controller", () => {
     const res = {} as Response;
     res.status = vi.fn().mockReturnValue(res);
     res.render = vi.fn().mockReturnValue(res);
+    res.setHeader = vi.fn().mockReturnValue(res);
     res.locals = { locale: "en" };
     return res;
   };
@@ -42,6 +50,23 @@ describe("List Download Files Controller", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getBlobProperties).mockResolvedValue(null);
+    vi.mocked(getArtefactById).mockResolvedValue({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "CLASSIFIED" } as never);
+    vi.mocked(canAccessPublicationData).mockReturnValue(true);
+  });
+
+  it("should render 403 when the user cannot access the artefact", async () => {
+    // Arrange
+    const req = mockRequest({ query: { artefactId: ARTEFACT_ID } });
+    const res = mockResponse();
+    vi.mocked(canAccessPublicationData).mockReturnValue(false);
+
+    // Act
+    await handler(req, res, () => {});
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.render).toHaveBeenCalledWith("errors/403", expect.any(Object));
+    expect(getBlobProperties).not.toHaveBeenCalled();
   });
 
   it("should render 400 when artefactId is missing", async () => {
@@ -168,6 +193,7 @@ describe("List Download Files requireVerifiedWithProvenance middleware", () => {
     const res = {} as Response;
     res.status = vi.fn().mockReturnValue(res);
     res.render = vi.fn().mockReturnValue(res);
+    res.setHeader = vi.fn().mockReturnValue(res);
     res.redirect = vi.fn().mockReturnValue(res);
     res.locals = { locale: "en" };
     return res;

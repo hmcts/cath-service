@@ -38,7 +38,10 @@ jobs:
 
       - name: Load e2e test credentials from bootstrap Key Vault
         run: |
-          KV="cath-bootstrap-stg-kv"
+          # Test-account credentials live in the bootstrap vault, not the
+          # application vault: they are only read by this workflow and by
+          # developers, and are deliberately never mounted into running pods.
+          KV="cath-bootstrap-aat"
           fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
 
           echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
@@ -57,8 +60,8 @@ jobs:
           echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
           echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
           echo "AZURE_TENANT_ID=$(fetch app-tenant)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_ID=$(fetch app-pip-data-management-id)" >> $GITHUB_ENV
-          echo "AZURE_API_CLIENT_SECRET=$(fetch app-pip-data-management-pwd)" >> $GITHUB_ENV
+          echo "CATH_SERVICE_API_CLIENT_ID=$(fetch cath-service-api-client-id)" >> $GITHUB_ENV
+          echo "CATH_SERVICE_API_CLIENT_SECRET=$(fetch cath-service-api-client-secret)" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v6

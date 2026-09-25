@@ -5,6 +5,7 @@ import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostco
 import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
 import type { Request, Response } from "express";
 import type { ParsedQs } from "qs";
+import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound } from "../publication-access.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,13 @@ export const GET = async (req: Request, res: Response) => {
       cy,
       locale
     });
+  }
+
+  const access = await checkArtefactDataAccess(req.user, artefactId);
+  if (access.reason === AccessReason.ACCESS_DENIED) {
+    return renderAccessDenied(res, locale);
+  } else if (!access.allowed) {
+    return renderNotFound(res, locale, { en, cy });
   }
 
   const list = await getSjpListById(artefactId);

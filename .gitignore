@@ -63,7 +63,11 @@ lcov.info
 # agentic env vars
 .mcp.env
 .claude/claude.env
-.claude/analytics
+# Claude Code writes analytics and hook logs into a .claude directory next to
+# whatever the shell cwd happened to be, so these are matched at any depth
+# rather than listed per directory. Only the root .claude/ is real, tracked
+# config - agents, commands, hooks, rules, skills, workflows.
+**/.claude/analytics/
 **/.claude/hooks/run.log
 
 /storage/temp
@@ -80,6 +84,10 @@ libs/postgres-prisma/prisma/generated/
 # Prisma generated files
 libs/postgres-prisma/prisma/generated/
 libs/postgres-prisma/generated/
+
+# Terraform local module/provider cache created by `terraform init`
+# Note: infrastructure/.terraform-version IS tracked - it pins the CI Terraform version.
+infrastructure/.terraform/
 
 # Compiled JavaScript from TypeScript sources
 # The project is TypeScript - only .ts files are source

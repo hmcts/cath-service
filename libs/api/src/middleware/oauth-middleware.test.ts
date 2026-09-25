@@ -1,13 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authenticateApi } from "./oauth-middleware.js";
-
-// Mock config module
-vi.mock("config", () => ({
-  default: {
-    get: vi.fn()
-  }
-}));
 
 // Mock jsonwebtoken
 vi.mock("jsonwebtoken", () => ({
@@ -41,6 +34,13 @@ describe("authenticateApi", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.AZURE_TENANT_ID = "test-tenant-id";
+    process.env.CATH_SERVICE_API_CLIENT_ID = "test-client-id";
+  });
+
+  afterEach(() => {
+    delete process.env.AZURE_TENANT_ID;
+    delete process.env.CATH_SERVICE_API_CLIENT_ID;
   });
 
   it("should reject request without Authorization header", async () => {
@@ -74,8 +74,8 @@ describe("authenticateApi", () => {
   });
 
   it("should reject request with invalid token when Azure config is missing", async () => {
-    const config = await import("config");
-    vi.mocked(config.default.get).mockReturnValue(undefined);
+    delete process.env.AZURE_TENANT_ID;
+    delete process.env.CATH_SERVICE_API_CLIENT_ID;
 
     const req = mockRequest("Bearer invalid-token");
     const res = mockResponse();
@@ -92,16 +92,8 @@ describe("authenticateApi", () => {
   });
 
   it("should authenticate successfully with valid token and required role", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config to return Azure AD settings
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -146,16 +138,8 @@ describe("authenticateApi", () => {
   });
 
   it("should reject request when token is valid but missing required role", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config to return Azure AD settings
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -199,19 +183,9 @@ describe("authenticateApi", () => {
     expect(mockNext).not.toHaveBeenCalled();
   });
 
-  it("should use environment variables when config throws error", async () => {
-    const config = await import("config");
+  it("should fall back to the azp claim when appid is absent", async () => {
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config.get to throw error
-    vi.mocked(config.default.get).mockImplementation(() => {
-      throw new Error("Config not found");
-    });
-
-    // Set environment variables
-    process.env.AZURE_TENANT_ID = "env-tenant-id";
-    process.env.AZURE_API_CLIENT_ID = "env-client-id";
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -252,23 +226,10 @@ describe("authenticateApi", () => {
       appId: "test-app-id",
       roles: ["api.publisher.user"]
     });
-
-    // Clean up environment variables
-    delete process.env.AZURE_TENANT_ID;
-    delete process.env.AZURE_API_CLIENT_ID;
   });
 
   it("should reject token with invalid format (not an object)", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
-    const _jwksClient = await import("jwks-rsa");
-
-    // Mock config
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode to return string instead of object
     vi.mocked(jwt.default.decode).mockReturnValue("invalid-decoded-token" as any);
@@ -288,15 +249,7 @@ describe("authenticateApi", () => {
   });
 
   it("should reject token missing kid in header", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
-
-    // Mock config
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode with missing kid
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -319,16 +272,8 @@ describe("authenticateApi", () => {
   });
 
   it("should reject when JWKS client fails to fetch signing key", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -360,16 +305,8 @@ describe("authenticateApi", () => {
   });
 
   it("should reject when JWT verification fails", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({
@@ -408,16 +345,8 @@ describe("authenticateApi", () => {
   });
 
   it("should handle roles as undefined and reject", async () => {
-    const config = await import("config");
     const jwt = await import("jsonwebtoken");
     const jwksClient = await import("jwks-rsa");
-
-    // Mock config
-    vi.mocked(config.default.get).mockImplementation((key: string) => {
-      if (key === "AZURE_TENANT_ID") return "test-tenant-id";
-      if (key === "AZURE_API_CLIENT_ID") return "test-client-id";
-      return undefined;
-    });
 
     // Mock JWT decode
     vi.mocked(jwt.default.decode).mockReturnValue({

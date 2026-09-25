@@ -1,23 +1,62 @@
-resource "azurerm_resource_group" "rg" {
+provider "azurerm" {
+  features {
+  }
+  subscription_id = var.subscription
+}
+
+provider "azurerm" {
+  alias           = "postgres_network"
+  subscription_id = var.aks_subscription_id
+  features {}
+}
+
+# The core-infra vnet that holds the Redis private endpoint is in a different
+# subscription for ithc and perftest than for aat and demo. Falls back to
+# var.subscription so the alias is always configured; it is only read where
+# local.redis_subnet_override is true.
+provider "azurerm" {
+  alias           = "core_infra"
+  subscription_id = local.core_infra_subscription_id != null ? local.core_infra_subscription_id : var.subscription
+  features {}
+}
+
+# The shared hmcts-nonprod Log Analytics workspace sits in one subscription for
+# every environment, which is not the application subscription for perftest.
+provider "azurerm" {
+  alias           = "log_analytics"
+  subscription_id = local.log_analytics_subscription_id
+  features {}
+}
+
+# Key vaults and application insights.
+resource "azurerm_resource_group" "shared" {
   name     = "${var.product}-${var.env}"
   location = var.location
-  tags     = var.common_tags
+  tags     = local.common_tags
 }
 
-resource "azurerm_resource_group" "ss_kv_rg" {
-  name     = "${var.product}-ss-kv-${var.env}-rg"
+# Storage account for aat only. Kept separate from the shared group purely
+# because moving an existing storage account between resource groups is a
+# ForceNew change in the azurerm provider, which would destroy cathsaaat and
+# every blob in it. Consolidating aat into azurerm_resource_group.shared
+# requires an out-of-band `az resource move` first, then a no-op apply - see
+# #978.
+#
+# Environments provisioned after that decision put their storage account
+# straight into the shared group, so this group is not created for them - see
+# local.storage_uses_legacy_rg in env-config.tf.
+resource "azurerm_resource_group" "rg" {
+  count = local.storage_uses_legacy_rg ? 1 : 0
+
+  name     = "${var.product}-${var.env}-${var.component}"
   location = var.location
-  tags     = var.common_tags
+  tags     = local.common_tags
 }
 
-resource "azurerm_resource_group" "postgres_rg" {
-  name     = "flexible-cath-${var.env}-rg"
-  location = var.location
-  tags     = var.common_tags
-}
-
-resource "azurerm_resource_group" "redis_rg" {
-  name     = "cath-cache-${var.env}"
-  location = var.location
-  tags     = var.common_tags
+# Adding the count above changes the address from `rg` to `rg[0]`. aat's group
+# already exists in state under the unindexed address, so re-home it rather than
+# let terraform destroy and recreate it.
+moved {
+  from = azurerm_resource_group.rg
+  to   = azurerm_resource_group.rg[0]
 }

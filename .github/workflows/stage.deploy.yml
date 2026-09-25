@@ -26,8 +26,20 @@ on:
       environment:
         required: false
         type: string
-        description: "Deployment environment (dev or stg)"
-        default: "dev"
+        description: "Deployment environment (preview, aat, demo, ithc or perftest)"
+        default: "preview"
+      image-tag:
+        required: false
+        type: string
+        default: ""
+        description: >-
+          Deploy an already-built image tag instead of deriving one from
+          change-id. Either a bare tag or a JSON object of app -> tag.
+      cluster-suffix:
+        required: false
+        type: string
+        default: "00"
+        description: "CNP cluster ordinal (00 or 01)"
     outputs:
       urls:
         description: "Base64-encoded JSON of deployment URLs"
@@ -50,4 +62,6 @@ jobs:
       affected-apps: ${{ inputs.affected-apps }}
       helm-apps: ${{ inputs.helm-apps }}
       environment: ${{ inputs.environment }}
+      image-tag: ${{ inputs.image-tag }}
+      cluster-suffix: ${{ inputs.cluster-suffix }}
     secrets: inherit
