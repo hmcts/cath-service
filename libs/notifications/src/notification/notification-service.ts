@@ -107,6 +107,7 @@ import {
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
+import { MAX_SUMMARY_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 import {
   type CaseSubscriberWithUser,
   findActiveSubscriptionsByCaseName,
@@ -468,6 +469,14 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
+    const payloadBytes = payloadSizeBytes(event.jsonData);
+    if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
+      console.log(`Email summary skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_SUMMARY_PAYLOAD_BYTES}`, {
+        publicationId: event.publicationId
+      });
+      return buildFallbackEmailData(event, userName, listTypeName, caseValue);
+    }
+
     return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
   }
 
