@@ -1,0 +1,12 @@
+model UserArchive {
+  userId            String    @id @map("user_id") @db.Uuid
+  userProvenance    String?   @map("user_provenance") @db.VarChar(255)
+  provenanceUserId  String?   @map("provenance_user_id") @db.VarChar(255)
+  email             String?   @db.VarChar(255)
+  roles             String?   @db.VarChar(255)
+  lastSignedInDate  DateTime? @map("last_signed_in_date")
+  archivedDate      DateTime  @default(now()) @map("archived_date")
+
+  @@index([archivedDate])
+  @@map("user_archive")
+}
