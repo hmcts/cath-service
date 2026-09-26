@@ -799,6 +799,17 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [10]
   },
   {
+    name: "INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Interim Applications List (Chancery Division) Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Ceisiadau Interim (Adran Siawnsri)",
+    shortenedFriendlyName: "Interim Applications List (ChD) Daily Cause List",
+    provenance: "CFT_IDAM",
+    urlPath: "interim-applications-chd-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
     name: "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST",
     englishFriendlyName: "Financial List (Chancery Division/King's Bench Division/Commercial Court) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Rhestr Ariannol (Adran Siawnsri/Adran Mainc y Brenin)",
