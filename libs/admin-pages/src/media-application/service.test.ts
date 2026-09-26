@@ -197,7 +197,7 @@ describe("media-application service", () => {
       expect(result.isNewUser).toBe(false);
     });
 
-    it("should create local user record with provenance B2C_IDAM and role VERIFIED", async () => {
+    it("should create local user record with provenance PI_AAD and role VERIFIED", async () => {
       // Arrange
       const mockApplication = {
         id: "1",
