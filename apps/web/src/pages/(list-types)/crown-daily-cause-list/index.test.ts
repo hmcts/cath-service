@@ -46,8 +46,7 @@ describe("crown-daily-list controller", () => {
     lastReceivedDate: new Date("2025-01-15"),
     isFlatFile: false,
     provenance: "PDDA",
-    supersededCount: 0,
-    noMatch: false
+    supersededCount: 0
   } as any;
 
   const mockJsonData = {

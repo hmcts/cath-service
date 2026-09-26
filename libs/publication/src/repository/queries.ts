@@ -56,7 +56,6 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
         displayTo: data.displayTo,
         isFlatFile: data.isFlatFile,
         provenance: data.provenance,
-        noMatch: data.noMatch,
         lastReceivedDate: new Date(),
         supersededCount: {
           increment: 1
@@ -80,8 +79,7 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
       displayTo: data.displayTo,
       lastReceivedDate: data.lastReceivedDate ?? new Date(),
       isFlatFile: data.isFlatFile,
-      provenance: data.provenance,
-      noMatch: data.noMatch ?? false
+      provenance: data.provenance
     }
   });
   return { artefactId: artefact.artefactId, isUpdate: false };
@@ -104,8 +102,7 @@ export async function getArtefactById(artefactId: string): Promise<ArtefactWithL
       lastReceivedDate: true,
       isFlatFile: true,
       provenance: true,
-      supersededCount: true,
-      noMatch: true
+      supersededCount: true
     }
   });
   if (!artefact) return null;
@@ -133,8 +130,7 @@ export async function getArtefactsByLocation(locationId: string): Promise<Artefa
       displayTo: true,
       lastReceivedDate: true,
       isFlatFile: true,
-      provenance: true,
-      noMatch: true
+      provenance: true
     }
   });
 }
@@ -158,8 +154,7 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
       displayTo: true,
       lastReceivedDate: true,
       isFlatFile: true,
-      provenance: true,
-      noMatch: true
+      provenance: true
     }
   });
 }
@@ -278,7 +273,8 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     return null;
   }
 
-  const location = await getLocationById(Number.parseInt(artefact.locationId, 10));
+  const numericLocationId = Number.parseInt(artefact.locationId, 10);
+  const location = Number.isNaN(numericLocationId) ? undefined : await getLocationById(numericLocationId);
 
   return {
     artefactId: artefact.artefactId,
@@ -367,8 +363,7 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       displayTo: artefact.displayTo,
       lastReceivedDate: artefact.lastReceivedDate,
       isFlatFile: artefact.isFlatFile,
-      provenance: artefact.provenance,
-      noMatch: artefact.noMatch
+      provenance: artefact.provenance
     })
   );
 }

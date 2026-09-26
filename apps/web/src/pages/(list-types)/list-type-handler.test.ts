@@ -39,7 +39,6 @@ const mockArtefact = {
   sensitivity: "CLASSIFIED",
   provenance: "MANUAL_UPLOAD",
   isFlatFile: false,
-  noMatch: false,
   supersededCount: 0
 };
 

@@ -13,6 +13,7 @@ export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson, getSourceArtefactId } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
+export { buildNoMatchLocationId, getLocationIdForNoMatch, isNoMatchLocationId } from "./no-match-location.js";
 export { generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./processing/service.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
 export {

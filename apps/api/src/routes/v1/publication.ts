@@ -74,10 +74,6 @@ async function handleJsonBlobIngestion(req: Request, res: Response) {
   const result = await processBlobIngestion(request, rawBodySize);
 
   if (!result.success) {
-    if ("no_match" in result && result.no_match) {
-      return res.status(200).json(result);
-    }
-
     if (result.message === "Validation failed") {
       return res.status(400).json(result);
     }
@@ -146,10 +142,6 @@ async function handleFlatFileUpload(req: Request, res: Response) {
   const result = await processFlatFileBlobIngestion(request, req.file.buffer, req.file.size);
 
   if (!result.success) {
-    if ("no_match" in result && result.no_match) {
-      return res.status(200).json(result);
-    }
-
     if (result.message === "Validation failed") {
       return res.status(400).json(result);
     }

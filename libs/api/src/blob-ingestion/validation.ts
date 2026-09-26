@@ -1,6 +1,6 @@
 import { validateListTypeJson } from "@hmcts/list-types-common";
 import { getLocationById, getLocationByProvenanceLocationId } from "@hmcts/location";
-import { Language, Sensitivity } from "@hmcts/publication";
+import { buildNoMatchLocationId, Language, Sensitivity } from "@hmcts/publication";
 import { findAllListTypes } from "@hmcts/system-admin-pages";
 import type { BlobIngestionRequest, BlobValidationResult, FlatFileIngestionRequest, ValidationError } from "./repository/model.js";
 
@@ -110,26 +110,19 @@ async function validateCommonFields(request: FlatFileIngestionRequest, payloadSi
     }
   }
 
-  let locationExists = false;
   let resolvedLocationId: string | undefined;
 
   if (request.court_id) {
     if (EXTERNAL_PROVENANCES.includes(request.provenance)) {
       const location = await getLocationByProvenanceLocationId(request.provenance, request.court_id, listTypeLocationType);
-      locationExists = !!location;
-      if (location) {
-        resolvedLocationId = location.locationId.toString();
-      }
+      resolvedLocationId = location ? location.locationId.toString() : buildNoMatchLocationId(request.court_id);
     } else {
       const locationId = Number.parseInt(request.court_id, 10);
       if (Number.isNaN(locationId)) {
         errors.push({ field: "court_id", message: "court_id must be a valid number" });
       } else {
         const location = await getLocationById(locationId);
-        locationExists = !!location;
-        if (location) {
-          resolvedLocationId = locationId.toString();
-        }
+        resolvedLocationId = location ? locationId.toString() : buildNoMatchLocationId(request.court_id);
       }
     }
   }
@@ -137,7 +130,6 @@ async function validateCommonFields(request: FlatFileIngestionRequest, payloadSi
   return {
     isValid: errors.length === 0,
     errors,
-    locationExists,
     listTypeId: listTypeId ? Number.parseInt(listTypeId, 10) : undefined,
     resolvedLocationId
   };

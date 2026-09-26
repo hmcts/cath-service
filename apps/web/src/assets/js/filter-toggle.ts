@@ -67,7 +67,7 @@ function keepRevealPanelOpenOnLoad(filter: HTMLElement, startHidden: string | un
   if (startHidden !== "false" || !filter.closest(REVEAL_LAYOUT_SELECTOR)) return;
 
   const toggleButton = document.querySelector<HTMLButtonElement>(`${TOGGLE_CONTAINER_SELECTOR} button`);
-  if (!toggleButton || toggleButton.getAttribute("aria-expanded") !== "false") return;
+  if (toggleButton?.getAttribute("aria-expanded") !== "false") return;
 
   filter.classList.remove("moj-js-hidden");
   toggleButton.setAttribute("aria-expanded", "true");
