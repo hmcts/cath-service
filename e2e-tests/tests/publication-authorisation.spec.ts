@@ -92,31 +92,69 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       await page.goto("/summary-of-publications?locationId=9");
       await page.waitForSelector("h1.govuk-heading-l");
 
-      // 2. Verify PUBLIC publications are visible
+      // 2. Verify the SJP publishing advisory is shown above the list selection sentence
+      const advisory = page.locator("#sjp-publishing-advisory");
+      await expect(advisory).toBeVisible();
+      await expect(advisory.locator("strong")).toHaveText("Please note:");
+      await expect(advisory).toContainText(
+        "SJP hearing lists are published up until 10:15am. If no lists are currently displayed, please check again after this time."
+      );
+
+      // Accessibility check with the advisory present (English)
+      const englishAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
+      expect(englishAccessibility.violations).toEqual([]);
+
+      // 3. Verify PUBLIC publications are visible
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const count = await publicationLinks.count();
 
       // Unauthenticated users should see at least some PUBLIC publications
       expect(count).toBeGreaterThan(0);
 
+      // The advisory must precede the "Select the list you want to view" sentence in the document
+      const selectListMessage = page.getByText("Select the list you want to view from the link(s) below:");
+      await expect(selectListMessage).toBeVisible();
+      const advisoryPrecedesSelectMessage = await page.evaluate(() => {
+        const advisoryElement = document.querySelector("#sjp-publishing-advisory");
+        const selectElement = Array.from(document.querySelectorAll("p.govuk-body")).find((element) =>
+          element.textContent?.includes("Select the list you want to view from the link(s) below:")
+        );
+        if (!advisoryElement || !selectElement) {
+          return false;
+        }
+        return (advisoryElement.compareDocumentPosition(selectElement) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+      });
+      expect(advisoryPrecedesSelectMessage).toBe(true);
+
       // Verify publications are accessible
       const firstLinkText = await publicationLinks.first().textContent();
       expect(firstLinkText).toBeTruthy();
 
-      // 3. Verify CLASSIFIED Civil and Family publications are NOT visible
+      // 4. Verify CLASSIFIED Civil and Family publications are NOT visible
       const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
       const classifiedCount = await classifiedLinks.count();
 
       // Unauthenticated users should NOT see any CLASSIFIED publications
       expect(classifiedCount).toBe(0);
 
-      // 4. Test Welsh translation
+      // 5. Test Welsh translation
       await page.goto("/summary-of-publications?locationId=9&lng=cy");
       await page.waitForSelector("h1.govuk-heading-l");
       const welshHeading = await page.locator("h1.govuk-heading-l").textContent();
       expect(welshHeading).toBeTruthy();
 
-      // 5. Attempt to directly access a CLASSIFIED publication by URL
+      // The advisory is translated and its prefix is still bold
+      const welshAdvisory = page.locator("#sjp-publishing-advisory");
+      await expect(welshAdvisory).toBeVisible();
+      await expect(welshAdvisory.locator("strong")).toHaveText("Sylwer:");
+      await expect(welshAdvisory).toContainText("Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP) eu cyhoeddi tan 10:15am.");
+      await expect(welshAdvisory).not.toContainText("SJP hearing lists are published up until");
+
+      // Accessibility check with the advisory present (Welsh)
+      const welshAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
+      expect(welshAccessibility.violations).toEqual([]);
+
+      // 6. Attempt to directly access a CLASSIFIED publication by URL
       // Create a CLASSIFIED artefact to test access denial
       const civilAndFamilyListType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
       const classifiedArtefact = await createTestArtefact({

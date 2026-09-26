@@ -8,5 +8,8 @@ export const cy = {
   languageWelsh: "Cymraeg (Welsh)",
   factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban."
+  factAdditionalText: "yng Nghymru a Lloegr, a rhai tribiwnlysoedd nad ydynt wedi'u datganoli yn yr Alban.",
+  sjpAdvisoryPrefix: "Sylwer:",
+  sjpAdvisoryMessage:
+    "Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP) eu cyhoeddi tan 10:15am. Os nad oes unrhyw restrau yn ymddangos ar hyn o bryd, gwiriwch eto ar ôl yr amser hwn."
 };

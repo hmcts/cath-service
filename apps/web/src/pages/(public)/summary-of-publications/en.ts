@@ -8,5 +8,7 @@ export const en = {
   languageWelsh: "Welsh (Cymraeg)",
   factLinkText: "Find contact details and other information about courts and tribunals",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland."
+  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
+  sjpAdvisoryPrefix: "Please note:",
+  sjpAdvisoryMessage: "SJP hearing lists are published up until 10:15am. If no lists are currently displayed, please check again after this time."
 };

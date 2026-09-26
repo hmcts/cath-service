@@ -32,6 +32,7 @@ vi.mock("@hmcts/location", () => ({
 }));
 
 import { getLocationMetadataByLocationId } from "@hmcts/location";
+import { filterPublicationsForSummary } from "@hmcts/publication";
 
 // Mock the postgres module
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -701,6 +702,96 @@ describe("Summary of Publications - GET handler", () => {
       const renderCall = renderSpy.mock.calls[0][1];
       expect(renderCall.cautionMessage).toBe("Caution message");
       expect(renderCall.noListMessage).toBe("No list message");
+    });
+  });
+
+  describe("SJP publishing advisory", () => {
+    it("should pass isSjpVenue true with the English advisory strings for the SJP location when publications exist", async () => {
+      // Arrange
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.publications.length).toBeGreaterThan(0);
+      expect(renderCall.isSjpVenue).toBe(true);
+      expect(renderCall.sjpAdvisoryPrefix).toBe("Please note:");
+      expect(renderCall.sjpAdvisoryMessage).toBe(
+        "SJP hearing lists are published up until 10:15am. If no lists are currently displayed, please check again after this time."
+      );
+    });
+
+    it("should pass isSjpVenue true with the advisory strings for the SJP location when there are no publications", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.publications).toHaveLength(0);
+      expect(renderCall.isSjpVenue).toBe(true);
+      expect(renderCall.sjpAdvisoryPrefix).toBe("Please note:");
+      expect(renderCall.sjpAdvisoryMessage).toContain("10:15am");
+    });
+
+    it("should pass isSjpVenue false for a non-SJP location", async () => {
+      // Arrange
+      mockRequest.query = { locationId: "1" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.isSjpVenue).toBe(false);
+    });
+
+    it("should pass the Welsh advisory strings when the locale is Welsh", async () => {
+      // Arrange
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "cy" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.isSjpVenue).toBe(true);
+      expect(renderCall.sjpAdvisoryPrefix).toBe("Sylwer:");
+      expect(renderCall.sjpAdvisoryMessage).toBe(
+        "Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP) eu cyhoeddi tan 10:15am. Os nad oes unrhyw restrau yn ymddangos ar hyn o bryd, gwiriwch eto ar ôl yr amser hwn."
+      );
+    });
+
+    it.each([
+      { userType: "unauthenticated", user: undefined },
+      { userType: "verified", user: { id: "user-1", email: "user@example.com", displayName: "Verified User", role: "VERIFIED", provenance: "CFT_IDAM" } },
+      { userType: "system admin", user: { id: "admin-1", email: "admin@example.com", displayName: "System Admin", role: "SYSTEM_ADMIN", provenance: "SSO" } }
+    ])("should pass isSjpVenue true for a $userType user even when the user can see no publications", async ({ user }) => {
+      // Arrange
+      mockRequest.query = { locationId: "9" };
+      mockRequest.user = user;
+      mockResponse.locals = { locale: "en" };
+      vi.mocked(filterPublicationsForSummary).mockReturnValueOnce([]);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(filterPublicationsForSummary).toHaveBeenCalledWith(user, expect.any(Array), expect.any(Array));
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.publications).toEqual([]);
+      expect(renderCall.isSjpVenue).toBe(true);
+      expect(renderCall.sjpAdvisoryPrefix).toBe("Please note:");
     });
   });
 

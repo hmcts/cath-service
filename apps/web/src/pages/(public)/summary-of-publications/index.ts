@@ -7,6 +7,10 @@ import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+// Location.locationId is an explicitly-assigned Int @id (no autoincrement), seeded from
+// libs/location/src/location-data.ts, so this value is stable across environments.
+const SJP_LOCATION_ID = 9;
+
 const IAC_ORDER: Record<string, number> = {
   IAC_DAILY_LIST: 0,
   IAC_DAILY_LIST_ADDITIONAL_CASES: 1
@@ -130,6 +134,8 @@ export const GET = async (req: Request, res: Response) => {
   const cautionMessage = locale === "cy" ? locationMetadata?.welshCautionMessage : locationMetadata?.cautionMessage;
   const noListMessage = locale === "cy" ? locationMetadata?.welshNoListMessage : locationMetadata?.noListMessage;
 
+  const isSjpVenue = locationId === SJP_LOCATION_ID;
+
   res.render("summary-of-publications/index", {
     en,
     cy,
@@ -141,6 +147,9 @@ export const GET = async (req: Request, res: Response) => {
     noListMessage,
     factLinkText: t.factLinkText,
     factLinkUrl: t.factLinkUrl,
-    factAdditionalText: t.factAdditionalText
+    factAdditionalText: t.factAdditionalText,
+    isSjpVenue,
+    sjpAdvisoryPrefix: t.sjpAdvisoryPrefix,
+    sjpAdvisoryMessage: t.sjpAdvisoryMessage
   });
 };

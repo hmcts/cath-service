@@ -25,8 +25,20 @@ const buildData = (t: typeof en, overrides: Record<string, unknown> = {}) => ({
   factLinkText: t.factLinkText,
   factLinkUrl: t.factLinkUrl,
   factAdditionalText: t.factAdditionalText,
+  isSjpVenue: false,
+  sjpAdvisoryPrefix: t.sjpAdvisoryPrefix,
+  sjpAdvisoryMessage: t.sjpAdvisoryMessage,
   ...overrides
 });
+
+const PUBLICATION = {
+  id: "url-artefact",
+  displayName: "SJP Public List 12 July 2026",
+  languageLabel: en.languageEnglish,
+  isFlatFile: false,
+  locationId: "9",
+  urlPath: "sjp-public-list"
+};
 
 describe("summary-of-publications template", () => {
   let env: nunjucks.Environment;
@@ -202,13 +214,121 @@ describe("summary-of-publications template", () => {
     });
   });
 
+  describe("SJP publishing advisory", () => {
+    const childPositionOf = ($: ReturnType<typeof render>["$"], selector: string) => $(".govuk-grid-column-full").children().index($(selector));
+
+    const positionOfTextBlock = ($: ReturnType<typeof render>["$"], text: string) => {
+      const children = $(".govuk-grid-column-full").children();
+      return children.index(children.filter((_index, element) => $(element).text().includes(text)).first());
+    };
+
+    it("should render the advisory once with a bold prefix when the venue is the SJP venue", () => {
+      const data = buildData(en, { isSjpVenue: true, publications: [PUBLICATION] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const advisory = $("#sjp-publishing-advisory");
+      expect(advisory).toHaveLength(1);
+      expect(advisory.find("strong").text()).toBe(en.sjpAdvisoryPrefix);
+      expect(advisory.text()).toContain(en.sjpAdvisoryMessage);
+    });
+
+    it("should render the advisory above the select list message when publications exist", () => {
+      const data = buildData(en, { isSjpVenue: true, publications: [PUBLICATION] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const advisoryPosition = childPositionOf($, "#sjp-publishing-advisory");
+      expect(advisoryPosition).toBeGreaterThan(positionOfTextBlock($, en.factAdditionalText));
+      expect(advisoryPosition).toBeLessThan(positionOfTextBlock($, en.selectListMessage));
+    });
+
+    it("should render the advisory above the no publications message when there are no publications", () => {
+      const data = buildData(en, { isSjpVenue: true, publications: [] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const advisoryPosition = childPositionOf($, "#sjp-publishing-advisory");
+      expect(advisoryPosition).toBeGreaterThan(positionOfTextBlock($, en.factAdditionalText));
+      expect(advisoryPosition).toBeLessThan(positionOfTextBlock($, en.noPublicationsMessage));
+    });
+
+    it("should render the advisory above an admin authored no list message", () => {
+      const data = buildData(en, { isSjpVenue: true, publications: [], noListMessage: "Court closed today" });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect(childPositionOf($, "#sjp-publishing-advisory")).toBeLessThan(positionOfTextBlock($, "Court closed today"));
+    });
+
+    it.each([
+      ["publications exist", [PUBLICATION]],
+      ["there are no publications", []]
+    ])("should not render the advisory on a non-SJP venue when %s", (_description, publications) => {
+      const data = buildData(en, { isSjpVenue: false, publications });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#sjp-publishing-advisory")).toHaveLength(0);
+      expect($("body").text()).not.toContain(en.sjpAdvisoryMessage);
+    });
+
+    it("should render the caution message before the advisory when both are present", () => {
+      const data = buildData(en, { isSjpVenue: true, cautionMessage: "Caution notice", publications: [PUBLICATION] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const cautionPosition = positionOfTextBlock($, "Caution notice");
+      const advisoryPosition = childPositionOf($, "#sjp-publishing-advisory");
+      expect(cautionPosition).toBeLessThan(advisoryPosition);
+      expect(advisoryPosition).toBeLessThan(positionOfTextBlock($, en.selectListMessage));
+    });
+
+    it("should render the Welsh advisory and no English advisory text when the Welsh locale is used", () => {
+      const data = buildData(cy, { isSjpVenue: true, publications: [] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const advisory = $("#sjp-publishing-advisory");
+      expect(advisory.find("strong").text()).toBe(cy.sjpAdvisoryPrefix);
+      expect(advisory.text()).toContain(cy.sjpAdvisoryMessage);
+      expect($("body").text()).not.toContain(en.sjpAdvisoryMessage);
+      expect($("body").text()).not.toContain(en.sjpAdvisoryPrefix);
+    });
+
+    it("should escape markup in the advisory content rather than rendering it", () => {
+      const data = buildData(en, {
+        isSjpVenue: true,
+        sjpAdvisoryPrefix: "<em>Please note:</em>",
+        sjpAdvisoryMessage: '<script>alert(1)</script><img src="x" onerror="alert(2)">'
+      });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const advisory = $("#sjp-publishing-advisory");
+      expect(advisory.find("strong")).toHaveLength(1);
+      expect(advisory.find("em")).toHaveLength(0);
+      expect(advisory.find("script")).toHaveLength(0);
+      expect(advisory.find("img")).toHaveLength(0);
+      expect(advisory.find("strong").text()).toBe("<em>Please note:</em>");
+    });
+  });
+
   describe("Locale consistency", () => {
     it("should have same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
     });
 
     it("should have all required keys", () => {
-      const requiredKeys = ["titlePrefix", "titleSuffix", "noPublicationsMessage", "languageEnglish", "languageWelsh"];
+      const requiredKeys = [
+        "titlePrefix",
+        "titleSuffix",
+        "noPublicationsMessage",
+        "languageEnglish",
+        "languageWelsh",
+        "sjpAdvisoryPrefix",
+        "sjpAdvisoryMessage"
+      ];
 
       for (const key of requiredKeys) {
         expect(en).toHaveProperty(key);
