@@ -1,13 +1,13 @@
-import { formatContentDate, formatCrownLastUpdated, formatPddaDefendantName } from "@hmcts/list-types-common";
+import { formatCrownLastUpdated, formatPddaDefendantName } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { DateTime } from "luxon";
 import { formatShortDate } from "../date-formatting.js";
-import type { CrownWarnedCaseRow, CrownWarnedListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
+import type { CrownAdvanceCaseRow, CrownAdvanceListData, GroupedHearingCategory, PddaCase, PddaDefendant, RenderOptions } from "../models/types.js";
 
 export const TO_BE_ALLOCATED_KEY = "TO_BE_ALLOCATED";
 const CUSTODY_STATUSES = ["On remand", "In custody", "In care"];
 
-export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, options: RenderOptions) {
+export async function renderCrownAdvanceListData(jsonData: CrownAdvanceListData, options: RenderOptions) {
   const { WarnedList } = jsonData;
   const location = await getLocationById(Number.parseInt(options.locationId, 10));
   const locationName = options.locale === "cy" && location?.welshName ? location.welshName : location?.name || WarnedList.CrownCourt.CourtHouseName;
@@ -23,7 +23,6 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     addressLines: formatAddress(address),
     dateRange,
     lastUpdated: WarnedList.ListHeader.PublishedTime ? formatCrownLastUpdated(WarnedList.ListHeader.PublishedTime, options.locale) : "",
-    weekCommencing: formatContentDate(toStartOfWeek(options.contentDate), options.locale),
     version: WarnedList.ListHeader.Version || ""
   };
 
@@ -33,7 +32,7 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
     phone: WarnedList.CrownCourt.CourtHouseTelephone || ""
   };
 
-  const categoryMap: Map<string, CrownWarnedCaseRow[]> = new Map();
+  const categoryMap: Map<string, CrownAdvanceCaseRow[]> = new Map();
   for (const courtList of WarnedList.CourtLists) {
     for (const entry of courtList.WithFixedDate ?? []) {
       for (const fixture of entry.Fixture ?? []) {
@@ -79,7 +78,7 @@ export async function renderCrownWarnedListData(jsonData: CrownWarnedListData, o
   return { header, openJustice, groupedCategories };
 }
 
-function formatAddress(address: CrownWarnedListData["WarnedList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
+function formatAddress(address: CrownAdvanceListData["WarnedList"]["CrownCourt"]["CourtHouseAddress"]): string[] {
   if (!address) return [];
   const parts: string[] = [];
   for (const line of address.Line ?? []) {
@@ -97,12 +96,6 @@ function formatLongDate(dateStr: string | undefined, locale: string): string {
   return dt.toJSDate().toLocaleDateString(localeCode, { day: "numeric", month: "long", year: "numeric" });
 }
 
-function toStartOfWeek(date: Date): Date {
-  const dt = DateTime.fromJSDate(date);
-  if (dt.weekday === 1) return date;
-  return dt.startOf("week").toJSDate();
-}
-
 function formatDefendantName(defendant: PddaDefendant): string {
   return formatPddaDefendantName(defendant.PersonalDetails);
 }
@@ -113,7 +106,7 @@ function isDefendantInCustody(defendant: PddaDefendant): boolean {
 
 type Hearing = NonNullable<PddaCase["Hearing"]>[0];
 
-function processCase(caseItem: PddaCase, fixedDate: string | undefined, hearing: Hearing | undefined): CrownWarnedCaseRow {
+function processCase(caseItem: PddaCase, fixedDate: string | undefined, hearing: Hearing | undefined): CrownAdvanceCaseRow {
   const defendants = caseItem.Defendants ?? [];
   const names = defendants.map(formatDefendantName).filter((n) => n.length > 0);
   const inCustody = defendants.some(isDefendantInCustody);

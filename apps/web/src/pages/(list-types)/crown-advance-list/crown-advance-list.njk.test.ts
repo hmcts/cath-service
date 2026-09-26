@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { crownWarnedListCy as cy, crownWarnedListEn as en } from "@hmcts/crown-warned-list";
+import { crownAdvanceListCy as cy, crownAdvanceListEn as en } from "@hmcts/crown-advanced-pdda-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
 import { moduleRoot as webCoreModuleRoot } from "@hmcts/web-core/config";
 import type { CheerioAPI } from "cheerio";
@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TEMPLATE = "crown-warned-list.njk";
+const TEMPLATE = "crown-advance-list.njk";
 const webCoreViews = path.join(webCoreModuleRoot, "views");
 
 interface CaseOverrides {
@@ -52,7 +52,6 @@ function baseData(locale: typeof en | typeof cy = en) {
       addressLines: ["The Priory Courts", "33 Bull Street", "Birmingham", "B4 6DS"],
       dateRange: "15 January 2026 to 19 January 2026",
       lastUpdated: "14 January 2026 at 12:00pm",
-      weekCommencing: "13 January 2026",
       version: "1.0"
     },
     openJustice: { venueName: "Birmingham Crown Court", email: "", phone: "0121 681 3400" },
@@ -88,7 +87,7 @@ beforeEach(() => {
   env = createTestEnvironment([__dirname, webCoreViews]);
 });
 
-describe("crown-warned-list template", () => {
+describe("crown-advance-list template", () => {
   describe("Locale consistency", () => {
     it("should have the same keys in English and Welsh", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
@@ -149,22 +148,21 @@ describe("crown-warned-list template", () => {
   });
 
   describe("Pre-statement", () => {
-    it("should render the week-commencing pre-statement when a week is provided", () => {
-      const { $ } = renderList([], { header: { ...baseData().header, weekCommencing: "13 January 2026" } });
+    it("should render the three pre-statement paragraphs in order", () => {
+      const { $ } = renderList([]);
 
-      const bodyText = $(".govuk-body").text();
-      expect(bodyText).toContain(en.preStatementPrefix);
-      expect(bodyText).toContain("13 January 2026");
-      expect(bodyText).toContain(en.preStatementSuffix2);
-      expect(bodyText).toContain(en.preStatementSuffix3);
-      expect(bodyText).toContain(en.preStatementSuffix4);
+      const paragraphs = $("p.govuk-body")
+        .map((_, el) => $(el).text().trim())
+        .get();
+      const start = paragraphs.indexOf(en.headingP1);
+      expect(start).toBeGreaterThan(-1);
+      expect(paragraphs.slice(start, start + 3)).toEqual([en.headingP1, en.headingP2, en.headingP3]);
     });
 
-    it("should not render the pre-statement when weekCommencing is empty", () => {
-      const { $ } = renderList([], { header: { ...baseData().header, weekCommencing: "" } });
+    it("should not render the removed week-commencing statement", () => {
+      const { $ } = renderList([]);
 
-      const preStatement = $("p.govuk-body").filter((_, el) => $(el).text().includes(en.preStatementPrefix));
-      expect(preStatement).toHaveLength(0);
+      expect($(".govuk-body").text()).not.toContain("week commencing");
     });
   });
 
@@ -201,7 +199,7 @@ describe("crown-warned-list template", () => {
     it("should render the accordion container with no sections when there are no categories", () => {
       const { $ } = renderList([]);
 
-      const accordion = $("#accordion-warned-list.govuk-accordion");
+      const accordion = $("#accordion-advance-list.govuk-accordion");
       expect(accordion).toHaveLength(1);
       expect(accordion.attr("data-module")).toBe("govuk-accordion");
       expect($(".govuk-accordion__section")).toHaveLength(0);
@@ -367,7 +365,7 @@ describe("crown-warned-list template", () => {
 
       expect($("h1#page-heading").text()).toContain(cy.pageTitle);
       expect($(".govuk-body").text()).toContain(cy.lastUpdated);
-      expect($(".govuk-body").text()).toContain(cy.preStatementPrefix);
+      expect($(".govuk-body").text()).toContain(cy.headingP1);
       expect($("h2").filter((_, el) => $(el).text().includes(cy.searchCases))).toHaveLength(1);
 
       const headers = tableHeaders($);

@@ -29,10 +29,10 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_WARNED_LIST",
-    friendlyName: "Crown Warned List",
-    welshFriendlyName: "Crown Warned List",
-    url: "crown-warned-list",
+    name: "CROWN_ADVANCED_PDDA_LIST",
+    friendlyName: "Crown Advance List",
+    welshFriendlyName: "Rhestr Ymlaen Llaw Llys y Goron",
+    url: "crown-advance-list",
     defaultSensitivity: "Public",
     provenance: "CRIME_IDAM",
     isNonStrategic: false
