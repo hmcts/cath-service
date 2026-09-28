@@ -1,5 +1,5 @@
 module "key_vault" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=master"
+  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
 
   product             = var.product
   env                 = var.env
@@ -13,7 +13,7 @@ module "key_vault" {
   # object id, so passing the same group here is silently overridden.
   product_group_name = "DTS PIP Non-Prod"
 
-  common_tags             = var.common_tags
+  common_tags             = local.common_tags
   create_managed_identity = true
 }
 
@@ -24,7 +24,7 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurerm_key_vault_access_policy" "e2e_oidc_sp" {
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = module.key_vault.key_vault_id
   tenant_id    = var.tenant_id
   object_id    = var.e2e_oidc_object_id
 

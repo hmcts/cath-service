@@ -182,21 +182,29 @@ checks:
 
   # Observed: 1% over 24h (18 of 1800). 20% is deliberately well clear of that; it is
   # meant to catch broken routing or auth, not ordinary 404s.
+  #
+  # Measured over a day rather than {{window}}, like no-user-traffic above: web serves
+  # around 544 non-health requests in 24h, so a 15-minute denominator is too small for a
+  # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
+  # names the routes, without which a firing cannot distinguish a broken route from
+  # someone probing the hostname.
   - id: client-error-rate
     severity: medium
-    description: 4xx responses as a share of non-health traffic.
+    description: 4xx responses as a share of non-health traffic over a day.
     fingerprint-by: [app]
     rule: { column: rate, value: '> 0.2' }
     query: |
       requests
-      | where timestamp > ago({{window}})
+      | where timestamp > ago(24h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
+      | extend is_client_error = toint(resultCode) between (400 .. 499)
       | summarize total = count(),
-                  client_errors = countif(toint(resultCode) between (400 .. 499))
+                  client_errors = countif(is_client_error),
+                  sample_4xx = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 10)
           by app
-      | where total >= 20
+      | where total >= 200
       | extend rate = todouble(client_errors) / total
 
   # Observed p95 by operation over 24h: GET /cft-login/return 1257ms,
@@ -268,6 +276,13 @@ checks:
   # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
   # afternoon would false-positive constantly. The expected_for_window floor
   # suppresses the check entirely when the baseline is too thin to judge.
+  #
+  # Baseline is whole past days rather than ago({{baseline}}): a range starting and ending
+  # mid-hour only matches clipped fragments at its two edges, and the later one is today —
+  # the traffic the drop would be measured against. 28d because the same-day-of-week filter
+  # leaves only one comparable day in 7. The floor is 20 rather than 4 because assets are
+  # counted individually, so 4 requests per 15 minutes sits inside a single page load; this
+  # keeps the check quiet until a slot sustains real traffic.
   - id: volume-drop
     severity: medium
     description: Non-health traffic well below the same slot on comparable days.
@@ -280,7 +295,7 @@ checks:
         | where name !startswith 'GET /health'
         | count);
       requests
-      | where timestamp between (ago({{baseline}}) .. ago({{window}}))
+      | where timestamp between (startofday(ago(28d)) .. startofday(now()))
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | where dayofweek(timestamp) == dayofweek(now())
@@ -288,11 +303,19 @@ checks:
       | summarize per_day = count() by bin(timestamp, 1d)
       | summarize baseline_per_hour = avg(per_day), days = count()
       | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
-      | where days >= 2 and expected_for_window >= 4.0
+      | where days >= 2 and expected_for_window >= 20.0
       | extend current = current
       | extend drop_ratio = 1.0 - (todouble(current) / expected_for_window)
 
   # Scraping, a runaway client, or a retry storm.
+  #
+  # The ratio alone is not trustworthy here, hence the absolute floor on current below.
+  # The day-of-week condition leaves only clipped partial hours in the baseline — one of
+  # them the current hour's own earlier minutes — and bin(timestamp, 1d) counts each as a
+  # whole hour, so expected_for_window comes out low and the ratio high. 100 requests in
+  # 15 minutes is 400/hour against an observed 18-75/hour: past anything browsing produces,
+  # well inside what a scraper or retry storm reaches. Fixing the baseline arithmetic needs
+  # a longer baseline than 7d to have two real comparable days — see issue #1046.
   - id: volume-spike
     severity: low
     description: Non-health traffic far above the same slot on comparable days.
@@ -315,6 +338,7 @@ checks:
       | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
       | where days >= 2 and expected_for_window >= 4.0
       | extend current = current
+      | where current >= 100
       | extend spike_ratio = todouble(current) / expected_for_window
 
 # Known-benign fingerprints. Every entry needs a reason — the action rejects the

@@ -27,7 +27,8 @@ test.describe("System Admin Dashboard", () => {
       { title: "Bulk Create Media Accounts", href: "/bulk-media-accounts" },
       { title: "Audit Log Viewer", href: "/audit-log-list" },
       { title: "Manage List Types", href: "/manage-list-types" },
-      { title: "Manage Jurisdiction Data", href: "/jurisdiction-data" }
+      { title: "Manage Jurisdiction Data", href: "/jurisdiction-data" },
+      { title: "Download MI Report", href: "/mi-report" }
     ];
 
     const tiles = page.locator("a.admin-tile");
@@ -66,7 +67,7 @@ test.describe("System Admin Dashboard", () => {
   test("dashboard is keyboard accessible @nightly", async ({ page }) => {
     // Verify tiles are focusable
     const tileLinks = page.locator("a.admin-tile");
-    await expect(tileLinks).toHaveCount(10);
+    await expect(tileLinks).toHaveCount(11);
 
     // Verify first tile is visible and focusable
     const firstTile = tileLinks.first();
