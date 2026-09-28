@@ -9,9 +9,11 @@ export const cy = {
   emailLabel: "Cyfeiriad e-bost",
   emailHint: "Dim ond i drafod eich cyfrif a'r gwasanaeth hwn y byddwn yn defnyddio hwn i gysylltu â chi",
   employerLabel: "Cyflogwr",
-  uploadLabel: "Uwchlwytho llun o'ch prawf hunaniaeth",
-  uploadHint:
-    "Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod. Trwy uwchlwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'r prosesu hwn o'ch data. Rhaid iddi fod yn ffeil jpg, pdf neu png ac yn llai na 2mb o ran maint",
+  uploadLabel: "Llwytho llun clir o Gerdyn y Wasg neu gerdyn adnabod gwaith",
+  uploadHintIdentity:
+    "Dim ond i gadarnhau pwy ydych ar gyfer y gwasanaeth hwn y byddwn yn defnyddio hwn, a byddwn yn ei ddileu wedi i'ch cais gael ei gymeradwyo neu ei wrthod.",
+  uploadHintConsent: "Trwy lwytho eich dogfen, rydych yn cadarnhau eich bod yn cydsynio i'ch data gael ei brosesu",
+  uploadHintFileType: "Rhaid i'r ffeil fod ar ffurf jpg, pdf neu png a rhaid bod yn llai na 2MB mewn maint.",
   termsHeading: "Telerau ac Amodau",
   termsText1:
     "Caniateir ichi gael cyfrif ar gyfer gwrandawiadau Llys a thribiwnlys ar yr amod bod gennych resymau cyfreithiol dros gael mynediad at wybodaeth nad yw ar gael i'r cyhoedd e.e. rydych yn aelod o sefydliad cyfryngau ac angen gwybodaeth ychwanegol i riportio ar wrandawiadau.",

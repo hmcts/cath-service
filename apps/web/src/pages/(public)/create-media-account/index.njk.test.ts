@@ -75,7 +75,9 @@ describe("create-media-account template", () => {
       expect($("#email-hint").text()).toContain(en.emailHint);
       expect($('label[for="employer"]').text()).toContain(en.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(en.uploadLabel);
-      expect($("#idProof-hint").text()).toContain(en.uploadHint);
+      expect($("#idProof-hint-identity").text()).toContain(en.uploadHintIdentity);
+      expect($("#idProof-hint-consent").text()).toContain(en.uploadHintConsent);
+      expect($("#idProof-hint-filetype").text()).toContain(en.uploadHintFileType);
       expect($('input[name="email"]').attr("type")).toBe("email");
       expect($('input[name="idProof"]').attr("type")).toBe("file");
       expect($('input[name="termsAccepted"]').attr("type")).toBe("checkbox");
@@ -205,7 +207,9 @@ describe("create-media-account template", () => {
       expect(bodyText).toContain(cy.openingText3);
       expect($('label[for="employer"]').text()).toContain(cy.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(cy.uploadLabel);
-      expect($("#idProof-hint").text()).toContain(cy.uploadHint);
+      expect($("#idProof-hint-identity").text()).toContain(cy.uploadHintIdentity);
+      expect($("#idProof-hint-consent").text()).toContain(cy.uploadHintConsent);
+      expect($("#idProof-hint-filetype").text()).toContain(cy.uploadHintFileType);
       expect($("#email-hint").text()).toContain(cy.emailHint);
       expect($("h2.govuk-heading-m").text()).toContain(cy.termsHeading);
       expect(bodyText).toContain(cy.termsText1);
@@ -267,7 +271,9 @@ describe("create-media-account template", () => {
         "emailHint",
         "employerLabel",
         "uploadLabel",
-        "uploadHint",
+        "uploadHintIdentity",
+        "uploadHintConsent",
+        "uploadHintFileType",
         "termsHeading",
         "termsText1",
         "termsText2",

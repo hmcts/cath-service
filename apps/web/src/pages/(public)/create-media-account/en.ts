@@ -9,9 +9,10 @@ export const en = {
   emailLabel: "Email address",
   emailHint: "We'll only use this to contact you about your account and this service.",
   employerLabel: "Employer",
-  uploadLabel: "Upload a photo of your ID proof",
-  uploadHint:
-    "Upload a clear photo of your UK Press Card or work ID. We will only use this to confirm your identity for this service, and will delete upon approval or rejection of your request. By uploading your document, you confirm that you consent to this processing of your data. Must be a jpg, pdf or png and less than 2mb in size",
+  uploadLabel: "Upload a clear photo of your UK Press Card or work ID",
+  uploadHintIdentity: "We will only use this to confirm your identity for this service, and will delete upon approval or rejection of your request.",
+  uploadHintConsent: "By uploading your document, you confirm that you consent to this processing of your data.",
+  uploadHintFileType: "Must be a jpg, pdf or png and less than 2mb in size",
   termsHeading: "Terms and conditions",
   termsText1:
     "A Court and tribunal hearing account is granted based on you having legitimate reasons to access information not open to the public e.g. you are a member of a media organisation and require extra information to report on hearings.",
