@@ -1,21 +1,29 @@
 name: Perftest
 
 # Deploys the image master already built and promoted. There is deliberately no
-# build, promote or e2e stage here: the perftest branch is synced from master
-# (#1020), so github.sha is the commit master already built and smoke-tested, and
-# rebuilding it would produce a different image for the same source.
+# build, promote or e2e stage here: rebuilding would produce a different image
+# for the same source.
+#
+# How it runs:
+#   - workflow_call: workflow.main.yml calls this once promote-stage succeeds, so
+#     github.sha is the master commit just built, deployed to aat, smoke-tested
+#     and promoted.
+#   - workflow_dispatch: redeploys the dispatched ref's HEAD (normally master).
+#   - push to perftest: inert until the perftest branch exists. Moving the deploy onto a
+#     dedicated branch is #1084.
 #
 # Infrastructure is applied from master (stage.infrastructure.yml runs Terraform
-# for all four environments), so it is not repeated here either.
+# for every non-prod environment), so it is not repeated here either.
 on:
   push:
     branches:
       - perftest
-  # The push trigger is inert until the perftest branch exists - GitHub shows the
-  # workflow with no runs and no error. Dispatch makes it verifiable before then,
-  # and lets the first deploy be triggered deliberately.
   workflow_dispatch:
+  workflow_call:
 
+# Serialises a master-triggered deploy against a manual dispatch of the same
+# release. It must differ from the caller's `main` group: a called workflow
+# sharing its caller's group deadlocks.
 concurrency:
   group: perftest
   cancel-in-progress: false
