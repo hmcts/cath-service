@@ -10,16 +10,30 @@ set -euo pipefail
 #   $4: short_sha - Short git SHA
 #   $5: timestamp - Build timestamp (unused, kept for compatibility)
 #   $6: application_name - Application name for release name
+#   $7: image_tag_override - Optional. Pre-built tag(s) to deploy verbatim.
+#       Either a bare tag applied to every app ("aat-abc1234"), or a JSON object
+#       of app -> tag ('{"web":"aat-abc1234","api":"aat"}') when the tag differs
+#       per app.
 # Outputs:
 #   Environment variables:
 #   - RELEASE_NAME:
 #     - PR (numeric change_id): {application_name}-pr-{change_id}
 #     - Non-PR (e.g., staging): {application_name}-{change_id}
 #   - {APP}_IMAGE for each Helm app
+#     - If image_tag_override is set: the overridden tag for that app
 #     - If app was affected (PR): pr-{change_id}-{sha}
 #     - If app was affected (non-PR): {change_id}-{sha}
 #     - If app was not affected (PR): pr-{change_id}
 #     - If app was not affected (non-PR): {change_id}
+#
+# Why the override exists: change_id drives BOTH the release name and the image
+# tag. The demo/ithc/perftest deploys need release name cath-service-{env} but
+# must pull the tag master already built and promoted (aat-{sha}), so the two
+# uses have to be decoupled. The override affects only the tag.
+#
+# Why per-app tags are supported: master only builds the apps it detected as
+# affected, so aat-{sha} exists for those and only the older floating aat tag
+# exists for the rest. A single tag cannot describe both.
 
 main() {
   local affected_apps="${1:-}"
@@ -28,9 +42,10 @@ main() {
   local short_sha="${4:-}"
   local timestamp="${5:-}"
   local application_name="${6:-}"
+  local image_tag_override="${7:-}"
 
   if [ -z "$helm_apps" ] || [ -z "$change_id" ] || [ -z "$application_name" ]; then
-    echo "Usage: $0 <affected_apps_json> <helm_apps_json> <change_id> <short_sha> <timestamp> <application_name>"
+    echo "Usage: $0 <affected_apps_json> <helm_apps_json> <change_id> <short_sha> <timestamp> <application_name> [image_tag_override]"
     exit 1
   fi
 
@@ -61,6 +76,26 @@ main() {
     # Example: web -> WEB_IMAGE, my-app -> MY_APP_IMAGE
     local env_var_name
     env_var_name=$(echo "${app}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')_IMAGE
+
+    # An explicit override deploys an already-built tag, so nothing was rebuilt
+    # in this run and the affected/not-affected distinction does not apply.
+    if [ -n "$image_tag_override" ]; then
+      local override_tag="$image_tag_override"
+      if echo "$image_tag_override" | jq -e 'type == "object"' > /dev/null 2>&1; then
+        override_tag=$(echo "$image_tag_override" | jq -r --arg app "$app" '.[$app] // empty')
+        if [ -z "$override_tag" ]; then
+          echo "Error: image tag override has no entry for app '${app}'" >&2
+          exit 1
+        fi
+      fi
+
+      if [ -n "${GITHUB_ENV:-}" ]; then
+        echo "${env_var_name}=${override_tag}" >> "$GITHUB_ENV"
+      fi
+
+      echo "→ ${app}: ${override_tag} (pre-built, image tag override)"
+      continue
+    fi
 
     # Check if app was affected (needs rebuild)
     if echo "$affected_apps" | jq -e --arg app "$app" 'index($app)' > /dev/null 2>&1; then

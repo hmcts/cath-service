@@ -18,7 +18,7 @@ jobs:
       # e2e-tests/ is included because the E2E stage can only run against a
       # deployed preview environment, and Deploy cascades off Build. Without it a
       # PR that only changes an E2E test skips the very tests it changed.
-      paths: "^(yarn\\.lock|apps/|libs/|helm/|e2e-tests/)"
+      paths: "^(yarn\\.lock|apps/|libs/|helm/|e2e-tests/|Dockerfile|\\.dockerignore)"
       cache-key: code-pr-${{ github.event.pull_request.number }}
 
   detect-infra-changes:
@@ -44,6 +44,12 @@ jobs:
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
       plan-only: true
+      # Plan every environment master will apply. Reviewing only aat here would
+      # mean the first sight of a demo/ithc/perftest plan is the master run that
+      # is already applying it. Only aat posts a PR comment - see
+      # post-plan-to-pr in stage.infrastructure.yml.
+      # ithc is parked - see the note in workflow.main.yml.
+      environments: '["aat","demo","perftest"]'
     secrets: inherit
 
   deploy-stage:

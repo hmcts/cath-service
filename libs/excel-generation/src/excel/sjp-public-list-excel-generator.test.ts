@@ -93,6 +93,22 @@ describe("generateSjpPublicListExcel", () => {
     expect(row3.getCell(4).value).toBe("HMRC");
   });
 
+  it("should generate Welsh headers when locale is cy", async () => {
+    const buffer = await generateSjpPublicListExcel(FIXTURE, "cy");
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+
+    const worksheet = workbook.getWorksheet("SJP Public List");
+    const headerRow = worksheet!.getRow(1);
+    expect(headerRow.getCell(1).value).toBe("Enw");
+    expect(headerRow.getCell(2).value).toBe("Cod post");
+    expect(headerRow.getCell(3).value).toBe("Trosedd");
+    expect(headerRow.getCell(4).value).toBe("Erlynydd");
+
+    const row2 = worksheet!.getRow(2);
+    expect(row2.getCell(1).value).toBe("John Smith");
+  });
+
   it("should handle empty court lists", async () => {
     const emptyJson: SjpJson = {
       document: { publicationDate: "2025-01-01T10:00:00Z" },

@@ -1,0 +1,55 @@
+name: Perftest
+
+# Deploys the image master already built and promoted. There is deliberately no
+# build, promote or e2e stage here: the perftest branch is synced from master
+# (#1020), so github.sha is the commit master already built and smoke-tested, and
+# rebuilding it would produce a different image for the same source.
+#
+# Infrastructure is applied from master (stage.infrastructure.yml runs Terraform
+# for all four environments), so it is not repeated here either.
+on:
+  push:
+    branches:
+      - perftest
+  # The push trigger is inert until the perftest branch exists - GitHub shows the
+  # workflow with no runs and no error. Dispatch makes it verifiable before then,
+  # and lets the first deploy be triggered deliberately.
+  workflow_dispatch:
+
+concurrency:
+  group: perftest
+  cancel-in-progress: false
+
+jobs:
+  resolve-images:
+    name: Resolve Promoted Images
+    uses: ./.github/workflows/job.resolve-promoted-images.yml
+    secrets: inherit
+
+  deploy-stage:
+    name: Deploy to Perftest
+    needs: [resolve-images]
+    uses: ./.github/workflows/stage.deploy.yml
+    with:
+      # change-id gives the release name cath-service-perftest. It must NOT drive
+      # the image tag: no `perftest` tag was ever pushed. That is what image-tag
+      # is for.
+      change-id: perftest
+      timestamp: ${{ needs.resolve-images.outputs.timestamp }}
+      short-sha: ${{ needs.resolve-images.outputs.short-sha }}
+      # Nothing was built in this run, so no app counts as affected.
+      affected-apps: '[]'
+      helm-apps: ${{ needs.resolve-images.outputs.helm-apps }}
+      image-tag: ${{ needs.resolve-images.outputs.image-tag }}
+      environment: perftest
+    secrets: inherit
+
+  smoke-test-stage:
+    name: Smoke Test
+    needs: [deploy-stage]
+    if: always() && needs.deploy-stage.result == 'success'
+    uses: ./.github/workflows/stage.smoke-test.yml
+    with:
+      change-id: perftest
+      urls: ${{ needs.deploy-stage.outputs.urls }}
+      runner-group: azure-prod

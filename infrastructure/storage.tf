@@ -3,13 +3,13 @@ module "sa" {
 
   env                      = var.env
   storage_account_name     = "cathsa${var.env}"
-  resource_group_name      = azurerm_resource_group.rg.name
+  resource_group_name      = local.storage_uses_legacy_rg ? azurerm_resource_group.rg[0].name : azurerm_resource_group.shared.name
   location                 = var.location
   account_kind             = var.sa_account_kind
   account_tier             = var.sa_account_tier
   account_replication_type = var.sa_account_replication_type
   access_tier              = var.sa_access_tier
-  common_tags              = var.common_tags
+  common_tags              = local.common_tags
   default_action           = "Allow"
 
   containers = [
