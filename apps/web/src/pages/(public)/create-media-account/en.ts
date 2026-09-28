@@ -12,8 +12,13 @@ export const en = {
   uploadLabel: "Upload a photo of your ID proof",
   uploadHint:
     "Upload a clear photo of your UK Press Card or work ID. We will only use this to confirm your identity for this service, and will delete upon approval or rejection of your request. By uploading your document, you confirm that you consent to this processing of your data. Must be a jpg, pdf or png and less than 2mb in size",
-  termsText:
-    "A Court and tribunal hearing account is granted based on you having legitimate reasons to access information not open to the public e.g. you are a member of a media organisation and require extra information to report on hearings. If your circumstances change and you no longer have legitimate reasons to hold a Court and tribunal hearings account e.g. you leave your employer entered above. It is your responsibility to inform HMCTS of this for your account to be deactivated.",
+  termsHeading: "Terms and conditions",
+  termsText1:
+    "A Court and tribunal hearing account is granted based on you having legitimate reasons to access information not open to the public e.g. you are a member of a media organisation and require extra information to report on hearings.",
+  termsText2:
+    "As part of our annual verification process, you will be sent an email to verify you still have access to the email address that was used to create your account. If you do not verify your email address within the stipulated time, your account will be removed and you will need to apply for a new account if you still require access.",
+  termsText3:
+    "If your circumstances change and you no longer have legitimate reasons to hold a Court and tribunal hearings account e.g. you leave your employer entered above. It is your responsibility to inform HMCTS of this for your account to be deactivated.",
   termsCheckboxLabel: "Please tick this box to agree to the above terms and conditions",
   continueButton: "Continue",
   backToTop: "Back to top",

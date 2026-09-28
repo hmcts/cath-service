@@ -81,13 +81,36 @@ describe("create-media-account template", () => {
       expect($('input[name="termsAccepted"]').attr("type")).toBe("checkbox");
     });
 
-    it("should render the terms and conditions text and checkbox label", () => {
+    it("should render the terms and conditions heading and paragraphs before the checkbox", () => {
       const data = buildData(en);
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("#termsAccepted-hint").text()).toContain(en.termsText);
+      const heading = $("h2.govuk-heading-m");
+      expect(heading.text()).toContain(en.termsHeading);
+
+      const paragraphs = $("form p.govuk-body");
+      const paragraphTexts = paragraphs.map((_, el) => $(el).text()).get();
+      expect(paragraphTexts).toContain(en.termsText1);
+      expect(paragraphTexts).toContain(en.termsText2);
+      expect(paragraphTexts).toContain(en.termsText3);
+
+      // Terms content sits after the ID upload field and before the consent checkbox
+      const headingIndex = $("*").index(heading);
+      const uploadIndex = $("*").index($("#idProof"));
+      const checkboxIndex = $("*").index($('input[name="termsAccepted"]'));
+      expect(headingIndex).toBeGreaterThan(uploadIndex);
+      expect(headingIndex).toBeLessThan(checkboxIndex);
+
       expect($('label[for="termsAccepted"]').text()).toContain(en.termsCheckboxLabel);
+    });
+
+    it("should not render a hint on the terms checkbox", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#termsAccepted-hint")).toHaveLength(0);
     });
 
     it("should render every field validation message in the error summary", () => {
@@ -184,8 +207,13 @@ describe("create-media-account template", () => {
       expect($('label[for="idProof"]').text()).toContain(cy.uploadLabel);
       expect($("#idProof-hint").text()).toContain(cy.uploadHint);
       expect($("#email-hint").text()).toContain(cy.emailHint);
-      expect($("#termsAccepted-hint").text()).toContain(cy.termsText);
+      expect($("h2.govuk-heading-m").text()).toContain(cy.termsHeading);
+      expect(bodyText).toContain(cy.termsText1);
+      expect(bodyText).toContain(cy.termsText2);
+      expect(bodyText).toContain(cy.termsText3);
       expect($('label[for="termsAccepted"]').text()).toContain(cy.termsCheckboxLabel);
+      // No English terms content leaks into the Welsh render
+      expect(bodyText).not.toContain(en.termsText2);
     });
 
     it("should render the Welsh error summary", () => {
@@ -240,7 +268,10 @@ describe("create-media-account template", () => {
         "employerLabel",
         "uploadLabel",
         "uploadHint",
-        "termsText",
+        "termsHeading",
+        "termsText1",
+        "termsText2",
+        "termsText3",
         "termsCheckboxLabel",
         "continueButton",
         "backToTop",
