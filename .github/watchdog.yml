@@ -153,24 +153,36 @@ checks:
       | mv-expand expected_app to typeof(string)
       | where expected_app !in ((seen | project app))
 
-  # Up but serving nobody, measured over a day rather than the usual window.
+  # Up but serving nobody, measured over days rather than the usual window.
   #
   # AAT gets very little real traffic: 544 non-health requests in 24h on web and none
   # at all on api, mostly static assets from someone loading a page. A 15-minute window
-  # is empty most of the time, so this looks for a day with no traffic — which does mean
-  # a genuine outage is not caught here until it has lasted hours. app-silent and the
-  # availability test are the checks that notice quickly; this one is a backstop for
-  # "reachable but serving nothing", and only has meaning once there is real traffic.
+  # is empty most of the time, so this looks for a long stretch with no traffic — which
+  # does mean a genuine outage is not caught here until it has lasted days. app-silent
+  # and the availability test are the checks that notice quickly; this one is a backstop
+  # for "reachable but serving nothing", and only has meaning once there is real traffic.
   #
   # No time-of-day condition, so there is nothing that can filter the result away and
-  # accidentally fire the check — an empty result here means exactly what it says.
+  # accidentally fire the check — an empty result here means exactly what it says. That
+  # cuts both ways: because the rule is `rows == 0`, any narrowing of this query fires
+  # the check rather than quieting it, so the lookback is the only safe thing to tune.
+  #
+  # 72h, not 24h. Every source of non-health traffic here is a weekday human: the
+  # availability test targets /health/liveness so it is excluded by the filter below,
+  # and nightly.yml runs Playwright against localhost with service containers rather
+  # than against AAT. The watchdog itself only runs Mon-Fri 07:30-18:30, so at the first
+  # tick of a Monday a 24h lookback saw nothing but the weekend and fired every week.
+  # 72h is the shortest lookback that leaves every scheduled tick covering at least one
+  # whole working day. A genuinely quiet week will still fire it — the durable fix is a
+  # guaranteed non-health traffic source in AAT, which is a deliberate decision rather
+  # than a threshold tweak. See issue #1079.
   - id: no-user-traffic
     severity: low
-    description: No successful non-health requests in a day.
+    description: No successful non-health requests in three days.
     rule: { rows: '== 0' }
     query: |
       requests
-      | where timestamp > ago(24h)
+      | where timestamp > ago(72h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
       | where success == true
