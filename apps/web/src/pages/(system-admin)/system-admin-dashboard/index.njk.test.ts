@@ -37,6 +37,7 @@ describe("system-admin-dashboard template", () => {
 
       expect($("h1").text()).toContain(en.title);
       const tiles = $("a.admin-tile");
+      expect(tiles).toHaveLength(11);
       expect(tiles).toHaveLength(en.tiles.length);
       en.tiles.forEach((tile) => {
         const link = $(`a.admin-tile[href="${tile.href}"]`);
@@ -44,6 +45,16 @@ describe("system-admin-dashboard template", () => {
         expect(link.find(".admin-tile__heading").text()).toBe(tile.title);
         expect(link.find(".admin-tile__description").text()).toBe(tile.description);
       });
+    });
+
+    it("should render the Download MI Report tile linking to /mi-report", () => {
+      const data = { ...en, user: { id: "admin-1" } };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const link = $('a.admin-tile[href="/mi-report"]');
+      expect(link).toHaveLength(1);
+      expect(link.find(".admin-tile__heading").text()).toBe("Download MI Report");
     });
 
     it("should render the Welsh heading and tiles", () => {

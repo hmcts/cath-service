@@ -189,6 +189,46 @@ describe("filter-toggle", () => {
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
   });
 
+  it("should leave the panel hidden when the reveal layout has no toggle button", async () => {
+    // Arrange — reveal-layout page with filters applied but no toggle rendered in the action bar.
+    document.body.innerHTML = `
+      <div class="moj-filter-layout app-filter-layout--reveal">
+        <div class="moj-filter moj-js-hidden" data-module="moj-filter"
+             data-hide-text="Hide filters" data-start-hidden="false"></div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert — nothing to sync against, so the panel is not revealed.
+    const filter = document.querySelector(".moj-filter") as HTMLElement;
+    expect(filter.classList.contains("moj-js-hidden")).toBe(true);
+  });
+
+  it("should not change the toggle when the reveal panel is already expanded", async () => {
+    // Arrange — reveal-layout page where the toggle already reports the panel as open.
+    document.body.innerHTML = `
+      <div class="moj-action-bar"><div class="moj-action-bar__filter">
+        <button type="button" aria-expanded="true">Hide filters</button>
+      </div></div>
+      <div class="moj-filter-layout app-filter-layout--reveal">
+        <div class="moj-filter" data-module="moj-filter"
+             data-hide-text="Hide filters" data-start-hidden="false"></div>
+      </div>
+    `;
+    const { initFilterToggle } = await import("./filter-toggle.js");
+
+    // Act
+    initFilterToggle();
+
+    // Assert — toggle state untouched.
+    const toggle = document.querySelector(".moj-action-bar__filter button") as HTMLButtonElement;
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.textContent).toBe("Hide filters");
+  });
+
   it("should render the hide button after the apply button as a plain (non-cross) secondary button", async () => {
     // Arrange
     document.body.innerHTML = `

@@ -14,7 +14,7 @@ jobs:
     name: Detect Code Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^(yarn\\.lock|apps/|libs/|helm/|docs/api/|\\.github/workflows/)"
+      paths: "^(yarn\\.lock|apps/|libs/|helm/|docs/api/|\\.github/workflows/|Dockerfile|\\.dockerignore)"
       cache-key: code
 
   detect-infra-changes:
@@ -44,6 +44,14 @@ jobs:
     uses: ./.github/workflows/stage.infrastructure.yml
     with:
       plan-only: false
+      # Every non-prod environment is applied from master. Each gets its own
+      # terraform state container (tfstate-{environment}) and the legs are
+      # independent - fail-fast is off, so a demo failure cannot cancel aat.
+      # ithc is parked - its cath-ithc key vault name is held by a soft-deleted
+      # vault with purge protection until 2026-12-21. Re-add it here and in
+      # workflow.preview.yml once that passes; the per-environment lookups in
+      # stage.infrastructure.yml already carry the correct values for it.
+      environments: '["aat","demo","perftest"]'
     secrets: inherit
 
   deploy-stage:
@@ -103,6 +111,25 @@ jobs:
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
       affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
+    secrets: inherit
+
+  # Demo and perftest redeploy the image promote-stage just promoted. They run
+  # after promote, so a failure here turns the run red but cannot touch aat.
+  # Separate jobs rather than a matrix, so one environment failing cannot cancel
+  # the other. Keyed off promote-stage, so if promotion moves behind E2E (#1004)
+  # these inherit that gate.
+  deploy-demo:
+    name: Demo
+    needs: [promote-stage]
+    if: always() && needs.promote-stage.result == 'success'
+    uses: ./.github/workflows/workflow.demo.yml
+    secrets: inherit
+
+  deploy-perftest:
+    name: Perftest
+    needs: [promote-stage]
+    if: always() && needs.promote-stage.result == 'success'
+    uses: ./.github/workflows/workflow.perftest.yml
     secrets: inherit
 
   publish-openapi:

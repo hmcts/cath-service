@@ -1,5 +1,6 @@
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { generateFamilyDailyCauseListExcel } from "./excel/excel-generator.js";
 export { cy as familyDailyCauseListCy } from "./locales/cy.js";
 export { en as familyDailyCauseListEn } from "./locales/en.js";
 export * from "./models/types.js";

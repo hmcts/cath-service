@@ -18,13 +18,20 @@
       "versioningTemplate": "node"
     },
     {
-      "description": "Update Node.js version in Dockerfiles",
+      "description": "Update Node.js version in the root Dockerfile. The base image is an HMCTS mirror declared via ARG, not a bare `FROM node:`.",
       "fileMatch": ["(^|/)Dockerfile[^/]*$"],
-      "matchStrings": ["FROM node:(?<currentValue>[0-9]+(?:\\.[0-9]+)?(?:\\.[0-9]+)?)-(?<currentVariant>alpine|slim|bullseye|bookworm)(?:\\s|$)"],
+      "matchStrings": ["ARG NODE_IMAGE=\\S*node:(?<currentValue>[0-9]+(?:\\.[0-9]+)?(?:\\.[0-9]+)?)-(?<currentVariant>alpine|slim|bullseye|bookworm)(?:\\s|$)"],
       "depNameTemplate": "node",
       "datasourceTemplate": "docker",
       "packageNameTemplate": "node",
       "versioningTemplate": "node"
+    },
+    {
+      "description": "Update the pinned corepack version in the root Dockerfile.",
+      "fileMatch": ["(^|/)Dockerfile[^/]*$"],
+      "matchStrings": ["ARG COREPACK_VERSION=(?<currentValue>\\S+)"],
+      "depNameTemplate": "corepack",
+      "datasourceTemplate": "npm"
     },
     {
       "description": "Update Node.js version in GitHub Actions",
@@ -71,7 +78,7 @@
       "automerge": false
     },
     {
-      "description": "Node.js version updates always need manual review - a single update moves .nvmrc, four Dockerfile base images and three workflow files together.",
+      "description": "Node.js version updates always need manual review - a single update moves .nvmrc, the root Dockerfile base image and three workflow files together.",
       "matchPackageNames": ["node"],
       "automerge": false
     }

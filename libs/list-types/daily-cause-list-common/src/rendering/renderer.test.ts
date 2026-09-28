@@ -43,9 +43,67 @@ describe("renderCauseListData", () => {
     });
 
     expect(result.header.locationName).toBe("Oxford Combined Court Centre");
-    expect(result.header.addressLines).toEqual(["St Aldate's", "Oxford", "Oxfordshire", "OX1 1TL"]);
+    expect(result.header.addressLines).toEqual(["St Aldate's", "OX1 1TL"]);
     expect(result.header.contentDate).toBe("1 January 2025");
     expect(result.header.lastUpdated).toBe("12 November 2025 at 9am");
+  });
+
+  it("should exclude town and county from the address lines when both are supplied", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Oxford Combined Court Centre",
+        venueAddress: {
+          line: ["St Aldate's", "Second Line"],
+          town: "Oxford",
+          county: "Oxfordshire",
+          postCode: "OX1 1TL"
+        }
+      },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual(["St Aldate's", "Second Line", "OX1 1TL"]);
+    expect(result.header.addressLines).not.toContain("Oxford");
+    expect(result.header.addressLines).not.toContain("Oxfordshire");
+  });
+
+  it("should return the address lines and postcode when only line and postCode are supplied", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: { venueName: "Test Court", venueAddress: { line: ["Line 1"], postCode: "AB1 2CD" } },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual(["Line 1", "AB1 2CD"]);
+  });
+
+  it("should return empty address lines when only town and county are supplied", async () => {
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: { venueName: "Test Court", venueAddress: { town: "Oxford", county: "Oxfordshire" } },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.header.addressLines).toEqual([]);
   });
 
   it("should return empty address lines when venue has no address", async () => {
@@ -65,7 +123,7 @@ describe("renderCauseListData", () => {
     expect(result.header.locationName).toBe("Preston");
   });
 
-  it("should render open justice information", async () => {
+  it("should fall back to the JSON venue name for open justice when the location does not resolve", async () => {
     const inputData = {
       document: { publicationDate: "2025-11-12T09:00:00.000Z" },
       venue: {
@@ -88,6 +146,65 @@ describe("renderCauseListData", () => {
     expect(result.openJustice.venueName).toBe("Oxford Combined Court Centre");
     expect(result.openJustice.email).toBe("enquiries.oxford.countycourt@justice.gov.uk");
     expect(result.openJustice.phone).toBe("01865 264 200");
+  });
+
+  it("should use the resolved location name for open justice instead of the JSON venue name", async () => {
+    (getLocationById as any).mockResolvedValue({ name: "Barnet Civil and Family Courts Centre" });
+
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: {
+        venueName: "Barnet Venue From Json",
+        venueAddress: { line: ["St Mary's Court"], postCode: "EN5 5BE" },
+        venueContact: { venueTelephone: "0300 123 5577", venueEmail: "family.barnet.countycourt@justice.gov.uk" }
+      },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "en"
+    });
+
+    expect(result.openJustice.venueName).toBe("Barnet Civil and Family Courts Centre");
+    expect(result.openJustice.venueName).not.toBe("Barnet Venue From Json");
+  });
+
+  it("should use the Welsh location name for open justice when the Welsh locale is requested", async () => {
+    (getLocationById as any).mockResolvedValue({ name: "Test Court", welshName: "Llys Prawf" });
+
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: { venueName: "Venue From Json", venueAddress: { line: ["Address"], postCode: "AB1 2CD" } },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy"
+    });
+
+    expect(result.openJustice.venueName).toBe("Llys Prawf");
+  });
+
+  it.each(["en", "cy"])("should keep the open justice venue name and header location name identical for the %s locale", async (locale) => {
+    (getLocationById as any).mockResolvedValue({ name: "Test Court", welshName: "Llys Prawf" });
+
+    const inputData = {
+      document: { publicationDate: "2025-11-12T09:00:00.000Z" },
+      venue: { venueName: "Venue From Json", venueAddress: { line: ["Address"], postCode: "AB1 2CD" } },
+      courtLists: []
+    };
+
+    const result = await renderCauseListData(inputData, {
+      locationId: "240",
+      contentDate: new Date("2025-01-01"),
+      locale
+    });
+
+    expect(result.openJustice.venueName).toBe(result.header.locationName);
   });
 
   it("should render courtroom sittings correctly", async () => {
