@@ -59,4 +59,9 @@ jobs:
     with:
       change-id: demo
       urls: ${{ needs.deploy-stage.outputs.urls }}
-      runner-group: azure-prod
+      # demo.platform.hmcts.net is linked to the stg GitHub runner vnet
+      # (hub-github-network-github-stg) but not the prod one, so azure-prod
+      # runners fall through to public DNS and get NXDOMAIN for every release
+      # host. See environments/demo/demo-platform-hmcts-net.yml in
+      # hmcts/azure-private-dns.
+      runner-group: azure-nonprod
