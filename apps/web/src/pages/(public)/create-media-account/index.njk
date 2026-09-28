@@ -28,11 +28,11 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ title }}</h1>
+    <h1 class="govuk-heading-l">{{ title }}</h1>
 
     <p class="govuk-body">{{ openingText1 }}</p>
     <p class="govuk-body">{{ openingText2 }}</p>
-    <p class="govuk-body">{{ openingText3 }}</p>
+    <p class="govuk-hint govuk-!-margin-bottom-7">{{ openingText3 }}</p>
 
     <form method="post" enctype="multipart/form-data" novalidate>
 
@@ -106,7 +106,7 @@
                aria-describedby="idProof-hint-identity idProof-hint-consent idProof-hint-filetype{% if (fileErrorText and fileErrorText | length > 0) %} idProof-error{% endif %}" />
       </div>
 
-      <h2 class="govuk-heading-m">{{ termsHeading }}</h2>
+      <h2 class="govuk-heading-l">{{ termsHeading }}</h2>
       <p class="govuk-body">{{ termsText1 }}</p>
       <p class="govuk-body">{{ termsText2 }}</p>
       <p class="govuk-body">{{ termsText3 }}</p>

@@ -62,7 +62,7 @@ describe("create-media-account template", () => {
       const bodyText = $(".govuk-body").text();
       expect(bodyText).toContain(en.openingText1);
       expect(bodyText).toContain(en.openingText2);
-      expect(bodyText).toContain(en.openingText3);
+      expect($(".govuk-hint").text()).toContain(en.openingText3);
     });
 
     it("should render the form fields with labels and hints", () => {
@@ -88,7 +88,7 @@ describe("create-media-account template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      const heading = $("h2.govuk-heading-m");
+      const heading = $("h2.govuk-heading-l");
       expect(heading.text()).toContain(en.termsHeading);
 
       const paragraphs = $("form p.govuk-body");
@@ -204,14 +204,14 @@ describe("create-media-account template", () => {
       const bodyText = $(".govuk-body").text();
       expect(bodyText).toContain(cy.openingText1);
       expect(bodyText).toContain(cy.openingText2);
-      expect(bodyText).toContain(cy.openingText3);
+      expect($(".govuk-hint").text()).toContain(cy.openingText3);
       expect($('label[for="employer"]').text()).toContain(cy.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(cy.uploadLabel);
       expect($("#idProof-hint-identity").text()).toContain(cy.uploadHintIdentity);
       expect($("#idProof-hint-consent").text()).toContain(cy.uploadHintConsent);
       expect($("#idProof-hint-filetype").text()).toContain(cy.uploadHintFileType);
       expect($("#email-hint").text()).toContain(cy.emailHint);
-      expect($("h2.govuk-heading-m").text()).toContain(cy.termsHeading);
+      expect($("h2.govuk-heading-l").text()).toContain(cy.termsHeading);
       expect(bodyText).toContain(cy.termsText1);
       expect(bodyText).toContain(cy.termsText2);
       expect(bodyText).toContain(cy.termsText3);
