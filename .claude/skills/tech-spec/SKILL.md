@@ -10,7 +10,7 @@ Use this skill when a GitHub issue needs a full technical specification written 
 ## Inputs
 
 Provide one of the following:
-- A GitHub issue number (e.g. `#659`) — the skill reads the issue body from the repo
+- A GitHub issue number (e.g. `#659`) — the skill fetches the issue body from GitHub
 - The raw issue title and body pasted into the conversation
 
 Optionally specify a template type: `new-feature` (default), `technical-task`, `enhancement`, `spike`, or `bug`. Templates are in `resources/templates/`.
@@ -18,13 +18,14 @@ Optionally specify a template type: `new-feature` (default), `technical-task`, `
 ## Process
 
 1. **Read the template** from `resources/templates/<type>.md`. Remove all guidance text in round brackets from the output — it is for orientation only.
-2. **Read design guidance** from `.claude/rules/design.md` for GOV.UK Design System patterns (components, one-question-per-page, WCAG 2.2 AA requirements).
-3. **Search the codebase** for similar existing implementations:
-   - Check `apps/web/src/pages/` for existing page controllers and templates that follow the same pattern
-   - Check `libs/` for shared components, locale files, or utilities that would be reused
-   - Check `docs/tickets/` for prior specs on related issues
-4. **Output the completed specification as a markdown document in the chat.**
-5. **For Welsh content**, insert `[TRANSLATE: "English text here"]` markers wherever Welsh text is needed. Do not attempt to write Welsh directly. The `welsh-translation` skill resolves these markers.
+2. **Read design guidance** from `resources/design-guidance.md` for GOV.UK Design System patterns (components, one-question-per-page, WCAG 2.2 AA requirements).
+3. **Read project conventions** from `CLAUDE.md` in the project root if it exists — for naming conventions, module structure, and page patterns. If absent, infer conventions from codebase patterns found in step 4.
+4. **Search the codebase** for similar existing implementations if codebase access is available:
+   - Existing page controllers and templates that follow the same pattern
+   - Shared components, locale files, or utilities that would be reused
+   - Prior specs in `docs/tickets/` for related issues
+5. **Output the completed specification as a markdown document in the chat.**
+6. **For Welsh content**, insert `[TRANSLATE: "English text here"]` markers wherever Welsh text is needed. Do not attempt to write Welsh directly. The `welsh-translation` skill resolves these markers.
 
 ### Template selection guide
 

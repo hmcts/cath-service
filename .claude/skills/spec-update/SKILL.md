@@ -23,7 +23,9 @@ Provide:
 1. **Read the existing spec** from `docs/tickets/<issue-number>/specification.md`.
 2. **Read the update checklist** from `resources/update-checklist.md` — use it as a guide for what to check and verify.
 3. **Review the change source** (new comments, clarifications, or the description provided) and identify which sections of the spec are affected.
-4. **For each affected section**, update it using the Edit tool — one Edit call per section changed.
+4. **For each affected section**, update it — one change per section.
+   - If file-write access is available, apply edits directly to the file.
+   - If file-write access is not available, output the full updated specification as a fenced markdown block in chat instead.
    - Do not rewrite sections that are not affected.
    - Do not change the structure or section numbering.
 5. **Output a change summary to the user** (do not write it to the file):
@@ -35,7 +37,7 @@ Provide:
 
 ## Output
 
-Updated `docs/tickets/<issue-number>/specification.md` with targeted edits, plus a change summary output to the user in the chat.
+The updated specification — either applied directly to `docs/tickets/<issue-number>/specification.md` (if file-write access is available) or output as a fenced markdown block in chat — plus a change summary.
 
 ## Notes
 

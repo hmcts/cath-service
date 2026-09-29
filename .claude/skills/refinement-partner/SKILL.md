@@ -17,8 +17,8 @@ Provide one of the following:
 
 The skill runs as a conversation. It does not produce a specification — that is `tech-spec`'s job.
 
-1. **Read the issue or description** provided.
-2. **Check for an existing spec** in `docs/tickets/<issue-number>/specification.md` if an issue number was given.
+1. **Read the issue or description** provided. If an issue number was given, fetch it from GitHub.
+2. **Check for an existing spec** in `docs/tickets/<issue-number>/specification.md` if an issue number was given and repo access is available.
 3. **Work through the refinement guide** in `resources/refinement-guide.md`, asking questions in a natural conversational order — not as a mechanical list. Ask follow-up questions based on the answers.
 4. **Summarise decisions** at the end of the conversation: a bullet list of what was decided, what is still open, and suggested next steps (`tech-spec`, `spec-update`, or raising new tickets for descoped items).
 
