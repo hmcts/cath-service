@@ -51,12 +51,12 @@ describe("blob-explorer-json-file template", () => {
       expect($("h2").text()).toContain(en.jsonFileMetadataHeading);
       expect($("button").text()).toContain(en.jsonFileResubmitButton);
 
-      const tableText = $(".govuk-table").text();
-      expect(tableText).toContain(en.metadataArtefactId);
-      expect(tableText).toContain(mockMetadata.artefactId);
-      expect(tableText).toContain(en.metadataLocationName);
-      expect(tableText).toContain(mockMetadata.locationName);
-      expect(tableText).toContain(`formatted:${mockMetadata.contentDate}`);
+      const summaryListText = $(".govuk-summary-list").text();
+      expect(summaryListText).toContain(en.metadataArtefactId);
+      expect(summaryListText).toContain(mockMetadata.artefactId);
+      expect(summaryListText).toContain(en.metadataLocationName);
+      expect(summaryListText).toContain(mockMetadata.locationName);
+      expect(summaryListText).toContain(`formatted:${mockMetadata.contentDate}`);
 
       expect($('a[href="https://example.com/rendered.html"]').text()).toContain(en.jsonFileLinkToTemplate);
       expect($(".govuk-details__summary-text").text()).toContain(en.jsonFileAccordionTitle);
@@ -87,7 +87,7 @@ describe("blob-explorer-json-file template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, [en.jsonFileError]);
-      expect($(".govuk-table")).toHaveLength(0);
+      expect($(".govuk-summary-list")).toHaveLength(0);
       expect($("button")).toHaveLength(0);
     });
   });
@@ -107,7 +107,7 @@ describe("blob-explorer-json-file template", () => {
 
       expect($("h1").text()).toContain(cy.header);
       expect($("h2").text()).toContain(cy.jsonFileMetadataHeading);
-      expect($(".govuk-table").text()).toContain(cy.metadataArtefactId);
+      expect($(".govuk-summary-list").text()).toContain(cy.metadataArtefactId);
       assertNoErrors($);
     });
   });
