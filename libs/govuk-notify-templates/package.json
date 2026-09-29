@@ -1,5 +1,5 @@
 {
-  "name": "@hmcts/notification",
+  "name": "@hmcts/govuk-notify-templates",
   "version": "1.0.0",
   "type": "module",
   "exports": {
@@ -17,13 +17,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write --unsafe ."
   },
-  "dependencies": {
-    "@hmcts/govuk-notify-client": "workspace:*",
-    "@hmcts/govuk-notify-templates": "workspace:*",
-    "notifications-node-client": "^8.2.1"
-  },
   "devDependencies": {
-    "@types/node": "^22.10.2",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

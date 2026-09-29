@@ -1,9 +1,12 @@
+import {
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN
+} from "@hmcts/govuk-notify-templates";
+
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
 const SJP_LIST_TYPE_NAMES = ["SJP_PUBLIC_LIST", "SJP_DELTA_PUBLIC_LIST", "SJP_PRESS_LIST", "SJP_DELTA_PRESS_LIST"];
@@ -19,29 +22,17 @@ export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: b
   // large to link: use the no-links template. The PDF/Excel templates require
   // pdf_link_*/excel_link_* personalisation that is only set when a buffer exists.
   if (!filesUnder2MB || (!hasPdf && !hasExcel)) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS environment variable is not set");
-    }
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS;
   }
 
   if (hasExcel && !hasPdf) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY environment variable is not set");
-    }
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY;
   }
 
   if (hasPdf && hasExcel) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set");
-    }
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL;
   }
 
-  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY) {
-    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY environment variable is not set");
-  }
   return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
 }
 

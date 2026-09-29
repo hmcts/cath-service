@@ -42,81 +42,40 @@ describe("template-config", () => {
 
   describe("getSubscriptionTemplateId", () => {
     it("should return no-links template when files exceed 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = "no-links-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: false })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: false })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
     });
 
     it("should return no-links template when a single file exceeds 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = "no-links-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: false })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: false })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
     });
 
     it("should return the subscription PDF+Excel template when both formats are under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "subscription-pdf-excel-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("subscription-pdf-excel-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("42f65ada-6de0-45da-822a-9632f6f682fd");
     });
 
     it("should return the subscription Excel-only template when only Excel is present under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY = "subscription-excel-only-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toBe("subscription-excel-only-template");
+      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toBe("2117d63a-eb4d-4e0b-996c-56367f719905");
     });
 
     it("should return the PDF-only template when only a PDF is present under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "pdf-only-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("pdf-only-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("ac63ed12-c179-416d-b9af-83b2b37752bf");
     });
 
     it("should return no-links template when there are no files", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = "no-links-template";
-
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
     });
+  });
 
-    it("should throw when no-links template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = "";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: false })).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS environment variable is not set"
-      );
-    });
-
-    it("should throw when subscription PDF+Excel template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set"
-      );
-    });
-
-    it("should throw when subscription Excel-only template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY = "";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY environment variable is not set"
-      );
-    });
-
-    it("should throw when PDF-only template is not set", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY environment variable is not set"
-      );
+  describe("getSystemAdminTemplateId", () => {
+    it("should return the system admin template id", async () => {
+      const { getSystemAdminTemplateId } = await import("./template-config.js");
+      expect(getSystemAdminTemplateId()).toBe("ec6c863f-3c6f-4d75-82b9-c3e805be20b9");
     });
   });
 
