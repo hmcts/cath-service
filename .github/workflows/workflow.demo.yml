@@ -5,12 +5,16 @@ name: Demo
 # for the same source.
 #
 # How it runs:
-#   - workflow_call: workflow.main.yml calls this once promote-stage succeeds, so
-#     github.sha is the master commit just built, deployed to aat, smoke-tested
-#     and promoted.
+#   - workflow_run: starts when a Main run on master completes, so it is a
+#     separate run that cannot turn the master build red or hold it open.
+#     job.check-promoted.yml skips the deploy unless that run promoted, and
+#     deploys the commit it built rather than the current master HEAD.
 #   - workflow_dispatch: redeploys the dispatched ref's HEAD (normally master).
-#   - push to demo: inert until the demo branch exists. Moving the deploy onto a
-#     dedicated branch is #1084.
+#   - push to demo: inert until the demo branch exists. Moving the deploy onto
+#     a dedicated branch is #1084.
+#
+# workflow_run only ever runs the default-branch copy of this file, so edits to
+# the trigger do nothing until merged.
 #
 # Infrastructure is applied from master (stage.infrastructure.yml runs Terraform
 # for every non-prod environment), so it is not repeated here either.
@@ -19,24 +23,36 @@ on:
     branches:
       - demo
   workflow_dispatch:
-  workflow_call:
+  workflow_run:
+    workflows: [Main]
+    types: [completed]
+    branches: [master]
 
 # Serialises a master-triggered deploy against a manual dispatch of the same
-# release. It must differ from the caller's `main` group: a called workflow
-# sharing its caller's group deadlocks.
+# release.
 concurrency:
   group: demo
   cancel-in-progress: false
 
 jobs:
+  check-promoted:
+    name: Check Promoted
+    permissions:
+      actions: read
+    uses: ./.github/workflows/job.check-promoted.yml
+
   resolve-images:
     name: Resolve Promoted Images
+    needs: [check-promoted]
+    if: needs.check-promoted.outputs.should-deploy == 'true'
     uses: ./.github/workflows/job.resolve-promoted-images.yml
+    with:
+      sha: ${{ needs.check-promoted.outputs.sha }}
     secrets: inherit
 
   deploy-stage:
     name: Deploy to Demo
-    needs: [resolve-images]
+    needs: [check-promoted, resolve-images]
     uses: ./.github/workflows/stage.deploy.yml
     with:
       # change-id gives the release name cath-service-demo. It must NOT drive the
@@ -49,6 +65,7 @@ jobs:
       helm-apps: ${{ needs.resolve-images.outputs.helm-apps }}
       image-tag: ${{ needs.resolve-images.outputs.image-tag }}
       environment: demo
+      ref: ${{ needs.check-promoted.outputs.sha }}
     secrets: inherit
 
   smoke-test-stage:
