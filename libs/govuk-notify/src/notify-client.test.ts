@@ -77,70 +77,37 @@ describe("sendNotifyEmail", () => {
       })
     ).rejects.toBe(apiError);
   });
+});
 
-  it("should upload a PDF and include link_to_file/pdf_link_to_file when pdfBuffer is provided", async () => {
-    const { sendNotifyEmail } = await import("./notify-client.js");
-    const pdfBuffer = Buffer.from("PDF content");
+describe("prepareNotifyFileUpload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should call NotifyClient.prepareUpload with default options", async () => {
+    const { prepareNotifyFileUpload } = await import("./notify-client.js");
+    const fileBuffer = Buffer.from("file content");
     mockPrepareUpload.mockReturnValue({ file: "uploaded-file-reference" });
 
-    await sendNotifyEmail({
-      apiKey: "test-api-key",
-      templateId: "test-template-id",
-      emailAddress: "user@example.com",
-      pdfBuffer
-    });
+    const result = prepareNotifyFileUpload("test-api-key", fileBuffer);
 
-    expect(mockPrepareUpload).toHaveBeenCalledWith(pdfBuffer, {
+    expect(mockPrepareUpload).toHaveBeenCalledWith(fileBuffer, {
       confirmEmailBeforeDownload: false,
       retentionPeriod: "1 week"
     });
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      "test-template-id",
-      "user@example.com",
-      expect.objectContaining({
-        personalisation: expect.objectContaining({
-          link_to_file: { file: "uploaded-file-reference" },
-          pdf_link_to_file: { file: "uploaded-file-reference" },
-          pdf_link_text: "Download PDF version"
-        })
-      })
-    );
+    expect(result).toEqual({ file: "uploaded-file-reference" });
   });
 
-  it("should upload an Excel file and include excel_link_to_file when excelBuffer is provided", async () => {
-    const { sendNotifyEmail } = await import("./notify-client.js");
-    const excelBuffer = Buffer.from("Excel content");
-    mockPrepareUpload.mockReturnValue({ file: "uploaded-excel-reference" });
+  it("should allow overriding the default options", async () => {
+    const { prepareNotifyFileUpload } = await import("./notify-client.js");
+    const fileBuffer = Buffer.from("file content");
 
-    await sendNotifyEmail({
-      apiKey: "test-api-key",
-      templateId: "test-template-id",
-      emailAddress: "user@example.com",
-      excelBuffer
+    prepareNotifyFileUpload("test-api-key", fileBuffer, { retentionPeriod: "26 weeks" });
+
+    expect(mockPrepareUpload).toHaveBeenCalledWith(fileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "26 weeks"
     });
-
-    expect(mockSendEmail).toHaveBeenCalledWith(
-      "test-template-id",
-      "user@example.com",
-      expect.objectContaining({
-        personalisation: expect.objectContaining({
-          excel_link_to_file: { file: "uploaded-excel-reference" },
-          excel_link_text: "Download Excel version"
-        })
-      })
-    );
-  });
-
-  it("should not upload attachments when no buffers are provided", async () => {
-    const { sendNotifyEmail } = await import("./notify-client.js");
-
-    await sendNotifyEmail({
-      apiKey: "test-api-key",
-      templateId: "test-template-id",
-      emailAddress: "user@example.com"
-    });
-
-    expect(mockPrepareUpload).not.toHaveBeenCalled();
   });
 });
 

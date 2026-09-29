@@ -1,4 +1,4 @@
-import { extractNotifyError, sendNotifyEmailWithRetry } from "@hmcts/govuk-notify";
+import { extractNotifyError, prepareNotifyFileUpload, sendNotifyEmailWithRetry } from "@hmcts/govuk-notify";
 import { getApiKey, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
@@ -24,14 +24,15 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   }
 
   try {
+    const apiKey = getApiKey();
+    const personalisation = buildAttachmentPersonalisation(apiKey, params);
+
     const { notificationId } = await sendNotifyEmailWithRetry(
       {
-        apiKey: getApiKey(),
+        apiKey,
         templateId: params.templateId,
         emailAddress: params.emailAddress,
-        personalisation: params.templateParameters,
-        pdfBuffer: params.pdfBuffer,
-        excelBuffer: params.excelBuffer
+        personalisation
       },
       { retryAttempts: NOTIFICATION_RETRY_ATTEMPTS, retryDelayMs: NOTIFICATION_RETRY_DELAY_MS }
     );
@@ -43,4 +44,25 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
     console.error("[send-email] Failed to send email:", message);
     return { success: false, error: `GOV.UK Notify error: ${message}` };
   }
+}
+
+// Subscription Notify templates require pdf_link_*/excel_link_* personalisation
+// keys (see getSubscriptionTemplateId in template-config.ts) — this is specific
+// to the subscription list-download templates, not a generic Notify concern.
+function buildAttachmentPersonalisation(apiKey: string, params: SendEmailParams): Record<string, unknown> {
+  const personalisation: Record<string, unknown> = { ...params.templateParameters };
+
+  if (params.pdfBuffer) {
+    const linkToFile = prepareNotifyFileUpload(apiKey, params.pdfBuffer);
+    personalisation.link_to_file = linkToFile;
+    personalisation.pdf_link_to_file = linkToFile;
+    personalisation.pdf_link_text = "Download PDF version";
+  }
+
+  if (params.excelBuffer) {
+    personalisation.excel_link_to_file = prepareNotifyFileUpload(apiKey, params.excelBuffer);
+    personalisation.excel_link_text = "Download Excel version";
+  }
+
+  return personalisation;
 }

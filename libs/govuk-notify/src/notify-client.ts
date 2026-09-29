@@ -5,13 +5,16 @@ export interface SendNotifyEmailParams {
   templateId: string;
   emailAddress: string;
   personalisation?: Record<string, unknown>;
-  pdfBuffer?: Buffer;
-  excelBuffer?: Buffer;
   reference?: string;
 }
 
 export interface SendNotifyEmailResult {
   notificationId: string;
+}
+
+export interface NotifyFileUploadOptions {
+  confirmEmailBeforeDownload?: boolean;
+  retentionPeriod?: string;
 }
 
 interface NotifyEmailResponse {
@@ -20,29 +23,9 @@ interface NotifyEmailResponse {
 
 export async function sendNotifyEmail(params: SendNotifyEmailParams): Promise<SendNotifyEmailResult> {
   const notifyClient = new NotifyClient(params.apiKey);
-  const personalisation: Record<string, unknown> = { ...params.personalisation };
-
-  if (params.pdfBuffer) {
-    const linkToFile = (notifyClient as any).prepareUpload(params.pdfBuffer, {
-      confirmEmailBeforeDownload: false,
-      retentionPeriod: "1 week"
-    });
-    personalisation.link_to_file = linkToFile;
-    personalisation.pdf_link_to_file = linkToFile;
-    personalisation.pdf_link_text = "Download PDF version";
-  }
-
-  if (params.excelBuffer) {
-    const excelLink = (notifyClient as any).prepareUpload(params.excelBuffer, {
-      confirmEmailBeforeDownload: false,
-      retentionPeriod: "1 week"
-    });
-    personalisation.excel_link_to_file = excelLink;
-    personalisation.excel_link_text = "Download Excel version";
-  }
 
   const response = (await (notifyClient as any).sendEmail(params.templateId, params.emailAddress, {
-    personalisation,
+    personalisation: params.personalisation ?? {},
     ...(params.reference ? { reference: params.reference } : {})
   })) as unknown as NotifyEmailResponse;
 
@@ -59,6 +42,17 @@ export async function sendNotifyEmailWithRetry(
   options: { retryAttempts: number; retryDelayMs: number }
 ): Promise<SendNotifyEmailResult> {
   return retryWithBackoff(() => sendNotifyEmail(params), options.retryAttempts, options.retryDelayMs);
+}
+
+// Wraps NotifyClient.prepareUpload, which is untyped in notifications-node-client.
+// Used by callers that need to attach a downloadable file link via personalisation.
+export function prepareNotifyFileUpload(apiKey: string, fileBuffer: Buffer, options?: NotifyFileUploadOptions): unknown {
+  const notifyClient = new NotifyClient(apiKey);
+  return (notifyClient as any).prepareUpload(fileBuffer, {
+    confirmEmailBeforeDownload: false,
+    retentionPeriod: "1 week",
+    ...options
+  });
 }
 
 async function retryWithBackoff<T>(fn: () => Promise<T>, retries: number, delay: number): Promise<T> {
