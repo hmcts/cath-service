@@ -28,6 +28,8 @@ jobs:
   resolve-images:
     name: Resolve Promoted Images
     uses: ./.github/workflows/job.resolve-promoted-images.yml
+    with:
+      sha: ${{ github.sha }}
     secrets: inherit
 
   deploy-stage:
