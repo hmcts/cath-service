@@ -1856,21 +1856,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/govuk-notify-client@workspace:*, @hmcts/govuk-notify-client@workspace:libs/govuk-notify-client":
+"@hmcts/govuk-notify@workspace:*, @hmcts/govuk-notify@workspace:libs/govuk-notify":
   version: 0.0.0-use.local
-  resolution: "@hmcts/govuk-notify-client@workspace:libs/govuk-notify-client"
+  resolution: "@hmcts/govuk-notify@workspace:libs/govuk-notify"
   dependencies:
     "@types/node": "npm:^22.10.2"
     notifications-node-client: "npm:8.4.0"
-    typescript: "npm:6.0.3"
-    vitest: "npm:4.1.10"
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/govuk-notify-templates@workspace:*, @hmcts/govuk-notify-templates@workspace:libs/govuk-notify-templates":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/govuk-notify-templates@workspace:libs/govuk-notify-templates"
-  dependencies:
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
   languageName: unknown
@@ -2051,8 +2042,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
-    "@hmcts/govuk-notify-client": "workspace:*"
-    "@hmcts/govuk-notify-templates": "workspace:*"
+    "@hmcts/govuk-notify": "workspace:*"
     "@types/node": "npm:^22.10.2"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:6.0.3"
@@ -2084,8 +2074,7 @@ __metadata:
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
-    "@hmcts/govuk-notify-client": "workspace:*"
-    "@hmcts/govuk-notify-templates": "workspace:*"
+    "@hmcts/govuk-notify": "workspace:*"
     "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/iac-daily-list": "workspace:*"
     "@hmcts/list-types-common": "workspace:*"

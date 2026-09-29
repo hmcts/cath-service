@@ -1,4 +1,4 @@
-import { extractNotifyError, sendNotifyEmailWithRetry } from "@hmcts/govuk-notify-client";
+import { extractNotifyError, sendNotifyEmailWithRetry } from "@hmcts/govuk-notify";
 import { getApiKey, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);

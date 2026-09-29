@@ -4,7 +4,7 @@ import {
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY,
   GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN
-} from "@hmcts/govuk-notify-templates";
+} from "@hmcts/govuk-notify";
 
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";

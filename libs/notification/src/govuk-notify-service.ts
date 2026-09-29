@@ -1,9 +1,9 @@
-import { sendNotifyEmail } from "@hmcts/govuk-notify-client";
 import {
   GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT,
   GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT,
-  GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION
-} from "@hmcts/govuk-notify-templates";
+  GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION,
+  sendNotifyEmail
+} from "@hmcts/govuk-notify";
 
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY;
 const MEDIA_PASSWORD_RESET_LINK = process.env.MEDIA_PASSWORD_RESET_LINK;
