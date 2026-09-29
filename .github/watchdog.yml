@@ -52,6 +52,31 @@ checks:
       | summarize occurrences = count(), sample = any(outerMessage)
           by problemId, app, type
 
+  # A/B kill switch: 5xx on a flagged page. The watchdog workflow turns the flag off when
+  # this fires. Threshold is two, not zero, so one transient 5xx cannot end the test;
+  # server-errors still alerts on the first.
+  #
+  # Unlike the other checks, preview deployments are included: they share the LaunchDarkly
+  # test environment with STG, so a broken variant on a preview is a broken variant.
+  #
+  # To add a page, add its path and flag to the case() below.
+  - id: feature-flag-errors
+    severity: high
+    description: Two or more 5xx responses on a page behind a feature flag.
+    fingerprint-by: [name, app, deployment, flag]
+    rule: { column: occurrences, value: '> 1' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where toint(resultCode) >= 500
+      | extend flag = case(
+          url has '/subscriptions/manage', 'third-party-subscriptions-radio-buttons',
+          '')
+      | where isnotempty(flag)
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance),
+               deployment = coalesce(extract(@'-(pr-[0-9]+)-', 1, cloud_RoleInstance), 'stg')
+      | summarize occurrences = count(), resultCodes = make_set(resultCode) by name, app, deployment, flag
+
   - id: server-errors
     severity: high
     description: Any 5xx response, health probes excluded.

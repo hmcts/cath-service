@@ -109,6 +109,9 @@ cath-web:
             alias: AZURE_B2C_CLIENT_SECRET
           - name: b2c-ad-url
             alias: AZURE_B2C_DOMAIN
+          # LaunchDarkly SDK key (CaTH project, test environment).
+          - name: cath-ld-sdk-key
+            alias: CATH_LD_KEY
           # B2C secrets for CaTH user sign-in
           - name: auto-pip-stg-pip-frontend-stg-id
             alias: B2C_CLIENT_ID
