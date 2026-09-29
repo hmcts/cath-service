@@ -97,6 +97,8 @@ jobs:
       #
       # Flags come from the verdict, not the findings: findings are capped and deduplicated,
       # so a flag switched back on while still broken would never be switched off again.
+      # The verdict's rows are every row the query returned, not only the breaching ones,
+      # so the check's rule (occurrences > 1) is applied again here.
       # Suppressions are bypassed too; to stop a page rolling back, remove it from the case()
       # in .github/watchdog.yml.
       #
@@ -111,7 +113,7 @@ jobs:
           set -euo pipefail
           flags=$(jq -r '[.verdicts[]
             | select(.id == "feature-flag-errors")
-            | select(.fired) | .rows[].flag // empty]
+            | select(.fired) | .rows[] | select(.occurrences > 1) | .flag // empty]
             | unique | map(select(test("^[a-z0-9-]+$"))) | join(",")' "$VERDICT_PATH")
           echo "flags=$flags" >> "$GITHUB_OUTPUT"
 

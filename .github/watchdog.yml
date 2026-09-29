@@ -63,7 +63,7 @@ checks:
   - id: feature-flag-errors
     severity: high
     description: Two or more 5xx responses on a page behind a feature flag.
-    fingerprint-by: [name, app, deployment, flag]
+    fingerprint-by: [app, deployment, flag]
     rule: { column: occurrences, value: '> 1' }
     query: |
       requests
@@ -75,7 +75,8 @@ checks:
       | where isnotempty(flag)
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance),
                deployment = coalesce(extract(@'-(pr-[0-9]+)-', 1, cloud_RoleInstance), 'stg')
-      | summarize occurrences = count(), resultCodes = make_set(resultCode) by name, app, deployment, flag
+      | summarize occurrences = count(), resultCodes = make_set(resultCode), names = make_set(name, 10)
+          by app, deployment, flag
 
   - id: server-errors
     severity: high
