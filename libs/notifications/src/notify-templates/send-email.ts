@@ -36,11 +36,11 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       { retryAttempts: NOTIFICATION_RETRY_ATTEMPTS, retryDelayMs: NOTIFICATION_RETRY_DELAY_MS }
     );
 
-    console.log("[govnotify-client] Successfully sent email with notification ID:", notificationId);
+    console.log("[send-email] Successfully sent email with notification ID:", notificationId);
     return { success: true, notificationId };
   } catch (error) {
     const { message } = extractNotifyError(error);
-    console.error("[govnotify-client] Failed to send email:", message);
+    console.error("[send-email] Failed to send email:", message);
     return { success: false, error: `GOV.UK Notify error: ${message}` };
   }
 }

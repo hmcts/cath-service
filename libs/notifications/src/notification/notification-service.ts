@@ -96,7 +96,7 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../govnotify/govnotify-client.js";
+import { sendEmail } from "../notify-templates/send-email.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
@@ -104,7 +104,7 @@ import {
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
-} from "../govnotify/template-config.js";
+} from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import {
   type CaseSubscriberWithUser,

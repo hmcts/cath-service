@@ -16,7 +16,7 @@ vi.mock("notifications-node-client", () => ({
   })
 }));
 
-describe("govnotify-client", () => {
+describe("send-email", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -40,7 +40,7 @@ describe("govnotify-client", () => {
   });
 
   it("should send email successfully", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const result = await sendEmail({
       emailAddress: "user@example.com",
@@ -68,7 +68,7 @@ describe("govnotify-client", () => {
   });
 
   it("should fail when no templateId is provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const result = await sendEmail({
       emailAddress: "user@example.com",
@@ -86,7 +86,7 @@ describe("govnotify-client", () => {
   });
 
   it("should handle errors and return failure result", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     mockSendEmail.mockRejectedValue(new Error("API Error"));
 
@@ -108,7 +108,7 @@ describe("govnotify-client", () => {
   });
 
   it("should retry on failure and succeed", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
@@ -147,7 +147,7 @@ describe("govnotify-client", () => {
   });
 
   it("should fail after exhausting all retries", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     // Fail consistently (more failures than retry attempts)
     mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockRejectedValueOnce(new Error("Second failure"));
@@ -170,7 +170,7 @@ describe("govnotify-client", () => {
   });
 
   it("should handle non-Error exceptions", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     mockSendEmail.mockRejectedValue("String error");
 
@@ -192,7 +192,7 @@ describe("govnotify-client", () => {
   });
 
   it("should implement exponential backoff in retry logic", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     // Mock setTimeout to track delay values
     const originalSetTimeout = global.setTimeout;
@@ -243,7 +243,7 @@ describe("govnotify-client", () => {
   });
 
   it("should use custom templateId when provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const result = await sendEmail({
       emailAddress: "user@example.com",
@@ -262,7 +262,7 @@ describe("govnotify-client", () => {
   });
 
   it("should upload PDF and include link_to_file and pdf_link_to_file when pdfBuffer is provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const pdfBuffer = Buffer.from("PDF content");
     mockPrepareUpload.mockReturnValue({ file: "uploaded-file-reference" });
@@ -299,7 +299,7 @@ describe("govnotify-client", () => {
   });
 
   it("should upload Excel and include excel_link_to_file when excelBuffer is provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const excelBuffer = Buffer.from("Excel content");
     mockPrepareUpload.mockReturnValue({ file: "uploaded-excel-reference" });
@@ -335,7 +335,7 @@ describe("govnotify-client", () => {
   });
 
   it("should upload both PDF and Excel when both buffers are provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const pdfBuffer = Buffer.from("PDF content");
     const excelBuffer = Buffer.from("Excel content");
@@ -373,7 +373,7 @@ describe("govnotify-client", () => {
   });
 
   it("should send email without file links when no buffers are provided", async () => {
-    const { sendEmail } = await import("./govnotify-client.js");
+    const { sendEmail } = await import("./send-email.js");
 
     const result = await sendEmail({
       emailAddress: "user@example.com",
