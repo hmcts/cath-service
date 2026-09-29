@@ -2,18 +2,11 @@
 
 ## Implementation Tasks
 
-- [x] Add `sjpAdvisoryPrefix: "Please note:"` and `sjpAdvisoryMessage` (AC wording verbatim, including `10:15am` and the trailing full stop) to `apps/web/src/pages/(public)/summary-of-publications/en.ts`
-- [x] Add the same two keys to `apps/web/src/pages/(public)/summary-of-publications/cy.ts` using the Welsh copy supplied in the ticket (`Sylwer:` / `Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP)...`), with straight ASCII apostrophes to match the existing file style
-- [x] Add module-scope `const SJP_LOCATION_ID = 9;` to `apps/web/src/pages/(public)/summary-of-publications/index.ts`, above `IAC_ORDER`
-- [x] Compute `const isSjpVenue = locationId === SJP_LOCATION_ID;` after the existing `/400` guards and add `isSjpVenue`, `sjpAdvisoryPrefix`, `sjpAdvisoryMessage` to the `res.render` context — no change to any query, filter, dedupe or sort
-- [x] Insert the advisory block in `apps/web/src/pages/(public)/summary-of-publications/index.njk` between the `cautionMessage` `{% endif %}` (line 27) and `{% if publications.length > 0 %}` (line 29), as `<p class="govuk-body" id="sjp-publishing-advisory"><strong>{{ sjpAdvisoryPrefix }}</strong> {{ sjpAdvisoryMessage }}</p>` — no `| safe`, no `| sanitiseHtml`, no inline styles
-- [x] Add controller tests to `index.test.ts`: `locationId=9` with publications → `isSjpVenue: true` + English strings; `locationId=9` with `findMany` overridden to `[]` → still `true`; `locationId=1` → `false`; `locationId=9` with locale `cy` → Welsh strings; flag unaffected by user type
-- [x] Add `isSjpVenue` (default `false`), `sjpAdvisoryPrefix` and `sjpAdvisoryMessage` to the `buildData` helper in `index.njk.test.ts`
-- [x] Add template tests: advisory renders exactly once when `isSjpVenue`; `<strong>` contains the prefix; DOM order above `selectListMessage` (publications present) and above `noPublicationsMessage` (publications empty); absent when `isSjpVenue: false` in both states; `cautionMessage` div precedes the advisory when both set; Welsh advisory renders with the `cy` objects and no English advisory text
-- [x] Extend the `requiredKeys` array in `index.njk.test.ts` (line 211) with `sjpAdvisoryPrefix` and `sjpAdvisoryMessage`
-- [x] Extend the existing unauthenticated journey in `e2e-tests/tests/publication-authorisation.spec.ts` (line 90): assert the visible advisory and bold prefix after the English `locationId=9` load (line 92) and the Welsh advisory after the `&lng=cy` load (line 114), plus an inline `axeCheck(page).disableRules(["target-size", "link-name", "region"])` — do not add a new `test()` block
-- [x] Assert the advisory is absent in the existing `"should display no publications message when location has no publications"` test in `e2e-tests/tests/summary-of-publications.spec.ts` (line 301), which uses a dynamic non-SJP location
-- [x] Run `yarn lint:fix` and `yarn format`
-- [x] Run `yarn test` and confirm the summary-of-publications controller and template suites pass
-- [x] Manually verify `/summary-of-publications?locationId=9`, `?locationId=9&lng=cy`, and a non-SJP location such as `?locationId=1`, checking placement relative to the FaCT sentence and the list/no-list sentence — **done against a locally booted app** (`docker compose up -d`, `yarn db:migrate:dev`, `yarn db:seed`, `yarn dev:web:nowatch`). English rendered `<strong>Please note:</strong>` plus the exact AC sentence; Welsh rendered `<strong>Sylwer:</strong>` plus the supplied Welsh copy; `locationId=1` (Oxford Combined Court Centre) rendered zero occurrences of `#sjp-publishing-advisory`. Document order on location 9 confirmed as FaCT sentence → advisory → "Sorry, no lists found for this court". Note: the E2E teardown deletes location 9 (its global-setup creates it as a fixture), so `yarn db:seed` must be re-run after an E2E run or the page 400s.
-- [x] Raise the CLARIFICATIONS NEEDED items from `plan.md` on the issue — raised in the `@plan` comment on #742 (2026-07-29); **answers are still outstanding and must be resolved before release**
+- [x] Remove the hardcoded advisory (`SJP_LOCATION_ID`, `isSjpVenue`, `sjpAdvisoryPrefix` / `sjpAdvisoryMessage` locale keys, `#sjp-publishing-advisory` template block and their unit/template/E2E assertions) — summary-of-publications page restored to master
+- [x] Add `cautionMessage` / `welshCautionMessage` to location 9 in `libs/location/src/location-data.ts`, with the bold prefix as `<strong>` (allowed by the `sanitiseHtml` allowlist)
+- [x] Emit `INSERT INTO location_metadata ... ON CONFLICT (location_id) DO NOTHING` from `apps/postgres/prisma/generate-seed-sql.ts` so admin edits are never overwritten on redeploy
+- [x] Create the row in the local seed (`libs/location/src/seed-data.ts`) with a create-only upsert, on both fresh and existing databases
+- [x] Unit tests for the SQL generator and the local seed
+- [x] Apply the generated seed SQL to a local database (twice, to confirm idempotency) and confirm the `location_metadata` row for location 9
+- [ ] Manually verify `/summary-of-publications?locationId=9` and `?locationId=9&lng=cy` render the caution message
+- [ ] Resolve the outstanding CLARIFICATIONS NEEDED items on the issue before release

@@ -318,9 +318,6 @@ test.describe("Summary of Publications Page", () => {
     const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
     await expect(publicationLinks).toHaveCount(0);
 
-    // The SJP publishing advisory belongs to the SJP venue only, so it must not appear here
-    await expect(page.locator("#sjp-publishing-advisory")).toHaveCount(0);
-
     // Run accessibility checks
     const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
 

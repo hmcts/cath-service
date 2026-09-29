@@ -1,5 +1,18 @@
 # Technical Plan — #742: Advisory message for SJP publishing time
 
+> **Revised approach (supersedes sections below).** The advisory is stored as a caution message in
+> `location_metadata` for location 9 instead of hardcoded locale keys, so admins can edit it via
+> `location-metadata-manage` and caution messages can be added to other locations. The existing
+> `cautionMessage` rendering on the summary page (sanitised HTML, placed after the FaCT sentence and
+> above the list/no-list sentence) already satisfies the placement ACs, so the page itself is unchanged.
+>
+> - `libs/location/src/location-data.ts` — location 9 carries `cautionMessage` / `welshCautionMessage`
+>   (`<strong>Please note:</strong> …` / `<strong>Sylwer:</strong> …`).
+> - `apps/postgres/prisma/generate-seed-sql.ts` — emits `INSERT INTO location_metadata … ON CONFLICT (location_id) DO NOTHING`
+>   so a redeploy never overwrites admin edits.
+> - `libs/location/src/seed-data.ts` — local seed creates the row via a create-only upsert.
+> - Removed: `SJP_LOCATION_ID`, `isSjpVenue`, `sjpAdvisory*` locale keys, the `#sjp-publishing-advisory` template block and their tests.
+
 ## 1. Technical Approach
 
 ### Strategy
