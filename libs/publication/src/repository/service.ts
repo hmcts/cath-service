@@ -1,13 +1,7 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { CONTAINER, getBlobProperties } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
+import { getFileBuffer, getFileExtension } from "../file-storage/file-retrieval.js";
 import { getArtefactListTypeId } from "./queries.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const MONOREPO_ROOT = path.join(__dirname, "..", "..", "..", "..");
-const TEMP_STORAGE_BASE = path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
 
 function isValidArtefactId(artefactId: string): boolean {
   // Only allow alphanumeric characters, hyphens, and underscores (typical UUID format)
@@ -15,36 +9,18 @@ function isValidArtefactId(artefactId: string): boolean {
   return validPattern.test(artefactId);
 }
 
-function getSafeFilePath(artefactId: string, filename: string): string | null {
-  // Validate artefactId format
+export async function getJsonContent(artefactId: string): Promise<object | null> {
   if (!isValidArtefactId(artefactId)) {
     return null;
   }
 
-  // Create the path
-  const filePath = path.join(TEMP_STORAGE_BASE, filename);
-
-  // Resolve both paths to absolute and normalize them
-  const resolvedPath = path.resolve(filePath);
-  const resolvedBase = path.resolve(TEMP_STORAGE_BASE);
-
-  // Ensure the resolved path is within the base directory
-  if (!resolvedPath.startsWith(resolvedBase + path.sep) && resolvedPath !== resolvedBase) {
-    return null;
-  }
-
-  return resolvedPath;
-}
-
-export async function getJsonContent(artefactId: string): Promise<object | null> {
   try {
-    const filePath = getSafeFilePath(artefactId, `${artefactId}.json`);
-    if (!filePath) {
+    const buffer = await getFileBuffer(artefactId);
+    if (!buffer) {
       return null;
     }
 
-    const content = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(content);
+    return JSON.parse(buffer.toString("utf-8"));
   } catch {
     return null;
   }
@@ -71,25 +47,24 @@ export async function getRenderedTemplateUrl(artefactId: string): Promise<string
 }
 
 export async function getFlatFileUrl(artefactId: string): Promise<string | null> {
+  if (!isValidArtefactId(artefactId)) {
+    return null;
+  }
+
   try {
-    // Validate artefactId before using it
-    if (!isValidArtefactId(artefactId)) {
+    const extension = await getFileExtension(artefactId);
+
+    // New blobs are stored without an extension (just the artefactId).
+    const bareBlob = await getBlobProperties(artefactId, CONTAINER.ARTEFACT);
+
+    // Backward-compat: older blobs were stored with the extension appended.
+    const legacyBlob = bareBlob ? null : await getBlobProperties(`${artefactId}${extension}`, CONTAINER.ARTEFACT);
+
+    if (!bareBlob && !legacyBlob) {
       return null;
     }
 
-    const files = await fs.readdir(TEMP_STORAGE_BASE);
-    const fileMatch = files.find((file) => file.startsWith(`${artefactId}.`));
-
-    if (!fileMatch) {
-      return null;
-    }
-
-    // Validate the matched filename doesn't contain path traversal
-    if (fileMatch.includes("..") || fileMatch.includes("/") || fileMatch.includes("\\")) {
-      return null;
-    }
-
-    return `/files/${encodeURIComponent(fileMatch)}`;
+    return `/files/${encodeURIComponent(`${artefactId}${extension}`)}`;
   } catch {
     return null;
   }
