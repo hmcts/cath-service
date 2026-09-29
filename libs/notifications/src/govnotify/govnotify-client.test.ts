@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables BEFORE any imports
 process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
-process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "test-template-id";
 process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
 
 const mockSendEmail = vi.fn();

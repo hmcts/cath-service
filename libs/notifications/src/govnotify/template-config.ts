@@ -1,8 +1,7 @@
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF =
-  process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
@@ -13,26 +12,24 @@ export function isSjpListType(listTypeName: string): boolean {
   return SJP_LIST_TYPE_NAMES.includes(listTypeName);
 }
 
-export function getSubscriptionTemplateId(params: { isSjp: boolean; hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
-  const { isSjp, hasPdf, hasExcel, filesUnder2MB } = params;
+export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
+  const { hasPdf, hasExcel, filesUnder2MB } = params;
 
   // No attachments (e.g. flat-file lists with no generated PDF/Excel) or files too
   // large to link: use the no-links template. The PDF/Excel templates require
   // pdf_link_*/excel_link_* personalisation that is only set when a buffer exists.
   if (!filesUnder2MB || (!hasPdf && !hasExcel)) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS environment variable is not set");
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS environment variable is not set");
     }
-    return GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS;
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS;
   }
 
-  if (isSjp) {
-    if (hasExcel && !hasPdf) {
-      if (!GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY) {
-        throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY environment variable is not set");
-      }
-      return GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY;
+  if (hasExcel && !hasPdf) {
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY environment variable is not set");
     }
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY;
   }
 
   if (hasPdf && hasExcel) {
@@ -42,10 +39,10 @@ export function getSubscriptionTemplateId(params: { isSjp: boolean; hasPdf: bool
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL;
   }
 
-  if (!GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF) {
-    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF environment variable is not set");
+  if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY) {
+    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY environment variable is not set");
   }
-  return GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF;
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
 }
 
 export function getSystemAdminTemplateId(): string {
