@@ -71,6 +71,8 @@ checks:
       | where toint(resultCode) >= 500
       | extend flag = case(
           url has '/subscriptions/manage', 'third-party-subscriptions-radio-buttons',
+          // TEMP: public test page for the kill switch. Revert before merge.
+          url has '/watchdog-kill-switch-test', 'third-party-subscriptions-radio-buttons',
           '')
       | where isnotempty(flag)
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance),

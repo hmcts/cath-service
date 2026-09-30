@@ -28,6 +28,9 @@ on:
         type: boolean
         required: false
         default: false
+  # TEMP: branch runs of workflow_dispatch cannot log in to Azure, whose federated
+  # credentials only trust master and pull_request. Revert before merge.
+  pull_request:
 
 concurrency:
   # Not cancel-in-progress: a run that is mid-triage must not be killed by the next
