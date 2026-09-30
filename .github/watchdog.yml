@@ -52,9 +52,9 @@ checks:
       | summarize occurrences = count(), sample = any(outerMessage)
           by problemId, app, type
 
-  # A/B kill switch: 5xx on a flagged page. The watchdog workflow turns the flag off when
-  # this fires. Threshold is two, not zero, so one transient 5xx cannot end the test;
-  # server-errors still alerts on the first.
+  # A/B tests: 5xx on a flagged page. Triage recommends whether to switch the flag off;
+  # nothing switches it automatically. Threshold is two, not zero, so one transient 5xx
+  # is left to server-errors, which alerts on the first.
   #
   # Unlike the other checks, preview deployments are included: they share the LaunchDarkly
   # test environment with STG, so a broken variant on a preview is a broken variant.

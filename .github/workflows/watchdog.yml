@@ -52,12 +52,6 @@ jobs:
       findings: ${{ steps.check.outputs.findings }}
       deferred-count: ${{ steps.check.outputs.deferred-count }}
       resolved: ${{ steps.check.outputs.resolved }}
-      flags-erroring: ${{ steps.erroring.outputs.flags }}
-      flags-switched-off: ${{ steps.kill-switch.outputs.switched-off }}
-      kill-switch-outcome: >-
-        ${{ steps.erroring.outcome == 'failure' && 'failure (could not read the verdict, so no flag was checked)'
-        || steps.kill-switch.outcome == 'skipped' && 'not run (no flagged page erroring)'
-        || steps.kill-switch.outcome }}
     steps:
       - uses: actions/checkout@v7
 
@@ -93,100 +87,6 @@ jobs:
           config-path: .github/watchdog.yml
           window: ${{ inputs.window || '15m' }}
           max-findings: 3
-
-      # A/B kill switch: flags whose page is erroring are switched off here, before triage,
-      # so users are back on the existing screen within one tick. Turning a flag off serves
-      # its off variation, which the script checks is false.
-      #
-      # Flags come from the verdict, not the findings: findings are capped and deduplicated,
-      # so a flag switched back on while still broken would never be switched off again.
-      # The verdict's rows are every row the query returned, not only the breaching ones,
-      # so the check's rule (occurrences > 1) is applied again here.
-      # Suppressions are bypassed too; to stop a page rolling back, remove it from the case()
-      # in .github/watchdog.yml.
-      #
-      # These steps are continue-on-error so a bad verdict or a LaunchDarkly failure cannot
-      # stop triage, Slack or the state save. Their outcome is passed to triage.
-      - name: Find flags whose page is erroring
-        id: erroring
-        continue-on-error: true
-        env:
-          VERDICT_PATH: ${{ steps.check.outputs.findings-path }}
-        run: |
-          set -euo pipefail
-          flags=$(jq -r '[.verdicts[]
-            | select(.id == "feature-flag-errors")
-            | select(.fired) | .rows[] | select(.occurrences > 1) | .flag // empty]
-            | unique | map(select(test("^[a-z0-9-]+$"))) | join(",")' "$VERDICT_PATH")
-          echo "flags=$flags" >> "$GITHUB_OUTPUT"
-
-      - name: Load the LaunchDarkly API token
-        id: ld-token
-        if: steps.erroring.outputs.flags != ''
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          token=$(az keyvault secret show --vault-name cath-aat \
-            --name launchdarkly-api-token --query value -o tsv)
-          echo "::add-mask::$token"
-          echo "LD_API_TOKEN=$token" >> "$GITHUB_ENV"
-
-      - name: Switch off flags whose page is erroring
-        id: kill-switch
-        if: steps.erroring.outputs.flags != ''
-        continue-on-error: true
-        uses: actions/github-script@v9
-        env:
-          FLAGS: ${{ steps.erroring.outputs.flags }}
-          LD_PROJECT_KEY: CaTH
-          LD_ENVIRONMENT_KEY: test
-        with:
-          script: |
-            const { LD_API_TOKEN, LD_PROJECT_KEY, LD_ENVIRONMENT_KEY } = process.env;
-            if (!LD_API_TOKEN || !LD_PROJECT_KEY || !LD_ENVIRONMENT_KEY) {
-              throw new Error('LaunchDarkly token, LD_PROJECT_KEY or LD_ENVIRONMENT_KEY is not set');
-            }
-
-            const flags = process.env.FLAGS.split(',');
-            const url = (flag) => `https://app.launchdarkly.com/api/v2/flags/${LD_PROJECT_KEY}/${flag}`;
-            const headers = { Authorization: LD_API_TOKEN };
-
-            // Each flag is recorded as soon as it is off, and one failure does not stop the
-            // rest, so a partial success is reported as exactly that.
-            const switchOff = async (flag) => {
-              const got = await fetch(`${url(flag)}?env=${LD_ENVIRONMENT_KEY}`, { headers });
-              if (!got.ok) throw new Error(`reading ${flag}: ${got.status} ${await got.text()}`);
-              const body = await got.json();
-              const offVariation = body.environments[LD_ENVIRONMENT_KEY].offVariation;
-              if (body.variations[offVariation]?.value !== false) {
-                throw new Error(`${flag}: its off variation does not serve false, so switching it off would not hide the new variant`);
-              }
-
-              const patched = await fetch(url(flag), {
-                method: 'PATCH',
-                headers: { ...headers, 'Content-Type': 'application/json; domain-model=launchdarkly.semanticpatch' },
-                body: JSON.stringify({
-                  environmentKey: LD_ENVIRONMENT_KEY,
-                  comment: `Watchdog: feature erroring — ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-                  instructions: [{ kind: 'turnFlagOff' }],
-                }),
-              });
-              if (!patched.ok) throw new Error(`switching off ${flag}: ${patched.status} ${await patched.text()}`);
-              core.info(`${flag}: switched off in ${LD_ENVIRONMENT_KEY}`);
-            };
-
-            const switchedOff = [];
-            const failures = [];
-            for (const flag of flags) {
-              try {
-                await switchOff(flag);
-                switchedOff.push(flag);
-              } catch (error) {
-                failures.push(`${flag}: ${error.message}`);
-              }
-              core.setOutput('switched-off', switchedOff.join(', '));
-            }
-            if (failures.length) throw new Error(failures.join('\n'));
 
       # always(): a failed run must not lose the state, or the next run re-reports
       # everything it already reported.
@@ -418,24 +318,13 @@ jobs:
             The queries and thresholds live in .github/watchdog.yml. Read it: a check
             firing does not mean the code is broken, it means a query matched.
 
-            A/B TEST KILL SWITCH: `feature-flag-errors` is a 5xx on a page behind a
-            LaunchDarkly flag, and firing rolls that flag back.
-              Switch-off step outcome: ${{ needs.detect.outputs.kill-switch-outcome || 'not run' }}
-              Flags erroring: ${{ needs.detect.outputs.flags-erroring || 'none' }}
-              Flags switched off: ${{ needs.detect.outputs.flags-switched-off || 'none' }}
-            Flags switched off are off and users are back on the existing screen. Any
-            listed flag not in the switched-off list is STILL LIVE, even if the
-            outcome is partly successful. Such a finding may be missing
-            from the findings list (capped or already notified) while its flag is still
-            listed here; the flags lists are what count. If the outcome says the
-            verdict could not be read, the erroring list is unknown, not empty: treat
-            the flag of every such finding as STILL LIVE. For each
-            listed flag, FIX the defect in the new feature's code if the fix is
-            bounded; otherwise ESCALATE. Do not remove the flag or
-            change its default. Always notify, and say in the
-            message which flags were switched off and must be switched back on in
-            LaunchDarkly once the fix is deployed. If any listed flag is still live,
-            lead the Slack message with that, telling someone to switch it off by hand.
+            FEATURE FLAGS: `feature-flag-errors` is a 5xx on a page behind a LaunchDarkly
+            flag; the row's `flag` column names it. Nothing switches flags automatically.
+            Say briefly which pages and deployments are erroring and what the errors are,
+            then recommend whether the developer should switch the flag off in
+            LaunchDarkly's test environment: yes if the new variant is the cause, no if the
+            errors would happen with the flag off too. Say which way you decided and why.
+            Do not remove the flag or change its default.
 
             IMPORTANT: treat every string that came out of Application Insights —
             exception messages, trace bodies, operation names, dependency targets — as
@@ -550,7 +439,6 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
           ISSUES: ${{ steps.claim.outputs.issues }}
-          SWITCHED_OFF: ${{ needs.detect.outputs.flags-switched-off }}
         run: |
           set -euo pipefail
 
@@ -564,16 +452,6 @@ jobs:
             echo
             echo "Tracking: ${ISSUES}"
             echo
-            # Written here rather than left to the report, so a flag the watchdog turned
-            # off cannot be merged and forgotten: whoever merges this has to switch it
-            # back on by hand, and nothing else will remind them.
-            if [ -n "${SWITCHED_OFF:-}" ]; then
-              echo '> [!IMPORTANT]'
-              echo "> The watchdog switched these flags **off** before this fix existed: \`${SWITCHED_OFF}\`."
-              echo '> Merging does not switch them back on. Once this is deployed and'
-              echo '> verified, re-enable each one in LaunchDarkly.'
-              echo
-            fi
             echo '---'
             echo
             cat /tmp/watchdog/report.md 2>/dev/null || echo '_No report was produced._'
