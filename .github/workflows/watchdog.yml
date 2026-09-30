@@ -87,6 +87,8 @@ jobs:
           config-path: .github/watchdog.yml
           window: ${{ inputs.window || '15m' }}
           max-findings: 3
+          # TEMP: re-report findings already notified, so a PR run reaches triage. Revert before merge.
+          renotify-after: 1m
 
       # always(): a failed run must not lose the state, or the next run re-reports
       # everything it already reported.
