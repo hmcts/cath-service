@@ -11,6 +11,11 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   formatCaseSummaryForEmail: vi.fn().mockReturnValue("Case 123 - Smith v Jones")
 }));
 
+vi.mock("@hmcts/magistrates-standard-list", () => ({
+  extractCaseSummary: vi.fn().mockReturnValue([{ caseReference: "M1" }]),
+  formatCaseSummaryForEmail: vi.fn().mockReturnValue("Case M1")
+}));
+
 vi.mock("../govnotify/govnotify-client.js", () => ({
   sendEmail: vi.fn().mockResolvedValue({
     success: true,
@@ -577,5 +582,160 @@ describe("sendSystemAdminNotification", () => {
     vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
 
     await expect(sendSystemAdminNotification(["admin1@example.com"], notification)).resolves.toBeUndefined();
+  });
+});
+
+describe("media protocol personalisation flags", () => {
+  const MAGISTRATES_FLAGS = { is_magistrates_media_protocol: "yes", is_not_magistrates_media_protocol: "no" };
+  const NON_MAGISTRATES_FLAGS = { is_magistrates_media_protocol: "no", is_not_magistrates_media_protocol: "yes" };
+
+  const listTypeEvent = {
+    publicationId: "pub-1",
+    locationId: "1",
+    locationName: "Test Court",
+    hearingListName: "Magistrates Standard List",
+    publicationDate: new Date("2025-01-01"),
+    listTypeId: 999,
+    language: "ENGLISH"
+  };
+
+  const locationEvent = {
+    publicationId: "pub-1",
+    locationId: "1",
+    locationName: "Test Court",
+    hearingListName: "Magistrates Standard List",
+    publicationDate: new Date("2025-01-01"),
+    listTypeId: 999
+  };
+
+  const subscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+  const locationSubscriber = { subscriptionId: "sub-1", searchType: "LOCATION_ID", searchValue: "1", ...subscriber };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
+
+    const { buildTemplateParameters, buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+    vi.mocked(buildTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Magistrates Standard List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com"
+    } as any);
+    vi.mocked(buildEnhancedTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Magistrates Standard List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com",
+      display_summary: "yes",
+      summary_of_cases: "Case M1"
+    } as any);
+
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(downloadBlob).mockResolvedValue(null);
+
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([]);
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findActiveSubscriptionsByLocation, findCaseSubscriptionsByUserIds } = await import(
+      "./subscription-queries.js"
+    );
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([subscriber] as never);
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([locationSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({ notificationId: "notif-1" } as never);
+  });
+
+  async function mockListTypeName(name: string | null) {
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue((name ? { name } : null) as any);
+  }
+
+  async function sentPersonalisation() {
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    return vi.mocked(sendEmail).mock.calls[0][0].templateParameters;
+  }
+
+  describe("sendListTypePublicationNotifications", () => {
+    it("should send Magistrates flags on the enhanced path for a Magistrates list type", async () => {
+      // Arrange
+      await mockListTypeName("MAGISTRATES_STANDARD_LIST");
+
+      // Act
+      await sendListTypePublicationNotifications({ ...listTypeEvent, jsonData: { someData: true } });
+
+      // Assert
+      const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+      expect(buildEnhancedTemplateParameters).toHaveBeenCalled();
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining({ ...MAGISTRATES_FLAGS, summary_of_cases: "Case M1" }));
+    });
+
+    it("should send non-Magistrates flags for a non-Magistrates list type", async () => {
+      // Arrange
+      await mockListTypeName("CROWN_DAILY_LIST");
+
+      // Act
+      await sendListTypePublicationNotifications(listTypeEvent);
+
+      // Assert
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining(NON_MAGISTRATES_FLAGS));
+    });
+
+    it("should send Magistrates flags on the fallback path when enhanced extraction fails", async () => {
+      // Arrange
+      await mockListTypeName("MAGISTRATES_STANDARD_LIST");
+      const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+      vi.mocked(buildEnhancedTemplateParameters).mockImplementation(() => {
+        throw new Error("Extraction failed");
+      });
+
+      // Act
+      await sendListTypePublicationNotifications({ ...listTypeEvent, jsonData: { someData: true } });
+
+      // Assert
+      expect(buildTemplateParameters).toHaveBeenCalled();
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining(MAGISTRATES_FLAGS));
+    });
+
+    it("should send non-Magistrates flags when the list type name cannot be resolved", async () => {
+      // Arrange
+      await mockListTypeName(null);
+
+      // Act
+      await sendListTypePublicationNotifications(listTypeEvent);
+
+      // Assert
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining(NON_MAGISTRATES_FLAGS));
+    });
+  });
+
+  describe("sendLocationAndCaseSubscriptionNotifications", () => {
+    it("should send Magistrates flags for a Magistrates list type", async () => {
+      // Arrange
+      await mockListTypeName("MAGISTRATES_STANDARD_LIST");
+
+      // Act
+      await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+      // Assert
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining(MAGISTRATES_FLAGS));
+    });
+
+    it("should send non-Magistrates flags for a non-Magistrates list type", async () => {
+      // Arrange
+      await mockListTypeName("CROWN_DAILY_LIST");
+
+      // Act
+      await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+      // Assert
+      expect(await sentPersonalisation()).toEqual(expect.objectContaining(NON_MAGISTRATES_FLAGS));
+    });
   });
 });

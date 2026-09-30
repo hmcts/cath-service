@@ -4,6 +4,7 @@ const GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_N
 const GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF =
   process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL || "";
+const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL || "";
 const GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
@@ -40,6 +41,14 @@ export function getSubscriptionTemplateId(params: { isSjp: boolean; hasPdf: bool
       throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set");
     }
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL;
+  }
+
+  // Non-SJP Excel-only must not use the PDF template, which requires pdf_link_* personalisation.
+  if (hasExcel && !hasPdf) {
+    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL) {
+      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL environment variable is not set");
+    }
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL;
   }
 
   if (!GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF) {

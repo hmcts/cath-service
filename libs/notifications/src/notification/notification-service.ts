@@ -98,6 +98,12 @@ import {
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
 import { sendEmail } from "../govnotify/govnotify-client.js";
 import {
+  IS_MAGISTRATES_MEDIA_PROTOCOL,
+  IS_NOT_MAGISTRATES_MEDIA_PROTOCOL,
+  isMagistratesMediaProtocol,
+  isNotMagistratesMediaProtocol
+} from "../govnotify/subscription-template-helper.js";
+import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
@@ -528,7 +534,11 @@ async function buildEmailDataWithFiles(
   });
 
   return {
-    templateParameters,
+    templateParameters: {
+      ...templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    },
     templateId,
     pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
     excelBuffer: excelUnder2MB ? excelBuffer : undefined
