@@ -2,6 +2,7 @@
 
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { generateCrownFirmListExcel } from "./excel/excel-generator.js";
 export { cy as crownFirmListCy } from "./locales/cy.js";
 export { en as crownFirmListEn } from "./locales/en.js";
 export * from "./models/types.js";
