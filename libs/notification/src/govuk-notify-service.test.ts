@@ -2,9 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables before importing the module
 process.env.GOVUK_NOTIFY_API_KEY = "test-api-key-12345";
-process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION = "test-template-id-rejection";
-process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT = "test-template-id-new-account";
-process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_DUPLICATE_ACCOUNT = "test-template-id-duplicate-account";
 process.env.MEDIA_PASSWORD_RESET_LINK = "https://example.com/reset";
 process.env.MEDIA_SIGN_IN_LINK = "https://example.com/sign-in";
 // Mock the NotifyClient
@@ -19,34 +16,7 @@ vi.mock("notifications-node-client", () => ({
 }));
 
 // Import after mocking
-const { extractNotifyError, sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail, sendMediaRejectionEmail } = await import("./govuk-notify-service.js");
-
-describe("extractNotifyError", () => {
-  it("should extract status and message from a Notify API error", () => {
-    const error = {
-      response: {
-        status: 400,
-        data: {
-          errors: [{ error: "BadRequestError", message: "Missing personalisation: name" }],
-          status_code: 400
-        }
-      },
-      message: "Bad Request"
-    };
-
-    expect(extractNotifyError(error)).toEqual({ status: 400, message: "Missing personalisation: name" });
-  });
-
-  it("should fall back to top-level message when response data is missing", () => {
-    const error = new Error("Network timeout");
-
-    expect(extractNotifyError(error)).toEqual({ status: 0, message: "Network timeout" });
-  });
-
-  it("should return defaults for an unknown error shape", () => {
-    expect(extractNotifyError({})).toEqual({ status: 0, message: "Unknown error" });
-  });
-});
+const { sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail, sendMediaRejectionEmail } = await import("./govuk-notify-service.js");
 
 describe("GOV Notify Service", () => {
   beforeEach(() => {
@@ -72,26 +42,6 @@ describe("GOV Notify Service", () => {
       await expect(testFunc(testData)).rejects.toThrow("GOV Notify API key not configured");
 
       process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
-    });
-
-    it("should throw error when rejection template ID not configured", async () => {
-      const originalTemplateId = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
-      delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION;
-
-      const testData = {
-        fullName: "John Smith",
-        email: "john@example.com",
-        rejectReasons: "The applicant is not an accredited member of the media.",
-        linkToService: "https://example.com"
-      };
-
-      // Re-import to pick up the changed environment variable
-      vi.resetModules();
-      const { sendMediaRejectionEmail: testFunc } = await import("./govuk-notify-service.js");
-
-      await expect(testFunc(testData)).rejects.toThrow("GOV Notify rejection template ID not configured");
-
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION = originalTemplateId;
     });
 
     it("should send email with correct parameters", async () => {
@@ -122,7 +72,7 @@ describe("GOV Notify Service", () => {
 
       await sendMediaRejectionEmail(testData);
 
-      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-rejection", "john@example.com", {
+      expect(mockSendEmail).toHaveBeenCalledWith("838be14a-1ca2-408f-a4bc-a8b4d3c7d54d", "john@example.com", {
         personalisation: {
           "full-name": "John Smith",
           "reject-reasons": "The applicant is not an accredited member of the media.\nID provided has expired or is not a Press ID.",
@@ -184,7 +134,7 @@ describe("GOV Notify Service", () => {
 
       await sendMediaNewAccountEmail({ email: "test@example.com", fullName: "Test Reporter" });
 
-      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-new-account", "test@example.com", {
+      expect(mockSendEmail).toHaveBeenCalledWith("91d93e44-0ad8-4782-8ef0-fb1cad0c641f", "test@example.com", {
         personalisation: {
           full_name: "Test Reporter",
           "forgot password process link": "https://example.com/reset"
@@ -203,18 +153,6 @@ describe("GOV Notify Service", () => {
       await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("GOV Notify API key not configured");
 
       process.env.GOVUK_NOTIFY_API_KEY = originalApiKey;
-    });
-
-    it("should throw error when new account template ID not configured", async () => {
-      const originalTemplateId = process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT;
-      delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT;
-
-      vi.resetModules();
-      const { sendMediaNewAccountEmail: testFunc } = await import("./govuk-notify-service.js");
-
-      await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("GOV Notify new account template ID not configured");
-
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_NEW_ACCOUNT = originalTemplateId;
     });
 
     it("should throw error when MEDIA_PASSWORD_RESET_LINK not configured", async () => {
@@ -238,7 +176,7 @@ describe("GOV Notify Service", () => {
 
       await sendMediaDuplicateAccountEmail({ email: "test@example.com", fullName: "Test Reporter" });
 
-      expect(mockSendEmail).toHaveBeenCalledWith("test-template-id-duplicate-account", "test@example.com", {
+      expect(mockSendEmail).toHaveBeenCalledWith("2b4ccd66-2b04-4d27-94e5-b7372f58be08", "test@example.com", {
         personalisation: {
           "Full name": "Test Reporter",
           "sign in page link": "https://example.com/sign-in"

@@ -96,16 +96,21 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../govnotify/govnotify-client.js";
+import { sendEmail } from "../notify-templates/send-email.js";
+import {
+  IS_MAGISTRATES_MEDIA_PROTOCOL,
+  IS_NOT_MAGISTRATES_MEDIA_PROTOCOL,
+  isMagistratesMediaProtocol,
+  isNotMagistratesMediaProtocol
+} from "../notify-templates/subscription-template-helper.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
-  isSjpListType,
   type TemplateParameters
-} from "../govnotify/template-config.js";
+} from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import {
   type CaseSubscriberWithUser,
@@ -467,20 +472,20 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
-  if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
-  }
+  const emailData =
+    config && event.jsonData ? await buildEnhancedEmailData(event, userName, config, caseValue) : await buildFallbackEmailData(event, userName, caseValue);
 
-  return buildFallbackEmailData(event, userName, listTypeName, caseValue);
+  return {
+    ...emailData,
+    templateParameters: {
+      ...emailData.templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    }
+  };
 }
 
-async function buildEnhancedEmailData(
-  event: PublicationEvent,
-  userName: string,
-  config: EmailBuilderConfig,
-  listTypeName?: string,
-  caseValue?: string
-): Promise<EmailTemplateData> {
+async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
@@ -494,21 +499,14 @@ async function buildEnhancedEmailData(
       caseValue
     });
 
-    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
+    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, templateParameters);
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName, listTypeName, caseValue);
+    return buildFallbackEmailData(event, userName, caseValue);
   }
 }
 
-async function buildEmailDataWithFiles(
-  artefactId: string,
-  pdfBlobKey: string | undefined,
-  listTypeName: string | undefined,
-  templateParameters: TemplateParameters
-): Promise<EmailTemplateData> {
-  const isSjp = listTypeName ? isSjpListType(listTypeName) : false;
-
+async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | undefined, templateParameters: TemplateParameters): Promise<EmailTemplateData> {
   const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
   const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
 
@@ -521,7 +519,6 @@ async function buildEmailDataWithFiles(
   const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
 
   const templateId = getSubscriptionTemplateId({
-    isSjp,
     hasPdf: hasPdf && pdfUnder2MB,
     hasExcel: hasExcel && excelUnder2MB,
     filesUnder2MB
@@ -535,7 +532,7 @@ async function buildEmailDataWithFiles(
   };
 }
 
-async function buildFallbackEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+async function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): Promise<EmailTemplateData> {
   const templateParameters = buildTemplateParameters({
     userName,
     hearingListName: event.hearingListName,
@@ -544,7 +541,7 @@ async function buildFallbackEmailData(event: PublicationEvent, userName: string,
     caseValue
   });
 
-  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
+  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, templateParameters);
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
