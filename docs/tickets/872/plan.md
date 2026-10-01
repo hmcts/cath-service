@@ -245,5 +245,5 @@ fixes the Excel-without-PDF defect.
 1. **Flag values.** The plan assumes `"yes"`/`"no"` strings (consistent with CaTH's `display_*`
    flags). Make sure the new templates don't compare against a specific value; plain
    `((flag?? ...))` works with `"yes"`/`"no"`.
-2. **Email address spelling.** `mediaandpressenquires@justice.gov.uk` ("enquires") is copied as
-   written in the issue. Please confirm it is correct.
+2. **Email address spelling.** Resolved: the issue said `mediaandpressenquires@justice.gov.uk`
+   ("enquires"), and the Notify templates were changed to `mediaandpressenquiries@justice.gov.uk`.

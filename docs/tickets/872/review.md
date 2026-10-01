@@ -215,7 +215,7 @@ Status: 2 fully met, 3 partially met, 3 not met. All three unmet criteria depend
 
 - [ ] For each of the four new templates, list its placeholders and check them against the keys CaTH sends on that route (flags, `TemplateParameters`, and only the file-link keys that route supplies) (`tasks.md:18`)
 - [ ] Check there are no round brackets inside either conditional block, including the existing "(for example on victims and children)", and no trailing comma after the email address
-- [ ] Confirm the `mediaandpressenquires@justice.gov.uk` spelling with the business
+- [x] Confirm the email address spelling: the Notify templates now use `mediaandpressenquiries@justice.gov.uk`
 - [ ] AAT test sends: one Mags list, one non-Mags list, one non-SJP Excel-only list (`tasks.md:21-23`). Attach the rendered output to the PR, including the mailto link and heading rendering
 - [ ] Compare the non-Mags render against the old templates and get sign-off on any wording differences
 - [ ] Record the Welsh descope on issue #872 (update the ACs or raise a follow-up)
