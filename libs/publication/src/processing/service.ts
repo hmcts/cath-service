@@ -45,18 +45,36 @@ import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList 
 import { generateSjpPressListPdf } from "@hmcts/sjp-press-list";
 import { generateSjpPublicListPdf } from "@hmcts/sjp-public-list";
 import { generateSscsDailyHearingListPdf, importantInformationByListType, type SscsDailyHearingList } from "@hmcts/sscs-daily-hearing-list";
-import { generateUtaacDailyHearingListPdf, type UtaacHearingList } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
-import { generateUtlcDailyHearingListPdf, type UtlcHearingList } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
-import { generateUtccDailyHearingListPdf, type UtccHearingList } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
+import {
+  generateUtaacDailyHearingListExcel,
+  generateUtaacDailyHearingListPdf,
+  type UtaacHearingList
+} from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
+import {
+  generateUtlcDailyHearingListExcel,
+  generateUtlcDailyHearingListPdf,
+  type UtlcHearingList
+} from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
+import {
+  generateUtccDailyHearingListExcel,
+  generateUtccDailyHearingListPdf,
+  type UtccHearingList
+} from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
 import {
   createUtiacJrDailyHearingListPdfGenerator,
+  generateUtiacJrDailyHearingListExcel,
   generateUtiacJrLeedsDailyHearingListPdf,
+  generateUtiacJrLondonDailyHearingListExcel,
   generateUtiacJrLondonDailyHearingListPdf,
   type UtiacJrHearingList,
   type UtiacJrLeedsHearingList,
   type UtiacJrLondonHearingList
 } from "@hmcts/utiac-jr-daily-hearing-list";
-import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
+import {
+  generateUtiacStatutoryAppealDailyHearingListExcel,
+  generateUtiacStatutoryAppealDailyHearingListPdf,
+  type UtiacStatutoryAppealHearingList
+} from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 
@@ -380,6 +398,16 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListExcel({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCivilAndFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as CauseListData }),
+  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtccDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtccHearingList }),
+  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtlcDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtlcHearingList }),
+  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: (p) => generateUtaacDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtaacHearingList }),
+  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: (p) =>
+    generateUtiacStatutoryAppealDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacStatutoryAppealHearingList }),
+  UTIAC_JR_LONDON_DAILY_HEARING_LIST: (p) => generateUtiacJrLondonDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacJrLondonHearingList }),
+  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: (p) => generateUtiacJrDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacJrHearingList }),
+  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: (p) => generateUtiacJrDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacJrHearingList }),
+  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: (p) => generateUtiacJrDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacJrHearingList }),
+  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: (p) => generateUtiacJrDailyHearingListExcel({ ...p, jsonData: p.jsonData as UtiacJrHearingList }),
   SJP_PUBLIC_LIST: async (p) => {
     const buffer = await generateSjpPublicListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
