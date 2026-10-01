@@ -154,14 +154,15 @@ describe("validatePublicationMetadata", () => {
     expect(result.errors).toContainEqual({ field: "x-court-id", message: "x-court-id must be a valid number" });
   });
 
-  // An unresolvable court id is accepted; the submitted id is carried behind the NoMatch prefix.
-  it("should accept an unresolvable court id and prefix it with NoMatch", async () => {
+  // MANUAL_UPLOAD is an internal provenance, so an unresolvable court id is accepted as-is,
+  // without the NoMatch prefix (that prefix is reserved for external provenances).
+  it("should accept an unresolvable court id for MANUAL_UPLOAD without a NoMatch prefix", async () => {
     // Act
-    const result = await validatePublicationMetadata(metadata({ courtId: "999" }), 1000);
+    const result = await validatePublicationMetadata(metadata({ provenance: "MANUAL_UPLOAD", courtId: "999" }), 1000);
 
     // Assert
     expect(result.isValid).toBe(true);
-    expect(result.resolvedLocationId).toBe("NoMatch999");
+    expect(result.resolvedLocationId).toBe("999");
   });
 
   it("should resolve the internal location id when the location exists", async () => {

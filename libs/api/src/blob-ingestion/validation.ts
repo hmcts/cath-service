@@ -77,8 +77,9 @@ export async function validatePublicationMetadata(metadata: PublicationMetadata,
     if (Number.isNaN(locationId)) {
       errors.push({ field: "x-court-id", message: "x-court-id must be a valid number" });
     } else {
-      const location = await getLocationById(locationId);
-      resolvedLocationId = location ? locationId.toString() : buildNoMatchLocationId(metadata.courtId);
+      // MANUAL_UPLOAD is never NoMatch-prefixed, even when the location doesn't exist
+      await getLocationById(locationId);
+      resolvedLocationId = locationId.toString();
     }
   }
 
