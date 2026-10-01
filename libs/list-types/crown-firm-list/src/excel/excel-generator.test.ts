@@ -128,10 +128,22 @@ describe("generateCrownFirmListExcel", () => {
     const worksheet = await readWorksheet();
     const header = worksheet.getRow(1);
 
-    expect(header.getCell(3).value).toBe("Cyfeiriad y Llys");
-    expect(header.getCell(4).value).toBe("Rhif ffôn y Llys");
-    expect(header.getCell(6).value).toBe("Yn eistedd am");
-    expect(header.getCell(11).value).toBe("Cynrychiolir gan");
+    expect(header.values).toEqual([
+      undefined,
+      "Dyddiad yr Eisteddiad",
+      "Llys",
+      "Cyfeiriad y Llys",
+      "Rhif ffôn y Llys",
+      "Ystafell Llys",
+      "Yn eistedd yn",
+      "Amser y Gwrandawiad",
+      "Cyfeirnod yr Achos",
+      "Enw'r Diffynnydd(Diffynyddion)",
+      "Math o Wrandawiad",
+      "Cynrychiolir gan",
+      "Yr Awdurdod sy'n Erlyn",
+      "Nodiadau Rhestru"
+    ]);
   });
 
   it("should write one row per case with court address, phone and the judge folded into the court room column", async () => {

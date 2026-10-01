@@ -39,11 +39,11 @@ export const cy = {
   error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
   excelColumns: {
     hearing: "Disgrifiad o'r Gwrandawiad",
-    fixedFor: "Wedi'i bennu ar gyfer",
-    caseReference: "Cyfeirnod Achos",
+    fixedFor: "Pennu ar gyfer",
+    caseReference: "Cyfeirnod yr Achos",
     defendant: "Enw'r Diffynnydd",
-    prosecutingAuthority: "Awdurdod Erlyn",
-    linkedCases: "Achosion Cysylltiedig",
-    listingNotes: "Nodiadau Rhestru"
+    prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
+    linkedCases: "Achosion cysylltiedig",
+    listingNotes: "Nodiadau rhestru"
   }
 };

@@ -47,13 +47,13 @@ export const cy = {
     courtAddress: "Cyfeiriad y Llys",
     courtPhone: "Rhif ffôn y Llys",
     courtRoom: "Ystafell Llys",
-    sittingAt: "Yn eistedd am",
-    hearingTime: "Amser Gwrandawiad",
-    caseNumber: "Rhif yr Achos",
+    sittingAt: "Yn eistedd yn",
+    hearingTime: "Amser y Gwrandawiad",
+    caseNumber: "Cyfeirnod yr Achos",
     defendant: "Enw'r Diffynnydd(Diffynyddion)",
     hearingType: "Math o Wrandawiad",
     representative: "Cynrychiolir gan",
-    prosecutingAuthority: "Awdurdod Erlyn",
+    prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
     listingNotes: "Nodiadau Rhestru"
   }
 };

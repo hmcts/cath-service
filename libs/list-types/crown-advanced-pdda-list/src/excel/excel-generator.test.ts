@@ -104,9 +104,16 @@ describe("generateCrownAdvanceListExcel", () => {
     const worksheet = await readWorksheet();
     const header = worksheet.getRow(1);
 
-    expect(header.getCell(1).value).toBe("Disgrifiad o'r Gwrandawiad");
-    expect(header.getCell(2).value).toBe("Wedi'i bennu ar gyfer");
-    expect(header.getCell(6).value).toBe("Achosion Cysylltiedig");
+    expect(header.values).toEqual([
+      undefined,
+      "Disgrifiad o'r Gwrandawiad",
+      "Pennu ar gyfer",
+      "Cyfeirnod yr Achos",
+      "Enw'r Diffynnydd",
+      "Yr Awdurdod sy'n Erlyn",
+      "Achosion cysylltiedig",
+      "Nodiadau rhestru"
+    ]);
   });
 
   it("should write one row per case with the category label and joined linked cases", async () => {
