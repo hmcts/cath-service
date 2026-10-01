@@ -1,4 +1,5 @@
 export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
+export { ArtefactType } from "./artefact-type.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
@@ -9,6 +10,7 @@ export {
   type ListType,
   resolveListType
 } from "./authorisation/service.js";
+export { isWithinDisplayWindow } from "./display-window.js";
 export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson, getSourceArtefactId } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";

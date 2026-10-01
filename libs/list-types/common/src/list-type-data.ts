@@ -42,7 +42,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [7]
   },
   {
-    name: "CROWN_WARNED_LIST",
+    name: "CROWN_WARNED_PDDA_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
     provenance: "CRIME_IDAM",
@@ -52,7 +52,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [4]
   },
   {
-    name: "CROWN_DAILY_LIST",
+    name: "CROWN_DAILY_PDDA_LIST",
     englishFriendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
     provenance: "CRIME_IDAM",
@@ -62,7 +62,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [4]
   },
   {
-    name: "CROWN_FIRM_LIST",
+    name: "CROWN_FIRM_PDDA_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
     provenance: "CRIME_IDAM",

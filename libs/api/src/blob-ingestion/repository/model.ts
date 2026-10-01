@@ -1,29 +1,11 @@
-/**
- * Request body for blob ingestion API
- *
- * @property list_type - The list type name (e.g., "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", "CROWN_DAILY_LIST")
- *                       The API accepts the list type name and maps it internally to the corresponding ID
- * @property content_date - The content date in ISO 8601 date format (YYYY-MM-DD) - REQUIRED
- */
-export interface BlobIngestionRequest {
-  court_id: string;
-  provenance: string;
-  content_date: string;
-  list_type: string;
-  sensitivity: string;
-  language: string;
-  display_from: string;
-  display_to: string;
-  hearing_list: unknown;
-  source_artefact_id?: string;
-}
+import type { ArtefactResponse } from "../artefact-response.js";
 
-export type FlatFileIngestionRequest = Omit<BlobIngestionRequest, "hearing_list">;
+export type IngestionOutcome = "CREATED" | "VALIDATION_ERROR" | "CONFLICT" | "ERROR";
 
-export interface BlobIngestionResponse {
-  success: boolean;
-  artefact_id?: string;
-  message: string;
+export interface PublicationIngestionResult {
+  outcome: IngestionOutcome;
+  artefact?: ArtefactResponse;
+  message?: string;
   errors?: ValidationError[];
 }
 
@@ -36,6 +18,11 @@ export interface BlobValidationResult {
   isValid: boolean;
   errors: ValidationError[];
   listTypeId?: number;
+  /**
+   * Always set when a court id was supplied: either the resolved location id, or the submitted
+   * id behind the "NoMatch" prefix when reference data has no match. Use `isNoMatchLocationId`
+   * rather than a separate flag to tell the two apart.
+   */
   resolvedLocationId?: string;
 }
 

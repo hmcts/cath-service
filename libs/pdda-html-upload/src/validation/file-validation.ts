@@ -1,14 +1,15 @@
 import path from "node:path";
 import type { FileValidationResult } from "../types.js";
 
-export function validatePddaHtmlUpload(artefactType: unknown, file: Express.Multer.File | undefined): FileValidationResult {
-  if (artefactType !== "LCSU") {
-    return {
-      valid: false,
-      error: "ArtefactType must be LCSU for HTM/HTML uploads"
-    };
-  }
+const ALLOWED_EXTENSIONS = [".htm", ".html"];
+const UNSUPPORTED_FORMAT_MESSAGE = "File format is not supported for LCSU.";
 
+/**
+ * Mirrors the incumbent's `validateLcsuUploadFile`: HTM/HTML only, case-insensitive.
+ * The artefact type is decided by the `x-type` header before this is called, so it
+ * is deliberately not a parameter.
+ */
+export function validatePddaHtmlUpload(file: Express.Multer.File | undefined): FileValidationResult {
   if (!file) {
     return {
       valid: false,
@@ -16,12 +17,11 @@ export function validatePddaHtmlUpload(artefactType: unknown, file: Express.Mult
     };
   }
 
-  const allowedExtensions = [".htm", ".html"];
   const fileExtension = path.extname(file.originalname).toLowerCase();
-  if (!allowedExtensions.includes(fileExtension)) {
+  if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
     return {
       valid: false,
-      error: "The uploaded file must be an HTM or HTML file"
+      error: UNSUPPORTED_FORMAT_MESSAGE
     };
   }
 
