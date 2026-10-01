@@ -45,5 +45,20 @@ export const en = {
   errorMessage:
     "This publication cannot be viewed at the moment. Please check again later. If the problem persists, contact the court directly for assistance.",
   error403Title: "Access Denied",
-  error403Message: "You do not have permission to view this publication."
+  error403Message: "You do not have permission to view this publication.",
+  excelColumns: {
+    courtHouse: "Court House",
+    courtRoom: "Court Room",
+    judge: "Judge",
+    time: "Time",
+    caseRef: "Case ref",
+    caseName: "Case name",
+    caseType: "Case type",
+    hearingType: "Hearing type",
+    location: "Location",
+    duration: "Duration",
+    applicant: "Applicant/Petitioner",
+    respondent: "Respondent",
+    reportingRestrictions: "Reporting Restriction"
+  }
 };

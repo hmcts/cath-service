@@ -69,7 +69,7 @@ on:
 jobs:
   terraform:
     name: Terraform ${{ inputs.plan-only && 'Plan' || 'Apply' }}
-    uses: hmcts/cnp-githubactions-library/.github/workflows/terraform-deploy.yaml@main
+    uses: hmcts/cnp-githubactions-library/.github/workflows/terraform-deploy.yaml@endakelly-patch-1
     with:
       environment: ${{ inputs.environment }}
       subscription: ${{ inputs.subscription }}

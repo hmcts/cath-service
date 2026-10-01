@@ -50,6 +50,11 @@ export const en = {
       title: "Manage Jurisdiction Data",
       description: "View, create, update and remove jurisdictions and sub-jurisdictions",
       href: "/jurisdiction-data"
+    },
+    {
+      title: "Download MI Report",
+      description: "Download User accounts, Publication, Location subscriptions and All subscription data",
+      href: "/mi-report"
     }
   ]
 };
