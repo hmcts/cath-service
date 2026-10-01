@@ -71,7 +71,7 @@ checks:
       | where toint(resultCode) >= 500
       | extend flag = case(
           url has '/subscriptions/manage', 'third-party-subscriptions-radio-buttons',
-          url has '/subscription-layout-preview', 'third-party-subscriptions-radio-buttons',
+          url has '/watchdog-integration-test', 'watchdog-integration-test',
           '')
       | where isnotempty(flag)
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance),
