@@ -121,8 +121,9 @@ async function validateCommonFields(request: FlatFileIngestionRequest, payloadSi
       if (Number.isNaN(locationId)) {
         errors.push({ field: "court_id", message: "court_id must be a valid number" });
       } else {
-        const location = await getLocationById(locationId);
-        resolvedLocationId = location ? locationId.toString() : buildNoMatchLocationId(request.court_id);
+        // MANUAL_UPLOAD is never NoMatch-prefixed, even when the location doesn't exist
+        await getLocationById(locationId);
+        resolvedLocationId = locationId.toString();
       }
     }
   }

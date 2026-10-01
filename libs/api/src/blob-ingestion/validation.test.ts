@@ -226,12 +226,12 @@ describe("validateBlobRequest", () => {
     });
   });
 
-  it("should set resolvedLocationId to a NoMatch-prefixed value when court_id not found", async () => {
+  it("should set resolvedLocationId to the raw court_id (no NoMatch prefix) for MANUAL_UPLOAD when court_id not found", async () => {
     const request = { ...validRequest, court_id: "999" };
     const result = await validateBlobRequest(request, 1000);
 
     expect(result.isValid).toBe(true);
-    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
+    expect(result.resolvedLocationId).toBe("999");
   });
 
   it("should reject request with non-numeric court_id", async () => {
@@ -252,7 +252,7 @@ describe("validateBlobRequest", () => {
     const result = await validateBlobRequest(request, 1000);
 
     // This test FAILS before the fix because Promise is truthy
-    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
+    expect(result.resolvedLocationId).toBe("999");
     expect(getLocationById).toHaveBeenCalledWith(999);
   });
 
@@ -499,7 +499,7 @@ describe("validateFlatFileRequest", () => {
     expect(result.errors).toContainEqual({ field: "body", message: "Payload too large. Maximum size is 100MB" });
   });
 
-  it("should set resolvedLocationId to a NoMatch-prefixed value when court_id not found", async () => {
+  it("should set resolvedLocationId to the raw court_id (no NoMatch prefix) for MANUAL_UPLOAD when court_id not found", async () => {
     // Arrange
     const request = { ...validRequest, court_id: "999" };
 
@@ -508,7 +508,7 @@ describe("validateFlatFileRequest", () => {
 
     // Assert
     expect(result.isValid).toBe(true);
-    expect(result.resolvedLocationId).toBe(buildNoMatchLocationId("999"));
+    expect(result.resolvedLocationId).toBe("999");
   });
 
   it("should resolve external provenance location when provenance is SNL", async () => {
