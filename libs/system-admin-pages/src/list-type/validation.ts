@@ -1,5 +1,6 @@
+import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
+
 const SENSITIVITY_OPTIONS = ["Public", "Private", "Classified"] as const;
-const PROVENANCE_OPTIONS = ["CFT_IDAM", "PI_AAD", "CRIME_IDAM"] as const;
 
 function getFieldLabel(fieldName: string): string {
   const labels: Record<string, string> = {
@@ -73,7 +74,7 @@ function validateProvenance(provenanceList: string[]): ValidationError | null {
   }
 
   for (const provenance of provenanceList) {
-    if (!PROVENANCE_OPTIONS.includes(provenance as never)) {
+    if (!PUBLISHER_PROVENANCES.includes(provenance as never)) {
       return {
         field: "allowedProvenance",
         message: "Select valid provenance options",
