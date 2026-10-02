@@ -42,6 +42,7 @@
     "@hmcts/family-daily-cause-list": "workspace:*",
     "@hmcts/financial-list-chd-kb-daily-cause-list": "workspace:*",
     "@hmcts/iac-daily-list": "workspace:*",
+    "@hmcts/insolvency-and-companies-court-chd-daily-cause-list": "workspace:*",
     "@hmcts/list-types-common": "workspace:*",
     "@hmcts/location": "workspace:*",
     "@hmcts/london-administrative-court-daily-cause-list": "workspace:*",
