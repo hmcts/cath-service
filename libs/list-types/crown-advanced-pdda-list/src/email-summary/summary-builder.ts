@@ -1,6 +1,6 @@
 import { type CaseSummary, formatCaseSummaryForEmail, formatPddaDefendantName, SPECIAL_CATEGORY_DATA_WARNING } from "@hmcts/list-types-common";
 import { formatShortDate } from "../date-formatting.js";
-import type { CrownWarnedListData, PddaCase } from "../models/types.js";
+import type { CrownAdvanceListData, PddaCase } from "../models/types.js";
 
 export { formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING };
 
@@ -20,7 +20,7 @@ function buildCaseSummary(caseItem: PddaCase, fixedDate: string | undefined): Ca
   return fields;
 }
 
-export function extractCaseSummary(jsonData: CrownWarnedListData): CaseSummary[] {
+export function extractCaseSummary(jsonData: CrownAdvanceListData): CaseSummary[] {
   const summaries: CaseSummary[] = [];
 
   for (const courtList of jsonData.WarnedList.CourtLists) {

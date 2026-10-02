@@ -12,17 +12,17 @@ import {
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import { PROVENANCE_LABELS } from "@hmcts/publication";
-import type { CrownWarnedListData, RenderOptions } from "../models/types.js";
-import { renderCrownWarnedListData } from "../rendering/renderer.js";
+import type { CrownAdvanceListData, RenderOptions } from "../models/types.js";
+import { renderCrownAdvanceListData } from "../rendering/renderer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface PdfGenerationOptions extends BasePdfGenerationOptions<CrownWarnedListData> {
+interface PdfGenerationOptions extends BasePdfGenerationOptions<CrownAdvanceListData> {
   contentDate: Date;
 }
 
-export async function generateCrownWarnedListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
+export async function generateCrownAdvanceListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
     const renderOptions: RenderOptions = {
       contentDate: options.contentDate,
@@ -30,7 +30,7 @@ export async function generateCrownWarnedListPdf(options: PdfGenerationOptions):
       locationId: options.locationId
     };
 
-    const renderedData = await renderCrownWarnedListData(options.jsonData, renderOptions);
+    const renderedData = await renderCrownAdvanceListData(options.jsonData, renderOptions);
 
     const translations = await loadTranslations(
       options.locale,

@@ -58,7 +58,7 @@ export interface PddaCourtHouse {
   CourtHouseTelephone?: string;
 }
 
-export interface CrownWarnedListData {
+export interface CrownAdvanceListData {
   WarnedList: {
     DocumentID: { UniqueID: string; DocumentType: string };
     ListHeader: {
@@ -78,10 +78,10 @@ export interface CrownWarnedListData {
 
 export interface GroupedHearingCategory {
   category: string;
-  cases: CrownWarnedCaseRow[];
+  cases: CrownAdvanceCaseRow[];
 }
 
-export interface CrownWarnedCaseRow {
+export interface CrownAdvanceCaseRow {
   fixedFor: string;
   caseNumber: string;
   defendants: string;

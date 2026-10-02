@@ -23,9 +23,12 @@ import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import {
+  extractCaseSummary as extractCrownAdvanceSummary,
+  formatCaseSummaryForEmail as formatCrownAdvanceSummaryForEmail
+} from "@hmcts/crown-advanced-pdda-list";
 import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
 import { extractCaseSummary as extractCrownFirmSummary, formatCaseSummaryForEmail as formatCrownFirmSummaryForEmail } from "@hmcts/crown-firm-list";
-import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEmail as formatCrownWarnedSummaryForEmail } from "@hmcts/crown-warned-list";
 import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
@@ -213,9 +216,9 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCrownFirmSummary as SummaryExtractor,
     format: formatCrownFirmSummaryForEmail
   },
-  CROWN_WARNED_LIST: {
-    extract: extractCrownWarnedSummary as SummaryExtractor,
-    format: formatCrownWarnedSummaryForEmail
+  CROWN_ADVANCED_PDDA_LIST: {
+    extract: extractCrownAdvanceSummary as SummaryExtractor,
+    format: formatCrownAdvanceSummaryForEmail
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
