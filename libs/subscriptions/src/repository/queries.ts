@@ -181,6 +181,25 @@ export async function deleteSubscriptionsByIds(subscriptionIds: string[], userId
   });
 }
 
+export async function findSubscribersByLocationIdRecord(locationId: number) {
+  return prisma.subscription.findMany({
+    where: {
+      searchType: "LOCATION_ID",
+      searchValue: locationId.toString()
+    },
+    select: {
+      userId: true,
+      user: {
+        select: {
+          email: true,
+          firstName: true,
+          surname: true
+        }
+      }
+    }
+  });
+}
+
 export async function deleteSubscriptionsByLocationIdRecord(locationId: number) {
   const result = await prisma.subscription.deleteMany({
     where: {
