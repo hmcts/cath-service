@@ -1,4 +1,5 @@
 import {
+  GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
@@ -38,6 +39,10 @@ export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: b
 
 export function getSystemAdminTemplateId(): string {
   return GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN;
+}
+
+export function getLocationSubscriptionDeletionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION;
 }
 
 export function getEnvName(): string {

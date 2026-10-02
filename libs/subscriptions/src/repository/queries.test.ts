@@ -8,6 +8,7 @@ import {
   deleteSubscriptionsByIds,
   deleteSubscriptionsByLocationIdRecord,
   findCaseSubscriptionsByUserId,
+  findSubscribersByLocationIdRecord,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
   findSubscriptionsByLocationId,
@@ -607,6 +608,45 @@ describe("Subscription Queries", () => {
         where: { searchType: "LOCATION_ID", searchValue: "123" }
       });
       expect(result).toBe(3);
+    });
+  });
+
+  describe("findSubscribersByLocationIdRecord", () => {
+    it("should return subscriber user details for a location", async () => {
+      const mockSubscribers = [
+        { userId: "user1", user: { email: "user1@example.com", firstName: "Jane", surname: "Doe" } },
+        { userId: "user2", user: { email: "user2@example.com", firstName: null, surname: null } }
+      ];
+
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue(mockSubscribers as any);
+
+      const result = await findSubscribersByLocationIdRecord(456);
+
+      expect(result).toEqual(mockSubscribers);
+      expect(prisma.subscription.findMany).toHaveBeenCalledWith({
+        where: {
+          searchType: "LOCATION_ID",
+          searchValue: "456"
+        },
+        select: {
+          userId: true,
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              surname: true
+            }
+          }
+        }
+      });
+    });
+
+    it("should return empty array when no subscribers found", async () => {
+      vi.mocked(prisma.subscription.findMany).mockResolvedValue([]);
+
+      const result = await findSubscribersByLocationIdRecord(456);
+
+      expect(result).toEqual([]);
     });
   });
 });
