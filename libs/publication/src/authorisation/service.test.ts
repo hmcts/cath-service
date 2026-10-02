@@ -170,7 +170,7 @@ describe("canAccessPublication", () => {
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
-    it("should handle B2C_IDAM with CRIME_IDAM list type", () => {
+    it("should handle PI_AAD with CRIME_IDAM list type", () => {
       const user = createUser("VERIFIED", "PI_AAD");
       const listType = createListType("CRIME_IDAM");
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
