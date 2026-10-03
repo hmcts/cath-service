@@ -94,6 +94,9 @@ nodejs:
           alias: B2C_GRAPH_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
+        # LaunchDarkly SDK key (CaTH project, test environment)
+        - name: cath-ld-sdk-key
+          alias: CATH_LD_KEY
         # B2C secrets for CaTH user sign-in
         - name: b2c-<ENV>-client-id
           alias: B2C_CLIENT_ID
