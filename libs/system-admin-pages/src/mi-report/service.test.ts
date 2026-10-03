@@ -1,7 +1,13 @@
 import { generateMiReportExcel } from "@hmcts/excel-generation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildCourtNameResolver } from "./court-name-resolver.js";
-import { buildAllSubscriptionsSheet, buildLocationSubscriptionsSheet, buildPublicationsSheet, buildUserAccountsSheet } from "./queries.js";
+import {
+  buildAllSubscriptionsSheet,
+  buildDeletedAccountsSheet,
+  buildLocationSubscriptionsSheet,
+  buildPublicationsSheet,
+  buildUserAccountsSheet
+} from "./queries.js";
 import { buildMiReport } from "./service.js";
 
 vi.mock("@hmcts/excel-generation", () => ({ generateMiReportExcel: vi.fn() }));
@@ -12,7 +18,8 @@ vi.mock("./queries.js", () => ({
   buildUserAccountsSheet: vi.fn(),
   buildPublicationsSheet: vi.fn(),
   buildLocationSubscriptionsSheet: vi.fn(),
-  buildAllSubscriptionsSheet: vi.fn()
+  buildAllSubscriptionsSheet: vi.fn(),
+  buildDeletedAccountsSheet: vi.fn()
 }));
 
 describe("buildMiReport", () => {
@@ -22,6 +29,7 @@ describe("buildMiReport", () => {
     vi.mocked(buildPublicationsSheet).mockResolvedValue({ name: "Publications", headers: [], rows: [] });
     vi.mocked(buildLocationSubscriptionsSheet).mockResolvedValue({ name: "Location Subscriptions", headers: [], rows: [] });
     vi.mocked(buildAllSubscriptionsSheet).mockResolvedValue({ name: "All Subscriptions", headers: [], rows: [] });
+    vi.mocked(buildDeletedAccountsSheet).mockResolvedValue({ name: "Deleted Accounts", headers: [], rows: [] });
     vi.mocked(buildCourtNameResolver).mockResolvedValue(() => "Court");
     vi.mocked(generateMiReportExcel).mockResolvedValue(Buffer.from("xlsx"));
   });
@@ -36,13 +44,22 @@ describe("buildMiReport", () => {
     expect(result.buffer).toBeInstanceOf(Buffer);
   });
 
-  it("should build a four-sheet workbook for all-data", async () => {
+  it("should build a single-sheet report for deleted-accounts", async () => {
+    // Act
+    await buildMiReport("deleted-accounts", "7");
+
+    // Assert
+    expect(generateMiReportExcel).toHaveBeenCalledWith([{ name: "Deleted Accounts", headers: [], rows: [] }]);
+    expect(buildUserAccountsSheet).not.toHaveBeenCalled();
+  });
+
+  it("should build a five-sheet workbook for all-data including the Deleted Accounts tab", async () => {
     // Act
     await buildMiReport("all-data", "30");
 
     // Assert
     const sheets = vi.mocked(generateMiReportExcel).mock.calls[0][0];
-    expect(sheets.map((s) => s.name)).toEqual(["User Accounts", "Publications", "Location Subscriptions", "All Subscriptions"]);
+    expect(sheets.map((s) => s.name)).toEqual(["User Accounts", "Publications", "Location Subscriptions", "All Subscriptions", "Deleted Accounts"]);
   });
 
   it("should build the court-name resolver once and share it across the all-data sheets", async () => {
