@@ -16,7 +16,7 @@
 <div id="top"></div>
 
 <div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+  <div class="govuk-grid-column-full">
 
     {% if errors %}
       {{ govukErrorSummary({
@@ -28,11 +28,11 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ title }}</h1>
+    <h1 class="govuk-heading-l">{{ title }}</h1>
 
     <p class="govuk-body">{{ openingText1 }}</p>
     <p class="govuk-body">{{ openingText2 }}</p>
-    <p class="govuk-body">{{ openingText3 }}</p>
+    <p class="govuk-hint govuk-!-margin-bottom-7">{{ openingText3 }}</p>
 
     <form method="post" enctype="multipart/form-data" novalidate>
 
@@ -44,6 +44,7 @@
         label: {
           text: fullNameLabel
         },
+        classes: "govuk-!-width-one-half",
         value: data.name if data else "",
         errorMessage: { text: fullNameErrorText } if (fullNameErrorText and fullNameErrorText | length > 0) else undefined
       }) }}
@@ -60,6 +61,7 @@
         hint: {
           text: emailHint
         },
+        classes: "govuk-!-width-one-half",
         value: data.email if data else "",
         errorMessage: { text: emailErrorText } if (emailErrorText and emailErrorText | length > 0) else undefined
       }) }}
@@ -72,6 +74,7 @@
         label: {
           text: employerLabel
         },
+        classes: "govuk-!-width-one-half",
         value: data.employer if data else "",
         errorMessage: { text: employerErrorText } if (employerErrorText and employerErrorText | length > 0) else undefined
       }) }}
@@ -81,8 +84,14 @@
         <label class="govuk-label" for="idProof">
           {{ uploadLabel }}
         </label>
-        <div id="idProof-hint" class="govuk-hint">
-          {{ uploadHint }}
+        <div id="idProof-hint-identity" class="govuk-hint">
+          {{ uploadHintIdentity }}
+        </div>
+        <div id="idProof-hint-consent" class="govuk-hint">
+          {{ uploadHintConsent }}
+        </div>
+        <div id="idProof-hint-filetype" class="govuk-hint">
+          {{ uploadHintFileType }}
         </div>
         {% if (fileErrorText and fileErrorText | length > 0) %}
           <p id="idProof-error" class="govuk-error-message">
@@ -94,8 +103,13 @@
                name="idProof"
                type="file"
                accept=".jpg,.jpeg,.pdf,.png"
-               aria-describedby="idProof-hint{% if (fileErrorText and fileErrorText | length > 0) %} idProof-error{% endif %}" />
+               aria-describedby="idProof-hint-identity idProof-hint-consent idProof-hint-filetype{% if (fileErrorText and fileErrorText | length > 0) %} idProof-error{% endif %}" />
       </div>
+
+      <h2 class="govuk-heading-l">{{ termsHeading }}</h2>
+      <p class="govuk-body">{{ termsText1 }}</p>
+      <p class="govuk-body">{{ termsText2 }}</p>
+      <p class="govuk-body">{{ termsText3 }}</p>
 
       {% set termsErrorText = getError(errors, "#termsAccepted") %}
       {{ govukCheckboxes({
@@ -105,9 +119,6 @@
             text: "",
             classes: "govuk-visually-hidden"
           }
-        },
-        hint: {
-          html: "<p class='govuk-body'>" + termsText + "</p>"
         },
         items: [
           {
