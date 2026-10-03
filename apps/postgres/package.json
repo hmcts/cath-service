@@ -10,7 +10,7 @@
     "migrate:dev": "yarn build && npx prisma migrate dev",
     "migrate:reset": "yarn build && npx prisma migrate reset",
     "studio": "yarn build && npx prisma studio",
-    "test": "echo 'No tests for migration runner'",
+    "test": "vitest run",
     "format": "biome format --write .",
     "lint": "biome check .",
     "lint:fix": "biome check --write ."
