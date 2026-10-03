@@ -38,8 +38,7 @@ const mockArtefact = {
   lastReceivedDate: new Date("2025-01-13"),
   isFlatFile: false,
   provenance: "MANUAL_UPLOAD",
-  supersededCount: 0,
-  noMatch: false
+  supersededCount: 0
 } as any;
 
 const mockJsonData = {

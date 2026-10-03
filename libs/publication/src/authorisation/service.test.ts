@@ -22,8 +22,7 @@ const createArtefact = (sensitivity: Sensitivity): Artefact => ({
   displayFrom: new Date(),
   displayTo: new Date(),
   isFlatFile: false,
-  provenance: "CFT_IDAM",
-  noMatch: false
+  provenance: "CFT_IDAM"
 });
 
 const createListType = (provenance: string): ListType => ({

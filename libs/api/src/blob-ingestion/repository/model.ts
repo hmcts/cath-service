@@ -23,7 +23,6 @@ export type FlatFileIngestionRequest = Omit<BlobIngestionRequest, "hearing_list"
 export interface BlobIngestionResponse {
   success: boolean;
   artefact_id?: string;
-  no_match?: boolean;
   message: string;
   errors?: ValidationError[];
 }
@@ -36,7 +35,6 @@ export interface ValidationError {
 export interface BlobValidationResult {
   isValid: boolean;
   errors: ValidationError[];
-  locationExists: boolean;
   listTypeId?: number;
   resolvedLocationId?: string;
 }

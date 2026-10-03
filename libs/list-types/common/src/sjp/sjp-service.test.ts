@@ -90,8 +90,7 @@ describe("getLatestSjpLists", () => {
         displayFrom: new Date("2025-11-28"),
         displayTo: new Date("2025-12-28"),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        noMatch: false
+        provenance: "MANUAL_UPLOAD"
       },
       {
         artefactId: "list-2",
@@ -104,8 +103,7 @@ describe("getLatestSjpLists", () => {
         displayFrom: new Date("2025-11-27"),
         displayTo: new Date("2025-12-27"),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        noMatch: false
+        provenance: "MANUAL_UPLOAD"
       }
     ];
 
@@ -138,8 +136,7 @@ describe("getLatestSjpLists", () => {
         displayFrom: new Date("2025-11-28"),
         displayTo: new Date("2025-12-28"),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        noMatch: false
+        provenance: "MANUAL_UPLOAD"
       },
       {
         artefactId: "list-2",
@@ -152,8 +149,7 @@ describe("getLatestSjpLists", () => {
         displayFrom: new Date("2025-11-27"),
         displayTo: new Date("2025-12-27"),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        noMatch: false
+        provenance: "MANUAL_UPLOAD"
       }
     ];
 
