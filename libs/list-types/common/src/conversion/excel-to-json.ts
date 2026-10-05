@@ -21,14 +21,14 @@ export interface ExcelConversionResult<T = Record<string, string>> {
 
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
-function formatDateValue(value: unknown): unknown {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const day = String(value.getDate()).padStart(2, "0");
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const year = value.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-  return value;
+export function readCellValue(value: unknown): string {
+  const formatted = formatDateValue(value);
+  return formatted === null || formatted === undefined ? "" : String(formatted).trim();
+}
+
+export function findFieldForHeader(fields: FieldConfig[], header: string): FieldConfig | undefined {
+  const normalisedHeader = header.toLowerCase().trim();
+  return fields.find((field) => field.header.toLowerCase() === normalisedHeader);
 }
 
 export function validateNoHtmlTags(value: string, fieldName: string, rowNumber: number): void {
@@ -75,7 +75,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
       row.eachCell((cell, colNumber) => {
         const header = headers[colNumber - 1];
         if (header) {
-          rowData[header] = formatDateValue(cell.value) ?? "";
+          rowData[header] = readCellValue(cell.value);
         }
       });
       jsonData.push(rowData);
@@ -112,6 +112,16 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
   return results;
 }
 
+function formatDateValue(value: unknown): unknown {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    const day = String(value.getDate()).padStart(2, "0");
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const year = value.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return value;
+}
+
 function validateHeaders(actualHeaders: string[], fields: FieldConfig[]): void {
   const expectedHeaders = fields.map((f) => f.header.toLowerCase());
   const missingHeaders = expectedHeaders.filter((expected) => !actualHeaders.includes(expected));
@@ -127,7 +137,7 @@ function parseRow(row: Record<string, unknown>, rowNumber: number, fields: Field
   const result: Record<string, string> = {};
 
   for (const field of fields) {
-    const value = getField(row, field.header, rowNumber, field.required ?? true);
+    const value = getField(row, field, rowNumber);
 
     if (value && field.validators) {
       for (const validator of field.validators) {
@@ -141,18 +151,13 @@ function parseRow(row: Record<string, unknown>, rowNumber: number, fields: Field
   return result;
 }
 
-function getField(row: Record<string, unknown>, header: string, rowNumber: number, required: boolean): string {
-  const keys = Object.keys(row);
-  const key = keys.find((k) => k.toLowerCase().trim() === header.toLowerCase());
+function getField(row: Record<string, unknown>, field: FieldConfig, rowNumber: number): string {
+  const key = Object.keys(row).find((k) => findFieldForHeader([field], k));
+  const value = key ? readCellValue(row[key]) : "";
 
-  const value = key ? row[key] : undefined;
-
-  if (value === null || value === undefined || String(value).trim() === "") {
-    if (required) {
-      throw new Error(`Missing required field '${header}' in row ${rowNumber}`);
-    }
-    return "";
+  if (value === "" && (field.required ?? true)) {
+    throw new Error(`Missing required field '${field.header}' in row ${rowNumber}`);
   }
 
-  return String(value).trim();
+  return value;
 }

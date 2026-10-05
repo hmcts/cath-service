@@ -83,7 +83,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: true
   },
   {
-    name: "COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST",
+    name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
     friendlyName: "Court of Appeal (Civil Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
     url: "court-of-appeal-civil-division-daily-cause-list",

@@ -1,12 +1,17 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf, generateCivilAndFamilyDailyCauseListExcel } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListExcel, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
 import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
-import { type CourtOfAppealCivilData, generateCourtOfAppealCivilDailyCauseListPdf } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import {
+  type CourtOfAppealCivilData,
+  generateCourtOfAppealCivilDailyCauseListPdf,
+  reformatCourtOfAppealCivilDailyCauseListExcel
+} from "@hmcts/court-of-appeal-civil-daily-cause-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
 import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
 import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/crown-warned-list";
@@ -21,9 +26,13 @@ import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPd
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
-import type { SjpJson } from "@hmcts/list-types-common";
+import { type SjpJson, saveExcelToStorage } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
-import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
+import {
+  generateLondonAdministrativeCourtDailyCauseListPdf,
+  type LondonAdminCourtData,
+  reformatLondonAdministrativeCourtDailyCauseListExcel
+} from "@hmcts/london-administrative-court-daily-cause-list";
 import {
   generateMagistratesAdultCourtListExcel,
   generateMagistratesAdultCourtListPdf,
@@ -39,7 +48,7 @@ import { generateMagistratesStandardListExcel, generateMagistratesStandardListPd
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { generatePhtWeeklyHearingListPdf, type PhtHearingList } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
-import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
+import { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
 import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import { generateSjpPressListPdf } from "@hmcts/sjp-press-list";
@@ -352,6 +361,7 @@ interface GenerateExcelParams {
   locale: string;
   locationId: string;
   jsonData: unknown;
+  uploadedExcel?: Buffer;
   logPrefix?: string;
 }
 
@@ -367,6 +377,8 @@ interface ExcelGeneratorResult {
 }
 
 type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorResult>;
+
+const rcjStandardUploadedExcelGenerator = createUploadedExcelGenerator(reformatRcjStandardDailyCauseListExcel);
 
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
@@ -399,7 +411,17 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
     const buffer = await generateSjpPressListExcel(p.jsonData as SjpJson, p.locale === "cy" ? "cy" : "en");
     await saveExcelFile(p.artefactId, buffer);
     return { success: true, excelPath: `${p.artefactId}.xlsx` };
-  }
+  },
+  CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
+  LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatLondonAdministrativeCourtDailyCauseListExcel),
+  COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatCourtOfAppealCivilDailyCauseListExcel)
 };
 
 export function listTypeHasExcel(listTypeName: string | undefined): boolean {
@@ -588,6 +610,7 @@ interface ProcessPublicationParams {
   language?: string;
   isUpdate?: boolean;
   flatFilePath?: string;
+  uploadedExcel?: Buffer;
   skipNotifications?: boolean;
   skipThirdPartyPush?: boolean;
   logPrefix?: string;
@@ -617,6 +640,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     language = "",
     isUpdate = false,
     flatFilePath,
+    uploadedExcel,
     skipNotifications = false,
     skipThirdPartyPush = false,
     logPrefix = "[Publication]"
@@ -658,6 +682,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       locale,
       locationId,
       jsonData,
+      uploadedExcel,
       logPrefix
     });
 
@@ -705,4 +730,24 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   }
 
   return result;
+}
+
+function createUploadedExcelGenerator(reformat: (buffer: Buffer, locale: string) => Promise<Buffer>): ExcelGenerator {
+  return async ({ artefactId, locale, uploadedExcel }) => {
+    const blobName = `${artefactId}.xlsx`;
+
+    // The artefactId is reused when the same list is republished, so a previous upload's Excel must not outlive it
+    if (!uploadedExcel) {
+      await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
+      return { success: false };
+    }
+
+    try {
+      const { excelPath } = await saveExcelToStorage(artefactId, await reformat(uploadedExcel, locale));
+      return { success: true, excelPath };
+    } catch (error) {
+      await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  };
 }

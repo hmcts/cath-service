@@ -64,9 +64,20 @@ export async function createMultiSheetConverter(buffer: Buffer, sheets: SheetCon
   const result: Record<string, any[]> = {};
 
   for (const sheet of sheets) {
-    const worksheet = workbook.getWorksheet(sheet.worksheetName) || workbook.worksheets[sheet.worksheetIndex];
+    const worksheet = resolveWorksheet(workbook, sheet);
     result[sheet.dataKey] = worksheet ? await convertSheetToJson(worksheet, sheet.config) : [];
   }
 
   return result;
+}
+
+export function resolveWorksheet(workbook: ExcelJSPkg.Workbook, sheet: WorksheetLocator): ExcelJSPkg.Worksheet | undefined {
+  // getWorksheet(undefined) returns the first sheet, so only look up by name when one is given
+  const namedWorksheet = sheet.worksheetName ? workbook.getWorksheet(sheet.worksheetName) : undefined;
+  return namedWorksheet || workbook.worksheets[sheet.worksheetIndex];
+}
+
+export interface WorksheetLocator {
+  worksheetName?: string;
+  worksheetIndex: number;
 }

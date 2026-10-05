@@ -125,6 +125,7 @@ const postHandler = async (req: Request, res: Response) => {
     // convert it to JSON (validation already done on upload page)
     const selectedListType = await findListTypeById(listTypeId);
     let jsonData: unknown;
+    let uploadedExcel: Buffer | undefined;
 
     if (isExcelFile && selectedListType?.isNonStrategic) {
       const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
@@ -133,7 +134,9 @@ const postHandler = async (req: Request, res: Response) => {
 
       if (listTypeName && hasConverterForListTypeName(listTypeName)) {
         jsonData = await convertExcelForListTypeName(listTypeName, uploadData.file);
-        // Store converted JSON in blob — original Excel is not stored (no value after conversion)
+        // Kept for list types that offer the reformatted upload as their Excel download
+        uploadedExcel = uploadData.file;
+        // The converted JSON is the stored source of the publication
         await saveUploadedFile(artefactId, artefactId, Buffer.from(JSON.stringify(jsonData)));
         // Track the original uploaded Excel file name, not the synthetic JSON blob name
         await updateSourceArtefactId(artefactId, uploadData.fileName);
@@ -170,6 +173,7 @@ const postHandler = async (req: Request, res: Response) => {
       contentDate,
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
+      uploadedExcel,
       provenance: Provenance.MANUAL_UPLOAD,
       sensitivity: uploadData.sensitivity,
       language: uploadData.language,
