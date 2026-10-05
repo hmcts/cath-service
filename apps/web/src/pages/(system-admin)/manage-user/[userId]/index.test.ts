@@ -73,6 +73,70 @@ describe("manage-user page", () => {
       );
     });
 
+    it("should display PI_AAD provenance as B2C", async () => {
+      // Arrange
+      const mockUser = {
+        userId: "456",
+        email: "media@example.com",
+        firstName: "Media",
+        surname: "User",
+        userProvenance: "PI_AAD",
+        userProvenanceId: "azure-456",
+        role: "VERIFIED",
+        createdDate: new Date(),
+        lastSignedInDate: null
+      };
+
+      mockRequest.params = { userId: "456" };
+      vi.mocked(getUserById).mockResolvedValue(mockUser);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "manage-user/[userId]/index",
+        expect.objectContaining({
+          user: expect.objectContaining({ userProvenance: "B2C" })
+        })
+      );
+    });
+
+    it("should display PI_AAD provenance as B2C when lng=cy", async () => {
+      // Arrange
+      const mockUser = {
+        userId: "456",
+        email: "media@example.com",
+        firstName: "Media",
+        surname: "User",
+        userProvenance: "PI_AAD",
+        userProvenanceId: "azure-456",
+        role: "VERIFIED",
+        createdDate: new Date(),
+        lastSignedInDate: null
+      };
+
+      mockRequest.query = { lng: "cy" };
+      mockRequest.params = { userId: "456" };
+      vi.mocked(getUserById).mockResolvedValue(mockUser);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      expect(mockResponse.render).toHaveBeenCalledWith(
+        "manage-user/[userId]/index",
+        expect.objectContaining({
+          user: expect.objectContaining({ userProvenance: "B2C" }),
+          lng: "cy"
+        })
+      );
+    });
+
     it("should return 404 when user not found", async () => {
       // Arrange
       mockRequest.params = { userId: "nonexistent" };

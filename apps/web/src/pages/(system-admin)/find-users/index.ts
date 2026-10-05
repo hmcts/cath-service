@@ -56,6 +56,13 @@ const getHandler = async (req: Request, res: Response) => {
   const lngParam = language === "cy" ? "?lng=cy" : "";
   const lngQueryParam = language === "cy" ? "&lng=cy" : "";
 
+  const provenanceLabels: Record<string, string> = {
+    CFT_IDAM: content.provenanceCftIdam,
+    SSO: content.provenanceSso,
+    PI_AAD: content.provenanceB2c,
+    CRIME_IDAM: content.provenanceCrimeIdam
+  };
+
   // Build selected filter groups
   const selectedFilterGroups = [];
 
@@ -113,13 +120,6 @@ const getHandler = async (req: Request, res: Response) => {
   }
 
   if (filters.provenances && filters.provenances.length > 0) {
-    const provenanceLabels: Record<string, string> = {
-      CFT_IDAM: content.provenanceCftIdam,
-      SSO: content.provenanceSso,
-      B2C_IDAM: content.provenanceB2c,
-      CRIME_IDAM: content.provenanceCrimeIdam
-    };
-
     selectedFilterGroups.push({
       heading: content.provenancesLabel,
       tags: filters.provenances.map((provenance) => ({
@@ -135,14 +135,6 @@ const getHandler = async (req: Request, res: Response) => {
     INTERNAL_ADMIN_CTSC: content.roleCtscAdmin,
     INTERNAL_ADMIN_LOCAL: content.roleLocalAdmin,
     SYSTEM_ADMIN: content.roleSystemAdmin
-  };
-
-  const provenanceLabels: Record<string, string> = {
-    CFT_IDAM: content.provenanceCftIdam,
-    SSO: content.provenanceSso,
-    B2C_IDAM: content.provenanceB2c,
-    PI_AAD: content.provenanceB2c,
-    CRIME_IDAM: content.provenanceCrimeIdam
   };
 
   const userRows = searchResult.users.map((user) => [
