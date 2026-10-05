@@ -42,8 +42,11 @@ nodejs:
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPROVAL: 91d93e44-0ad8-4782-8ef0-fb1cad0c641f
     GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_REJECTION: 838be14a-1ca2-408f-a4bc-a8b4d3c7d54d
     GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN: b3c0a60f-34ee-4bfa-857d-7ccbd678cf0c
-    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.staging.platform.hmcts.net'
-    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.staging.platform.hmcts.net'
+    # One B2C tenant, one custom domain per PIP environment. PIP names aat
+    # "staging" and perftest "test"; demo matches. Backtick literals because the
+    # chart quotes the value before tpl, which would escape double quotes.
+    B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net'
+    B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net'
     # Source-payload size gates for publication output generation (KB)
     MAX_PDF_PAYLOAD_KB: 256 # 256 KB
     MAX_EXCEL_PAYLOAD_KB: 10240 # 10 MB
@@ -89,16 +92,16 @@ nodejs:
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID
-        - name: auto-pip-stg-pip-account-management-stg-id
-          alias: AZURE_B2C_CLIENT_ID
-        - name: auto-pip-stg-pip-account-management-stg-pwd
-          alias: AZURE_B2C_CLIENT_SECRET
+        - name: b2c-<ENV>-graph-client-id
+          alias: B2C_GRAPH_CLIENT_ID
+        - name: b2c-<ENV>-graph-client-secret
+          alias: B2C_GRAPH_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
         # B2C secrets for CaTH user sign-in
-        - name: auto-pip-stg-pip-frontend-stg-id
+        - name: b2c-<ENV>-client-id
           alias: B2C_CLIENT_ID
-        - name: auto-pip-stg-pip-frontend-stg-pwd
+        - name: b2c-<ENV>-client-secret
           alias: B2C_CLIENT_SECRET
         # Azure Blob Storage
         - name: storageaccount-connection-string

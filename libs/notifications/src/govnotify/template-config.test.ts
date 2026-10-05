@@ -36,7 +36,7 @@ describe("template-config", () => {
     it("should return false for non-SJP list types", async () => {
       const { isSjpListType } = await import("./template-config.js");
       expect(isSjpListType("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
-      expect(isSjpListType("CROWN_DAILY_LIST")).toBe(false);
+      expect(isSjpListType("CROWN_DAILY_PDDA_LIST")).toBe(false);
     });
   });
 

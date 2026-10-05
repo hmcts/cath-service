@@ -117,8 +117,7 @@ const postHandler = async (req: Request, res: Response) => {
       displayTo,
       lastReceivedDate: new Date(),
       isFlatFile,
-      provenance: Provenance.MANUAL_UPLOAD,
-      noMatch: false
+      provenance: Provenance.MANUAL_UPLOAD
     });
 
     // If this is a non-strategic list and it's an Excel file,

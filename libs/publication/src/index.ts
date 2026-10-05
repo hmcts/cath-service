@@ -1,4 +1,5 @@
 export { extractAndStoreArtefactSearch } from "./artefact-search-extractor.js";
+export { ArtefactType } from "./artefact-type.js";
 export { requirePublicationAccess, requirePublicationDataAccess } from "./authorisation/middleware.js";
 export {
   canAccessPublication,
@@ -9,10 +10,12 @@ export {
   type ListType,
   resolveListType
 } from "./authorisation/service.js";
+export { isWithinDisplayWindow } from "./display-window.js";
 export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson, getSourceArtefactId } from "./file-storage/file-retrieval.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
+export { buildNoMatchLocationId, getLocationIdForNoMatch, isNoMatchLocationId } from "./no-match-location.js";
 export { generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./processing/service.js";
 export { PROVENANCE_LABELS, Provenance } from "./provenance.js";
 export {

@@ -53,8 +53,7 @@ const givenArtefact = (sensitivity: string) => {
     displayTo: new Date("2099-12-31"),
     lastReceivedDate: new Date("2025-01-20"),
     isFlatFile: false,
-    provenance: "MANUAL_UPLOAD",
-    noMatch: false
+    provenance: "MANUAL_UPLOAD"
   } as never);
   vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 999, allowedProvenance: ALLOWED_PROVENANCE, isNonStrategic: false } as never);
 };

@@ -39,6 +39,12 @@ cath-web:
   nodejs:
     image: "hmctsprod.azurecr.io/cath/cath-web:${WEB_IMAGE}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
+    # Clears the subchart default (apps/web/helm/values.yaml), which claims the
+    # Front Door host cath.{env}.platform.hmcts.net. Inheriting it gives both
+    # releases an ingress rule for that host, and traefik may route Front Door
+    # traffic here, where BASE_URL builds a redirect URI the SSO app does not
+    # register (AADSTS50011).
+    additionalIngressHosts: []
     environment:
       BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-web.{{ .Values.global.environment }}.platform.hmcts.net"
       # false on demo (production-like), true elsewhere. Resolved by
