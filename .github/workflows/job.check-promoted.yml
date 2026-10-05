@@ -1,0 +1,76 @@
+name: Check Promoted Job
+
+# Decides whether the demo/perftest workflows should deploy, and which commit.
+#
+# Under workflow_run, github.sha is the default branch HEAD when the event fires,
+# not the commit Main built. If another merge landed while Main was running they
+# differ, and deploying github.sha would pick an image that is not built yet. The
+# triggering run's head_sha is the commit that was built, deployed to aat and
+# promoted, so that is what gets deployed.
+#
+# Main can finish green without promoting anything (an infrastructure-only change
+# skips build, so deploy, smoke test and promote all skip). Redeploying then would
+# only reapply the floating aat tag, so the deploy is skipped unless every Promote
+# job in the triggering run succeeded. Main's overall conclusion is deliberately
+# not used: a failure in an unrelated job such as Publish OpenAPI must not hold
+# back an image that was promoted.
+
+on:
+  workflow_call:
+    outputs:
+      should-deploy:
+        description: "'true' when there is a promoted image to deploy"
+        value: ${{ jobs.check.outputs.should-deploy }}
+      sha:
+        description: "Full SHA of the commit to deploy"
+        value: ${{ jobs.check.outputs.sha }}
+
+jobs:
+  check:
+    name: Check Promoted
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+      sha: ${{ steps.check.outputs.sha }}
+
+    steps:
+      - name: Check the triggering run promoted
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          # push and workflow_dispatch deploy the ref they ran against.
+          if [ "${EVENT_NAME}" != "workflow_run" ]; then
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "sha=${RUN_HEAD_SHA}" >> "$GITHUB_OUTPUT"
+
+          if [ "${RUN_EVENT}" != "push" ]; then
+            echo "Main run ${RUN_ID} was triggered by ${RUN_EVENT}, not a push to master - skipping"
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Reusable-workflow jobs are named "<caller job> / <called job>", so
+          # every job promote-stage ran starts with "Promote / ".
+          CONCLUSIONS=$(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs?per_page=100" \
+            --jq '.jobs[] | select(.name | startswith("Promote / ")) | .conclusion' \
+            | sort -u)
+
+          if [ "${CONCLUSIONS}" = "success" ]; then
+            echo "Main run ${RUN_ID} promoted ${RUN_HEAD_SHA} - deploying"
+            echo "should-deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Main run ${RUN_ID} did not promote ${RUN_HEAD_SHA} (Promote job conclusions: ${CONCLUSIONS:-none}) - skipping"
+            echo "should-deploy=false" >> "$GITHUB_OUTPUT"
+          fi

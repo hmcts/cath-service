@@ -113,6 +113,12 @@ jobs:
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
     secrets: inherit
 
+  # Demo and perftest are not deployed from here. workflow.demo.yml and
+  # workflow.perftest.yml start on this workflow's completion (workflow_run), so a
+  # demo/perftest failure cannot turn master red. They deploy only when every
+  # Promote job succeeded, so if promotion moves behind E2E (#1004) they inherit
+  # that gate.
+
   publish-openapi:
     name: Publish OpenAPI Spec
     needs: [build-stage]
