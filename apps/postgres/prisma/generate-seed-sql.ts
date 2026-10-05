@@ -56,6 +56,7 @@ export function generateSeedSql(data: typeof locationData, listTypes: ListTypeDa
     generateLocationReferencesSql(data.locations),
     generateLocationRegionsSql(data.locations),
     generateLocationSubJurisdictionsSql(data.locations),
+    generateLocationMetadataSql(data.locations),
     generateListTypesSql(listTypes),
     generateListTypeSubJurisdictionsSql(listTypes),
     generateSoftDeleteReconciliationSql(listTypes),
@@ -124,6 +125,21 @@ function generateLocationSubJurisdictionsSql(locations: typeof locationData.loca
     return "-- no location_sub_jurisdiction rows";
   }
   return `INSERT INTO location_sub_jurisdiction (location_id, sub_jurisdiction_id) VALUES\n${rows.join(",\n")}\nON CONFLICT (location_id, sub_jurisdiction_id) DO NOTHING;`;
+}
+
+function generateLocationMetadataSql(locations: typeof locationData.locations): string {
+  const rows = locations
+    .filter((l) => l.cautionMessage || l.welshCautionMessage)
+    .map(
+      (l) =>
+        `  (${sqlStr(`seedmeta_${l.locationId}`)}, ${l.locationId}, ${sqlStrOrNull(l.cautionMessage ?? null)}, ${sqlStrOrNull(l.welshCautionMessage ?? null)}, NOW(), NOW())`
+    );
+  if (rows.length === 0) {
+    return "-- no location_metadata rows";
+  }
+  // DO NOTHING rather than DO UPDATE: once a metadata row exists it is owned by admins via
+  // location-metadata-manage, so a redeploy must never overwrite their edits.
+  return `INSERT INTO location_metadata (location_metadata_id, location_id, caution_message, welsh_caution_message, created_at, updated_at) VALUES\n${rows.join(",\n")}\nON CONFLICT (location_id) DO NOTHING;`;
 }
 
 function generateListTypesSql(listTypes: ListTypeData[]): string {
