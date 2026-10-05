@@ -53,7 +53,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     Promise.resolve([
       {
         id: 9,
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        name: "CST_WEEKLY_HEARING_LIST",
         friendlyName: "Care Standards Tribunal Weekly Hearing List",
         shortenedFriendlyName: "CST Weekly Hearing List",
         welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
@@ -101,7 +101,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
     if (id === 9)
       return Promise.resolve({
         id: 9,
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        name: "CST_WEEKLY_HEARING_LIST",
         friendlyName: "Care Standards Tribunal Weekly Hearing List",
         shortenedFriendlyName: "CST Weekly Hearing List",
         welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",

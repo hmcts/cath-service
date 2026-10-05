@@ -55,4 +55,4 @@ export const UTAAC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utaacConverter = createConverter(UTAAC_EXCEL_CONFIG);
-registerConverterByName("UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST", utaacConverter);
+registerConverterByName("UT_AAC_DAILY_HEARING_LIST", utaacConverter);

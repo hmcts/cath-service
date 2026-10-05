@@ -27,11 +27,11 @@ vi.mock("@hmcts/publication", () => ({
 
 const { RPT_REGIONAL_EMAIL, MARKET_RENTS_EXTRA_INFORMATION_EN, MARKET_RENTS_EXTRA_INFORMATION_CY } = vi.hoisted(() => ({
   RPT_REGIONAL_EMAIL: {
-    FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
-    FTT_RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
-    FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
-    FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
-    FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
+    RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
+    RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
+    RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
+    RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
+    RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
     FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: "marketrents@justice.gov.uk"
   },
   MARKET_RENTS_EXTRA_INFORMATION_EN: "Market Rents extra information (en)",
@@ -88,35 +88,35 @@ import { GET } from "./index.js";
 const REGION_CASES = [
   {
     listTypeId: 33,
-    listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+    listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
     regionalEmail: "RPEastern@justice.gov.uk"
   },
   {
     listTypeId: 34,
-    listTypeName: "FTT_RPT_LONDON_WEEKLY_HEARING_LIST",
+    listTypeName: "RPT_LONDON_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): London region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
     regionalEmail: "London.Rap@justice.gov.uk"
   },
   {
     listTypeId: 35,
-    listTypeName: "FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST",
+    listTypeName: "RPT_MIDLANDS_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Midlands region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
     regionalEmail: "rpmidland@justice.gov.uk"
   },
   {
     listTypeId: 36,
-    listTypeName: "FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST",
+    listTypeName: "RPT_NORTHERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Northern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
     regionalEmail: "rpnorthern@justice.gov.uk"
   },
   {
     listTypeId: 37,
-    listTypeName: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST",
+    listTypeName: "RPT_SOUTHERN_WEEKLY_HEARING_LIST",
     courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
     listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
     regionalEmail: "RPSouthern@justice.gov.uk"
@@ -189,7 +189,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 33,
-        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+        listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -204,7 +204,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-id",
         listTypeId: 33,
-        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+        listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
@@ -229,7 +229,7 @@ describe("FTT RPT Weekly Hearing List page controller", () => {
       const mockArtefact = {
         artefactId: "test-id",
         listTypeId: 33,
-        listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+        listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST",
         contentDate: new Date("2026-01-01"),
         lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
         provenance: "MANUAL_UPLOAD"
