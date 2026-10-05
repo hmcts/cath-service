@@ -1,9 +1,14 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
+import { PUBLISHER_PROVENANCES } from "@hmcts/list-types-common/list-type-provenance";
 import type { ListTypeFormData, ListTypeSession } from "@hmcts/system-admin-pages";
 import { findListTypeByName, validateListTypeDetails } from "@hmcts/system-admin-pages";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
+
+function buildProvenanceOptions(selected: string[]) {
+  return PUBLISHER_PROVENANCES.map((value) => ({ value, text: value, checked: selected.includes(value) }));
+}
 
 const getHandler = async (req: Request, res: Response) => {
   const session = req.session as ListTypeSession;
@@ -15,7 +20,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("add-list-type/index", {
     t,
     data: {},
-    checkedProvenance: { CFT_IDAM: false, PI_AAD: false, CRIME_IDAM: false }
+    provenanceOptions: buildProvenanceOptions([])
   });
 };
 
@@ -77,16 +82,10 @@ const postHandler = async (req: Request, res: Response) => {
       {} as Record<string, { text: string }>
     );
 
-    const checkedProvenance = {
-      CFT_IDAM: allowedProvenance.includes("CFT_IDAM"),
-      PI_AAD: allowedProvenance.includes("PI_AAD"),
-      CRIME_IDAM: allowedProvenance.includes("CRIME_IDAM")
-    };
-
     return res.render("add-list-type/index", {
       t,
       data: formData,
-      checkedProvenance,
+      provenanceOptions: buildProvenanceOptions(allowedProvenance),
       errors: errorMap,
       errorList: errors.map((error) => ({ text: error.message, href: error.href }))
     });
