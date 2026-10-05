@@ -164,13 +164,13 @@ describe("POST /v1/publication", () => {
     expect(processBlobIngestion).toHaveBeenCalledWith(mockRequest.body as BlobIngestionRequest, expectedSize);
   });
 
-  it("should handle no_match scenario", async () => {
+  it("should return 201 with the no-match message when the court location does not resolve", async () => {
     const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
 
     vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: false,
-      no_match: true,
-      message: "Court not found"
+      success: true,
+      artefact_id: "test-artefact-123",
+      message: "Blob ingested but location not found in reference data"
     });
 
     const handlers = Array.isArray(POST) ? POST : [POST];
@@ -178,11 +178,11 @@ describe("POST /v1/publication", () => {
 
     await handler(mockRequest as Request, mockResponse as Response);
 
-    expect(statusMock).toHaveBeenCalledWith(200);
+    expect(statusMock).toHaveBeenCalledWith(201);
     expect(jsonMock).toHaveBeenCalledWith({
-      success: false,
-      no_match: true,
-      message: "Court not found"
+      success: true,
+      artefact_id: "test-artefact-123",
+      message: "Blob ingested but location not found in reference data"
     });
   });
 
@@ -368,7 +368,6 @@ describe("POST /v1/publication", () => {
       vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
         success: true,
         artefact_id: "flat-artefact-123",
-        no_match: false,
         message: "Flat file ingested successfully"
       });
 
@@ -382,7 +381,6 @@ describe("POST /v1/publication", () => {
       expect(jsonMock).toHaveBeenCalledWith({
         success: true,
         artefact_id: "flat-artefact-123",
-        no_match: false,
         message: "Flat file ingested successfully"
       });
       expect(processFlatFileBlobIngestion).toHaveBeenCalledWith(mockFlatFileRequest.body, mockFlatFileRequest.file?.buffer, mockFlatFileRequest.file?.size);
@@ -445,12 +443,12 @@ describe("POST /v1/publication", () => {
       });
     });
 
-    it("should return 200 when location not found (no_match)", async () => {
+    it("should return 201 with the no-match message when the court location does not resolve", async () => {
       // Arrange
       const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
       vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
-        success: false,
-        no_match: true,
+        success: true,
+        artefact_id: "flat-artefact-123",
         message: "Flat file ingested but location not found in reference data"
       });
 
@@ -460,7 +458,7 @@ describe("POST /v1/publication", () => {
       await handler(mockFlatFileRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(statusMock).toHaveBeenCalledWith(200);
+      expect(statusMock).toHaveBeenCalledWith(201);
     });
 
     it("should pass source_artefact_id when provided", async () => {
@@ -470,7 +468,6 @@ describe("POST /v1/publication", () => {
       vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
         success: true,
         artefact_id: "flat-artefact-123",
-        no_match: false,
         message: "Flat file ingested successfully"
       });
 

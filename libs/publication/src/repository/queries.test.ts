@@ -84,8 +84,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any);
 
     const result = await createArtefact(artefactData as any);
@@ -145,8 +144,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date("2025-10-19"),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any);
 
     vi.mocked(prisma.artefact.update).mockResolvedValue({
@@ -161,8 +159,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 1,
-      noMatch: false
+      supersededCount: 1
     } as any);
 
     const result = await createArtefact(artefactData as any);
@@ -221,8 +218,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any);
 
     await createArtefact(artefactData as any);
@@ -261,8 +257,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any);
 
     await createArtefact(artefactData as any);
@@ -286,8 +281,7 @@ describe("createArtefact", () => {
       displayTo: new Date("2025-10-28"),
       lastReceivedDate: new Date(),
       isFlatFile: true,
-      provenance: "MANUAL_UPLOAD",
-      noMatch: false
+      provenance: "MANUAL_UPLOAD"
     };
 
     vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -313,8 +307,7 @@ describe("createArtefact", () => {
         displayTo: new Date("2025-10-30"),
         lastReceivedDate: new Date(),
         isFlatFile: true,
-        provenance: "MANUAL_UPLOAD",
-        noMatch: false
+        provenance: "MANUAL_UPLOAD"
       };
 
       vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
@@ -330,8 +323,7 @@ describe("createArtefact", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       } as any);
 
       await createArtefact(artefactData as any);
@@ -376,8 +368,7 @@ describe("createArtefact", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any);
 
     await createArtefact(artefactData as any);
@@ -419,8 +410,7 @@ describe("getArtefactsByLocation", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       },
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440001",
@@ -434,8 +424,7 @@ describe("getArtefactsByLocation", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       }
     ] as any;
 
@@ -458,8 +447,7 @@ describe("getArtefactsByLocation", () => {
         displayTo: true,
         lastReceivedDate: true,
         isFlatFile: true,
-        provenance: true,
-        noMatch: true
+        provenance: true
       }
     });
     expect(result).toHaveLength(2);
@@ -495,8 +483,7 @@ describe("getArtefactsByIds", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       }
     ] as any;
 
@@ -522,8 +509,7 @@ describe("getArtefactsByIds", () => {
         displayTo: true,
         lastReceivedDate: true,
         isFlatFile: true,
-        provenance: true,
-        noMatch: true
+        provenance: true
       }
     });
     expect(result).toHaveLength(1);
@@ -544,8 +530,7 @@ describe("getArtefactsByIds", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       },
       {
         artefactId: "550e8400-e29b-41d4-a716-446655440001",
@@ -559,8 +544,7 @@ describe("getArtefactsByIds", () => {
         lastReceivedDate: new Date(),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       }
     ] as any;
 
@@ -765,8 +749,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any;
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "CIVIL_DAILY_CAUSE_LIST" } } as any);
@@ -789,8 +772,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
-        supersededCount: true,
-        noMatch: true
+        supersededCount: true
       }
     });
     expect(result).toEqual({
@@ -806,8 +788,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     });
   });
 
@@ -832,8 +813,7 @@ describe("getArtefactById", () => {
         lastReceivedDate: true,
         isFlatFile: true,
         provenance: true,
-        supersededCount: true,
-        noMatch: true
+        supersededCount: true
       }
     });
     expect(result).toBeNull();
@@ -853,8 +833,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "API",
-      supersededCount: 5,
-      noMatch: true
+      supersededCount: 5
     } as any;
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ ...mockArtefact, listType: { name: "FAMILY_DAILY_CAUSE_LIST" } } as any);
@@ -874,8 +853,7 @@ describe("getArtefactById", () => {
       lastReceivedDate: mockArtefact.lastReceivedDate,
       isFlatFile: false,
       provenance: "API",
-      supersededCount: 5,
-      noMatch: true
+      supersededCount: 5
     });
   });
 });
@@ -957,8 +935,7 @@ describe("getArtefactSummariesByLocation", () => {
         lastReceivedDate: new Date(),
         isFlatFile: false,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       }
     ] as any;
 
@@ -1063,8 +1040,7 @@ describe("getArtefactMetadata", () => {
       lastReceivedDate: new Date(),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any;
 
     const mockLocation = {
@@ -1102,8 +1078,7 @@ describe("getArtefactMetadata", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any;
 
     const mockListType = {
@@ -1133,8 +1108,7 @@ describe("getArtefactMetadata", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any;
 
     const mockLocation = {
@@ -1167,8 +1141,7 @@ describe("getArtefactMetadata", () => {
       lastReceivedDate: new Date(),
       isFlatFile: false,
       provenance: "PDDA",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     } as any;
 
     const mockLocation = {
@@ -1378,8 +1351,7 @@ describe("getLatestSjpArtefacts", () => {
         lastReceivedDate: new Date("2025-10-26"),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       },
       {
         artefactId: "sjp-2",
@@ -1393,8 +1365,7 @@ describe("getLatestSjpArtefacts", () => {
         lastReceivedDate: new Date("2025-10-25"),
         isFlatFile: true,
         provenance: "MANUAL_UPLOAD",
-        supersededCount: 0,
-        noMatch: false
+        supersededCount: 0
       }
     ] as any;
 
@@ -1437,8 +1408,7 @@ describe("getLatestSjpArtefacts", () => {
       lastReceivedDate: new Date(`2025-10-${25 - i}`),
       isFlatFile: true,
       provenance: "MANUAL_UPLOAD",
-      supersededCount: 0,
-      noMatch: false
+      supersededCount: 0
     }));
 
     vi.mocked(prisma.artefact.findMany).mockResolvedValue(mockArtefacts as any);

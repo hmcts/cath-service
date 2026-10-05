@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { CauseListData } from "@hmcts/civil-and-family-daily-cause-list";
-import { createArtefact, extractAndStoreArtefactSearch, Provenance, processPublication, updateSourceArtefactId } from "@hmcts/publication";
+import { createArtefact, extractAndStoreArtefactSearch, isNoMatchLocationId, Provenance, processPublication, updateSourceArtefactId } from "@hmcts/publication";
 import { saveUploadedFile } from "../file-storage.js";
 import { validateBlobRequest, validateFlatFileRequest } from "../validation.js";
 import type { BlobIngestionRequest, BlobIngestionResponse, BlobValidationResult, FlatFileIngestionRequest, IngestionLog, ValidationError } from "./model.js";
@@ -50,8 +50,7 @@ function buildArtefactParams(request: FlatFileIngestionRequest, validation: Blob
     displayTo: new Date(request.display_to),
     lastReceivedDate: new Date(),
     isFlatFile,
-    provenance: PROVENANCE_MAP[request.provenance] || request.provenance,
-    noMatch: !validation.locationExists
+    provenance: PROVENANCE_MAP[request.provenance] || request.provenance
   };
 }
 
@@ -99,7 +98,7 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
   }
 
   const locationId = validation.resolvedLocationId ?? request.court_id;
-  const noMatch = !validation.locationExists;
+  const noMatch = isNoMatchLocationId(locationId);
 
   try {
     const { artefactId, isUpdate } = await createArtefact({ artefactId: randomUUID(), ...buildArtefactParams(request, validation, false) });
@@ -120,7 +119,6 @@ export async function processBlobIngestion(request: BlobIngestionRequest, rawBod
     return {
       success: true,
       artefact_id: artefactId,
-      no_match: noMatch,
       message: noMatch ? "Blob ingested but location not found in reference data" : "Blob ingested and published successfully"
     };
   } catch (error) {
@@ -146,7 +144,7 @@ export async function processFlatFileBlobIngestion(request: FlatFileIngestionReq
   }
 
   const locationId = validation.resolvedLocationId ?? request.court_id;
-  const noMatch = !validation.locationExists;
+  const noMatch = isNoMatchLocationId(locationId);
   const sourceArtefactId = request.source_artefact_id || null;
 
   try {
@@ -183,7 +181,6 @@ export async function processFlatFileBlobIngestion(request: FlatFileIngestionReq
     return {
       success: true,
       artefact_id: artefactId,
-      no_match: noMatch,
       message: noMatch ? "Flat file ingested but location not found in reference data" : "Flat file ingested successfully"
     };
   } catch (error) {

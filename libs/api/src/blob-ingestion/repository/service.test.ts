@@ -8,6 +8,8 @@ vi.mock("@hmcts/publication", () => ({
   extractAndStoreArtefactSearch: vi.fn(),
   processPublication: vi.fn(),
   updateSourceArtefactId: vi.fn(),
+  buildNoMatchLocationId: (id: string) => `NoMatch${id}`,
+  isNoMatchLocationId: (id: string) => id.startsWith("NoMatch"),
   Provenance: {
     MANUAL_UPLOAD: "MANUAL_UPLOAD",
     SNL: "SNL",
@@ -31,7 +33,9 @@ vi.mock("../file-storage.js", () => ({
 }));
 
 describe("processBlobIngestion", async () => {
-  const { createArtefact, extractAndStoreArtefactSearch, processPublication, updateSourceArtefactId } = await import("@hmcts/publication");
+  const { createArtefact, extractAndStoreArtefactSearch, processPublication, updateSourceArtefactId, buildNoMatchLocationId } = await import(
+    "@hmcts/publication"
+  );
   const { createIngestionLog } = await import("./queries.js");
   const { validateBlobRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
@@ -60,7 +64,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -70,7 +74,6 @@ describe("processBlobIngestion", async () => {
 
     expect(result.success).toBe(true);
     expect(result.artefact_id).toBeDefined();
-    expect(result.no_match).toBe(false);
     expect(result.message).toBe("Blob ingested and published successfully");
     expect(createArtefact).toHaveBeenCalled();
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
@@ -84,11 +87,11 @@ describe("processBlobIngestion", async () => {
     );
   });
 
-  it("should process blob with no_match=true when location not found", async () => {
+  it("should process blob with no matching location, storing a NoMatch-prefixed locationId", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: false,
+      resolvedLocationId: buildNoMatchLocationId("123"),
       listTypeId: 8
     });
 
@@ -97,11 +100,10 @@ describe("processBlobIngestion", async () => {
     const result = await processBlobIngestion(validRequest, 1000);
 
     expect(result.success).toBe(true);
-    expect(result.no_match).toBe(true);
     expect(result.message).toBe("Blob ingested but location not found in reference data");
     expect(createArtefact).toHaveBeenCalledWith(
       expect.objectContaining({
-        noMatch: true
+        locationId: buildNoMatchLocationId("123")
       })
     );
     expect(saveUploadedFile).toHaveBeenCalledWith("test-artefact-id", "upload.json", expect.any(Buffer));
@@ -113,7 +115,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "test-artefact-id", isUpdate: false });
@@ -134,8 +136,7 @@ describe("processBlobIngestion", async () => {
       errors: [
         { field: "court_id", message: "court_id is required" },
         { field: "provenance", message: "provenance is required" }
-      ],
-      locationExists: false
+      ]
     });
 
     const result = await processBlobIngestion(validRequest, 1000);
@@ -155,7 +156,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -177,7 +178,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -196,7 +197,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -217,7 +218,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -237,8 +238,7 @@ describe("processBlobIngestion", async () => {
 
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: false,
-      errors: [{ field: "provenance", message: "Missing provenance" }],
-      locationExists: false
+      errors: [{ field: "provenance", message: "Missing provenance" }]
     });
 
     const result = await processBlobIngestion(requestWithoutProvenance, 1000);
@@ -257,8 +257,7 @@ describe("processBlobIngestion", async () => {
 
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: false,
-      errors: [{ field: "court_id", message: "Missing court ID" }],
-      locationExists: false
+      errors: [{ field: "court_id", message: "Missing court ID" }]
     });
 
     const result = await processBlobIngestion(requestWithoutCourtId, 1000);
@@ -276,7 +275,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: null as any
     });
 
@@ -296,7 +295,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -317,7 +316,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -349,7 +348,6 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
       listTypeId: 8,
       resolvedLocationId: "456"
     });
@@ -379,7 +377,6 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: false,
       listTypeId: 8,
       resolvedLocationId: undefined
     });
@@ -399,7 +396,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: false,
+      resolvedLocationId: buildNoMatchLocationId("123"),
       listTypeId: 8
     });
 
@@ -419,7 +416,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -448,7 +445,7 @@ describe("processBlobIngestion", async () => {
     vi.mocked(validateBlobRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
 
@@ -469,7 +466,7 @@ describe("processBlobIngestion", async () => {
 });
 
 describe("processFlatFileBlobIngestion", async () => {
-  const { createArtefact, processPublication, updateSourceArtefactId } = await import("@hmcts/publication");
+  const { createArtefact, processPublication, updateSourceArtefactId, buildNoMatchLocationId } = await import("@hmcts/publication");
   const { createIngestionLog } = await import("./queries.js");
   const { validateFlatFileRequest } = await import("../validation.js");
   const { saveUploadedFile } = await import("../file-storage.js");
@@ -499,7 +496,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -510,7 +507,6 @@ describe("processFlatFileBlobIngestion", async () => {
     // Assert
     expect(result.success).toBe(true);
     expect(result.artefact_id).toBe("flat-artefact-id");
-    expect(result.no_match).toBe(false);
     expect(result.message).toBe("Flat file ingested successfully");
   });
 
@@ -519,7 +515,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -536,7 +532,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -553,7 +549,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -572,7 +568,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -584,12 +580,12 @@ describe("processFlatFileBlobIngestion", async () => {
     expect(updateSourceArtefactId).toHaveBeenCalledWith("flat-artefact-id", null);
   });
 
-  it("should return no_match=true and 'location not found' message when location absent", async () => {
+  it("should return 'location not found' message when location absent", async () => {
     // Arrange
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: false,
+      resolvedLocationId: buildNoMatchLocationId("123"),
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -599,9 +595,8 @@ describe("processFlatFileBlobIngestion", async () => {
 
     // Assert
     expect(result.success).toBe(true);
-    expect(result.no_match).toBe(true);
     expect(result.message).toBe("Flat file ingested but location not found in reference data");
-    expect(createArtefact).toHaveBeenCalledWith(expect.objectContaining({ noMatch: true }));
+    expect(createArtefact).toHaveBeenCalledWith(expect.objectContaining({ locationId: buildNoMatchLocationId("123") }));
   });
 
   it("should not call processPublication when noMatch is true", async () => {
@@ -609,7 +604,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: false,
+      resolvedLocationId: buildNoMatchLocationId("123"),
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -626,8 +621,7 @@ describe("processFlatFileBlobIngestion", async () => {
     // Arrange
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: false,
-      errors: [{ field: "list_type", message: "list_type is required" }],
-      locationExists: false
+      errors: [{ field: "list_type", message: "list_type is required" }]
     });
 
     // Act
@@ -646,7 +640,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: null as any
     });
 
@@ -666,7 +660,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockRejectedValue(new Error("Database error"));
@@ -685,7 +679,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
@@ -704,7 +698,6 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
       listTypeId: 8,
       resolvedLocationId: "456"
     });
@@ -723,7 +716,7 @@ describe("processFlatFileBlobIngestion", async () => {
     vi.mocked(validateFlatFileRequest).mockResolvedValue({
       isValid: true,
       errors: [],
-      locationExists: true,
+      resolvedLocationId: "123",
       listTypeId: 8
     });
     vi.mocked(createArtefact).mockResolvedValue({ artefactId: "flat-artefact-id", isUpdate: false });
