@@ -154,7 +154,7 @@ describe("requirePublicationAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -197,7 +197,7 @@ describe("requirePublicationAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -240,7 +240,7 @@ describe("requirePublicationAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -410,7 +410,7 @@ describe("requirePublicationDataAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -466,7 +466,7 @@ describe("requirePublicationDataAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -509,7 +509,7 @@ describe("requirePublicationDataAccess", () => {
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
