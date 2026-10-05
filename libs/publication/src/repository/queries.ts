@@ -10,8 +10,8 @@ const SJP_LIST_TYPE_NAMES = ["SJP_PRESS_LIST", "SJP_PUBLIC_LIST", "SJP_DELTA_PRE
 export interface ArtefactSummary {
   artefactId: string;
   listType: string;
-  displayFrom: string;
-  displayTo: string;
+  displayFrom: string | null;
+  displayTo: string | null;
   isFlatFile: boolean;
 }
 
@@ -25,8 +25,8 @@ export interface ArtefactMetadata {
   language: string;
   sensitivity: string;
   contentDate: string;
-  displayFrom: string;
-  displayTo: string;
+  displayFrom: string | null;
+  displayTo: string | null;
 }
 
 export interface LocationWithPublicationCount {
@@ -36,13 +36,15 @@ export interface LocationWithPublicationCount {
 }
 
 export async function createArtefact(data: Artefact): Promise<{ artefactId: string; isUpdate: boolean }> {
-  // Check if artefact already exists with same location, list type, content date, and language
+  // The CaTH Inbound Publication API supersedes on court, content date, language,
+  // list type and provenance — all five must match for an existing artefact to be overwritten.
   const existing = await prisma.artefact.findFirst({
     where: {
       locationId: data.locationId,
       listTypeId: data.listTypeId,
       contentDate: data.contentDate,
-      language: data.language
+      language: data.language,
+      provenance: data.provenance
     }
   });
 
@@ -239,8 +241,8 @@ export async function getArtefactSummariesByLocation(locationId: string): Promis
   return artefacts.map((artefact) => ({
     artefactId: artefact.artefactId,
     listType: artefact.listType?.friendlyName || "Unknown",
-    displayFrom: artefact.displayFrom.toISOString(),
-    displayTo: artefact.displayTo.toISOString(),
+    displayFrom: artefact.displayFrom?.toISOString() ?? null,
+    displayTo: artefact.displayTo?.toISOString() ?? null,
     isFlatFile: artefact.isFlatFile
   }));
 }
@@ -286,8 +288,8 @@ export async function getArtefactMetadata(artefactId: string): Promise<ArtefactM
     language: artefact.language,
     sensitivity: artefact.sensitivity,
     contentDate: artefact.contentDate.toISOString(),
-    displayFrom: artefact.displayFrom.toISOString(),
-    displayTo: artefact.displayTo.toISOString()
+    displayFrom: artefact.displayFrom?.toISOString() ?? null,
+    displayTo: artefact.displayTo?.toISOString() ?? null
   };
 }
 

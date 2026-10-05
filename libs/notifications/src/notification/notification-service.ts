@@ -205,15 +205,15 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractFinancialListChdKbSummary as SummaryExtractor,
     format: formatFinancialListChdKbSummaryForEmail
   },
-  CROWN_DAILY_LIST: {
+  CROWN_DAILY_PDDA_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,
     format: formatCrownDailySummaryForEmail
   },
-  CROWN_FIRM_LIST: {
+  CROWN_FIRM_PDDA_LIST: {
     extract: extractCrownFirmSummary as SummaryExtractor,
     format: formatCrownFirmSummaryForEmail
   },
-  CROWN_WARNED_LIST: {
+  CROWN_WARNED_PDDA_LIST: {
     extract: extractCrownWarnedSummary as SummaryExtractor,
     format: formatCrownWarnedSummaryForEmail
   },
