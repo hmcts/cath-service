@@ -47,16 +47,16 @@ nodejs:
         # Azure AD B2C secrets (media user account management)
         - name: b2c-tenant-id
           alias: AZURE_B2C_TENANT_ID
-        - name: auto-pip-stg-pip-account-management-stg-id
-          alias: AZURE_B2C_CLIENT_ID
-        - name: auto-pip-stg-pip-account-management-stg-pwd
-          alias: AZURE_B2C_CLIENT_SECRET
+        - name: b2c-aat-graph-client-id
+          alias: B2C_GRAPH_CLIENT_ID
+        - name: b2c-aat-graph-client-secret
+          alias: B2C_GRAPH_CLIENT_SECRET
         - name: b2c-ad-url
           alias: AZURE_B2C_DOMAIN
         # B2C secrets for verified user sign-in (using PIP staging frontend app registration)
-        - name: auto-pip-stg-pip-frontend-stg-id
+        - name: b2c-aat-client-id
           alias: B2C_CLIENT_ID
-        - name: auto-pip-stg-pip-frontend-stg-pwd
+        - name: b2c-aat-client-secret
           alias: B2C_CLIENT_SECRET
         # Third-party push secrets (Courtel)
         - name: auto-pip-stg-courtel-api

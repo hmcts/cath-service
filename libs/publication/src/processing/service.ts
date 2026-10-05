@@ -27,8 +27,16 @@ import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment
 import type { SjpJson } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import { generateLondonAdministrativeCourtDailyCauseListPdf, type LondonAdminCourtData } from "@hmcts/london-administrative-court-daily-cause-list";
-import { generateMagistratesAdultCourtListPdf, type MagistratesAdultCourtListData } from "@hmcts/magistrates-adult-court-list";
-import { generateMagistratesPublicAdultCourtListPdf, type MagistratesPublicAdultCourtListData } from "@hmcts/magistrates-public-adult-court-list";
+import {
+  generateMagistratesAdultCourtListExcel,
+  generateMagistratesAdultCourtListPdf,
+  type MagistratesAdultCourtListData
+} from "@hmcts/magistrates-adult-court-list";
+import {
+  generateMagistratesPublicAdultCourtListExcel,
+  generateMagistratesPublicAdultCourtListPdf,
+  type MagistratesPublicAdultCourtListData
+} from "@hmcts/magistrates-public-adult-court-list";
 import { generateMagistratesPublicListExcel, generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListExcel, generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
@@ -69,8 +77,8 @@ interface GeneratePdfParams {
   locationId: string;
   jsonData: unknown;
   provenance?: string;
-  displayFrom?: Date;
-  displayTo?: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   logPrefix?: string;
 }
 
@@ -201,9 +209,9 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SJP_DELTA_PUBLIC_LIST: sjpPublicGenerator,
   SJP_PRESS_LIST: sjpPressGenerator,
   SJP_DELTA_PRESS_LIST: sjpPressGenerator,
-  CROWN_DAILY_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
-  CROWN_FIRM_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
-  CROWN_WARNED_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
+  CROWN_DAILY_PDDA_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
+  CROWN_FIRM_PDDA_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
+  CROWN_WARNED_PDDA_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),
@@ -366,6 +374,12 @@ type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorRes
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
+    generateMagistratesPublicAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicAdultCourtListData }),
+  MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE: (p) =>
+    generateMagistratesPublicAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicAdultCourtListData }),
   CIVIL_DAILY_CAUSE_LIST: (p) => generateCivilDailyCauseListExcel({ ...p, jsonData: p.jsonData as CivilCauseListData }),
   FAMILY_DAILY_CAUSE_LIST: (p) => generateFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as FamilyCauseListData }),
   CIVIL_AND_FAMILY_DAILY_CAUSE_LIST: (p) => generateCivilAndFamilyDailyCauseListExcel({ ...p, jsonData: p.jsonData as CauseListData }),
@@ -571,8 +585,8 @@ interface ProcessPublicationParams {
   locale: string;
   jsonData?: unknown;
   provenance?: string;
-  displayFrom?: Date;
-  displayTo?: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   sensitivity?: string;
   language?: string;
   isUpdate?: boolean;
@@ -680,8 +694,8 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       contentDate,
       sensitivity,
       language,
-      displayFrom: displayFrom ?? new Date(),
-      displayTo: displayTo ?? new Date(),
+      displayFrom,
+      displayTo,
       provenance: provenance ?? "",
       isUpdate,
       jsonData,

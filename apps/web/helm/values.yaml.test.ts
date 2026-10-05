@@ -60,3 +60,14 @@ describe("aat and Flux must never deploy a -dev secret", () => {
     expect(devAliases.sort()).toEqual(Object.keys(ALLOWED_NAME_OVERRIDES).sort());
   });
 });
+
+describe("Front Door hostname ownership", () => {
+  // Only the Flux cath-web release may serve cath.{env}.platform.hmcts.net. If the pipeline
+  // release inherits it too, traefik can route Front Door traffic to a pod whose BASE_URL
+  // yields a redirect URI the SSO app registration does not accept.
+  it("should clear additionalIngressHosts for the pipeline release", () => {
+    const template = parse(readFileSync(path.join(REPO_ROOT, "helm/cath-service/values.template.yaml"), "utf8"));
+
+    expect(template["cath-web"].nodejs.additionalIngressHosts).toEqual([]);
+  });
+});
