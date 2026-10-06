@@ -27,7 +27,7 @@ function rowValues(worksheet: ExcelJS.Worksheet, rowNumber: number): unknown[] {
 }
 
 describe("reformatRcjStandardDailyCauseListExcel", () => {
-  it("should write the English PDF table headings in bold and keep unknown columns", async () => {
+  it("should write the English PDF table headings in bold and drop unknown columns", async () => {
     // Arrange
     const upload = await buildUpload();
 
@@ -43,8 +43,7 @@ describe("reformatRcjStandardDailyCauseListExcel", () => {
       headers.caseNumber,
       headers.caseDetails,
       headers.hearingType,
-      headers.additionalInformation,
-      "Notes"
+      headers.additionalInformation
     ]);
     expect(worksheet.getCell("A1").font?.bold).toBe(true);
     expect(worksheet.name).toBe("KB hearings");
@@ -59,7 +58,7 @@ describe("reformatRcjStandardDailyCauseListExcel", () => {
 
     // Assert
     const headers = cy.common.tableHeaders;
-    expect(rowValues(worksheet, 1).slice(0, 7)).toEqual([
+    expect(rowValues(worksheet, 1)).toEqual([
       headers.venue,
       headers.judge,
       headers.time,
@@ -78,6 +77,6 @@ describe("reformatRcjStandardDailyCauseListExcel", () => {
     const worksheet = await loadFirstSheet(await reformatRcjStandardDailyCauseListExcel(upload, "en"));
 
     // Assert
-    expect(rowValues(worksheet, 2)).toEqual(["Court 1", "Mr Justice Smith", "10:30am", "KB-2025-001", "Smith v Jones", "Trial", "", "Bring bundle"]);
+    expect(rowValues(worksheet, 2)).toEqual(["Court 1", "Mr Justice Smith", "10:30am", "KB-2025-001", "Smith v Jones", "Trial", ""]);
   });
 });

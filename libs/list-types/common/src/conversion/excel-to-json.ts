@@ -22,8 +22,29 @@ export interface ExcelConversionResult<T = Record<string, string>> {
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
 export function readCellValue(value: unknown): string {
-  const formatted = formatDateValue(value);
-  return formatted === null || formatted === undefined ? "" : String(formatted).trim();
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (value instanceof Date) {
+    return formatDateValue(value);
+  }
+  if (typeof value !== "object") {
+    return String(value).trim();
+  }
+  if ("richText" in value && Array.isArray(value.richText)) {
+    return value.richText
+      .map((part: { text?: unknown }) => (typeof part.text === "string" ? part.text : ""))
+      .join("")
+      .trim();
+  }
+  if ("formula" in value || "sharedFormula" in value) {
+    return "result" in value ? readCellValue(value.result) : "";
+  }
+  if ("text" in value) {
+    return readCellValue(value.text);
+  }
+  // Error values (e.g. #REF!) and unknown shapes are treated as empty so required-field validation catches them
+  return "";
 }
 
 export function findFieldForHeader(fields: FieldConfig[], header: string): FieldConfig | undefined {
@@ -67,8 +88,9 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
 
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) {
-      row.eachCell((cell) => {
-        headers.push(String(cell.value ?? ""));
+      // Indexed by column so a blank header cell does not shift the headers after it
+      row.eachCell((cell, colNumber) => {
+        headers[colNumber - 1] = readCellValue(cell.value);
       });
     } else {
       const rowData: Record<string, unknown> = {};
@@ -112,14 +134,14 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
   return results;
 }
 
-function formatDateValue(value: unknown): unknown {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const day = String(value.getDate()).padStart(2, "0");
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const year = value.getFullYear();
-    return `${day}/${month}/${year}`;
+function formatDateValue(value: Date): string {
+  if (Number.isNaN(value.getTime())) {
+    return String(value);
   }
-  return value;
+  const day = String(value.getDate()).padStart(2, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const year = value.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 function validateHeaders(actualHeaders: string[], fields: FieldConfig[]): void {

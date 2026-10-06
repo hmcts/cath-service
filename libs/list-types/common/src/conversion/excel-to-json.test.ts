@@ -297,6 +297,70 @@ describe("excel-to-json", () => {
     });
   });
 
+  describe("convertExcelToJson with typed cells", () => {
+    const fields: FieldConfig[] = [
+      { header: "Venue", fieldName: "venue" },
+      { header: "Case Details", fieldName: "caseDetails" },
+      { header: "Notes", fieldName: "notes", required: false }
+    ];
+
+    it("should convert rich text, hyperlink and formula cells to their readable text", async () => {
+      // Arrange
+      const buffer = await createExcelBuffer([
+        ["Venue", "Case Details", "Notes"],
+        [{ text: "Court 1", hyperlink: "https://example.com" }, { richText: [{ text: "Smith " }, { text: "v Jones" }] }, { formula: "1+1", result: 2 }]
+      ]);
+
+      // Act
+      const result = await convertExcelToJson(buffer, { fields });
+
+      // Assert
+      expect(result).toEqual([{ venue: "Court 1", caseDetails: "Smith v Jones", notes: "2" }]);
+    });
+
+    it("should fail the upload when a required field holds an error value", async () => {
+      // Arrange
+      const buffer = await createExcelBuffer([
+        ["Venue", "Case Details", "Notes"],
+        ["Court 1", { formula: "A1/0", result: { error: "#DIV/0!" } }, ""]
+      ]);
+
+      // Act
+      const result = convertExcelToJson(buffer, { fields });
+
+      // Assert
+      await expect(result).rejects.toThrow("Missing required field 'Case Details' in row 2");
+    });
+
+    it("should recognise a rich text header", async () => {
+      // Arrange
+      const buffer = await createExcelBuffer([
+        ["Venue", { richText: [{ font: { bold: true }, text: "Case " }, { text: "Details" }] }, "Notes"],
+        ["Court 1", "Smith v Jones", ""]
+      ]);
+
+      // Act
+      const result = await convertExcelToJson(buffer, { fields });
+
+      // Assert
+      expect(result).toEqual([{ venue: "Court 1", caseDetails: "Smith v Jones", notes: "" }]);
+    });
+
+    it("should not shift later fields when a header cell is blank", async () => {
+      // Arrange
+      const buffer = await createExcelBuffer([
+        ["Venue", null, "Case Details", "Notes"],
+        ["Court 1", "ignored", "Smith v Jones", "Bring bundle"]
+      ]);
+
+      // Act
+      const result = await convertExcelToJson(buffer, { fields });
+
+      // Assert
+      expect(result).toEqual([{ venue: "Court 1", caseDetails: "Smith v Jones", notes: "Bring bundle" }]);
+    });
+  });
+
   describe("readCellValue", () => {
     it("should return an empty string when the value is null or undefined", () => {
       // Act
@@ -339,6 +403,85 @@ describe("excel-to-json", () => {
 
       // Assert
       expect(result).toBe("Invalid Date");
+    });
+
+    it("should join the text parts of a rich text value", () => {
+      // Arrange
+      const value = { richText: [{ text: "Smith " }, { font: { bold: true }, text: "v Jones" }] };
+
+      // Act
+      const result = readCellValue(value);
+
+      // Assert
+      expect(result).toBe("Smith v Jones");
+    });
+
+    it("should read the text of a hyperlink value", () => {
+      // Arrange
+      const value = { text: " Court 1 ", hyperlink: "https://example.com" };
+
+      // Act
+      const result = readCellValue(value);
+
+      // Assert
+      expect(result).toBe("Court 1");
+    });
+
+    it("should read the text of a hyperlink whose text is rich text", () => {
+      // Arrange
+      const value = { text: { richText: [{ text: "Court " }, { text: "2" }] }, hyperlink: "https://example.com" };
+
+      // Act
+      const result = readCellValue(value);
+
+      // Assert
+      expect(result).toBe("Court 2");
+    });
+
+    it("should read the cached result of a formula", () => {
+      // Arrange
+      const value = { formula: "A1&B1", result: "Court 3" };
+
+      // Act
+      const result = readCellValue(value);
+
+      // Assert
+      expect(result).toBe("Court 3");
+    });
+
+    it("should read the cached result of a shared formula", () => {
+      // Arrange
+      const value = { sharedFormula: "C2", result: 42 };
+
+      // Act
+      const result = readCellValue(value);
+
+      // Assert
+      expect(result).toBe("42");
+    });
+
+    it("should return an empty string for a formula without a cached result", () => {
+      // Act
+      const result = readCellValue({ formula: "A1" });
+
+      // Assert
+      expect(result).toBe("");
+    });
+
+    it("should return an empty string for an error value", () => {
+      // Act
+      const results = [readCellValue({ error: "#N/A" }), readCellValue({ formula: "1/0", result: { error: "#DIV/0!" } })];
+
+      // Assert
+      expect(results).toEqual(["", ""]);
+    });
+
+    it("should return an empty string for an unknown object value", () => {
+      // Act
+      const result = readCellValue({ unexpected: true });
+
+      // Assert
+      expect(result).toBe("");
     });
   });
 
