@@ -3,6 +3,12 @@ import { convertExcelToJson, type ExcelConverterConfig } from "./excel-to-json.j
 
 const { Workbook } = ExcelJSPkg;
 
+// Excel truncates worksheet names to 31 characters, so a section named longer than that
+// (e.g. "Intellectual Property and Enterprise Court") is stored under its truncated form.
+// Match on the exact name first, then fall back to the truncated form so long section names
+// still resolve by name rather than needing the positional-index fallback.
+const EXCEL_WORKSHEET_NAME_MAX_LENGTH = 31;
+
 /**
  * Converts a single worksheet to JSON using the provided configuration
  * This is a helper for multi-sheet Excel converters
@@ -36,12 +42,25 @@ export interface SheetConfig {
   config: ExcelConverterConfig;
 }
 
+export interface MultiSheetConverterOptions {
+  /**
+   * Match worksheets by exact name only, disabling the positional-index fallback.
+   * When true, a workbook whose tabs match none of the configured worksheet names is
+   * rejected (throws) rather than silently filing data into the sheet at index 0. A tab
+   * that matches no section still yields an empty array for that section. Use this for
+   * lists where sibling tabs share the same field config (so the positional fallback
+   * cannot distinguish sections and would mis-file data).
+   */
+  matchByNameOnly?: boolean;
+}
+
 /**
  * Generic converter for multi-sheet Excel files
  * Converts each sheet according to its configuration and returns an object with the results
  *
  * @param buffer - Excel file buffer
  * @param sheets - Array of sheet configurations
+ * @param options - Optional behaviour flags; see {@link MultiSheetConverterOptions}
  * @returns Object with keys from dataKey containing the converted data
  *
  * @example
@@ -51,7 +70,11 @@ export interface SheetConfig {
  * ]);
  * // Returns: { mainHearings: [...], planningCourt: [...] }
  */
-export async function createMultiSheetConverter(buffer: Buffer, sheets: SheetConfig[]): Promise<Record<string, any[]>> {
+export async function createMultiSheetConverter(
+  buffer: Buffer,
+  sheets: SheetConfig[],
+  options: MultiSheetConverterOptions = {}
+): Promise<Record<string, any[]>> {
   const workbook = new Workbook();
   // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
   await workbook.xlsx.load(buffer);
@@ -61,20 +84,31 @@ export async function createMultiSheetConverter(buffer: Buffer, sheets: SheetCon
     throw new Error("Excel file must contain at least one worksheet");
   }
 
+  // In name-only mode, a workbook whose tabs match none of the expected section names would
+  // otherwise produce a silently-empty (or, without this mode, mis-filed) list. Reject it so
+  // the publisher gets a clear error naming the tabs the workbook must contain.
+  if (options.matchByNameOnly && !sheets.some((sheet) => findWorksheetByName(workbook, sheet.worksheetName))) {
+    throw new Error(`Excel file has no recognised worksheet tabs. Expected tabs named: ${sheets.map((sheet) => sheet.worksheetName).join(", ")}`);
+  }
+
   const result: Record<string, any[]> = {};
 
   for (const sheet of sheets) {
-    const worksheet = resolveWorksheet(workbook, sheet);
+    const worksheet = resolveWorksheet(workbook, sheet, options.matchByNameOnly);
     result[sheet.dataKey] = worksheet ? await convertSheetToJson(worksheet, sheet.config) : [];
   }
 
   return result;
 }
 
-export function resolveWorksheet(workbook: ExcelJSPkg.Workbook, sheet: WorksheetLocator): ExcelJSPkg.Worksheet | undefined {
+export function resolveWorksheet(workbook: ExcelJSPkg.Workbook, sheet: WorksheetLocator, matchByNameOnly = false): ExcelJSPkg.Worksheet | undefined {
   // getWorksheet(undefined) returns the first sheet, so only look up by name when one is given
-  const namedWorksheet = sheet.worksheetName ? workbook.getWorksheet(sheet.worksheetName) : undefined;
-  return namedWorksheet || workbook.worksheets[sheet.worksheetIndex];
+  const namedWorksheet = sheet.worksheetName ? findWorksheetByName(workbook, sheet.worksheetName) : undefined;
+  return matchByNameOnly ? namedWorksheet : namedWorksheet || workbook.worksheets[sheet.worksheetIndex];
+}
+
+function findWorksheetByName(workbook: ExcelJSPkg.Workbook, worksheetName: string): ExcelJSPkg.Worksheet | undefined {
+  return workbook.getWorksheet(worksheetName) || workbook.getWorksheet(worksheetName.slice(0, EXCEL_WORKSHEET_NAME_MAX_LENGTH));
 }
 
 export interface WorksheetLocator {

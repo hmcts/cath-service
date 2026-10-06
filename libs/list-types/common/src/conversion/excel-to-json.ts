@@ -21,6 +21,12 @@ export interface ExcelConversionResult<T = Record<string, string>> {
 
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
+// Excel stores time-only values against the 1899-12-30 epoch, so ExcelJS reads a
+// cell like "10:30" back as a Date of 1899-12-30T10:30:00Z. Rendering that as a
+// date discards the time; format it as a time string (e.g. "10:30am") instead so
+// time columns validate. The wall-clock time is encoded in UTC by ExcelJS.
+const EXCEL_TIME_EPOCH_YEAR = 1899;
+
 export function readCellValue(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
@@ -37,11 +43,14 @@ export function readCellValue(value: unknown): string {
       .join("")
       .trim();
   }
-  if ("formula" in value || "sharedFormula" in value) {
+  if ("formula" in value || "sharedFormula" in value || "result" in value) {
     return "result" in value ? readCellValue(value.result) : "";
   }
   if ("text" in value) {
     return readCellValue(value.text);
+  }
+  if ("hyperlink" in value) {
+    return readCellValue(value.hyperlink);
   }
   // Error values (e.g. #REF!) and unknown shapes are treated as empty so required-field validation catches them
   return "";
@@ -138,10 +147,21 @@ function formatDateValue(value: Date): string {
   if (Number.isNaN(value.getTime())) {
     return String(value);
   }
+  if (value.getUTCFullYear() === EXCEL_TIME_EPOCH_YEAR) {
+    return formatExcelTime(value);
+  }
   const day = String(value.getDate()).padStart(2, "0");
   const month = String(value.getMonth() + 1).padStart(2, "0");
   const year = value.getFullYear();
   return `${day}/${month}/${year}`;
+}
+
+function formatExcelTime(value: Date): string {
+  const hours = value.getUTCHours();
+  const minutes = value.getUTCMinutes();
+  const period = hours < 12 ? "am" : "pm";
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return minutes === 0 ? `${hour12}${period}` : `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
 }
 
 function validateHeaders(actualHeaders: string[], fields: FieldConfig[]): void {

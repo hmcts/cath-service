@@ -517,7 +517,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for Crown Daily List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CROWN_DAILY_LIST",
+        name: "CROWN_DAILY_PDDA_LIST",
         friendlyName: "Crown Daily List"
       } as any);
       vi.mocked(generateCrownDailyListPdf).mockResolvedValue({
@@ -535,7 +535,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for Crown Firm List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CROWN_FIRM_LIST",
+        name: "CROWN_FIRM_PDDA_LIST",
         friendlyName: "Crown Firm List"
       } as any);
       vi.mocked(generateCrownFirmListPdf).mockResolvedValue({
@@ -553,7 +553,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for Crown Warned List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CROWN_WARNED_LIST",
+        name: "CROWN_WARNED_PDDA_LIST",
         friendlyName: "Crown Warned List"
       } as any);
       vi.mocked(generateCrownWarnedListPdf).mockResolvedValue({
