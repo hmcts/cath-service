@@ -37,8 +37,7 @@ vi.mock("../govnotify/template-config.js", () => ({
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
   getSystemAdminTemplateId: vi.fn().mockReturnValue("location-deleted-template-id"),
-  getEnvName: vi.fn().mockReturnValue("Local"),
-  isSjpListType: vi.fn().mockReturnValue(false)
+  getEnvName: vi.fn().mockReturnValue("Local")
 }));
 
 vi.mock("./subscription-queries.js", () => ({
