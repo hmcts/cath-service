@@ -56,7 +56,13 @@ import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmc
 import { generateSiacPoacPaacWeeklyHearingListPdf, type SiacPoacPaacHearingList } from "@hmcts/siac-poac-paac-weekly-hearing-list";
 import { generateSjpPressListPdf } from "@hmcts/sjp-press-list";
 import { generateSjpPublicListPdf } from "@hmcts/sjp-public-list";
-import { generateSscsDailyHearingListPdf, importantInformationByListType, type SscsDailyHearingList } from "@hmcts/sscs-daily-hearing-list";
+import {
+  generateSscsDailyHearingListExcel,
+  generateSscsDailyHearingListPdf,
+  importantInformationByListType,
+  reformatSscsDailyHearingListExcel,
+  type SscsDailyHearingList
+} from "@hmcts/sscs-daily-hearing-list";
 import { generateUtaacDailyHearingListPdf, type UtaacHearingList } from "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list";
 import { generateUtlcDailyHearingListPdf, type UtlcHearingList } from "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list";
 import { generateUtccDailyHearingListPdf, type UtccHearingList } from "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list";
@@ -381,7 +387,39 @@ interface ExcelGeneratorResult {
 
 type ExcelGenerator = (params: GenerateExcelParams) => Promise<ExcelGeneratorResult>;
 
+/**
+ * Reuses the uploaded workbook when there is one. Otherwise the optional JSON generator builds the Excel;
+ * without one the list has no Excel.
+ */
+function createUploadedExcelGenerator(reformat: (buffer: Buffer, locale: string) => Promise<Buffer>, generateFromJson?: ExcelGenerator): ExcelGenerator {
+  const generate: ExcelGenerator = async (params) => {
+    if (params.uploadedExcel) {
+      const { excelPath } = await saveExcelToStorage(params.artefactId, await reformat(params.uploadedExcel, params.locale));
+      return { success: true, excelPath };
+    }
+
+    return generateFromJson ? generateFromJson(params) : { success: false };
+  };
+
+  return async (params) => {
+    const result = await generate(params).catch((error: unknown) => ({
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    }));
+
+    // The artefactId is reused when the same list is republished, so an earlier Excel must not outlive a publication that has none
+    if (!result.success) {
+      await deleteBlob(`${params.artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
+    }
+
+    return result;
+  };
+}
+
 const rcjStandardUploadedExcelGenerator = createUploadedExcelGenerator(reformatRcjStandardDailyCauseListExcel);
+const sscsExcelGenerator = createUploadedExcelGenerator(reformatSscsDailyHearingListExcel, (p) =>
+  generateSscsDailyHearingListExcel({ ...p, jsonData: p.jsonData as SscsDailyHearingList })
+);
 
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
@@ -424,7 +462,14 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatLondonAdministrativeCourtDailyCauseListExcel),
-  COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatCourtOfAppealCivilDailyCauseListExcel)
+  COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatCourtOfAppealCivilDailyCauseListExcel),
+  SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_SCOTLAND_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_NORTH_EAST_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_NORTH_WEST_DAILY_HEARING_LIST: sscsExcelGenerator,
+  SSCS_LONDON_DAILY_HEARING_LIST: sscsExcelGenerator
 };
 
 export function listTypeHasExcel(listTypeName: string | undefined): boolean {
@@ -692,6 +737,9 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     if (excelResult.hasExcel) {
       result.excelPath = `${artefactId}.xlsx`;
     }
+  } else if (isUpdate) {
+    // A flat-file republish reuses the artefactId but cannot produce an Excel, so one from an earlier upload must go
+    await deleteStaleExcel(artefactId, logPrefix);
   }
 
   if (!skipNotifications) {
@@ -735,22 +783,13 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   return result;
 }
 
-function createUploadedExcelGenerator(reformat: (buffer: Buffer, locale: string) => Promise<Buffer>): ExcelGenerator {
-  return async ({ artefactId, locale, uploadedExcel }) => {
-    const blobName = `${artefactId}.xlsx`;
-
-    // The artefactId is reused when the same list is republished, so a previous upload's Excel must not outlive it
-    if (!uploadedExcel) {
-      await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
-      return { success: false };
-    }
-
-    try {
-      const { excelPath } = await saveExcelToStorage(artefactId, await reformat(uploadedExcel, locale));
-      return { success: true, excelPath };
-    } catch (error) {
-      await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
-    }
-  };
+async function deleteStaleExcel(artefactId: string, logPrefix: string): Promise<void> {
+  try {
+    await deleteBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
+  } catch (error) {
+    console.error(`${logPrefix} Failed to delete stale Excel:`, {
+      artefactId,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
 }

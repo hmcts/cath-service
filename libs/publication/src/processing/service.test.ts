@@ -13,6 +13,8 @@ vi.mock("@hmcts/pht-weekly-hearing-list", () => ({
 
 vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
   generateSscsDailyHearingListPdf: vi.fn(),
+  generateSscsDailyHearingListExcel: vi.fn(),
+  reformatSscsDailyHearingListExcel: vi.fn(),
   importantInformationByListType: {
     SSCS_NORTH_EAST_DAILY_HEARING_LIST: "Important information for North East"
   }
@@ -194,7 +196,9 @@ describe("publication-processor", async () => {
   const { generateMagistratesPublicListPdf, generateMagistratesPublicListExcel } = await import("@hmcts/magistrates-public-list");
   const { generateMagistratesStandardListPdf, generateMagistratesStandardListExcel } = await import("@hmcts/magistrates-standard-list");
   const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
-  const { generateSscsDailyHearingListPdf } = await import("@hmcts/sscs-daily-hearing-list");
+  const { generateSscsDailyHearingListPdf, generateSscsDailyHearingListExcel, reformatSscsDailyHearingListExcel } = await import(
+    "@hmcts/sscs-daily-hearing-list"
+  );
   const { generateUtaacDailyHearingListPdf } = await import("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list");
   const { generateUtlcDailyHearingListPdf } = await import("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list");
   const { generateUtccDailyHearingListPdf } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
@@ -222,7 +226,7 @@ describe("publication-processor", async () => {
   );
   const { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel } = await import("@hmcts/rcj-standard-daily-cause-list");
   const { deleteBlob } = await import("@hmcts/azure-blob");
-  const { saveExcelToStorage } = await import("@hmcts/list-types-common");
+  const { listTypeData, saveExcelToStorage } = await import("@hmcts/list-types-common");
   const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
   const { generatePhtWeeklyHearingListPdf } = await import("@hmcts/pht-weekly-hearing-list");
   const { generateCivilDailyCauseListPdf } = await import("@hmcts/civil-daily-cause-list");
@@ -1962,9 +1966,9 @@ describe("publication-processor", async () => {
       consoleErrorSpy.mockRestore();
     });
 
-    it("should not store an Excel for a non-RCJ non-strategic list given an uploaded Excel", async () => {
+    it("should not store an Excel for a non-strategic list without an Excel generator given an uploaded Excel", async () => {
       // Act
-      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "SSCS_LONDON_DAILY_HEARING_LIST", uploadedExcel });
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", uploadedExcel });
 
       // Assert
       expect(saveExcelToStorage).not.toHaveBeenCalled();
@@ -1991,6 +1995,27 @@ describe("publication-processor", async () => {
       );
     });
 
+    it("should delete the stale Excel and notify with the PDF only when an RCJ list is published without an upload", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateRcjStandardDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/kb.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("rcj-artefact.xlsx", "publications");
+      expect(reformatRcjStandardDailyCauseListExcel).not.toHaveBeenCalled();
+      expect(generateSscsDailyHearingListExcel).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "rcj-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/kb.pdf", excelPath: undefined })
+      );
+    });
+
     it("should still generate the PDF and notify without an Excel when reformatting fails in processPublication", async () => {
       // Arrange
       const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -2007,6 +2032,208 @@ describe("publication-processor", async () => {
       expect(result.excelPath).toBeUndefined();
       expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalled();
       consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe("Excel for SSCS lists", () => {
+    const SSCS_LIST_TYPES = listTypeData.filter((listType) => listType.urlPath === "sscs-daily-hearing-list").map((listType) => listType.name);
+    const uploadedExcel = Buffer.from("uploaded-sscs-excel");
+    const reformattedExcel = Buffer.from("reformatted-sscs-excel");
+    const excelParams = {
+      artefactId: "sscs-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: [{ venue: "Liverpool Tribunal" }]
+    };
+
+    beforeEach(() => {
+      vi.mocked(reformatSscsDailyHearingListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(generateSscsDailyHearingListExcel).mockResolvedValue({ success: true, excelPath: "sscs-artefact.xlsx" });
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "sscs-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+      vi.mocked(generateSscsDailyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/sscs.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Tribunal", welshName: "Tribiwnlys Prawf" });
+    });
+
+    it.each(SSCS_LIST_TYPES)("should register an Excel generator for %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it.each(SSCS_LIST_TYPES)("should reformat and save the uploaded Excel for %s", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatSscsDailyHearingListExcel).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("sscs-artefact", reformattedExcel);
+      expect(generateSscsDailyHearingListExcel).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(SSCS_LIST_TYPES)("should generate the Excel from the JSON when %s has no uploaded Excel", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName });
+
+      // Assert
+      expect(generateSscsDailyHearingListExcel).toHaveBeenCalledWith(
+        expect.objectContaining({ artefactId: "sscs-artefact", locale: "cy", jsonData: excelParams.jsonData })
+      );
+      expect(reformatSscsDailyHearingListExcel).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should pass the uploaded Excel through processPublication and notify with both files", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SSCS_LONDON_DAILY_HEARING_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(reformatSscsDailyHearingListExcel).toHaveBeenCalledWith(uploadedExcel, "en");
+      expect(result.pdfPath).toBe("/path/to/sscs.pdf");
+      expect(result.excelPath).toBe("sscs-artefact.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "sscs-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/sscs.pdf", excelPath: "sscs-artefact.xlsx" })
+      );
+    });
+
+    it("should generate the Excel from the JSON and notify with both files when no Excel was uploaded", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SSCS_NORTH_WEST_DAILY_HEARING_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(generateSscsDailyHearingListExcel).toHaveBeenCalledWith(
+        expect.objectContaining({ artefactId: "sscs-artefact", locale: "en", jsonData: excelParams.jsonData })
+      );
+      expect(reformatSscsDailyHearingListExcel).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/path/to/sscs.pdf");
+      expect(result.excelPath).toBe("sscs-artefact.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "sscs-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/sscs.pdf", excelPath: "sscs-artefact.xlsx" })
+      );
+    });
+
+    it("should delete the stale Excel and notify with the PDF only when generating the Excel from the JSON fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SSCS_MIDLANDS_DAILY_HEARING_LIST" } as any);
+      vi.mocked(generateSscsDailyHearingListExcel).mockResolvedValue({ success: false, error: "Failed to generate SSCS Excel: Storage unavailable" });
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("sscs-artefact.xlsx", "publications");
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", {
+        artefactId: "sscs-artefact",
+        error: "Failed to generate SSCS Excel: Storage unavailable"
+      });
+      expect(result.pdfPath).toBe("/path/to/sscs.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "sscs-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/sscs.pdf", excelPath: undefined })
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should delete the stale Excel without throwing when the JSON Excel generator rejects", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(generateSscsDailyHearingListExcel).mockRejectedValue(new Error("Unexpected failure"));
+
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "SSCS_LONDON_DAILY_HEARING_LIST" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("sscs-artefact.xlsx", "publications");
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", { artefactId: "sscs-artefact", error: "Unexpected failure" });
+      expect(result).toEqual({});
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should delete the stale Excel and still send the PDF and notifications when reformatting fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "SSCS_SCOTLAND_DAILY_HEARING_LIST" } as any);
+      vi.mocked(reformatSscsDailyHearingListExcel).mockRejectedValue(new Error("No recognised worksheet to reformat"));
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("sscs-artefact.xlsx", "publications");
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/path/to/sscs.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "sscs-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/sscs.pdf", excelPath: undefined })
+      );
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe("stale Excel on a flat-file republish", () => {
+    const flatFileParams = {
+      artefactId: "flat-file-artefact",
+      locationId: "123",
+      listTypeId: 999,
+      contentDate: new Date("2025-01-25"),
+      locale: "en",
+      skipNotifications: true,
+      skipThirdPartyPush: true
+    };
+
+    it("should delete the stale Excel when a flat file republishes an artefact", async () => {
+      // Arrange
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+
+      // Act
+      const result = await processPublication({ ...flatFileParams, isUpdate: true });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("flat-file-artefact.xlsx", "publications");
+      expect(result.excelPath).toBeUndefined();
+    });
+
+    it("should not delete any Excel for a first flat-file publication", async () => {
+      // Act
+      await processPublication({ ...flatFileParams, isUpdate: false });
+
+      // Assert
+      expect(deleteBlob).not.toHaveBeenCalled();
+    });
+
+    it("should log and not throw when deleting the stale Excel fails", async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(deleteBlob).mockRejectedValue(new Error("Storage unavailable"));
+
+      // Act
+      const result = processPublication({ ...flatFileParams, isUpdate: true });
+
+      // Assert
+      await expect(result).resolves.toEqual({});
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Failed to delete stale Excel:", {
+        artefactId: "flat-file-artefact",
+        error: "Storage unavailable"
+      });
+      consoleErrorSpy.mockRestore();
     });
   });
 });
