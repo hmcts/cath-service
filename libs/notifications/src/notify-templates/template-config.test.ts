@@ -72,6 +72,13 @@ describe("template-config", () => {
     });
   });
 
+  describe("getFlatFileSubscriptionTemplateId", () => {
+    it("should return the flat-file subscription template id", async () => {
+      const { getFlatFileSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getFlatFileSubscriptionTemplateId()).toBe("c10e561d-651e-45b1-a955-c8ec09ffa300");
+    });
+  });
+
   describe("getSystemAdminTemplateId", () => {
     it("should return the system admin template id", async () => {
       const { getSystemAdminTemplateId } = await import("./template-config.js");

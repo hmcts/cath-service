@@ -400,6 +400,86 @@ describe("createArtefact", () => {
   });
 });
 
+describe("createArtefact derived file cleanup", () => {
+  const artefactData = {
+    artefactId: "550e8400-e29b-41d4-a716-446655440000",
+    type: "LIST",
+    locationId: "1",
+    listTypeId: 999,
+    contentDate: new Date("2025-10-23"),
+    sensitivity: "PUBLIC",
+    language: "ENGLISH",
+    displayFrom: new Date("2025-10-20"),
+    displayTo: new Date("2025-10-30"),
+    isFlatFile: true,
+    provenance: "MANUAL_UPLOAD"
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should delete the derived PDF and Excel files when an existing artefact is superseded", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+    vi.mocked(prisma.artefact.update).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+
+    // Act
+    const result = await createArtefact(artefactData as any);
+
+    // Assert
+    expect(result).toEqual({ artefactId: "existing-artefact-id", isUpdate: true });
+    expect(deleteBlob).toHaveBeenCalledTimes(2);
+    expect(deleteBlob).toHaveBeenCalledWith("existing-artefact-id.pdf", "publications");
+    expect(deleteBlob).toHaveBeenCalledWith("existing-artefact-id.xlsx", "publications");
+  });
+
+  it("should not delete the uploaded artefact blob when an existing artefact is superseded", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+    vi.mocked(prisma.artefact.update).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+
+    // Act
+    await createArtefact(artefactData as any);
+
+    // Assert
+    expect(deleteBlob).not.toHaveBeenCalledWith(expect.anything(), "artefact");
+  });
+
+  it("should not delete any files when a new artefact is created", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.artefact.create).mockResolvedValue({ artefactId: artefactData.artefactId } as any);
+
+    // Act
+    await createArtefact(artefactData as any);
+
+    // Assert
+    expect(deleteBlob).not.toHaveBeenCalled();
+  });
+
+  it("should still complete the update when deleting a derived file fails", async () => {
+    // Arrange
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+    vi.mocked(prisma.artefact.update).mockResolvedValue({ artefactId: "existing-artefact-id" } as any);
+    vi.mocked(deleteBlob).mockRejectedValueOnce(new Error("Storage unavailable"));
+
+    // Act
+    const result = await createArtefact(artefactData as any);
+
+    // Assert
+    expect(result).toEqual({ artefactId: "existing-artefact-id", isUpdate: true });
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to delete PDF blob for artefact existing-artefact-id:", expect.any(Error));
+
+    consoleErrorSpy.mockRestore();
+  });
+});
+
 describe("getArtefactsByLocation", () => {
   beforeEach(() => {
     vi.clearAllMocks();

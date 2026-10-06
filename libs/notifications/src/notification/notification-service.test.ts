@@ -41,6 +41,7 @@ vi.mock("../notify-templates/template-config.js", () => ({
     summary_of_cases: "Case 123 - Smith v Jones"
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
+  getFlatFileSubscriptionTemplateId: vi.fn().mockReturnValue("flat-file-template-id"),
   getSystemAdminTemplateId: vi.fn().mockReturnValue("location-deleted-template-id"),
   getEnvName: vi.fn().mockReturnValue("Local")
 }));
@@ -736,5 +737,175 @@ describe("media protocol personalisation flags", () => {
       // Assert
       expect(await sentPersonalisation()).toEqual(expect.objectContaining(NON_MAGISTRATES_FLAGS));
     });
+  });
+});
+
+describe("flat-file publications", () => {
+  const FLAT_FILE = { buffer: Buffer.from("uploaded document"), fileName: "hearing-list.pdf" };
+
+  const locationEvent = {
+    publicationId: "artefact-1",
+    locationId: "1",
+    locationName: "Test Court",
+    hearingListName: "Civil Daily Cause List",
+    publicationDate: new Date("2025-01-01"),
+    listTypeId: 999,
+    flatFile: FLAT_FILE
+  };
+
+  const listTypeEvent = { ...locationEvent, language: "ENGLISH" };
+
+  const subscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+  const locationSubscriber = { subscriptionId: "sub-1", searchType: "LOCATION_ID", searchValue: "1", ...subscriber };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "gov-notify-1" });
+
+    const { buildTemplateParameters, getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+    vi.mocked(buildTemplateParameters).mockReturnValue({
+      locations: "Test Court",
+      ListType: "Civil Daily Cause List",
+      content_date: "1 January 2025",
+      start_page_link: "https://example.com",
+      subscription_page_link: "https://example.com",
+      display_locations: "yes"
+    } as any);
+    vi.mocked(getSubscriptionTemplateId).mockReturnValue("excel-only-template-id");
+
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(downloadBlob).mockImplementation(async (blobName: string) => (blobName.endsWith(".xlsx") ? Buffer.from("stale excel") : null));
+
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(prisma.artefactSearch.findMany).mockResolvedValue([]);
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findActiveSubscriptionsByLocation, findCaseSubscriptionsByUserIds } = await import(
+      "./subscription-queries.js"
+    );
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([subscriber] as never);
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([locationSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+
+    const { createNotificationAuditLog } = await import("./notification-queries.js");
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({ notificationId: "audit-1" } as never);
+  });
+
+  async function sentEmailParams() {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    return vi.mocked(sendEmail).mock.calls[0][0];
+  }
+
+  it("should use the flat-file template and pass the flat file to sendEmail for a location subscriber", async () => {
+    // Act
+    const result = await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(result.sent).toBe(1);
+    expect(params.templateId).toBe("flat-file-template-id");
+    expect(params.flatFile).toBe(FLAT_FILE);
+    expect(params.pdfBuffer).toBeUndefined();
+    expect(params.excelBuffer).toBeUndefined();
+  });
+
+  it("should use the flat-file template for a list type subscriber", async () => {
+    // Act
+    const result = await sendListTypePublicationNotifications(listTypeEvent);
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(result.sent).toBe(1);
+    expect(params.templateId).toBe("flat-file-template-id");
+    expect(params.flatFile).toBe(FLAT_FILE);
+  });
+
+  it("should not look up the Excel file or use the Excel template when a stale Excel file exists", async () => {
+    // Arrange
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    const { getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+
+    // Act
+    await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+    await sendListTypePublicationNotifications(listTypeEvent);
+
+    // Assert
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    expect(downloadBlob).not.toHaveBeenCalled();
+    expect(getSubscriptionTemplateId).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalledWith(expect.objectContaining({ templateId: "excel-only-template-id" }));
+  });
+
+  it("should include list_type in the personalisation", async () => {
+    // Act
+    await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(params.templateParameters).toEqual(expect.objectContaining({ list_type: "Civil Daily Cause List", locations: "Test Court" }));
+  });
+
+  it("should use the flat-file template even when the list type supports an enhanced summary", async () => {
+    // Arrange
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { buildEnhancedTemplateParameters } = await import("../notify-templates/template-config.js");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+
+    // Act
+    await sendListTypePublicationNotifications({ ...listTypeEvent, jsonData: { someData: true } });
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(buildEnhancedTemplateParameters).not.toHaveBeenCalled();
+    expect(params.templateId).toBe("flat-file-template-id");
+  });
+
+  it("should audit the notification as Failed when the flat-file send fails", async () => {
+    // Arrange
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    const { updateNotificationStatus } = await import("./notification-queries.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "GOV.UK Notify error: File is larger than 2MB" });
+
+    // Act
+    const result = await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+    // Assert
+    expect(result.failed).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(updateNotificationStatus).toHaveBeenCalledWith("audit-1", "Failed", undefined, "GOV.UK Notify error: File is larger than 2MB");
+  });
+
+  it("should set the Magistrates media protocol flags for a Magistrates flat file", async () => {
+    // Arrange
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_STANDARD_LIST" } as any);
+
+    // Act
+    await sendLocationAndCaseSubscriptionNotifications("artefact-1", locationEvent);
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(params.templateId).toBe("flat-file-template-id");
+    expect(params.templateParameters).toEqual(expect.objectContaining({ is_magistrates_media_protocol: "yes", is_not_magistrates_media_protocol: "no" }));
+  });
+
+  it("should keep the JSON template selection unchanged when the publication is not a flat file", async () => {
+    // Arrange
+    const { flatFile: _flatFile, ...jsonEvent } = locationEvent;
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    const { getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+
+    // Act
+    await sendLocationAndCaseSubscriptionNotifications("artefact-1", jsonEvent);
+
+    // Assert
+    const params = await sentEmailParams();
+    expect(downloadBlob).toHaveBeenCalledWith("artefact-1.xlsx", "publications");
+    expect(getSubscriptionTemplateId).toHaveBeenCalledWith({ hasPdf: false, hasExcel: true, filesUnder2MB: true });
+    expect(params.templateId).toBe("excel-only-template-id");
+    expect(params.excelBuffer).toEqual(Buffer.from("stale excel"));
+    expect(params.flatFile).toBeUndefined();
   });
 });

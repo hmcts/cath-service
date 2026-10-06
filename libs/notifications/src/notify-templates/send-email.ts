@@ -10,6 +10,12 @@ export interface SendEmailParams {
   templateId?: string;
   pdfBuffer?: Buffer;
   excelBuffer?: Buffer;
+  flatFile?: FlatFileAttachment;
+}
+
+export interface FlatFileAttachment {
+  buffer: Buffer;
+  fileName?: string;
 }
 
 export interface SendEmailResult {
@@ -49,8 +55,16 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
 // Subscription Notify templates require pdf_link_*/excel_link_* personalisation
 // keys (see getSubscriptionTemplateId in template-config.ts) — this is specific
 // to the subscription list-download templates, not a generic Notify concern.
+// The flat-file template only has link_to_file; the original filename is passed when known
+// so Notify serves the download with the uploaded document's extension.
 function buildAttachmentPersonalisation(apiKey: string, params: SendEmailParams): Record<string, unknown> {
   const personalisation: Record<string, unknown> = { ...params.templateParameters };
+
+  if (params.flatFile) {
+    const { buffer, fileName } = params.flatFile;
+    personalisation.link_to_file = prepareNotifyFileUpload(apiKey, buffer, fileName ? { filename: fileName } : undefined);
+    return personalisation;
+  }
 
   if (params.pdfBuffer) {
     const linkToFile = prepareNotifyFileUpload(apiKey, params.pdfBuffer);
