@@ -150,6 +150,28 @@ describe("User Management Validation", () => {
       expect(validateProvenances([])).toBeNull();
     });
 
+    it("should return null when PI_AAD is submitted", () => {
+      // Arrange
+      const provenances = ["PI_AAD"];
+
+      // Act
+      const result = validateProvenances(provenances);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it("should return null when all platform provenances are submitted", () => {
+      // Arrange
+      const provenances = ["CFT_IDAM", "SSO", "PI_AAD", "CRIME_IDAM"];
+
+      // Act
+      const result = validateProvenances(provenances);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
     it("should return error for invalid provenance", () => {
       const result = validateProvenances(["INVALID_PROV"]);
       expect(result).not.toBeNull();

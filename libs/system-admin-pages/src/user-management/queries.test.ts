@@ -113,6 +113,25 @@ describe("User Management Queries", () => {
       );
     });
 
+    it("should pass provenances straight through without expansion", async () => {
+      // Arrange
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.user.count).mockResolvedValue(0);
+
+      // Act
+      await searchUsers({ provenances: ["PI_AAD"] }, 1);
+
+      // Assert
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userProvenance: { in: ["PI_AAD"] } }
+        })
+      );
+      expect(prisma.user.count).toHaveBeenCalledWith({
+        where: { userProvenance: { in: ["PI_AAD"] } }
+      });
+    });
+
     it("should calculate pagination correctly for page 2", async () => {
       // Arrange
       vi.mocked(prisma.user.findMany).mockResolvedValue([]);

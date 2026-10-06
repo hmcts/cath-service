@@ -5,6 +5,8 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
+const PROVENANCE_DISPLAY: Record<string, string> = { PI_AAD: "B2C" };
+
 const getHandler = async (req: Request, res: Response) => {
   const language = req.query.lng === "cy" ? "cy" : "en";
   const content = language === "cy" ? cy : en;
@@ -20,8 +22,6 @@ const getHandler = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).render("errors/404");
     }
-
-    const PROVENANCE_DISPLAY: Record<string, string> = { B2C_IDAM: "B2C" };
 
     const formattedUser = {
       ...user,

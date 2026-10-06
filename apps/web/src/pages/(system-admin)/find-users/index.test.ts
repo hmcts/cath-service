@@ -401,6 +401,66 @@ describe("find-users page", () => {
       expect(renderCall.userRows[0][2].text).toBe("SSO"); // SSO is same in Welsh
     });
 
+    it("should label PI_AAD filter tags and user rows as B2C", async () => {
+      // Arrange
+      mockSession.userManagement = { filters: { provenances: ["PI_AAD"] }, page: 1 };
+      const mockSearchResult = {
+        users: [
+          {
+            userId: "123",
+            email: "media@example.com",
+            role: "VERIFIED",
+            userProvenance: "PI_AAD"
+          }
+        ],
+        totalCount: 1,
+        currentPage: 1,
+        totalPages: 1
+      };
+      vi.mocked(searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(searchUsers).toHaveBeenCalledWith({ provenances: ["PI_AAD"] }, 1);
+      expect(renderCall.selectedFilterGroups[0].tags).toEqual([{ label: "B2C", removeUrl: "/find-users/remove-filter?filter=provenance&value=PI_AAD" }]);
+      expect(renderCall.userRows[0][2].text).toBe("B2C");
+    });
+
+    it("should label PI_AAD filter tags and user rows as B2C when lng=cy", async () => {
+      // Arrange
+      mockRequest.query = { lng: "cy" };
+      mockSession.userManagement = { filters: { provenances: ["PI_AAD"] }, page: 1 };
+      const mockSearchResult = {
+        users: [
+          {
+            userId: "123",
+            email: "media@example.com",
+            role: "VERIFIED",
+            userProvenance: "PI_AAD"
+          }
+        ],
+        totalCount: 1,
+        currentPage: 1,
+        totalPages: 1
+      };
+      vi.mocked(searchUsers).mockResolvedValue(mockSearchResult);
+
+      const handler = GET[GET.length - 1];
+
+      // Act
+      await handler(mockRequest as Request, mockResponse as Response, vi.fn());
+
+      // Assert
+      const renderCall = vi.mocked(mockResponse.render).mock.calls[0][1];
+      expect(renderCall.selectedFilterGroups[0].tags).toEqual([{ label: "B2C", removeUrl: "/find-users/remove-filter?filter=provenance&value=PI_AAD&lng=cy" }]);
+      expect(renderCall.userRows[0][2].text).toBe("B2C");
+    });
+
     it("should include Welsh language parameter in pagination URLs", async () => {
       // Arrange
       mockRequest.query = { lng: "cy" };

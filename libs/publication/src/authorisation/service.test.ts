@@ -169,10 +169,16 @@ describe("canAccessPublication", () => {
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
     });
 
-    it("should handle B2C_IDAM with CRIME_IDAM list type", () => {
+    it("should deny PI_AAD user when list type only allows CRIME_IDAM", () => {
       const user = createUser("VERIFIED", "PI_AAD");
       const listType = createListType(["CRIME_IDAM"]);
       expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(false);
+    });
+
+    it("should allow PI_AAD user when list type only allows PI_AAD (SJP press list)", () => {
+      const user = createUser("VERIFIED", "PI_AAD");
+      const listType = createListType(["PI_AAD"]);
+      expect(canAccessPublication(user, classifiedArtefact, listType)).toBe(true);
     });
 
     it("should handle CRIME_IDAM with CRIME_IDAM list type", () => {

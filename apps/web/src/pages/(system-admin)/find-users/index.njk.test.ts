@@ -69,6 +69,29 @@ describe("find-users template", () => {
       expect($("button.govuk-button").text().trim()).toBe(en.applyFiltersButton);
     });
 
+    it("should render the B2C provenance checkbox with the PI_AAD value", () => {
+      const data = { ...baseData };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const checkbox = $("input[name='provenances'][value='PI_AAD']");
+      expect(checkbox).toHaveLength(1);
+      expect(checkbox.attr("checked")).toBeUndefined();
+      expect(
+        $(`label[for='${checkbox.attr("id")}']`)
+          .text()
+          .trim()
+      ).toBe(en.provenanceB2c);
+    });
+
+    it("should check the B2C provenance checkbox when PI_AAD is in the filters", () => {
+      const data = { ...baseData, filters: { provenances: ["PI_AAD"] } };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("input[name='provenances'][value='PI_AAD']").attr("checked")).toBeDefined();
+    });
+
     it("should render the MOJ filter component and layout containers", () => {
       const data = { ...baseData };
 
@@ -183,6 +206,20 @@ describe("find-users template", () => {
       expect($("h1.govuk-heading-xl").text().trim()).toBe(cy.pageTitle);
       expect($("button.govuk-button").text().trim()).toBe(cy.applyFiltersButton);
       expect($("p.govuk-body").first().text().trim()).toBe(cy.resultsCount(1));
+    });
+
+    it("should render the Welsh B2C provenance checkbox with the PI_AAD value", () => {
+      const data = { ...baseData, ...cy };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const checkbox = $("input[name='provenances'][value='PI_AAD']");
+      expect(checkbox).toHaveLength(1);
+      expect(
+        $(`label[for='${checkbox.attr("id")}']`)
+          .text()
+          .trim()
+      ).toBe(cy.provenanceB2c);
     });
 
     it("should render the Welsh error summary", () => {

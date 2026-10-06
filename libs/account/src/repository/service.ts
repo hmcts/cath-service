@@ -1,5 +1,7 @@
 import { createUser, findUserByProvenanceId, updateUser } from "./query.js";
 
+const MEDIA_USER_PROVENANCE = "PI_AAD";
+
 export function splitName(fullName: string): { givenName: string; surname: string } {
   const trimmed = fullName.trim();
   const lastSpaceIndex = trimmed.lastIndexOf(" ");
@@ -21,7 +23,7 @@ export async function createLocalMediaUser(email: string, name: string, azureAdU
     email,
     firstName: givenName,
     surname,
-    userProvenance: "B2C_IDAM",
+    userProvenance: MEDIA_USER_PROVENANCE,
     userProvenanceId: azureAdUserId,
     role: "VERIFIED"
   });
@@ -37,7 +39,7 @@ export async function updateLocalMediaUser(email: string, azureAdUserId: string,
       email,
       firstName,
       surname,
-      userProvenance: "B2C_IDAM",
+      userProvenance: MEDIA_USER_PROVENANCE,
       userProvenanceId: azureAdUserId,
       role: "VERIFIED"
     });
