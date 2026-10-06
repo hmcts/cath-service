@@ -1,11 +1,14 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
+import {
+  type BusinessAndPropertyRollsData,
+  generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf
+} from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf, generateCivilAndFamilyDailyCauseListExcel } from "@hmcts/civil-and-family-daily-cause-list";
 import { type CauseListData as CivilCauseListData, generateCivilDailyCauseListExcel, generateCivilDailyCauseListPdf } from "@hmcts/civil-daily-cause-list";
-import { type CompaniesWindingUpHearingList, generateCompaniesWindingUpChdDailyCauseListPdf } from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { type CauseListData as CopCauseListData, generateCopDailyCauseListPdf } from "@hmcts/cop-daily-cause-list";
 import {
   type CourtOfAppealCivilData,
@@ -19,12 +22,12 @@ import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } fr
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListExcel, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
-import { type FinancialListChdKbHearingList, generateFinancialListChdKbDailyCauseListPdf } from "@hmcts/financial-list-chd-kb-daily-cause-list";
 import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
 import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
+import { generateInterimApplicationsDailyCauseListPdf, type InterimApplicationsData } from "@hmcts/interim-applications-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { type SjpJson, saveExcelToStorage } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -83,8 +86,8 @@ interface GeneratePdfParams {
   locationId: string;
   jsonData: unknown;
   provenance?: string;
-  displayFrom?: Date;
-  displayTo?: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   logPrefix?: string;
 }
 
@@ -201,10 +204,10 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardGenerator,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: (p) =>
     generateLondonAdministrativeCourtDailyCauseListPdf({ ...p, jsonData: p.jsonData as LondonAdminCourtData }),
+  BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: (p) =>
+    generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf({ ...p, jsonData: p.jsonData as BusinessAndPropertyRollsData }),
+  INTERIM_APPLICATIONS_DAILY_CAUSE_LIST: (p) => generateInterimApplicationsDailyCauseListPdf({ ...p, jsonData: p.jsonData as InterimApplicationsData }),
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: (p) => generateCourtOfAppealCivilDailyCauseListPdf({ ...p, jsonData: p.jsonData as CourtOfAppealCivilData }),
-  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: (p) =>
-    generateCompaniesWindingUpChdDailyCauseListPdf({ ...p, jsonData: p.jsonData as CompaniesWindingUpHearingList }),
-  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: (p) => generateFinancialListChdKbDailyCauseListPdf({ ...p, jsonData: p.jsonData as FinancialListChdKbHearingList }),
   IAC_DAILY_LIST: iacDailyListGenerator,
   IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
@@ -215,9 +218,9 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SJP_DELTA_PUBLIC_LIST: sjpPublicGenerator,
   SJP_PRESS_LIST: sjpPressGenerator,
   SJP_DELTA_PRESS_LIST: sjpPressGenerator,
-  CROWN_DAILY_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
-  CROWN_FIRM_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
-  CROWN_WARNED_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
+  CROWN_DAILY_PDDA_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
+  CROWN_FIRM_PDDA_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
+  CROWN_WARNED_PDDA_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),
@@ -604,8 +607,8 @@ interface ProcessPublicationParams {
   locale: string;
   jsonData?: unknown;
   provenance?: string;
-  displayFrom?: Date;
-  displayTo?: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   sensitivity?: string;
   language?: string;
   isUpdate?: boolean;
@@ -716,8 +719,8 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       contentDate,
       sensitivity,
       language,
-      displayFrom: displayFrom ?? new Date(),
-      displayTo: displayTo ?? new Date(),
+      displayFrom,
+      displayTo,
       provenance: provenance ?? "",
       isUpdate,
       jsonData,

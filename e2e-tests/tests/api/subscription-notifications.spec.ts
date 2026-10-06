@@ -13,7 +13,7 @@ import {
 import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo, listFlatFiles } from "../../utils/test-support-api.js";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const ENDPOINT = `${API_BASE_URL}/publication`;
 
 // GOV.UK Notify document download links pattern
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/;
@@ -58,6 +58,21 @@ async function waitForFileGeneration(artefactId: string, expectedExtensions: str
   return listFlatFiles(artefactId);
 }
 
+// Publication metadata travels in x-* headers; the request body is the payload itself.
+function publicationHeaders(listType: string, sensitivity: string, contentDate: string, displayFrom: string, displayTo: string, locationId: number) {
+  return {
+    "x-provenance": "MANUAL_UPLOAD",
+    "x-court-id": locationId.toString(),
+    "x-content-date": contentDate,
+    "x-list-type": listType,
+    "x-language": "ENGLISH",
+    "x-type": "LIST",
+    "x-sensitivity": sensitivity,
+    "x-display-from": displayFrom,
+    "x-display-to": displayTo
+  };
+}
+
 function createSjpPublicListPayload(contentDate: string, displayFrom: string, displayTo: string, locationId: number) {
   const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
   const prosecutors = ["TV Licensing", "Thames Valley Police", "Manchester City Council"];
@@ -97,15 +112,8 @@ function createSjpPublicListPayload(contentDate: string, displayFrom: string, di
   }
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "SJP_PUBLIC_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
+    headers: publicationHeaders("SJP_PUBLIC_LIST", "PUBLIC", contentDate, displayFrom, displayTo, locationId),
+    payload: {
       document: { publicationDate: `${contentDate}T09:00:00Z`, version: "1.0" },
       courtLists: [
         {
@@ -172,15 +180,8 @@ function createSjpPressListPayload(contentDate: string, displayFrom: string, dis
   }
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "SJP_PRESS_LIST",
-    sensitivity: "CLASSIFIED",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
+    headers: publicationHeaders("SJP_PRESS_LIST", "CLASSIFIED", contentDate, displayFrom, displayTo, locationId),
+    payload: {
       document: { publicationDate: `${contentDate}T09:00:00Z`, version: "1.0" },
       courtLists: [
         {
@@ -251,15 +252,8 @@ function createLargeCivilFamilyCauseListPayload(contentDate: string, displayFrom
   }
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
+    headers: publicationHeaders("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", "PUBLIC", contentDate, displayFrom, displayTo, locationId),
+    payload: {
       document: { publicationDate: `${contentDate}T09:00:00.000Z`, version: "1.0" },
       venue: {
         venueName: locationName,
@@ -281,15 +275,8 @@ function createLargeCivilFamilyCauseListPayload(contentDate: string, displayFrom
 
 function createCivilFamilyCauseListPayload(contentDate: string, displayFrom: string, displayTo: string, locationId: number, locationName: string) {
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
+    headers: publicationHeaders("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", "PUBLIC", contentDate, displayFrom, displayTo, locationId),
+    payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00.000Z`,
         version: "1.0"
@@ -420,18 +407,18 @@ test.describe("Subscription Notifications", () => {
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload.payload,
+      headers: { ...payload.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse.status()).toBe(201);
     const result = await apiResponse.json();
-    expect(result.artefact_id).toBeDefined();
-    testData.publicationIds.push(result.artefact_id);
+    expect(result.artefactId).toBeDefined();
+    testData.publicationIds.push(result.artefactId);
 
     // Wait for notification to reach terminal status (processPublication is fire-and-forget after 201).
     // Puppeteer PDF generation must complete before notifications are sent, so allow up to 90 seconds.
-    const notifications = await waitForNotifications(result.artefact_id, 90, 1000, false, true);
+    const notifications = await waitForNotifications(result.artefactId, 90, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     // Verify notification was processed (Sent when Notify is configured, Failed otherwise)
@@ -439,9 +426,9 @@ test.describe("Subscription Notifications", () => {
     expect(sentNotification).toBeDefined();
 
     // Verify PDF was generated for the publication (may take time as it's async)
-    const pdfInfo = await waitForPdfGeneration(result.artefact_id);
+    const pdfInfo = await waitForPdfGeneration(result.artefactId);
     expect(pdfInfo.exists).toBe(true);
-    expect(pdfInfo.filename).toContain(result.artefact_id);
+    expect(pdfInfo.filename).toContain(result.artefactId);
     expect(pdfInfo.sizeBytes).toBeGreaterThan(0);
     console.log(`PDF generated: ${pdfInfo.filename} (${pdfInfo.sizeBytes} bytes)`);
 
@@ -486,16 +473,16 @@ test.describe("Subscription Notifications", () => {
     const payload2 = createCivilFamilyCauseListPayload(dates2.contentDate, dates2.displayFrom, dates2.displayTo, testLocationId, testLocationName);
 
     const apiResponse2 = await request.post(ENDPOINT, {
-      data: payload2,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload2.payload,
+      headers: { ...payload2.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse2.status()).toBe(201);
     const result2 = await apiResponse2.json();
-    testData.publicationIds.push(result2.artefact_id);
+    testData.publicationIds.push(result2.artefactId);
 
     // Wait for notifications to reach terminal status
-    const notifications2 = await waitForNotifications(result2.artefact_id, 60, 1000, false, true);
+    const notifications2 = await waitForNotifications(result2.artefactId, 60, 1000, false, true);
 
     // Verify notifications were processed for both subscribers (Sent or Failed depending on Notify config)
     const processedNotifications = notifications2.filter((n) => n.status === "Sent" || n.status === "Failed");
@@ -518,19 +505,19 @@ test.describe("Subscription Notifications", () => {
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload.payload,
+      headers: { ...payload.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse.status()).toBe(201);
     const result = await apiResponse.json();
-    testData.publicationIds.push(result.artefact_id);
+    testData.publicationIds.push(result.artefactId);
 
     // Wait briefly for any notifications to be processed
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Verify no notifications were created
-    const notifications = await waitForNotifications(result.artefact_id, 3, 500);
+    const notifications = await waitForNotifications(result.artefactId, 3, 500);
     expect(notifications).toHaveLength(0);
   });
 
@@ -546,24 +533,24 @@ test.describe("Subscription Notifications", () => {
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload.payload,
+      headers: { ...payload.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse.status()).toBe(201);
     const result = await apiResponse.json();
-    expect(result.artefact_id).toBeDefined();
-    testData.publicationIds.push(result.artefact_id);
+    expect(result.artefactId).toBeDefined();
+    testData.publicationIds.push(result.artefactId);
 
     // Wait for notification to reach terminal status
-    const notifications = await waitForNotifications(result.artefact_id, 30, 1000, false, true);
+    const notifications = await waitForNotifications(result.artefactId, 30, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     const sentNotification = notifications.find((n) => n.status === "Sent" || n.status === "Failed");
     expect(sentNotification).toBeDefined();
 
     // Verify both PDF and Excel were generated
-    const fileList = await waitForFileGeneration(result.artefact_id, [".pdf", ".xlsx"]);
+    const fileList = await waitForFileGeneration(result.artefactId, [".pdf", ".xlsx"]);
     const pdfFile = fileList.files.find((f) => f.filename.endsWith(".pdf"));
     const excelFile = fileList.files.find((f) => f.filename.endsWith(".xlsx"));
 
@@ -602,24 +589,24 @@ test.describe("Subscription Notifications", () => {
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload.payload,
+      headers: { ...payload.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse.status()).toBe(201);
     const result = await apiResponse.json();
-    expect(result.artefact_id).toBeDefined();
-    testData.publicationIds.push(result.artefact_id);
+    expect(result.artefactId).toBeDefined();
+    testData.publicationIds.push(result.artefactId);
 
     // Wait for notification to reach terminal status
-    const notifications = await waitForNotifications(result.artefact_id, 30, 1000, false, true);
+    const notifications = await waitForNotifications(result.artefactId, 30, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     const sentNotification = notifications.find((n) => n.status === "Sent" || n.status === "Failed");
     expect(sentNotification).toBeDefined();
 
     // Verify both PDF and Excel were generated for SJP press list
-    const fileList = await waitForFileGeneration(result.artefact_id, [".pdf", ".xlsx"]);
+    const fileList = await waitForFileGeneration(result.artefactId, [".pdf", ".xlsx"]);
     const pdfFile = fileList.files.find((f) => f.filename.endsWith(".pdf"));
     const excelFile = fileList.files.find((f) => f.filename.endsWith(".xlsx"));
 
@@ -662,24 +649,24 @@ test.describe("Subscription Notifications", () => {
 
     const token = await getApiAuthToken();
     const apiResponse = await request.post(ENDPOINT, {
-      data: payload,
-      headers: { Authorization: `Bearer ${token}` }
+      data: payload.payload,
+      headers: { ...payload.headers, Authorization: `Bearer ${token}` }
     });
 
     expect(apiResponse.status()).toBe(201);
     const result = await apiResponse.json();
-    expect(result.artefact_id).toBeDefined();
-    testData.publicationIds.push(result.artefact_id);
+    expect(result.artefactId).toBeDefined();
+    testData.publicationIds.push(result.artefactId);
 
     // Wait for notification to reach terminal status
-    const notifications = await waitForNotifications(result.artefact_id, 30, 1000, false, true);
+    const notifications = await waitForNotifications(result.artefactId, 30, 1000, false, true);
     expect(notifications.length).toBeGreaterThan(0);
 
     const sentNotification = notifications.find((n) => n.status === "Sent" || n.status === "Failed");
     expect(sentNotification).toBeDefined();
 
     // Verify the PDF was generated and check its size
-    const pdfInfo = await waitForPdfGeneration(result.artefact_id);
+    const pdfInfo = await waitForPdfGeneration(result.artefactId);
     expect(pdfInfo.exists).toBe(true);
     console.log(`Large list PDF generated: ${pdfInfo.filename} (${pdfInfo.sizeBytes} bytes)`);
 
