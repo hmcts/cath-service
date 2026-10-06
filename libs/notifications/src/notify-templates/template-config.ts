@@ -1,5 +1,6 @@
 import {
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY,
@@ -34,6 +35,10 @@ export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: b
   }
 
   return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
+}
+
+export function getFlatFileSubscriptionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE;
 }
 
 export function getSystemAdminTemplateId(): string {

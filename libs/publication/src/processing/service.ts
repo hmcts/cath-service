@@ -1,3 +1,4 @@
+import path from "node:path";
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
@@ -36,7 +37,7 @@ import {
 } from "@hmcts/magistrates-public-adult-court-list";
 import { generateMagistratesPublicListExcel, generateMagistratesPublicListPdf, type MagistratesPublicListData } from "@hmcts/magistrates-public-list";
 import { generateMagistratesStandardListExcel, generateMagistratesStandardListPdf, type MagistratesStandardList } from "@hmcts/magistrates-standard-list";
-import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
+import { type FlatFileAttachment, sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications } from "@hmcts/notifications";
 import { generatePhtWeeklyHearingListPdf, type PhtHearingList } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
@@ -59,6 +60,7 @@ import {
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+import { getFileBuffer } from "../file-storage/file-retrieval.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -498,6 +500,13 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       return { success: false };
     }
 
+    const flatFileResult = await loadFlatFileAttachment(artefactId, logPrefix);
+    if (flatFileResult.status === "missing") {
+      console.error(`${logPrefix} Flat file not found in blob storage, no subscription emails sent:`, { artefactId });
+      return { success: false };
+    }
+    const flatFile = flatFileResult.status === "found" ? flatFileResult.flatFile : undefined;
+
     let listTypeFriendlyName = `LIST_TYPE_${listTypeId}`;
     try {
       const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { friendlyName: true } });
@@ -520,7 +529,8 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       listTypeId,
       jsonData,
       pdfFilePath,
-      excelPath
+      excelPath,
+      flatFile
     });
 
     if (result.errors.length > 0) {
@@ -544,7 +554,8 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
             listTypeId,
             language,
             jsonData,
-            pdfFilePath
+            pdfFilePath,
+            flatFile
           },
           result.notifiedUserIds
         );
@@ -573,6 +584,44 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
     return { success: false };
   }
 }
+
+// Flat files are emailed as the uploaded document, so it is loaded once here and
+// shared across every subscriber. @hmcts/notifications cannot load it itself
+// because it must not depend on @hmcts/publication.
+async function loadFlatFileAttachment(artefactId: string, logPrefix: string): Promise<FlatFileLoadResult> {
+  const artefact = await findFlatFileArtefact(artefactId, logPrefix);
+  if (!artefact?.isFlatFile) {
+    return { status: "not-flat-file" };
+  }
+
+  const buffer = await getFileBuffer(artefactId);
+  if (!buffer) {
+    return { status: "missing" };
+  }
+
+  return { status: "found", flatFile: { buffer, fileName: getNotifyFileName(artefact.sourceArtefactId) } };
+}
+
+async function findFlatFileArtefact(artefactId: string, logPrefix: string) {
+  try {
+    return await prisma.artefact.findUnique({ where: { artefactId }, select: { isFlatFile: true, sourceArtefactId: true } });
+  } catch (error) {
+    console.error(`${logPrefix} Artefact lookup failed, treating publication as not a flat file:`, {
+      artefactId,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return null;
+  }
+}
+
+// source_artefact_id is optional for API ingestion and may lack an extension, which Notify
+// needs to serve the download. Without one the filename is omitted and Notify infers the type
+// from the file contents, as legacy PIP always did.
+function getNotifyFileName(sourceArtefactId: string | null): string | undefined {
+  return sourceArtefactId && path.extname(sourceArtefactId) ? sourceArtefactId : undefined;
+}
+
+type FlatFileLoadResult = { status: "not-flat-file" } | { status: "missing" } | { status: "found"; flatFile: FlatFileAttachment };
 
 interface ProcessPublicationParams {
   artefactId: string;

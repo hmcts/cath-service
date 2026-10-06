@@ -169,8 +169,15 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn()
+    },
+    artefact: {
+      findUnique: vi.fn()
     }
   }
+}));
+
+vi.mock("../file-storage/file-retrieval.js", () => ({
+  getFileBuffer: vi.fn()
 }));
 
 vi.mock("../artefact-search-extractor.js", () => ({
@@ -217,10 +224,12 @@ describe("publication-processor", async () => {
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
   const { extractAndStoreArtefactSearch } = await import("../artefact-search-extractor.js");
+  const { getFileBuffer } = await import("../file-storage/file-retrieval.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSendThirdPartyPublications.mockResolvedValue(undefined);
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       friendlyName: "Civil And Family Daily Cause List"
@@ -1243,6 +1252,131 @@ describe("publication-processor", async () => {
       });
 
       consoleErrorSpy.mockRestore();
+    });
+
+    describe("flat-file publications", () => {
+      const flatFileParams = {
+        artefactId: "test-artefact-id",
+        locationId: "123",
+        listTypeId: 999,
+        contentDate: new Date("2025-01-25"),
+        locale: "en"
+      };
+
+      beforeEach(() => {
+        vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      });
+
+      it("should pass the flat file buffer and source file name to both notification functions", async () => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("uploaded document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.pdf" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        const expectedFlatFile = { buffer: flatFileBuffer, fileName: "hearing-list.pdf" };
+        expect(result.success).toBe(true);
+        expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+          where: { artefactId: "test-artefact-id" },
+          select: { isFlatFile: true, sourceArtefactId: true }
+        });
+        expect(getFileBuffer).toHaveBeenCalledTimes(1);
+        expect(getFileBuffer).toHaveBeenCalledWith("test-artefact-id");
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "test-artefact-id",
+          expect.objectContaining({ flatFile: expectedFlatFile, jsonData: undefined })
+        );
+        expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ flatFile: expectedFlatFile }), []);
+      });
+
+      it("should not load a flat file for a JSON publication", async () => {
+        // Arrange
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
+
+        // Act
+        await sendPublicationNotificationsForArtefact({ ...flatFileParams, jsonData: { courtLists: [] } });
+
+        // Assert
+        expect(getFileBuffer).not.toHaveBeenCalled();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", expect.objectContaining({ flatFile: undefined }));
+        expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ flatFile: undefined }), []);
+      });
+
+      it.each([
+        { description: "is null", sourceArtefactId: null },
+        { description: "has no file extension", sourceArtefactId: "ABC123" }
+      ])("should omit the file name when source_artefact_id $description", async ({ sourceArtefactId }) => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("api ingested document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        const { flatFile } = vi.mocked(sendLocationAndCaseSubscriptionNotifications).mock.calls[0][1];
+        expect(flatFile).toEqual({ buffer: flatFileBuffer, fileName: undefined });
+      });
+
+      it("should send no subscription emails and log an error when the flat file blob is missing", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(null);
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        expect(result).toEqual({ success: false });
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Flat file not found in blob storage, no subscription emails sent:", {
+          artefactId: "test-artefact-id"
+        });
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should treat the publication as not a flat file when the artefact lookup fails", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(prisma.artefact.findUnique).mockRejectedValue(new Error("Database unavailable"));
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        expect(result.success).toBe(true);
+        expect(getFileBuffer).not.toHaveBeenCalled();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", expect.objectContaining({ flatFile: undefined }));
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Artefact lookup failed, treating publication as not a flat file:", {
+          artefactId: "test-artefact-id",
+          error: "Database unavailable"
+        });
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should send flat-file notifications when processPublication is called without jsonData", async () => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("api ingested document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "api-upload.docx" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        await processPublication({ ...flatFileParams, skipThirdPartyPush: true });
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "test-artefact-id",
+          expect.objectContaining({ flatFile: { buffer: flatFileBuffer, fileName: "api-upload.docx" } })
+        );
+      });
     });
   });
 

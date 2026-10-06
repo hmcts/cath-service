@@ -63,6 +63,9 @@ export async function createArtefact(data: Artefact): Promise<{ artefactId: stri
         }
       }
     });
+    // The superseding upload may not regenerate these (e.g. a flat file replacing a JSON
+    // list), so they are removed to stop the old PDF/Excel being served or emailed.
+    await deleteDerivedFiles(existing.artefactId);
     return { artefactId: existing.artefactId, isUpdate: true };
   }
 
@@ -180,18 +183,7 @@ export async function deleteArtefacts(artefactIds: string[]): Promise<void> {
     deleteBlob(`${artefact.artefactId}${extension}`, CONTAINER.ARTEFACT).catch(() => {
       // Silently ignore — legacy blob may not exist for new artefacts.
     });
-    deleteBlob(`${artefact.artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
-      // 404 is expected if no PDF was generated for this artefact
-      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
-        console.error(`Failed to delete PDF blob for artefact ${artefact.artefactId}:`, error);
-      }
-    });
-    deleteBlob(`${artefact.artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
-      // 404 is expected if no Excel file was generated for this artefact
-      if (!("statusCode" in error) || (error as { statusCode: number }).statusCode !== 404) {
-        console.error(`Failed to delete Excel blob for artefact ${artefact.artefactId}:`, error);
-      }
-    });
+    void deleteDerivedFiles(artefact.artefactId);
   }
 
   await prisma.artefact.deleteMany({
@@ -371,4 +363,15 @@ export async function getLatestSjpArtefacts(): Promise<Artefact[]> {
       noMatch: artefact.noMatch
     })
   );
+}
+
+async function deleteDerivedFiles(artefactId: string): Promise<void> {
+  await Promise.all([
+    deleteBlob(`${artefactId}.pdf`, CONTAINER.PUBLICATIONS).catch((error) => {
+      console.error(`Failed to delete PDF blob for artefact ${artefactId}:`, error);
+    }),
+    deleteBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS).catch((error) => {
+      console.error(`Failed to delete Excel blob for artefact ${artefactId}:`, error);
+    })
+  ]);
 }
