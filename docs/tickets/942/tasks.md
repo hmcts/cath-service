@@ -83,13 +83,13 @@
   - [x] `service.test.ts`: SSCS with upload uses the reformatter and not the JSON generator; SSCS without upload calls the JSON generator for every SSCS name, saves the Excel and passes `excelPath` to notifications; a failed or rejected JSON generation deletes the stale xlsx, does not throw and notifies PDF-only; an RCJ list without upload is unchanged (stale xlsx deleted, JSON generator not called, PDF-only)
 - [x] `e2e-tests/tests/admin/non-strategic-upload.spec.ts`: add an SSCS upload to the existing `@nightly` Excel journey. Cover the English and Welsh headings in the downloaded xlsx, the dropped unknown column, and the 2 Notify links. Note that the suite is `describe.skip` until the SSO specs are re-enabled
 
-### Verify, rebase and merge
+### Verify, merge and push
 - [x] Run `yarn lint:fix`, a typecheck and `yarn test` from the root. Coverage must be above 80% in `libs/list-types/common`, `sscs-daily-hearing-list` and `publication`
-- [ ] After #1122 merges:
-  - [ ] Run `git fetch origin && git rebase --onto origin/master 969df726 feature/942-sscs-excel-download` (or a plain `git rebase origin/master` if #1122 was merge-committed)
-  - [ ] Check that the `CROWN_*_PDDA_LIST`, nullable `displayFrom`/`displayTo`, `noMatch` and `list-types-common/src/index.ts` export changes merged cleanly
-  - [ ] Run `yarn install` if `yarn.lock` conflicts, then re-run lint, typecheck and tests
-- [ ] Push with `git push --force-with-lease`. This replaces the old docs-only commit `0c511850` on `origin/feature/942-sscs-excel-download`
+- [x] Merge `origin/master` into `feature/940-rcj-excel-download`, resolve the #966 conflicts and push (`9af34cda`)
+- [x] Merge `feature/940-rcj-excel-download` into `feature/942-sscs-excel-download` and resolve the `readCellValue` conflict (`2c5db823`)
+- [x] Run `yarn install` and `yarn db:generate`, then re-run lint, typecheck and tests
+- [x] Push with `git push --force-with-lease`, replacing the old docs-only commit `0c511850` (one-off; later pushes are plain)
+- [ ] After #1122 merges: merge `origin/master` into #942, re-run lint, typecheck and tests, then merge #942. Or merge only #942 and close #1122 (see plan "Exposure window")
 - [ ] Lower environment check:
   - [ ] Upload one English and one Welsh SSCS Excel with a hidden sheet, a hidden column, a note, a formula and an extra column
   - [ ] Confirm the xlsx in `/blob-explorer` and the email links contain none of these, and that the xlsx matches the PDF row by row

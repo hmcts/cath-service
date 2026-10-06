@@ -87,36 +87,26 @@ The user decided these **must** get an Excel too (AC1, "all SSCS hearing lists")
 
 ### Dependency on PR #1122 and merge order
 - #942 is **stacked on #1122**. It needs the reformatter, the `uploadedExcel` passthrough and `createUploadedExcelGenerator`, none of which are on master.
-- **Overlap.** The reformatter and `readCellValue` fixes here are #1122's own review follow-ups (CRITICAL 1, HIGH 1, HIGH 2, suggestions 1, 3, 5 and 9). They must be done **once**. Agree with #1122's owner that #1122 does not fix them separately.
-- **Exposure window.** If #1122 merges and deploys before #942, RCJ uploads are published with the CRITICAL leak until #942 lands. Build #942 as **two commits**:
-  1. `fix(940): harden uploaded-workbook reformatter and cell reading`. List-agnostic, includes the updated RCJ tests.
-  2. `feat(942): SSCS Excel download`.
+- **Overlap.** The reformatter and `readCellValue` fixes here are #1122's own review follow-ups (CRITICAL 1, HIGH 1, HIGH 2, suggestions 1, 3, 5 and 9). They are done **once**, in #942. Agree with #1122's owner that #1122 does not fix them separately.
+- **Exposure window.** The hardening and the SSCS work were committed together in `e485929a`, so the hardening cannot be cherry-picked into #1122 on its own. If #1122 merges and deploys before #942, RCJ uploads are published with the CRITICAL leak until #942 lands. Either merge #942 straight after #1122 with no release in between, or merge only #942 (it contains all of #940) and close #1122.
+- **Branches are kept up to date by merging, not rebasing**, so no force-push is needed after the one-off push below:
+  - `9af34cda`: `origin/master` merged into `feature/940-rcj-excel-download` (pushed to #1122).
+  - `2c5db823`: `feature/940-rcj-excel-download` merged into `feature/942-sscs-excel-download`.
+  - To pick up later changes, merge `origin/master` into #940, then #940 into #942. After #1122 merges, merge `origin/master` into #942.
+- **Merge order:** #1122 to master, then merge `origin/master` into #942, then merge #942.
+- **One-off force-push.** `origin/feature/942-sscs-excel-download` held only an old docs commit (`0c511850`, the superseded JSON-generation plan) that is not in this branch's history. It was replaced with `git push --force-with-lease`. Every later push is a plain `git push`.
 
-  Preferred: cherry-pick commit 1 into #1122 before it merges. Otherwise merge #942 straight after #1122, with no release in between.
-- **Merge order:** #1122 to master, then rebase #942, then merge #942.
-- **Rebase after #1122 merges.** If it is squash-merged, drop the #940 commit:
-  `git fetch origin && git rebase --onto origin/master 969df726 feature/942-sscs-excel-download`
-  If commit 1 was cherry-picked into #1122, it drops out as empty. If #1122 is merge-committed, a plain `git rebase origin/master` is enough.
-- **Force-push.** `origin/feature/942-sscs-excel-download` holds only an old docs commit (`0c511850`, the superseded JSON-generation plan). Pushing this branch needs `git push --force-with-lease`, which replaces it. Nothing of value is lost.
+### Conflicts resolved when merging master
+`origin/master` at the time of the merge included #966 (`a4a9ef4d`, Business and Property Division Rolls Building), which conflicted with #940 and #942:
 
-### Rebase conflicts with newer master
-This branch is based on `56b60967`, 4 commits behind `origin/master`:
-- `26c0988b`
-- `72c914ff` (Feature-698 provenance)
-- `b77e22b4` (#901 no-match)
-- `0c5674a9` (#1026 Inbound Publication API)
-
-`git merge-tree origin/master 969df726` reports **no textual conflicts**. Files changed on both sides, and what to check after the rebase:
-
-| File | Master change | Check |
+| File | Master change | Resolution |
 |---|---|---|
-| `libs/publication/src/processing/service.ts` | Crown keys renamed to `CROWN_*_PDDA_LIST` (`:206-208`); `displayFrom` / `displayTo` now `Date \| null` in `GeneratePdfParams` / `ProcessPublicationParams`; third-party push no longer defaults them to `new Date()` | Auto-merges next to `uploadedExcel`. Typecheck afterwards |
-| `libs/publication/src/processing/service.test.ts` | Crown name updates | Auto-merges. Run the tests |
-| `apps/web/src/pages/(admin)/non-strategic-upload-summary/index.ts` | `noMatch: false` removed from `createArtefact` (no_match column dropped) | Auto-merges next to `uploadedExcel`. #940's `index.test.ts` must not expect `noMatch` (verified: it does not) |
-| `libs/list-types/common/src/index.ts` | New `assertValidProvenances, PUBLISHER_PROVENANCES` export on the line after `excel-utilities` | Lines next to #940's reformatter export. Keep both |
-| `e2e-tests/utils/seed-list-types.ts` | Crown renames | Separate from #940's CoA Civil rename |
-| `yarn.lock` | Both sides | Run `yarn install` if it conflicts |
-| `libs/publication/src/repository/queries.ts` (not in #940) | `createArtefact` now also supersedes on **provenance** (`:38-49`) | #940's stale-xlsx reasoning still holds, but now only when the API publication uses `MANUAL_UPLOAD`. See §3 |
+| `libs/list-types/common/src/conversion/excel-to-json.ts` | Added `normalizeCellValue` (rich text, hyperlinks, formula results) and Excel time-only cells read as `"10:30am"` | One reader, `readCellValue`, used by conversion and the reformatter. It keeps #942's handling (error values, unknown shapes and formulas without a cached result read as `""`; shared formulas) plus master's time cells and hyperlink-without-text fallback to the URL |
+| `libs/list-types/common/src/conversion/multi-sheet-converter.ts` | Added the `matchByNameOnly` option and a 31-character truncated sheet-name lookup | `resolveWorksheet(workbook, sheet, matchByNameOnly)` uses master's lookup, so the reformatter and converter resolve the same sheet. Lookups without the flag now also try the truncated name before the positional fallback |
+| `libs/list-types/common/src/conversion/multi-sheet-converter.test.ts` | Created on both sides | Both test suites kept |
+| `libs/publication/src/processing/service.ts` | Rolls Building import | Both imports kept |
+
+Earlier master changes (crown keys renamed to `CROWN_*_PDDA_LIST`, nullable `displayFrom` / `displayTo`, `noMatch` removed, `createArtefact` superseding on provenance) merged without conflicts. After merging, run `yarn install` (new workspace packages) and `yarn db:generate` (nullable display dates) before typechecking.
 
 ## 2. Implementation Details
 
@@ -253,10 +243,10 @@ None.
 | Case | Behaviour |
 |---|---|
 | Republish of an Excel upload (same `artefactId`) | `saveExcelToStorage` overwrites. A reformat or save failure deletes the old xlsx (`createUploadedExcelGenerator`) |
-| Republish as JSON (non-strategic JSON branch, or API with `MANUAL_UPLOAD` provenance, same court, date, language and list type) | **SSCS:** no `uploadedExcel`, so the xlsx is regenerated from the JSON and overwrites the old one; if generation fails the stale xlsx is deleted and the email is PDF-only. **RCJ, London Admin, CoA Civil:** the stale xlsx is deleted and the email is PDF-only (#940 behaviour). After the rebase, external provenances never share an `artefactId` with a manual upload, because `origin/master` `queries.ts:38-49` supersedes on provenance. The branch base does not yet |
+| Republish as JSON (non-strategic JSON branch, or API with `MANUAL_UPLOAD` provenance, same court, date, language and list type) | **SSCS:** no `uploadedExcel`, so the xlsx is regenerated from the JSON and overwrites the old one; if generation fails the stale xlsx is deleted and the email is PDF-only. **RCJ, London Admin, CoA Civil:** the stale xlsx is deleted and the email is PDF-only (#940 behaviour). Now that master is merged in, external provenances never share an `artefactId` with a manual upload, because `origin/master` `queries.ts:38-49` supersedes on provenance. The branch base does not yet |
 | SSCS JSON with no hearings | Header-only sheet |
 | Republish as a flat file through the API with `MANUAL_UPLOAD` | `processPublication` has no `jsonData` and the Excel step is skipped. Fixed by the no-jsonData stale delete (§2.4 item 4) |
-| `no_match` ingestion skips `processPublication` (`origin/master` `blob-ingestion/repository/service.ts:51-55`) | After the rebase this cannot leave an upload-derived xlsx. `MANUAL_UPLOAD` is never NoMatch (`origin/master` `libs/api/src/blob-ingestion/validation.ts:80`), and external provenances get their own artefact. No change. All `libs/api` and `queries.ts` references are to `origin/master`, the state #942 merges into |
+| `no_match` ingestion skips `processPublication` (`origin/master` `blob-ingestion/repository/service.ts:51-55`) | Now that master is merged in, this cannot leave an upload-derived xlsx. `MANUAL_UPLOAD` is never NoMatch (`origin/master` `libs/api/src/blob-ingestion/validation.ts:80`), and external provenances get their own artefact. No change. All `libs/api` and `queries.ts` references are to `origin/master`, the state #942 merges into |
 | Hidden first sheet in the upload | The converter used it for the PDF, so it is copied as a visible sheet. All other sheets are dropped |
 | Hidden rows | The converter includes them in the JSON and PDF, so they are copied and unhidden, keeping the PDF and Excel row-for-row equal |
 | Hidden mapped column | Copied and unhidden, because its data is in the PDF. Hidden unmapped columns are dropped with all other unmapped columns |
@@ -267,7 +257,7 @@ None.
 | No sheet recognised, or invalid buffer | Throws. The generator deletes the stale xlsx and returns `success: false`. PDF and notifications go ahead |
 | Welsh publication | `cy.tableHeaders` are used. For an upload the sheet name keeps the uploaded (usually English) text; for the JSON fallback it is `cy.excelWorksheetName`. Notify link text is English-only (`govnotify-client.ts:79,89`); this is existing behaviour |
 | Excel 2MB or more | No-links template (existing behaviour, tested) |
-| Excel time cells (for example `10:30` formatted as a time) | ExcelJS loads these as a `Date` on 1899-12-30, which `formatDateValue` writes as `30/12/1899`. This affects the PDF too and is not new. Note it for a follow-up and do not fix it here |
+| Excel time cells (for example `10:30` formatted as a time) | ExcelJS loads these as a `Date` on 1899-12-30. Previously written as `30/12/1899`; since merging #966 they are read as `"10:30am"` in both the PDF data and the reformatted Excel. No further change |
 | Fast re-uploads finishing out of order (review suggestion 2) | Already affects the PDF. Out of scope |
 | Logging | `artefactId` and the error message only |
 
