@@ -72,7 +72,7 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(result.success).toBe(true);
@@ -94,12 +94,12 @@ describe("generateAdministrativeCourtDailyCauseListPdf", () => {
       locale: "en",
       locationId: "999",
       jsonData: mockHearingList,
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
     });
 
     expect(renderAdminCourt).toHaveBeenCalledWith(mockHearingList, {
       locale: "en",
-      listTypeName: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      listTypeName: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       listTitle: "Bristol and Cardiff Administrative Court Daily Cause List",
       contentDate: contentDate,
       lastReceivedDate: expect.any(String)

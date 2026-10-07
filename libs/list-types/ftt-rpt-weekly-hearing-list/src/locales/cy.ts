@@ -15,11 +15,11 @@ export const cy = {
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   rptRegionalEmail: {
-    FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
-    FTT_RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
-    FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
-    FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
-    FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
+    RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
+    RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
+    RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
+    RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
+    RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
     FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: "marketrents@justice.gov.uk"
   },
   marketRentsExtraInformation:
@@ -50,10 +50,10 @@ export const cy = {
   rptNorthernCourtName: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Northern region']",
   rptSouthernCourtName: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Southern region']",
   rptMarketRentsCourtName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr Gwrandawiadau Wythnosol Rhenti'r Farchnad",
-  rptEasternPageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List']",
-  rptLondonPageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List']",
-  rptMidlandsPageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List']",
-  rptNorthernPageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List']",
-  rptSouthernPageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List']",
+  rptEasternPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Dwyrain Lloegr",
+  rptLondonPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Llundain",
+  rptMidlandsPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Canolbarth Lloegr",
+  rptNorthernPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Gogledd Lloegr",
+  rptSouthernPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth De Lloegr",
   rptMarketRentsPageTitle: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr Gwrandawiadau Wythnosol Rhenti'r Farchnad"
 };

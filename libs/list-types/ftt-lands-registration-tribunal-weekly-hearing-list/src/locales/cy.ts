@@ -1,7 +1,7 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const cy = {
-  pageTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
+  pageTitle: "Rhestr o Wrandawiadau Wythnosol Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
   listForWeekCommencing: "List for week commencing",
   lastUpdated: "Last updated",
   at: "at",

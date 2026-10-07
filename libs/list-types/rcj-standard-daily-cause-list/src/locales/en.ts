@@ -88,7 +88,7 @@ export const en = {
     trialWindowsLinkText: "Current trial windows",
     trialWindowsLinkUrl: "https://www.gov.uk/guidance/kings-bench-hearing-and-trial-dates"
   },
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "Civil Daily Cause List",
     locationLine1: "Mayor & City",
     locationLine2: "Guildhall Buildings",

@@ -156,7 +156,7 @@ describe("generateUtlcDailyHearingListPdf", () => {
       locale: "cy",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)"
+      listTitle: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Tiroedd)"
     });
   });
 });
