@@ -234,6 +234,7 @@ describe("processBlobIngestion", async () => {
       contentDate: new Date("2025-01-25"),
       locale: "en",
       jsonData: PAYLOAD,
+      payloadSizeBytes: 1000,
       provenance: "MANUAL_UPLOAD",
       sensitivity: "PUBLIC",
       language: "ENGLISH",

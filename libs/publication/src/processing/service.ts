@@ -1,5 +1,6 @@
 import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts/ast-daily-hearing-list";
+import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
 import { type CauseListData, generateCauseListPdf, generateCivilAndFamilyDailyCauseListExcel } from "@hmcts/civil-and-family-daily-cause-list";
@@ -469,6 +470,7 @@ interface SendNotificationsParams {
   listTypeId: number;
   contentDate: Date;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   pdfFilePath?: string;
   excelPath?: string;
   locale?: string;
@@ -520,6 +522,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       publicationDate: contentDate,
       listTypeId,
       jsonData,
+      payloadSizeBytes: params.payloadSizeBytes,
       pdfFilePath,
       excelPath
     });
@@ -545,6 +548,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
             listTypeId,
             language,
             jsonData,
+            payloadSizeBytes: params.payloadSizeBytes,
             pdfFilePath
           },
           result.notifiedUserIds
@@ -582,6 +586,8 @@ interface ProcessPublicationParams {
   contentDate: Date;
   locale: string;
   jsonData?: unknown;
+  /** Size of the payload as received (raw bytes, including whitespace). Falls back to the re-serialised jsonData size. */
+  payloadSizeBytes?: number;
   provenance?: string;
   displayFrom?: Date | null;
   displayTo?: Date | null;
@@ -611,6 +617,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     contentDate,
     locale,
     jsonData,
+    payloadSizeBytes: receivedPayloadBytes,
     provenance,
     displayFrom,
     displayTo,
@@ -625,6 +632,10 @@ export async function processPublication(params: ProcessPublicationParams): Prom
 
   const result: ProcessPublicationResult = {};
 
+  if (isUpdate) {
+    await deletePreviousPublicationFiles(artefactId, logPrefix);
+  }
+
   if (jsonData) {
     try {
       await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
@@ -635,7 +646,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       });
     }
 
-    const payloadBytes = payloadSizeBytes(jsonData);
+    const payloadBytes = receivedPayloadBytes ?? payloadSizeBytes(jsonData);
 
     let listTypeName = "";
 
@@ -689,6 +700,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       listTypeId,
       contentDate,
       jsonData,
+      payloadSizeBytes: receivedPayloadBytes,
       pdfFilePath: result.pdfPath,
       excelPath: result.excelPath,
       locale,
@@ -721,4 +733,22 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   }
 
   return result;
+}
+
+// An update reuses the artefactId, so files from the previous version would otherwise still be served and
+// attached to emails when the new version skips them. Mirrors legacy deleteFiles on update.
+async function deletePreviousPublicationFiles(artefactId: string, logPrefix: string) {
+  await Promise.all(
+    [`${artefactId}.pdf`, `${artefactId}.xlsx`].map(async (blobName) => {
+      try {
+        await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
+      } catch (error) {
+        console.error(`${logPrefix} Failed to delete previous publication file:`, {
+          artefactId,
+          blobName,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    })
+  );
 }

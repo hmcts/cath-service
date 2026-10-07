@@ -163,6 +163,11 @@ vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
   sendThirdPartyPublications: mockSendThirdPartyPublications
 }));
 
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { PUBLICATIONS: "publications" },
+  deleteBlob: vi.fn()
+}));
+
 vi.mock("../repository/queries.js", () => ({}));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -215,6 +220,7 @@ describe("publication-processor", async () => {
   const { generateMagistratesPublicAdultCourtListPdf } = await import("@hmcts/magistrates-public-adult-court-list");
   const { getLocationById } = await import("@hmcts/location");
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
+  const { deleteBlob } = await import("@hmcts/azure-blob");
   const { prisma } = await import("@hmcts/postgres-prisma");
   const { extractAndStoreArtefactSearch } = await import("../artefact-search-extractor.js");
 
@@ -1632,6 +1638,121 @@ describe("publication-processor", async () => {
       expect(result.excelPath).toBe("test-artefact-id.xlsx");
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("PDF skipped generation: source payload"), { artefactId: "test-artefact-id" });
       consoleLogSpy.mockRestore();
+    });
+
+    it("should skip PDF generation when the received payload size exceeds the PDF limit even if the minified jsonData is small", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(generateMagistratesPublicListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999, payloadSizeBytes: 300 * 1024 });
+
+      expect(generateMagistratesPublicListPdf).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBeUndefined();
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", expect.objectContaining({ payloadSizeBytes: 300 * 1024 }));
+      consoleLogSpy.mockRestore();
+    });
+
+    it("should delete the previous PDF and Excel before regenerating on an update", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(generateMagistratesPublicListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateMagistratesPublicListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999, isUpdate: true });
+
+      expect(deleteBlob).toHaveBeenCalledWith("test-artefact-id.pdf", "publications");
+      expect(deleteBlob).toHaveBeenCalledWith("test-artefact-id.xlsx", "publications");
+      const lastDeleteOrder = Math.max(...vi.mocked(deleteBlob).mock.invocationCallOrder);
+      expect(lastDeleteOrder).toBeLessThan(vi.mocked(generateMagistratesPublicListPdf).mock.invocationCallOrder[0]);
+      expect(lastDeleteOrder).toBeLessThan(vi.mocked(generateMagistratesPublicListExcel).mock.invocationCallOrder[0]);
+      expect(result.pdfPath).toBe("test-artefact-id.pdf");
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
+    it("should delete the previous PDF and Excel on an update that skips PDF generation", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      await processPublication({ ...baseParams, listTypeId: 999, payloadSizeBytes: 300 * 1024, isUpdate: true });
+
+      expect(generateMagistratesPublicListPdf).not.toHaveBeenCalled();
+      expect(deleteBlob).toHaveBeenCalledWith("test-artefact-id.pdf", "publications");
+      expect(deleteBlob).toHaveBeenCalledWith("test-artefact-id.xlsx", "publications");
+      consoleLogSpy.mockRestore();
+    });
+
+    it("should not delete any files when the publication is not an update", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(generateMagistratesPublicListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateMagistratesPublicListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      await processPublication({ ...baseParams, listTypeId: 999, isUpdate: false });
+
+      expect(deleteBlob).not.toHaveBeenCalled();
+    });
+
+    it("should log and continue processing when deleting a previous file fails", async () => {
+      const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_LIST", friendlyName: "Magistrates Public List" } as any);
+      vi.mocked(deleteBlob).mockRejectedValueOnce(new Error("Blob service unavailable"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 1,
+        sent: 1,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999, payloadSizeBytes: 300 * 1024, isUpdate: true });
+
+      expect(result.notificationsSent).toBe(1);
+      expect(deleteBlob).toHaveBeenCalledTimes(2);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to delete previous publication file"),
+        expect.objectContaining({ artefactId: "test-artefact-id", blobName: "test-artefact-id.pdf" })
+      );
+      consoleLogSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     });
 
     it("should skip both PDF and Excel generation when source payload exceeds the Excel limit and still send notifications", async () => {

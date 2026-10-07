@@ -311,6 +311,25 @@ describe("sendListTypePublicationNotifications", () => {
     consoleLogSpy.mockRestore();
   });
 
+  it("should fall back to the no-summary template when the received payload size exceeds the summary limit even if the minified jsonData is small", async () => {
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { prisma } = await import("@hmcts/postgres-prisma");
+
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+
+    await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { courtLists: [] }, payloadSizeBytes: 300 * 1024 });
+
+    expect(buildEnhancedTemplateParameters).not.toHaveBeenCalled();
+    expect(buildTemplateParameters).toHaveBeenCalled();
+    consoleLogSpy.mockRestore();
+  });
+
   it("should send email without PDF buffer when PDF blob is not found", async () => {
     // Arrange
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };

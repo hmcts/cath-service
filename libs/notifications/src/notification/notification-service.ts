@@ -468,7 +468,7 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
   if (config && event.jsonData) {
-    const payloadBytes = payloadSizeBytes(event.jsonData);
+    const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
     if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
       console.log(`Email summary skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_SUMMARY_PAYLOAD_BYTES}`, {
         publicationId: event.publicationId
@@ -581,6 +581,7 @@ export interface ListTypePublicationEvent {
   listTypeId: number;
   language: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   pdfFilePath?: string;
 }
 
@@ -635,6 +636,7 @@ async function processListTypeUserNotification(
       publicationDate: event.publicationDate,
       listTypeId: event.listTypeId,
       jsonData: event.jsonData,
+      payloadSizeBytes: event.payloadSizeBytes,
       pdfFilePath: event.pdfFilePath
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
