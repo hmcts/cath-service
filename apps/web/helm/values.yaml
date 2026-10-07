@@ -47,7 +47,7 @@ nodejs:
     # chart quotes the value before tpl, which would escape double quotes.
     B2C_CUSTOM_DOMAIN: 'sign-in.pip-frontend.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net'
     B2C_CUSTOM_DOMAIN_PATH: 'pip-frontend.{{ get (dict `aat` `staging` `perftest` `test`) .Values.global.environment | default .Values.global.environment }}.platform.hmcts.net'
-    # Source-payload size gates for publication output generation (KB)
+    # Source-payload size gates for publication output generation (KB). Keep in sync with apps/api/helm/values.yaml
     MAX_PDF_PAYLOAD_KB: 256 # 256 KB
     MAX_EXCEL_PAYLOAD_KB: 10240 # 10 MB
     MAX_SUMMARY_PAYLOAD_KB: 256
