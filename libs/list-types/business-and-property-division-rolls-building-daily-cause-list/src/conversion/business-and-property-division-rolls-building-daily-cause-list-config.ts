@@ -2,6 +2,7 @@ import {
   createMultiSheetConverter,
   type ExcelConverterConfig,
   registerConverterByName,
+  type SheetConfig,
   validateNoHtmlTags,
   validateTimeFormatSimple
 } from "@hmcts/list-types-common";
@@ -33,17 +34,14 @@ export const STANDARD_CONFIG: ExcelConverterConfig = {
 // mis-file a mis-named tab (e.g. a single "Sheet 1") into the first section. matchByNameOnly disables
 // the fallback: unmatched tabs yield an empty section, and a workbook matching no section name is
 // rejected with a clear error.
-const convertBusinessAndPropertyRollsExcel = (buffer: Buffer) =>
-  createMultiSheetConverter(
-    buffer,
-    SECTIONS.map((section, index) => ({
-      worksheetName: section.worksheetName,
-      worksheetIndex: index,
-      dataKey: section.key,
-      config: STANDARD_CONFIG
-    })),
-    { matchByNameOnly: true }
-  );
+export const BUSINESS_AND_PROPERTY_SHEETS: SheetConfig[] = SECTIONS.map((section, index) => ({
+  worksheetName: section.worksheetName,
+  worksheetIndex: index,
+  dataKey: section.key,
+  config: STANDARD_CONFIG
+}));
+
+const convertBusinessAndPropertyRollsExcel = (buffer: Buffer) => createMultiSheetConverter(buffer, BUSINESS_AND_PROPERTY_SHEETS, { matchByNameOnly: true });
 
 registerConverterByName("BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST", {
   config: STANDARD_CONFIG,

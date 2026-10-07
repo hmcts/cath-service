@@ -3,7 +3,8 @@ import { type AstDailyHearingList, generateAstDailyHearingListPdf } from "@hmcts
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import {
   type BusinessAndPropertyRollsData,
-  generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf
+  generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf,
+  reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel
 } from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
 import { type CareStandardsTribunalHearingList, generateCareStandardsTribunalWeeklyHearingListPdf } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
 import { type CicWeeklyHearingList, generateCicWeeklyHearingListPdf } from "@hmcts/cic-weekly-hearing-list";
@@ -27,7 +28,11 @@ import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmc
 import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
-import { generateInterimApplicationsDailyCauseListPdf, type InterimApplicationsData } from "@hmcts/interim-applications-daily-cause-list";
+import {
+  generateInterimApplicationsDailyCauseListPdf,
+  type InterimApplicationsData,
+  reformatInterimApplicationsDailyCauseListExcel
+} from "@hmcts/interim-applications-daily-cause-list";
 import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
 import { type SjpJson, saveExcelToStorage } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
@@ -463,6 +468,10 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatLondonAdministrativeCourtDailyCauseListExcel),
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatCourtOfAppealCivilDailyCauseListExcel),
+  BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: createUploadedExcelGenerator(
+    reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel
+  ),
+  INTERIM_APPLICATIONS_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatInterimApplicationsDailyCauseListExcel),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsExcelGenerator,
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsExcelGenerator,
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsExcelGenerator,

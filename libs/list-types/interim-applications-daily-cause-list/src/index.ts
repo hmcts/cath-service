@@ -4,6 +4,7 @@ import "./conversion/interim-applications-daily-cause-list-config.js"; // Regist
 export type { ValidationResult } from "@hmcts/publication";
 // Email summary (object-shaped jsonData, so extract reads data.hearingList)
 export { extractCaseSummary, formatCaseSummaryForEmail, SPECIAL_CATEGORY_DATA_WARNING } from "./email-summary/summary-builder.js";
+export { reformatInterimApplicationsDailyCauseListExcel } from "./excel/excel-reformatter.js";
 export { cy as interimApplicationsDailyCauseListCy } from "./locales/cy.js";
 // Locale exports
 export { en as interimApplicationsDailyCauseListEn } from "./locales/en.js";
