@@ -54,6 +54,16 @@ vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
   reformatCourtOfAppealCivilDailyCauseListExcel: vi.fn()
 }));
 
+vi.mock("@hmcts/business-and-property-division-rolls-building-daily-cause-list", () => ({
+  generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf: vi.fn(),
+  reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel: vi.fn()
+}));
+
+vi.mock("@hmcts/interim-applications-daily-cause-list", () => ({
+  generateInterimApplicationsDailyCauseListPdf: vi.fn(),
+  reformatInterimApplicationsDailyCauseListExcel: vi.fn()
+}));
+
 vi.mock("@hmcts/excel-generation", () => ({
   generateSjpPublicListExcel: vi.fn().mockResolvedValue(Buffer.from("public-excel")),
   generateSjpPressListExcel: vi.fn().mockResolvedValue(Buffer.from("press-excel")),
@@ -205,6 +215,11 @@ describe("publication-processor", async () => {
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf, reformatCourtOfAppealCivilDailyCauseListExcel } = await import(
     "@hmcts/court-of-appeal-civil-daily-cause-list"
+  );
+  const { generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf, reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel } =
+    await import("@hmcts/business-and-property-division-rolls-building-daily-cause-list");
+  const { generateInterimApplicationsDailyCauseListPdf, reformatInterimApplicationsDailyCauseListExcel } = await import(
+    "@hmcts/interim-applications-daily-cause-list"
   );
   const { generateSjpPublicListExcel, generateSjpPressListExcel, saveExcelFile } = await import("@hmcts/excel-generation");
   const { generateLondonAdministrativeCourtDailyCauseListPdf, reformatLondonAdministrativeCourtDailyCauseListExcel } = await import(
@@ -2186,6 +2201,133 @@ describe("publication-processor", async () => {
       );
       consoleWarnSpy.mockRestore();
     });
+  });
+
+  describe("uploaded Excel for Rolls Building lists", () => {
+    const ROLLS_BUILDING_URL_PATHS = ["business-and-property-division-rolls-building-daily-cause-list", "interim-applications-daily-cause-list"];
+    const ROLLS_BUILDING_LIST_TYPES = listTypeData
+      .filter((listType) => ROLLS_BUILDING_URL_PATHS.includes(listType.urlPath ?? ""))
+      .map((listType) => listType.name);
+    const ROLLS_BUILDING_CASES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>, ReturnType<typeof vi.fn>][] = [
+      [
+        "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST",
+        reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel,
+        vi.mocked(generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf)
+      ],
+      ["INTERIM_APPLICATIONS_DAILY_CAUSE_LIST", reformatInterimApplicationsDailyCauseListExcel, vi.mocked(generateInterimApplicationsDailyCauseListPdf)]
+    ];
+    const uploadedExcel = Buffer.from("uploaded-rolls-excel");
+    const reformattedExcel = Buffer.from("reformatted-rolls-excel");
+    const excelParams = {
+      artefactId: "rolls-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: { hearingList: [{ venue: "Court 1" }] }
+    };
+    const pdfResult = { success: true, pdfPath: "/path/to/rolls.pdf", sizeBytes: 1024, exceedsMaxSize: false };
+
+    beforeEach(() => {
+      vi.mocked(reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(reformatInterimApplicationsDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf).mockResolvedValue(pdfResult);
+      vi.mocked(generateInterimApplicationsDailyCauseListPdf).mockResolvedValue(pdfResult);
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "rolls-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+      vi.mocked(getLocationById).mockResolvedValue({ locationId: 123, name: "Rolls Building", welshName: "Adeilad Rolls", regions: [], subJurisdictions: [] });
+    });
+
+    it("should find both Rolls Building list types in the list type data", () => {
+      // Assert
+      expect(ROLLS_BUILDING_LIST_TYPES.sort()).toEqual(ROLLS_BUILDING_CASES.map(([name]) => name).sort());
+    });
+
+    it.each(ROLLS_BUILDING_LIST_TYPES)("should register an Excel generator for %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it.each(ROLLS_BUILDING_CASES)("should reformat and save the uploaded Excel for %s", async (listTypeName, reformatter) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatter).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("rolls-artefact", reformattedExcel);
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(ROLLS_BUILDING_CASES)(
+      "should pass the uploaded Excel through processPublication and notify with both files for %s",
+      async (listTypeName, reformatter) => {
+        // Arrange
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+
+        // Act
+        const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+        // Assert
+        expect(reformatter).toHaveBeenCalledWith(uploadedExcel, "en");
+        expect(result.pdfPath).toBe("/path/to/rolls.pdf");
+        expect(result.excelPath).toBe("rolls-artefact.xlsx");
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "rolls-artefact",
+          expect.objectContaining({ pdfFilePath: "/path/to/rolls.pdf", excelPath: "rolls-artefact.xlsx" })
+        );
+      }
+    );
+
+    it.each(ROLLS_BUILDING_CASES)("should delete the stale Excel and notify with the PDF only when %s has no upload", async (listTypeName, reformatter) => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("rolls-artefact.xlsx", "publications");
+      expect(reformatter).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/path/to/rolls.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "rolls-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/rolls.pdf", excelPath: undefined })
+      );
+    });
+
+    it.each(ROLLS_BUILDING_CASES)(
+      "should delete the stale Excel and still send the PDF and notifications when reformatting fails for %s",
+      async (listTypeName, reformatter, pdfGenerator) => {
+        // Arrange
+        const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+        vi.mocked(reformatter).mockRejectedValue(new Error("No recognised worksheet to reformat"));
+
+        // Act
+        const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+        // Assert
+        expect(deleteBlob).toHaveBeenCalledWith("rolls-artefact.xlsx", "publications");
+        expect(saveExcelToStorage).not.toHaveBeenCalled();
+        expect(pdfGenerator).toHaveBeenCalled();
+        expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", {
+          artefactId: "rolls-artefact",
+          error: "No recognised worksheet to reformat"
+        });
+        expect(result.pdfPath).toBe("/path/to/rolls.pdf");
+        expect(result.excelPath).toBeUndefined();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "rolls-artefact",
+          expect.objectContaining({ pdfFilePath: "/path/to/rolls.pdf", excelPath: undefined })
+        );
+        consoleWarnSpy.mockRestore();
+      }
+    );
   });
 
   describe("stale Excel on a flat-file republish", () => {
