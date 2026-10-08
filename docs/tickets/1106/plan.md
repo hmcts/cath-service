@@ -6,7 +6,7 @@ This is a **one-entry reference-data addition**. A new Crime / Magistrates Court
 
 It is **not** a new list-type page. The publishing route is manual upload and the file type is flat file, so there is no rendered view, no JSON schema, no validator, no PDF generator and no Excel converter. There is also no database schema change — `list_types` and `list_types_sub_jurisdictions` already exist.
 
-The largest risks in this ticket are not technical. `defaultSensitivity` is unspecified in the issue and controls who can read the list; Poole Magistrates' Court is claimed to exist but is absent from `location-data.ts`; and AC3 (Courtel enablement) cannot be satisfied by code at all. See §7.
+`defaultSensitivity` is `null` by deliberate choice — the Sensitivity dropdown is left unselected on `/manual-upload` for this list type, forcing the uploader to actively choose rather than silently accepting a pre-filled value. Poole Magistrates' Court is confirmed to already exist with the correct sub-jurisdiction — no location-data change needed. The remaining risk is not technical: AC3 (Courtel enablement) cannot be satisfied by code at all. See §7.
 
 ## 2. Technical Approach
 
@@ -33,7 +33,7 @@ The whole change is one object literal plus tests.
   welshFriendlyName: "Rhestr y Llys ar gyfer Achosion Traffig sydd i'w cynnal yn rhithiol",
   provenance: "CRIME_IDAM,PI_AAD",
   isNonStrategic: false,
-  defaultSensitivity: "Public",
+  defaultSensitivity: null,
   subJurisdictionIds: [7]
 }
 ```
@@ -46,7 +46,7 @@ The whole change is one object literal plus tests.
 | `provenance` | `CRIME_IDAM,PI_AAD` | Matches `MAGISTRATES_PUBLIC_LIST` (line 35) and `MAGISTRATES_STANDARD_LIST` (line 656). Only consulted for `CLASSIFIED` artefacts; `PI_AAD` keeps legacy media accounts able to read a classified upload. |
 | `urlPath` | **omitted** | Flat files route via `/hearing-lists/{locationId}/{artefactId}`; `urlPath` is never read for them. Only 2 of 77 entries omit it (`PCOL_DAILY_CAUSE_LIST`, `MENTAL_HEALTH_TRIBUNAL_HEARING_LIST`), so this is precedented but rare — it is deliberate, not an oversight. Both seed paths coerce an absent value to `""`. |
 | `isNonStrategic` | `false` | Required to reach `findStrategicListTypes()` and therefore the `/manual-upload` dropdown. `true` would route it to `/non-strategic-upload`, which only accepts `.xlsx`. |
-| `defaultSensitivity` | `"Public"` | **Assumption — see §7.** Pre-fills the Sensitivity dropdown client-side; the uploader can override. |
+| `defaultSensitivity` | `null` | **Deliberate.** Leaves the Sensitivity dropdown unselected on `/manual-upload` for this list type, per `listTypeSensitivityMap[id] || ""` in `apps/web/src/pages/(admin)/manual-upload/index.ts:68` and the client-side fallback in `apps/web/src/assets/js/list-type-sensitivity.ts:35` — forces the uploader to actively choose. Precedented by `ET_DAILY_LIST`/`ET_FORTNIGHTLY_PRESS_LIST`, which also use `null`. The `sensitivity` field remains a required form field regardless (`libs/admin-pages/src/manual-upload/validation.ts:108-109`), so this has no effect on submission — only on the pre-fill. |
 | `shortenedFriendlyName` | **omitted** | Defaults to `englishFriendlyName` in both seed paths. 27 characters fits the dropdown. |
 | `subJurisdictionIds` | `[7]` | Magistrates Court, `jurisdictionId: 3` (Crime) — `libs/location/src/location-data.ts:330`. |
 
@@ -54,12 +54,7 @@ The whole change is one object literal plus tests.
 
 ### 3.2 Location prerequisite — Poole Magistrates' Court
 
-Poole is **not** in `libs/location/src/location-data.ts` (a 27-location development subset). Two branches:
-
-- **If STG locations come from `location-data.ts`** — add an entry with `subJurisdictions: [7]` and the correct region.
-- **If STG locations come from the reference-data CSV upload** (`/reference-data-upload`, System Admin) — no code change; Poole just needs to be present in the uploaded CSV with the Magistrates Court sub-jurisdiction.
-
-Either way the hard requirement is identical: **Poole must carry `subJurisdictionId: 7`**. Without it the list type will not appear on `/subscription-configure-list` for Poole subscribers — manual upload will still work, because it does not cross-check the location's sub-jurisdiction against the chosen list type, so this failure is silent.
+**Confirmed out of scope.** Poole Magistrates' Court already exists on the target environment(s) with the correct sub-jurisdiction — no `location-data.ts` change is required for this ticket.
 
 ### 3.3 Consumers that work with zero code change
 
@@ -116,16 +111,16 @@ Scale to the change. One data entry does not justify a new spec file, a template
 
 **Controller tests** — `apps/web/src/pages/(admin)/manual-upload/index.test.ts` already mocks `findStrategicListTypes` and asserts that every returned list type becomes an option and that `defaultSensitivity` reaches `listTypeSensitivityMap`. These are list-type-agnostic; **confirm they exist and say so in the PR** rather than adding near-identical tests keyed to this name.
 
-**E2E — be honest about this.** `e2e-tests/tests/admin/manual-upload.spec.ts` is `test.describe.skip(...)`, so any assertion added there **will not run in CI**. Adding one line ("offers 'Traffic Virtual Courts List' in the dropdown") is fine for when the skip is lifted, but it is not evidence. Re-enabling the spec is out of scope. Flag the skip in the PR.
+**E2E — out of scope.** `e2e-tests/tests/admin/manual-upload.spec.ts` is `test.describe.skip(...)`, so any assertion added there would not run in CI anyway. No E2E change is made for this ticket.
 
 ### Manual verification (this is where the confidence comes from)
 
 **Local**
 
-1. `yarn db:seed`, then confirm in `yarn db:studio` that `list_types` has the row with both friendly names, `is_non_strategic = false`, `default_sensitivity = 'Public'`, `url = ''`, `deleted_at IS NULL`, plus one `list_types_sub_jurisdictions` row for sub-jurisdiction 7.
+1. `yarn db:seed`, then confirm in `yarn db:studio` that `list_types` has the row with both friendly names, `is_non_strategic = false`, `default_sensitivity IS NULL`, `url = ''`, `deleted_at IS NULL`, plus one `list_types_sub_jurisdictions` row for sub-jurisdiction 7.
 2. Run `yarn db:seed` again — no error, no duplicate (idempotency).
 3. `tsx apps/postgres/prisma/generate-seed-sql.ts` — inspect the output for the new row, the escaped `i''w`, and the new name being present in the soft-delete `NOT IN (...)` list (i.e. it is excluded from deletion).
-4. `/manual-upload` as System Admin: option present and alphabetically placed; selecting it pre-fills Sensitivity to Public.
+4. `/manual-upload` as System Admin: option present and alphabetically placed; selecting it leaves Sensitivity unselected, requiring the uploader to choose.
 5. Upload a small PDF against Poole (or a test location) and complete through `/manual-upload-success`.
 6. `/summary-of-publications?locationId={id}`: entry links to `/hearing-lists/{locationId}/{artefactId}` and the PDF renders. Repeat with `?lng=cy` and confirm the Welsh name.
 7. Attempt a `.json` upload for this list type — error summary, not a 500.
@@ -146,22 +141,24 @@ Scale to the change. One data entry does not justify a new spec file, a template
 | AC | Satisfied by | Verified by |
 |---|---|---|
 | The Traffic Virtual Courts List is created in CaTH | `listTypeData` entry → seeded `list_types` row + `list_types_sub_jurisdictions` link to sub-jurisdiction 7 | `list-type-data.test.ts`; manual steps 1-3 and 10 |
-| The list name is added to the drop-down options in the manual upload form | Automatic via `findStrategicListTypes()` (`isNonStrategic: false`) — no code change | Manual steps 4 and 12 (E2E assertion exists but is skipped) |
+| The list name is added to the drop-down options in the manual upload form | Automatic via `findStrategicListTypes()` (`isNonStrategic: false`) — no code change | Manual steps 4 and 12 |
 | Courtel is enabled to receive the list | **Not satisfied by code.** The checkbox appears automatically, but a System Admin must tick it on **each environment** after deploy | Manual steps 8, 12, 13 |
 
 **AC3 requires a post-deploy human action and must go in the release notes** — otherwise the ticket will be closed with Courtel silently receiving nothing. Courtel should also be given advance notice before the box is ticked (see §7).
 
 ## 7. CLARIFICATIONS NEEDED
 
-### Blocking — answer before merging
+### Resolved
 
-1. **`defaultSensitivity` is unspecified in the issue.** This plan assumes `"Public"`. The two existing magistrates list types disagree: `MAGISTRATES_PUBLIC_LIST` is `Public`, `MAGISTRATES_STANDARD_LIST` is `Classified`. Sensitivity controls **who can read the list** (`canAccessPublication`), and the default is what the uploading court will accept without thinking. If the flat file contains defendant addresses or dates of birth, `Public` exposes them to the open internet. Confirm with the Crime Service Manager what the file actually contains; if it carries personal data beyond name and case reference, change the value to `"Classified"`.
+1. ~~`defaultSensitivity` is unspecified in the issue.~~ **Confirmed `null`** — Sensitivity is left unselected on `/manual-upload` for this list type, forcing an active choice rather than defaulting to Public. Plan §3.1 updated accordingly.
 
-2. **Poole Magistrates' Court is claimed to be "already available in CaTH" but is absent from `location-data.ts`.** Confirm (a) it exists on STG, and (b) it carries `subJurisdictionId: 7`. Without (b), Poole subscribers will never see the list type on `/subscription-configure-list`, and the failure is silent because manual upload does not cross-check. §3.2 gives both remediation branches.
+2. ~~Poole Magistrates' Court is claimed to be "already available in CaTH" but is absent from `location-data.ts`.~~ **Confirmed no change needed** — Poole already exists on the target environment(s) with the correct sub-jurisdiction. §3.2 (adding a `location-data.ts` entry) is **out of scope**; drop that branch entirely.
 
-3. **Has Courtel been given advance notice, and can they ingest this list?** Pushing to an unprepared recipient produces `FAILED` rows in `third_party_push_log` with **no user-visible symptom** — nobody will notice for weeks.
+### Still blocking — answer before merging
 
-4. **Is the list name final?** It is baked into a `@unique` DB column. Renaming later means either a new `name` row (leaving the old row to be soft-deleted, orphaning its artefacts' `listTypeId`) or a data migration. Note also that "Traffic Virtual Courts List" does not identify the court or the days it covers — if the pilot extends beyond Poole, or runs alongside a non-virtual traffic list, the name will not distinguish them.
+1. **Has Courtel been given advance notice, and can they ingest this list?** Pushing to an unprepared recipient produces `FAILED` rows in `third_party_push_log` with **no user-visible symptom** — nobody will notice for weeks.
+
+2. **Is the list name final?** It is baked into a `@unique` DB column. Renaming later means either a new `name` row (leaving the old row to be soft-deleted, orphaning its artefacts' `listTypeId`) or a data migration. Note also that "Traffic Virtual Courts List" does not identify the court or the days it covers — if the pilot extends beyond Poole, or runs alongside a non-virtual traffic list, the name will not distinguish them.
 
 ### Non-blocking assumptions — proceed, correct if wrong
 

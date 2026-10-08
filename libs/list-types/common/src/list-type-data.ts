@@ -746,6 +746,15 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
   },
+  {
+    name: "TRAFFIC_VIRTUAL_COURTS_LIST",
+    englishFriendlyName: "Traffic Virtual Courts List",
+    welshFriendlyName: "Rhestr y Llys ar gyfer Achosion Traffig sydd i'w cynnal yn rhithiol",
+    provenance: "CRIME_IDAM,PI_AAD",
+    isNonStrategic: false,
+    defaultSensitivity: null,
+    subJurisdictionIds: [7]
+  },
   // High Court flat-file daily cause lists (manual upload)
   {
     name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",

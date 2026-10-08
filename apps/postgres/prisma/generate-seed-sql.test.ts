@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { generateSeedSql } from "./generate-seed-sql.js";
 
 // Synthetic fixture: includes an apostrophe (quote escaping), a null defaultSensitivity,
-// a location with empty junction arrays, and the two ET list types that must reach STG.
+// a location with empty junction arrays, the two ET list types that must reach STG, and
+// a flat-file-only list type with no urlPath to prove the empty-string url coercion.
 const LOCATION_DATA: typeof locationData = {
   regions: [
     { regionId: 1, name: "London", welshName: "Llundain" },
@@ -54,6 +55,15 @@ const LIST_TYPES: ListTypeData[] = [
     isNonStrategic: true,
     defaultSensitivity: null,
     subJurisdictionIds: [3, 4]
+  },
+  {
+    name: "FLAT_FILE_ONLY_LIST",
+    englishFriendlyName: "Flat File Only List",
+    welshFriendlyName: "Rhestr Ffeil Wastad",
+    provenance: "MANUAL_UPLOAD",
+    isNonStrategic: false,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [4]
   }
 ];
 
@@ -124,6 +134,13 @@ describe("generateSeedSql", () => {
     expect(sql).not.toContain("'null'");
   });
 
+  it("should coerce an omitted urlPath to an empty-string url", () => {
+    const sql = generate();
+
+    // FLAT_FILE_ONLY_LIST has no urlPath; the url column must be an empty string, not NULL or undefined.
+    expect(sql).toContain("'FLAT_FILE_ONLY_LIST', 'Flat File Only List', 'Rhestr Ffeil Wastad', 'Flat File Only List', '', 'Public'");
+  });
+
   it("should supply a deterministic location_reference id and derived provenance id", () => {
     const sql = generate();
 
@@ -166,7 +183,7 @@ describe("generateSeedSql", () => {
     const sql = generate();
 
     expect(sql).toContain("UPDATE list_types SET deleted_at = NOW()");
-    expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST')");
+    expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST', 'FLAT_FILE_ONLY_LIST')");
     expect(sql).toContain("name NOT LIKE 'TEST_%'");
     expect(sql).toContain("name NOT LIKE 'E2E_%'");
   });

@@ -1,11 +1,12 @@
+---
 # #1106: 'Traffic Virtual Courts List' to be created in CaTH
 
 **State:** OPEN
-**Assignees:** None
+**Assignees:** KianKwa
 **Author:** OgechiOkelu
 **Labels:** priority:2-high, type:story
 **Created:** 2026-09-30T11:41:34Z
-**Updated:** 2026-09-30T11:54:28Z
+**Updated:** 2026-10-08T13:52:33Z
 
 ## Description
 
@@ -42,11 +43,9 @@ Traffic Virtual Courts List - Rhestr y Llys ar gyfer Achosion Traffig sydd i’w
 ## Comments
 
 ### Comment by OgechiOkelu on 2026-09-30T11:42:27Z
-
 @spec 
 
 ### Comment by hmctsclaudecode on 2026-09-30T11:51:04Z
-
 # Technical Specification — Issue #1106: 'Traffic Virtual Courts List' to be created in CaTH
 
 ## 1. User Story
@@ -855,5 +854,53 @@ Because most of the behaviour is data-driven and the E2E suite for manual upload
 
 
 ### Comment by OgechiOkelu on 2026-09-30T11:54:28Z
-
 @plan 
+
+### Comment by hmctsclaudecode on 2026-09-30T11:59:50Z
+## Plan ready — 4 questions before this can be implemented
+
+Technical plan committed to `docs/tickets/1106/` on branch [`feature/1106-traffic-virtual-courts-list`](https://github.com/hmcts/cath-service/tree/feature/1106-traffic-virtual-courts-list/docs/tickets/1106).
+
+**Scope:** this is a one-entry reference-data addition to `libs/list-types/common/src/list-type-data.ts`. Because the route is manual upload and the file type is flat file, there is no new lib package, no JSON schema, no validator, no PDF generator, no Excel converter and no rendered view. The `/manual-upload` dropdown, the Courtel subscription checkboxes, summary-of-publications, the flat-file viewer and verified-user subscriptions all read list types from the database, so they pick the new entry up with zero code change.
+
+### Blocking questions
+
+**1. What sensitivity should this list default to?**
+
+The issue does not say, and the two existing magistrates list types disagree — `MAGISTRATES_PUBLIC_LIST` is `Public`, `MAGISTRATES_STANDARD_LIST` is `Classified`. The plan currently assumes `Public`.
+
+This is not cosmetic. Sensitivity controls who can read the list, and the default is what the uploading court will accept without thinking about it. **What does the Traffic Virtual Courts List flat file actually contain?** If it carries personal data beyond name and case reference — defendant addresses, dates of birth — then `Public` publishes that to the open internet and the value must be `Classified` instead.
+
+**2. Does Poole Magistrates' Court exist on STG with the Magistrates Court sub-jurisdiction?**
+
+The issue says Poole is "already available in CaTH", but it is not in `libs/location/src/location-data.ts` (which holds a 27-location development subset). So either it is present on STG via the reference-data CSV upload, or the claim is wrong.
+
+Two things need confirming: (a) the location exists on STG, and (b) it carries `subJurisdictionId: 7` (Magistrates Court). Without (b), Poole subscribers will never see this list type on `/subscription-configure-list` — and the failure is silent, because manual upload does not cross-check the location's sub-jurisdiction against the chosen list type. Manual upload would appear to work fine while subscriptions quietly did not.
+
+**3. Has Courtel been given advance notice, and can they ingest this list?**
+
+AC3 ("Courtel is enabled to receive the list") **cannot be satisfied by code**. The checkbox appears automatically once the list type row exists, but a System Admin has to tick it on each environment after deploy. That step needs to be in the release notes or it will be missed and the ticket will close with Courtel receiving nothing.
+
+Separately, pushing to an unprepared recipient produces `FAILED` rows in `third_party_push_log` with no user-visible symptom — nobody would notice for weeks. Courtel should confirm readiness before the box is ticked.
+
+**4. Is "Traffic Virtual Courts List" the final name?**
+
+The name goes into a `@unique` database column. Renaming it later means either a new row (leaving the old one to be soft-deleted, orphaning its artefacts' `listTypeId`) or a data migration.
+
+Worth a sanity check on the name itself: it does not identify the court or the days it covers. Someone browsing Poole's publications sees the list name and a date only. If the pilot extends beyond Poole, or ever runs alongside a non-virtual traffic list, the name will not distinguish them.
+
+### Assumptions we will proceed on unless corrected
+
+- The Welsh name is used **verbatim** as supplied in the issue and treated as signed off.
+- `urlPath` is deliberately **omitted** — flat-file artefacts route via `/hearing-lists/{locationId}/{artefactId}`, so a `urlPath` would be a dead route.
+- `provenance` is `CRIME_IDAM,PI_AAD`, matching both existing magistrates list types.
+- `/manual-upload` is English-only by design (`hideLanguageToggle: true`), so the Welsh name will not appear there. Pre-existing and correct for an internal admin tool.
+- The publication cadence is **operational and unenforced**. CaTH has no scheduling or expected-publication feature, so nothing will detect or alert on a missed Wednesday or Friday upload. The 26 October 2026 move to Mondays, Wednesdays and Fridays needs no code change at all.
+
+### Two things worth flagging honestly
+
+- **The E2E coverage will not run.** `e2e-tests/tests/admin/manual-upload.spec.ts` is currently `test.describe.skip(...)`, so a dropdown assertion added there is dead code until that skip is lifted. Re-enabling it is out of scope here, which means manual verification is doing the real work — "tests pass" will not be evidence that the upload journey works.
+- **"The list is created in CaTH" is a weaker guarantee than it sounds.** Creating the list type makes it uploadable and distributable. It does not make the published content accessible or correctly redacted — flat files are served as-is, and a scanned or untagged PDF will be unusable for screen reader users with CaTH unable to detect it. Poole should be onboarded with explicit guidance on both document accessibility and which sensitivity to select. That is a pilot action, not a defect in this ticket.
+
+
+---

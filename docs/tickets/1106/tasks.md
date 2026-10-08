@@ -2,18 +2,16 @@
 
 ## Implementation Tasks
 
-- [ ] Confirm `defaultSensitivity` with the Crime Service Manager (`Public` vs `Classified`) before writing the entry — see plan §7.1
-- [ ] Confirm Poole Magistrates' Court exists on STG and carries `subJurisdictionId: 7`; if it comes from `location-data.ts`, add it with `subJurisdictions: [7]`
-- [ ] Add the `TRAFFIC_VIRTUAL_COURTS_LIST` entry to `libs/list-types/common/src/list-type-data.ts`, adjacent to the other Crime/Magistrates entries
-- [ ] Run `yarn db:seed` and verify in `yarn db:studio`: both friendly names, `is_non_strategic = false`, `url = ''`, `deleted_at IS NULL`, one `list_types_sub_jurisdictions` row for sub-jurisdiction 7
-- [ ] Run `yarn db:seed` a second time to prove idempotency (no error, no duplicate)
-- [ ] Run `tsx apps/postgres/prisma/generate-seed-sql.ts` and check the emitted SQL: new row present, `i''w` escaped, new name inside the soft-delete `NOT IN (...)` list
-- [ ] Add `libs/list-types/common/src/list-type-data.test.ts` asserting the new entry's names, `isNonStrategic: false`, `subJurisdictionIds: [7]`, omitted `urlPath`, and uniqueness of all `name` values
-- [ ] Extend `apps/postgres/prisma/generate-seed-sql.test.ts` with a synthetic fixture entry that omits `urlPath`, asserting the emitted `url` is an empty string (do not assert on the real list type name — the suite uses synthetic fixtures)
-- [ ] Confirm or add the `libs/admin-pages/src/manual-upload/validation.test.ts` case where a `.json` upload for a list type with no validator package returns the "No JSON schema available for …" message instead of throwing
-- [ ] Confirm the existing `apps/web/src/pages/(admin)/manual-upload/index.test.ts` assertions already cover option rendering and `listTypeSensitivityMap`; note this in the PR rather than duplicating them
-- [ ] Add the single dropdown-option assertion to `e2e-tests/tests/admin/manual-upload.spec.ts` and state in the PR that the spec is `test.describe.skip`, so it does not run in CI
-- [ ] Run `yarn test`, `yarn lint:fix` and `yarn format` from the root; confirm the `libs/list-types/common` validator guard test still passes
-- [ ] Manual verification locally: `/manual-upload` option placement and sensitivity pre-fill, full PDF upload journey, `/summary-of-publications` in English and Welsh, `.json` rejection, Courtel checkbox, `/subscription-configure-list`
+- [x] Add the `TRAFFIC_VIRTUAL_COURTS_LIST` entry to `libs/list-types/common/src/list-type-data.ts`, adjacent to the other Crime/Magistrates entries
+- [x] Run `yarn db:seed` and verify in the database: both friendly names, `is_non_strategic = false`, `default_sensitivity IS NULL` (unselected on manual upload, per follow-up instruction), `url = ''`, `deleted_at IS NULL`, one `list_types_sub_jurisdictions` row for sub-jurisdiction 7 (Magistrates Court, Crime) — re-verified via direct psql query against a fresh local container after the sensitivity change
+- [x] Run `yarn db:seed` a second time to prove idempotency (no error, no duplicate) — second run reported "Seeded 78 list types, Soft-deleted 0", and `SELECT COUNT(*)` confirmed exactly 1 row
+- [x] Run `tsx apps/postgres/prisma/generate-seed-sql.ts` and check the emitted SQL: new row present, `i''w` escaped, new name inside the soft-delete `NOT IN (...)` list — all three confirmed in generated output
+- [x] Add `libs/list-types/common/src/list-type-data.test.ts` asserting the new entry's names, `isNonStrategic: false`, `subJurisdictionIds: [7]`, omitted `urlPath`, and uniqueness of all `name` values
+- [x] Extend `apps/postgres/prisma/generate-seed-sql.test.ts` with a synthetic fixture entry that omits `urlPath`, asserting the emitted `url` is an empty string (do not assert on the real list type name — the suite uses synthetic fixtures)
+- [x] Confirm or add the `libs/admin-pages/src/manual-upload/validation.test.ts` case where a `.json` upload for a list type with no validator package returns the "No JSON schema available for …" message instead of throwing — added two cases (flat-file PDF accepted; JSON rejected with clean error, not a throw)
+- [x] Confirm the existing `apps/web/src/pages/(admin)/manual-upload/index.test.ts` assertions already cover option rendering and `listTypeSensitivityMap`; note this in the PR rather than duplicating them — confirmed at lines 147 ("should include list type options") and 216-217 (`listTypeSensitivityMap` assertion); both are list-type-agnostic and already exercise this code path
+- [x] ~~Add the single dropdown-option assertion to `e2e-tests/tests/admin/manual-upload.spec.ts`~~ — removed per user instruction; not needed for this ticket
+- [x] Run `yarn test`, `yarn lint:fix` and `yarn format` from the root; confirm the `libs/list-types/common` validator guard test still passes — all pass; see implementation report for a note on unrelated full-suite flakiness in `@hmcts/web` under heavy parallel load
+- [x] Manual verification locally: DB row/link verified directly via psql (see above); generated seed SQL verified directly; `yarn dev` boots cleanly end-to-end. Full interactive browser walkthrough of `/manual-upload`, `/summary-of-publications`, Courtel checkbox and `/subscription-configure-list` was **not** performed — local sign-in routes through real IDAM/B2C SSO with no local bypass, which isn't feasible in this automated session. The DB/SQL-level verification plus existing + new unit test coverage is the evidence substituting for it; a human should still click through once before merge.
 - [ ] Add a release note requiring a System Admin to tick the Courtel checkbox on each environment post-deploy (AC3 is not satisfied by code), and give Courtel advance notice before enabling
 - [ ] Post-deploy on STG: confirm the seed SQL applied with no P2002 errors, the option appears in both dropdowns, and a test publication produces a `SUCCESS` row in `third_party_push_log`
