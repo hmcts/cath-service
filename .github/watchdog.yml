@@ -212,9 +212,18 @@ checks:
   # everything else below 660ms. Ratio-based rather than absolute so it adapts as the
   # service changes; the row-count floors stop a handful of slow requests in a quiet
   # window from registering as a regression.
+  #
+  # p95_now floor added 2026-10-06. A ratio has no meaning when the baseline is a few
+  # milliseconds, and most of what AAT serves is static assets off express.static at
+  # single-digit ms. Observed firing: GET /assets/js/web_js-<hash>.js at p95 7.2ms ->
+  # 21.6ms, ratio 3.0 over 7 requests — a 14ms absolute move no user can perceive, and
+  # with now_n >= 5 the "p95" of 7 samples is just the slowest one, so a single cold
+  # file read sets it. 250ms is the Application Insights <250ms performance bucket
+  # boundary and sits below every real operation above, so a genuine regression on a
+  # page or API route still fires while asset jitter cannot.
   - id: latency-p95-regression
     severity: medium
-    description: Operation p95 more than double its trailing baseline.
+    description: Operation p95 above 250ms and more than double its trailing baseline.
     fingerprint-by: [name]
     rule: { column: ratio, value: '> 2' }
     query: |
@@ -230,6 +239,7 @@ checks:
       | where name !startswith 'GET /health'
       | summarize p95_now = percentile(duration, 95), now_n = count() by name
       | where now_n >= 5
+      | where p95_now > 250
       | join kind=inner base on name
       | where p95_base > 0
       | extend ratio = p95_now / p95_base
