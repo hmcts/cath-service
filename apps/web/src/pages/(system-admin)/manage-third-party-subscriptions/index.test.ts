@@ -20,7 +20,7 @@ describe("manage-third-party-subscriptions page", () => {
 
   const mockListTypes = [
     { id: 1, friendlyName: "Civil Daily Cause List", name: "CIVIL_DAILY_CAUSE_LIST", welshFriendlyName: "Rhestr Achos Dyddiol Sifil" },
-    { id: 2, friendlyName: "Crown Daily List", name: "CROWN_DAILY_LIST", welshFriendlyName: "Rhestr Ddyddiol y Goron" }
+    { id: 2, friendlyName: "Crown Daily List", name: "CROWN_DAILY_PDDA_LIST", welshFriendlyName: "Rhestr Ddyddiol y Goron" }
   ];
 
   beforeEach(() => {
