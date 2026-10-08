@@ -754,6 +754,7 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: null,
     subJurisdictionIds: [7]
+  },
   // Business and Property Division Rolls Building — Excel non-strategic multi-tab lists
   {
     name: "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST",
