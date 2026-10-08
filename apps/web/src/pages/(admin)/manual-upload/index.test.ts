@@ -75,7 +75,7 @@ vi.mock("@hmcts/system-admin-pages", () => ({
       },
       {
         id: 6,
-        name: "CROWN_DAILY_LIST",
+        name: "CROWN_DAILY_PDDA_LIST",
         friendlyName: "Crown Daily List",
         shortenedFriendlyName: "Crown Daily List",
         welshFriendlyName: "Rhestr Ddyddiol y Goron",

@@ -21,12 +21,54 @@ export interface ExcelConversionResult<T = Record<string, string>> {
 
 const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 
+// Excel stores time-only values against the 1899-12-30 epoch, so ExcelJS reads a
+// cell like "10:30" back as a Date of 1899-12-30T10:30:00Z. Rendering that as a
+// date discards the time; format it as a time string (e.g. "10:30am") instead so
+// time columns validate. The wall-clock time is encoded in UTC by ExcelJS.
+const EXCEL_TIME_EPOCH_YEAR = 1899;
+
+function formatExcelTime(value: Date): string {
+  const hours = value.getUTCHours();
+  const minutes = value.getUTCMinutes();
+  const period = hours < 12 ? "am" : "pm";
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return minutes === 0 ? `${hour12}${period}` : `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
+}
+
 function formatDateValue(value: unknown): unknown {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    if (value.getUTCFullYear() === EXCEL_TIME_EPOCH_YEAR) {
+      return formatExcelTime(value);
+    }
     const day = String(value.getDate()).padStart(2, "0");
     const month = String(value.getMonth() + 1).padStart(2, "0");
     const year = value.getFullYear();
     return `${day}/${month}/${year}`;
+  }
+  return value;
+}
+
+// ExcelJS returns rich objects for some cell types: hyperlinks as { text, hyperlink },
+// rich text as { richText: [...] }, and formulae as { result }. Extract the plain
+// text so downstream string handling doesn't produce "[object Object]".
+function normalizeCellValue(value: unknown): unknown {
+  if (value instanceof Date) {
+    return formatDateValue(value);
+  }
+  if (value && typeof value === "object") {
+    const cell = value as Record<string, unknown>;
+    if (Array.isArray(cell.richText)) {
+      return cell.richText.map((run) => (run as { text?: string }).text ?? "").join("");
+    }
+    if ("text" in cell) {
+      return normalizeCellValue(cell.text);
+    }
+    if ("result" in cell) {
+      return normalizeCellValue(cell.result);
+    }
+    if ("hyperlink" in cell) {
+      return cell.hyperlink;
+    }
   }
   return value;
 }
@@ -75,7 +117,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
       row.eachCell((cell, colNumber) => {
         const header = headers[colNumber - 1];
         if (header) {
-          rowData[header] = formatDateValue(cell.value) ?? "";
+          rowData[header] = normalizeCellValue(cell.value) ?? "";
         }
       });
       jsonData.push(rowData);

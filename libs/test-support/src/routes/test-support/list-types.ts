@@ -75,7 +75,7 @@ export const POST = async (req: Request, res: Response) => {
         shortenedFriendlyName: listType.shortenedFriendlyName || listType.friendlyName || listType.name,
         url: listType.url || "",
         defaultSensitivity: listType.defaultSensitivity || "Public",
-        allowedProvenance: listType.provenance || "MANUAL_UPLOAD",
+        allowedProvenance: Array.isArray(listType.provenance) ? listType.provenance : listType.provenance ? [listType.provenance] : ["CFT_IDAM"],
         isNonStrategic: listType.isNonStrategic ?? false
       };
 

@@ -2,76 +2,64 @@ import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 
 const API_BASE_URL = "http://localhost:3001";
-const ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const ENDPOINT = `${API_BASE_URL}/publication`;
+const LEGACY_ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
-// Valid test payload
-const validPayload = {
-  court_id: "1",
-  provenance: "MANUAL_UPLOAD",
-  content_date: "2024-01-15",
-  list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-  sensitivity: "PUBLIC",
-  language: "ENGLISH",
-  display_from: "2024-01-15T00:00:00Z",
-  display_to: "2024-01-16T00:00:00Z",
-  hearing_list: {
-    cases: []
-  }
+// All publication metadata travels in x-* headers; the body is the payload itself.
+const REQUIRED_HEADERS = {
+  "x-provenance": "MANUAL_UPLOAD",
+  "x-court-id": "1",
+  "x-content-date": "2024-01-15",
+  "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+  "x-language": "ENGLISH",
+  "x-type": "LIST"
 };
 
-test.describe("POST /v1/publication - Blob Ingestion API", () => {
+const PAYLOAD = { cases: [] };
+
+test.describe("POST /publication - JSON publication", () => {
   test("authentication validation - missing, invalid format, invalid token, empty, and malformed JWT @nightly", async ({ request }) => {
     // STEP 1: Test missing Authorization header
-    let response = await request.post(ENDPOINT, {
-      data: validPayload
-    });
+    let response = await request.post(ENDPOINT, { data: PAYLOAD, headers: REQUIRED_HEADERS });
 
     expect(response.status()).toBe(401);
     let body = await response.json();
-    expect(body.success).toBe(false);
-    expect(body.message).toContain("Authorization");
+    expect(body.statusCode).toBe(401);
+    expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 2: Test invalid Authorization format
     response = await request.post(ENDPOINT, {
-      data: validPayload,
-      headers: {
-        Authorization: "InvalidFormat token123"
-      }
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: "InvalidFormat token123" }
     });
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
+    expect(body.statusCode).toBe(401);
 
     // STEP 3: Test invalid Bearer token
     response = await request.post(ENDPOINT, {
-      data: validPayload,
-      headers: {
-        Authorization: "Bearer invalid-token"
-      }
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: "Bearer invalid-token" }
     });
 
     expect(response.status()).toBe(401);
     body = await response.json();
-    expect(body.success).toBe(false);
-    expect(body.message).toContain("Invalid or expired token");
+    expect(body.statusCode).toBe(401);
+    expect(body.message).toBe("Access denied due to invalid OAuth information");
 
     // STEP 4: Test empty Bearer token
     response = await request.post(ENDPOINT, {
-      data: validPayload,
-      headers: {
-        Authorization: "Bearer "
-      }
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: "Bearer " }
     });
 
     expect(response.status()).toBe(401);
 
     // STEP 5: Test malformed JWT token
     response = await request.post(ENDPOINT, {
-      data: validPayload,
-      headers: {
-        Authorization: "Bearer not.a.valid.jwt"
-      }
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: "Bearer not.a.valid.jwt" }
     });
 
     expect(response.status()).toBe(401);
@@ -79,178 +67,161 @@ test.describe("POST /v1/publication - Blob Ingestion API", () => {
     // STEP 6: Verify endpoint accepts POST only (GET should fail)
     response = await request.get(ENDPOINT);
 
-    // Should return 404 or 405 (Method Not Allowed)
     expect([404, 405]).toContain(response.status());
-
-    // STEP 7: Test content type acceptance
-    response = await request.post(ENDPOINT, {
-      data: validPayload,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer test-token"
-      }
-    });
-
-    // Should fail on auth, not content type
-    expect(response.status()).toBeGreaterThanOrEqual(400);
   });
 
-  test("payload validation - missing fields, invalid enums, date formats, and size limits @nightly", async ({ request }) => {
-    const authHeaders = { Authorization: "Bearer test-token" };
-
-    // STEP 1: Test missing court_id
-    let invalidPayload = { ...validPayload };
-    delete (invalidPayload as any).court_id;
-
-    let response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    // Note: Will fail auth first with test-token, but validates API accepts the request
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 2: Test invalid provenance
-    invalidPayload = {
-      ...validPayload,
-      provenance: "INVALID_PROVENANCE"
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 3: Test invalid content_date format
-    invalidPayload = {
-      ...validPayload,
-      content_date: "15-01-2024" // Invalid format
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 4: Test invalid list_type
-    invalidPayload = {
-      ...validPayload,
-      list_type: "INVALID_LIST_TYPE"
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 5: Test invalid sensitivity
-    invalidPayload = {
-      ...validPayload,
-      sensitivity: "INVALID_SENSITIVITY"
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 6: Test invalid language
-    invalidPayload = {
-      ...validPayload,
-      language: "INVALID_LANGUAGE"
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 7: Test invalid display_from format (missing time component)
-    invalidPayload = {
-      ...validPayload,
-      display_from: "2024-01-15" // Missing time component
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 8: Test display_to before display_from
-    invalidPayload = {
-      ...validPayload,
-      display_from: "2024-01-16T00:00:00Z",
-      display_to: "2024-01-15T00:00:00Z"
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 9: Test missing hearing_list
-    invalidPayload = { ...validPayload };
-    delete (invalidPayload as any).hearing_list;
-
-    response = await request.post(ENDPOINT, {
-      data: invalidPayload,
-      headers: authHeaders
-    });
-
-    expect(response.status()).toBeGreaterThanOrEqual(400);
-
-    // STEP 10: Test large payload size validation
-    const largePayload = {
-      ...validPayload,
-      hearing_list: {
-        cases: Array(100000).fill({
-          caseNumber: `A${"x".repeat(100)}`,
-          caseName: `B${"x".repeat(100)}`
-        })
-      }
-    };
-
-    response = await request.post(ENDPOINT, {
-      data: largePayload,
-      headers: authHeaders
-    });
-
-    // Should either be rejected by auth (401) or validation (400) or size limit (413)
-    expect([400, 401, 413, 500]).toContain(response.status());
-  });
-
-  test("submits publication using provenance location ID as court_id for SNL provenance @nightly", async ({ request }) => {
+  test("publishes with headers only and returns the Artefact body @nightly", async ({ request }) => {
     const token = await getApiAuthToken();
 
-    const response = await request.post(ENDPOINT, {
-      data: {
-        ...validPayload,
-        court_id: "9001",
-        provenance: "SNL"
-      },
+    // STEP 1: A minimal spec-valid request — no x-sensitivity, no display dates, no wrapper
+    let response = await request.post(ENDPOINT, {
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: `Bearer ${token}` }
+    });
+
+    expect(response.status()).toBe(201);
+    let body = await response.json();
+    expect(body.artefactId).toBeTruthy();
+    expect(body.locationId).toBe("1");
+    expect(body.contentDate).toBe("2024-01-15T00:00:00.000Z");
+    expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
+    expect(body.language).toBe("ENGLISH");
+    expect(body.type).toBe("LIST");
+    expect(body.isFlatFile).toBe(false);
+    expect(body.provenance).toBe("MANUAL_UPLOAD");
+    // Optional headers omitted: sensitivity defaults to PUBLIC and display dates are null
+    expect(body.sensitivity).toBe("PUBLIC");
+    expect(body.displayFrom).toBeNull();
+    expect(body.displayTo).toBeNull();
+    expect(body.payload).toContain(body.artefactId);
+    // The snake_case envelope is gone
+    expect(body).not.toHaveProperty("success");
+    expect(body).not.toHaveProperty("artefact_id");
+    expect(body).not.toHaveProperty("no_match");
+
+    // STEP 2: The same request against the legacy /v1 path behaves identically
+    response = await request.post(LEGACY_ENDPOINT, {
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, Authorization: `Bearer ${token}` }
+    });
+
+    expect(response.status()).toBe(201);
+    body = await response.json();
+    expect(body.artefactId).toBeTruthy();
+
+    // STEP 3: Explicit optional headers are echoed back
+    response = await request.post(ENDPOINT, {
+      data: PAYLOAD,
       headers: {
+        ...REQUIRED_HEADERS,
+        "x-sensitivity": "CLASSIFIED",
+        "x-display-from": "2024-01-15T00:00:00.000Z",
+        "x-display-to": "2024-01-16T00:00:00.000Z",
+        "x-source-artefact-id": "SNL-2024-01-15-001",
         Authorization: `Bearer ${token}`
       }
     });
 
-    // 201 = ingested and matched to a location, 200 = ingested but no matching location found
-    expect([200, 201]).toContain(response.status());
-    const body = await response.json();
-    expect(body.success).toBe(true);
-    expect(body.artefact_id).toBeDefined();
+    expect(response.status()).toBe(201);
+    body = await response.json();
+    expect(body.sensitivity).toBe("CLASSIFIED");
+    expect(body.displayFrom).toBe("2024-01-15T00:00:00.000Z");
+    expect(body.displayTo).toBe("2024-01-16T00:00:00.000Z");
+    expect(body.sourceArtefactId).toBe("SNL-2024-01-15-001");
+
+    // STEP 4: A provenance location id resolves for SNL
+    response = await request.post(ENDPOINT, {
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, "x-provenance": "SNL", "x-court-id": "9001", Authorization: `Bearer ${token}` }
+    });
+
+    expect(response.status()).toBe(201);
+    body = await response.json();
+    expect(body.artefactId).toBeTruthy();
+    // locationId is the *resolved* id, so its exact value depends on the seeded location
+    // reference for SNL/9001. Asserting only that it resolved rather than hardcoding an id:
+    // a NoMatch prefix here would mean the reference data is missing, not that the API is wrong.
+    expect(body.locationId).toBeTruthy();
+    expect(body.locationId).not.toMatch(/^NoMatch/);
+  });
+
+  test("rejects invalid headers and payloads with a Message body @nightly", async ({ request }) => {
+    const token = await getApiAuthToken();
+    const auth = { Authorization: `Bearer ${token}` };
+
+    // STEP 1: Each required header is individually enforced
+    for (const header of Object.keys(REQUIRED_HEADERS)) {
+      const headers: Record<string, string> = { ...REQUIRED_HEADERS, ...auth };
+      delete headers[header];
+
+      const response = await request.post(ENDPOINT, { data: PAYLOAD, headers });
+
+      expect(response.status()).toBe(400);
+      const body = await response.json();
+      expect(body.message).toContain(`${header} is mandatory however an empty value is provided`);
+      expect(body.timestamp).toBeTruthy();
+      expect(body).not.toHaveProperty("errors");
+    }
+
+    // STEP 2: An unrecognised x-type is rejected, never treated as LIST
+    let response = await request.post(ENDPOINT, {
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, ...auth, "x-type": "FOO" }
+    });
+
+    expect(response.status()).toBe(400);
+    let body = await response.json();
+    expect(body.message).toBe(
+      "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)"
+    );
+
+    // STEP 3: LCSU is file-only
+    response = await request.post(ENDPOINT, {
+      data: PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, ...auth, "x-type": "LCSU" }
+    });
+
+    expect(response.status()).toBe(400);
+    body = await response.json();
+    expect(body.message).toBe("LCSU publications must be sent as multipart/form-data");
+
+    // STEP 4: Invalid enum and date values
+    const invalidHeaderCases: Record<string, string>[] = [
+      { "x-provenance": "INVALID_PROVENANCE" },
+      { "x-list-type": "INVALID_LIST_TYPE" },
+      { "x-language": "INVALID_LANGUAGE" },
+      { "x-sensitivity": "INVALID_SENSITIVITY" },
+      { "x-content-date": "15-01-2024" },
+      { "x-display-from": "2024-01-15" },
+      { "x-display-from": "2024-01-16T00:00:00.000Z", "x-display-to": "2024-01-15T00:00:00.000Z" }
+    ];
+
+    for (const overrides of invalidHeaderCases) {
+      response = await request.post(ENDPOINT, {
+        data: PAYLOAD,
+        headers: { ...REQUIRED_HEADERS, ...auth, ...overrides }
+      });
+
+      expect(response.status()).toBe(400);
+      body = await response.json();
+      expect(body.message).toBeTruthy();
+      expect(body.timestamp).toBeTruthy();
+    }
+
+    // STEP 5: An empty body is rejected — the body must be the payload
+    response = await request.post(ENDPOINT, {
+      data: {},
+      headers: { ...REQUIRED_HEADERS, ...auth }
+    });
+
+    expect(response.status()).toBe(400);
+
+    // STEP 6: An over-size payload is rejected
+    response = await request.post(ENDPOINT, {
+      data: { cases: Array(100000).fill({ caseNumber: `A${"x".repeat(100)}`, caseName: `B${"x".repeat(100)}` }) },
+      headers: { ...REQUIRED_HEADERS, ...auth }
+    });
+
+    expect([400, 413, 500]).toContain(response.status());
   });
 });
