@@ -250,9 +250,22 @@ checks:
       | summarize p99_ms = percentile(duration, 99), n = count() by name
       | where n >= 5
 
+  # The ratio needs an absolute floor to mean anything, because the dependencies here
+  # are fast: observed baselines are 89ms for pg-pool.connect and 24ms for pg.query.
+  # At that scale one TLS handshake on a fresh pool, or one uncached row, doubles a p95
+  # computed over as few as 5 samples — which is all a quiet 15-minute window on AAT
+  # contains. Fired on 2026-10-08 at 204ms vs 89ms and 51ms vs 24ms: both arithmetically
+  # over 2x, neither remotely user-visible, nothing else in the window unhealthy.
+  #
+  # 500ms is where one outbound call starts to be worth a human's time. A dependency
+  # that has genuinely stalled goes far past it and still fires, and the sub-second
+  # band is covered by what it actually affects — request p95 and p99.
+  #
+  # now_n stays in the projection: without it a finding gives no way to tell a shifted
+  # distribution from one slow call, which is the first thing triage needs to know.
   - id: dependency-latency-regression
     severity: low
-    description: Dependency p95 more than double its trailing baseline.
+    description: Dependency p95 above 500ms and more than double its trailing baseline.
     fingerprint-by: [operation, type]
     rule: { column: ratio, value: '> 2' }
     query: |
@@ -270,8 +283,9 @@ checks:
       | where now_n >= 5
       | join kind=inner base on operation, type
       | where p95_base > 0
+      | where p95_now > 500
       | extend ratio = p95_now / p95_base
-      | project operation, type, p95_now, p95_base, ratio
+      | project operation, type, p95_now, p95_base, ratio, now_n
 
   # Day-of-week and hour-of-day aware: comparing a Sunday night against a Tuesday
   # afternoon would false-positive constantly. The expected_for_window floor
