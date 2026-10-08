@@ -20,7 +20,7 @@ export {
   registerConverterByName
 } from "./conversion/non-strategic-list-registry.js";
 export { RCJ_EXCEL_CONFIG, RCJ_EXCEL_CONFIG_SIMPLE_TIME } from "./conversion/rcj-field-configs.js";
-export { DD_MM_YYYY_PATTERN, TIME_PATTERN, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
+export { DD_MM_YYYY_PATTERN, EMAIL_PATTERN, TIME_PATTERN, validateEmailFormat, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
 export {
   type CaseSummary,
   type CaseSummaryField,
@@ -29,6 +29,7 @@ export {
 } from "./email-summary/case-summary-formatter.js";
 export { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
+export { assertValidProvenances, PUBLISHER_PROVENANCES } from "./list-type-provenance.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
 export { provenanceLabels as provenanceLabelsEn } from "./locales/en.js";
 export type {

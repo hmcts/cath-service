@@ -9,6 +9,8 @@ export { cy as cookiePreferencesCy } from "./locales/cookie-preferences/cy.js";
 export { en as cookiePreferencesEn } from "./locales/cookie-preferences/en.js";
 export { cy } from "./locales/cy.js";
 export { en } from "./locales/en.js";
+export { cy as publishingPolicyCy } from "./locales/publishing-policy/cy.js";
+export { en as publishingPolicyEn } from "./locales/publishing-policy/en.js";
 export { parseCookiePolicy, setCookieBannerSeen, setCookiePolicy } from "./middleware/cookies/cookie-helpers.js";
 export type { CookieManagerOptions, CookieManagerState, CookiePreferences } from "./middleware/cookies/cookie-manager-middleware.js";
 export { configureCookieManager } from "./middleware/cookies/cookie-manager-middleware.js";

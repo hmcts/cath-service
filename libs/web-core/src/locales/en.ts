@@ -17,6 +17,7 @@ export const en = {
     contactUs: "Contact",
     language: "Welsh",
     governmentDigitalService: "Government Digital Service",
+    publishingPolicy: "Publishing policy",
     openGovernmentLicence: "Open Government Licence",
     contentLicence: {
       text: "All content is available under the",
