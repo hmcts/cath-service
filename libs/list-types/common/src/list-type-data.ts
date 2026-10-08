@@ -755,7 +755,6 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: null,
     subJurisdictionIds: [7]
   },
-  // High Court flat-file daily cause lists (manual upload)
   {
     name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
     englishFriendlyName: "Business & Property Daily Cause List",
