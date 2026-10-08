@@ -81,16 +81,16 @@
 
       {% set fileErrorText = getError(errors, "#idProof") %}
       <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
-        <label class="govuk-label" for="idProof">
+        <label class="govuk-label govuk-!-margin-bottom-4" for="idProof">
           {{ uploadLabel }}
         </label>
-        <div id="idProof-hint-identity" class="govuk-hint">
+        <div id="idProof-hint-identity" class="govuk-hint govuk-!-margin-bottom-3">
           {{ uploadHintIdentity }}
         </div>
-        <div id="idProof-hint-consent" class="govuk-hint">
+        <div id="idProof-hint-consent" class="govuk-hint govuk-!-margin-bottom-3">
           {{ uploadHintConsent }}
         </div>
-        <div id="idProof-hint-filetype" class="govuk-hint">
+        <div id="idProof-hint-filetype" class="govuk-hint govuk-!-margin-bottom-3">
           {{ uploadHintFileType }}
         </div>
         {% if (fileErrorText and fileErrorText | length > 0) %}
