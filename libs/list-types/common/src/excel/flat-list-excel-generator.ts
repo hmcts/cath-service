@@ -1,12 +1,12 @@
 import ExcelJS from "exceljs";
 import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel-utilities.js";
 
-const MAX_WORKSHEET_NAME_LENGTH = 31;
+const WORKSHEET_NAME = "Sheet1";
 
 export async function generateFlatListExcel<T>(options: FlatListExcelOptions<T>): Promise<FlatListExcelResult> {
   try {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(options.worksheetName.slice(0, MAX_WORKSHEET_NAME_LENGTH));
+    const worksheet = workbook.addWorksheet(WORKSHEET_NAME);
 
     const headerRow = worksheet.addRow(options.columns.map((column) => column.header));
     headerRow.font = { bold: true };
@@ -33,7 +33,6 @@ export interface FlatListExcelColumn<T> {
 
 export interface FlatListExcelOptions<T> {
   artefactId: string;
-  worksheetName: string;
   columns: FlatListExcelColumn<T>[];
   rows: T[];
 }

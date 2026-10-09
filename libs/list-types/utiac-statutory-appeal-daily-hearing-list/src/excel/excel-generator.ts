@@ -4,8 +4,6 @@ import { en } from "../locales/en.js";
 import type { UtiacStatutoryAppealHearing, UtiacStatutoryAppealHearingList } from "../models/types.js";
 import { renderUtiacStatutoryAppealDailyHearingListData } from "../rendering/renderer.js";
 
-const WORKSHEET_NAME = "UTIAC Statutory Appeal";
-
 export async function generateUtiacStatutoryAppealDailyHearingListExcel(options: UtiacStatutoryAppealExcelGenerationOptions): Promise<FlatListExcelResult> {
   const t = options.locale === "cy" ? cy : en;
   const { hearings } = renderUtiacStatutoryAppealDailyHearingListData(options.jsonData, {
@@ -18,7 +16,6 @@ export async function generateUtiacStatutoryAppealDailyHearingListExcel(options:
 
   return generateFlatListExcel<UtiacStatutoryAppealHearing>({
     artefactId: options.artefactId,
-    worksheetName: WORKSHEET_NAME,
     rows: hearings,
     columns: [
       { header: t.tableHeaders.hearingTime, value: (h) => h.hearingTime },

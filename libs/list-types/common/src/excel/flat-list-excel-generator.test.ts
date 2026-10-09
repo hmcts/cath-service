@@ -48,7 +48,7 @@ describe("generateFlatListExcel", () => {
     ];
 
     // Act
-    const result = await generateFlatListExcel({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows });
+    const result = await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows });
 
     // Assert
     expect(result).toEqual({ success: true, excelPath: "abc.xlsx" });
@@ -65,7 +65,7 @@ describe("generateFlatListExcel", () => {
     const rows = [{ name: '=HYPERLINK("http://x")', note: "@cmd" }];
 
     // Act
-    await generateFlatListExcel({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows });
+    await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows });
 
     // Assert
     const worksheet = await loadWorksheet();
@@ -77,7 +77,7 @@ describe("generateFlatListExcel", () => {
     const rows = [{ name: "Alpha" }];
 
     // Act
-    const result = await generateFlatListExcel({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows });
+    const result = await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows });
 
     // Assert
     expect(result.success).toBe(true);
@@ -88,7 +88,7 @@ describe("generateFlatListExcel", () => {
 
   it("should write a header-only sheet when there are no rows", async () => {
     // Act
-    const result = await generateFlatListExcel<TestRow>({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows: [] });
+    const result = await generateFlatListExcel<TestRow>({ artefactId: "abc", columns: COLUMNS, rows: [] });
 
     // Assert
     expect(result.success).toBe(true);
@@ -97,22 +97,18 @@ describe("generateFlatListExcel", () => {
     expect(rowValues(worksheet, 1)).toEqual(["Name", "Note"]);
   });
 
-  it("should truncate the worksheet name to 31 characters", async () => {
-    // Arrange
-    const worksheetName = "A worksheet name that is far longer than Excel allows";
-
+  it("should name the single worksheet Sheet1", async () => {
     // Act
-    await generateFlatListExcel({ artefactId: "abc", worksheetName, columns: COLUMNS, rows: [{ name: "Alpha" }] });
+    await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows: [{ name: "Alpha" }] });
 
     // Assert
     const worksheet = await loadWorksheet();
-    expect(worksheet.name).toBe(worksheetName.slice(0, 31));
-    expect(worksheet.name).toHaveLength(31);
+    expect(worksheet.name).toBe("Sheet1");
   });
 
   it("should upload the workbook as <artefactId>.xlsx to the publications container", async () => {
     // Act
-    await generateFlatListExcel({ artefactId: "artefact-123", worksheetName: "Sheet", columns: COLUMNS, rows: [{ name: "Alpha" }] });
+    await generateFlatListExcel({ artefactId: "artefact-123", columns: COLUMNS, rows: [{ name: "Alpha" }] });
 
     // Assert
     expect(uploadBlob).toHaveBeenCalledWith(
@@ -128,7 +124,7 @@ describe("generateFlatListExcel", () => {
     vi.mocked(uploadBlob).mockRejectedValueOnce(new Error("Blob unavailable"));
 
     // Act
-    const result = await generateFlatListExcel({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows: [{ name: "Alpha" }] });
+    const result = await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows: [{ name: "Alpha" }] });
 
     // Assert
     expect(result).toEqual({ success: false, error: "Blob unavailable" });
@@ -139,7 +135,7 @@ describe("generateFlatListExcel", () => {
     vi.mocked(uploadBlob).mockRejectedValueOnce("network down");
 
     // Act
-    const result = await generateFlatListExcel({ artefactId: "abc", worksheetName: "Sheet", columns: COLUMNS, rows: [{ name: "Alpha" }] });
+    const result = await generateFlatListExcel({ artefactId: "abc", columns: COLUMNS, rows: [{ name: "Alpha" }] });
 
     // Assert
     expect(result).toEqual({ success: false, error: "network down" });

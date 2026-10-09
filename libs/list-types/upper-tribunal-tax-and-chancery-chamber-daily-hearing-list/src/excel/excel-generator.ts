@@ -4,8 +4,6 @@ import { en } from "../locales/en.js";
 import type { UtccHearing, UtccHearingList } from "../models/types.js";
 import { renderUtccDailyHearingListData } from "../rendering/renderer.js";
 
-const WORKSHEET_NAME = "UT Tax and Chancery Chamber";
-
 export async function generateUtccDailyHearingListExcel(options: UtccExcelGenerationOptions): Promise<FlatListExcelResult> {
   const t = options.locale === "cy" ? cy : en;
   const { hearings } = renderUtccDailyHearingListData(options.jsonData, {
@@ -17,7 +15,6 @@ export async function generateUtccDailyHearingListExcel(options: UtccExcelGenera
 
   return generateFlatListExcel<UtccHearing>({
     artefactId: options.artefactId,
-    worksheetName: WORKSHEET_NAME,
     rows: hearings,
     columns: [
       { header: t.tableHeaders.time, value: (h) => h.time },

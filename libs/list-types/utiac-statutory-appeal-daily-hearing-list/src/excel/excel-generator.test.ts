@@ -125,7 +125,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListExcel", () => {
 
     // Assert
     const worksheet = await loadWorksheet();
-    expect(worksheet.name).toBe("UTIAC Statutory Appeal");
+    expect(worksheet.name).toBe("Sheet1");
     expect(worksheet.name.length).toBeLessThanOrEqual(31);
   });
 

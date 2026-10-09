@@ -134,7 +134,7 @@ describe("generateUtccDailyHearingListExcel", () => {
 
     // Assert
     const worksheet = await loadWorksheet();
-    expect(worksheet.name).toBe("UT Tax and Chancery Chamber");
+    expect(worksheet.name).toBe("Sheet1");
     expect(worksheet.name.length).toBeLessThanOrEqual(31);
   });
 

@@ -149,7 +149,7 @@ describe("generateUtlcDailyHearingListExcel", () => {
 
     // Assert
     const worksheet = await loadWorksheet();
-    expect(worksheet.name).toBe("UT Lands Chamber");
+    expect(worksheet.name).toBe("Sheet1");
     expect(worksheet.name.length).toBeLessThanOrEqual(31);
   });
 

@@ -4,8 +4,6 @@ import { en, londonTableHeaders } from "../locales/en.js";
 import type { UtiacJrLondonHearing, UtiacJrLondonHearingList } from "../models/types.js";
 import { renderUtiacJrLondonDailyHearingListData } from "../rendering/renderer-london.js";
 
-const WORKSHEET_NAME = "UTIAC Judicial Review London";
-
 export async function generateUtiacJrLondonDailyHearingListExcel(options: UtiacJrLondonExcelGenerationOptions): Promise<FlatListExcelResult> {
   const isWelsh = options.locale === "cy";
   const t = isWelsh ? cy : en;
@@ -20,7 +18,6 @@ export async function generateUtiacJrLondonDailyHearingListExcel(options: UtiacJ
 
   return generateFlatListExcel<UtiacJrLondonHearing>({
     artefactId: options.artefactId,
-    worksheetName: WORKSHEET_NAME,
     rows: hearings,
     columns: [
       { header: headers.hearingTime, value: (h) => h.hearingTime },
