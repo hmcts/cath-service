@@ -31,15 +31,18 @@ vi.mock("@hmcts/ast-daily-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list", () => ({
-  generateUtaacDailyHearingListPdf: vi.fn()
+  generateUtaacDailyHearingListPdf: vi.fn(),
+  generateUtaacDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list", () => ({
-  generateUtlcDailyHearingListPdf: vi.fn()
+  generateUtlcDailyHearingListPdf: vi.fn(),
+  generateUtlcDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list", () => ({
-  generateUtccDailyHearingListPdf: vi.fn()
+  generateUtccDailyHearingListPdf: vi.fn(),
+  generateUtccDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
@@ -78,7 +81,8 @@ vi.mock("@hmcts/wpafcc-weekly-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
-  generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn()
+  generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn(),
+  generateUtiacStatutoryAppealDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
@@ -95,7 +99,9 @@ vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
     ...actual,
     generateUtiacJrLeedsDailyHearingListPdf: vi.fn(),
     generateUtiacJrLondonDailyHearingListPdf: vi.fn(),
-    createUtiacJrDailyHearingListPdfGenerator: vi.fn()
+    createUtiacJrDailyHearingListPdfGenerator: vi.fn(),
+    generateUtiacJrDailyHearingListExcel: vi.fn(),
+    generateUtiacJrLondonDailyHearingListExcel: vi.fn()
   };
 });
 vi.mock("@hmcts/location", () => ({
@@ -1335,6 +1341,70 @@ describe("publication-processor", async () => {
       consoleErrorSpy.mockRestore();
     });
 
+    it("should set excelPath for an Upper Tribunal list type and pass it to notifications", async () => {
+      // Arrange
+      const { generateUtccDailyHearingListExcel } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" } as any);
+      vi.mocked(generateUtccDailyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/utcc.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateUtccDailyHearingListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 1,
+        sent: 1,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // Act
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      // Assert
+      expect(generateUtccDailyHearingListExcel).toHaveBeenCalledWith(
+        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" })
+      );
+      expect(result.pdfPath).toBe("/path/to/utcc.pdf");
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "test-artefact-id",
+        expect.objectContaining({ publicationId: "test-artefact-id", pdfFilePath: "/path/to/utcc.pdf", excelPath: "test-artefact-id.xlsx" })
+      );
+    });
+
+    it("should still return pdfPath and send notifications when an Upper Tribunal Excel generator rejects", async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
+      vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/utiac-london.pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+      vi.mocked(generateUtiacJrLondonDailyHearingListExcel).mockRejectedValue(new Error("Excel crash"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 2,
+        sent: 2,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // Act
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      // Assert
+      expect(result.pdfPath).toBe("/path/to/utiac-london.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(result.notificationsSent).toBe(2);
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should call extractAndStoreArtefactSearch when jsonData is provided", async () => {
       vi.mocked(generateCauseListPdf).mockResolvedValue({
         success: true,
@@ -1639,6 +1709,24 @@ describe("publication-processor", async () => {
 
     it("should register exactly the 3 in-scope Civil and Family cause lists", () => {
       expect(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES).toHaveLength(3);
+    });
+
+    it.each([
+      "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+      "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+      "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+      "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+      "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+      "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+      "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+      "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+      "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST"
+    ])("should return true for the Upper Tribunal list type %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it("should return false for an undefined list type name", () => {
