@@ -2,7 +2,6 @@ import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime } from
 import type { PhtHearing, PhtHearingList } from "../models/types.js";
 
 export const PHT_COURT_NAME = "Primary Health Tribunal";
-export const PHT_LIST_TITLE = "Primary Health Tribunal Weekly Hearing List";
 
 export interface RenderOptions {
   locale: string;
