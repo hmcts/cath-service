@@ -20,6 +20,7 @@ export interface PublicationEvent {
   pdfFilePath?: string;
   excelPath?: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
 }
 
 export interface ValidationResult {

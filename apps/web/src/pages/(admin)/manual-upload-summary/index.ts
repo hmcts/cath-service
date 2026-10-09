@@ -139,6 +139,7 @@ const postHandler = async (req: Request, res: Response) => {
       contentDate,
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
+      payloadSizeBytes: uploadData.file.length,
       provenance: Provenance.MANUAL_UPLOAD,
       sensitivity: uploadData.sensitivity,
       language: uploadData.language,
