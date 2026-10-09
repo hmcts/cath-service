@@ -65,7 +65,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+    name: "CST_WEEKLY_HEARING_LIST",
     friendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     url: "care-standards-tribunal-weekly-hearing-list",

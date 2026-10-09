@@ -28,9 +28,9 @@ const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: strin
     cy: cy.LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
     template: "leeds-administrative-court-daily-cause-list"
   },
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
-    en: en.BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
-    cy: cy.BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
+    en: en.BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle,
     template: "bristol-cardiff-administrative-court-daily-cause-list"
   },
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {

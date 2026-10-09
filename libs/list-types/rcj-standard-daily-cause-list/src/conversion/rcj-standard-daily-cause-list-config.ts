@@ -11,5 +11,5 @@ registerConverterByName("COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST", converter);
 registerConverterByName("FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST", converter);
 registerConverterByName("KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST", converter);
 registerConverterByName("KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST", converter);
-registerConverterByName("MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST", converter);
+registerConverterByName("MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST", converter);
 registerConverterByName("SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST", converter);
