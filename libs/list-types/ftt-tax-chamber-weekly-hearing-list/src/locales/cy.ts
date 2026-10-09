@@ -2,37 +2,37 @@ import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common
 
 export const cy = {
   pageTitle: "Rhestr o Wrandawiadau Wythnosol Tribiwnlys Haen Gyntaf (Siambr Treth)",
-  listForWeekCommencing: "List for week commencing",
-  lastUpdated: "Last updated",
-  at: "at",
-  factLinkText: "Find contact details and other information about courts and tribunals",
+  listForWeekCommencing: "Rhestr ar gyfer yr wythnos yn dechrau ar",
+  lastUpdated: "Diweddarwyd ddiwethaf",
+  at: "am",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
-  importantInformationTitle: "Important information",
+  factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationParagraphs: [
-    "Open justice is a fundamental principle of our justice system. You can attend a public hearing in person, or you can apply for permission to observe remotely.",
-    "Members of the public and the media can ask to join any telephone or video hearing remotely. Contact the Tribunal before the hearing to ask for permission to attend by emailing taxappeals@justice.gov.uk.",
-    "The subject line for the email should contain the following wording: \"HEARING ACCESS REQUEST – [Appellant's name] v [Respondent's name, for example HMRC] – [case reference] – [hearing date]\". You will be sent instructions on how to join the hearing.",
-    "The judge may refuse a request and can also decide a hearing must be held in private, in such cases you will not be able to attend."
+    "Mae cyfiawnder agored yn egwyddor sylfaenol yn ein system gyfiawnder. Gallwch fynychu gwrandawiad cyhoeddus wyneb yn wyneb, neu gallwch wneud cais am ganiatâd i arsylwi o bell.",
+    "Gall aelodau'r cyhoedd a'r cyfryngau ofyn am gael ymuno ag unrhyw wrandawiad dros y ffôn neu drwy fideo o bell. Cysylltwch â'r Tribiwnlys cyn y gwrandawiad i ofyn am ganiatâd i fod yn bresennol drwy anfon e-bost at taxappeals@justice.gov.uk.",
+    "Dylai llinell bwnc yr e-bost gynnwys y geiriad canlynol: \"CAIS MYNEDIAD I WRANDAWIAD – [Enw'r apelydd] v [Enw'r atebydd, er enghraifft CThEF] – [cyfeirnod yr achos] – [dyddiad y gwrandawiad]\". Anfonir cyfarwyddiadau atoch ar sut i ymuno â'r gwrandawiad.",
+    "Gall y barnwr wrthod cais a gall hefyd benderfynu bod yn rhaid cynnal gwrandawiad yn breifat, ac mewn achosion o'r fath ni fyddwch yn gallu bod yn bresennol."
   ],
-  importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
+  importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  searchCasesTitle: "Search Cases",
-  searchCasesLabel: "Search by case name, date, judge, or other details",
+  searchCasesTitle: "Chwilio Achosion",
+  searchCasesLabel: "[WELSH TRANSLATION REQUIRED: 'Search by case name, date, judge, or other details']",
   tableHeaders: {
-    date: "Date",
-    hearingTime: "Hearing time",
-    caseName: "Case name",
-    caseReferenceNumber: "Case reference number",
-    judges: "Judge(s)",
-    members: "Member(s)",
-    venuePlatform: "Venue/Platform"
+    date: "Dyddiad",
+    hearingTime: "Amser y gwrandawiad",
+    caseName: "Enw'r achos",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    judges: "Barnwr/Barnwyr",
+    members: "Aelod(au)",
+    venuePlatform: "Lleoliad/Platfform"
   },
-  dataSource: "Data source",
-  backToTop: "Back to top",
+  dataSource: "Ffynhonnell data",
+  backToTop: "Yn ôl i frig y dudalen",
   cautionNote:
-    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
-    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels
 };
