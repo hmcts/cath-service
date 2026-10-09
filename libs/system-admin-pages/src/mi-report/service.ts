@@ -1,6 +1,12 @@
 import { generateMiReportExcel, type MiReportSheet } from "@hmcts/excel-generation";
 import { buildCourtNameResolver } from "./court-name-resolver.js";
-import { buildAllSubscriptionsSheet, buildLocationSubscriptionsSheet, buildPublicationsSheet, buildUserAccountsSheet } from "./queries.js";
+import {
+  buildAllSubscriptionsSheet,
+  buildDeletedAccountsSheet,
+  buildLocationSubscriptionsSheet,
+  buildPublicationsSheet,
+  buildUserAccountsSheet
+} from "./queries.js";
 import type { MiReportPeriod, MiReportType } from "./validation.js";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -9,7 +15,8 @@ const SHEET_BUILDERS: Record<Exclude<MiReportType, "all-data">, (cutoff?: Date) 
   "user-accounts": buildUserAccountsSheet,
   publications: buildPublicationsSheet,
   "location-subscriptions": buildLocationSubscriptionsSheet,
-  "all-subscriptions": buildAllSubscriptionsSheet
+  "all-subscriptions": buildAllSubscriptionsSheet,
+  "deleted-accounts": buildDeletedAccountsSheet
 };
 
 export async function buildMiReport(reportType: MiReportType, period: MiReportPeriod): Promise<MiReport> {
@@ -37,7 +44,8 @@ async function buildAllDataSheets(cutoff?: Date): Promise<MiReportSheet[]> {
     buildUserAccountsSheet(cutoff),
     buildPublicationsSheet(cutoff, resolver),
     buildLocationSubscriptionsSheet(cutoff, resolver),
-    buildAllSubscriptionsSheet(cutoff, resolver)
+    buildAllSubscriptionsSheet(cutoff, resolver),
+    buildDeletedAccountsSheet(cutoff)
   ]);
 }
 
