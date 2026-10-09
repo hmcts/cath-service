@@ -159,7 +159,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractFamilySummary as SummaryExtractor,
     format: formatFamilySummaryForEmail
   },
-  CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  CST_WEEKLY_HEARING_LIST: {
     extract: extractCareStandardsSummary as SummaryExtractor,
     format: formatCareStandardsSummaryForEmail
   },
@@ -187,7 +187,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardConfig,
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardConfig,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     extract: extractLondonAdminSummary as SummaryExtractor,
@@ -219,7 +219,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   SSCS_LONDON_DAILY_HEARING_LIST: sscsConfig,
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsConfig,
@@ -240,31 +240,31 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractSiacPoacPaacSummary as SummaryExtractor,
     format: formatSiacPoacPaacSummaryForEmail
   },
-  FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: {
+  FTT_TAX_WEEKLY_HEARING_LIST: {
     extract: extractFttTaxSummary as SummaryExtractor,
     format: formatFttTaxSummaryForEmail
   },
-  FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  FTT_LR_WEEKLY_HEARING_LIST: {
     extract: extractFttLrtSummary as SummaryExtractor,
     format: formatFttLrtSummaryForEmail
   },
-  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
+  RPT_EASTERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
+  RPT_LONDON_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
+  RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
+  RPT_NORTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+  RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
@@ -280,39 +280,39 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractWpafccSummary as SummaryExtractor,
     format: formatWpafccSummaryForEmail
   },
-  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+  UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST: {
     extract: extractUtiacSaSummary as SummaryExtractor,
     format: formatUtiacSaSummaryForEmail
   },
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLondonSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+  UT_T_AND_CC_DAILY_HEARING_LIST: {
     extract: extractUtccSummary as SummaryExtractor,
     format: formatUtccSummaryForEmail
   },
-  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_LC_DAILY_HEARING_LIST: {
     extract: extractUtlcSummary as SummaryExtractor,
     format: formatUtlcSummaryForEmail
   },
-  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_AAC_DAILY_HEARING_LIST: {
     extract: extractUtaacSummary as SummaryExtractor,
     format: formatUtaacSummaryForEmail
   },

@@ -41,7 +41,7 @@ function baseData(locale: typeof en | typeof cy = en) {
     en,
     cy,
     header: {
-      listTitle: en.pageTitle,
+      listTitle: locale.pageTitle,
       weekCommencingDate: "7 July 2026",
       lastUpdatedDate: "10 July 2026",
       lastUpdatedTime: "9:00am"

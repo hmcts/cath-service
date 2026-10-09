@@ -14,7 +14,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Civil Daily Cause List",
-    welshFriendlyName: "Civil Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Sifil",
     provenance: ["CFT_IDAM"],
     urlPath: "civil-daily-cause-list",
     isNonStrategic: false,
@@ -24,7 +24,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "FAMILY_DAILY_CAUSE_LIST",
     englishFriendlyName: "Family Daily Cause List",
-    welshFriendlyName: "Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Teulu",
     provenance: ["CFT_IDAM"],
     urlPath: "family-daily-cause-list",
     isNonStrategic: false,
@@ -34,7 +34,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "MAGISTRATES_PUBLIC_LIST",
     englishFriendlyName: "Magistrates Public List",
-    welshFriendlyName: "Magistrates Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus y Llys Ynadon",
     provenance: ["CRIME_IDAM", "PI_AAD"],
     urlPath: "magistrates-public-list",
     isNonStrategic: false,
@@ -44,7 +44,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CROWN_WARNED_PDDA_LIST",
     englishFriendlyName: "Crown Warned List",
-    welshFriendlyName: "Crown Warned List",
+    welshFriendlyName: "Rhestr Rybudd Llys y Goron",
     provenance: ["CRIME_IDAM", "PI_AAD"],
     urlPath: "crown-warned-list",
     isNonStrategic: false,
@@ -54,7 +54,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CROWN_DAILY_PDDA_LIST",
     englishFriendlyName: "Crown Daily List",
-    welshFriendlyName: "Crown Daily List",
+    welshFriendlyName: "Rhestr Ddyddiol Llys y Goron",
     provenance: ["CRIME_IDAM", "PI_AAD"],
     urlPath: "crown-daily-cause-list",
     isNonStrategic: false,
@@ -64,7 +64,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CROWN_FIRM_PDDA_LIST",
     englishFriendlyName: "Crown Firm List",
-    welshFriendlyName: "Crown Firm List",
+    welshFriendlyName: "Rhestr Cwmni Llys y Goron",
     provenance: ["CRIME_IDAM", "PI_AAD"],
     urlPath: "crown-firm-list",
     isNonStrategic: false,
@@ -74,11 +74,12 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     englishFriendlyName: "Civil and Family Daily Cause List",
-    welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Sifil a Theulu",
     provenance: ["CFT_IDAM"],
     urlPath: "civil-and-family-daily-cause-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
+    shortenedFriendlyName: "Civil And Family Daily Cause List",
     subJurisdictionIds: [1, 2]
   },
   {
@@ -125,13 +126,14 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [3]
   },
   {
-    name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+    name: "CST_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Care Standards Tribunal Weekly Hearing List",
     welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
     provenance: ["CFT_IDAM"],
     urlPath: "care-standards-tribunal-weekly-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
+    shortenedFriendlyName: "CST Weekly Hearing List",
     subJurisdictionIds: [9]
   },
   {
@@ -206,13 +208,14 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1]
   },
   {
-    name: "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+    name: "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
     englishFriendlyName: "Mayor & City Civil Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Sifil y Maer a'r Ddinas",
     provenance: ["CFT_IDAM"],
     urlPath: "mayor-city-civil-daily-cause-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
+    shortenedFriendlyName: "Mayor & City Civil Daily Cause List",
     subJurisdictionIds: [1]
   },
   {
@@ -269,13 +272,14 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1]
   },
   {
-    name: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    name: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Bristol and Cardiff Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Bryste a Chaerdydd",
     provenance: ["CFT_IDAM"],
     urlPath: "bristol-cardiff-administrative-court-daily-cause-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
+    shortenedFriendlyName: "Bristol and Cardiff Administrative Court Daily Cause List",
     subJurisdictionIds: [1]
   },
   {
@@ -290,8 +294,8 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "SJP_PRESS_LIST",
-    englishFriendlyName: "Single Justice Procedure Press List (Full list)",
-    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl",
+    englishFriendlyName: "Single Justice Procedure Press List (Full List)",
+    welshFriendlyName: "Rhestr y Wasg Y Weithdrefn Un Ynad (Rhestr Lawn)",
     provenance: ["PI_AAD"],
     urlPath: "sjp-press-list",
     isNonStrategic: false,
@@ -301,8 +305,8 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "SJP_PUBLIC_LIST",
-    englishFriendlyName: "Single Justice Procedure Public List (Full list)",
-    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl",
+    englishFriendlyName: "Single Justice Procedure Public List (Full List)",
+    welshFriendlyName: "Rhestr Gyhoeddus Y Weithdrefn Un Ynad (Rhestr Lawn)",
     provenance: ["PI_AAD"],
     urlPath: "sjp-public-list",
     isNonStrategic: false,
@@ -312,8 +316,8 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "SJP_DELTA_PRESS_LIST",
-    englishFriendlyName: "Single Justice Procedure Press List (New cases)",
-    welshFriendlyName: "Rhestr Wasg Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    englishFriendlyName: "Single Justice Procedure Press List (New Cases)",
+    welshFriendlyName: "Rhestr y Wasg Y Weithdrefn Un Ynad (Achosion Newydd)",
     provenance: ["PI_AAD"],
     urlPath: "sjp-delta-press-list",
     isNonStrategic: false,
@@ -323,8 +327,8 @@ export const listTypeData: ListTypeData[] = [
   },
   {
     name: "SJP_DELTA_PUBLIC_LIST",
-    englishFriendlyName: "Single Justice Procedure Public List (New cases)",
-    welshFriendlyName: "Rhestr Gyhoeddus Gweithdrefn Ynad Sengl (Achosion Newydd)",
+    englishFriendlyName: "Single Justice Procedure Public List (New Cases)",
+    welshFriendlyName: "Rhestr Gyhoeddus Y Weithdrefn Un Ynad (Achosion Newydd)",
     provenance: ["PI_AAD"],
     urlPath: "sjp-delta-public-list",
     isNonStrategic: false,
@@ -335,7 +339,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SIAC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Special Immigration Appeals Commission Weekly Hearing List",
-    welshFriendlyName: "Special Immigration Appeals Commission Weekly Hearing List",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mewnfudo Arbennig",
     provenance: ["CFT_IDAM"],
     urlPath: "siac-poac-paac-weekly-hearing-list",
     isNonStrategic: true,
@@ -346,7 +350,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "POAC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Proscribed Organisations Appeal Commission Weekly Hearing List",
-    welshFriendlyName: "Proscribed Organisations Appeal Commission Weekly Hearing List",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Sefydliadau Gwaharddedig",
     provenance: ["CFT_IDAM"],
     urlPath: "siac-poac-paac-weekly-hearing-list",
     isNonStrategic: true,
@@ -357,40 +361,40 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "PAAC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Pathogens Access Appeal Commission Weekly Hearing List",
-    welshFriendlyName: "Pathogens Access Appeal Commission Weekly Hearing List",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mynediad Pathogenau",
     provenance: ["CFT_IDAM"],
     urlPath: "siac-poac-paac-weekly-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
-    shortenedFriendlyName: "PACC Weekly Hearing List",
+    shortenedFriendlyName: "PAAC Weekly Hearing List",
     subJurisdictionIds: [21]
   },
   {
-    name: "FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST",
+    name: "FTT_TAX_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol Tribiwnlys Haen Gyntaf (Siambr Treth)",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-tax-chamber-weekly-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
-    shortenedFriendlyName: "FFT Tax Weekly Hearing List",
+    shortenedFriendlyName: "FTT Tax Weekly Hearing List",
     subJurisdictionIds: [16]
   },
   {
-    name: "FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST",
+    name: "FTT_LR_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-lands-registration-tribunal-weekly-hearing-list",
     isNonStrategic: true,
     defaultSensitivity: "Public",
-    shortenedFriendlyName: "FFT (LR) Weekly Hearing List",
+    shortenedFriendlyName: "FTT (LR) Weekly Hearing List",
     subJurisdictionIds: [15]
   },
   {
-    name: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+    name: "RPT_EASTERN_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Dwyrain Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-rpt-weekly-hearing-list",
     isNonStrategic: true,
@@ -399,9 +403,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [24]
   },
   {
-    name: "FTT_RPT_LONDON_WEEKLY_HEARING_LIST",
+    name: "RPT_LONDON_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Llundain",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-rpt-weekly-hearing-list",
     isNonStrategic: true,
@@ -410,9 +414,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [24]
   },
   {
-    name: "FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST",
+    name: "RPT_MIDLANDS_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Canolbarth Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-rpt-weekly-hearing-list",
     isNonStrategic: true,
@@ -421,9 +425,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [24]
   },
   {
-    name: "FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST",
+    name: "RPT_NORTHERN_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth Gogledd Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-rpt-weekly-hearing-list",
     isNonStrategic: true,
@@ -432,9 +436,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [24]
   },
   {
-    name: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST",
+    name: "RPT_SOUTHERN_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
-    welshFriendlyName: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Tribiwnlys Eiddo Preswyl): Rhestr o Wrandawiadau Wythnosol rhanbarth De Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "ftt-rpt-weekly-hearing-list",
     isNonStrategic: true,
@@ -456,7 +460,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SEND_DAILY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (Special Educational Needs and Disability) Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Haen Gyntaf (Anghenion Addysgol Arbennig ac Anabledd)",
     provenance: ["CFT_IDAM"],
     urlPath: "send-daily-hearing-list",
     isNonStrategic: true,
@@ -467,7 +471,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "CIC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "Criminal Injuries Compensation Weekly Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol yr Iawndal am Anafiadau Troseddol",
+    welshFriendlyName: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Digolledu am Anafiadau Troseddol",
     provenance: ["CFT_IDAM"],
     urlPath: "cic-weekly-hearing-list",
     isNonStrategic: true,
@@ -478,7 +482,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "AST_DAILY_HEARING_LIST",
     englishFriendlyName: "Asylum Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol y Tribiwnlys Cymorth Lloches",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol Tribiwnlys Cefnogi Ceiswyr Lloches",
     provenance: ["CFT_IDAM"],
     urlPath: "ast-daily-hearing-list",
     isNonStrategic: true,
@@ -489,7 +493,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "GRC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "General Regulatory Chamber Weekly Hearing List",
-    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol y Siambr Reoleiddio Gyffredinol",
+    welshFriendlyName: "Rhestr o Wrandawiadau Wythnosol y Siambr Rheoleiddio Cyffredinol",
     shortenedFriendlyName: "GRC Weekly Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "grc-weekly-hearing-list",
@@ -500,7 +504,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "WPAFCC_WEEKLY_HEARING_LIST",
     englishFriendlyName: "First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List",
-    welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Siambr Pensiynau Rhyfel a Digollediad Lluoedd Arfog",
+    welshFriendlyName: "Tribiwnlys Haen Gyntaf (Iawndal Pensiynau Rhyfel a'r Lluoedd Arfog) - Rhestr o Wrandawiadau Wythnosol",
     shortenedFriendlyName: "WPAFCC Weekly Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "wpafcc-weekly-hearing-list",
@@ -509,10 +513,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [17]
   },
   {
-    name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+    name: "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber Statutory Appeal Daily Hearing List",
     welshFriendlyName: "Uwch Dribiwnlys (Siambr Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol - Apeliadau Statudol",
-    shortenedFriendlyName: "UTIAC Statutory Appeal Daily Hearing List",
+    shortenedFriendlyName: "UT IAC Statutory Appeal Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-statutory-appeal-daily-hearing-list",
     isNonStrategic: true,
@@ -520,10 +524,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [28]
   },
   {
-    name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+    name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List",
-    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']",
-    shortenedFriendlyName: "UTIAC JR London Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Llundain",
+    shortenedFriendlyName: "UTIAC (JR) - London Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
@@ -531,10 +535,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+    name: "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List",
-    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
-    shortenedFriendlyName: "UTIAC JR Leeds Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Leeds",
+    shortenedFriendlyName: "UTIAC (JR) - Leeds Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
@@ -542,10 +546,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    name: "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+    name: "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List",
-    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
-    shortenedFriendlyName: "UTIAC JR Manchester Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Manceinion",
+    shortenedFriendlyName: "UTIAC (JR) - Manchester Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
@@ -553,10 +557,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    name: "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+    name: "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List",
-    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
-    shortenedFriendlyName: "UTIAC JR Birmingham Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Birmingham",
+    shortenedFriendlyName: "UTIAC (JR) - Birmingham Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
@@ -564,10 +568,10 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [27]
   },
   {
-    name: "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
-    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List",
-    welshFriendlyName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
-    shortenedFriendlyName: "UTIAC JR Cardiff Daily Hearing List",
+    name: "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST",
+    englishFriendlyName: "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Bristol and Cardiff Daily Hearing List",
+    welshFriendlyName: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Bryste a Caerdydd",
+    shortenedFriendlyName: "UTIAC (JR) - Bristol and Cardiff Daily Hearing List",
     provenance: ["CFT_IDAM"],
     urlPath: "utiac-jr-daily-hearing-list",
     isNonStrategic: true,
@@ -578,7 +582,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_MIDLANDS_DAILY_HEARING_LIST",
     englishFriendlyName: "Midlands Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Canolbarth Lloegr",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Canolbarth Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -589,7 +593,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_SOUTH_EAST_DAILY_HEARING_LIST",
     englishFriendlyName: "South East Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant De Ddwyrain",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant De Ddwyrain Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -600,7 +604,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST",
     englishFriendlyName: "Wales and South West Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Cymru a De Orllewin Lloegr",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Cymru a De Orllewin Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -611,7 +615,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_SCOTLAND_DAILY_HEARING_LIST",
     englishFriendlyName: "Scotland Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Yr Alban",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Yr Alban",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -622,7 +626,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_NORTH_EAST_DAILY_HEARING_LIST",
     englishFriendlyName: "North East Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Ddwyrain Lloegr",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Gogledd Ddwyrain Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -633,7 +637,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_NORTH_WEST_DAILY_HEARING_LIST",
     englishFriendlyName: "North West Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Gogledd Orllewin Lloegr",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Gogledd Orllewin Lloegr",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -644,7 +648,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "SSCS_LONDON_DAILY_HEARING_LIST",
     englishFriendlyName: "London Social Security and Child Support Tribunal Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Nawdd Cymdeithasol a Chynhaliaeth Plant Llundain",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol y Tribiwnlys Nawdd Cymdeithasol a Chynnal Plant Llundain",
     provenance: ["CFT_IDAM"],
     urlPath: "sscs-daily-hearing-list",
     isNonStrategic: true,
@@ -663,9 +667,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [7]
   },
   {
-    name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+    name: "UT_T_AND_CC_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Treth a Siawnsri)",
     provenance: ["CFT_IDAM"],
     urlPath: "upper-tribunal-tax-and-chancery-chamber-daily-hearing-list",
     isNonStrategic: true,
@@ -674,9 +678,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [30]
   },
   {
-    name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+    name: "UT_LC_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Lands Chamber) Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Tiroedd)",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Tiroedd)",
     provenance: ["CFT_IDAM"],
     urlPath: "upper-tribunal-lands-chamber-daily-hearing-list",
     isNonStrategic: true,
@@ -685,9 +689,9 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [29]
   },
   {
-    name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+    name: "UT_AAC_DAILY_HEARING_LIST",
     englishFriendlyName: "Upper Tribunal (Administrative Appeals Chamber) Daily Hearing List",
-    welshFriendlyName: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch (Siambr Apeliadau Gweinyddol)",
+    welshFriendlyName: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Apeliadau Gweinyddol)",
     provenance: ["CFT_IDAM"],
     urlPath: "upper-tribunal-administrative-appeals-chamber-daily-hearing-list",
     isNonStrategic: true,
@@ -822,7 +826,7 @@ export const listTypeData: ListTypeData[] = [
   {
     name: "IAC_DAILY_LIST_ADDITIONAL_CASES",
     englishFriendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
-    welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches – Achosion Ychwanegol",
+    welshFriendlyName: "Rhestr Dyddiol y Siambr Mewnfudo a Lloches – Achosion Ychwanegol",
     shortenedFriendlyName: "IAC Daily List – Additional Cases",
     provenance: ["CFT_IDAM"],
     urlPath: "iac-daily-list-additional-cases",
