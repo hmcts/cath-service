@@ -3,6 +3,7 @@ import "./conversion/grc-config.js"; // Register converter on module load
 // Business logic exports
 export type { ValidationResult } from "@hmcts/list-types-common";
 export * from "./email-summary/summary-builder.js";
+export { reformatGrcWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as grcWeeklyHearingListCy } from "./locales/cy.js";
 // Locale exports
 export { en as grcWeeklyHearingListEn } from "./locales/en.js";

@@ -1,6 +1,7 @@
 import "./conversion/pht-config.js"; // Register converter on module load
 
 export * from "./email-summary/summary-builder.js";
+export { reformatPhtWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as phtWeeklyHearingListCy } from "./locales/cy.js";
 export { en as phtWeeklyHearingListEn } from "./locales/en.js";
 export * from "./models/types.js";
