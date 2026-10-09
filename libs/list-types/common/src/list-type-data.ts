@@ -79,6 +79,7 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "civil-and-family-daily-cause-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
+    shortenedFriendlyName: "Civil And Family Daily Cause List",
     subJurisdictionIds: [1, 2]
   },
   {

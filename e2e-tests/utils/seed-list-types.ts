@@ -4,7 +4,7 @@ const BASE_LIST_TYPES = [
   {
     name: "CIVIL_DAILY_CAUSE_LIST",
     friendlyName: "Civil Daily Cause List",
-    welshFriendlyName: "Civil Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Sifil",
     url: "civil-daily-cause-list",
     defaultSensitivity: "Public",
     provenance: "CFT_IDAM",
@@ -13,7 +13,7 @@ const BASE_LIST_TYPES = [
   {
     name: "FAMILY_DAILY_CAUSE_LIST",
     friendlyName: "Family Daily Cause List",
-    welshFriendlyName: "Family Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Teulu",
     url: "family-daily-cause-list",
     defaultSensitivity: "Private",
     provenance: "CFT_IDAM",
@@ -22,7 +22,7 @@ const BASE_LIST_TYPES = [
   {
     name: "MAGISTRATES_PUBLIC_LIST",
     friendlyName: "Magistrates Public List",
-    welshFriendlyName: "Magistrates Public List",
+    welshFriendlyName: "Rhestr Gyhoeddus y Llys Ynadon",
     url: "magistrates-public-list",
     defaultSensitivity: "Public",
     provenance: "CRIME_IDAM",
@@ -31,7 +31,7 @@ const BASE_LIST_TYPES = [
   {
     name: "CROWN_WARNED_PDDA_LIST",
     friendlyName: "Crown Warned List",
-    welshFriendlyName: "Crown Warned List",
+    welshFriendlyName: "Rhestr Rybudd Llys y Goron",
     url: "crown-warned-list",
     defaultSensitivity: "Public",
     provenance: "CRIME_IDAM",
@@ -40,7 +40,7 @@ const BASE_LIST_TYPES = [
   {
     name: "CROWN_DAILY_PDDA_LIST",
     friendlyName: "Crown Daily List",
-    welshFriendlyName: "Crown Daily List",
+    welshFriendlyName: "Rhestr Ddyddiol Llys y Goron",
     url: "crown-daily-cause-list",
     defaultSensitivity: "Public",
     provenance: "CRIME_IDAM",
@@ -49,7 +49,7 @@ const BASE_LIST_TYPES = [
   {
     name: "CROWN_FIRM_PDDA_LIST",
     friendlyName: "Crown Firm List",
-    welshFriendlyName: "Crown Firm List",
+    welshFriendlyName: "Rhestr Cwmni Llys y Goron",
     url: "crown-firm-list",
     defaultSensitivity: "Public",
     provenance: "CRIME_IDAM",
@@ -58,7 +58,7 @@ const BASE_LIST_TYPES = [
   {
     name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
     friendlyName: "Civil and Family Daily Cause List",
-    welshFriendlyName: "Rhestr Achos Dyddiol Sifil a Theulu",
+    welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Sifil a Theulu",
     url: "civil-and-family-daily-cause-list",
     defaultSensitivity: "Public",
     provenance: "CFT_IDAM",
@@ -83,7 +83,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: true
   },
   {
-    name: "COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST",
+    name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
     friendlyName: "Court of Appeal (Civil Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
     url: "court-of-appeal-civil-division-daily-cause-list",
