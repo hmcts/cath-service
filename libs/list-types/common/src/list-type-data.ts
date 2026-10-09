@@ -750,7 +750,7 @@ export const listTypeData: ListTypeData[] = [
     name: "TRAFFIC_VIRTUAL_COURTS_LIST",
     englishFriendlyName: "Traffic Virtual Courts List",
     welshFriendlyName: "Rhestr y Llys ar gyfer Achosion Traffig sydd i'w cynnal yn rhithiol",
-    provenance: "CRIME_IDAM,PI_AAD",
+    provenance: ["CRIME_IDAM"],
     isNonStrategic: false,
     defaultSensitivity: null,
     subJurisdictionIds: [7]
