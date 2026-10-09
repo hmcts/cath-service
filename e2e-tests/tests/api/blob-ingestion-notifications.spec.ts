@@ -13,37 +13,42 @@ import {
 } from "../../utils/notification-helpers.js";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const ENDPOINT = `${API_BASE_URL}/publication`;
 
-function createValidPayload(locationId: number, locationName: string) {
+// Publication metadata travels in x-* headers; the body is the payload itself.
+function createPublicationHeaders(locationId: number, token: string) {
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: "2024-12-01",
-    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: "2024-12-01T00:00:00Z",
-    display_to: "2024-12-02T00:00:00Z",
-    hearing_list: {
-      document: {
-        publicationDate: "2024-12-01T00:00:00.000Z",
-        version: "1.0"
+    "x-provenance": "MANUAL_UPLOAD",
+    "x-court-id": locationId.toString(),
+    "x-content-date": "2024-12-01",
+    "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+    "x-language": "ENGLISH",
+    "x-type": "LIST",
+    "x-display-from": "2024-12-01T00:00:00.000Z",
+    "x-display-to": "2024-12-02T00:00:00.000Z",
+    Authorization: `Bearer ${token}`
+  };
+}
+
+function createValidPayload(locationName: string) {
+  return {
+    document: {
+      publicationDate: "2024-12-01T00:00:00.000Z",
+      version: "1.0"
+    },
+    venue: {
+      venueName: locationName,
+      venueAddress: {
+        line: ["St Aldates"],
+        town: "Oxford",
+        postCode: "OX1 1TL"
       },
-      venue: {
-        venueName: locationName,
-        venueAddress: {
-          line: ["St Aldates"],
-          town: "Oxford",
-          postCode: "OX1 1TL"
-        },
-        venueContact: {
-          venueTelephone: "01865000000",
-          venueEmail: "court@test.hmcts.net"
-        }
-      },
-      courtLists: []
-    }
+      venueContact: {
+        venueTelephone: "01865000000",
+        venueEmail: "court@test.hmcts.net"
+      }
+    },
+    courtLists: []
   };
 }
 
@@ -90,15 +95,16 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
 
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: createValidPayload(testLocationId, testLocationName),
-      headers: { Authorization: `Bearer ${token}` }
+      data: createValidPayload(testLocationName),
+      headers: createPublicationHeaders(testLocationId, token)
     });
 
+    expect(response.status()).toBe(201);
     const result = await response.json();
-    testData.publicationIds.push(result.artefact_id);
+    testData.publicationIds.push(result.artefactId);
 
     // Wait for async notification processing with retry logic (wait for govNotifyId to be populated)
-    const notifications = await waitForNotifications(result.artefact_id, 30, 2000, true);
+    const notifications = await waitForNotifications(result.artefactId, 30, 2000, true);
 
     // Verify notification was created
     expect(notifications.length).toBeGreaterThan(0);
@@ -124,16 +130,17 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   test("should not send notifications when no subscriptions exist", async ({ request }) => {
     const token = await getApiAuthToken();
     const response = await request.post(ENDPOINT, {
-      data: createValidPayload(999, "Non-existent Court"),
-      headers: { Authorization: `Bearer ${token}` }
+      data: createValidPayload("Non-existent Court"),
+      headers: createPublicationHeaders(999, token)
     });
 
+    expect(response.status()).toBe(201);
     const result = await response.json();
-    testData.publicationIds.push(result.artefact_id);
+    testData.publicationIds.push(result.artefactId);
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const notifications = await getNotificationsByPublicationId(result.artefact_id);
+    const notifications = await getNotificationsByPublicationId(result.artefactId);
     expect(notifications).toHaveLength(0);
   });
 });

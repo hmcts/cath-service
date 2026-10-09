@@ -14,8 +14,8 @@ export interface ThirdPartyPushParams {
   contentDate: Date;
   sensitivity: string;
   language: string;
-  displayFrom: Date;
-  displayTo: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   provenance: string;
   isUpdate: boolean;
   jsonData?: unknown;

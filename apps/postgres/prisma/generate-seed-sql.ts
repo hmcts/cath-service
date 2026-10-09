@@ -4,6 +4,7 @@
 // not installed in the focused postgres deploy image.
 
 import { type ListTypeData, listTypeData } from "@hmcts/list-types-common/list-type-data";
+import { assertValidProvenances } from "@hmcts/list-types-common/list-type-provenance";
 import { locationData } from "@hmcts/location/location-data";
 
 const LOCATION_REFERENCE_PROVENANCE = "SNL";
@@ -130,7 +131,7 @@ function generateListTypesSql(listTypes: ListTypeData[]): string {
     .map((lt) => {
       const shortened = lt.shortenedFriendlyName ?? lt.englishFriendlyName;
       const url = lt.urlPath || "";
-      return `  (${sqlStr(lt.name)}, ${sqlStr(lt.englishFriendlyName)}, ${sqlStr(lt.welshFriendlyName)}, ${sqlStr(shortened)}, ${sqlStr(url)}, ${sqlStrOrNull(lt.defaultSensitivity)}, ${sqlStr(lt.provenance)}, ${sqlBool(lt.isNonStrategic)}, NOW(), NOW())`;
+      return `  (${sqlStr(lt.name)}, ${sqlStr(lt.englishFriendlyName)}, ${sqlStr(lt.welshFriendlyName)}, ${sqlStr(shortened)}, ${sqlStr(url)}, ${sqlStrOrNull(lt.defaultSensitivity)}, ${sqlStrArray(assertValidProvenances(lt.provenance))}, ${sqlBool(lt.isNonStrategic)}, NOW(), NOW())`;
     })
     .join(",\n");
   return `INSERT INTO list_types (name, friendly_name, welsh_friendly_name, shortened_friendly_name, url, default_sensitivity, allowed_provenance, is_non_strategic, created_at, updated_at) VALUES\n${values}\nON CONFLICT (name) DO UPDATE SET\n  friendly_name = EXCLUDED.friendly_name,\n  welsh_friendly_name = EXCLUDED.welsh_friendly_name,\n  shortened_friendly_name = EXCLUDED.shortened_friendly_name,\n  url = EXCLUDED.url,\n  default_sensitivity = EXCLUDED.default_sensitivity,\n  allowed_provenance = EXCLUDED.allowed_provenance,\n  is_non_strategic = EXCLUDED.is_non_strategic,\n  deleted_at = NULL,\n  updated_at = NOW();`;
@@ -157,6 +158,11 @@ function generateSoftDeleteReconciliationSql(listTypes: ListTypeData[]): string 
 
 function sqlStr(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
+}
+
+function sqlStrArray(values: string[]): string {
+  if (values.length === 0) return "ARRAY[]::text[]";
+  return `ARRAY[${values.map(sqlStr).join(", ")}]::text[]`;
 }
 
 function sqlStrOrNull(value: string | null): string {

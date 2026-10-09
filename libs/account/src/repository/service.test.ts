@@ -36,14 +36,14 @@ describe("account repository service", () => {
   });
 
   describe("createLocalMediaUser", () => {
-    it("should create user with B2C_IDAM provenance and VERIFIED role", async () => {
+    it("should create user with PI_AAD provenance and VERIFIED role", async () => {
       await createLocalMediaUser("john@example.com", "John Doe", "azure-123");
 
       expect(mockCreateUser).toHaveBeenCalledWith({
         email: "john@example.com",
         firstName: "John",
         surname: "Doe",
-        userProvenance: "B2C_IDAM",
+        userProvenance: "PI_AAD",
         userProvenanceId: "azure-123",
         role: "VERIFIED"
       });
@@ -86,7 +86,7 @@ describe("account repository service", () => {
         email: "jane@example.com",
         firstName: "Jane",
         surname: "Smith",
-        userProvenance: "B2C_IDAM",
+        userProvenance: "PI_AAD",
         userProvenanceId: "azure-123",
         role: "VERIFIED"
       });
