@@ -48,7 +48,8 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
 }));
 
 vi.mock("@hmcts/court-of-appeal-civil-daily-cause-list", () => ({
-  generateCourtOfAppealCivilDailyCauseListPdf: vi.fn()
+  generateCourtOfAppealCivilDailyCauseListPdf: vi.fn(),
+  reformatCourtOfAppealCivilDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/excel-generation", () => ({
@@ -58,7 +59,8 @@ vi.mock("@hmcts/excel-generation", () => ({
 }));
 
 vi.mock("@hmcts/london-administrative-court-daily-cause-list", () => ({
-  generateLondonAdministrativeCourtDailyCauseListPdf: vi.fn()
+  generateLondonAdministrativeCourtDailyCauseListPdf: vi.fn(),
+  reformatLondonAdministrativeCourtDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/sjp-public-list", () => ({
@@ -82,7 +84,18 @@ vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
-  generateRcjStandardDailyCauseListPdf: vi.fn()
+  generateRcjStandardDailyCauseListPdf: vi.fn(),
+  reformatRcjStandardDailyCauseListExcel: vi.fn()
+}));
+
+vi.mock("@hmcts/azure-blob", () => ({
+  CONTAINER: { ARTEFACT: "artefact", FILES: "files", PUBLICATIONS: "publications" },
+  deleteBlob: vi.fn()
+}));
+
+vi.mock("@hmcts/list-types-common", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@hmcts/list-types-common")>()),
+  saveExcelToStorage: vi.fn()
 }));
 
 vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
@@ -186,9 +199,13 @@ describe("publication-processor", async () => {
   const { generateUtlcDailyHearingListPdf } = await import("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list");
   const { generateUtccDailyHearingListPdf } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
-  const { generateCourtOfAppealCivilDailyCauseListPdf } = await import("@hmcts/court-of-appeal-civil-daily-cause-list");
+  const { generateCourtOfAppealCivilDailyCauseListPdf, reformatCourtOfAppealCivilDailyCauseListExcel } = await import(
+    "@hmcts/court-of-appeal-civil-daily-cause-list"
+  );
   const { generateSjpPublicListExcel, generateSjpPressListExcel, saveExcelFile } = await import("@hmcts/excel-generation");
-  const { generateLondonAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/london-administrative-court-daily-cause-list");
+  const { generateLondonAdministrativeCourtDailyCauseListPdf, reformatLondonAdministrativeCourtDailyCauseListExcel } = await import(
+    "@hmcts/london-administrative-court-daily-cause-list"
+  );
   const { generateSjpPublicListPdf } = await import("@hmcts/sjp-public-list");
   const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
   const { generateCrownDailyListPdf } = await import("@hmcts/crown-daily-list");
@@ -203,7 +220,9 @@ describe("publication-processor", async () => {
   const { generateUtiacJrLondonDailyHearingListPdf, generateUtiacJrLeedsDailyHearingListPdf, createUtiacJrDailyHearingListPdfGenerator } = await import(
     "@hmcts/utiac-jr-daily-hearing-list"
   );
-  const { generateRcjStandardDailyCauseListPdf } = await import("@hmcts/rcj-standard-daily-cause-list");
+  const { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel } = await import("@hmcts/rcj-standard-daily-cause-list");
+  const { deleteBlob } = await import("@hmcts/azure-blob");
+  const { saveExcelToStorage } = await import("@hmcts/list-types-common");
   const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
   const { generatePhtWeeklyHearingListPdf } = await import("@hmcts/pht-weekly-hearing-list");
   const { generateCivilDailyCauseListPdf } = await import("@hmcts/civil-daily-cause-list");
@@ -1831,6 +1850,163 @@ describe("publication-processor", async () => {
       expect(generateSjpPublicListExcel).not.toHaveBeenCalled();
       expect(generateSjpPressListExcel).not.toHaveBeenCalled();
       expect(saveExcelFile).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("uploaded Excel for RCJ lists", () => {
+    const RCJ_STANDARD_LIST_TYPES = [
+      "CIVIL_COURTS_RCJ_DAILY_CAUSE_LIST",
+      "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST",
+      "COURT_OF_APPEAL_CRIMINAL_DAILY_CAUSE_LIST",
+      "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
+      "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
+      "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
+      "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+      "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
+    ];
+    const RCJ_LIST_TYPES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>][] = [
+      ...RCJ_STANDARD_LIST_TYPES.map((name): [string, typeof reformatRcjStandardDailyCauseListExcel] => [name, reformatRcjStandardDailyCauseListExcel]),
+      ["LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", reformatLondonAdministrativeCourtDailyCauseListExcel],
+      ["COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST", reformatCourtOfAppealCivilDailyCauseListExcel]
+    ];
+    const uploadedExcel = Buffer.from("uploaded-excel");
+    const reformattedExcel = Buffer.from("reformatted-excel");
+    const excelParams = {
+      artefactId: "rcj-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: [{ venue: "Court 1" }]
+    };
+
+    beforeEach(() => {
+      vi.mocked(reformatRcjStandardDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(reformatLondonAdministrativeCourtDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(reformatCourtOfAppealCivilDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "rcj-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+    });
+
+    it("should register all 10 RCJ list types", () => {
+      // Assert
+      expect(RCJ_LIST_TYPES).toHaveLength(10);
+      for (const [listTypeName] of RCJ_LIST_TYPES) {
+        expect(listTypeHasExcel(listTypeName)).toBe(true);
+      }
+    });
+
+    it.each(RCJ_LIST_TYPES)("should reformat and save the uploaded Excel for %s", async (listTypeName, reformatter) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatter).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("rcj-artefact", reformattedExcel);
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(RCJ_LIST_TYPES)("should delete any stale Excel and store none when %s has no uploaded Excel", async (listTypeName, reformatter) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("rcj-artefact.xlsx", "publications");
+      expect(reformatter).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result).toEqual({});
+    });
+
+    it("should delete the stale Excel and log a warning when reformatting fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(reformatRcjStandardDailyCauseListExcel).mockRejectedValue(new Error("Corrupt workbook"));
+
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST", uploadedExcel });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("rcj-artefact.xlsx", "publications");
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", { artefactId: "rcj-artefact", error: "Corrupt workbook" });
+      expect(result).toEqual({});
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should delete the stale Excel when saving fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(saveExcelToStorage).mockRejectedValue("Upload failed");
+
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", uploadedExcel });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("rcj-artefact.xlsx", "publications");
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", { artefactId: "rcj-artefact", error: "Upload failed" });
+      expect(result).toEqual({});
+      consoleWarnSpy.mockRestore();
+    });
+
+    it("should log an error and return no Excel when deleting the stale Excel fails", async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(deleteBlob).mockRejectedValue(new Error("Storage unavailable"));
+
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST" });
+
+      // Assert
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Excel generation error:", { artefactId: "rcj-artefact", error: "Storage unavailable" });
+      expect(result).toEqual({});
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("should not store an Excel for a non-RCJ non-strategic list given an uploaded Excel", async () => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "SSCS_LONDON_DAILY_HEARING_LIST", uploadedExcel });
+
+      // Assert
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({});
+    });
+
+    it("should pass the uploaded Excel through processPublication and set excelPath", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateRcjStandardDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/kb.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(reformatRcjStandardDailyCauseListExcel).toHaveBeenCalledWith(uploadedExcel, "en");
+      expect(result.pdfPath).toBe("/path/to/kb.pdf");
+      expect(result.excelPath).toBe("rcj-artefact.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "rcj-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/kb.pdf", excelPath: "rcj-artefact.xlsx" })
+      );
+    });
+
+    it("should still generate the PDF and notify without an Excel when reformatting fails in processPublication", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(generateRcjStandardDailyCauseListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/kb.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(reformatRcjStandardDailyCauseListExcel).mockRejectedValue(new Error("Corrupt workbook"));
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(result.pdfPath).toBe("/path/to/kb.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalled();
+      consoleWarnSpy.mockRestore();
     });
   });
 });
