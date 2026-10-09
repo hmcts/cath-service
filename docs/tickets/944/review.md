@@ -118,7 +118,7 @@ Inherited from #942 (still open, not introduced here, and not counted):
 - **The data-source fix matches legacy and the web page.** All six libs have an en/cy provenance test. AST and SIAC include SNL → "ListAssist", which pins the legacy-facing value.
 - **Time formatting is consistent.** It is applied in the renderer (web and PDF) and the reformatter (Excel) from one shared helper. Both the dedicated dot-time tests and the existing round-trip tests prove PDF/Excel parity.
 - **The test fixtures are good.** The Tribunal block in `service.test.ts` uses `listTypeId: 999` throughout. The SIAC web test uses 999/998/997, in line with CLAUDE.md. The Tribunal list-type names are derived from `listTypeData` by `urlPath`, so a missing registration fails CI.
-- **The locale tests guard against regressions.** The SIAC `locales.test.ts` now has key parity (including `tableHeaders`) and a "translated, not placeholder, not English" check for every heading. GRC has an equivalent new `locales.test.ts`.
+- **The locale tests guard against regressions.** The SIAC `locales.test.ts` now has key parity (including `tableHeaders`) and a "translated, not placeholder, not English" check for every heading.
 - The previous HIGH (E2E apostrophe) was fixed exactly as recommended.
 
 ## Test Coverage Assessment

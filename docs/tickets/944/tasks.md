@@ -48,7 +48,7 @@
 ### 3b. Welsh content (GRC, SIAC/POAC/PAAC)
 - [x] Copy legacy Welsh into `grc-weekly-hearing-list/src/locales/cy.ts` (page title, important information, table headings)
 - [x] Copy legacy Welsh into `siac-poac-paac-weekly-hearing-list/src/locales/cy.ts` (all content except the search label)
-- [x] Locale tests: key parity, and no untranslated or placeholder table headings (both libs)
+- [x] SIAC locale tests: key parity, and no untranslated or placeholder table headings
 - [x] Keep the SIAC/POAC/PAAC court-name keys as they were (English in both locales; never displayed). The PDF generator now reads the court name from the locale by `listTypeName` instead of `service.ts` hard-coding it
 - [x] SIAC/POAC/PAAC PDF title from the locale by `listTypeName`, so the Welsh PDF gets the Welsh title; one generator in `service.ts` for all three
 - [x] Welsh text keeps straight apostrophes for now (e.g. "Enw'r achos"); legacy uses curly ’, to switch once confirmed
