@@ -180,19 +180,29 @@ checks:
   # Rates and regressions — real thresholds, since zero is not a floor here.
   # ---------------------------------------------------------------------------
 
-  # Observed: 1% over 24h (18 of 1800). 20% is deliberately well clear of that; it is
-  # meant to catch broken routing or auth, not ordinary 404s.
-  #
   # Measured over a day rather than {{window}}, like no-user-traffic above: web serves
   # around 544 non-health requests in 24h, so a 15-minute denominator is too small for a
   # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
   # names the routes, without which a firing cannot distinguish a broken route from
   # someone probing the hostname.
+  #
+  # Recalibrated 2026-09-22 from 0.2 to 0.5. The check is meant to catch broken routing or
+  # auth, not ordinary 404s, but the denominator is real traffic while the numerator is
+  # mostly unsolicited scanning, which arrives at a roughly fixed absolute rate regardless
+  # of how busy the service is. Observed scanner floor is around 50 probes/24h on web
+  # (/config.json, /.vscode/sftp.json, /settings.py and similar, all correctly 404). Against
+  # web's 250-550 real non-health requests/day that alone is 9-21% — so 0.2 sat inside the
+  # noise band and was certain to fire eventually with nothing broken, as it did on
+  # 2026-09-22 at 52/253. The original 1% figure in this comment was 18 of 1800 measured
+  # service-wide, but the check groups by app, and web's own share was always several times
+  # that. 0.5 clears the noise floor at any plausible AAT volume while staying well under
+  # what genuinely broken routing or auth would produce, since that affects real requests
+  # and so moves the ratio much further. Revisit alongside the volume figures above.
   - id: client-error-rate
     severity: medium
     description: 4xx responses as a share of non-health traffic over a day.
     fingerprint-by: [app]
-    rule: { column: rate, value: '> 0.2' }
+    rule: { column: rate, value: '> 0.5' }
     query: |
       requests
       | where timestamp > ago(24h)
