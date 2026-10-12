@@ -39,7 +39,7 @@ That is 10 names across 5 libs, matching the spec. All 10 have `isNonStrategic: 
 | Spec says | This plan | Why |
 |---|---|---|
 | Build a new workbook from the artefact JSON (`generateNonStrategicExcel` in common plus 5 per-lib generators) | Reformat the uploaded workbook with the shared `reformatUploadedWorkbook` | AC2 says the uploaded file is re-used. This is the mechanism #940–#941 settled on. The allow-list copy already answers the spec's objection to the raw upload: hidden sheets, notes, formulas and metadata are never copied (#942 review leak check) |
-| Excel also for JSON published through `POST /publication` (spec AC scenario 2) | No Excel for JSON by default. Any stale xlsx is deleted and the email is PDF-only | Series default. #942 added a JSON fallback for SSCS only because the user asked. The spec's "roughly half arrive as JSON" has no evidence in the code. See Clarification 1 |
+| Excel also for JSON published through `POST /publication` (spec AC scenario 2) | No Excel for JSON by default. Any stale xlsx is deleted and the email is PDF-only | Series default. #942 added a JSON fallback for SSCS only because the user asked. The spec's "roughly half arrive as JSON" has no evidence in the code. See Clarification 1 — confirmed by the PO: these lists are upload-only, never published as JSON. |
 | Row 2 holds "`dd/MM/yyyy` date formatting produced by the renderer" | Dates are written as the PDF prints them: `15 January 2026` (en) or `15 Ionawr 2026` (cy) | The spec is wrong about the PDF. Four renderers call `formatDdMmYyyyDate(hearing.date, locale)` (`libs/list-types/common/src/rendering/date-formatting.ts:62`), which returns a long, localised date |
 | New `shortSheetName` locale keys in 5 libs, plus Welsh translations | None | The reformatter keeps the uploaded sheet name. It never names a sheet, so no new content is needed |
 | `fttRptExcelGenerator("Eastern region")` and so on, one per region | One `reformatFttRptWeeklyHearingListExcel` registered under all 6 names | The 6 RPT names share the converter, the table and the table formatting. The region only changes the title, the important-information email and the Market Rents extra paragraph, all outside the table |
@@ -250,13 +250,12 @@ None.
 
 ## 5. CLARIFICATIONS NEEDED
 
-1. **JSON publications: Excel or not?** The default is no Excel, matching RCJ and Rolls Building: a JSON publication gets a PDF and a PDF-only email.
-   - The non-strategic upload page accepts only `.xlsx` (`libs/admin-pages/src/manual-upload/validation.ts:202`).
-   - `POST /publication` accepts any `x-list-type`, so these lists *can* arrive as JSON.
-   - The spec says many FTT publications arrive by API. Nothing in the code shows whether any source system does this.
-   - If they do, the fix is the #942 pattern: a JSON fallback passed to `createUploadedExcelGenerator`, which needs a JSON generator per lib (5 generators, sheet-name locale keys and Welsh translations).
-
-   Please confirm whether any FTT list is published through the API today or is planned to be.
+1. **JSON publications: Excel or not? — RESOLVED, not applicable.** Confirmed by the PO: these FTT
+   list types are non-strategic and admin-uploaded as `.xlsx` only; none are published as JSON
+   through `POST /publication`. The spec's "roughly half arrive as JSON via the API" claim (ticket.md
+   §14) was an unverified assumption Claude introduced while drafting the technical spec, not
+   something from the original issue. No JSON fallback is needed; the upload-only implementation
+   stands.
 2. **Is Market Rents in scope?** The default is yes. "Residential Property … (for all regions)" literally means the 5 regions, but `FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST` is the same RPT list type family and lib. Leaving it out would make it the only RPT list without an Excel.
 3. **Welsh table headings in WPAFCC, Tax and LRT.** These are `[WELSH TRANSLATION REQUIRED: …]` placeholders (WPAFCC) or English (Tax, LRT), so the Welsh PDF and the Welsh Excel show them. The default is to leave them, since fixing them changes the PDF too. Should this be a separate ticket, or folded in? Approved Welsh for `date`, `caseReferenceNumber`, `judges`, `members`, `venue` and `time` already exists in RPT and SEND.
 4. **Dates as PDF text or as uploaded?** The default writes `15 January 2026` to match the PDF (AC3), but it is text and does not sort as a date. The alternative is the uploaded `dd/MM/yyyy` (identity `formatRow`). That is just as sortable as text, but it differs from the PDF.

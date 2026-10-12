@@ -48,13 +48,15 @@ None.
 
      Either way, add a per-lib parity test with a reordered upload (for example `Time` before `Date`).
 
-2. **None of the product decisions has sign-off, and one is visible to Welsh users**
-   - **Where:** `tasks.md:276`: "Post CLARIFICATIONS 1–5 … proceeding on defaults; not posted".
-   - **Why it matters for #943 specifically:**
-     - **Clarification 1 (JSON).** The ticket spec has a scenario that requires Excel for a JSON `FTT_RPT_LONDON` publication. The implementation deliberately does not do this. The no-upload test locks that in (`libs/publication/src/processing/service.test.ts:2448-2459`). UAT that follows the spec will log it as a defect.
-     - **Clarification 3 (Welsh headings).** A Welsh WPAFCC Excel has 7 of its 8 headings as `[WELSH TRANSLATION REQUIRED: 'Date']` and so on. I confirmed this in the script. Tax and LRT Welsh headings are English (`ftt-tax-chamber-weekly-hearing-list/src/locales/cy.ts:22-30`, `ftt-lands-registration-tribunal-weekly-hearing-list/src/locales/cy.ts:18-25`). This matches the Welsh PDF, so it is not a regression. But an Excel file is easier to forward and reuse, so placeholder text in it is more visible.
-     - **Clarification 2 (Market Rents)** and **Clarification 4 (long-date text)** also have no sign-off.
-   - **Recommendation:** post Clarifications 1–5 on issue #943 before merging and record the answers in plan.md §5. If Clarification 1 comes back "yes", that adds 5 JSON generators. Raise a separate Welsh-translation ticket for the WPAFCC, Tax and LRT `cy.tableHeaders` so the gap is tracked rather than hidden.
+2. **Welsh translation sign-off is still missing, and it's visible to Welsh users**
+   - **Where:** WPAFCC `cy.tableHeaders` are `[WELSH TRANSLATION REQUIRED: …]` placeholders; Tax and
+     LRT `cy.tableHeaders` are English copies (`ftt-tax-chamber-weekly-hearing-list/src/locales/cy.ts:22-30`,
+     `ftt-lands-registration-tribunal-weekly-hearing-list/src/locales/cy.ts:18-25`).
+   - This matches the Welsh PDF today, so it is not a #943 regression — but an Excel file is more
+     easily forwarded/reused than a PDF, so the placeholder/English text is more visible once shipped.
+   - **Recommendation:** raise a separate ticket for the WPAFCC/Tax/LRT `cy.tableHeaders` translations.
+     Clarifications 2 (Market Rents) and 4 (long-date text) also still have no explicit sign-off,
+     though both read as sensible defaults.
 
 **Inherited from earlier reviews, not new. They also apply to FTT:**
 
@@ -107,7 +109,7 @@ All workspaces are above 80%.
 - [x] **Excel and PDF downloadable files are made available as downloadable options for all the First Tier Tribunal hearing lists above**
   - Met under the Excel-uploads-only decision. All 10 names are in `EXCEL_GENERATOR_REGISTRY` (`libs/publication/src/processing/service.ts:491-500`), and the PDFs were already registered (`service.ts:199,271-316`). The Excel is served by `getExcelForDownload` (`libs/public-pages/src/flat-file/flat-file-service.ts:79-106`).
   - Tests: `service.test.ts:2424-2446`.
-  - JSON publications are PDF-only by design. The sign-off is outstanding (HIGH 2).
+  - JSON publications are PDF-only by design; confirmed as the correct, permanent behaviour (plan.md §5, Clarification 1 resolved).
 - [x] **The uploaded excel file will be re-used in providing the excel file for download**
   - Met as decided: a cleaned copy of the upload, not the raw file. `uploadedExcel` (`non-strategic-upload-summary/index.ts:137,175`) goes to `createUploadedExcelGenerator` (`service.ts:407-430`), which calls the per-lib reformatter (for example `ftt-rpt-weekly-hearing-list/src/excel/excel-reformatter.ts:6-18`).
   - The uploaded sheet name is kept and the extra sheet and column are dropped (`excel-reformatter.test.ts:133-145` in each lib).
@@ -123,7 +125,7 @@ All workspaces are above 80%.
 ## Next Steps
 
 - [ ] Fix HIGH 1: order the output columns by field order, or record the upload-order decision and correct plan.md. Either way, add a reordered-column parity test.
-- [ ] Fix HIGH 2: post Clarifications 1–5 on #943 and record the answers. Raise the Welsh `tableHeaders` ticket for WPAFCC, Tax and LRT.
+- [ ] Raise the Welsh `tableHeaders` ticket for WPAFCC, Tax and LRT (HIGH 2). Clarification 1 is resolved; 2–5 remain open but are non-blocking defaults.
 - [ ] Optional: Suggestions 1, 2 and 5 (test quality), and 4 (Notify follow-up for Private lists).
 - [ ] Inherited: follow up #942 HIGH 3 and HIGH 5 in the stack. Run the lower-environment check in `tasks.md:336-342`, including "SEND's Excel is not downloadable without access".
 - [ ] Re-run `yarn lint:fix`, typecheck and `yarn test`, then request a re-review. Merge after #1122, #1129 and #1133.

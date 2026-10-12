@@ -490,4 +490,14 @@ Columns are derived from each package's already-registered `ExcelConverterConfig
 
 8. **No Excel for third-party fulfilment** — `sendThirdPartyPublications` continues to receive the PDF only, since no third-party consumer has asked for it. Confirm that's correct.
 
+### Correction (added during implementation review, not yet posted to GitHub)
+
+The "Excel is generated when the same list is published as JSON via the API" scenario (§3) and
+Clarification 1 above were based on an unverified assumption in the `@spec` comment ("roughly half
+of these publications arrive as JSON via the API") that has no supporting evidence anywhere in the
+code. This has now been confirmed incorrect: these FTT list types are non-strategic, admin-uploaded
+`.xlsx` only, and are never published as JSON through the publication API. Clarification 1 is
+resolved as **not applicable** — no JSON-to-Excel generator is required, and the implemented
+upload-only behaviour (`createUploadedExcelGenerator(reformat)`, no JSON fallback) is correct.
+
 

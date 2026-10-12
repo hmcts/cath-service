@@ -3,7 +3,9 @@
 ## Implementation Tasks
 
 ### 0. Before coding
-- [ ] Post CLARIFICATIONS 1–5 (plan.md §5) on issue #943 and record the answers. Go ahead on the defaults unless Clarification 1 (JSON fallback) is answered "yes", because that adds 5 JSON generators — proceeding on defaults; not posted
+- [x] Post CLARIFICATIONS 1–5 (plan.md §5) on issue #943 and record the answers. Clarification 1
+  (JSON fallback) confirmed not applicable — resolved without posting, see plan.md §5. Clarifications
+  2–5 still outstanding.
 - [x] Create `feature/943-ftt-excel` from `feature/941-rolls-building-excel` (`f1521ded`). Do not reuse `origin/feature/943-ftt-excel-download`: it has an obsolete docs commit and is not in the stack's history
 - [x] Run `yarn install` and `yarn db:generate`, then check the stack builds and tests pass before changing anything
 
