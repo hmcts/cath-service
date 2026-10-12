@@ -10,6 +10,7 @@ import {
   getFileBuffer,
   getFileName,
   getSourceArtefactId,
+  isWithinDisplayWindow,
   resolveListType
 } from "@hmcts/publication";
 import { findListTypeById } from "@hmcts/system-admin-pages";
@@ -20,8 +21,7 @@ type GuardError = { error: "NOT_FLAT_FILE" | "EXPIRED" | "ACCESS_DENIED" };
 
 async function checkArtefactAccess(artefact: Artefact, user: UserProfile | undefined): Promise<GuardError | null> {
   if (!artefact.isFlatFile) return { error: "NOT_FLAT_FILE" };
-  const now = new Date();
-  if (now < artefact.displayFrom || now > artefact.displayTo) return { error: "EXPIRED" };
+  if (!isWithinDisplayWindow(artefact.displayFrom, artefact.displayTo)) return { error: "EXPIRED" };
   if (!canAccessPublicationData(user, artefact, await resolveListType(artefact.listTypeId))) return { error: "ACCESS_DENIED" };
   return null;
 }
@@ -85,8 +85,7 @@ export async function getExcelForDownload(artefactId: string, user: UserProfile 
     return { error: "NOT_FOUND" as const };
   }
 
-  const now = new Date();
-  if (now < artefact.displayFrom || now > artefact.displayTo) {
+  if (!isWithinDisplayWindow(artefact.displayFrom, artefact.displayTo)) {
     return { error: "EXPIRED" as const };
   }
 

@@ -55,8 +55,8 @@ async function seedSjpArtefacts(prefix: string): Promise<void> {
 
     // Look up list type IDs dynamically using prefixed names
     const listTypeNames = [
-      { name: "CROWN_DAILY_LIST", sensitivity: "PUBLIC", provenance: "CRIME_IDAM" },
-      { name: "CROWN_FIRM_LIST", sensitivity: "PUBLIC", provenance: "CRIME_IDAM" },
+      { name: "CROWN_DAILY_PDDA_LIST", sensitivity: "PUBLIC", provenance: "CRIME_IDAM" },
+      { name: "CROWN_FIRM_PDDA_LIST", sensitivity: "PUBLIC", provenance: "CRIME_IDAM" },
       { name: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PRIVATE", provenance: "CFT_IDAM" },
       { name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", sensitivity: "CLASSIFIED", provenance: "CFT_IDAM" }
     ];

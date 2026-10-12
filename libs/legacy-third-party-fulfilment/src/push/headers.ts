@@ -7,8 +7,8 @@ export interface PushHeaderParams {
   contentDate: Date;
   sensitivity: string;
   language: string;
-  displayFrom: Date;
-  displayTo: Date;
+  displayFrom?: Date | null;
+  displayTo?: Date | null;
   provenance: string;
   location?: LocationDetails | null;
 }
@@ -34,8 +34,9 @@ export async function buildPushHeaders(params: PushHeaderParams): Promise<Record
     "x-content-date": toDateString(contentDate),
     "x-sensitivity": sensitivity,
     "x-language": language,
-    "x-display-from": toDateString(displayFrom),
-    "x-display-to": toDateString(displayTo),
+    // Omitted when null, mirroring the optional x-display-from / x-display-to we accept inbound.
+    ...(displayFrom ? { "x-display-from": toDateString(displayFrom) } : {}),
+    ...(displayTo ? { "x-display-to": toDateString(displayTo) } : {}),
     "x-location-name": location?.name ?? "",
     "x-location-jurisdiction": location?.subJurisdictions?.[0]?.jurisdictionName ?? "",
     "x-location-region": location?.regions?.[0]?.name ?? ""

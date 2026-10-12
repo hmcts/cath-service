@@ -10,13 +10,17 @@ name: Resolve Promoted Images Job
 #     produces an identical pod spec and Kubernetes performs no rollout at all -
 #     the deploy silently no-ops
 #
-# workflow.main.yml calls the demo/perftest workflows after promote-stage, so
-# github.sha is the commit that run built, smoke-tested and promoted, and
-# aat-<short-sha> names exactly that image. A workflow_dispatch resolves the
-# dispatched ref's HEAD the same way.
+# The demo/perftest workflows pass the commit Main built, smoke-tested and
+# promoted (see job.check-promoted.yml), and aat-<short-sha> names exactly that
+# image. A workflow_dispatch resolves the dispatched ref's HEAD the same way.
 
 on:
   workflow_call:
+    inputs:
+      sha:
+        required: true
+        type: string
+        description: "Full SHA of the commit whose image to resolve"
     outputs:
       helm-apps:
         description: "JSON array of all apps with Helm charts"
@@ -53,12 +57,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
 
       - name: Generate metadata
         id: meta
         run: |
           echo "timestamp=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
-          echo "short-sha=$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          echo "short-sha=$(echo '${{ inputs.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
       - name: Find Helm apps
         id: apps

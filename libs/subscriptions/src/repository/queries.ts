@@ -23,8 +23,9 @@ export async function searchByCaseName(term: string): Promise<CaseSearchResult[]
       caseName: { contains: term, mode: "insensitive" },
       artefact: {
         listTypeId: { in: listTypeIds },
-        displayFrom: { lte: now },
-        displayTo: { gte: now }
+        // A null display date means the window is unbounded at that end. Prisma excludes
+        // NULL from lte/gte comparisons, so those rows need an explicit OR branch.
+        AND: [{ OR: [{ displayFrom: null }, { displayFrom: { lte: now } }] }, { OR: [{ displayTo: null }, { displayTo: { gte: now } }] }]
       }
     },
     select: { caseNumber: true, caseName: true },
