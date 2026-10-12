@@ -1,3 +1,4 @@
+import { validateEmailRateLimit } from "@hmcts/email-rate-limit";
 import { NotifyClient } from "notifications-node-client";
 import { getApiKey, type TemplateParameters } from "./template-config.js";
 
@@ -45,6 +46,7 @@ export interface SendEmailResult {
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
   try {
+    await validateEmailRateLimit(params.emailAddress, "HIGH", "Email");
     const result = await retryWithBackoff(() => sendEmailInternal(params), NOTIFICATION_RETRY_ATTEMPTS);
     return result;
   } catch (error) {

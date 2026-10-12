@@ -18,6 +18,12 @@ vi.mock("notifications-node-client", () => ({
   NotifyClient: MockNotifyClient
 }));
 
+const mockValidateEmailRateLimit = vi.fn();
+
+vi.mock("@hmcts/email-rate-limit", () => ({
+  validateEmailRateLimit: mockValidateEmailRateLimit
+}));
+
 // Import after mocking
 const { extractNotifyError, sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail, sendMediaRejectionEmail } = await import("./govuk-notify-service.js");
 
@@ -51,6 +57,48 @@ describe("extractNotifyError", () => {
 describe("GOV Notify Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockValidateEmailRateLimit.mockResolvedValue(undefined);
+  });
+
+  describe("rate limiting", () => {
+    it("should apply the standard limit and send the rejection email", async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
+
+      await sendMediaRejectionEmail({ fullName: "John Smith", email: "john@example.com", rejectReasons: "Reason", linkToService: "https://example.com" });
+
+      expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("john@example.com", "STANDARD", "Media account rejection email");
+      expect(mockSendEmail).toHaveBeenCalledOnce();
+    });
+
+    it("should apply the standard limit and send the new account email", async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
+
+      await sendMediaNewAccountEmail({ email: "test@example.com", fullName: "Test Reporter" });
+
+      expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("test@example.com", "STANDARD", "New media account welcome email");
+      expect(mockSendEmail).toHaveBeenCalledOnce();
+    });
+
+    it("should apply the standard limit and send the duplicate account email", async () => {
+      mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
+
+      await sendMediaDuplicateAccountEmail({ email: "test@example.com", fullName: "Test Reporter" });
+
+      expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("test@example.com", "STANDARD", "Duplicate media account email");
+      expect(mockSendEmail).toHaveBeenCalledOnce();
+    });
+
+    it("should not send any email when the rate limit is exceeded", async () => {
+      mockValidateEmailRateLimit.mockRejectedValue(new Error("Rate limit has been exceeded. Test failed to be sent to t***@example.com"));
+
+      await expect(
+        sendMediaRejectionEmail({ fullName: "John", email: "john@example.com", rejectReasons: "Reason", linkToService: "https://example.com" })
+      ).rejects.toThrow("Rate limit has been exceeded");
+      await expect(sendMediaNewAccountEmail({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("Rate limit has been exceeded");
+      await expect(sendMediaDuplicateAccountEmail({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("Rate limit has been exceeded");
+
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
   });
 
   describe("sendMediaRejectionEmail", () => {

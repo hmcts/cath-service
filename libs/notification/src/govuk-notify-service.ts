@@ -1,3 +1,4 @@
+import { validateEmailRateLimit } from "@hmcts/email-rate-limit";
 import { NotifyClient } from "notifications-node-client";
 
 interface NotifyError {
@@ -40,6 +41,8 @@ export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEma
     throw new Error("GOV Notify rejection template ID not configured");
   }
 
+  await validateEmailRateLimit(data.email, "STANDARD", "Media account rejection email");
+
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_REJECTION, data.email, {
@@ -65,6 +68,8 @@ export async function sendMediaNewAccountEmail(data: MediaAccountEmailData): Pro
     throw new Error("MEDIA_PASSWORD_RESET_LINK environment variable is not configured");
   }
 
+  await validateEmailRateLimit(data.email, "STANDARD", "New media account welcome email");
+
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 
   await notifyClient.sendEmail(TEMPLATE_ID_MEDIA_NEW_ACCOUNT, data.email, {
@@ -88,6 +93,8 @@ export async function sendMediaDuplicateAccountEmail(data: MediaAccountEmailData
   if (!MEDIA_SIGN_IN_LINK) {
     throw new Error("MEDIA_SIGN_IN_LINK environment variable is not configured");
   }
+
+  await validateEmailRateLimit(data.email, "STANDARD", "Duplicate media account email");
 
   const notifyClient = new NotifyClient(GOVUK_NOTIFY_API_KEY);
 

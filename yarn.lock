@@ -1686,6 +1686,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/email-rate-limit@workspace:*, @hmcts/email-rate-limit@workspace:libs/email-rate-limit":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/email-rate-limit@workspace:libs/email-rate-limit"
+  dependencies:
+    "@hmcts/redis": "workspace:*"
+    typescript: "npm:6.0.3"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/et-daily-list@workspace:*, @hmcts/et-daily-list@workspace:libs/list-types/et-daily-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/et-daily-list@workspace:libs/list-types/et-daily-list"
@@ -2019,6 +2028,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
+    "@hmcts/email-rate-limit": "workspace:*"
     "@types/node": "npm:^22.10.2"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:6.0.3"
@@ -2043,6 +2053,7 @@ __metadata:
     "@hmcts/crown-daily-list": "workspace:*"
     "@hmcts/crown-firm-list": "workspace:*"
     "@hmcts/crown-warned-list": "workspace:*"
+    "@hmcts/email-rate-limit": "workspace:*"
     "@hmcts/et-daily-list": "workspace:*"
     "@hmcts/et-fortnightly-list": "workspace:*"
     "@hmcts/family-daily-cause-list": "workspace:*"

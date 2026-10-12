@@ -17,9 +17,16 @@ vi.mock("notifications-node-client", () => ({
   })
 }));
 
+const mockValidateEmailRateLimit = vi.fn();
+
+vi.mock("@hmcts/email-rate-limit", () => ({
+  validateEmailRateLimit: mockValidateEmailRateLimit
+}));
+
 describe("govnotify-client", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockValidateEmailRateLimit.mockResolvedValue(undefined);
 
     mockSendEmail.mockResolvedValue({
       data: {
@@ -66,6 +73,51 @@ describe("govnotify-client", () => {
         subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
       }
     });
+  });
+
+  it("should apply the high email rate limit before sending", async () => {
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: { locations: "Test Court", ListType: "Daily Cause List", content_date: "1 December 2024" } as never,
+      templateId: "test-template-id"
+    });
+
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("user@example.com", "HIGH", "Email");
+  });
+
+  it("should return a failure without sending or retrying when the rate limit is exceeded", async () => {
+    mockValidateEmailRateLimit.mockRejectedValue(new Error("Rate limit has been exceeded. Email failed to be sent to u***@example.com"));
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: { locations: "Test Court", ListType: "Daily Cause List", content_date: "1 December 2024" } as never,
+      templateId: "test-template-id"
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: "Rate limit has been exceeded. Email failed to be sent to u***@example.com"
+    });
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledOnce();
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should consume the rate limit once per email even when sending is retried", async () => {
+    mockSendEmail.mockRejectedValueOnce(new Error("Temporary failure")).mockResolvedValueOnce({ data: { id: "notification-123" } });
+    const { sendEmail } = await import("./govnotify-client.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: { locations: "Test Court", ListType: "Daily Cause List", content_date: "1 December 2024" } as never,
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledOnce();
   });
 
   it("should fail when no templateId is provided", async () => {

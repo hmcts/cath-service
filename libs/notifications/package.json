@@ -31,6 +31,7 @@
     "@hmcts/crown-daily-list": "workspace:*",
     "@hmcts/crown-firm-list": "workspace:*",
     "@hmcts/crown-warned-list": "workspace:*",
+    "@hmcts/email-rate-limit": "workspace:*",
     "@hmcts/et-daily-list": "workspace:*",
     "@hmcts/et-fortnightly-list": "workspace:*",
     "@hmcts/family-daily-cause-list": "workspace:*",
