@@ -32,7 +32,8 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
         apiKey,
         templateId: params.templateId,
         emailAddress: params.emailAddress,
-        personalisation
+        personalisation,
+        emailLimit: "HIGH"
       },
       { retryAttempts: NOTIFICATION_RETRY_ATTEMPTS, retryDelayMs: NOTIFICATION_RETRY_DELAY_MS }
     );

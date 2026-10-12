@@ -1,4 +1,7 @@
+import { type EmailLimit, validateEmailRateLimit } from "@hmcts/email-rate-limit";
 import { NotifyClient } from "notifications-node-client";
+
+const DEFAULT_EMAIL_LIMIT: EmailLimit = "STANDARD";
 
 export interface SendNotifyEmailParams {
   apiKey: string;
@@ -6,6 +9,7 @@ export interface SendNotifyEmailParams {
   emailAddress: string;
   personalisation?: Record<string, unknown>;
   reference?: string;
+  emailLimit?: EmailLimit;
 }
 
 export interface SendNotifyEmailResult {
@@ -22,6 +26,19 @@ interface NotifyEmailResponse {
 }
 
 export async function sendNotifyEmail(params: SendNotifyEmailParams): Promise<SendNotifyEmailResult> {
+  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, "Email");
+  return deliverNotifyEmail(params);
+}
+
+export async function sendNotifyEmailWithRetry(
+  params: SendNotifyEmailParams,
+  options: { retryAttempts: number; retryDelayMs: number }
+): Promise<SendNotifyEmailResult> {
+  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, "Email");
+  return retryWithBackoff(() => deliverNotifyEmail(params), options.retryAttempts, options.retryDelayMs);
+}
+
+async function deliverNotifyEmail(params: SendNotifyEmailParams): Promise<SendNotifyEmailResult> {
   const notifyClient = new NotifyClient(params.apiKey);
 
   const response = (await (notifyClient as any).sendEmail(params.templateId, params.emailAddress, {
@@ -35,13 +52,6 @@ export async function sendNotifyEmail(params: SendNotifyEmailParams): Promise<Se
   }
 
   return { notificationId };
-}
-
-export async function sendNotifyEmailWithRetry(
-  params: SendNotifyEmailParams,
-  options: { retryAttempts: number; retryDelayMs: number }
-): Promise<SendNotifyEmailResult> {
-  return retryWithBackoff(() => sendNotifyEmail(params), options.retryAttempts, options.retryDelayMs);
 }
 
 // Wraps NotifyClient.prepareUpload, which is untyped in notifications-node-client.
