@@ -67,8 +67,51 @@ For each of `wpafcc-weekly-hearing-list`, `ftt-tax-chamber-weekly-hearing-list`,
 
 ### 6. Lower-environment check (after the stack is deployed) — manual, left for user
 - [ ] Upload one English and one Welsh workbook for WPAFCC, Tax, LRT, SEND and one RPT region, each with a hidden sheet, a note, a formula in an unmapped column and an extra column
-- [ ] Each email has PDF and Excel links. The xlsx matches the PDF table row for row: headings, long dates, raw times
+- [ ] Each email has PDF and Excel links. The xlsx matches the PDF table row for row on every field except the date, which stays exactly as uploaded (see §7)
 - [ ] Hidden or extra content is absent
 - [ ] SEND's Excel is not downloadable without access
 - [ ] Republishing one of them as JSON through `POST /publication` removes the xlsx, and the email is PDF-only
 - [ ] `GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL` is set in the environment
+
+### 7. Post-release fix: keep the uploaded date exactly as uploaded (plan.md §5, Clarification 4 — RESOLVED)
+A real LRT Welsh upload surfaced two problems: `cy.tableHeaders` showed English (pre-existing gap,
+tracked separately), and the date `16/12/2024` came back as `16 Rhagfyr 2024`. The PO confirmed the
+date must never be changed — AC2 ("the uploaded excel file will be re-used") takes priority over AC3
+matching the PDF for this one column.
+
+- [x] `wpafcc-weekly-hearing-list/src/excel/excel-reformatter.ts`: `formatRow` changed from
+  `(row) => ({ ...row, date: formatDdMmYyyyDate(row.date, locale) })` to `(row) => row`. Removed the
+  now-unused `formatDdMmYyyyDate` import
+- [x] `ftt-tax-chamber-weekly-hearing-list/src/excel/excel-reformatter.ts`: same change
+- [x] `ftt-lands-registration-tribunal-weekly-hearing-list/src/excel/excel-reformatter.ts`: same change
+- [x] `ftt-rpt-weekly-hearing-list/src/excel/excel-reformatter.ts`: same change
+- [x] Per-lib `excel-reformatter.test.ts` (all 4): replaced the long-date `it.each` with an assertion
+  that the date equals the raw uploaded value (`15/01/2026`) for both `en` and `cy`. Narrowed the
+  PDF-parity test to exclude the `date` column, since the Excel and PDF now intentionally disagree on
+  that one field
+- [x] `e2e-tests/tests/admin/non-strategic-upload.spec.ts` STEP 8: changed the expected RPT London
+  date from `"15 Ionawr 2026"` to `"15/01/2026"`
+- [x] Reran `yarn test` for all 4 workspaces and `yarn biome check --write` on the changed files
+- [ ] SEND already used identity for the date (no change needed) — confirm no other list type outside
+  this ticket's 10 names reformats dates before this pattern is copied elsewhere
+
+### 8. Post-release fix: real Welsh table headings for WPAFCC, Tax Chamber and LRT (plan.md §5, Clarification 3 — RESOLVED)
+The PO supplied real Welsh `tableHeaders` for all 3 libs in the same conversation as the date fix
+(§7). Only `tableHeaders` was in scope — the rest of each `cy.ts` (page title, important-information
+text, search label) is untouched and still English/placeholder for WPAFCC and Tax Chamber.
+
+- [x] `wpafcc-weekly-hearing-list/src/locales/cy.ts`: replaced all 8 `[WELSH TRANSLATION REQUIRED: …]`
+  `tableHeaders` placeholders with the supplied translations (`additionalInformation` was already
+  translated and unchanged, confirming the field order mapping)
+- [x] `ftt-tax-chamber-weekly-hearing-list/src/locales/cy.ts`: replaced all 7 English `tableHeaders`
+  copies with the supplied translations
+- [x] `ftt-lands-registration-tribunal-weekly-hearing-list/src/locales/cy.ts`: replaced all 6 English
+  `tableHeaders` copies with the supplied translations
+- [x] No test changes needed: `excel-reformatter.test.ts` and the `.njk.test.ts` template tests for
+  all 3 libs derive expected headings from `cy.tableHeaders` itself, not hardcoded strings, so they
+  picked up the real translations automatically. Reran all 3 lib test suites plus the 3 `.njk.test.ts`
+  files to confirm
+- [x] Confirmed this also changes the Welsh **PDF** for these 3 list types, since the PDF template
+  reads the same `t.tableHeaders` object. Accepted as correct, not a side effect to avoid
+- [ ] Other English/placeholder content in WPAFCC and Tax Chamber `cy.ts` (page title, important
+  info, search label) is still open — raise separately if needed

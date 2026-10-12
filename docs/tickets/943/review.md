@@ -1,5 +1,22 @@
 # Code Review: Issue #943
 
+## Post-review correction (see plan.md §5, Clarification 4 and tasks.md §7)
+
+This review's description of date handling (Summary, HIGH 1 evidence, Suggestion 1, Positive
+Feedback) reflects the **original** implementation, which rewrote the date to match the PDF's long
+form (`15 January 2026` / `15 Ionawr 2026`). A real LRT Welsh upload showed this was wrong: the PO
+confirmed the uploaded date must never change, so AC2 ("the uploaded excel file will be re-used")
+takes priority over AC3 for this one column. All 4 affected reformatters (WPAFCC, Tax, LRT, RPT) now
+pass the date through unchanged, the same identity pattern SEND always used. The Excel's date column
+no longer matches the PDF's — that mismatch is the correct, confirmed outcome.
+
+Separately, the Welsh-headings gap described in HIGH 2 below is now **resolved** for WPAFCC, Tax
+Chamber and LRT: the PO supplied real Welsh `tableHeaders`, replacing the `[WELSH TRANSLATION
+REQUIRED: …]` placeholders and English copies. This also changes the Welsh PDF for these 3 list
+types (same `t.tableHeaders` object), which was accepted. Suggestion 1 ("the Tax and LRT Welsh
+header tests cannot fail on a locale bug") is also moot now that `cy.tableHeaders` genuinely differs
+from `en.tableHeaders`.
+
 ## Summary
 
 #943 adds an Excel download for the 10 First-tier Tribunal list types in 5 libs: WPAFCC, Tax Chamber, Land Registration, SEND and the 6 RPT names. It reuses the stack's `reformatUploadedWorkbook` and `createUploadedExcelGenerator`. The change is small:
@@ -55,8 +72,9 @@ None.
    - This matches the Welsh PDF today, so it is not a #943 regression — but an Excel file is more
      easily forwarded/reused than a PDF, so the placeholder/English text is more visible once shipped.
    - **Recommendation:** raise a separate ticket for the WPAFCC/Tax/LRT `cy.tableHeaders` translations.
-     Clarifications 2 (Market Rents) and 4 (long-date text) also still have no explicit sign-off,
-     though both read as sensible defaults.
+     Clarification 2 (Market Rents) also still has no explicit sign-off, though it reads as a sensible
+     default. Clarification 4 (date formatting) is resolved — see the correction note at the top of
+     this file.
 
 **Inherited from earlier reviews, not new. They also apply to FTT:**
 
@@ -125,7 +143,7 @@ All workspaces are above 80%.
 ## Next Steps
 
 - [ ] Fix HIGH 1: order the output columns by field order, or record the upload-order decision and correct plan.md. Either way, add a reordered-column parity test.
-- [ ] Raise the Welsh `tableHeaders` ticket for WPAFCC, Tax and LRT (HIGH 2). Clarification 1 is resolved; 2–5 remain open but are non-blocking defaults.
+- [x] Welsh `tableHeaders` for WPAFCC, Tax and LRT (HIGH 2) — resolved, real translations applied. Clarification 1 and 4 are also resolved; Clarification 2 (Market Rents) remains open but reads as a sensible default.
 - [ ] Optional: Suggestions 1, 2 and 5 (test quality), and 4 (Notify follow-up for Private lists).
 - [ ] Inherited: follow up #942 HIGH 3 and HIGH 5 in the stack. Run the lower-environment check in `tasks.md:336-342`, including "SEND's Excel is not downloadable without access".
 - [ ] Re-run `yarn lint:fix`, typecheck and `yarn test`, then request a re-review. Merge after #1122, #1129 and #1133.

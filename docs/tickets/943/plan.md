@@ -257,8 +257,24 @@ None.
    something from the original issue. No JSON fallback is needed; the upload-only implementation
    stands.
 2. **Is Market Rents in scope?** The default is yes. "Residential Property … (for all regions)" literally means the 5 regions, but `FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST` is the same RPT list type family and lib. Leaving it out would make it the only RPT list without an Excel.
-3. **Welsh table headings in WPAFCC, Tax and LRT.** These are `[WELSH TRANSLATION REQUIRED: …]` placeholders (WPAFCC) or English (Tax, LRT), so the Welsh PDF and the Welsh Excel show them. The default is to leave them, since fixing them changes the PDF too. Should this be a separate ticket, or folded in? Approved Welsh for `date`, `caseReferenceNumber`, `judges`, `members`, `venue` and `time` already exists in RPT and SEND.
-4. **Dates as PDF text or as uploaded?** The default writes `15 January 2026` to match the PDF (AC3), but it is text and does not sort as a date. The alternative is the uploaded `dd/MM/yyyy` (identity `formatRow`). That is just as sortable as text, but it differs from the PDF.
+3. **Welsh table headings in WPAFCC, Tax and LRT — RESOLVED, folded in here.** The PO supplied real
+   Welsh `tableHeaders` for all three libs, confirmed in the same conversation as Clarification 4.
+   `libs/list-types/{wpafcc-weekly-hearing-list,ftt-tax-chamber-weekly-hearing-list,ftt-lands-registration-tribunal-weekly-hearing-list}/src/locales/cy.ts`
+   now hold real translations instead of `[WELSH TRANSLATION REQUIRED: …]` placeholders (WPAFCC) or
+   English copies (Tax, LRT). This also changes the Welsh **PDF** for these 3 list types, since the
+   PDF template reads the same `t.tableHeaders` object — that was accepted as the correct outcome,
+   not a side effect to avoid. The rest of each lib's `cy.ts` (page title, important-information text,
+   search label) is unchanged and still English/placeholder for WPAFCC and Tax Chamber — out of scope
+   here, raise separately if needed.
+4. **Dates as PDF text or as uploaded? — RESOLVED, keep the uploaded value.** Confirmed by the PO
+   after testing a real LRT upload in Welsh: the date must never be changed from what was uploaded.
+   The default of writing `15 January 2026` / `15 Ionawr 2026` to match the PDF (the original choice,
+   reasoned at line 229 and in the decision table at line 43) is wrong — it broke "the uploaded excel
+   file will be re-used" (AC2) for the one column that was being rewritten. All 4 affected reformatters
+   (WPAFCC, Tax, LRT, RPT) now use `formatRow: (row) => row` (the same identity pattern SEND always
+   used), so the date stays exactly as uploaded, e.g. `16/12/2024`, in both English and Welsh
+   publications. This means the Excel's date column no longer matches the PDF's long-date column —
+   that mismatch is accepted as the correct outcome of AC2 taking priority over AC3 for this field.
 5. **No backfill.** Only publications processed after release get an Excel. Please confirm that is acceptable.
 
 Carried from the series, and not re-asked unless the PO says otherwise:
