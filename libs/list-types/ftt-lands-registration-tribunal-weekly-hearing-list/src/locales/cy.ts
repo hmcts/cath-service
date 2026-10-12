@@ -16,12 +16,12 @@ export const cy = {
   searchCasesTitle: "Search Cases",
   searchCasesLabel: "Search by case name, date, judge, or other details",
   tableHeaders: {
-    date: "Date",
-    hearingTime: "Hearing time",
-    caseName: "Case name",
-    caseReferenceNumber: "Case reference number",
-    judge: "Judge",
-    venuePlatform: "Venue/Platform"
+    date: "Dyddiad",
+    hearingTime: "Amser y gwrandawiad",
+    caseName: "Enw’r achos",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    judge: "Barnwr",
+    venuePlatform: "Lleoliad/Platfform"
   },
   dataSource: "Data source",
   backToTop: "Back to top",
