@@ -69,8 +69,7 @@ describe("publication/[id] page", () => {
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
         sensitivity: "PUBLIC",
-        isFlatFile: false,
-        noMatch: false
+        isFlatFile: false
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
@@ -95,8 +94,7 @@ describe("publication/[id] page", () => {
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
         sensitivity: "PUBLIC",
-        isFlatFile: false,
-        noMatch: false
+        isFlatFile: false
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 
@@ -143,8 +141,7 @@ describe("publication/[id] page", () => {
         displayFrom: new Date("2025-01-13"),
         displayTo: new Date("2025-01-20"),
         sensitivity: "PUBLIC",
-        isFlatFile: false,
-        noMatch: false
+        isFlatFile: false
       };
       vi.mocked(getArtefactById).mockResolvedValue(mockArtefact);
 

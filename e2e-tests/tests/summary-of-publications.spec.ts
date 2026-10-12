@@ -16,21 +16,47 @@ const { Workbook } = ExcelJSPkg;
 // These issues affect ALL pages and should be addressed in a separate ticket
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const PUBLICATION_ENDPOINT = `${API_BASE_URL}/publication`;
 const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 
 // Create Civil and Family Daily Cause List payload (strategic list type that accepts JSON via API)
+// Publication metadata travels in x-* headers; the request body is the payload itself.
+function publicationHeaders(options: {
+  provenance: string;
+  courtId: string;
+  contentDate: string;
+  listType: string;
+  sensitivity: string;
+  language: string;
+  displayFrom: string;
+  displayTo: string;
+}) {
+  return {
+    "x-provenance": options.provenance,
+    "x-court-id": options.courtId,
+    "x-content-date": options.contentDate,
+    "x-list-type": options.listType,
+    "x-language": options.language,
+    "x-type": "LIST",
+    "x-sensitivity": options.sensitivity,
+    "x-display-from": options.displayFrom,
+    "x-display-to": options.displayTo
+  };
+}
+
 function createCivilFamilyCauseListPayload(locationId: number, contentDate: string, displayFrom: string, displayTo: string) {
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom,
-    display_to: displayTo,
-    hearing_list: {
+    headers: publicationHeaders({
+      provenance: "MANUAL_UPLOAD",
+      courtId: locationId.toString(),
+      contentDate: contentDate,
+      listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: displayFrom,
+      displayTo: displayTo
+    }),
+    payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00.000Z`,
         version: "1.0"
@@ -116,29 +142,29 @@ async function uploadPublicationViaApi(request: APIRequestContext, locationId: n
   const token = await getApiAuthToken();
 
   const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload,
-    headers: { Authorization: `Bearer ${token}` }
+    data: payload.payload,
+    headers: { ...payload.headers, Authorization: `Bearer ${token}` }
   });
 
   console.log(`[uploadPublicationViaApi] API response status=${response.status()}`);
   expect(response.status()).toBe(201);
   const result = await response.json();
   console.log(`[uploadPublicationViaApi] API response body=${JSON.stringify(result)}`);
-  expect(result.artefact_id).toBeDefined();
+  expect(result.artefactId).toBeDefined();
 
   // In deployed environments, API and web are separate pods with separate filesystems.
   // The API stores the JSON on the API pod; the web controller reads from the web pod.
   // Upload the JSON to the web pod so the list type page can render it.
   if (IS_DEPLOYED) {
-    console.log(`[uploadPublicationViaApi] Uploading flat file to web pod for artefactId=${result.artefact_id}`);
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    const uploadResult = await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+    console.log(`[uploadPublicationViaApi] Uploading flat file to web pod for artefactId=${result.artefactId}`);
+    const jsonBuffer = Buffer.from(JSON.stringify(payload.payload));
+    const uploadResult = await uploadTestFlatFileToWeb({ artefactId: result.artefactId, content: jsonBuffer, extension: ".json" });
     console.log(`[uploadPublicationViaApi] Flat file upload result=${JSON.stringify(uploadResult)}`);
   } else {
     console.log("[uploadPublicationViaApi] Not deployed, skipping flat file upload to web pod");
   }
 
-  return result.artefact_id;
+  return result.artefactId;
 }
 
 // Helper function to authenticate as System Admin for non-strategic uploads

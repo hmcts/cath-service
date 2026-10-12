@@ -11,6 +11,8 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("@hmcts/publication", () => ({
+  // Faithful stub of the real predicate: a null date is unbounded at that end.
+  isWithinDisplayWindow: (from: Date | null, to: Date | null, now: Date = new Date()) => !(from && now < from) && !(to && now > to),
   getArtefactById: vi.fn()
 }));
 

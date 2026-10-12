@@ -221,7 +221,7 @@ describe("list-type-queries", () => {
           caseNumberJsonFieldName: "caseNo",
           caseNameJsonFieldName: "caseName",
           defaultSensitivity: "Public",
-          allowedProvenance: "CFT_IDAM,PI_AAD",
+          allowedProvenance: ["CFT_IDAM", "PI_AAD"],
           isNonStrategic: false,
           subJurisdictions: {
             create: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]
@@ -246,7 +246,7 @@ describe("list-type-queries", () => {
         where: { id: 5 },
         data: expect.objectContaining({
           deletedAt: null,
-          allowedProvenance: "CFT_IDAM,PI_AAD",
+          allowedProvenance: ["CFT_IDAM", "PI_AAD"],
           subJurisdictions: {
             deleteMany: {},
             create: [{ subJurisdictionId: 1 }, { subJurisdictionId: 2 }]

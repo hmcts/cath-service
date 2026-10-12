@@ -550,7 +550,7 @@ describe("Summary of Publications - GET handler", () => {
           friendlyName: "Criminal Injuries Compensation Weekly Hearing List",
           welshFriendlyName: "Rhestr Wythnosol",
           url: "cic-weekly-hearing-list",
-          allowedProvenance: "MANUAL_UPLOAD",
+          allowedProvenance: ["CFT_IDAM"],
           isNonStrategic: false
         } as any
       ]);
@@ -712,7 +712,7 @@ describe("Summary of Publications - GET handler", () => {
         friendlyName: "Immigration and Asylum Chamber Daily List",
         welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches",
         url: "iac-daily-list",
-        allowedProvenance: "CFT_IDAM",
+        allowedProvenance: ["CFT_IDAM"],
         isNonStrategic: false
       },
       {
@@ -721,7 +721,7 @@ describe("Summary of Publications - GET handler", () => {
         friendlyName: "Immigration and Asylum Chamber Daily List - Additional Cases",
         welshFriendlyName: "Rhestr Ddyddiol y Siambr Mewnfudo a Lloches - Achosion Ychwanegol",
         url: "iac-daily-list-additional-cases",
-        allowedProvenance: "CFT_IDAM",
+        allowedProvenance: ["CFT_IDAM"],
         isNonStrategic: false
       }
     ];

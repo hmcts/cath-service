@@ -93,7 +93,7 @@ async function createFlatFileArtefact(
   } = options;
 
   // Look up the actual list type ID (don't hardcode - DB IDs are not guaranteed sequential)
-  const crownDailyList = (await getListTypeByName("CROWN_DAILY_LIST")) as { id: number };
+  const crownDailyList = (await getListTypeByName("CROWN_DAILY_PDDA_LIST")) as { id: number };
 
   // Create artefact via API and get the returned artefactId
   const createdArtefact = await createTestArtefact({

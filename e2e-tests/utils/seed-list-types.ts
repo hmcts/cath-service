@@ -29,7 +29,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_WARNED_LIST",
+    name: "CROWN_WARNED_PDDA_LIST",
     friendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
     url: "crown-warned-list",
@@ -38,7 +38,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_DAILY_LIST",
+    name: "CROWN_DAILY_PDDA_LIST",
     friendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
     url: "crown-daily-cause-list",
@@ -47,7 +47,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_FIRM_LIST",
+    name: "CROWN_FIRM_PDDA_LIST",
     friendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
     url: "crown-firm-list",
