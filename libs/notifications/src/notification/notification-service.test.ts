@@ -288,6 +288,23 @@ describe("sendListTypePublicationNotifications", () => {
     // Assert
     expect(result.sent).toBe(1);
   });
+
+  it("should count a subscriber as skipped when the email send is skipped", async () => {
+    // Arrange
+    const mockSubscribers = [{ userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } }];
+    const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, isSkipped: true, error: "Outbound disabled" });
+
+    // Act
+    const result = await sendListTypePublicationNotifications(baseEvent);
+
+    // Assert
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(result.failed).toBe(0);
+  });
 });
 
 describe("sendLocationAndCaseSubscriptionNotifications", () => {
@@ -515,6 +532,43 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     // Email shows both location and case
     expect(buildTemplateParameters).toHaveBeenCalledWith(expect.objectContaining({ caseValue: "AB-123" }));
   });
+
+  it("should record the audit row as Skipped when the email send is skipped", async () => {
+    // Arrange
+    const locationSubscriber = {
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      searchType: "LOCATION_ID",
+      searchValue: "1",
+      user: { email: "user1@example.com", firstName: "John", surname: "Doe" }
+    };
+    const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
+    const { createNotificationAuditLog, updateNotificationStatus } = await import("./notification-queries.js");
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([locationSubscriber]);
+    vi.mocked(createNotificationAuditLog).mockResolvedValue({
+      notificationId: "notif-1",
+      subscriptionId: "sub-1",
+      userId: "user-1",
+      publicationId: "pub-1",
+      govNotifyId: null,
+      status: "Pending",
+      errorMessage: null,
+      createdAt: new Date(),
+      sentAt: null
+    });
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, isSkipped: true, error: "Outbound disabled" });
+
+    // Act
+    const result = await sendLocationAndCaseSubscriptionNotifications("artefact-1", baseEvent);
+
+    // Assert
+    expect(result.skipped).toBe(1);
+    expect(result.sent).toBe(0);
+    expect(result.failed).toBe(0);
+    expect(updateNotificationStatus).toHaveBeenCalledTimes(1);
+    expect(updateNotificationStatus).toHaveBeenCalledWith("notif-1", "Skipped", undefined, "Outbound disabled");
+  });
 });
 
 describe("sendSystemAdminNotification", () => {
@@ -577,5 +631,19 @@ describe("sendSystemAdminNotification", () => {
     vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
 
     await expect(sendSystemAdminNotification(["admin1@example.com"], notification)).resolves.toBeUndefined();
+  });
+
+  it("should not log a failure when the email send is skipped", async () => {
+    // Arrange
+    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, isSkipped: true, error: "Outbound disabled" });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Act
+    await sendSystemAdminNotification(["admin1@example.com"], notification);
+
+    // Assert
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });

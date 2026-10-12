@@ -1,4 +1,5 @@
 import { getLocationWithDetails } from "@hmcts/location";
+import { isOutboundEnabled } from "@hmcts/outbound";
 import { prisma } from "@hmcts/postgres-prisma";
 import { buildPushHeaders } from "./push/headers.js";
 import { pushWithRetry } from "./push/retry.js";
@@ -27,6 +28,11 @@ export interface ThirdPartyPushParams {
 export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "pdfPath" | "flatFilePath" | "isUpdate">;
 
 function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: string } | null {
+  if (!isOutboundEnabled()) {
+    console.warn(`${logPrefix} Third-party push skipped: outbound disabled`);
+    return null;
+  }
+
   const url = process.env[COURTEL_API_URL_ENV];
   const certBase64 = process.env[COURTEL_CERTIFICATE_ENV];
 

@@ -5,11 +5,12 @@ const mockDownload = vi.fn();
 const mockDelete = vi.fn();
 const mockCreateIfNotExists = vi.fn();
 const mockGetProperties = vi.fn();
+const mockSetMetadata = vi.fn();
 const mockGetBlockBlobClient = vi.fn((blobName: string) => ({
   uploadData: mockUploadData,
   url: `https://devstoreaccount1.blob.core.windows.net/artefact/${blobName}`
 }));
-const mockGetBlobClient = vi.fn(() => ({ download: mockDownload, delete: mockDelete, getProperties: mockGetProperties }));
+const mockGetBlobClient = vi.fn(() => ({ download: mockDownload, delete: mockDelete, getProperties: mockGetProperties, setMetadata: mockSetMetadata }));
 const mockGetContainerClient = vi.fn(() => ({
   createIfNotExists: mockCreateIfNotExists,
   getBlockBlobClient: mockGetBlockBlobClient,
@@ -213,17 +214,17 @@ describe("blob-client", () => {
   });
 
   describe("getBlobProperties", () => {
-    it("should return size when blob exists", async () => {
+    it("should return size and metadata when blob exists", async () => {
       // Arrange
       vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
-      mockGetProperties.mockResolvedValue({ contentLength: 12345 });
+      mockGetProperties.mockResolvedValue({ contentLength: 12345, metadata: { source: "legacy" } });
       const { getBlobProperties } = await import("./blob-client.js");
 
       // Act
       const result = await getBlobProperties("abc123.pdf");
 
       // Assert
-      expect(result).toEqual({ size: 12345 });
+      expect(result).toEqual({ size: 12345, metadata: { source: "legacy" } });
       expect(mockGetBlobClient).toHaveBeenCalledWith("abc123.pdf");
     });
 
@@ -250,6 +251,23 @@ describe("blob-client", () => {
 
       // Act & Assert
       await expect(getBlobProperties("abc123.pdf")).rejects.toThrow("Server error");
+    });
+  });
+
+  describe("setBlobMetadata", () => {
+    it("should set metadata on the blob in the given container", async () => {
+      // Arrange
+      vi.stubEnv("AZURE_STORAGE_CONNECTION_STRING", "conn-string");
+      mockSetMetadata.mockResolvedValue({});
+      const { setBlobMetadata } = await import("./blob-client.js");
+
+      // Act
+      await setBlobMetadata("abc123", { synced: "yes" }, "publications");
+
+      // Assert
+      expect(mockGetContainerClient).toHaveBeenCalledWith("publications");
+      expect(mockGetBlobClient).toHaveBeenCalledWith("abc123");
+      expect(mockSetMetadata).toHaveBeenCalledWith({ synced: "yes" });
     });
   });
 

@@ -1,0 +1,200 @@
+import { type Prisma, prisma } from "@hmcts/postgres-prisma";
+import { transformAuditLogs } from "./audit-log-transform.js";
+import { transformCourtelSubscriptions, transformCourtelUsers } from "./courtel-transform.js";
+import { type LegacyAccountData, readLegacyAccountData } from "./legacy-account-source.js";
+import { createLegacySecretReader } from "./legacy-secret-source.js";
+import { createLegacyStorageReader, type LegacyStorageReader } from "./legacy-storage-source.js";
+import { transformListTypeSubscriptions } from "./list-type-subscription-transform.js";
+import { type MigratedMediaApplication, transformMediaApplications } from "./media-application-transform.js";
+import { copyOauthSecrets, deleteRemovedOauthSecrets } from "./oauth-secret-copy.js";
+import { transformOauthCredentials, transformOauthSubscriptions, transformOauthUsers } from "./oauth-third-party-transform.js";
+import { deleteOrphanedProofOfIdFiles, stageProofOfIdFiles } from "./proof-of-id-copy.js";
+import { findDropLimitViolation } from "./row-count-guard.js";
+import { transformSubscriptions } from "./subscription-transform.js";
+import type { DomainReport, DomainTransform, SyncReport } from "./sync-report.js";
+import { transformUsers } from "./user-transform.js";
+
+const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
+
+// Every pending application can be approved or rejected, leaving none to migrate.
+const TABLES_THAT_CAN_BE_EMPTIED = new Set<TableName>(["media_application"]);
+
+// Before cutover nothing but this job writes account data, so each run replaces it wholesale
+// with the transformed legacy snapshot. One transaction keeps every table consistent.
+export async function runLegacySync(options: LegacySyncOptions): Promise<SyncReport> {
+  const { legacyAccountDatabaseUrl, isDryRun, maxDropRatio } = options;
+  const legacy = await readLegacyAccountData(legacyAccountDatabaseUrl);
+  const referenceData = await readReferenceData();
+  const plan = await buildAccountPlan(legacy, referenceData, createLegacyStorageReader(), isDryRun);
+
+  const { domains, previous } = await prisma.$transaction(async (tx) => {
+    const domains = await buildReports(tx, plan, maxDropRatio);
+    const previous = await readPreviousState(tx);
+
+    if (!isDryRun) {
+      const violations = domains.flatMap((report) => (report.dropLimitViolation ? [report.dropLimitViolation] : []));
+      if (violations.length > 0) {
+        throw new Error(violations.join("\n"));
+      }
+      await replaceAccountData(tx, plan);
+    }
+
+    return { domains, previous };
+  }, TRANSACTION_OPTIONS);
+
+  if (!isDryRun) {
+    await deleteOrphanedProofOfIdFiles(
+      previous.proofOfIdPaths,
+      plan.mediaApplications.rows.map((application) => application.proofOfIdPath)
+    );
+  }
+
+  const secretStep = await copyOauthSecrets(plan.oauthCredentials.rows, createLegacySecretReader(), isDryRun);
+
+  if (!isDryRun) {
+    await deleteRemovedOauthSecrets(
+      previous.oauthUserIds,
+      plan.oauthUsers.rows.map((user) => user.id)
+    );
+  }
+
+  return {
+    isDryRun,
+    domains,
+    steps: [{ ...secretStep, rejections: [...plan.oauthCredentials.rejections, ...secretStep.rejections] }]
+  };
+}
+
+async function readReferenceData(): Promise<ReferenceData> {
+  const listTypes = await prisma.listType.findMany({ where: { deletedAt: null }, select: { id: true, name: true } });
+  const locations = await prisma.location.findMany({ select: { locationId: true } });
+
+  return {
+    listTypeIdByName: new Map(listTypes.map((listType) => [listType.name, listType.id])),
+    locationIds: new Set(locations.map((location) => String(location.locationId)))
+  };
+}
+
+async function buildAccountPlan(legacy: LegacyAccountData, referenceData: ReferenceData, storage: LegacyStorageReader, isDryRun: boolean) {
+  const { listTypeIdByName, locationIds } = referenceData;
+
+  const users = transformUsers(legacy.users);
+  const migratedUserIds = new Set(users.rows.map((user) => user.userId));
+
+  const courtelUsers = transformCourtelUsers(legacy.users);
+  const courtelUserIds = new Set(courtelUsers.rows.map((user) => user.id));
+
+  const oauthUsers = transformOauthUsers(legacy.apiUsers);
+  const oauthContext = { oauthUserIds: new Set(oauthUsers.rows.map((user) => user.id)), listTypeIdByName };
+
+  const media = transformMediaApplications(legacy.mediaApplications);
+  const stagedMedia = await stageProofOfIdFiles(media.rows, storage, isDryRun);
+  const mediaApplications: DomainTransform<MigratedMediaApplication> = {
+    rows: stagedMedia.rows.map((load) => load.application),
+    rejections: [...media.rejections, ...stagedMedia.rejections]
+  };
+
+  return {
+    users,
+    subscriptions: transformSubscriptions(legacy.subscriptions, { migratedUserIds, locationIds }),
+    listTypeSubscriptions: transformListTypeSubscriptions(legacy.listTypeSubscriptions, { migratedUserIds, listTypeIdByName }),
+    courtelUsers,
+    courtelSubscriptions: transformCourtelSubscriptions(legacy.subscriptions, { courtelUserIds, listTypeIdByName }),
+    oauthUsers,
+    oauthSubscriptions: transformOauthSubscriptions(legacy.apiSubscriptions, oauthContext),
+    oauthCredentials: transformOauthCredentials(legacy.apiOauthConfigurations, oauthContext),
+    mediaApplications,
+    auditLogs: transformAuditLogs(legacy.auditLogs),
+    readCounts: {
+      user: legacy.users.length,
+      subscription: legacy.subscriptions.length,
+      subscription_list_type: legacy.listTypeSubscriptions.length,
+      legacy_third_party_user: courtelUsers.rows.length,
+      legacy_third_party_subscription: legacy.subscriptions.filter((subscription) => subscription.channel === "API_COURTEL").length,
+      third_party_user: legacy.apiUsers.length,
+      third_party_subscription: legacy.apiSubscriptions.length,
+      media_application: legacy.mediaApplications.length,
+      audit_log: legacy.auditLogs.length
+    }
+  };
+}
+
+async function buildReports(tx: Prisma.TransactionClient, plan: AccountPlan, maxDropRatio: number): Promise<DomainReport[]> {
+  const tables: [TableName, DomainTransform<unknown>, () => Promise<number>][] = [
+    ["user", plan.users, () => tx.user.count()],
+    ["subscription", plan.subscriptions, () => tx.subscription.count()],
+    ["subscription_list_type", plan.listTypeSubscriptions, () => tx.subscriptionListType.count()],
+    ["legacy_third_party_user", plan.courtelUsers, () => tx.legacyThirdPartyUser.count()],
+    ["legacy_third_party_subscription", plan.courtelSubscriptions, () => tx.legacyThirdPartySubscription.count()],
+    ["third_party_user", plan.oauthUsers, () => tx.thirdPartyUser.count()],
+    ["third_party_subscription", plan.oauthSubscriptions, () => tx.thirdPartySubscription.count()],
+    ["media_application", plan.mediaApplications, () => tx.mediaApplication.count()],
+    ["audit_log", plan.auditLogs, () => tx.auditLog.count()]
+  ];
+
+  const reports: DomainReport[] = [];
+  for (const [entityType, transform, count] of tables) {
+    const existing = await count();
+    const loaded = transform.rows.length;
+    reports.push({
+      entityType,
+      read: plan.readCounts[entityType],
+      existing,
+      loaded,
+      rejections: transform.rejections,
+      dropLimitViolation: findDropLimitViolation(entityType, existing, loaded, maxDropRatio, {
+        canBeEmptied: TABLES_THAT_CAN_BE_EMPTIED.has(entityType)
+      })
+    });
+  }
+  return reports;
+}
+
+async function readPreviousState(tx: Prisma.TransactionClient) {
+  const applications = await tx.mediaApplication.findMany({ select: { proofOfIdPath: true } });
+  const oauthUsers = await tx.thirdPartyUser.findMany({ select: { id: true } });
+
+  return {
+    proofOfIdPaths: applications.flatMap((application) => (application.proofOfIdPath ? [application.proofOfIdPath] : [])),
+    oauthUserIds: oauthUsers.map((user) => user.id)
+  };
+}
+
+// Deleting subscriptions cascades to notification_audit_log, which stays empty while outbound
+// notifications are disabled before cutover.
+async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPlan): Promise<void> {
+  await tx.subscriptionListType.deleteMany();
+  await tx.subscription.deleteMany();
+  await tx.user.deleteMany();
+  await tx.legacyThirdPartySubscription.deleteMany();
+  await tx.legacyThirdPartyUser.deleteMany();
+  await tx.thirdPartySubscription.deleteMany();
+  await tx.thirdPartyUser.deleteMany();
+  await tx.mediaApplication.deleteMany();
+  await tx.auditLog.deleteMany();
+
+  await tx.user.createMany({ data: plan.users.rows });
+  await tx.subscription.createMany({ data: plan.subscriptions.rows });
+  await tx.subscriptionListType.createMany({ data: plan.listTypeSubscriptions.rows });
+  await tx.legacyThirdPartyUser.createMany({ data: plan.courtelUsers.rows });
+  await tx.legacyThirdPartySubscription.createMany({ data: plan.courtelSubscriptions.rows });
+  await tx.thirdPartyUser.createMany({ data: plan.oauthUsers.rows });
+  await tx.thirdPartySubscription.createMany({ data: plan.oauthSubscriptions.rows });
+  await tx.mediaApplication.createMany({ data: plan.mediaApplications.rows });
+  await tx.auditLog.createMany({ data: plan.auditLogs.rows });
+}
+
+export interface LegacySyncOptions {
+  legacyAccountDatabaseUrl: string;
+  isDryRun: boolean;
+  maxDropRatio: number;
+}
+
+interface ReferenceData {
+  listTypeIdByName: Map<string, number>;
+  locationIds: Set<string>;
+}
+
+type AccountPlan = Awaited<ReturnType<typeof buildAccountPlan>>;
+
+type TableName = keyof AccountPlan["readCounts"];

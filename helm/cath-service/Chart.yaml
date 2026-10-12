@@ -23,6 +23,17 @@ dependencies:
     version: 0.1.0
     repository: "file://../../apps/crons/helm"
     condition: crons.enabled
+  # Same chart, second CronJob: each job is one release of the crons chart with its own SCRIPT_NAME.
+  - name: cath-crons
+    alias: cath-crons-legacy-sync
+    version: 0.1.0
+    repository: "file://../../apps/crons/helm"
+    condition: legacySync.enabled
+  - name: cath-crons
+    alias: cath-crons-legacy-sync-publications
+    version: 0.1.0
+    repository: "file://../../apps/crons/helm"
+    condition: legacySync.enabled
   - name: redis
     version: 24.1.8
     repository: https://charts.bitnami.com/bitnami

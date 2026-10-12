@@ -114,13 +114,16 @@ async function handleLcsuUpload(req: Request, res: Response, metadata: Publicati
 
   const uploadResult = await uploadHtmlToS3(file.buffer, file.originalname, correlationId);
 
-  console.info("LCSU HTML upload successful", {
-    s3Key: uploadResult.s3Key,
-    bucketName: uploadResult.bucketName,
-    correlationId,
-    originalFilename: file.originalname,
-    fileSize: file.size
-  });
+  // Not successful only when OUTBOUND_ENABLED=false skipped the upload, which is logged there.
+  if (uploadResult.success) {
+    console.info("LCSU HTML upload successful", {
+      s3Key: uploadResult.s3Key,
+      bucketName: uploadResult.bucketName,
+      correlationId,
+      originalFilename: file.originalname,
+      fileSize: file.size
+    });
+  }
 
   // Traceability only — the publisher sees nothing of this and no artefact is created.
   await logIngestionResult({ sourceSystem: metadata.provenance, courtId: metadata.courtId, status: "SUCCESS" });

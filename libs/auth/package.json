@@ -36,6 +36,7 @@
   "dependencies": {
     "@hmcts-cft/cloud-native-platform": "2.3.0",
     "@hmcts/account": "*",
+    "@hmcts/outbound": "workspace:*",
     "@microsoft/microsoft-graph-client": "3.0.7",
     "openid-client": "6.8.5"
   },

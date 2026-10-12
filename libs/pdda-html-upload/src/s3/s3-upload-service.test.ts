@@ -101,4 +101,52 @@ describe("uploadHtmlToS3", () => {
 
     expect(result.s3Key).toMatch(/\.htm$/i);
   });
+
+  describe("outbound kill switch", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+    });
+
+    it("should upload to S3 when OUTBOUND_ENABLED is true", async () => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "true");
+
+      // Act
+      const result = await uploadHtmlToS3(Buffer.from("<html></html>"), "test.html", "corr-1");
+
+      // Assert
+      expect(result).toEqual({ success: true, s3Key: "test-prefix/test.html", bucketName: "test-bucket" });
+      expect(mockS3Send).toHaveBeenCalledTimes(1);
+    });
+
+    it("should skip the upload and return an unsuccessful result when OUTBOUND_ENABLED is false", async () => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "false");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { createS3Client } = await import("./s3-client.js");
+
+      // Act
+      const result = await uploadHtmlToS3(Buffer.from("<html></html>"), "test.html", "corr-1");
+
+      // Assert
+      expect(result).toEqual({ success: false, s3Key: "test-prefix/test.html", bucketName: "test-bucket" });
+      expect(createS3Client).not.toHaveBeenCalled();
+      expect(mockS3Send).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith("[pdda-html-upload] S3 upload skipped: outbound disabled (correlationId corr-1)");
+    });
+
+    it("should not throw when OUTBOUND_ENABLED is false and the bucket is not configured", async () => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "false");
+      delete process.env.AWS_S3_XHIBIT_BUCKET_NAME;
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      // Act
+      const result = await uploadHtmlToS3(Buffer.from("<html></html>"), "test.html");
+
+      // Assert
+      expect(result).toEqual({ success: false, s3Key: "test-prefix/test.html", bucketName: "" });
+    });
+  });
 });

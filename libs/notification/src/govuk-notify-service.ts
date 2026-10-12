@@ -1,3 +1,4 @@
+import { isOutboundEnabled } from "@hmcts/outbound";
 import { NotifyClient } from "notifications-node-client";
 
 interface NotifyError {
@@ -32,6 +33,11 @@ interface MediaAccountEmailData {
 }
 
 export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEmailData): Promise<void> {
+  if (!isOutboundEnabled()) {
+    console.warn("[govuk-notify-service] Email send skipped: outbound disabled (media rejection email)");
+    return;
+  }
+
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
   }
@@ -53,6 +59,11 @@ export async function sendMediaRejectionEmail(data: MediaApplicationRejectionEma
 }
 
 export async function sendMediaNewAccountEmail(data: MediaAccountEmailData): Promise<void> {
+  if (!isOutboundEnabled()) {
+    console.warn("[govuk-notify-service] Email send skipped: outbound disabled (media new account email)");
+    return;
+  }
+
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
   }
@@ -77,6 +88,11 @@ export async function sendMediaNewAccountEmail(data: MediaAccountEmailData): Pro
 }
 
 export async function sendMediaDuplicateAccountEmail(data: MediaAccountEmailData): Promise<void> {
+  if (!isOutboundEnabled()) {
+    console.warn("[govuk-notify-service] Email send skipped: outbound disabled (media duplicate account email)");
+    return;
+  }
+
   if (!GOVUK_NOTIFY_API_KEY) {
     throw new Error("GOV Notify API key not configured");
   }

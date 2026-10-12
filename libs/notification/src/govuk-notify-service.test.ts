@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables before importing the module
 process.env.GOVUK_NOTIFY_API_KEY = "test-api-key-12345";
@@ -257,6 +257,49 @@ describe("GOV Notify Service", () => {
       await expect(testFunc({ email: "test@example.com", fullName: "Test" })).rejects.toThrow("MEDIA_SIGN_IN_LINK environment variable is not configured");
 
       process.env.MEDIA_SIGN_IN_LINK = original;
+    });
+  });
+
+  describe("outbound kill switch", () => {
+    const senders = [
+      {
+        name: "sendMediaRejectionEmail",
+        send: () => sendMediaRejectionEmail({ fullName: "Test", email: "test@example.com", rejectReasons: "Reason", linkToService: "https://example.com" })
+      },
+      { name: "sendMediaNewAccountEmail", send: () => sendMediaNewAccountEmail({ email: "test@example.com", fullName: "Test" }) },
+      { name: "sendMediaDuplicateAccountEmail", send: () => sendMediaDuplicateAccountEmail({ email: "test@example.com", fullName: "Test" }) }
+    ];
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+    });
+
+    it.each(senders)("$name should send the email when OUTBOUND_ENABLED is true", async ({ send }) => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "true");
+      mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
+
+      // Act
+      await send();
+
+      // Assert
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(senders)("$name should skip the send without throwing when OUTBOUND_ENABLED is false", async ({ send }) => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "false");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      // Act
+      const result = await send();
+
+      // Assert
+      expect(result).toBeUndefined();
+      expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).not.toContain("test@example.com");
     });
   });
 });

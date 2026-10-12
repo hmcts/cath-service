@@ -1,8 +1,10 @@
+import { isOutboundEnabled } from "@hmcts/outbound";
 import { NotifyClient } from "notifications-node-client";
 import { getApiKey, type TemplateParameters } from "./template-config.js";
 
 const NOTIFICATION_RETRY_ATTEMPTS = Number.parseInt(process.env.NOTIFICATION_RETRY_ATTEMPTS || "1", 10);
 const NOTIFICATION_RETRY_DELAY_MS = Number.parseInt(process.env.NOTIFICATION_RETRY_DELAY_MS || "1000", 10);
+const OUTBOUND_DISABLED_REASON = "Outbound disabled";
 
 interface NotificationData {
   id: string;
@@ -41,9 +43,15 @@ export interface SendEmailResult {
   success: boolean;
   notificationId?: string;
   error?: string;
+  isSkipped?: boolean;
 }
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
+  if (!isOutboundEnabled()) {
+    console.warn(`[govnotify-client] Email send skipped: outbound disabled (template ${params.templateId ?? "none"})`);
+    return { success: false, isSkipped: true, error: OUTBOUND_DISABLED_REASON };
+  }
+
   try {
     const result = await retryWithBackoff(() => sendEmailInternal(params), NOTIFICATION_RETRY_ATTEMPTS);
     return result;

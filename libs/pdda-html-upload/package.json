@@ -20,6 +20,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1085.0",
     "@aws-sdk/node-http-handler": "3.374.0",
+    "@hmcts/outbound": "workspace:*",
     "multer": "2.0.2"
   },
   "peerDependencies": {
