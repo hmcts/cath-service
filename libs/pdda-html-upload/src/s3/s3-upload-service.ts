@@ -1,18 +1,24 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { isOutboundEnabled } from "@hmcts/outbound";
 import type { S3UploadResult } from "../types.js";
 import { createS3Client } from "./s3-client.js";
 
 export async function uploadHtmlToS3(fileBuffer: Buffer, originalFilename: string, correlationId?: string): Promise<S3UploadResult> {
-  const s3Client = createS3Client();
   const bucketName = process.env.AWS_S3_XHIBIT_BUCKET_NAME;
   const prefix = process.env.AWS_S3_XHIBIT_PREFIX || "pdda-html/";
+  const s3Key = `${prefix}${originalFilename}`;
+
+  if (!isOutboundEnabled()) {
+    console.warn(`[pdda-html-upload] S3 upload skipped: outbound disabled (correlationId ${correlationId ?? "none"})`);
+    return { success: false, s3Key, bucketName: bucketName ?? "" };
+  }
 
   if (!bucketName) {
     throw new Error("AWS S3 bucket name not configured");
   }
 
+  const s3Client = createS3Client();
   const now = new Date();
-  const s3Key = `${prefix}${originalFilename}`;
 
   try {
     const putCommand = new PutObjectCommand({

@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { isOutboundEnabled } from "@hmcts/outbound";
 import { Client } from "@microsoft/microsoft-graph-client";
 import type { UserProfile } from "../user-profile.js";
 
@@ -6,6 +7,14 @@ const GRAPH_API_SCOPE = "https://graph.microsoft.com/.default";
 
 function isB2CMocked(): boolean {
   return process.env.MOCK_AZURE_B2C === "true";
+}
+
+// Throws rather than skipping so media approval stops before a local user is created without a B2C account.
+function assertOutboundEnabled(operation: string): void {
+  if (!isOutboundEnabled()) {
+    console.warn(`[graph-api] ${operation} skipped: outbound disabled`);
+    throw new Error(`${operation} skipped: outbound disabled (OUTBOUND_ENABLED=false)`);
+  }
 }
 
 interface GraphUser {
@@ -170,6 +179,8 @@ export async function updateMediaUser(
     return;
   }
 
+  assertOutboundEnabled("updateMediaUser");
+
   const client = Client.init({
     authProvider: (done) => {
       done(null, accessToken);
@@ -208,6 +219,8 @@ export async function createMediaUser(
     const mockId = `mock-azure-ad-${crypto.randomUUID()}`;
     return { azureAdUserId: mockId };
   }
+
+  assertOutboundEnabled("createMediaUser");
 
   const b2cDomain = process.env.AZURE_B2C_DOMAIN;
   if (!b2cDomain) {

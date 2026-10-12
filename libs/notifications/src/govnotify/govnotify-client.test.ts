@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set environment variables BEFORE any imports
 process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
@@ -390,5 +390,56 @@ describe("govnotify-client", () => {
 
     expect(result.success).toBe(true);
     expect(mockPrepareUpload).not.toHaveBeenCalled();
+  });
+
+  describe("outbound kill switch", () => {
+    const params = {
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      pdfBuffer: Buffer.from("pdf"),
+      excelBuffer: Buffer.from("excel")
+    };
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      vi.restoreAllMocks();
+    });
+
+    it("should send the email when OUTBOUND_ENABLED is true", async () => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "true");
+      const { sendEmail } = await import("./govnotify-client.js");
+
+      // Act
+      const result = await sendEmail(params);
+
+      // Assert
+      expect(result).toEqual({ success: true, notificationId: "notification-123" });
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    });
+
+    it("should skip the send and return a skipped result when OUTBOUND_ENABLED is false", async () => {
+      // Arrange
+      vi.stubEnv("OUTBOUND_ENABLED", "false");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const { sendEmail } = await import("./govnotify-client.js");
+
+      // Act
+      const result = await sendEmail(params);
+
+      // Assert
+      expect(result).toEqual({ success: false, isSkipped: true, error: "Outbound disabled" });
+      expect(mockSendEmail).not.toHaveBeenCalled();
+      expect(mockPrepareUpload).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).not.toContain("user@example.com");
+    });
   });
 });

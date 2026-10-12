@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@hmcts/location": "workspace:*",
+    "@hmcts/outbound": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*"
   },
   "peerDependencies": {

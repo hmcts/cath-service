@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendThirdPartyDeletion, sendThirdPartyPublications } from "./service.js";
 
 const mockPushLogCreate = vi.hoisted(() => vi.fn());
@@ -173,5 +173,43 @@ describe("sendThirdPartyDeletion", () => {
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to write push log:"), "DB write failed");
     consoleWarnSpy.mockRestore();
+  });
+});
+
+describe("outbound kill switch", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("should push to Courtel when OUTBOUND_ENABLED is true", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "true");
+
+    // Act
+    await sendThirdPartyPublications(BASE_PARAMS);
+
+    // Assert
+    expect(pushWithRetry).toHaveBeenCalledTimes(1);
+    expect(mockPushLogCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { name: "sendThirdPartyPublications", send: () => sendThirdPartyPublications(BASE_PARAMS) },
+    { name: "sendThirdPartyDeletion", send: () => sendThirdPartyDeletion(BASE_PARAMS) }
+  ])("$name should skip the push without writing a push log when OUTBOUND_ENABLED is false", async ({ send }) => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "false");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Act
+    const result = await send();
+
+    // Assert
+    expect(result).toBeUndefined();
+    expect(pushWithRetry).not.toHaveBeenCalled();
+    expect(findSubscribersByListType).not.toHaveBeenCalled();
+    expect(mockPushLogCreate).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith("[ThirdParty] Third-party push skipped: outbound disabled");
   });
 });

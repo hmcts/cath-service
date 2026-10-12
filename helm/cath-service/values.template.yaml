@@ -18,6 +18,12 @@ api:
   enabled: true
 crons:
   enabled: true
+# Off until legacy-account-database-url, legacy-publication-database-url and
+# legacy-storage-account-name exist in the cath vault: the CSI mount fails the pod if a
+# listed secret is missing. Never enable on aat, where an applied run
+# would wipe E2E users and subscriptions (docs/migration/legacy-data-migration.md §11).
+legacySync:
+  enabled: false
 
 # Web application configuration
 #
@@ -51,6 +57,8 @@ cath-web:
       # job.helm-deploy.yml; the :-true default keeps aat behaviour if unset.
       ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+      # "false" on any environment holding migrated legacy subscriptions (§10 of the migration doc).
+      OUTBOUND_ENABLED: "${OUTBOUND_ENABLED:-true}"
 
 # API application configuration
 cath-api:
@@ -60,6 +68,8 @@ cath-api:
     environment:
       ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+      # "false" on any environment holding migrated legacy subscriptions (§10 of the migration doc).
+      OUTBOUND_ENABLED: "${OUTBOUND_ENABLED:-true}"
 
 # Crons application configuration
 cath-crons:
@@ -68,6 +78,61 @@ cath-crons:
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
+
+# Legacy CaTH sync (docs/migration/legacy-data-migration.md): accounts at 02:00, then
+# publications at 03:00. Dry runs unless LEGACY_SYNC_APPLY is "true". keyVaults replaces the
+# subchart list rather than merging, so the default secrets are repeated. The legacy OAuth
+# vault (LEGACY_THIRD_PARTY_KEY_VAULT) is unset until confirmed, so that copy reports as skipped.
+cath-crons-legacy-sync:
+  job:
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    releaseNameOverride: "{{ .Release.Name }}-legacy-sync"
+    schedule: "0 2 * * *"
+    suspend: false
+    kind: CronJob
+    environment:
+      SCRIPT_NAME: "legacy-sync"
+      LEGACY_SYNC_APPLY: "false"
+      THIRD_PARTY_KEY_VAULT: "cath-tp-{{ .Values.global.environment }}"
+      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+    keyVaults:
+      cath:
+        secrets:
+          - name: app-insights-connection-string
+            alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+          - name: postgres-url
+            alias: DATABASE_URL
+          - name: storageaccount-connection-string
+            alias: AZURE_STORAGE_CONNECTION_STRING
+          - name: legacy-account-database-url
+            alias: LEGACY_ACCOUNT_DATABASE_URL
+          - name: legacy-storage-account-name
+            alias: LEGACY_STORAGE_ACCOUNT_NAME
+
+cath-crons-legacy-sync-publications:
+  job:
+    image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
+    releaseNameOverride: "{{ .Release.Name }}-legacy-sync-publications"
+    schedule: "0 3 * * *"
+    suspend: false
+    kind: CronJob
+    environment:
+      SCRIPT_NAME: "legacy-sync-publications"
+      LEGACY_SYNC_APPLY: "false"
+      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+    keyVaults:
+      cath:
+        secrets:
+          - name: app-insights-connection-string
+            alias: APPLICATION_INSIGHTS_CONNECTION_STRING
+          - name: postgres-url
+            alias: DATABASE_URL
+          - name: storageaccount-connection-string
+            alias: AZURE_STORAGE_CONNECTION_STRING
+          - name: legacy-publication-database-url
+            alias: LEGACY_PUBLICATION_DATABASE_URL
+          - name: legacy-storage-account-name
+            alias: LEGACY_STORAGE_ACCOUNT_NAME
 
 # Postgres Prisma Studio service configuration
 cath-postgres:

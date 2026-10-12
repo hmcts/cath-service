@@ -396,7 +396,7 @@ export async function sendSystemAdminNotification(adminEmails: string[], details
         templateParameters: personalisation as unknown as TemplateParameters
       });
 
-      if (!result.success) {
+      if (!result.success && !result.isSkipped) {
         console.error(`Failed to send system admin notification to ${emailAddress}: ${result.error}`);
       }
     })
@@ -436,6 +436,11 @@ async function processUserNotification(
     if (emailResult.success) {
       await updateNotificationStatus(notification.notificationId, "Sent", new Date(), undefined, emailResult.notificationId);
       return { status: "sent" };
+    }
+
+    if (emailResult.isSkipped) {
+      await updateNotificationStatus(notification.notificationId, "Skipped", undefined, emailResult.error);
+      return { status: "skipped", error: `User ${subscription.userId}: ${emailResult.error}` };
     }
 
     await updateNotificationStatus(notification.notificationId, "Failed", undefined, emailResult.error);
@@ -654,6 +659,10 @@ async function processListTypeUserNotification(
 
     if (emailResult.success) {
       return { status: "sent" };
+    }
+
+    if (emailResult.isSkipped) {
+      return { status: "skipped", error: `User ${subscriber.userId}: ${emailResult.error}` };
     }
 
     return { status: "failed", error: `User ${subscriber.userId}: ${emailResult.error}` };

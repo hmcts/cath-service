@@ -587,3 +587,92 @@ describe("createMediaUser", () => {
     expect(mockPost).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("outbound kill switch", () => {
+  const userData = { email: "test@example.com", displayName: "Test Name", givenName: "Test", surname: "Name" };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.AZURE_B2C_DOMAIN = "test-tenant.onmicrosoft.com";
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it("should create the user in Azure AD when OUTBOUND_ENABLED is true", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "true");
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { createMediaUser } = await import("./client.js");
+    const mockPost = vi.fn().mockResolvedValue({ id: "new-user-id" });
+    vi.mocked(Client.init).mockReturnValue({ api: vi.fn().mockReturnValue({ post: mockPost }) } as any);
+
+    // Act
+    const result = await createMediaUser("test-token", userData);
+
+    // Assert
+    expect(result).toEqual({ azureAdUserId: "new-user-id" });
+    expect(mockPost).toHaveBeenCalledTimes(1);
+  });
+
+  it("should update the user in Azure AD when OUTBOUND_ENABLED is true", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "true");
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { updateMediaUser } = await import("./client.js");
+    const mockPatch = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(Client.init).mockReturnValue({ api: vi.fn().mockReturnValue({ patch: mockPatch }) } as any);
+
+    // Act
+    await updateMediaUser("test-token", "user-456", userData);
+
+    // Assert
+    expect(mockPatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw without calling Graph from createMediaUser when OUTBOUND_ENABLED is false", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "false");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { createMediaUser } = await import("./client.js");
+
+    // Act
+    const result = createMediaUser("test-token", userData);
+
+    // Assert
+    await expect(result).rejects.toThrow("createMediaUser skipped: outbound disabled");
+    expect(Client.init).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith("[graph-api] createMediaUser skipped: outbound disabled");
+  });
+
+  it("should throw without calling Graph from updateMediaUser when OUTBOUND_ENABLED is false", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "false");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { Client } = await import("@microsoft/microsoft-graph-client");
+    const { updateMediaUser } = await import("./client.js");
+
+    // Act
+    const result = updateMediaUser("test-token", "user-456", userData);
+
+    // Assert
+    await expect(result).rejects.toThrow("updateMediaUser skipped: outbound disabled");
+    expect(Client.init).not.toHaveBeenCalled();
+  });
+
+  it("should still return a mock user when MOCK_AZURE_B2C is true and OUTBOUND_ENABLED is false", async () => {
+    // Arrange
+    vi.stubEnv("OUTBOUND_ENABLED", "false");
+    vi.stubEnv("MOCK_AZURE_B2C", "true");
+    const { createMediaUser } = await import("./client.js");
+
+    // Act
+    const result = await createMediaUser("test-token", userData);
+
+    // Assert
+    expect(result.azureAdUserId).toMatch(/^mock-azure-ad-/);
+  });
+});

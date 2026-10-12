@@ -46,6 +46,7 @@
     "@hmcts/magistrates-public-adult-court-list": "workspace:*",
     "@hmcts/magistrates-public-list": "workspace:*",
     "@hmcts/magistrates-standard-list": "workspace:*",
+    "@hmcts/outbound": "workspace:*",
     "@hmcts/pht-weekly-hearing-list": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",

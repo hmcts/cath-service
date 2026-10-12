@@ -25,6 +25,8 @@ nodejs:
     POSTGRES_DATABASE: cath
     THIRD_PARTY_KEY_VAULT: 'cath-tp-{{ .Values.global.environment }}'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
+    # 'false' stops all outbound side effects (Notify emails, Courtel push, B2C user writes, LCSU S3 upload)
+    OUTBOUND_ENABLED: 'true'
     # Public hostname, not the ingress host. OIDC redirect URIs are built from
     # this (libs/auth/src/config/sso-config.ts, b2c-config.ts, crime-idam-config.ts),
     # so it must match what is registered on the app registrations and what the
