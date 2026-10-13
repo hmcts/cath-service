@@ -40,6 +40,8 @@ module "apim_product" {
   # Callers authenticate with an Entra ID token, not subscription keys.
   subscription_required = false
   approval_required     = false
+
+  product_policy = templatefile("${path.module}/resources/product-policy/product-policy.xml", {})
 }
 
 module "apim_api" {

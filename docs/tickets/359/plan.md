@@ -17,7 +17,7 @@ Source system (SNL / CP / CP_CATH / PDDA)
    | Authorization: Bearer <Entra ID token, aud = cath-service-api-client-id, roles ∋ api.publisher.user>
    v
 https://cft-api-mgmt.<env>.platform.hmcts.net/cath/v1/publication
-   | APIM inbound: validate-azure-ad-token -> rate-limit-by-key(azp/appid)
+   | APIM inbound: product rate-limit-by-key(azp/appid) -> validate-azure-ad-token
    | (401 JSON returned here on failure - never reaches backend)
    v  APIM swaps the supplier token for its own (cached client-credentials token)
 https://cath-api.<env>.platform.hmcts.net/v1/publication
@@ -78,6 +78,8 @@ infrastructure/
 ├── provider.tf                            # NEW: azurerm.cftapps alias
 ├── keyvault-access.tf                     # NEW: APIM managed identity Get on the cath key vault
 └── resources/
+    ├── product-policy/
+    │   └── product-policy.xml             # NEW: per-supplier rate limit
     └── api-policy/
         └── api-policy.xml                 # NEW: inbound/outbound policy template
 docs/api/openapi.yaml                      # CHANGED: APIM servers entry, APIM 401 response
@@ -200,7 +202,7 @@ module "apim_api_policy" {
 
 ### `infrastructure/resources/api-policy/api-policy.xml`
 
-The policy follows `pip-data-management/infrastructure/resources/api-policy/api-policy.xml`. See the file for the XML.
+The policy follows `pip-data-management/infrastructure/resources/api-policy/api-policy.xml`. See the file for the XML. The rate limit lives in the product policy (`resources/product-policy/product-policy.xml`), which runs before the API policy, so its key reads the claim from the unvalidated header.
 
 - APIM gets a client-credentials token for `cath-service-api-client-id` (secret and scope read from the cath key vault with its managed identity), caches it for 45 minutes and sets it as `Authorization`.
 - A backend 401/403 clears the cached token and returns 502.

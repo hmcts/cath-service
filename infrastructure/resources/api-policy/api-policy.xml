@@ -2,7 +2,7 @@
   <!-- Rendered with templatefile(): never use C# $"..." interpolation here. -->
   <inbound>
     <base />
-    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Access denied due to invalid OAuth information" output-token-variable-name="jwt">
+    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Access denied due to invalid OAuth information">
       <audiences>
         <audience>${client_id}</audience>
       </audiences>
@@ -12,8 +12,6 @@
         </claim>
       </required-claims>
     </validate-azure-ad-token>
-    <!-- v2 tokens carry azp, v1 tokens carry appid. -->
-    <rate-limit-by-key calls="600" renewal-period="60" counter-key="@{ var jwt = (Jwt)context.Variables[&quot;jwt&quot;]; return jwt.Claims.GetValueOrDefault(&quot;azp&quot;, jwt.Claims.GetValueOrDefault(&quot;appid&quot;, &quot;unknown&quot;)); }" />
     <!-- Suppliers never call the backend: APIM swaps their token for its own. -->
     <cache-lookup-value key="cathAuth" variable-name="cathAuthToken" />
     <choose>
