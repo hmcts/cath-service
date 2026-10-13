@@ -112,7 +112,7 @@ users → subscriptions and list-type subscriptions → third parties → media 
 | `location`, `location_reference` | `location-data.ts` | **Don't sync.** `location-data.ts` is the source of truth, and the deploy seed overwrites names from it. **One-off generator:** emit a `location-data.ts` candidate from legacy for the parity PR (§3). Legacy regions and jurisdictions are `text[]` names, so map them to ids by name; `jurisdiction_type` maps to sub-jurisdictions. **Nightly drift report:** compare id, name, Welsh name, regions, sub-jurisdictions, email, contact number and references (`provenance`, `provenance_location_id`, `provenance_location_type`). Legacy admins can upload location CSVs in prod, so drift will happen. Fix it with a PR. |
 | `location_metadata` | `location_metadata` | Replace. Keep `location_metadata_id`. Trim the four messages, converting empty strings to null. Set `updated_at` explicitly (`@updatedAt` is a Prisma default only). Reject unknown locations, rows with no message, and messages that fail `libs/location/src/validation/location-metadata-validation.ts`. |
 | `artefact` | `artefact` | Upsert and delete (§4). Scope: `display_to IS NULL OR display_to > now()`, which includes future `display_from` and `GENERAL_PUBLICATION` rows with no end date. Field rules are in the table below. Drop `search` (`artefact_search` replaces it) and `payload_size`. |
-| artefact payloads (`artefact` container) | `artefact` container | Legacy `payload` holds `https://<account>/artefact/<random uuid>`. Copy it server-side to `artefact/<artefactId>`, matching the ingest path. Stamp `legacy_last_received_date` metadata on the blob. Legacy V1.25 copied rows that kept the same `payload` URL, so check for and report artefacts sharing one blob. |
+| artefact payloads (`artefact` container) | `artefact` container | Legacy `payload` holds `https://<account>/artefact/<random uuid>`. Copy it to `artefact/<artefactId>`, matching the ingest path. The copy goes through the sync pod (SDK download, then upload), not server-side, because the payload has to be read anyway to detect flat-file types and check the JSON. Stamp `legacylastreceived` metadata on the blob. Legacy V1.25 copied rows that kept the same `payload` URL; each such artefact gets its own copy under its own id, so a shared blob is copied once per artefact and is not reported. |
 | `publications` container (PDF/xlsx) | `publications` container | **Copy, don't regenerate** (§5.3). Legacy names them `<artefactId>.pdf` and `<artefactId>.xlsx`, exactly what the new download pages read, so a copy is a drop-in. They are only needed until the migrated lists expire, a few days to two weeks after cutover; after that every file comes from the normal ingest path. The cost is that migrated lists offer the legacy-styled PDF for that window. Legacy's extra `<id>_cy.pdf` is not copied, because nothing here links to it. |
 | `artefact_search` | `artefact_search` | **Regenerate** from the payload (§5.3). |
 | `list_search_config` | `list_search_config` | Replace. It is admin-managed in both systems, not config in code: without it `artefact_search` is never populated, so migrated lists have no case search (found in the end-to-end run). Keep the id, map list type name → id, and reject a second config for one list type. |
@@ -200,7 +200,7 @@ Email is not an identity key, but it is used for lookups (`findUserByEmail`, med
 
 - Migration lowercases and trims emails. Legacy compares emails case-insensitively (`…IgnoreCase` repositories), but the new code mostly compares exactly, and only `createMediaApplication` lowercases.
 - **Fix in new:** lowercase emails on every write path in `createUser`/`updateUser`, and update `email` from the IdP on login. Today `createOrUpdateUser` only updates `role` and `lastSignedInDate`, so an email changed at the IdP stays stale forever.
-- **Fix in new:** `createLocalMediaUser`/`updateLocalMediaUser` write `userProvenance: "B2C_IDAM"`, but B2C login and all legacy data use `PI_AAD`. The same person ends up under two provenance labels depending on whether an admin approved them or they signed in first. Standardise on `PI_AAD`.
+- ~~**Fix in new:** `createLocalMediaUser`/`updateLocalMediaUser` write `userProvenance: "B2C_IDAM"`.~~ **Done in #1052:** admin-created media users are now written as `PI_AAD`, matching B2C login and legacy data.
 
 ### Subscriptions must match
 
@@ -211,14 +211,16 @@ Email is not an identity key, but it is used for lookups (`findUserByEmail`, med
 
 ## 7. Verification (every run)
 
-1. **Row counts and checksums** per table: legacy in-scope count vs new count, plus a hash of the mapped key columns. Output to App Insights and a summary in the job log. Non-zero drift fails the job.
+1. **Write check** per table (**built**, `write-drift.ts`). Every legacy row either loads or is rejected with a reason, so drift is measured against the transformed rows, not the raw legacy count: rejected rows are expected not to be there. After the writes, still inside the transaction, each table is read back and compared field by field with the rows the run meant to write. Missing, unexpected and differing rows are reported by id only. Any drift throws, which rolls the run back and leaves the previous night's data in place. The error (`SyncAbortedError`) carries the report built before the abort, and the cron entry logs it before failing, so an aborted night still shows what was read and rejected. A row-count guard violation aborts the same way. This catches write-side loss the transforms cannot see, such as a value a column type truncates (building it surfaced one: `content_date` is a date column but the transform kept the legacy timestamp, which also made every artefact with a time part look changed each night; the transform now truncates it). Output to App Insights is not built yet.
+   - **Rejections are classified** (**built**, `rejection-policy.ts`). Because each run reloads the full snapshot, permanent legacy data is re-rejected every night: the V1.16 duplicate subscriptions, non-`ACTIVE` OAuth subscribers and their subscriptions, `INTERNAL` sensitivity, non-`LIST` artefacts, and third parties routed to their own tables. These are **accepted**: reported and marked `(accepted)`, but not blocking. Every other reason is **blocking**, including any reason added later, so accepting one is a deliberate change to the list. A dry-run drop-limit violation is blocking too.
+   - **The job fails on blocking issues** (**built**). The report ends with `blocking issues: N`, and the cron entry throws after logging it when N > 0, so the CronJob run shows as failed. This applies to dry runs as well, because the prod dry run is the rehearsal.
 2. **Payload validity:** run `validateListTypeJson` on every migrated JSON payload. Legacy schemas may be looser than ours. Every failure is a real cutover risk, because that list would render badly or not at all on day one.
 3. **Search and files:** report `artefact_search` and file-copy failures (§5.3).
 4. **Orphans:** artefacts with unknown `locationId`, subscriptions to unknown locations or list types, users with unmapped roles.
 5. **Location drift** (§5.2).
 6. **Sample diff (weekly, manual):** pick N courts and compare the summary-of-publications page between legacy and new.
 
-The aim is an empty report for a sustained period (for example two weeks) before go/no-go.
+The aim is a report with no blocking issues and no recipient differences for a sustained period (for example two weeks) before go/no-go. Accepted rejections are expected in every report.
 
 ## 8. Parity gaps (outside migration, but they block cutover)
 
@@ -321,7 +323,7 @@ New has no `stg` environment; `aat` is staging. It deploys to the `DCD-CFTAPPS-S
 | 5 | Third parties + vault copy | Q6 vault | Built; secret copy skipped until the legacy vault is known |
 | 6 | Artefact rows, payload copy, blob cleanup, list search config | 3 | Built |
 | 7 | Derived data: validation, `artefact_search`, PDF/Excel copy | 6 | Built |
-| 8 | Verification: recipient diff, counts, App Insights, failing the job on drift | 6 | Not started |
+| 8 | Verification: recipient diff, counts, App Insights, failing the job on drift | 6 | Write check, rejection classification and failing the job built (2026-10-12); recipient diff and App Insights not started |
 | 9 | Parity gaps (§8), each as its own ticket | — | Not started |
 | 10 | Cutover rehearsal on `perftest` (prod snapshot), then go-live | all | Not started |
 
@@ -339,6 +341,7 @@ Scope: every domain in §5. Not built yet: verification beyond per-run reports (
 | File and secret steps | `proof-of-id-copy.ts`, `oauth-secret-copy.ts`, `artefact-payload.ts`, `artefact-derived-data.ts` |
 | Locations | `location-drift.ts` (nightly report), `location-data-generator.ts` (one-off candidate) |
 | Row-count guard | `row-count-guard.ts` |
+| Write check and rejection classification | `write-drift.ts`, `rejection-policy.ts`, `findBlockingIssues` in `sync-report.ts` |
 | Orchestrators | `run-legacy-sync.ts` (accounts: nine tables in one transaction), `run-publication-sync.ts` |
 | Cron entries | `apps/crons/src/legacy-sync.ts`, `legacy-sync-publications.ts`, `generate-location-data.ts` |
 | Deployment | `helm/cath-service`: two more releases of the crons chart (`cath-crons-legacy-sync` at 02:00, `cath-crons-legacy-sync-publications` at 03:00) behind `legacySync.enabled` (default `false`). The `example` cron is unchanged. |
@@ -353,7 +356,7 @@ Config:
 - `LEGACY_SYNC_APPLY=true`: needed to write. Anything else is a dry run.
 - `LEGACY_SYNC_MAX_DROP_RATIO`: default `0.05`. An applied run aborts, with no writes, if any table would shrink by more than `max(50, ratio × existing rows)` or be emptied. A dry run reports the same check as `WOULD BE REFUSED` and carries on. Exceptions: artefacts allow 50% (§4), and `media_application` may be emptied, because every pending application can be approved.
 
-Transforms and orchestrators are unit tested (76 tests). The orchestrators use mocked transactions to check write order, dry run, the guard, and the file and secret steps.
+Transforms and orchestrators are unit tested (110 tests, plus 14 for the cron entries). The orchestrators use mocked transactions that read back what was written, to check write order, dry run, the guard, the write check, and the file and secret steps.
 
 History: the prototype first used a ledger-based mirror. It was replaced by the wholesale reload once it was confirmed that no real user writes to new prod before cutover.
 
@@ -397,4 +400,4 @@ Open items surfaced:
 4. Payload copies and derived data run one artefact at a time. Check run time against prod volumes (Q13) before adding concurrency.
 5. The file copy has not run against real Azure storage; check the legacy `publications` container is readable by the sync identity.
 
-Next steps: ticket 2 (access, vault secrets, dry runs), the location parity PR, ticket 8 (verification), and the login-side fixes from §6 (B2C `oid` first, Crime `subname`, email lowercase and refresh, `PI_AAD` for admin-created media users).
+Next steps: ticket 2 (access, vault secrets, dry runs), the location parity PR, ticket 8 (verification), and the login-side fixes from §6 (B2C `oid` first, Crime `subname`, email lowercase and refresh).

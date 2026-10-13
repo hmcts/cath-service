@@ -5,12 +5,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MigratedArtefact } from "./artefact-transform.js";
 import { type LegacyArtefact, readLegacyPublicationData } from "./legacy-publication-source.js";
 import { runPublicationSync } from "./run-publication-sync.js";
+import { SyncAbortedError } from "./sync-report.js";
 
 const { tx, storage } = vi.hoisted(() => ({
   tx: {
-    locationMetadata: { count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() },
-    listSearchConfig: { count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() },
-    artefact: { deleteMany: vi.fn(), createMany: vi.fn(), update: vi.fn() }
+    locationMetadata: { count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn(), findMany: vi.fn() },
+    listSearchConfig: { count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn(), findMany: vi.fn() },
+    artefact: { deleteMany: vi.fn(), createMany: vi.fn(), update: vi.fn(), findMany: vi.fn() }
   },
   storage: { download: vi.fn(), exists: vi.fn() }
 }));
@@ -102,6 +103,22 @@ function existingRow(artefactId: string, overrides: Partial<MigratedArtefact> = 
   };
 }
 
+// Emulates the artefact table, so the write check reads back what the run's upserts and deletes left.
+function setExistingArtefacts(existing: MigratedArtefact[]): void {
+  const table = new Map(existing.map((row) => [row.artefactId, row]));
+  vi.mocked(prisma.artefact.findMany).mockResolvedValue(existing as never);
+  tx.artefact.deleteMany.mockImplementation(async ({ where }: { where: { artefactId: { in: string[] } } }) => {
+    for (const id of where.artefactId.in) table.delete(id);
+  });
+  tx.artefact.createMany.mockImplementation(async ({ data }: { data: MigratedArtefact[] }) => {
+    for (const row of data) table.set(row.artefactId, row);
+  });
+  tx.artefact.update.mockImplementation(async ({ data }: { data: MigratedArtefact }) => {
+    table.set(data.artefactId, data);
+  });
+  tx.artefact.findMany.mockImplementation(async () => [...table.values()]);
+}
+
 describe("runPublicationSync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,7 +139,12 @@ describe("runPublicationSync", () => {
     });
     vi.mocked(prisma.listType.findMany).mockResolvedValue([{ id: 901, name: "CIVIL_DAILY_CAUSE_LIST", friendlyName: null }] as never);
     vi.mocked(prisma.location.findMany).mockResolvedValue([{ locationId: 9 }] as never);
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue([] as never);
+    setExistingArtefacts([]);
+    for (const model of [tx.locationMetadata, tx.listSearchConfig]) {
+      model.createMany.mockImplementation(async ({ data }: { data: unknown[] }) => {
+        model.findMany.mockResolvedValue(data);
+      });
+    }
     vi.mocked(getBlobProperties).mockResolvedValue(null);
     tx.locationMetadata.count.mockResolvedValue(0);
     tx.listSearchConfig.count.mockResolvedValue(0);
@@ -151,10 +173,7 @@ describe("runPublicationSync", () => {
 
   it("should leave an artefact alone when its payload already carries the current marker", async () => {
     // Arrange
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue([
-      existingRow("json-artefact"),
-      existingRow("flat-artefact", { isFlatFile: true, sourceArtefactId: "SNL-7.pdf" })
-    ] as never);
+    setExistingArtefacts([existingRow("json-artefact"), existingRow("flat-artefact", { isFlatFile: true, sourceArtefactId: "SNL-7.pdf" })]);
     vi.mocked(getBlobProperties).mockResolvedValue({ size: 1, metadata: { legacylastreceived: RECEIVED.toISOString() } });
 
     // Act
@@ -170,7 +189,7 @@ describe("runPublicationSync", () => {
 
   it("should delete artefacts legacy no longer displays, with their files", async () => {
     // Arrange
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue([existingRow("expired")] as never);
+    setExistingArtefacts([existingRow("expired")]);
 
     // Act
     await runPublicationSync({ ...OPTIONS, isDryRun: false });
@@ -235,9 +254,24 @@ describe("runPublicationSync", () => {
     ]);
   });
 
+  it("should abort before touching files or derived data when a table does not hold what was written", async () => {
+    // Arrange
+    tx.listSearchConfig.createMany.mockImplementation(async ({ data }: { data: { id: string }[] }) => {
+      tx.listSearchConfig.findMany.mockResolvedValue(data.map((row) => ({ ...row, caseNameFieldName: "truncated" })));
+    });
+
+    // Act
+    const run = runPublicationSync({ ...OPTIONS, isDryRun: false });
+
+    // Assert
+    await expect(run).rejects.toThrow("list_search_config: written rows differ from the transformed legacy rows; 1 differing (config-1)");
+    expect(deleteBlob).not.toHaveBeenCalled();
+    expect(extractAndStoreArtefactSearch).not.toHaveBeenCalled();
+  });
+
   it("should refuse to write when the legacy read would empty the artefact table", async () => {
     // Arrange
-    vi.mocked(prisma.artefact.findMany).mockResolvedValue([existingRow("a"), existingRow("b")] as never);
+    setExistingArtefacts([existingRow("a"), existingRow("b")]);
     vi.mocked(readLegacyPublicationData).mockResolvedValue({
       locations: [],
       locationReferences: [],
@@ -246,8 +280,16 @@ describe("runPublicationSync", () => {
       artefacts: []
     });
 
-    // Act & Assert
-    await expect(runPublicationSync({ ...OPTIONS, isDryRun: false })).rejects.toThrow("artefact: refusing to replace 2 rows with 0");
+    // Act
+    const error = await runPublicationSync({ ...OPTIONS, isDryRun: false }).catch((caught: unknown) => caught);
+
+    // Assert
+    expect(error).toBeInstanceOf(SyncAbortedError);
+    expect((error as SyncAbortedError).message).toContain("artefact: refusing to replace 2 rows with 0");
+    expect((error as SyncAbortedError).report.domains.find(({ entityType }) => entityType === "artefact")?.dropLimitViolation).toContain(
+      "refusing to replace 2 rows with 0"
+    );
+    expect((error as SyncAbortedError).report.steps.map(({ name }) => name)).toEqual(["location_drift"]);
     expect(tx.artefact.deleteMany).not.toHaveBeenCalled();
     expect(deleteBlob).not.toHaveBeenCalled();
   });

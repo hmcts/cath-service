@@ -10,7 +10,8 @@ import { type MigratedListSearchConfig, transformListSearchConfigs } from "./lis
 import { findLocationDrift } from "./location-drift.js";
 import { type MigratedLocationMetadata, transformLocationMetadata } from "./location-metadata-transform.js";
 import { findDropLimitViolation } from "./row-count-guard.js";
-import type { DomainReport, DomainTransform, StepReport, SyncReport } from "./sync-report.js";
+import { type DomainReport, type DomainTransform, type StepReport, SyncAbortedError, type SyncReport } from "./sync-report.js";
+import { findWriteDrift } from "./write-drift.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 
@@ -49,6 +50,11 @@ export async function runPublicationSync(options: PublicationSyncOptions): Promi
   const staged = await stageArtefactPayloads(artefacts.rows, new Map(existing.map((artefact) => [artefact.artefactId, artefact])), storage, isDryRun);
   const artefactDomain: DomainTransform<MigratedArtefact> = { rows: staged.rows, rejections: [...artefacts.rejections, ...staged.rejections] };
   const plan = planArtefactWrites(staged.rows, existing);
+  const locationDriftStep: StepReport = {
+    name: "location_drift",
+    processed: legacy.locations.length,
+    rejections: findLocationDrift(legacy.locations, locationData)
+  };
 
   const domains = await prisma.$transaction(async (tx) => {
     const reports = [
@@ -58,17 +64,23 @@ export async function runPublicationSync(options: PublicationSyncOptions): Promi
     ];
 
     if (!isDryRun) {
+      // Throwing rolls the run back, leaving the previous night's data in place.
+      const abortedReport = { isDryRun, domains: reports, steps: [locationDriftStep] };
       const violations = reports.flatMap((report) => (report.dropLimitViolation ? [report.dropLimitViolation] : []));
       if (violations.length > 0) {
-        throw new Error(violations.join("\n"));
+        throw new SyncAbortedError(violations.join("\n"), abortedReport);
       }
       await writePublicationData(tx, locationMetadata.rows, listSearchConfigs.rows, plan);
+      const drift = await findPublicationWriteDrift(tx, locationMetadata.rows, listSearchConfigs.rows, staged.rows);
+      if (drift.length > 0) {
+        throw new SyncAbortedError(drift.join("\n"), abortedReport);
+      }
     }
 
     return reports;
   }, TRANSACTION_OPTIONS);
 
-  const steps: StepReport[] = [{ name: "location_drift", processed: legacy.locations.length, rejections: findLocationDrift(legacy.locations, locationData) }];
+  const steps: StepReport[] = [locationDriftStep];
 
   if (isDryRun) {
     steps.push({ name: "artefact_derived_data", processed: 0, rejections: [], skipped: `dry run; ${staged.changed.length} artefacts would be rebuilt` });
@@ -122,6 +134,19 @@ async function writePublicationData(
   for (const artefact of plan.updates) {
     await tx.artefact.update({ where: { artefactId: artefact.artefactId }, data: artefact });
   }
+}
+
+async function findPublicationWriteDrift(
+  tx: Prisma.TransactionClient,
+  locationMetadata: MigratedLocationMetadata[],
+  listSearchConfigs: MigratedListSearchConfig[],
+  artefacts: MigratedArtefact[]
+): Promise<string[]> {
+  return [
+    findWriteDrift("location_metadata", locationMetadata, await tx.locationMetadata.findMany(), "locationMetadataId"),
+    findWriteDrift("list_search_config", listSearchConfigs, await tx.listSearchConfig.findMany(), "id"),
+    findWriteDrift("artefact", artefacts, await tx.artefact.findMany({ select: ARTEFACT_FIELDS }), "artefactId")
+  ].filter((message) => message !== null);
 }
 
 export interface PublicationSyncOptions {

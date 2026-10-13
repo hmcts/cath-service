@@ -34,6 +34,17 @@ function buildLegacyArtefact(overrides: Partial<LegacyArtefact> = {}): LegacyArt
 }
 
 describe("transformArtefacts", () => {
+  it("should truncate the legacy content date timestamp to its date", () => {
+    // Arrange
+    const legacy = buildLegacyArtefact({ content_date: new Date("2026-10-09T23:30:00Z") });
+
+    // Act
+    const result = transformArtefacts([legacy], CONTEXT);
+
+    // Assert
+    expect(result.rows[0].artefact.contentDate).toEqual(new Date("2026-10-09T00:00:00Z"));
+  });
+
   it("should keep the legacy artefact id and take the payload blob name from the URL", () => {
     // Act
     const result = transformArtefacts([buildLegacyArtefact()], CONTEXT);

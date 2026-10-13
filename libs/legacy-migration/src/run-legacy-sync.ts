@@ -11,8 +11,9 @@ import { transformOauthCredentials, transformOauthSubscriptions, transformOauthU
 import { deleteOrphanedProofOfIdFiles, stageProofOfIdFiles } from "./proof-of-id-copy.js";
 import { findDropLimitViolation } from "./row-count-guard.js";
 import { transformSubscriptions } from "./subscription-transform.js";
-import type { DomainReport, DomainTransform, SyncReport } from "./sync-report.js";
+import { type DomainReport, type DomainTransform, SyncAbortedError, type SyncReport } from "./sync-report.js";
 import { transformUsers } from "./user-transform.js";
+import { findWriteDrift } from "./write-drift.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 
@@ -32,11 +33,17 @@ export async function runLegacySync(options: LegacySyncOptions): Promise<SyncRep
     const previous = await readPreviousState(tx);
 
     if (!isDryRun) {
+      // Throwing rolls the reload back, leaving the previous night's data in place.
+      const abortedReport = { isDryRun, domains, steps: [] };
       const violations = domains.flatMap((report) => (report.dropLimitViolation ? [report.dropLimitViolation] : []));
       if (violations.length > 0) {
-        throw new Error(violations.join("\n"));
+        throw new SyncAbortedError(violations.join("\n"), abortedReport);
       }
       await replaceAccountData(tx, plan);
+      const drift = await findAccountWriteDrift(tx, plan);
+      if (drift.length > 0) {
+        throw new SyncAbortedError(drift.join("\n"), abortedReport);
+      }
     }
 
     return { domains, previous };
@@ -182,6 +189,20 @@ async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPla
   await tx.thirdPartySubscription.createMany({ data: plan.oauthSubscriptions.rows });
   await tx.mediaApplication.createMany({ data: plan.mediaApplications.rows });
   await tx.auditLog.createMany({ data: plan.auditLogs.rows });
+}
+
+async function findAccountWriteDrift(tx: Prisma.TransactionClient, plan: AccountPlan): Promise<string[]> {
+  return [
+    findWriteDrift("user", plan.users.rows, await tx.user.findMany(), "userId"),
+    findWriteDrift("subscription", plan.subscriptions.rows, await tx.subscription.findMany(), "subscriptionId"),
+    findWriteDrift("subscription_list_type", plan.listTypeSubscriptions.rows, await tx.subscriptionListType.findMany(), "subscriptionListTypeId"),
+    findWriteDrift("legacy_third_party_user", plan.courtelUsers.rows, await tx.legacyThirdPartyUser.findMany(), "id"),
+    findWriteDrift("legacy_third_party_subscription", plan.courtelSubscriptions.rows, await tx.legacyThirdPartySubscription.findMany(), "id"),
+    findWriteDrift("third_party_user", plan.oauthUsers.rows, await tx.thirdPartyUser.findMany(), "id"),
+    findWriteDrift("third_party_subscription", plan.oauthSubscriptions.rows, await tx.thirdPartySubscription.findMany(), "id"),
+    findWriteDrift("media_application", plan.mediaApplications.rows, await tx.mediaApplication.findMany(), "id"),
+    findWriteDrift("audit_log", plan.auditLogs.rows, await tx.auditLog.findMany(), "id")
+  ].filter((message) => message !== null);
 }
 
 export interface LegacySyncOptions {
