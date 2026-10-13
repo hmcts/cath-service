@@ -1,15 +1,31 @@
+# Separate from cath-appinsights-<env> so APIM traffic is kept apart from the
+# app's telemetry. Declared directly for the same reason as appinsights.tf.
+resource "azurerm_application_insights" "apim" {
+  count = local.deploy_apim ? 1 : 0
+
+  name                 = "${var.product}-apim-appinsights-${var.env}"
+  location             = var.location
+  resource_group_name  = azurerm_resource_group.shared.name
+  application_type     = "web"
+  daily_data_cap_in_gb = 50
+  workspace_id         = data.azurerm_log_analytics_workspace.shared.id
+  sampling_percentage  = 100
+
+  tags = local.common_tags
+}
+
 # Name must not collide with the platform's cft-api-mgmt-<suffix>-logger.
-resource "azurerm_api_management_logger" "cath" {
+resource "azurerm_api_management_logger" "apim" {
   count    = local.deploy_apim ? 1 : 0
   provider = azurerm.cftapps
 
-  name                = "cath-appinsights-logger"
+  name                = "${var.product}-apim-appinsights-logger"
   api_management_name = local.apim_name
   resource_group_name = local.apim_rg
-  resource_id         = azurerm_application_insights.shared.id
+  resource_id         = azurerm_application_insights.apim[0].id
 
   application_insights {
-    connection_string = azurerm_application_insights.shared.connection_string
+    connection_string = azurerm_application_insights.apim[0].connection_string
   }
 }
 
@@ -22,9 +38,9 @@ resource "azurerm_api_management_api_diagnostic" "cath" {
   api_name                 = module.apim_api[0].name
   api_management_name      = local.apim_name
   resource_group_name      = local.apim_rg
-  api_management_logger_id = azurerm_api_management_logger.cath[0].id
+  api_management_logger_id = azurerm_api_management_logger.apim[0].id
 
-  sampling_percentage       = 25.0
+  sampling_percentage       = 100.0
   always_log_errors         = true
   log_client_ip             = true
   verbosity                 = "verbose"
