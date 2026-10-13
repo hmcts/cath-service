@@ -2,7 +2,7 @@
   <!-- Rendered with templatefile(): never use C# $"..." interpolation here. -->
   <inbound>
     <base />
-    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" output-token-variable-name="jwt">
+    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Access denied due to invalid OAuth information" output-token-variable-name="jwt">
       <audiences>
         <audience>${client_id}</audience>
       </audiences>
@@ -64,24 +64,12 @@
           <set-header name="Content-Type" exists-action="override">
             <value>application/json</value>
           </set-header>
-          <set-body>{"success":false,"message":"Authenticated by APIM, but the CaTH API rejected the request. Please try again."}</set-body>
+          <set-body>{"statusCode":502,"message":"Authenticated by APIM, but the CaTH API rejected the request. Please try again."}</set-body>
         </return-response>
       </when>
     </choose>
   </outbound>
   <on-error>
     <base />
-    <choose>
-      <!-- Matches the backend's 401 body. -->
-      <when condition="@(context.LastError.Source == &quot;validate-azure-ad-token&quot;)">
-        <return-response>
-          <set-status code="401" reason="Unauthorized" />
-          <set-header name="Content-Type" exists-action="override">
-            <value>application/json</value>
-          </set-header>
-          <set-body>{"success":false,"message":"Missing or invalid access token"}</set-body>
-        </return-response>
-      </when>
-    </choose>
   </on-error>
 </policies>

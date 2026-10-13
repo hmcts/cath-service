@@ -271,6 +271,95 @@ describe("excel-to-json", () => {
       await expect(convertExcelToJson(buffer, config)).rejects.toThrow("Excel file must contain at least 3 data rows");
     });
 
+    it("should format Excel time-typed cells as time strings, not dates", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [
+          { header: "Judge", fieldName: "judge", required: true },
+          { header: "Time", fieldName: "time", required: true }
+        ]
+      };
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sheet1");
+      worksheet.addRow(["Judge", "Time"]);
+      const dataRow = worksheet.addRow(["Judge A", null]);
+      // Excel stores a time as a Date against the 1899-12-30 epoch.
+      dataRow.getCell(2).value = new Date(Date.UTC(1899, 11, 30, 10, 30, 0));
+      const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result[0]).toEqual({ judge: "Judge A", time: "10:30am" });
+    });
+
+    it("should format an on-the-hour Excel time cell without minutes", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [{ header: "Time", fieldName: "time", required: true }]
+      };
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sheet1");
+      worksheet.addRow(["Time"]);
+      const dataRow = worksheet.addRow([null]);
+      dataRow.getCell(1).value = new Date(Date.UTC(1899, 11, 30, 14, 0, 0));
+      const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result[0]).toEqual({ time: "2pm" });
+    });
+
+    it("should extract plain text from hyperlink cells", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [{ header: "Email", fieldName: "email", required: true }]
+      };
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sheet1");
+      worksheet.addRow(["Email"]);
+      const dataRow = worksheet.addRow([null]);
+      dataRow.getCell(1).value = { text: "judge@justice.gov.uk", hyperlink: "mailto:judge@justice.gov.uk" };
+      const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result[0]).toEqual({ email: "judge@justice.gov.uk" });
+    });
+
+    it("should extract plain text from rich text cells", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [{ header: "Name", fieldName: "name", required: true }]
+      };
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sheet1");
+      worksheet.addRow(["Name"]);
+      const dataRow = worksheet.addRow([null]);
+      dataRow.getCell(1).value = { richText: [{ text: "Judge " }, { text: "A" }] };
+      const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result[0]).toEqual({ name: "Judge A" });
+    });
+
+    it("should still format genuine calendar dates as dd/MM/yyyy", async () => {
+      const config: ExcelConverterConfig = {
+        fields: [{ header: "Date", fieldName: "date", required: true }]
+      };
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Sheet1");
+      worksheet.addRow(["Date"]);
+      const dataRow = worksheet.addRow([null]);
+      dataRow.getCell(1).value = new Date(2025, 0, 15);
+      const buffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+      const result = await convertExcelToJson(buffer, config);
+
+      expect(result[0]).toEqual({ date: "15/01/2025" });
+    });
+
     it("should allow minRows of 0 for optional data", async () => {
       const config: ExcelConverterConfig = {
         fields: [{ header: "Name", fieldName: "name", required: true }],

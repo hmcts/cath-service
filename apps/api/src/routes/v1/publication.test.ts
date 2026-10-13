@@ -1,487 +1,527 @@
-import type { BlobIngestionRequest } from "@hmcts/blob-ingestion/repository/model";
 import type { Request, Response } from "express";
+import multer from "multer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./publication.js";
 
-vi.mock("@hmcts/blob-ingestion/repository/service", () => ({
-  processBlobIngestion: vi.fn(),
-  processFlatFileBlobIngestion: vi.fn()
-}));
-
-vi.mock("@hmcts/blob-ingestion/middleware/oauth-middleware", () => ({
-  authenticateApi: vi.fn(() => (_req: Request, _res: Response, next: () => void) => next())
-}));
+vi.mock("@hmcts/blob-ingestion", async () => {
+  const actual = await vi.importActual<typeof import("@hmcts/blob-ingestion")>("@hmcts/blob-ingestion");
+  return {
+    ...actual,
+    authenticateApi: vi.fn(() => (_req: Request, _res: Response, next: () => void) => next()),
+    processBlobIngestion: vi.fn(),
+    processFlatFileBlobIngestion: vi.fn(),
+    validatePublicationMetadata: vi.fn(),
+    logIngestionResult: vi.fn()
+  };
+});
 
 vi.mock("@hmcts/pdda-html-upload", () => ({
   validatePddaHtmlUpload: vi.fn(),
   uploadHtmlToS3: vi.fn()
 }));
 
-describe("POST /v1/publication", () => {
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+const { processBlobIngestion, processFlatFileBlobIngestion, validatePublicationMetadata, logIngestionResult } = await import("@hmcts/blob-ingestion");
+const { uploadHtmlToS3, validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
+
+const VALID_HEADERS = {
+  "x-provenance": "SNL",
+  "x-court-id": "1",
+  "x-content-date": "2026-09-14T00:00:00.000Z",
+  "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+  "x-language": "ENGLISH",
+  "x-type": "LIST"
+};
+
+const CREATED_ARTEFACT = {
+  artefactId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  contentDate: "2026-09-14T00:00:00.000Z",
+  displayFrom: null,
+  displayTo: null,
+  isFlatFile: false,
+  language: "ENGLISH",
+  listType: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+  locationId: "1",
+  payload: "https://account.blob.core.windows.net/artefact/3fa85f64",
+  provenance: "SNL",
+  sensitivity: "PUBLIC",
+  sourceArtefactId: null,
+  type: "LIST"
+};
+
+function multerFile(overrides: Partial<Express.Multer.File> = {}): Express.Multer.File {
+  return {
+    fieldname: "file",
+    originalname: "list.html",
+    encoding: "7bit",
+    mimetype: "text/html",
+    buffer: Buffer.from("<html></html>"),
+    size: 100,
+    stream: null as any,
+    destination: "",
+    filename: "",
+    path: "",
+    ...overrides
+  };
+}
+
+describe("POST /publication", () => {
   let statusMock: ReturnType<typeof vi.fn>;
   let jsonMock: ReturnType<typeof vi.fn>;
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let mockResponse: Partial<Response>;
+
+  const handler = () => {
+    const handlers = Array.isArray(POST) ? POST : [POST];
+    return handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
+  };
+
+  const jsonRequest = (headers: Record<string, string> = {}, body: unknown = { courtLists: [] }): Partial<Request> => ({
+    headers: { "content-type": "application/json", "content-length": "42", ...VALID_HEADERS, ...headers },
+    body
+  });
+
+  const multipartRequest = (headers: Record<string, string> = {}, file: Express.Multer.File | null = multerFile()): Partial<Request> =>
+    ({
+      headers: { "content-type": "multipart/form-data; boundary=x", ...VALID_HEADERS, ...headers },
+      body: {},
+      file: file ?? undefined
+    }) as Partial<Request>;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     statusMock = vi.fn().mockReturnThis();
     jsonMock = vi.fn();
+    mockResponse = { status: statusMock, json: jsonMock };
 
-    mockRequest = {
-      headers: {
-        "content-length": "277"
-      },
-      body: {
-        court_id: "TEST_COURT_ID",
-        provenance: "TEST_SOURCE",
-        content_date: "2024-01-15",
-        list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-        sensitivity: "PUBLIC",
-        language: "ENGLISH",
-        display_from: "2024-01-15T00:00:00Z",
-        display_to: "2024-01-16T00:00:00Z",
-        hearing_list: { cases: [] }
-      }
-    };
-
-    mockResponse = {
-      status: statusMock,
-      json: jsonMock
-    };
-
-    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    vi.mocked(processBlobIngestion).mockResolvedValue({ outcome: "CREATED", artefact: CREATED_ARTEFACT });
+    vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({ outcome: "CREATED", artefact: { ...CREATED_ARTEFACT, isFlatFile: true } });
+    vi.mocked(validatePublicationMetadata).mockResolvedValue({ isValid: true, errors: [], listTypeId: 1, resolvedLocationId: "1" });
+    vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
+    vi.mocked(uploadHtmlToS3).mockResolvedValue({ success: true, s3Key: "pdda-html/list.html", bucketName: "bucket" });
   });
 
-  it("should return 201 and artefact_id when blob ingestion is successful", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: true,
-      artefact_id: "test-artefact-123",
-      message: "Blob ingestion successful"
-    });
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    expect(statusMock).toHaveBeenCalledWith(201);
-    expect(jsonMock).toHaveBeenCalledWith({
-      success: true,
-      artefact_id: "test-artefact-123",
-      message: "Blob ingestion successful"
-    });
-  });
-
-  it("should return 400 when validation fails", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: false,
-      message: "Validation failed",
-      errors: [{ field: "court_id", message: "Invalid court ID" }]
-    });
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    expect(statusMock).toHaveBeenCalledWith(400);
-    expect(jsonMock).toHaveBeenCalledWith({
-      success: false,
-      message: "Validation failed",
-      errors: [{ field: "court_id", message: "Invalid court ID" }]
-    });
-  });
-
-  it("should return 500 when processing fails with generic error", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: false,
-      message: "Database error"
-    });
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    expect(statusMock).toHaveBeenCalledWith(500);
-    expect(jsonMock).toHaveBeenCalledWith({
-      success: false,
-      message: "Database error"
-    });
-  });
-
-  it("should return 500 when unexpected error occurs", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockRejectedValue(new Error("Unexpected error"));
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Unexpected error in publication endpoint:",
-      expect.objectContaining({
-        name: expect.any(String),
-        message: expect.any(String)
-      })
-    );
-    expect(statusMock).toHaveBeenCalledWith(500);
-    expect(jsonMock).toHaveBeenCalledWith({
-      success: false,
-      message: "Internal server error",
-      correlation_id: undefined
-    });
-  });
-
-  it("should calculate raw body size correctly", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: true,
-      artefact_id: "test-artefact-123",
-      message: "Blob ingestion successful"
-    });
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    // Should use Content-Length header value
-    const expectedSize = 277;
-    expect(processBlobIngestion).toHaveBeenCalledWith(mockRequest.body as BlobIngestionRequest, expectedSize);
-  });
-
-  it("should return 201 with the no-match message when the court location does not resolve", async () => {
-    const { processBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-
-    vi.mocked(processBlobIngestion).mockResolvedValue({
-      success: true,
-      artefact_id: "test-artefact-123",
-      message: "Blob ingested but location not found in reference data"
-    });
-
-    const handlers = Array.isArray(POST) ? POST : [POST];
-    const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-    await handler(mockRequest as Request, mockResponse as Response);
-
-    expect(statusMock).toHaveBeenCalledWith(201);
-    expect(jsonMock).toHaveBeenCalledWith({
-      success: true,
-      artefact_id: "test-artefact-123",
-      message: "Blob ingested but location not found in reference data"
-    });
-  });
-
-  describe("HTML file upload (multipart/form-data)", () => {
-    let mockMultipartRequest: Partial<Request>;
-
-    beforeEach(() => {
-      mockMultipartRequest = {
-        headers: {
-          "content-type": "multipart/form-data; boundary=----WebKitFormBoundary",
-          "x-correlation-id": "test-correlation-id"
-        },
-        body: {
-          type: "LCSU"
-        },
-        file: {
-          fieldname: "file",
-          originalname: "test.html",
-          encoding: "7bit",
-          mimetype: "text/html",
-          buffer: Buffer.from("<html></html>"),
-          size: 100,
-          stream: null as any,
-          destination: "",
-          filename: "",
-          path: ""
-        }
-      };
-    });
-
-    it("should return 201 on successful HTML upload", async () => {
-      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
-
-      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
-      vi.mocked(uploadHtmlToS3).mockResolvedValue({
-        success: true,
-        s3Key: "pdda-html/2026/02/11/uuid.html",
-        bucketName: "test-bucket"
-      });
-
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-      await handler(mockMultipartRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        message: "Upload accepted and stored",
-        s3_key: "pdda-html/2026/02/11/uuid.html",
-        correlation_id: "test-correlation-id"
-      });
-    });
-
-    it("should return 400 when HTML validation fails", async () => {
-      const { validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
-
-      vi.mocked(validatePddaHtmlUpload).mockReturnValue({
-        valid: false,
-        error: "The uploaded file must be an HTM or HTML file"
-      });
-
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-      await handler(mockMultipartRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "The uploaded file must be an HTM or HTML file",
-        correlation_id: "test-correlation-id"
-      });
-    });
-
-    it("should return 400 when type is not LCSU", async () => {
-      mockMultipartRequest.body = { type: "JSON" };
-
-      const { validatePddaHtmlUpload } = await import("@hmcts/pdda-html-upload");
-
-      vi.mocked(validatePddaHtmlUpload).mockReturnValue({
-        valid: false,
-        error: "ArtefactType must be LCSU for HTM/HTML uploads"
-      });
-
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-      await handler(mockMultipartRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "ArtefactType must be LCSU for HTM/HTML uploads",
-        correlation_id: "test-correlation-id"
-      });
-    });
-
-    it("should return 500 when S3 upload fails", async () => {
-      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
-
-      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
-      vi.mocked(uploadHtmlToS3).mockRejectedValue(new Error("S3 upload failed"));
-
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-      await handler(mockMultipartRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(500);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "Internal server error",
-        correlation_id: "test-correlation-id"
-      });
-    });
-
-    it("should work without correlation ID", async () => {
-      mockMultipartRequest.headers = {
-        "content-type": "multipart/form-data; boundary=----WebKitFormBoundary"
-      };
-
-      const { validatePddaHtmlUpload, uploadHtmlToS3 } = await import("@hmcts/pdda-html-upload");
-
-      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: true });
-      vi.mocked(uploadHtmlToS3).mockResolvedValue({
-        success: true,
-        s3Key: "pdda-html/2026/02/11/uuid.html",
-        bucketName: "test-bucket"
-      });
-
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-
-      await handler(mockMultipartRequest as Request, mockResponse as Response);
-
-      expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        message: "Upload accepted and stored",
-        s3_key: "pdda-html/2026/02/11/uuid.html",
-        correlation_id: undefined
-      });
-    });
-  });
-
-  describe("flat file upload (multipart/form-data without type field)", () => {
-    let mockFlatFileRequest: Partial<Request>;
-
-    beforeEach(() => {
-      mockFlatFileRequest = {
-        headers: {
-          "content-type": "multipart/form-data; boundary=----WebKitFormBoundary"
-        },
-        body: {
-          court_id: "123",
-          provenance: "MANUAL_UPLOAD",
-          content_date: "2024-01-15",
-          list_type: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-          sensitivity: "PUBLIC",
-          language: "ENGLISH",
-          display_from: "2024-01-15T00:00:00Z",
-          display_to: "2024-01-16T00:00:00Z"
-        },
-        file: {
-          fieldname: "file",
-          originalname: "civil-daily-cause-list.pdf",
-          encoding: "7bit",
-          mimetype: "application/pdf",
-          buffer: Buffer.from("%PDF-1.4"),
-          size: 1024,
-          stream: null as any,
-          destination: "",
-          filename: "",
-          path: ""
-        }
-      };
-    });
-
-    it("should return 201 on successful flat file upload", async () => {
+  describe("JSON publication", () => {
+    it("should return 201 with the Artefact body when the payload is accepted", async () => {
       // Arrange
-      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
-        success: true,
-        artefact_id: "flat-artefact-123",
-        message: "Flat file ingested successfully"
-      });
+      const req = jsonRequest();
 
       // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+      await handler()(req as Request, mockResponse as Response);
 
       // Assert
       expect(statusMock).toHaveBeenCalledWith(201);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: true,
-        artefact_id: "flat-artefact-123",
-        message: "Flat file ingested successfully"
-      });
-      expect(processFlatFileBlobIngestion).toHaveBeenCalledWith(mockFlatFileRequest.body, mockFlatFileRequest.file?.buffer, mockFlatFileRequest.file?.size);
+      expect(jsonMock).toHaveBeenCalledWith(CREATED_ARTEFACT);
     });
 
-    it("should return 400 when required metadata fields are missing", async () => {
+    // The incumbent skips its master-schema layer for these list types
+    // (PublicationControllerTest#shouldNotValidateMasterSchemaForMagistratesAdultCourtLists).
+    // We have no master schema — validation is per list type — so the behaviour to hold is
+    // simply that every one of them is accepted on the JSON path.
+    it.each([
+      ["MAGISTRATES_ADULT_COURT_LIST_DAILY"],
+      ["MAGISTRATES_ADULT_COURT_LIST_FUTURE"],
+      ["MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY"],
+      ["MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE"],
+      ["CROWN_DAILY_PDDA_LIST"],
+      ["CROWN_FIRM_PDDA_LIST"],
+      ["CROWN_WARNED_PDDA_LIST"]
+    ])("should accept a JSON publication for %s", async (listType) => {
       // Arrange
-      mockFlatFileRequest.body = {};
+      const req = jsonRequest({ "x-list-type": listType });
 
       // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "Invalid request body structure. Missing or invalid required fields."
-      });
-    });
-
-    it("should return 400 when no file is provided", async () => {
-      // Arrange
-      mockFlatFileRequest.file = undefined;
-
-      // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "No file provided. Include a file in the 'file' field of the multipart form."
-      });
-    });
-
-    it("should return 400 when flat file validation fails", async () => {
-      // Arrange
-      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
-        success: false,
-        message: "Validation failed",
-        errors: [{ field: "list_type", message: "Invalid list type" }]
-      });
-
-      // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
-
-      // Assert
-      expect(statusMock).toHaveBeenCalledWith(400);
-      expect(jsonMock).toHaveBeenCalledWith({
-        success: false,
-        message: "Validation failed",
-        errors: [{ field: "list_type", message: "Invalid list type" }]
-      });
-    });
-
-    it("should return 201 with the no-match message when the court location does not resolve", async () => {
-      // Arrange
-      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
-        success: true,
-        artefact_id: "flat-artefact-123",
-        message: "Flat file ingested but location not found in reference data"
-      });
-
-      // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+      await handler()(req as Request, mockResponse as Response);
 
       // Assert
       expect(statusMock).toHaveBeenCalledWith(201);
+      expect(processBlobIngestion).toHaveBeenCalledWith(expect.objectContaining({ listType }), expect.anything(), 42);
     });
 
-    it("should pass source_artefact_id when provided", async () => {
+    it("should pass the raw body through as the payload with no hearing_list wrapper", async () => {
       // Arrange
-      mockFlatFileRequest.body = { ...mockFlatFileRequest.body, source_artefact_id: "custom-name.pdf" };
-      const { processFlatFileBlobIngestion } = await import("@hmcts/blob-ingestion/repository/service");
-      vi.mocked(processFlatFileBlobIngestion).mockResolvedValue({
-        success: true,
-        artefact_id: "flat-artefact-123",
-        message: "Flat file ingested successfully"
-      });
+      const payload = [{ courtLists: [] }];
+      const req = jsonRequest({}, payload);
 
       // Act
-      const handlers = Array.isArray(POST) ? POST : [POST];
-      const handler = handlers[handlers.length - 1] as (req: Request, res: Response) => Promise<void>;
-      await handler(mockFlatFileRequest as Request, mockResponse as Response);
+      await handler()(req as Request, mockResponse as Response);
 
       // Assert
-      expect(processFlatFileBlobIngestion).toHaveBeenCalledWith(
-        expect.objectContaining({ source_artefact_id: "custom-name.pdf" }),
-        expect.any(Buffer),
+      expect(processBlobIngestion).toHaveBeenCalledWith(expect.objectContaining({ provenance: "SNL", courtId: "1" }), payload, 42);
+    });
+
+    it("should accept a request that omits every optional header and default sensitivity to PUBLIC", async () => {
+      // Arrange
+      const req = jsonRequest();
+
+      // Act
+      await handler()(req as Request, mockResponse as Response);
+
+      // Assert
+      expect(processBlobIngestion).toHaveBeenCalledWith(
+        expect.objectContaining({ sensitivity: "PUBLIC", displayFrom: null, displayTo: null, sourceArtefactId: null }),
+        expect.anything(),
         expect.any(Number)
       );
+      expect(statusMock).toHaveBeenCalledWith(201);
+    });
+
+    it("should return 400 with a Message body when the payload fails validation", async () => {
+      // Arrange
+      vi.mocked(processBlobIngestion).mockResolvedValue({
+        outcome: "VALIDATION_ERROR",
+        message: "body must have required property 'courtLists'",
+        errors: [{ field: "body", message: "body must have required property 'courtLists'" }]
+      });
+
+      // Act
+      await handler()(jsonRequest() as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "body must have required property 'courtLists'", timestamp: expect.any(String) });
+    });
+
+    it("should return 409 when the ingestion reports a conflict", async () => {
+      // Arrange
+      vi.mocked(processBlobIngestion).mockResolvedValue({ outcome: "CONFLICT", message: "already being created" });
+
+      // Act
+      await handler()(jsonRequest() as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(409);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "already being created", timestamp: expect.any(String) });
+    });
+
+    it("should return 500 with a Message body when the ingestion errors", async () => {
+      // Arrange
+      vi.mocked(processBlobIngestion).mockResolvedValue({ outcome: "ERROR", message: "Internal server error during ingestion" });
+
+      // Act
+      await handler()(jsonRequest() as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Internal server error during ingestion", timestamp: expect.any(String) });
+    });
+
+    it("should return 500 with a Message body when the ingestion throws", async () => {
+      // Arrange
+      vi.mocked(processBlobIngestion).mockRejectedValue(new Error("boom"));
+
+      // Act
+      await handler()(jsonRequest() as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Internal server error", timestamp: expect.any(String) });
+    });
+
+    it("should fall back to the serialised body length when content-length is absent", async () => {
+      // Arrange
+      const req = jsonRequest();
+      delete (req.headers as Record<string, unknown>)["content-length"];
+
+      // Act
+      await handler()(req as Request, mockResponse as Response);
+
+      // Assert
+      expect(processBlobIngestion).toHaveBeenCalledWith(expect.anything(), { courtLists: [] }, Buffer.byteLength('{"courtLists":[]}', "utf8"));
+    });
+  });
+
+  describe("header validation", () => {
+    it.each([["x-provenance"], ["x-court-id"], ["x-content-date"], ["x-list-type"], ["x-language"], ["x-type"]])(
+      "should return 400 with a Message body when %s is missing",
+      async (header) => {
+        // Arrange
+        const req = jsonRequest();
+        delete (req.headers as Record<string, unknown>)[header];
+
+        // Act
+        await handler()(req as Request, mockResponse as Response);
+
+        // Assert
+        expect(statusMock).toHaveBeenCalledWith(400);
+        expect(jsonMock).toHaveBeenCalledWith({
+          message: expect.stringContaining(`${header} is mandatory however an empty value is provided`),
+          timestamp: expect.any(String)
+        });
+        expect(processBlobIngestion).not.toHaveBeenCalled();
+      }
+    );
+
+    it("should return 400 without treating an unrecognised x-type as LIST", async () => {
+      // Act
+      await handler()(jsonRequest({ "x-type": "FOO" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({
+        message: "Unable to parse x-type. Please check that the value is of the correct format for the field (See Swagger documentation for correct formats)",
+        timestamp: expect.any(String)
+      });
+      expect(processBlobIngestion).not.toHaveBeenCalled();
+      expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+
+    it("should reject LCSU sent as application/json", async () => {
+      // Act
+      await handler()(jsonRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "LCSU publications must be sent as multipart/form-data", timestamp: expect.any(String) });
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("flat file publication", () => {
+    it("should return 201 with isFlatFile true and never call S3", async () => {
+      // Act
+      await handler()(multipartRequest({}, multerFile({ originalname: "list.pdf" })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(processFlatFileBlobIngestion).toHaveBeenCalledTimes(1);
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ isFlatFile: true }));
+    });
+
+    it("should return 400 when no file part is provided", async () => {
+      // Act
+      await handler()(multipartRequest({}, null) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
+      expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
+    });
+
+    // The incumbent's MultipartFile#isEmpty is true for a zero-byte part too, not just a
+    // missing one, so both report the same message.
+    it("should return 400 when the file part is present but zero bytes", async () => {
+      // Act
+      await handler()(multipartRequest({}, multerFile({ size: 0, buffer: Buffer.alloc(0) })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
+      expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
+    });
+
+    it("should ignore a type form field and still ingest as a flat file", async () => {
+      // Arrange
+      const req = multipartRequest();
+      req.body = { type: "LCSU" };
+
+      // Act
+      await handler()(req as Request, mockResponse as Response);
+
+      // Assert
+      expect(processFlatFileBlobIngestion).toHaveBeenCalledTimes(1);
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("LCSU upload", () => {
+    it("should upload to S3 and return 201 with a blank artefactId", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(uploadHtmlToS3).toHaveBeenCalledWith(Buffer.from("<html></html>"), "list.html", undefined);
+      expect(processFlatFileBlobIngestion).not.toHaveBeenCalled();
+      expect(processBlobIngestion).not.toHaveBeenCalled();
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "", type: "LCSU" }));
+    });
+
+    // payload is present and null, not absent: the incumbent's Artefact declares no
+    // @JsonInclude, so an unset field serialises as null.
+    it("should report a null payload and no search in the LCSU response", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      const body = jsonMock.mock.calls[0][0];
+      expect(body).toHaveProperty("payload", null);
+      expect(body).not.toHaveProperty("search");
+    });
+
+    // The incumbent builds the LCSU metadata with the flat-file flag set even though the file
+    // goes to S3 rather than blob storage — PublicationTest#testPublicationEndpointWithHtml-
+    // FileUploadToS3Bucket asserts getIsFlatFile() is true.
+    it("should report isFlatFile true in the LCSU response", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ isFlatFile: true }));
+    });
+
+    // The incumbent's functional test uploads LCSU with no x-list-type at all.
+    it("should accept an LCSU upload that omits x-list-type", async () => {
+      // Arrange
+      const req = multipartRequest({ "x-type": "LCSU" });
+      delete (req.headers as Record<string, unknown>)["x-list-type"];
+
+      // Act
+      await handler()(req as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(201);
+      expect(uploadHtmlToS3).toHaveBeenCalled();
+      expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ listType: null, type: "LCSU" }));
+    });
+
+    it("should surface a 500 when the S3 upload fails", async () => {
+      // Arrange
+      vi.mocked(uploadHtmlToS3).mockRejectedValue(new Error("Failed to upload file"));
+
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(500);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Internal server error", timestamp: expect.any(String) });
+      expect(logIngestionResult).not.toHaveBeenCalled();
+    });
+
+    it("should write an ingestion log for traceability", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(logIngestionResult).toHaveBeenCalledWith({ sourceSystem: "SNL", courtId: "1", status: "SUCCESS" });
+    });
+
+    it("should pass the correlation id through to S3", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU", "x-correlation-id": "corr-1" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(uploadHtmlToS3).toHaveBeenCalledWith(expect.any(Buffer), "list.html", "corr-1");
+    });
+
+    it("should reject a missing required header before any S3 upload", async () => {
+      // Arrange
+      const req = multipartRequest({ "x-type": "LCSU" });
+      delete (req.headers as Record<string, unknown>)["x-court-id"];
+
+      // Act
+      await handler()(req as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+      expect(validatePddaHtmlUpload).not.toHaveBeenCalled();
+    });
+
+    // The empty-file check is shared with the flat-file path and runs before the extension
+    // check, so an empty LCSU upload reports the generic message rather than the HTML one.
+    it("should reject an empty LCSU file before the extension is inspected", async () => {
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }, multerFile({ size: 0, buffer: Buffer.alloc(0) })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Empty file provided, please provide a valid file", timestamp: expect.any(String) });
+      expect(validatePddaHtmlUpload).not.toHaveBeenCalled();
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+
+    it("should reject a non-HTML file with the unsupported format message and no S3 upload", async () => {
+      // Arrange
+      vi.mocked(validatePddaHtmlUpload).mockReturnValue({ valid: false, error: "File format is not supported for LCSU." });
+
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }, multerFile({ originalname: "list.pdf" })) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "File format is not supported for LCSU.", timestamp: expect.any(String) });
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+
+    it("should reject invalid metadata before any S3 upload", async () => {
+      // Arrange
+      vi.mocked(validatePublicationMetadata).mockResolvedValue({
+        isValid: false,
+        errors: [{ field: "x-list-type", message: "Invalid x-list-type. Allowed values: A, B" }]
+      });
+
+      // Act
+      await handler()(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "Invalid x-list-type. Allowed values: A, B", timestamp: expect.any(String) });
+      expect(uploadHtmlToS3).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("one endpoint, three modes", () => {
+    it("should serve JSON, flat file and LCSU from the same exported handler", async () => {
+      // Arrange
+      const route = handler();
+
+      // Act
+      await route(jsonRequest() as Request, mockResponse as Response);
+      await route(multipartRequest() as Request, mockResponse as Response);
+      await route(multipartRequest({ "x-type": "LCSU" }) as Request, mockResponse as Response);
+
+      // Assert
+      expect(processBlobIngestion).toHaveBeenCalledTimes(1);
+      expect(processFlatFileBlobIngestion).toHaveBeenCalledTimes(1);
+      expect(uploadHtmlToS3).toHaveBeenCalledTimes(1);
+      expect(statusMock.mock.calls.map(([code]) => code)).toEqual([201, 201, 201]);
+    });
+  });
+
+  describe("multipart middleware", () => {
+    const multerMiddleware = () => (POST as unknown as ((req: Request, res: Response, next: (error?: unknown) => void) => void)[])[1];
+
+    it("should skip multer for non-multipart requests", () => {
+      // Arrange
+      const next = vi.fn();
+
+      // Act
+      multerMiddleware()(jsonRequest() as Request, mockResponse as Response, next);
+
+      // Assert
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it("should translate a multer error into a 400 Message rather than letting it reach the app-level 500", async () => {
+      // Arrange — a multer failure (e.g. the file size limit) must not reach the app-level 500 handler
+      vi.resetModules();
+      const limitError = new multer.MulterError("LIMIT_FILE_SIZE", "file");
+      vi.doMock("multer", () => {
+        const mockMulter = () => ({ single: () => (_req: Request, _res: Response, cb: (error: unknown) => void) => cb(limitError) });
+        mockMulter.memoryStorage = () => ({});
+        mockMulter.MulterError = multer.MulterError;
+        return { default: mockMulter };
+      });
+      const { POST: postWithFailingMulter } = await import("./publication.js");
+      const middleware = (postWithFailingMulter as unknown as ((req: Request, res: Response, next: (error?: unknown) => void) => void)[])[1];
+      const next = vi.fn();
+
+      // Act
+      middleware(multipartRequest() as Request, mockResponse as Response, next);
+
+      // Assert
+      expect(statusMock).toHaveBeenCalledWith(400);
+      expect(jsonMock).toHaveBeenCalledWith({ message: "File too large", timestamp: expect.any(String) });
+      expect(next).not.toHaveBeenCalled();
+      vi.doUnmock("multer");
+      vi.resetModules();
     });
   });
 });

@@ -200,49 +200,11 @@ module "apim_api_policy" {
 
 ### `infrastructure/resources/api-policy/api-policy.xml`
 
-```xml
-<policies>
-  <inbound>
-    <base />
-    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization"
-        failed-validation-httpcode="401" output-token-variable-name="jwt">
-      <audiences>
-        <audience>${audience}</audience>
-      </audiences>
-      <required-claims>
-        <claim name="roles" match="any">
-          <value>api.publisher.user</value>
-        </claim>
-      </required-claims>
-    </validate-azure-ad-token>
-    <!-- v2 tokens carry azp, v1 tokens carry appid. Start permissive; value to be agreed. -->
-    <rate-limit-by-key calls="600" renewal-period="60"
-        counter-key="@{ var jwt = (Jwt)context.Variables[&quot;jwt&quot;]; return jwt.Claims.GetValueOrDefault(&quot;azp&quot;, jwt.Claims.GetValueOrDefault(&quot;appid&quot;, &quot;unknown&quot;)); }" />
-  </inbound>
-  <backend>
-    <base />
-  </backend>
-  <outbound>
-    <base />
-  </outbound>
-  <on-error>
-    <base />
-    <choose>
-      <when condition="@(context.LastError.Source == &quot;validate-azure-ad-token&quot;)">
-        <return-response>
-          <set-status code="401" reason="Unauthorized" />
-          <set-header name="Content-Type" exists-action="override"><value>application/json</value></set-header>
-          <set-body>{"success":false,"message":"Missing or invalid access token"}</set-body>
-        </return-response>
-      </when>
-    </choose>
-  </on-error>
-</policies>
-```
+The policy follows `pip-data-management/infrastructure/resources/api-policy/api-policy.xml`. See the file for the XML.
 
 - APIM gets a client-credentials token for `cath-service-api-client-id` (secret and scope read from the cath key vault with its managed identity), caches it for 45 minutes and sets it as `Authorization`.
 - A backend 401/403 clears the cached token and returns 502.
-- The 401 body matches the backend's `{ success, message }` shape, so callers handle one shape.
+- The 401 body is APIM's default `{ statusCode, message: "Access denied due to invalid OAuth information" }`, which the backend's own 401 matches.
 - `templatefile` interpolates only `${...}` and `%{...}`. Policy expressions use `@(...)` / `@{...}`, so they need no escaping. Do not use C# `$"..."` interpolation in the XML.
 - A missing `api.publisher.user` role fails `required-claims`, so APIM returns **401, not 403**. The AC allows this ("rejected at APIM").
 
@@ -256,15 +218,15 @@ The diagnostic copies `pip-data-management/infrastructure/tf-apim-logger.tf`: sa
   ```yaml
   - url: https://cft-api-mgmt.{environment}.platform.hmcts.net/cath
     description: >-
-      CFT API Management gateway. Validates the bearer token and app role before
-      forwarding to cath-api. Preferred entry point for upstream source systems.
+      CFT API Management gateway. Validates the bearer token and app role, then calls
+      cath-api with its own token. Preferred entry point for upstream source systems.
     variables:
       environment:
         default: aat
         enum: [aat, demo, perftest]
   ```
   The gateway hostnames are confirmed in `hmcts/azure-platform-terraform` (stg, demo, test tfvars) and in fact-data-api's smoke test (`https://cft-api-mgmt.aat.platform.hmcts.net/fact`).
-- Under `/v1/publication` `401`, add an `apimRejected` example `{ success: false, message: "Missing or invalid access token" }`. Also note that, through APIM, a missing role is also a 401.
+- In `PublicationForbidden`, note that through APIM a missing role is a 401. The shared `PublicationUnauthorised` response already uses the APIM message.
 - The `info.description` currently states the cath-api hostname is "the hostname upstream source systems should use". Update it to point at the gateway.
 - `job.publish-openapi.yml` needs no change. It runs on every master build and is a no-op when the spec is unchanged.
 

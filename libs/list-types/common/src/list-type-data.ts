@@ -42,7 +42,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [7]
   },
   {
-    name: "CROWN_WARNED_LIST",
+    name: "CROWN_WARNED_PDDA_LIST",
     englishFriendlyName: "Crown Warned List",
     welshFriendlyName: "Crown Warned List",
     provenance: ["CRIME_IDAM", "PI_AAD"],
@@ -52,7 +52,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [4]
   },
   {
-    name: "CROWN_DAILY_LIST",
+    name: "CROWN_DAILY_PDDA_LIST",
     englishFriendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
     provenance: ["CRIME_IDAM", "PI_AAD"],
@@ -62,7 +62,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [4]
   },
   {
-    name: "CROWN_FIRM_LIST",
+    name: "CROWN_FIRM_PDDA_LIST",
     englishFriendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
     provenance: ["CRIME_IDAM", "PI_AAD"],
@@ -746,6 +746,27 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
   },
+  // Business and Property Division Rolls Building — Excel non-strategic multi-tab lists
+  {
+    name: "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Business and Property Division Rolls Building Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Adran Busnes ac Eiddo - Adeilad Rolls",
+    provenance: ["CFT_IDAM"],
+    urlPath: "business-and-property-division-rolls-building-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
+  {
+    name: "INTERIM_APPLICATIONS_DAILY_CAUSE_LIST",
+    englishFriendlyName: "Interim Applications Daily Cause List",
+    welshFriendlyName: "Rhestr Achosion Dyddiol Ceisiadau Interim",
+    provenance: ["CFT_IDAM"],
+    urlPath: "interim-applications-daily-cause-list",
+    isNonStrategic: true,
+    defaultSensitivity: "Public",
+    subJurisdictionIds: [10]
+  },
   // High Court flat-file daily cause lists (manual upload)
   {
     name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
@@ -786,28 +807,6 @@ export const listTypeData: ListTypeData[] = [
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [11]
-  },
-  {
-    name: "COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Companies Winding Up (Chancery Division) Daily Cause List",
-    welshFriendlyName: "Rhestr Achosion Dyddiol Dirwyn Cwmnïau i Ben (Adran Siawnsri)",
-    shortenedFriendlyName: "Companies Winding Up (ChD) Daily Cause List",
-    provenance: ["CFT_IDAM"],
-    urlPath: "companies-winding-up-chd-daily-cause-list",
-    isNonStrategic: true,
-    defaultSensitivity: "Public",
-    subJurisdictionIds: [10]
-  },
-  {
-    name: "FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST",
-    englishFriendlyName: "Financial List (Chancery Division/King's Bench Division/Commercial Court) Daily Cause List",
-    welshFriendlyName: "Rhestr Achosion Dyddiol y Rhestr Ariannol (Adran Siawnsri/Adran Mainc y Brenin)",
-    shortenedFriendlyName: "Financial List (ChD/KB) Daily Cause List",
-    provenance: ["CFT_IDAM"],
-    urlPath: "financial-list-chd-kb-daily-cause-list",
-    isNonStrategic: true,
-    defaultSensitivity: "Public",
-    subJurisdictionIds: [10]
   },
   {
     name: "IAC_DAILY_LIST",

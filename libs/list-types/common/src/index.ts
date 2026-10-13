@@ -20,7 +20,7 @@ export {
   registerConverterByName
 } from "./conversion/non-strategic-list-registry.js";
 export { RCJ_EXCEL_CONFIG, RCJ_EXCEL_CONFIG_SIMPLE_TIME } from "./conversion/rcj-field-configs.js";
-export { DD_MM_YYYY_PATTERN, TIME_PATTERN, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
+export { DD_MM_YYYY_PATTERN, EMAIL_PATTERN, TIME_PATTERN, validateEmailFormat, validateTimeFormat, validateTimeFormatSimple } from "./conversion/validators.js";
 export {
   type CaseSummary,
   type CaseSummaryField,
