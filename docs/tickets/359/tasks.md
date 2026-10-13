@@ -20,8 +20,8 @@
 - [x] Use `git::https://...?ref=master` module sources (Q12: no tags upstream; tracking master, matching hmcts/fact-data-api)
 - [x] `infrastructure/resources/product-policy/product-policy.xml`: `rate-limit-by-key` (600/min) keyed on the token's `azp`/`appid`, passed to the product module as `product_policy`
 - [x] `infrastructure/resources/api-policy/api-policy.xml`: PIP token-swap design (per HLD). `validate-azure-ad-token` on the supplier token (audience, `roles` contains `api.publisher.user`), then a cached client-credentials token for `cath-service-api-client-id` replaces Authorization; backend 401/403 clears the cache and returns 502; 401 uses APIM's default `Access denied due to invalid OAuth information` body
-- [x] `infrastructure/apim-logger.tf`: add `azurerm_api_management_logger` `cath-appinsights-logger` using `azurerm_application_insights.shared.connection_string` (provider `azurerm.cftapps`, count-gated)
-- [x] `infrastructure/apim-logger.tf`: add `azurerm_api_management_api_diagnostic` matching pip-data-management (`identifier = "applicationinsights"`, sampling 25, `verbose`, `log_client_ip`, `always_log_errors`, W3C, PIP header lists, `body_bytes = 8192`); never log Authorization, body bytes 0 in prod
+- [x] `infrastructure/apim-logger.tf`: add a dedicated `azurerm_application_insights` `cath-apim-appinsights-<env>` and `azurerm_api_management_logger` `cath-apim-appinsights-logger` pointing at it (provider `azurerm.cftapps`, count-gated), replacing `cath-appinsights-logger`
+- [x] `infrastructure/apim-logger.tf`: add `azurerm_api_management_api_diagnostic` matching pip-data-management (`identifier = "applicationinsights"`, sampling 100, `verbose`, `log_client_ip`, `always_log_errors`, W3C, PIP header lists, `body_bytes = 8192`); never log Authorization, body bytes 0 in prod
 - [x] Run `terraform fmt -recursive infrastructure` and `terraform validate` locally
 
 ### Spec and workflows

@@ -36,6 +36,8 @@ module "apim_product" {
   # Callers authenticate with an Entra ID token, not subscription keys.
   subscription_required = false
   approval_required     = false
+  # Azure stores 0 when subscriptions are off; the module default of 20 drifts.
+  subscriptions_limit = 0
 
   product_policy = templatefile("${path.module}/resources/product-policy/product-policy.xml", {})
 }
