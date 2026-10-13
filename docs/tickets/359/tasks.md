@@ -37,8 +37,9 @@
 
 ### Post-merge verification (aat)
 - [ ] Confirm the master apply succeeds for aat, demo and perftest
-- [ ] `az apim api show` in DCD-CFTAPPS-STG: `cath-api` exists in `cft-api-mgmt-stg`, linked to product `cath`, `serviceUrl = https://cath-api.aat.platform.hmcts.net`, with only the `createPublication` operation
-- [ ] Curl `POST /cath/v1/publication` via APIM with a valid `api.publisher.user` token. The response matches a direct call to `cath-api.aat`.
+- [ ] `az apim api show` in DCD-CFTAPPS-STG: `cath-api` exists in `cft-api-mgmt-stg`, linked to product `cath`, `serviceUrl = https://cath-api.aat.platform.hmcts.net`, with only the `createPublicationAtRoot` (`POST /publication`) and `getServiceInfo` (`GET /`) operations
+- [ ] `GET /cath/` via APIM returns the welcome response with a valid token, and 401 without one
+- [ ] Curl `POST /cath/publication` via APIM with a valid `api.publisher.user` token. The response matches a direct call to `cath-api.aat`.
 - [ ] Curl with no token and with a tampered token. Expect 401 with the APIM JSON body, and no backend dependency or request in App Insights.
 - [ ] Curl with a valid token that has no role. Expect 401 from APIM.
 - [ ] KQL in `cath-appinsights-aat`: APIM requests are present, configured headers are logged, and there is no `Authorization` dimension
