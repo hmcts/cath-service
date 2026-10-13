@@ -1,5 +1,5 @@
 module "sa" {
-  source = "git::https://github.com/hmcts/cnp-module-storage-account?ref=4.x"
+  source = "git::https://github.com/hmcts/cnp-module-storage-account?ref=5.x"
 
   env                      = var.env
   storage_account_name     = "cathsa${var.env}"
