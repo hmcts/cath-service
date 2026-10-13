@@ -1,3 +1,5 @@
+import { isAcceptedRejection } from "./rejection-policy.js";
+
 export function formatSyncReport(title: string, report: SyncReport): string {
   const lines = [`${title} ${report.isDryRun ? "(dry run)" : "(applied)"}`];
 
@@ -14,12 +16,40 @@ export function formatSyncReport(title: string, report: SyncReport): string {
     lines.push(...formatReasons(step.rejections));
   }
 
+  lines.push(`blocking issues: ${findBlockingIssues(report).length}`);
+
   return lines.join("\n");
+}
+
+// A run is clean when it has no blocking issues. Accepted rejections recur every night by design
+// (rejection-policy.ts), so counting them would mean no run is ever clean.
+export function findBlockingIssues(report: SyncReport): string[] {
+  const blockingReasons = [...report.domains, ...report.steps]
+    .flatMap((section) => section.rejections)
+    .filter((rejection) => !isAcceptedRejection(rejection.reason))
+    .map((rejection) => rejection.reason);
+  const dropLimitViolations = report.domains.flatMap((domain) => (domain.dropLimitViolation ? [domain.dropLimitViolation] : []));
+
+  return [...dropLimitViolations, ...blockingReasons];
+}
+
+// An applied run that aborts rolls back, so it returns no report. This carries the report built
+// before the abort, so the cron entry can still log what the run read and rejected.
+export class SyncAbortedError extends Error {
+  constructor(
+    message: string,
+    readonly report: SyncReport
+  ) {
+    super(message);
+    this.name = "SyncAbortedError";
+  }
 }
 
 // Rejections carry ids and reasons only, never emails or names, so the counts are safe to log.
 function formatReasons(rejections: Rejection[]): string[] {
-  return [...Map.groupBy(rejections, (rejection) => rejection.reason)].map(([reason, grouped]) => `  ${grouped.length} x ${reason}`);
+  return [...Map.groupBy(rejections, (rejection) => rejection.reason)].map(
+    ([reason, grouped]) => `  ${grouped.length} x ${reason}${isAcceptedRejection(reason) ? " (accepted)" : ""}`
+  );
 }
 
 export interface SyncReport {

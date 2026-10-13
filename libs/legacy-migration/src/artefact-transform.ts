@@ -50,7 +50,7 @@ function transformArtefact(legacy: LegacyArtefact, context: ArtefactContext): Tr
         type,
         locationId,
         listTypeId,
-        contentDate,
+        contentDate: toDateOnly(contentDate),
         sensitivity,
         language,
         displayFrom: legacy.display_from,
@@ -64,6 +64,12 @@ function transformArtefact(legacy: LegacyArtefact, context: ArtefactContext): Tr
       legacyPayloadBlob: payloadBlob
     }
   };
+}
+
+// content_date is a date column here but a timestamp in legacy. The legacy reader returns
+// timestamps as UTC, so the UTC date is the date legacy stored.
+function toDateOnly(timestamp: Date): Date {
+  return new Date(Date.UTC(timestamp.getUTCFullYear(), timestamp.getUTCMonth(), timestamp.getUTCDate()));
 }
 
 export interface MigratedArtefact {

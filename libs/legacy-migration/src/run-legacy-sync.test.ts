@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type LegacyAccountData, readLegacyAccountData } from "./legacy-account-source.js";
 import { createLegacySecretReader } from "./legacy-secret-source.js";
 import { runLegacySync } from "./run-legacy-sync.js";
+import { SyncAbortedError } from "./sync-report.js";
 
 const { tx, storage, secrets } = vi.hoisted(() => {
   const model = () => ({ count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn(), findMany: vi.fn() });
@@ -166,6 +167,10 @@ describe("runLegacySync", () => {
     setExistingCounts(1);
     for (const model of Object.values(tx)) {
       model.findMany.mockResolvedValue([]);
+      // Rows read back as written, so the write check passes unless a test says otherwise.
+      model.createMany.mockImplementation(async ({ data }: { data: unknown[] }) => {
+        model.findMany.mockResolvedValue(data);
+      });
     }
     storage.download.mockResolvedValue(Buffer.from("proof"));
     storage.exists.mockResolvedValue(true);
@@ -280,6 +285,47 @@ describe("runLegacySync", () => {
     expect(tx.user.deleteMany).not.toHaveBeenCalled();
     expect(deleteBlob).not.toHaveBeenCalled();
     expect(setSecret).not.toHaveBeenCalled();
+  });
+
+  it("should abort before copying files or secrets when a table does not hold what was written", async () => {
+    // Arrange
+    tx.subscription.createMany.mockImplementation(async () => {
+      tx.subscription.findMany.mockResolvedValue([]);
+    });
+
+    // Act
+    const run = runLegacySync({ ...OPTIONS, isDryRun: false });
+
+    // Assert
+    await expect(run).rejects.toThrow("subscription: written rows differ from the transformed legacy rows; 1 missing (sub-1)");
+    expect(deleteBlob).not.toHaveBeenCalled();
+    expect(setSecret).not.toHaveBeenCalled();
+  });
+
+  it("should carry the report built before the abort, so it can still be logged", async () => {
+    // Arrange
+    tx.subscription.createMany.mockImplementation(async () => {
+      tx.subscription.findMany.mockResolvedValue([]);
+    });
+
+    // Act
+    const error = await runLegacySync({ ...OPTIONS, isDryRun: false }).catch((caught: unknown) => caught);
+
+    // Assert
+    expect(error).toBeInstanceOf(SyncAbortedError);
+    const { report } = error as SyncAbortedError;
+    expect(report.isDryRun).toBe(false);
+    expect(report.domains.map((domain) => domain.entityType)).toEqual([
+      "user",
+      "subscription",
+      "subscription_list_type",
+      "legacy_third_party_user",
+      "legacy_third_party_subscription",
+      "third_party_user",
+      "third_party_subscription",
+      "media_application",
+      "audit_log"
+    ]);
   });
 
   it("should report the guard violation instead of failing in a dry run", async () => {
