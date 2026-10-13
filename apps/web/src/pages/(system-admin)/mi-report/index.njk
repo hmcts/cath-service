@@ -1,0 +1,66 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block backLink %}
+  {{ govukBackLink({
+    text: back,
+    href: backLink
+  }) }}
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+    <p class="govuk-body">{{ description }}</p>
+
+    <form method="post" novalidate>
+      {{ govukSelect({
+        id: "period",
+        name: "period",
+        classes: "govuk-!-width-one-half",
+        label: {
+          text: periodHeading,
+          classes: "govuk-label--m"
+        },
+        hint: {
+          text: periodHint
+        },
+        items: periodItems,
+        errorMessage: periodError
+      }) }}
+
+      {{ govukSelect({
+        id: "reportType",
+        name: "reportType",
+        classes: "govuk-!-width-one-half",
+        label: {
+          text: reportTypeHeading,
+          classes: "govuk-label--m"
+        },
+        hint: {
+          text: reportTypeHint
+        },
+        items: reportTypeItems,
+        errorMessage: reportTypeError
+      }) }}
+
+      {{ govukButton({
+        text: downloadButtonText
+      }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}

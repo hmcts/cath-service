@@ -29,12 +29,16 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /continue/i });
       await expect(continueButton).toBeVisible();
 
-      // Check for create account link
-      const createAccountText = page.getByText(/don't have a cath account/i);
-      await expect(createAccountText).toBeVisible();
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
+      // Check for the create account prompt, link and user research notice
+      const createAccountHeading = page.getByRole("heading", { level: 2, name: /don't have an account\?/i });
+      await expect(createAccountHeading).toBeVisible();
+      const createAccountLink = page.getByRole("link", { name: /^create a court and tribunal hearings account$/i });
       await expect(createAccountLink).toBeVisible();
       await expect(createAccountLink).toHaveAttribute("href", "/create-media-account");
+      const userResearchNotice = page.getByText(
+        /you may be contacted to take part in user research to help us improve our services\. participation is optional, and any information you share will be handled confidentially\./i
+      );
+      await expect(userResearchNotice).toBeVisible();
     });
   });
 
@@ -187,11 +191,14 @@ test.describe("Sign In Account Selection Page", () => {
       const continueButton = page.getByRole("button", { name: /parhau/i });
       await expect(continueButton).toBeVisible();
 
-      // Verify create account link in Welsh
-      const createAccountText = page.getByText(/nid oes gennych gyfrif cath/i);
-      await expect(createAccountText).toBeVisible();
-      const createAccountLink = page.getByRole("link", { name: /crëwch un yma/i });
+      // Verify the create account prompt, link and user research notice in Welsh
+      const createAccountHeading = page.getByRole("heading", { level: 2, name: /nid oes gennych gyfrif\?/i });
+      await expect(createAccountHeading).toBeVisible();
+      const createAccountLink = page.getByRole("link", { name: /^creu cyfrif gwrandawiadau llys a thribiwnlys$/i });
       await expect(createAccountLink).toBeVisible();
+      await expect(createAccountLink).toHaveAttribute("href", "/create-media-account");
+      const userResearchNotice = page.getByText(/efallai y cysylltir â chi i gymryd rhan mewn ymchwil defnyddwyr/i);
+      await expect(userResearchNotice).toBeVisible();
 
       // Run accessibility checks in Welsh
       const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
@@ -254,7 +261,7 @@ test.describe("Sign In Account Selection Page", () => {
       await page.goto("/sign-in");
 
       // Find and click the create account link
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
+      const createAccountLink = page.getByRole("link", { name: /^create a court and tribunal hearings account$/i });
       await expect(createAccountLink).toBeVisible();
       await createAccountLink.click();
 
@@ -270,14 +277,14 @@ test.describe("Sign In Account Selection Page", () => {
       // Tab through interactive elements
       await page.keyboard.press("Tab");
 
-      // The focus order should be:
+      // The focus order follows DOM order, so it should be:
       // 1. Skip link (if present)
       // 2. Language toggle
-      // 3. First radio button (HMCTS)
+      // 3. First radio button (HMCTS) - arrow keys move within the radio group
       // 4. Second radio button (Common Platform)
       // 5. Third radio button (CaTH)
-      // 6. Create account link
-      // 7. Continue button
+      // 6. Continue button (last element inside the form)
+      // 7. Create account link (sits after the form)
 
       // Find the continue button and verify it can be reached by keyboard
       let focused = false;
@@ -366,8 +373,8 @@ test.describe("Sign In Account Selection Page", () => {
       await expect(continueButton).toHaveAccessibleName(/continue/i);
 
       // Verify create account link has accessible name
-      const createAccountLink = page.getByRole("link", { name: /create one here/i });
-      await expect(createAccountLink).toHaveAccessibleName(/create one here/i);
+      const createAccountLink = page.getByRole("link", { name: /^create a court and tribunal hearings account$/i });
+      await expect(createAccountLink).toHaveAccessibleName(/^create a court and tribunal hearings account$/i);
     });
 
     test("should announce error messages properly to screen readers @nightly", async ({ page }) => {

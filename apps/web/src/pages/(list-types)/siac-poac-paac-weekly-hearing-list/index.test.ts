@@ -12,7 +12,7 @@ vi.mock("@hmcts/list-types-common", () => ({
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
-      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: "MANUAL_UPLOAD", isNonStrategic: true })
+      findUnique: vi.fn().mockResolvedValue({ id: 1, allowedProvenance: ["MANUAL_UPLOAD"], isNonStrategic: true })
     }
   }
 }));

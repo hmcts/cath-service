@@ -47,8 +47,7 @@ describe("magistrates-public-adult-court-list controller", () => {
     lastReceivedDate: new Date("2025-09-13"),
     isFlatFile: false,
     provenance: "CRIME_IDAM",
-    supersededCount: 0,
-    noMatch: false
+    supersededCount: 0
   } as any;
 
   const mockJsonData = {

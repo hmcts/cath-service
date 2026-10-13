@@ -186,8 +186,8 @@ export const locationData: {
     },
     {
       locationId: 26,
-      name: "Business and Property Courts Rolls Building",
-      welshName: "Llysoedd Busnes ac Eiddo - Adeilad Rolls",
+      name: "Business and Property Division Rolls Building",
+      welshName: "Adran Busnes ac Eiddo - Adeilad Rolls",
       regions: [11],
       subJurisdictions: [10]
     },

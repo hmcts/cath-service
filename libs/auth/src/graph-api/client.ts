@@ -70,7 +70,7 @@ export async function fetchUserProfile(accessToken: string): Promise<UserProfile
 
 /**
  * Obtains an access token using OAuth2 client credentials flow.
- * Requires AZURE_B2C_TENANT_ID, AZURE_B2C_CLIENT_ID, AZURE_B2C_CLIENT_SECRET env vars.
+ * Requires AZURE_B2C_TENANT_ID, B2C_GRAPH_CLIENT_ID, B2C_GRAPH_CLIENT_SECRET env vars.
  * When MOCK_AZURE_B2C=true, returns a mock token without calling Azure.
  */
 export async function getGraphApiAccessToken(): Promise<string> {
@@ -80,11 +80,11 @@ export async function getGraphApiAccessToken(): Promise<string> {
   }
 
   const tenantId = process.env.AZURE_B2C_TENANT_ID;
-  const clientId = process.env.AZURE_B2C_CLIENT_ID;
-  const clientSecret = process.env.AZURE_B2C_CLIENT_SECRET;
+  const clientId = process.env.B2C_GRAPH_CLIENT_ID;
+  const clientSecret = process.env.B2C_GRAPH_CLIENT_SECRET;
 
   if (!tenantId || !clientId || !clientSecret) {
-    throw new Error("Azure B2C credentials not configured: AZURE_B2C_TENANT_ID, AZURE_B2C_CLIENT_ID, AZURE_B2C_CLIENT_SECRET are required");
+    throw new Error("Azure B2C credentials not configured: AZURE_B2C_TENANT_ID, B2C_GRAPH_CLIENT_ID, B2C_GRAPH_CLIENT_SECRET are required");
   }
 
   const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
