@@ -77,6 +77,34 @@ export const PDF_BASE_STYLES = `
       color: #0b0c0c;
     }
     .caution-box p:last-child { margin-bottom: 0; }
+    .warning-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .warning-icon {
+      box-sizing: border-box;
+      display: inline-block;
+      flex-shrink: 0;
+      min-width: 30px;
+      min-height: 30px;
+      margin-right: 10px;
+      border-radius: 50%;
+      background-color: #0b0c0c;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 30px;
+      text-align: center;
+    }
+    .warning-text {
+      font-weight: 700;
+    }
+    .restriction-row-block {
+      background-color: #f3f2f1;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
 `;
 
 /**
@@ -99,7 +127,7 @@ export const PDF_CIVIL_FAMILY_STYLES = `
       font-weight: 700;
     }
     .restriction-row td {
-      background-color: #fff7e6;
+      background-color: #f3f2f1;
       font-style: italic;
     }
 `;

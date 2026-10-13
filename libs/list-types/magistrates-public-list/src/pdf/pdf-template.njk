@@ -121,7 +121,7 @@
                       </tr>
                     {% endif %}
                     {% if hasReporting %}
-                      <tr>
+                      <tr class="restriction-row">
                         <td colspan="2" style="border-right: none;"><strong>{{ t.reportingRestrictions }}:</strong></td>
                         <td colspan="3" style="border-left: none;">{{ t.reportingRestrictionText }}</td>
                       </tr>
@@ -161,6 +161,10 @@
     {% if dataSource %}
       <p>{{ t.dataSource }}: {{ dataSource }}</p>
     {% endif %}
+    <div class="caution-box">
+      <p>{{ t.cautionNote }}</p>
+      <p>{{ t.cautionReporting }}</p>
+    </div>
   </div>
 </body>
 </html>
