@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications, sendSystemAdminNotification } from "./notification-service.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
@@ -286,6 +286,51 @@ describe("sendListTypePublicationNotifications", () => {
 
     // Assert
     expect(result.sent).toBe(1);
+  });
+
+  describe("subscription template selection by generated file size", () => {
+    const TWO_MB = 2 * 1024 * 1024;
+    const UNDER = Buffer.alloc(1024);
+    const OVER = Buffer.alloc(TWO_MB + 1);
+    const EXACTLY_TWO_MB = Buffer.alloc(TWO_MB);
+
+    afterEach(async () => {
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(downloadBlob).mockResolvedValue(null);
+    });
+
+    it.each([
+      { scenario: "both under 2MB", pdf: UNDER, excel: UNDER, hasPdf: true, hasExcel: true },
+      { scenario: "PDF under 2MB and Excel over 2MB", pdf: UNDER, excel: OVER, hasPdf: true, hasExcel: false },
+      { scenario: "PDF under 2MB and no Excel generated", pdf: UNDER, excel: null, hasPdf: true, hasExcel: false },
+      { scenario: "PDF over 2MB and Excel under 2MB", pdf: OVER, excel: UNDER, hasPdf: false, hasExcel: true },
+      { scenario: "no PDF generated and Excel under 2MB", pdf: null, excel: UNDER, hasPdf: false, hasExcel: true },
+      { scenario: "both over 2MB", pdf: OVER, excel: OVER, hasPdf: false, hasExcel: false },
+      { scenario: "neither generated", pdf: null, excel: null, hasPdf: false, hasExcel: false },
+      { scenario: "PDF exactly 2MB (not less than 2MB) and Excel under 2MB", pdf: EXACTLY_TWO_MB, excel: UNDER, hasPdf: false, hasExcel: true }
+    ])("should select the template and attachments correctly when $scenario", async ({ pdf, excel, hasPdf, hasExcel }) => {
+      // Arrange
+      const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+      const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const { sendEmail } = await import("../notify-templates/send-email.js");
+      const { getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+      vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+      vi.mocked(downloadBlob).mockImplementation(async (key: string) => (key === "artefact-1.pdf" ? pdf : excel));
+
+      // Act
+      await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+      // Assert
+      expect(getSubscriptionTemplateId).toHaveBeenCalledWith({ hasPdf, hasExcel });
+      const sent = vi.mocked(sendEmail).mock.calls[0][0];
+      expect(sent.pdfBuffer !== undefined).toBe(hasPdf);
+      expect(sent.excelBuffer !== undefined).toBe(hasExcel);
+    });
   });
 });
 
