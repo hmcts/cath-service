@@ -9,10 +9,10 @@
 - [ ] Check that `app-tenant-id` and `cath-service-api-client-id` exist in `cath-aat`, `cath-demo` and `cath-perftest`
 
 ### Terraform
-- [x] `infrastructure/env-config.tf`: add `apim_suffix` to every `env_config` entry (`stg`, `demo`, `null` for ithc, `test`). Add the `apim_suffix`, `deploy_apim`, `apim_name`, `apim_rg` and `apim_exposed_paths` locals to the existing `locals` block.
+- [x] `infrastructure/env-config.tf`: add `apim_suffix` to every `env_config` entry (`stg`, `demo`, `null` for ithc, `test`). Add the `apim_suffix`, `deploy_apim`, `apim_name`, `apim_rg` and `apim_operations` (path => method => APIM operationId) locals to the existing `locals` block.
 - [x] `infrastructure/apim.tf`: add the `azurerm.cftapps` provider alias on `var.aks_subscription_id`
 - [x] `infrastructure/apim.tf`: add count-gated `data "azurerm_key_vault_secret"` for `app-tenant-id` and `cath-service-api-client-id` against `module.key_vault.key_vault_id`
-- [x] `infrastructure/apim.tf`: add the `openapi_spec` / `apim_openapi` locals (yamldecode `../docs/api/openapi.yaml`, filter to `apim_exposed_paths`, drop `servers`, jsonencode)
+- [x] `infrastructure/apim.tf`: add the `openapi_spec` / `apim_openapi` locals (yamldecode `../docs/api/openapi.yaml`, keep only `apim_operations` with their APIM operationIds, drop `servers`, jsonencode)
 - [x] `infrastructure/apim.tf`: add `module "apim_product"` (`cnp-module-api-mgmt-product`, `name = "cath"`, `approval_required = false`, `subscription_required = false`, `providers = { azurerm = azurerm.cftapps }`, count-gated)
 - [x] `infrastructure/apim.tf`: add `module "apim_api"` (`cath-api`, `CaTH API`, path `cath`, `revision = "1"`, https only, `service_url = https://cath-api.${var.env}.platform.hmcts.net`, `content_format = "openapi+json"`, `swagger_url = local.apim_openapi`, `subscription_required = false`, count-gated)
 - [x] `infrastructure/apim.tf`: add `module "apim_api_policy"` with `templatefile()` of the policy XML (tenant_id, client_id, key_vault_uri), count-gated; grant the APIM managed identity `Get` on the cath key vault
@@ -37,8 +37,9 @@
 
 ### Post-merge verification (aat)
 - [ ] Confirm the master apply succeeds for aat, demo and perftest
-- [ ] `az apim api show` in DCD-CFTAPPS-STG: `cath-api` exists in `cft-api-mgmt-stg`, linked to product `cath`, `serviceUrl = https://cath-api.aat.platform.hmcts.net`, with only the `createPublication` operation
-- [ ] Curl `POST /cath/v1/publication` via APIM with a valid `api.publisher.user` token. The response matches a direct call to `cath-api.aat`.
+- [ ] `az apim api show` in DCD-CFTAPPS-STG: `cath-api` exists in `cft-api-mgmt-stg`, linked to product `cath`, `serviceUrl = https://cath-api.aat.platform.hmcts.net`, with only the `createPublication` (`POST /publication`) and `healthCheck` (`GET /`) operations
+- [ ] `GET /cath/` via APIM returns the welcome response with a valid token, and 401 without one
+- [ ] Curl `POST /cath/publication` via APIM with a valid `api.publisher.user` token. The response matches a direct call to `cath-api.aat`.
 - [ ] Curl with no token and with a tampered token. Expect 401 with the APIM JSON body, and no backend dependency or request in App Insights.
 - [ ] Curl with a valid token that has no role. Expect 401 from APIM.
 - [ ] KQL in `cath-appinsights-aat`: APIM requests are present, configured headers are logged, and there is no `Authorization` dimension

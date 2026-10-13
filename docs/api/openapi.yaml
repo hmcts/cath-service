@@ -12,11 +12,12 @@ info:
     Publication API contract: all metadata travels in `x-*` request headers and the body
     carries only the payload. All other operations are read-only.
 
-    Upstream source systems should call `POST /v1/publication` through the CFT API
+    Upstream source systems should call `POST /publication` through the CFT API
     Management gateway (`https://cft-api-mgmt.{environment}.platform.hmcts.net/cath`).
     The gateway validates the caller's bearer token and the `api.publisher.user` app role,
     then calls `cath-api` with its own token, so callers never reach `cath-api` directly.
-    Only `POST /v1/publication` is exposed through the gateway.
+    Only `POST /publication` and `GET /` (a welcome check, which also needs a token) are
+    exposed through the gateway.
 
     This document is maintained by hand. It is not generated from the router, so if you
     change a route or a request/response shape in `apps/api` or `libs/public-pages`,
@@ -45,7 +46,7 @@ servers:
     description: >-
       CFT API Management gateway. Validates the bearer token and app role, then calls
       cath-api with its own token. Preferred entry point for upstream source systems.
-      Exposes `POST /v1/publication` only.
+      Exposes `POST /publication` and `GET /` only.
     variables:
       environment:
         default: aat
