@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../utils/axe-helper.js";
+import { CFT_IDAM_URL_PATTERN } from "../utils/cft-idam-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues:
 // 1. Crown copyright link fails WCAG 2.5.8 Target Size criterion (insufficient size)
@@ -60,7 +61,7 @@ test.describe("Sign In Account Selection Page", () => {
       // Verify navigation to CFT IDAM login (external or internal)
       await page.waitForTimeout(1000); // Wait for redirect
       const currentUrl = page.url();
-      expect(currentUrl).toMatch(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+      expect(currentUrl).toMatch(new RegExp(`${CFT_IDAM_URL_PATTERN.source}|cft-login`));
     });
   });
 

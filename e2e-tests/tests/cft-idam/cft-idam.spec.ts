@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
-import { assertAuthenticated, assertNotAuthenticated, loginWithCftIdam, logout } from "../../utils/cft-idam-helpers.js";
+import { assertAuthenticated, assertNotAuthenticated, CFT_IDAM_URL_PATTERN, loginWithCftIdam, logout } from "../../utils/cft-idam-helpers.js";
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 // See: docs/tickets/VIBE-150/accessibility-findings.md
@@ -19,7 +19,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await continueButton.click();
 
     // Should redirect to CFT IDAM
-    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+    await expect(page).toHaveURL(new RegExp(`${CFT_IDAM_URL_PATTERN.source}|cft-login`));
 
     // Perform CFT IDAM login
     await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
@@ -137,7 +137,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await page.waitForLoadState("networkidle");
 
     // Should redirect to CFT IDAM
-    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net/);
+    await expect(page).toHaveURL(CFT_IDAM_URL_PATTERN);
   });
 });
 
@@ -173,7 +173,12 @@ test.describe("CFT IDAM Session Management", () => {
 
     // Test 5: User can logout
     await logout(page);
-    await expect(page).toHaveURL("/session-logged-out");
+    await expect(page).toHaveURL(/\/session-logged-out\?lng=en/);
+
+    // Test 6: IDAM session has ended, so signing in again prompts for credentials
+    await page.goto("/cft-login");
+    await expect(page).toHaveURL(CFT_IDAM_URL_PATTERN);
+    await expect(page.locator("input#username, input#email").first()).toBeVisible();
   });
 
   test("Multiple concurrent sessions from same user are handled correctly @nightly", async ({ browser }) => {

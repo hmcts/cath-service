@@ -82,19 +82,21 @@ export async function createApp(): Promise<Express> {
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
   // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
   // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
-  const { authNavigationMiddleware, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
+  const { authNavigationMiddleware, cftIdamHealthCheck, configurePassport, getCftIdamConfig, sessionTimeoutMiddleware } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
 
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
+  app.get("/health", cftIdamHealthCheck());
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
   app.use(
     configureHelmet({
       cftIdamUrl: process.env.CFT_IDAM_URL,
+      hmctsAccessUrl: process.env.CFT_IDAM_URL ? getCftIdamConfig().hmctsAccessUrl : undefined,
       crimeIdamUrl: process.env.CRIME_IDAM_BASE_URL,
       b2cCustomDomain: process.env.B2C_CUSTOM_DOMAIN,
       b2cTenantName: process.env.B2C_TENANT_NAME
