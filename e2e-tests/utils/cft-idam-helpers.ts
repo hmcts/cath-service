@@ -1,9 +1,8 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
-// CFT IDAM serves the classic UI from idam-web-public and the new UI from hmcts-access
-export const CFT_IDAM_URL_PATTERN = /(idam-web-public|hmcts-access)\.aat\.platform\.hmcts\.net/;
-const CFT_IDAM_HOST_PATTERN = /idam-web-public|hmcts-access/;
+export const CFT_IDAM_URL_PATTERN = /idam-web-public\.aat\.platform\.hmcts\.net/;
+const CFT_IDAM_HOST_PATTERN = /idam-web-public/;
 
 /**
  * Helper function to perform CFT IDAM login against either the classic or the new IDAM UI
@@ -150,7 +149,7 @@ export async function assertNotAuthenticated(page: Page): Promise<void> {
   console.log(`[CFT IDAM] Asserting not authenticated. Current URL: ${currentUrl}`);
 
   // Should either be on CFT IDAM login or redirected to sign-in
-  await expect(page).toHaveURL(new RegExp(`${CFT_IDAM_URL_PATTERN.source}|\\/sign-in`));
+  await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net|\/sign-in/);
 
   console.log(`[CFT IDAM] Not-authenticated assertion passed`);
 }

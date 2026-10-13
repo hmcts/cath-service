@@ -34,7 +34,6 @@ export function getCftIdamConfig(): CftIdamConfig {
 
   return {
     cftIdamUrl,
-    // The new CFT IDAM UI (HMCTS Access) is served from a sibling host of idam-web-public
     hmctsAccessUrl: cftIdamUrl.replace("idam-web-public", "hmcts-access"),
     baseUrl,
     clientId: "app-pip-frontend",

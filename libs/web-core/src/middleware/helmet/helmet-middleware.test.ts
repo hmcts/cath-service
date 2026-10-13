@@ -269,15 +269,6 @@ describe("helmet-middleware", () => {
         expect(directives?.formAction).toContain("https://idam.example.com");
       });
 
-      it("should include HMCTS Access URL in formAction when provided", () => {
-        configureHelmet({ hmctsAccessUrl: "https://hmcts-access.example.com" });
-
-        const helmetCall = vi.mocked(helmet).mock.calls[0][0];
-        const directives = (helmetCall?.contentSecurityPolicy as any)?.directives;
-
-        expect(directives?.formAction).toContain("https://hmcts-access.example.com");
-      });
-
       it("should not include CFT IDAM URL in formAction when not provided", () => {
         configureHelmet();
 

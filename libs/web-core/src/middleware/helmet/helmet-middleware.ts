@@ -6,7 +6,6 @@ export interface SecurityOptions {
   enableGoogleTagManager?: boolean;
   isDevelopment?: boolean;
   cftIdamUrl?: string;
-  hmctsAccessUrl?: string;
   crimeIdamUrl?: string;
   b2cTenantName?: string;
   b2cCustomDomain?: string;
@@ -24,7 +23,6 @@ export function configureHelmet(options: SecurityOptions = {}) {
     enableGoogleTagManager = true,
     isDevelopment = process.env.NODE_ENV !== "production",
     cftIdamUrl,
-    hmctsAccessUrl,
     crimeIdamUrl,
     b2cTenantName,
     b2cCustomDomain
@@ -50,13 +48,7 @@ export function configureHelmet(options: SecurityOptions = {}) {
 
   const frameSources = ["'self'", ...(enableGoogleTagManager ? ["https://*.googletagmanager.com"] : [])];
 
-  const formActionSources = [
-    "'self'",
-    ...(cftIdamUrl ? [cftIdamUrl] : []),
-    ...(hmctsAccessUrl ? [hmctsAccessUrl] : []),
-    ...(crimeIdamUrl ? [crimeIdamUrl] : []),
-    ...(b2cUrl ? [b2cUrl] : [])
-  ];
+  const formActionSources = ["'self'", ...(cftIdamUrl ? [cftIdamUrl] : []), ...(crimeIdamUrl ? [crimeIdamUrl] : []), ...(b2cUrl ? [b2cUrl] : [])];
 
   return helmet({
     contentSecurityPolicy: {

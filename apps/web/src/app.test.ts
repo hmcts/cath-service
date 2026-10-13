@@ -61,7 +61,6 @@ vi.mock("@hmcts/auth", () => ({
   cftIdamHealthCheck: vi.fn(() => vi.fn()),
   configurePassport: vi.fn(),
   crimeCallbackHandler: vi.fn(),
-  getCftIdamConfig: vi.fn(() => ({ hmctsAccessUrl: "https://hmcts-access.aat.platform.hmcts.net" })),
   sessionTimeoutMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
   ssoCallbackHandler: vi.fn()
 }));
