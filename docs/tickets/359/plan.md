@@ -212,7 +212,7 @@ The policy follows `pip-data-management/infrastructure/resources/api-policy/api-
 
 ### `infrastructure/apim-logger.tf`
 
-The diagnostic copies `pip-data-management/infrastructure/tf-apim-logger.tf`: sampling 25%, `verbose`, `log_client_ip`, W3C, `body_bytes = 8192`, and PIP's per-direction header lists. The logger is our own `cath-appinsights-logger` (pointing at `cath-appinsights-<env>`), because PIP's platform logger `sds-api-mgmt-<env>-logger` does not exist for CaTH. Authorization is never logged; `body_bytes` must be 0 when prod is added.
+The diagnostic copies `pip-data-management/infrastructure/tf-apim-logger.tf`: sampling 100%, `verbose`, `log_client_ip`, W3C, `body_bytes = 8192`, and PIP's per-direction header lists. As in PIP's `tf-application-insight.tf`, APIM logs go to a dedicated App Insights, `cath-apim-appinsights-<env>` in `cath-<env>`, through the `cath-apim-appinsights-logger` logger. It is declared directly rather than via `terraform-module-application-insights` (see `appinsights.tf`). It replaced the original `cath-appinsights-logger`, which pointed at `cath-appinsights-<env>`. Authorization is never logged; `body_bytes` must be 0 when prod is added.
 
 ### `docs/api/openapi.yaml`
 
@@ -260,7 +260,7 @@ None.
 | Security scheme `tokenUrl` contains `{tenantId}` | APIM import generally ignores `securitySchemes`. If the import rejects it, also strip `components.securitySchemes` in the merge. |
 | Large uploads (100 MB JSON/flat file) | Diagnostics buffer only 8192 bytes. Confirm the APIM `forward-request` timeout (default 300 s) is enough for the largest PDDA or flat-file upload in aat before onboarding callers. |
 | Authorization header logging | Header logging is an allow-list. `Authorization` is never listed, and a code comment says not to add it. |
-| Logger name collision | Use `cath-appinsights-logger`. The platform's `cft-api-mgmt-<suffix>-logger` already exists in each instance. |
+| Logger name collision | Use `cath-apim-appinsights-logger`. The platform's `cft-api-mgmt-<suffix>-logger` already exists in each instance. |
 | Unpinned module refs | `ref=master` on modules without tags means upstream changes can alter plans. Pin to a commit SHA (see Clarifications). |
 | Rate limit too tight for bursty publishers | Start permissive (600/min per client). `429` responses are visible in App Insights. Tune once traffic is known. |
 
@@ -276,7 +276,7 @@ None.
 | `POST /cath/v1/publication` via APIM with a valid token returns the same as calling the backend directly | Manual curl in aat with a client-credentials token for a test app holding `api.publisher.user`. Send the same body to both URLs and compare status and body. Optionally add a `@nightly` smoke spec later. |
 | No or invalid token gives 401 from APIM and never reaches the backend | Curl without a token and with a tampered token: expect 401 with the APIM JSON body. In App Insights the `requests` row has no matching `dependencies` call to `cath-api`, and there is no request in `apps/api` logs. |
 | Valid token without the role is rejected | Curl with a token from an app with no role assignment: expect 401 from APIM. |
-| Logs in `cath-appinsights-aat` with configured headers and no Authorization | KQL on `requests` where `cloud_RoleName` is the APIM instance: `customDimensions` contain `Request-content-type`, and no `Authorization` key. Sampling is 25%, so send several requests. Name verified: `${var.product}-appinsights-${var.env}` gives `cath-appinsights-aat`. |
+| Logs in `cath-apim-appinsights-aat` with configured headers and no Authorization | KQL on `requests`: `customDimensions` contain `Request-content-type`, and no `Authorization` key. Sampling is 100%. |
 | `openapi.yaml` lists the APIM gateway URL and `job.publish-openapi.yml` republishes it | Visible in the PR diff. After merge, `curl https://hmcts.github.io/cnp-api-docs/specs/cath-service.json \| jq '.servers[].url'` includes `cft-api-mgmt`. |
 
 ## CLARIFICATIONS NEEDED
