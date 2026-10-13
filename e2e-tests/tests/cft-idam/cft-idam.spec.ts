@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { assertAuthenticated, assertNotAuthenticated, CFT_IDAM_URL_PATTERN, loginWithCftIdam, logout } from "../../utils/cft-idam-helpers.js";
 
+const MYHMCTS_GUIDANCE_URL = "https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals";
+
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 // See: docs/tickets/VIBE-150/accessibility-findings.md
 
@@ -46,8 +48,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await expect(page).toHaveURL(/\/cft-rejected/);
 
     // Verify the rejection message is displayed
-    const heading = page.getByRole("heading", { name: /you cannot access this service/i });
-    await expect(heading).toBeVisible();
+    await expect(page.getByText(/you have successfully signed into your myhmcts account/i)).toBeVisible();
   });
 
   test("Language and query parameters are preserved through CFT IDAM flow @nightly", async ({ page }) => {
@@ -82,12 +83,11 @@ test.describe("CFT IDAM Login Flow", () => {
     await expect(languageToggle).toContainText("English");
 
     // Check for Welsh content
-    const welshHeading = page.locator("h1");
-    await expect(welshHeading).toBeVisible();
+    await expect(page.getByText(/rydych wedi mewngofnodi’n llwyddiannus i’ch cyfrif myhmcts/i)).toBeVisible();
 
-    // Check return link still works
-    const signInLink = page.getByRole("link", { name: /yn ôl.*fewngofnodi|return.*sign/i });
-    await expect(signInLink).toHaveAttribute("href", "/sign-in");
+    // Check MyHMCTS guidance link
+    const guidanceLink = page.getByRole("link", { name: /rheoli achosion ar-lein/i });
+    await expect(guidanceLink).toHaveAttribute("href", MYHMCTS_GUIDANCE_URL);
 
     // Run accessibility checks in Welsh
     const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
@@ -223,22 +223,15 @@ test.describe("CFT IDAM Rejected Page", () => {
     // Navigate to rejected page (normally after authentication)
     await page.goto("/cft-rejected");
 
-    // Check heading
-    const heading = page.getByRole("heading", { name: /you cannot access this service/i });
-    await expect(heading).toBeVisible();
-
     // Check message content
-    const message = page.getByText(/your account type is not authorized/i);
-    await expect(message).toBeVisible();
+    await expect(page.getByText(/you have successfully signed into your myhmcts account/i)).toBeVisible();
+    await expect(page.getByText(/solicitors and other legal professionals are the only users/i)).toBeVisible();
+    await expect(page.getByText(/please click home to return to the public version/i)).toBeVisible();
 
-    // Check "What you can do" section
-    const whatYouCanDo = page.getByText(/what you can do/i);
-    await expect(whatYouCanDo).toBeVisible();
-
-    // Check return to sign in link
-    const signInLink = page.getByRole("link", { name: /return to sign in page/i });
-    await expect(signInLink).toBeVisible();
-    await expect(signInLink).toHaveAttribute("href", "/sign-in");
+    // Check MyHMCTS guidance link
+    const guidanceLink = page.getByRole("link", { name: /myhmcts: online case management for legal professionals/i });
+    await expect(guidanceLink).toBeVisible();
+    await expect(guidanceLink).toHaveAttribute("href", MYHMCTS_GUIDANCE_URL);
 
     // Run accessibility checks
     const accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
@@ -251,13 +244,13 @@ test.describe("CFT IDAM Rejected Page", () => {
     // Tab through interactive elements
     await page.keyboard.press("Tab");
 
-    // Find and focus on the sign-in link
+    // Find and focus on the MyHMCTS guidance link
+    const guidanceLink = page.getByRole("link", { name: /myhmcts: online case management for legal professionals/i });
     let focused = false;
     for (let i = 0; i < 10 && !focused; i++) {
       await page.keyboard.press("Tab");
-      const signInLink = page.getByRole("link", { name: /return to sign in page/i });
       try {
-        await expect(signInLink).toBeFocused({ timeout: 100 });
+        await expect(guidanceLink).toBeFocused({ timeout: 100 });
         focused = true;
       } catch {
         // Continue tabbing
@@ -265,11 +258,6 @@ test.describe("CFT IDAM Rejected Page", () => {
     }
 
     // Verify link is focused
-    const signInLink = page.getByRole("link", { name: /return to sign in page/i });
-    await expect(signInLink).toBeFocused();
-
-    // Press Enter to navigate
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL("/sign-in");
+    await expect(guidanceLink).toBeFocused();
   });
 });
