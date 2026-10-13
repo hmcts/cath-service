@@ -29,6 +29,23 @@ resource "azurerm_api_management_logger" "apim" {
   }
 }
 
+# Kept until the diagnostic has moved to azurerm_api_management_logger.apim: APIM
+# refuses to delete a logger a diagnostic is attached to, and Terraform deletes
+# before it updates. Remove in a follow-up PR.
+resource "azurerm_api_management_logger" "cath" {
+  count    = local.deploy_apim ? 1 : 0
+  provider = azurerm.cftapps
+
+  name                = "cath-appinsights-logger"
+  api_management_name = local.apim_name
+  resource_group_name = local.apim_rg
+  resource_id         = azurerm_application_insights.shared.id
+
+  application_insights {
+    connection_string = azurerm_application_insights.shared.connection_string
+  }
+}
+
 # Header lists follow pip-data-management. Never add Authorization.
 resource "azurerm_api_management_api_diagnostic" "cath" {
   count    = local.deploy_apim ? 1 : 0
