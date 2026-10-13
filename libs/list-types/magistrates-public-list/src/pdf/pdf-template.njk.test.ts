@@ -32,7 +32,6 @@ function buildCourtRoomWithCase(overrides: Record<string, unknown> = {}) {
                           prosecutingAuthority: "CPS",
                           offences: [],
                           reportingRestriction: false,
-                          reportingRestrictionText: "",
                           ...overrides
                         }
                       ],
@@ -77,15 +76,15 @@ beforeEach(() => {
 describe("magistrates-public-list pdf-template", () => {
   describe("Reporting restriction row", () => {
     it("should render the restriction-row class on the restriction row when a case has a reporting restriction", () => {
-      const { $ } = renderPdf([buildCourtRoomWithCase({ reportingRestriction: true, reportingRestrictionText: "Press restrictions apply" })]);
+      const { $ } = renderPdf([buildCourtRoomWithCase({ reportingRestriction: true })]);
 
       const restrictionRow = $("tr.restriction-row");
       expect(restrictionRow).toHaveLength(1);
-      expect(restrictionRow.text()).toContain("Press restrictions apply");
+      expect(restrictionRow.text()).toContain(en.reportingRestrictionText);
     });
 
     it("should keep the existing split-cell border overrides on the restriction row", () => {
-      const { $ } = renderPdf([buildCourtRoomWithCase({ reportingRestriction: true, reportingRestrictionText: "Press restrictions apply" })]);
+      const { $ } = renderPdf([buildCourtRoomWithCase({ reportingRestriction: true })]);
 
       const cells = $("tr.restriction-row td");
       expect(cells).toHaveLength(2);
