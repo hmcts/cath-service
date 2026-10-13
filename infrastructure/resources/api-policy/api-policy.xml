@@ -1,0 +1,87 @@
+<policies>
+  <!-- Rendered with templatefile(): never use C# $"..." interpolation here. -->
+  <inbound>
+    <base />
+    <validate-azure-ad-token tenant-id="${tenant_id}" header-name="Authorization" failed-validation-httpcode="401" output-token-variable-name="jwt">
+      <audiences>
+        <audience>${client_id}</audience>
+      </audiences>
+      <required-claims>
+        <claim name="roles" match="any">
+          <value>api.publisher.user</value>
+        </claim>
+      </required-claims>
+    </validate-azure-ad-token>
+    <!-- v2 tokens carry azp, v1 tokens carry appid. -->
+    <rate-limit-by-key calls="600" renewal-period="60" counter-key="@{ var jwt = (Jwt)context.Variables[&quot;jwt&quot;]; return jwt.Claims.GetValueOrDefault(&quot;azp&quot;, jwt.Claims.GetValueOrDefault(&quot;appid&quot;, &quot;unknown&quot;)); }" />
+    <!-- Suppliers never call the backend: APIM swaps their token for its own. -->
+    <cache-lookup-value key="cathAuth" variable-name="cathAuthToken" />
+    <choose>
+      <when condition="@(context.Variables.GetValueOrDefault(&quot;cathAuthToken&quot;, &quot;&quot;) == &quot;&quot;)">
+        <send-request ignore-error="false" timeout="20" response-variable-name="clientSecretResponse" mode="new">
+          <set-url>${key_vault_uri}secrets/cath-service-api-client-secret/?api-version=7.0</set-url>
+          <set-method>GET</set-method>
+          <authentication-managed-identity resource="https://vault.azure.net" />
+        </send-request>
+        <send-request ignore-error="false" timeout="20" response-variable-name="scopeResponse" mode="new">
+          <set-url>${key_vault_uri}secrets/cath-service-api-client-scope/?api-version=7.0</set-url>
+          <set-method>GET</set-method>
+          <authentication-managed-identity resource="https://vault.azure.net" />
+        </send-request>
+        <send-request ignore-error="false" timeout="20" response-variable-name="tokenResponse" mode="new">
+          <set-url>https://login.microsoftonline.com/${tenant_id}/oauth2/v2.0/token</set-url>
+          <set-method>POST</set-method>
+          <set-header name="Content-Type" exists-action="override">
+            <value>application/x-www-form-urlencoded</value>
+          </set-header>
+          <set-body>@{
+            var secret = ((IResponse)context.Variables["clientSecretResponse"]).Body.As<JObject>()["value"].ToString();
+            var scope = ((IResponse)context.Variables["scopeResponse"]).Body.As<JObject>()["value"].ToString();
+            return "grant_type=client_credentials&client_id=${client_id}"
+              + "&scope=" + System.Net.WebUtility.UrlEncode(scope + "/.default")
+              + "&client_secret=" + System.Net.WebUtility.UrlEncode(secret);
+          }</set-body>
+        </send-request>
+        <set-variable name="cathAuthToken" value="@("Bearer " + (string)((IResponse)context.Variables["tokenResponse"]).Body.As<JObject>()["access_token"])" />
+        <cache-store-value key="cathAuth" value="@((string)context.Variables["cathAuthToken"])" duration="2700" />
+      </when>
+    </choose>
+    <set-header name="Authorization" exists-action="override">
+      <value>@((string)context.Variables["cathAuthToken"])</value>
+    </set-header>
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+    <!-- The backend rejected APIM's token, not the supplier's: drop the cached token. -->
+    <choose>
+      <when condition="@(context.Response.StatusCode == 401 || context.Response.StatusCode == 403)">
+        <cache-remove-value key="cathAuth" />
+        <return-response>
+          <set-status code="502" reason="Bad Gateway" />
+          <set-header name="Content-Type" exists-action="override">
+            <value>application/json</value>
+          </set-header>
+          <set-body>{"success":false,"message":"Authenticated by APIM, but the CaTH API rejected the request. Please try again."}</set-body>
+        </return-response>
+      </when>
+    </choose>
+  </outbound>
+  <on-error>
+    <base />
+    <choose>
+      <!-- Matches the backend's 401 body. -->
+      <when condition="@(context.LastError.Source == &quot;validate-azure-ad-token&quot;)">
+        <return-response>
+          <set-status code="401" reason="Unauthorized" />
+          <set-header name="Content-Type" exists-action="override">
+            <value>application/json</value>
+          </set-header>
+          <set-body>{"success":false,"message":"Missing or invalid access token"}</set-body>
+        </return-response>
+      </when>
+    </choose>
+  </on-error>
+</policies>
