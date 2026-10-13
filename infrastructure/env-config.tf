@@ -60,9 +60,13 @@ locals {
   apim_name   = "cft-api-mgmt-${coalesce(local.apim_suffix, var.env)}"
   apim_rg     = "cft-${var.env}-network-rg"
 
-  # "/" is the welcome check, as in pip-data-management. Never expose the
+  # Operations exposed through APIM: path => method => APIM operationId. "/" is
+  # the health check, like pip-data-management's welcome. Never expose the
   # session-cookie download routes.
-  apim_exposed_paths = ["/", "/publication"]
+  apim_operations = {
+    "/"            = { get = "healthCheck" }
+    "/publication" = { post = "createPublication" }
+  }
 
   # Use local.common_tags everywhere instead of var.common_tags. Identical to
   # var.common_tags unless the environment needs a tag override, so aat, demo and

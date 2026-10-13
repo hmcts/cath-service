@@ -2,27 +2,23 @@
 # talk to APIM; APIM calls the backend with its own token. The CI service
 # principal needs API Management Service Contributor on each instance.
 
-# Inline import so only exposed paths are included. servers is emptied so it
-# cannot override service_url.
+# Inline import so only exposed operations are included, with the operationIds
+# APIM uses (they name the files in resources/operation-policies/). servers is
+# emptied so it cannot override service_url.
 locals {
   openapi_spec = yamldecode(file("${path.module}/../docs/api/openapi.yaml"))
 
   apim_openapi_paths = {
-    for path, operations in local.openapi_spec.paths : path => operations
-    if contains(local.apim_exposed_paths, path)
+    for path, methods in local.apim_operations : path => {
+      for method, operation_id in methods :
+      method => merge(local.openapi_spec.paths[path][method], { operationId = operation_id })
+    }
   }
 
   apim_openapi = jsonencode(merge(local.openapi_spec, {
     servers = []
     paths   = local.apim_openapi_paths
   }))
-}
-
-check "apim_exposed_paths_in_spec" {
-  assert {
-    condition     = length(local.apim_openapi_paths) == length(local.apim_exposed_paths)
-    error_message = "Every path in local.apim_exposed_paths must exist in docs/api/openapi.yaml, otherwise APIM imports an API without those operations."
-  }
 }
 
 module "apim_product" {
