@@ -10,3 +10,9 @@ data "azurerm_key_vault_secret" "apim_tenant_id" {
   name         = "app-tenant-id"
   key_vault_id = module.key_vault.key_vault_id
 }
+
+data "azurerm_key_vault_secret" "apim_client_id" {
+  count        = local.deploy_apim ? 1 : 0
+  name         = "cath-service-api-client-id"
+  key_vault_id = module.key_vault.key_vault_id
+}
