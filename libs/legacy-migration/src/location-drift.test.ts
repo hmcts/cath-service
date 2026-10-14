@@ -17,15 +17,8 @@ function buildLegacyLocation(overrides: Partial<LegacyLocation> = {}): LegacyLoc
     location_id: 1,
     name: "Oxford Combined Court Centre",
     welsh_name: "Canolfan Rhydychen",
-    location_type: "VENUE",
     region: ["South East"],
-    welsh_region: ["De Ddwyrain"],
-    jurisdiction: ["Civil"],
-    welsh_jurisdiction: ["Sifil"],
     jurisdiction_type: ["Civil Court"],
-    welsh_jurisdiction_type: ["Llys Sifil"],
-    email: null,
-    contact_no: null,
     ...overrides
   };
 }

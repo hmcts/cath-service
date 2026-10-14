@@ -124,7 +124,6 @@ describe("runPublicationSync", () => {
     vi.clearAllMocks();
     vi.mocked(readLegacyPublicationData).mockResolvedValue({
       locations: [],
-      locationReferences: [],
       locationMetadata: [],
       listSearchConfigs: [{ id: "config-1", list_type: "CIVIL_DAILY_CAUSE_LIST", case_number_field_name: "caseNumber", case_name_field_name: "caseName" }],
       artefacts: [
@@ -274,7 +273,6 @@ describe("runPublicationSync", () => {
     setExistingArtefacts([existingRow("a"), existingRow("b")]);
     vi.mocked(readLegacyPublicationData).mockResolvedValue({
       locations: [],
-      locationReferences: [],
       locationMetadata: [],
       listSearchConfigs: [],
       artefacts: []

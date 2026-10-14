@@ -8,14 +8,7 @@ export async function readLegacyPublicationData(connectionString: string): Promi
     // Same snapshot and UTC handling as the account reader (see legacy-account-source.ts).
     await client.query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
 
-    const locations = await client.query<LegacyLocation>(
-      `SELECT location_id, name, welsh_name, location_type, region, welsh_region, jurisdiction,
-              welsh_jurisdiction, jurisdiction_type, welsh_jurisdiction_type, email, contact_no
-         FROM location`
-    );
-    const locationReferences = await client.query<LegacyLocationReference>(
-      "SELECT location_id, provenance, provenance_location_id, provenance_location_type FROM location_reference"
-    );
+    const locations = await client.query<LegacyLocation>("SELECT location_id, name, welsh_name, region, jurisdiction_type FROM location");
     const locationMetadata = await client.query<LegacyLocationMetadata>(
       `SELECT location_metadata_id, location_id, caution_message, welsh_caution_message, no_list_message, welsh_no_list_message
          FROM location_metadata`
@@ -39,7 +32,6 @@ export async function readLegacyPublicationData(connectionString: string): Promi
 
     return {
       locations: locations.rows,
-      locationReferences: locationReferences.rows,
       locationMetadata: locationMetadata.rows,
       listSearchConfigs: listSearchConfigs.rows,
       artefacts: artefacts.rows
@@ -53,22 +45,8 @@ export interface LegacyLocation {
   location_id: number;
   name: string | null;
   welsh_name: string | null;
-  location_type: string | null;
   region: string[] | null;
-  welsh_region: string[] | null;
-  jurisdiction: string[] | null;
-  welsh_jurisdiction: string[] | null;
   jurisdiction_type: string[] | null;
-  welsh_jurisdiction_type: string[] | null;
-  email: string | null;
-  contact_no: string | null;
-}
-
-export interface LegacyLocationReference {
-  location_id: number;
-  provenance: string | null;
-  provenance_location_id: string | null;
-  provenance_location_type: string | null;
 }
 
 export interface LegacyLocationMetadata {
@@ -110,7 +88,6 @@ export interface LegacyArtefact {
 
 export interface LegacyPublicationData {
   locations: LegacyLocation[];
-  locationReferences: LegacyLocationReference[];
   locationMetadata: LegacyLocationMetadata[];
   listSearchConfigs: LegacyListSearchConfig[];
   artefacts: LegacyArtefact[];
