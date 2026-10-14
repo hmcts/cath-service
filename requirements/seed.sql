@@ -1009,7 +1009,7 @@ Each operation on the User table must be logged in the ***Audit Log*** for trace
 - `role` must be one of the following:  
   `VERIFIED`, `LOCAL*ADMIN`, `CTSC*ADMIN`, `SYSTEM_ADMIN`.
 - `user_provenance` must be one of:  
-  `SSO`, `CFT*IDAM`, `CRIME*IDAM`, `B2C_IDAM`.
+  `SSO`, `CFT*IDAM`, `CRIME*IDAM`, `PI_AAD`.
 - `created_date` must be immutable.
 - `last*signed*in_date` must be updated on each login.
 - Duplicate records (same provenance ID) must not be created.
@@ -1036,7 +1036,7 @@ Each operation on the User table must be logged in the ***Audit Log*** for trace
 | TS1 | Create user (SSO) | Sign in via SSO for first time | Record created with correct fields populated |
 | TS2 | Create user (CFT IDAM) | Sign in via CFT for first time | Record created; role set to VERIFIED |
 | TS3 | Create user (Crime IDAM) | Sign in via Crime IDAM | Record created with first/last name |
-| TS4 | Create user (B2C Media) | Media user signs in | Record created with provenance B2C_IDAM |
+| TS4 | Create user (B2C Media) | Media user signs in | Record created with provenance PI_AAD |
 | TS5 | Update existing user | Existing user signs in again | last*signed*in_date updated |
 | TS6 | Update role change | Role changed at provider side | Role updated in database |
 | TS7 | No duplicate records | Same provenance ID signs in twice | Only one record exists |
