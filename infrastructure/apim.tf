@@ -81,6 +81,7 @@ module "apim_api_policy" {
 
   api_policy_xml_content = templatefile("${path.module}/resources/api-policy/api-policy.xml", {
     tenant_id     = data.azurerm_key_vault_secret.apim_tenant_id[0].value
+    client_id     = data.azurerm_key_vault_secret.apim_client_id[0].value
     key_vault_uri = data.azurerm_key_vault.key_vault.vault_uri
   })
 
