@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mockGetPropertiesVolumeSecrets = vi.fn().mockResolvedValue({});
 const mockExampleScript = vi.fn();
 const mockFlush = vi.fn().mockResolvedValue(undefined);
+const mockMonitoringInstance = { flush: mockFlush };
 const mockMonitoringService = vi.fn(function MonitoringService() {
-  return { flush: mockFlush };
+  return mockMonitoringInstance;
 });
 
 let appInsightsConfig: Record<string, unknown> = {
@@ -110,6 +111,15 @@ describe("index - cron job runner", () => {
       expect(mockMonitoringService).toHaveBeenCalledWith("InstrumentationKey=test", "cath-crons");
     });
 
+    it("should pass the monitoring service to the script", async () => {
+      process.env.SCRIPT_NAME = "example";
+
+      const { main } = await import("./index.js");
+      await main();
+
+      expect(mockExampleScript).toHaveBeenCalledWith(mockMonitoringInstance);
+    });
+
     it("should flush telemetry after a successful run", async () => {
       process.env.SCRIPT_NAME = "example";
 
@@ -147,6 +157,7 @@ describe("index - cron job runner", () => {
 
       expect(mockMonitoringService).not.toHaveBeenCalled();
       expect(mockFlush).not.toHaveBeenCalled();
+      expect(mockExampleScript).toHaveBeenCalledWith(undefined);
     });
 
     it("should not initialise monitoring when no connection string is configured", async () => {

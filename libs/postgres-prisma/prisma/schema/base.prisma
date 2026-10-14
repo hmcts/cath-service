@@ -56,6 +56,8 @@ model User {
   lastSignedInDate   DateTime?      @map("last_signed_in_date")
   // Copied from legacy for the media account re-verification job; not yet written by this service.
   lastVerifiedDate   DateTime?      @map("last_verified_date")
+  // Set only by the legacy sync, which replaces these rows each run and keeps the rest.
+  isLegacyMigrated   Boolean        @default(false) @map("is_legacy_migrated")
 
   subscriptions         Subscription[]
   subscriptionListTypes SubscriptionListType[]

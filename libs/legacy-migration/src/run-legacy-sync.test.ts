@@ -203,6 +203,36 @@ describe("runLegacySync", () => {
     expect(createManyIds(tx.auditLog, "id")).toEqual(["audit-1"]);
   });
 
+  it("should replace only migrated users and their subscriptions, keeping users created in this service", async () => {
+    // Arrange
+    const replacedUsers = { OR: [{ isLegacyMigrated: true }, { userId: { in: [] } }] };
+
+    // Act
+    await runLegacySync({ ...OPTIONS, isDryRun: false });
+
+    // Assert
+    expect(tx.user.deleteMany).toHaveBeenCalledWith({ where: replacedUsers });
+    expect(tx.subscription.deleteMany).toHaveBeenCalledWith({ where: { user: replacedUsers } });
+    expect(tx.subscriptionListType.deleteMany).toHaveBeenCalledWith({ where: { user: replacedUsers } });
+    expect(tx.user.count).toHaveBeenCalledWith({ where: { isLegacyMigrated: true } });
+    expect(tx.subscription.count).toHaveBeenCalledWith({ where: { user: { isLegacyMigrated: true } } });
+    expect(tx.user.createMany).toHaveBeenCalledWith({ data: [expect.objectContaining({ userId: USER_ID, isLegacyMigrated: true })] });
+  });
+
+  it("should replace a local user who shares a provenance ID with a legacy user", async () => {
+    // Arrange
+    tx.user.findMany.mockResolvedValueOnce([
+      { userId: "local-colliding", userProvenanceId: "b2c-1" },
+      { userId: "local-tester", userProvenanceId: "tester-only" }
+    ]);
+
+    // Act
+    await runLegacySync({ ...OPTIONS, isDryRun: false });
+
+    // Assert
+    expect(tx.user.deleteMany).toHaveBeenCalledWith({ where: { OR: [{ isLegacyMigrated: true }, { userId: { in: ["local-colliding"] } }] } });
+  });
+
   it("should copy proof of ID files and OAuth secrets, and remove ones that are no longer in legacy", async () => {
     // Arrange
     tx.mediaApplication.findMany.mockResolvedValue([{ proofOfIdPath: "old-application.png" }, { proofOfIdPath: `${APPLICATION_ID}.pdf` }]);

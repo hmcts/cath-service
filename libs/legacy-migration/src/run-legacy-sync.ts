@@ -12,7 +12,7 @@ import { deleteOrphanedProofOfIdFiles, stageProofOfIdFiles } from "./proof-of-id
 import { findDropLimitViolation } from "./row-count-guard.js";
 import { transformSubscriptions } from "./subscription-transform.js";
 import { type DomainReport, type DomainTransform, SyncAbortedError, type SyncReport } from "./sync-report.js";
-import { transformUsers } from "./user-transform.js";
+import { type MigratedUser, transformUsers } from "./user-transform.js";
 import { findWriteDrift } from "./write-drift.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
@@ -20,8 +20,11 @@ const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 // Every pending application can be approved or rejected, leaving none to migrate.
 const TABLES_THAT_CAN_BE_EMPTIED = new Set<TableName>(["media_application"]);
 
-// Before cutover nothing but this job writes account data, so each run replaces it wholesale
-// with the transformed legacy snapshot. One transaction keeps every table consistent.
+// Users this service created themselves (testers signing in) are kept, along with their subscriptions.
+const MIGRATED_USER = { isLegacyMigrated: true } as const;
+
+// Each run replaces the migrated account data with the transformed legacy snapshot. One
+// transaction keeps every table consistent.
 export async function runLegacySync(options: LegacySyncOptions): Promise<SyncReport> {
   const { legacyAccountDatabaseUrl, isDryRun, maxDropRatio } = options;
   const legacy = await readLegacyAccountData(legacyAccountDatabaseUrl);
@@ -39,7 +42,7 @@ export async function runLegacySync(options: LegacySyncOptions): Promise<SyncRep
       if (violations.length > 0) {
         throw new SyncAbortedError(violations.join("\n"), abortedReport);
       }
-      await replaceAccountData(tx, plan);
+      await replaceAccountData(tx, plan, findCollidingLocalUserIds(previous.localUsers, plan.users.rows));
       const drift = await findAccountWriteDrift(tx, plan);
       if (drift.length > 0) {
         throw new SyncAbortedError(drift.join("\n"), abortedReport);
@@ -128,9 +131,9 @@ async function buildAccountPlan(legacy: LegacyAccountData, referenceData: Refere
 
 async function buildReports(tx: Prisma.TransactionClient, plan: AccountPlan, maxDropRatio: number): Promise<DomainReport[]> {
   const tables: [TableName, DomainTransform<unknown>, () => Promise<number>][] = [
-    ["user", plan.users, () => tx.user.count()],
-    ["subscription", plan.subscriptions, () => tx.subscription.count()],
-    ["subscription_list_type", plan.listTypeSubscriptions, () => tx.subscriptionListType.count()],
+    ["user", plan.users, () => tx.user.count({ where: MIGRATED_USER })],
+    ["subscription", plan.subscriptions, () => tx.subscription.count({ where: { user: MIGRATED_USER } })],
+    ["subscription_list_type", plan.listTypeSubscriptions, () => tx.subscriptionListType.count({ where: { user: MIGRATED_USER } })],
     ["legacy_third_party_user", plan.courtelUsers, () => tx.legacyThirdPartyUser.count()],
     ["legacy_third_party_subscription", plan.courtelSubscriptions, () => tx.legacyThirdPartySubscription.count()],
     ["third_party_user", plan.oauthUsers, () => tx.thirdPartyUser.count()],
@@ -160,19 +163,29 @@ async function buildReports(tx: Prisma.TransactionClient, plan: AccountPlan, max
 async function readPreviousState(tx: Prisma.TransactionClient) {
   const applications = await tx.mediaApplication.findMany({ select: { proofOfIdPath: true } });
   const oauthUsers = await tx.thirdPartyUser.findMany({ select: { id: true } });
+  const localUsers = await tx.user.findMany({ where: { isLegacyMigrated: false }, select: { userId: true, userProvenanceId: true } });
 
   return {
     proofOfIdPaths: applications.flatMap((application) => (application.proofOfIdPath ? [application.proofOfIdPath] : [])),
-    oauthUserIds: oauthUsers.map((user) => user.id)
+    oauthUserIds: oauthUsers.map((user) => user.id),
+    localUsers
   };
 }
 
-// Deleting subscriptions cascades to notification_audit_log, which stays empty while outbound
-// notifications are disabled before cutover.
-async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPlan): Promise<void> {
-  await tx.subscriptionListType.deleteMany();
-  await tx.subscription.deleteMany();
-  await tx.user.deleteMany();
+// userProvenanceId is unique, so a tester who signed in here as someone who is also in legacy
+// has to make way for the legacy row. They find it by provenance ID on their next sign-in.
+function findCollidingLocalUserIds(localUsers: LocalUser[], migratedUsers: MigratedUser[]): string[] {
+  const migratedProvenanceIds = new Set(migratedUsers.map((user) => user.userProvenanceId));
+  return localUsers.filter((user) => migratedProvenanceIds.has(user.userProvenanceId)).map((user) => user.userId);
+}
+
+// Deleting subscriptions cascades to notification_audit_log. Before cutover it only holds
+// Skipped rows, because outbound notifications are disabled, so nothing of record is lost.
+async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPlan, collidingUserIds: string[]): Promise<void> {
+  const replacedUsers = { OR: [MIGRATED_USER, { userId: { in: collidingUserIds } }] };
+  await tx.subscriptionListType.deleteMany({ where: { user: replacedUsers } });
+  await tx.subscription.deleteMany({ where: { user: replacedUsers } });
+  await tx.user.deleteMany({ where: replacedUsers });
   await tx.legacyThirdPartySubscription.deleteMany();
   await tx.legacyThirdPartyUser.deleteMany();
   await tx.thirdPartySubscription.deleteMany();
@@ -193,9 +206,14 @@ async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPla
 
 async function findAccountWriteDrift(tx: Prisma.TransactionClient, plan: AccountPlan): Promise<string[]> {
   return [
-    findWriteDrift("user", plan.users.rows, await tx.user.findMany(), "userId"),
-    findWriteDrift("subscription", plan.subscriptions.rows, await tx.subscription.findMany(), "subscriptionId"),
-    findWriteDrift("subscription_list_type", plan.listTypeSubscriptions.rows, await tx.subscriptionListType.findMany(), "subscriptionListTypeId"),
+    findWriteDrift("user", plan.users.rows, await tx.user.findMany({ where: MIGRATED_USER }), "userId"),
+    findWriteDrift("subscription", plan.subscriptions.rows, await tx.subscription.findMany({ where: { user: MIGRATED_USER } }), "subscriptionId"),
+    findWriteDrift(
+      "subscription_list_type",
+      plan.listTypeSubscriptions.rows,
+      await tx.subscriptionListType.findMany({ where: { user: MIGRATED_USER } }),
+      "subscriptionListTypeId"
+    ),
     findWriteDrift("legacy_third_party_user", plan.courtelUsers.rows, await tx.legacyThirdPartyUser.findMany(), "id"),
     findWriteDrift("legacy_third_party_subscription", plan.courtelSubscriptions.rows, await tx.legacyThirdPartySubscription.findMany(), "id"),
     findWriteDrift("third_party_user", plan.oauthUsers.rows, await tx.thirdPartyUser.findMany(), "id"),
@@ -209,6 +227,11 @@ export interface LegacySyncOptions {
   legacyAccountDatabaseUrl: string;
   isDryRun: boolean;
   maxDropRatio: number;
+}
+
+interface LocalUser {
+  userId: string;
+  userProvenanceId: string;
 }
 
 interface ReferenceData {

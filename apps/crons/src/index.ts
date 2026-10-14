@@ -28,7 +28,8 @@ export const main = async () => {
     const script = await import(`./${scriptName}.js`);
 
     if (script && typeof script.default === "function") {
-      await script.default();
+      // Scripts that report telemetry take the monitoring service; it is undefined when App Insights is off.
+      await script.default(monitoring);
     } else {
       throw new Error(`The script "${scriptName}" does not export a default function.`);
     }

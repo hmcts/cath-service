@@ -1,5 +1,4 @@
-import { generateLocationData, readLegacyPublicationData, renderLocationDataSource } from "@hmcts/legacy-migration";
-import { locationData } from "@hmcts/location";
+import { buildLocationDataCandidate } from "@hmcts/legacy-migration";
 
 // One-off: prints a location-data.ts candidate built from legacy to stdout for a reviewed PR,
 // and the issues to stderr. Reads legacy only; writes nothing.
@@ -9,10 +8,9 @@ export const generateLocationDataCandidate = async () => {
     throw new Error("LEGACY_PUBLICATION_DATABASE_URL is required");
   }
 
-  const legacy = await readLegacyPublicationData(legacyPublicationDatabaseUrl);
-  const { data, issues } = generateLocationData(legacy.locations, legacy.locationReferences, locationData);
+  const { source, issues } = await buildLocationDataCandidate(legacyPublicationDatabaseUrl);
 
-  process.stdout.write(renderLocationDataSource(data));
+  process.stdout.write(source);
   for (const issue of issues) {
     console.error(`location ${issue.entityId}: ${issue.reason}`);
   }
