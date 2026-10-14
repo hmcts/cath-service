@@ -27,12 +27,15 @@ describe("CFT IDAM Configuration", () => {
 
       expect(config).toEqual({
         cftIdamUrl: "https://idam-web-public.aat.platform.hmcts.net",
+        hmctsAccessUrl: "https://hmcts-access.aat.platform.hmcts.net",
+        baseUrl: "https://example.com",
         clientId: "app-pip-frontend",
         clientSecret: "test-secret",
         redirectUri: "https://example.com/cft-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam-web-public.aat.platform.hmcts.net",
-        tokenEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/token"
+        authorizationEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/authorize",
+        tokenEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/token",
+        endSessionEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/endSession"
       });
     });
 
@@ -66,8 +69,9 @@ describe("CFT IDAM Configuration", () => {
 
       const config = getCftIdamConfig();
 
-      expect(config.authorizationEndpoint).toBe("https://idam.example.com");
+      expect(config.authorizationEndpoint).toBe("https://idam.example.com/o/authorize");
       expect(config.tokenEndpoint).toBe("https://idam.example.com/o/token");
+      expect(config.endSessionEndpoint).toBe("https://idam.example.com/o/endSession");
     });
   });
 
