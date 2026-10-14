@@ -28,15 +28,8 @@ A line or two per item. Leave out anything that does not apply.
 * **Validation:** [Input rules and constraints]
 * **Error messages:** [Specific error text]
 * **Navigation:** [Where the user can go from here]
-* **Accessibility:** [Compliance needs]
 
-## 6. Test Scenarios
-(High-level scenario descriptions only - do not include actual test code)
-
-* [Scenario description 1]
-* [Scenario description 2]
-
-## 7. Assumptions & Open Questions
+## 6. Assumptions & Open Questions
 Only include items that are genuinely unclear - do not force this section. It is
 here to spark discussion in refinement, so if nothing obvious stands out, leave
 it empty rather than writing something for the sake of it.
