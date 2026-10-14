@@ -1,21 +1,13 @@
 {% extends "layouts/base-template.njk" %}
 
 {% block page_content %}
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
+<p class="govuk-body">{{ signedInMessage }}</p>
 
-    <h1 class="govuk-heading-l">{{ title }}</h1>
+<p class="govuk-body">{{ legalProfessionalsMessage }}</p>
 
-    <p class="govuk-body">{{ message }}</p>
+<p>
+  <a href="https://www.gov.uk/guidance/myhmcts-online-case-management-for-legal-professionals" class="govuk-link govuk-body">{{ myHmctsLinkText }}</a>
+</p>
 
-    <h2 class="govuk-heading-m">{{ whatYouCanDo }}</h2>
-
-    <p class="govuk-body">{{ contactSupport }}</p>
-
-    <p class="govuk-body">
-      <a href="/sign-in" class="govuk-link">{{ returnToSignIn }}</a>
-    </p>
-
-  </div>
-</div>
+<p class="govuk-body">{{ returnHomeMessage }}</p>
 {% endblock %}
