@@ -1,4 +1,8 @@
-import { type AdministrativeCourtHearingList, generateAdministrativeCourtDailyCauseListPdf } from "@hmcts/administrative-court-daily-cause-list";
+import {
+  type AdministrativeCourtHearingList,
+  generateAdministrativeCourtDailyCauseListPdf,
+  reformatAdministrativeCourtDailyCauseListExcel
+} from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf, reformatAstDailyHearingListExcel } from "@hmcts/ast-daily-hearing-list";
 import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
 import {
@@ -234,7 +238,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   IAC_DAILY_LIST_ADDITIONAL_CASES: iacDailyListGenerator,
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtGenerator,
   SJP_PUBLIC_LIST: sjpPublicGenerator,
   SJP_DELTA_PUBLIC_LIST: sjpPublicGenerator,
@@ -415,6 +419,7 @@ function createUploadedExcelGenerator(reformat: (buffer: Buffer, locale: string)
 }
 
 const rcjStandardUploadedExcelGenerator = createUploadedExcelGenerator(reformatRcjStandardDailyCauseListExcel);
+const adminCourtUploadedExcelGenerator = createUploadedExcelGenerator(reformatAdministrativeCourtDailyCauseListExcel);
 const siacPoacPaacUploadedExcelGenerator = createUploadedExcelGenerator(reformatSiacPoacPaacWeeklyHearingListExcel);
 const sscsExcelGenerator = createUploadedExcelGenerator(reformatSscsDailyHearingListExcel, (p) =>
   generateSscsDailyHearingListExcel({ ...p, jsonData: p.jsonData as SscsDailyHearingList })
@@ -461,6 +466,10 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardUploadedExcelGenerator,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatLondonAdministrativeCourtDailyCauseListExcel),
+  BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtUploadedExcelGenerator,
+  LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtUploadedExcelGenerator,
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtUploadedExcelGenerator,
+  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtUploadedExcelGenerator,
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: createUploadedExcelGenerator(reformatCourtOfAppealCivilDailyCauseListExcel),
   BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: createUploadedExcelGenerator(
     reformatBusinessAndPropertyDivisionRollsBuildingDailyCauseListExcel
