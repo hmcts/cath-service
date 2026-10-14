@@ -6,5 +6,7 @@ export const cy = {
   courtTribunalHint: "Gweld amser, lleoliad, math o wrandawiadau a mwy",
   sjpCaseLabel: "<strong>Dod o hyd i achos Gweithdrefn Un Ynad</strong>",
   sjpCaseHint: "Trwyddedu teledu, mân droseddau traffig megis goryrru a mwy",
+  caseSearchLabel: "<strong>Dod o hyd i wrandawiad yn ôl enw neu rif achos</strong>",
+  caseSearchHint: "Chwilio pob rhestr llys a thribiwnlys am achos",
   continueButton: "Parhau"
 };
