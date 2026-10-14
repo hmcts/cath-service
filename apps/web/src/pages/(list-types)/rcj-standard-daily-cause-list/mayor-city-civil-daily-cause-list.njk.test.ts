@@ -12,8 +12,8 @@ const __dirname = path.dirname(__filename);
 
 const TEMPLATE = "mayor-city-civil-daily-cause-list.njk";
 
-const listContent = en.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST;
-const listContentCy = cy.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST;
+const listContent = en.MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST;
+const listContentCy = cy.MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST;
 const common = en.common;
 const commonCy = cy.common;
 
