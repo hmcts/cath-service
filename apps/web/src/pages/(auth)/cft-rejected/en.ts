@@ -1,7 +1,8 @@
 export const en = {
-  title: "You cannot access this service",
-  message: "Your account type is not authorized to access this service.",
-  whatYouCanDo: "What you can do",
-  contactSupport: "If you think this is wrong, contact support for assistance.",
-  returnToSignIn: "Return to sign in page"
+  signedInMessage:
+    "You have successfully signed into your MyHMCTS account. Unfortunately, your account role does not allow you to access the verified user part of the Court and tribunal hearings service",
+  legalProfessionalsMessage:
+    "Solicitors and other legal professionals are the only users allowed to sign in with a MyHMCTS account. For more information about MyHMCTS the link below:",
+  myHmctsLinkText: "MyHMCTS: online case management for legal professionals",
+  returnHomeMessage: "Alternatively, please click Home to return to the public version of the Court and tribunals hearings Service."
 };

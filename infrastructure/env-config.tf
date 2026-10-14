@@ -28,10 +28,11 @@ locals {
     # "ITHC" are on that list so those environments need no override; "perftest"
     # is not, and every taggable resource in it was rejected with
     # RequestDisallowedByPolicy until this mapped it to "testing".
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing" }
+    # apim_suffix uses CFT names (aat is stg, perftest is test); null means no APIM.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg" }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo" }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test" }
   }
 
   # Unknown environments fall back to the module defaults rather than failing on
@@ -52,6 +53,20 @@ locals {
   # environment this module runs for maps to that workspace, and it does not move
   # when the application resources do - see appinsights.tf.
   log_analytics_subscription_id = "1c4f0704-a29e-403d-b719-b90c34ef14c9"
+
+  # The resource group uses our env name (cft-aat-network-rg), not the APIM suffix.
+  apim_suffix = try(local.env_config[var.env].apim_suffix, null)
+  deploy_apim = local.apim_suffix != null
+  apim_name   = "cft-api-mgmt-${coalesce(local.apim_suffix, var.env)}"
+  apim_rg     = "cft-${var.env}-network-rg"
+
+  # Operations exposed through APIM: path => method => APIM operationId. "/" is
+  # the health check, like pip-data-management's welcome. Never expose the
+  # session-cookie download routes.
+  apim_operations = {
+    "/"            = { get = "healthCheck" }
+    "/publication" = { post = "createPublication" }
+  }
 
   # Use local.common_tags everywhere instead of var.common_tags. Identical to
   # var.common_tags unless the environment needs a tag override, so aat, demo and

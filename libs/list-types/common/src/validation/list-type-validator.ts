@@ -25,7 +25,6 @@ export function convertListTypeNameToKebabCase(name: string): string {
 const PACKAGE_ALIASES: Record<string, string> = {
   "crown-daily-pdda-list": "crown-daily-list",
   "crown-firm-pdda-list": "crown-firm-list",
-  "crown-warned-pdda-list": "crown-warned-list",
   "iac-daily-list-additional-cases": "iac-daily-list",
   "et-fortnightly-press-list": "et-fortnightly-list",
   "magistrates-adult-court-list-daily": "magistrates-adult-court-list",

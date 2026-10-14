@@ -128,7 +128,7 @@ describe("POST /publication", () => {
       ["MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE"],
       ["CROWN_DAILY_PDDA_LIST"],
       ["CROWN_FIRM_PDDA_LIST"],
-      ["CROWN_WARNED_PDDA_LIST"]
+      ["CROWN_ADVANCED_PDDA_LIST"]
     ])("should accept a JSON publication for %s", async (listType) => {
       // Arrange
       const req = jsonRequest({ "x-list-type": listType });
