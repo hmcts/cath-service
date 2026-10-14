@@ -14,6 +14,32 @@
       }) }}
     {% endif %}
 
+    {% set viewOptions = [
+      {
+        value: "court-tribunal",
+        html: courtTribunalLabel,
+        hint: {
+          text: courtTribunalHint
+        }
+      },
+      {
+        value: "sjp-case",
+        html: sjpCaseLabel,
+        hint: {
+          text: sjpCaseHint
+        }
+      }
+    ] %}
+    {% if isCaseSearchEnabled %}
+      {% set viewOptions = viewOptions.concat([{
+        value: "case-search",
+        html: caseSearchLabel,
+        hint: {
+          text: caseSearchHint
+        }
+      }]) %}
+    {% endif %}
+
     <form method="post" novalidate>
       <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
         {{ govukRadios({
@@ -25,22 +51,7 @@
               classes: "govuk-fieldset__legend--l"
             }
           },
-          items: [
-            {
-              value: "court-tribunal",
-              html: courtTribunalLabel,
-              hint: {
-                text: courtTribunalHint
-              }
-            },
-            {
-              value: "sjp-case",
-              html: sjpCaseLabel,
-              hint: {
-                text: sjpCaseHint
-              }
-            }
-          ]
+          items: viewOptions
         }) }}
       </div>
 
