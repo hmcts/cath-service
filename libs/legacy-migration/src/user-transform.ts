@@ -52,7 +52,8 @@ function transformUser(legacy: LegacyUser): TransformResult {
       // A fixed fallback keeps rows stable between runs and makes missing legacy dates easy to find.
       createdDate: legacy.created_date ?? new Date(0),
       lastSignedInDate: legacy.last_signed_in_date,
-      lastVerifiedDate: legacy.last_verified_date
+      lastVerifiedDate: legacy.last_verified_date,
+      isLegacyMigrated: true
     }
   };
 }
@@ -68,6 +69,7 @@ export interface MigratedUser {
   createdDate: Date;
   lastSignedInDate: Date | null;
   lastVerifiedDate: Date | null;
+  isLegacyMigrated: true;
 }
 
 type TransformResult = { ok: true; user: MigratedUser } | { ok: false; reason: string };

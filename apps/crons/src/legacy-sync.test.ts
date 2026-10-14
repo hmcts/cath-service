@@ -113,4 +113,15 @@ describe("legacySync", () => {
     await expect(run).rejects.toThrow("connection refused");
     expect(console.log).not.toHaveBeenCalled();
   });
+
+  it("should report the run to App Insights as the accounts sync", async () => {
+    // Arrange
+    const monitoring = { trackEvent: vi.fn() };
+
+    // Act
+    await legacySync(monitoring);
+
+    // Assert
+    expect(monitoring.trackEvent).toHaveBeenCalledWith("LegacySyncRun", expect.objectContaining({ sync: "accounts", outcome: "clean" }));
+  });
 });

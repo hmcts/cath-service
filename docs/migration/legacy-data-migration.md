@@ -52,7 +52,7 @@ These are not migration code, but no apply run is safe without them.
    - create `legacy-account-database-url`, `legacy-publication-database-url` and `legacy-storage-account-name` in the `cath` vault. The CSI mount fails the pod if a listed secret is missing.
    - add `LEGACY_THIRD_PARTY_KEY_VAULT` once the legacy OAuth vault is confirmed (Q6). Until then the secret copy reports as skipped.
    - set `legacySync.enabled: true` (never on `aat`, §11)
-   - add the Flux releases for the plain-name deployment
+   - add the Flux releases for the plain-name deployment, setting `global.activeCronCluster: true` on **exactly one** cluster. Both sync releases keep the chart's active-cluster check on, so they run only where that value is true and are suspended everywhere else. Two clusters running the same sync would race two delete-and-reload transactions against one database. Pipeline deploys already target one cluster and set it in `values.template.yaml`.
 
 ## 4. Sync algorithm
 
@@ -69,11 +69,11 @@ COMMIT
 report  { read, existing, loaded, rejected[reason] }
 ```
 
-- **Replace, don't mirror.** Before cutover nothing but this job writes to new prod (§10), so there are no native rows worth keeping. Replacing the data wholesale removes the need for a ledger of migrated rows, upsert/delete diffing, and re-keying rows auto-created on sign-in. Each run leaves new prod an exact copy of the transformed legacy data.
+- **Replace, don't mirror.** Before cutover nothing but this job writes to new prod (§10), so there are no native rows worth keeping. Replacing the data wholesale removes the need for a ledger of migrated rows, upsert/delete diffing, and re-keying rows auto-created on sign-in. Each run leaves new prod an exact copy of the transformed legacy data. The exception is `user`: only rows flagged `is_legacy_migrated` are replaced (with their subscriptions), so users who signed in to this service directly are kept (§6).
 - **One transaction.** Related domains are replaced in one transaction, so they are always consistent with each other and a failure leaves the previous night's data intact. Use `DELETE`, not `TRUNCATE`, so the running app keeps reading the old rows until commit.
 - **Row-count guard.** A table may shrink by at most `max(50, ratio × existing rows)`, and a populated table is never emptied. This protects against a bad or empty source read.
 - **After cutover the job is deleted**, not reconfigured. There is no mode in which it runs alongside native writes.
-- **Shared non-prod environments.** An apply run wipes account data created there by testers or E2E runs, so apply runs don't target `aat` (§11).
+- **Shared non-prod environments.** An apply run wipes account data other than users and their subscriptions created there by testers or E2E runs, so apply runs don't target `aat` (§11).
 
 ### Artefacts: upsert and delete
 
@@ -165,7 +165,7 @@ This runs only for new or changed artefacts.
 
 1. **Provenance IDs must be byte-identical** for the same person in both systems.
 2. **Internal `userId` is the legacy UUID** for every migrated user, so subscriptions keep their FK unchanged.
-3. **Nothing the new service auto-created survives a sync.** Pre-cutover the only such rows are testers', and each run replaces account data wholesale (§4), so there is never a duplicate to re-key.
+3. **Users the new service created are kept, unless legacy has the same person.** The sync flags every row it writes with `is_legacy_migrated` and replaces only those. A user created here on sign-in (pre-cutover, a tester) survives the sync with their subscriptions, unless their `userProvenanceId` matches a legacy user, in which case the legacy row replaces theirs.
 
 ### Provenance ID by IdP (legacy pip-frontend vs new)
 
@@ -180,7 +180,7 @@ Confirmed: same B2C tenant as legacy (§9 Q1). This assumes the Entra SSO tenant
 
 ### Sync algorithm for users
 
-Each legacy `pi_user` is transformed and inserted with `user_id = legacy user_id`, after `user`, `subscription` and `subscription_list_type` have been emptied in the same transaction (§4). If a tester signed in to new prod with a real provenance ID, their auto-created row is deleted and the legacy row takes its place. On their next sign-in, `createOrUpdateUser` finds the legacy row by `userProvenanceId`.
+Each legacy `pi_user` is transformed and inserted with `user_id = legacy user_id` and `is_legacy_migrated = true`, after the previously migrated `user`, `subscription` and `subscription_list_type` rows have been deleted in the same transaction (§4). Rows created by this service are left alone. If a tester signed in to new prod with a real provenance ID, their auto-created row (and its subscriptions) is deleted and the legacy row takes its place, because `userProvenanceId` is unique. On their next sign-in, `createOrUpdateUser` finds the legacy row by `userProvenanceId`.
 
 Pre-flight check on legacy: `SELECT provenance_user_id, count(*) FROM pi_user GROUP BY 1 HAVING count(*) > 1`. Duplicates would break the new global unique constraint and have to be resolved by hand first.
 
@@ -188,7 +188,7 @@ Pre-flight check on legacy: `SELECT provenance_user_id, count(*) FROM pi_user GR
 
 This is for users whose provenance ID still doesn't match: Crime until the claim is verified, or B2C if the subject claim turns out to differ.
 
-- **How it works.** Add one branch to `createOrUpdateUser`. If there is no row for this `userProvenanceId`, look for an **unclaimed migrated** row with the same `userProvenance` and the same lowercased email. If there is exactly one, overwrite its `userProvenanceId`, mark it claimed, and log it. Otherwise create as normal.
+- **How it works.** Add one branch to `createOrUpdateUser`. If there is no row for this `userProvenanceId`, look for an **unclaimed migrated** row (`is_legacy_migrated = true`) with the same `userProvenance` and the same lowercased email. If there is exactly one, overwrite its `userProvenanceId`, mark it claimed, and log it. Otherwise create as normal.
 - **Claim marker.** It needs a nullable `legacyClaimedAt`, so a migrated row can only be claimed once.
 - **Only works after cutover.** Before then, the nightly reload overwrites a claimed `userProvenanceId` with the legacy value, so the login fixes above are the real answer.
 - **Never fall back on email across provenances.** The same address in CFT and B2C is two different accounts.
@@ -205,13 +205,13 @@ Email is not an identity key, but it is used for lookups (`findUserByEmail`, med
 ### Subscriptions must match
 
 - Keep legacy `subscription.id` and `user_id` (the legacy UUID). Map `searchType` per §5.1. Resolve list type names to ids per environment.
-- Subscriptions a tester created on the new side are removed by the next reload. Pre-cutover, legacy is the only source.
+- Subscriptions a tester created on the new side survive the reload, unless their user is replaced by a legacy user with the same provenance ID. The row-count guard and write check cover migrated users' subscriptions only.
 - **Row-level check (nightly):** per user, a hash of sorted `(searchType, searchValue)` on both sides, plus the list-type set and languages. Any mismatch is reported by userId.
 - **Behavioural check (nightly, the one that matters):** for every artefact published in legacy that day, compute the **recipient set** with the new service's matching logic (`libs/notifications/src/notification/subscription-queries.ts`) against the migrated data. Compare it with who legacy actually emailed for that artefact, from pip-publication-services' notification records or legacy's subscriber-lookup endpoint. Equal row counts can still hide a broken search-type or list-type mapping. Recipient diffs can't.
 
 ## 7. Verification (every run)
 
-1. **Write check** per table (**built**, `write-drift.ts`). Every legacy row either loads or is rejected with a reason, so drift is measured against the transformed rows, not the raw legacy count: rejected rows are expected not to be there. After the writes, still inside the transaction, each table is read back and compared field by field with the rows the run meant to write. Missing, unexpected and differing rows are reported by id only. Any drift throws, which rolls the run back and leaves the previous night's data in place. The error (`SyncAbortedError`) carries the report built before the abort, and the cron entry logs it before failing, so an aborted night still shows what was read and rejected. A row-count guard violation aborts the same way. This catches write-side loss the transforms cannot see, such as a value a column type truncates (building it surfaced one: `content_date` is a date column but the transform kept the legacy timestamp, which also made every artefact with a time part look changed each night; the transform now truncates it). Output to App Insights is not built yet.
+1. **Write check** per table (**built**, `write-drift.ts`). Every legacy row either loads or is rejected with a reason, so drift is measured against the transformed rows, not the raw legacy count: rejected rows are expected not to be there. After the writes, still inside the transaction, each table is read back and compared field by field with the rows the run meant to write. Missing, unexpected and differing rows are reported by id only. Any drift throws, which rolls the run back and leaves the previous night's data in place. The error (`SyncAbortedError`) carries the report built before the abort, and the cron entry logs it before failing, so an aborted night still shows what was read and rejected. A row-count guard violation aborts the same way. This catches write-side loss the transforms cannot see, such as a value a column type truncates (building it surfaced one: `content_date` is a date column but the transform kept the legacy timestamp, which also made every artefact with a time part look changed each night; the transform now truncates it).
    - **Rejections are classified** (**built**, `rejection-policy.ts`). Because each run reloads the full snapshot, permanent legacy data is re-rejected every night: the V1.16 duplicate subscriptions, non-`ACTIVE` OAuth subscribers and their subscriptions, `INTERNAL` sensitivity, non-`LIST` artefacts, and third parties routed to their own tables. These are **accepted**: reported and marked `(accepted)`, but not blocking. Every other reason is **blocking**, including any reason added later, so accepting one is a deliberate change to the list. A dry-run drop-limit violation is blocking too.
    - **The job fails on blocking issues** (**built**). The report ends with `blocking issues: N`, and the cron entry throws after logging it when N > 0, so the CronJob run shows as failed. This applies to dry runs as well, because the prod dry run is the rehearsal.
 2. **Payload validity:** run `validateListTypeJson` on every migrated JSON payload. Legacy schemas may be looser than ours. Every failure is a real cutover risk, because that list would render badly or not at all on day one.
@@ -221,6 +221,16 @@ Email is not an identity key, but it is used for lookups (`findUserByEmail`, med
 6. **Sample diff (weekly, manual):** pick N courts and compare the summary-of-publications page between legacy and new.
 
 The aim is a report with no blocking issues and no recipient differences for a sustained period (for example two weeks) before go/no-go. Accepted rejections are expected in every report.
+
+**Run history in App Insights** (**built**, `run-sync-job.ts`). Every run sends one `LegacySyncRun` custom event, including dry runs, aborted runs and failed runs. Its properties are `sync` (`accounts` or `publications`), `outcome` (`clean`, `blocking`, `aborted` or `failed`), `isDryRun`, `blockingIssues`, `blockingReasons` (reason → count), `abortReason` on aborts, and `<table>.read/existing/loaded/rejected` and `<step>.processed/rejected/skipped`. They hold counts, reasons and ids only, never emails or names. Pod logs are not kept long enough to evidence the go/no-go window; this is. Clean nights per sync:
+
+```kusto
+customEvents
+| where name == "LegacySyncRun"
+| extend sync = tostring(customDimensions.sync), outcome = tostring(customDimensions.outcome), isDryRun = tostring(customDimensions.isDryRun)
+| summarize arg_max(timestamp, outcome, isDryRun) by sync, night = startofday(timestamp)
+| order by night desc, sync asc
+```
 
 ## 8. Parity gaps (outside migration, but they block cutover)
 
@@ -323,7 +333,7 @@ New has no `stg` environment; `aat` is staging. It deploys to the `DCD-CFTAPPS-S
 | 5 | Third parties + vault copy | Q6 vault | Built; secret copy skipped until the legacy vault is known |
 | 6 | Artefact rows, payload copy, blob cleanup, list search config | 3 | Built |
 | 7 | Derived data: validation, `artefact_search`, PDF/Excel copy | 6 | Built |
-| 8 | Verification: recipient diff, counts, App Insights, failing the job on drift | 6 | Write check, rejection classification and failing the job built (2026-10-12); recipient diff and App Insights not started |
+| 8 | Verification: recipient diff, counts, App Insights, failing the job on drift | 6 | Write check, rejection classification, failing the job (2026-10-12) and App Insights run events (2026-10-13) built; recipient diff not started |
 | 9 | Parity gaps (§8), each as its own ticket | — | Not started |
 | 10 | Cutover rehearsal on `perftest` (prod snapshot), then go-live | all | Not started |
 
@@ -342,10 +352,11 @@ Scope: every domain in §5. Not built yet: verification beyond per-run reports (
 | Locations | `location-drift.ts` (nightly report), `location-data-generator.ts` (one-off candidate) |
 | Row-count guard | `row-count-guard.ts` |
 | Write check and rejection classification | `write-drift.ts`, `rejection-policy.ts`, `findBlockingIssues` in `sync-report.ts` |
+| Job wrapper: logging, failing on blocking issues, App Insights event | `run-sync-job.ts`; the crons runner passes its `MonitoringService` to each script |
 | Orchestrators | `run-legacy-sync.ts` (accounts: nine tables in one transaction), `run-publication-sync.ts` |
 | Cron entries | `apps/crons/src/legacy-sync.ts`, `legacy-sync-publications.ts`, `generate-location-data.ts` |
 | Deployment | `helm/cath-service`: two more releases of the crons chart (`cath-crons-legacy-sync` at 02:00, `cath-crons-legacy-sync-publications` at 03:00) behind `legacySync.enabled` (default `false`). The `example` cron is unchanged. |
-| Schema | `user.last_verified_date`, migration `20261008000000_add_user_last_verified_date` |
+| Schema | `user.last_verified_date`, migration `20261008000000_add_user_last_verified_date`; `user.is_legacy_migrated`, migration `20261014000000_add_user_is_legacy_migrated` |
 | Supporting changes | `setBlobMetadata` and blob metadata on `getBlobProperties` (`@hmcts/azure-blob`); the `validateLocationMetadataInput` export (`@hmcts/location`) |
 
 Config:
@@ -356,7 +367,7 @@ Config:
 - `LEGACY_SYNC_APPLY=true`: needed to write. Anything else is a dry run.
 - `LEGACY_SYNC_MAX_DROP_RATIO`: default `0.05`. An applied run aborts, with no writes, if any table would shrink by more than `max(50, ratio × existing rows)` or be emptied. A dry run reports the same check as `WOULD BE REFUSED` and carries on. Exceptions: artefacts allow 50% (§4), and `media_application` may be emptied, because every pending application can be approved.
 
-Transforms and orchestrators are unit tested (110 tests, plus 14 for the cron entries). The orchestrators use mocked transactions that read back what was written, to check write order, dry run, the guard, the write check, and the file and secret steps.
+Transforms and orchestrators are unit tested (119 tests, plus 32 in `apps/crons`). The orchestrators use mocked transactions that read back what was written, to check write order, dry run, the guard, the write check, and the file and secret steps.
 
 History: the prototype first used a ledger-based mirror. It was replaced by the wholesale reload once it was confirmed that no real user writes to new prod before cutover.
 

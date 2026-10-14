@@ -8,6 +8,9 @@
 # registration and the ASO blob storage.
 global:
   environment: ${ENVIRONMENT:-aat}
+  # The pipeline deploys each environment to exactly one CNP cluster (job.helm-deploy.yml), so
+  # that cluster is always the active one. Read by CronJobs that keep the active-cluster check on.
+  activeCronCluster: true
 
 # Enable/disable subcharts
 postgres:
@@ -83,8 +86,12 @@ cath-crons:
 # publications at 03:00. Dry runs unless LEGACY_SYNC_APPLY is "true". keyVaults replaces the
 # subchart list rather than merging, so the default secrets are repeated. The legacy OAuth
 # vault (LEGACY_THIRD_PARTY_KEY_VAULT) is unset until confirmed, so that copy reports as skipped.
+# The syncs keep the active-cluster check on (the crons chart turns it off by default): two
+# clusters running the same sync would race two delete-and-reload transactions against one
+# database. The CronJob is suspended unless global.activeCronCluster is true.
 cath-crons-legacy-sync:
   job:
+    disableActiveClusterCheck: false
     image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     releaseNameOverride: "{{ .Release.Name }}-legacy-sync"
     schedule: "0 2 * * *"
@@ -111,6 +118,7 @@ cath-crons-legacy-sync:
 
 cath-crons-legacy-sync-publications:
   job:
+    disableActiveClusterCheck: false
     image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     releaseNameOverride: "{{ .Release.Name }}-legacy-sync-publications"
     schedule: "0 3 * * *"

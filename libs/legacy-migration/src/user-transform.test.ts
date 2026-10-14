@@ -33,6 +33,7 @@ function buildMigratedUser(overrides: Partial<MigratedUser> = {}): MigratedUser 
     createdDate: CREATED,
     lastSignedInDate: null,
     lastVerifiedDate: VERIFIED,
+    isLegacyMigrated: true,
     ...overrides
   };
 }
