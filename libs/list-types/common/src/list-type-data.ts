@@ -269,7 +269,7 @@ export const listTypeData: ListTypeData[] = [
     subJurisdictionIds: [1]
   },
   {
-    name: "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+    name: "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
     englishFriendlyName: "Bristol and Cardiff Administrative Court Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol Llys Gweinyddol Bryste a Chaerdydd",
     provenance: ["CFT_IDAM"],

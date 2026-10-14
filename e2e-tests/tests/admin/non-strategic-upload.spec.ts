@@ -98,6 +98,9 @@ const CIC_CY_HEADINGS = [
   "Aelod(au)",
   "Gwybodaeth ychwanegol"
 ];
+const BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME = "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
+const BIRMINGHAM_ADMIN_COURT_SHEET_NAME = "Birmingham hearings";
+const ADMIN_COURT_CY_HEADINGS = ["Lleoliad", "Barnwr", "Amser", "Rhif yr achos", "Manylion yr achos", "Math o wrandawiad", "Gwybodaeth ychwanegol"];
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
@@ -180,6 +183,16 @@ async function createTribunalExcelFile(sheetName: string, header: string[], row:
   workbook.addWorksheet(sheetName).addRows([
     [...header, "Internal notes"],
     [...row, "Appellant is vulnerable"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createAdminCourtExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(BIRMINGHAM_ADMIN_COURT_SHEET_NAME).addRows([
+    ["Venue", "Judge", "Time", "Case Number", "Case Details", "Hearing Type", "Additional Information", "Internal notes"],
+    ["Court 1", "Mr Justice Smith", "10.30am", "AC-2026-000001", "R (Smith) v Secretary of State", "Judicial Review", "", "Claimant is vulnerable"]
   ]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
@@ -493,7 +506,9 @@ test.describe
     });
 
     // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-    test("RCJ, SSCS, Rolls Building and Tribunal Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
+    test("RCJ, SSCS, Rolls Building, Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
+      page
+    }) => {
       test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
       const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -504,7 +519,8 @@ test.describe
       const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
       const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
       const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
-      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !grcListType || !cicListType) {
+      const adminCourtListType = (await getListTypeByName(BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME)) as { id: number } | null;
+      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !grcListType || !cicListType || !adminCourtListType) {
         throw new Error("Expected list types are not seeded");
       }
       const artefactIds: string[] = [];
@@ -629,6 +645,32 @@ test.describe
         expect(rowValues(cicWorksheet, 1)).toEqual(CIC_CY_HEADINGS);
         expect(rowValues(cicWorksheet, 2)).toEqual(["2 Ionawr 2026", ...CIC_ROW.slice(1)]);
         await expectPdfAndExcelLinksInEmail(cicArtefactId);
+
+        // STEP 10: A Welsh Birmingham Administrative Court upload gets the Welsh headings, the normalised time, its unknown column dropped, and both email links
+        const adminCourtArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: adminCourtListType.id,
+          language: "WELSH",
+          fileName: "birmingham-administrative-court-cy.xlsx",
+          buffer: await createAdminCourtExcelFile(),
+          checkAccessibility: true
+        });
+        artefactIds.push(adminCourtArtefactId);
+
+        const adminCourtWorksheet = await downloadReformattedWorksheet(page, adminCourtArtefactId, BIRMINGHAM_ADMIN_COURT_SHEET_NAME);
+        expect(rowValues(adminCourtWorksheet, 1)).toEqual(ADMIN_COURT_CY_HEADINGS);
+        expect(adminCourtWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(adminCourtWorksheet, 2)).toEqual([
+          "Court 1",
+          "Mr Justice Smith",
+          "10:30am",
+          "AC-2026-000001",
+          "R (Smith) v Secretary of State",
+          "Judicial Review",
+          ""
+        ]);
+        expect(rowValues(adminCourtWorksheet, 1)).not.toContain("Internal notes");
+        expect(rowValues(adminCourtWorksheet, 2)).not.toContain("Claimant is vulnerable");
+        await expectPdfAndExcelLinksInEmail(adminCourtArtefactId);
       } finally {
         if (artefactIds.length > 0) {
           await cleanupTestNotifications(artefactIds);

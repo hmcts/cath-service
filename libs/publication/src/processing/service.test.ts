@@ -116,7 +116,8 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => ({
 }));
 
 vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
-  generateAdministrativeCourtDailyCauseListPdf: vi.fn()
+  generateAdministrativeCourtDailyCauseListPdf: vi.fn(),
+  reformatAdministrativeCourtDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
@@ -250,7 +251,9 @@ describe("publication-processor", async () => {
   const { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel } = await import("@hmcts/rcj-standard-daily-cause-list");
   const { deleteBlob } = await import("@hmcts/azure-blob");
   const { listTypeData, saveExcelToStorage } = await import("@hmcts/list-types-common");
-  const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
+  const { generateAdministrativeCourtDailyCauseListPdf, reformatAdministrativeCourtDailyCauseListExcel } = await import(
+    "@hmcts/administrative-court-daily-cause-list"
+  );
   const { generatePhtWeeklyHearingListPdf, reformatPhtWeeklyHearingListExcel } = await import("@hmcts/pht-weekly-hearing-list");
   const { generateCivilDailyCauseListPdf } = await import("@hmcts/civil-daily-cause-list");
   const { generateFamilyDailyCauseListPdf } = await import("@hmcts/family-daily-cause-list");
@@ -2472,6 +2475,137 @@ describe("publication-processor", async () => {
         consoleWarnSpy.mockRestore();
       }
     );
+  });
+
+  describe("uploaded Excel for Administrative Court lists", () => {
+    const ADMIN_COURT_URL_PATHS = [
+      "birmingham-administrative-court-daily-cause-list",
+      "leeds-administrative-court-daily-cause-list",
+      "bristol-cardiff-administrative-court-daily-cause-list",
+      "manchester-administrative-court-daily-cause-list"
+    ];
+    const ADMIN_COURT_LIST_TYPES = listTypeData.filter((listType) => ADMIN_COURT_URL_PATHS.includes(listType.urlPath ?? "")).map((listType) => listType.name);
+    const EXPECTED_ADMIN_COURT_LIST_TYPES = [
+      "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    ];
+    const uploadedExcel = Buffer.from("uploaded-admin-court-excel");
+    const reformattedExcel = Buffer.from("reformatted-admin-court-excel");
+    const excelParams = {
+      artefactId: "admin-court-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: [{ venue: "Court 1", time: "10:30am" }]
+    };
+    const pdfResult = { success: true, pdfPath: "/path/to/admin-court.pdf", sizeBytes: 1024, exceedsMaxSize: false };
+
+    beforeEach(() => {
+      vi.mocked(reformatAdministrativeCourtDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(generateAdministrativeCourtDailyCauseListPdf).mockResolvedValue(pdfResult);
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "admin-court-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+      vi.mocked(getLocationById).mockResolvedValue({
+        locationId: 123,
+        name: "Birmingham Civil and Family Justice Centre",
+        welshName: "Canolfan Gyfiawnder Sifil a Theulu Birmingham",
+        regions: [],
+        subJurisdictions: []
+      });
+    });
+
+    it("should find exactly the four Administrative Court list types in the list type data", () => {
+      // Assert
+      expect([...ADMIN_COURT_LIST_TYPES].sort()).toEqual(EXPECTED_ADMIN_COURT_LIST_TYPES);
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should register an Excel generator for %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should reformat and save the uploaded Excel for %s", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatAdministrativeCourtDailyCauseListExcel).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("admin-court-artefact", reformattedExcel);
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should delete the stale Excel without reformatting when %s has no upload", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(reformatAdministrativeCourtDailyCauseListExcel).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result).toEqual({});
+    });
+
+    it("should pass the uploaded Excel through processPublication and notify with both files", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(reformatAdministrativeCourtDailyCauseListExcel).toHaveBeenCalledWith(uploadedExcel, "en");
+      expect(result.pdfPath).toBe("/path/to/admin-court.pdf");
+      expect(result.excelPath).toBe("admin-court-artefact.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "admin-court-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/admin-court.pdf", excelPath: "admin-court-artefact.xlsx" })
+      );
+    });
+
+    it("should notify with the PDF only when the list was not uploaded as Excel", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(reformatAdministrativeCourtDailyCauseListExcel).not.toHaveBeenCalled();
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "admin-court-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/admin-court.pdf", excelPath: undefined })
+      );
+    });
+
+    it("should delete the stale Excel and log only the artefact id and message when reformatting fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(reformatAdministrativeCourtDailyCauseListExcel).mockRejectedValue(new Error("No recognised worksheet to reformat"));
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(generateAdministrativeCourtDailyCauseListPdf).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", {
+        artefactId: "admin-court-artefact",
+        error: "No recognised worksheet to reformat"
+      });
+      expect(result.pdfPath).toBe("/path/to/admin-court.pdf");
+      expect(result.excelPath).toBeUndefined();
+      consoleWarnSpy.mockRestore();
+    });
   });
 
   describe("stale Excel on a flat-file republish", () => {
