@@ -116,7 +116,7 @@ const getHandler = async (req: Request, res: Response) => {
     const provenanceLabels: Record<string, string> = {
       CFT_IDAM: content.provenanceCftIdam,
       SSO: content.provenanceSso,
-      B2C_IDAM: content.provenanceB2c,
+      PI_AAD: content.provenanceB2c,
       CRIME_IDAM: content.provenanceCrimeIdam
     };
 
@@ -140,7 +140,6 @@ const getHandler = async (req: Request, res: Response) => {
   const provenanceLabels: Record<string, string> = {
     CFT_IDAM: content.provenanceCftIdam,
     SSO: content.provenanceSso,
-    B2C_IDAM: content.provenanceB2c,
     PI_AAD: content.provenanceB2c,
     CRIME_IDAM: content.provenanceCrimeIdam
   };
