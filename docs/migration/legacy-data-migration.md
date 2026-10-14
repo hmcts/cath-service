@@ -24,8 +24,6 @@ There are two cron scripts, run through the existing `SCRIPT_NAME` mechanism as 
 | `legacy-sync` (accounts) | account-management DB, `files` container, legacy OAuth vault | users, subscriptions, list-type subscriptions, third parties, media applications, audit log |
 | `legacy-sync-publications` | data-management DB, `artefact` and `publications` containers | location drift report, location metadata, list search config, artefacts, payloads, derived data |
 
-A third script, `generate-location-data`, is a one-off: it reads legacy locations and prints a `location-data.ts` candidate for the parity PR (§3).
-
 - **Schedule:** run accounts before publications, after the legacy expiry jobs (for example 02:00 and 03:00).
 - **Code location:** mapping and transform logic lives in `libs/legacy-migration/`, following the repo rule of no business logic in apps. There is one pure transform module per domain (`user-transform.ts`, `subscription-transform.ts`, …), each returning the rows to load plus rejections with reasons.
 - **Reading legacy:** legacy DBs are read through a **read-only** Postgres role, using raw `pg` queries inside one repeatable-read snapshot. Don't add the legacy schemas to Prisma. Writes go through the Prisma client.
@@ -39,8 +37,8 @@ These are not migration code, but no apply run is safe without them.
 1. **Location parity.** `location-data.ts` has 27 locations (ids 1–27).
    - Legacy subscriptions and artefacts reference legacy P&I IDs, so anything for a location missing here is rejected.
    - The seeded `location_reference` rows are synthetic (`SNL`, `locationId + 100`), so real ingestion would not match them either.
-   - Location ids in `location-data.ts` must equal legacy P&I IDs. Generate it from legacy once with `generate-location-data` (§5.2), then keep it aligned with the nightly drift report.
-   - **Location references can't be carried yet.** `location-data.ts` has no field for them, so the generator reports each legacy reference and the seed keeps writing synthetic ones. Real ingestion matching needs a data-model change to `location-data.ts` and `generate-seed-sql.ts` before cutover.
+   - Location ids in `location-data.ts` must equal legacy P&I IDs. Locations are not synced or generated: `location-data.ts` is maintained by hand, and the nightly drift report (§5.2) plus the `unknown location` rejections show where it differs from legacy. Both block, so a run is only clean once the file matches.
+   - **Location references are a separate cutover item.** The seed writes synthetic ones, so real ingestion matching needs a change to `location-data.ts` and `generate-seed-sql.ts` before cutover. The sync does not touch references.
 2. **`OUTBOUND_ENABLED=false` (§10).** The guard is built. It must be set on any environment holding migrated subscriptions before the first apply run.
 3. **Access.** The sync identity needs:
    - read-only roles on both legacy DBs
@@ -109,7 +107,7 @@ users → subscriptions and list-type subscriptions → third parties → media 
 
 | Legacy | New | Treatment |
 |---|---|---|
-| `location`, `location_reference` | `location-data.ts` | **Don't sync.** `location-data.ts` is the source of truth, and the deploy seed overwrites names from it. **One-off generator:** emit a `location-data.ts` candidate from legacy for the parity PR (§3). Legacy regions and jurisdictions are `text[]` names, so map them to ids by name; `jurisdiction_type` maps to sub-jurisdictions. **Nightly drift report:** compare id, name, Welsh name, regions, sub-jurisdictions, email, contact number and references (`provenance`, `provenance_location_id`, `provenance_location_type`). Legacy admins can upload location CSVs in prod, so drift will happen. Fix it with a PR. |
+| `location`, `location_reference` | `location-data.ts` | **Don't sync.** `location-data.ts` is the source of truth, and the deploy seed overwrites names from it. **Nightly drift report** (`location_drift` step, blocking): by id, compare name, Welsh name, regions and sub-jurisdictions. Legacy stores regions and jurisdictions as `text[]` names, so they are compared by name; `jurisdiction_type` maps to sub-jurisdictions. Ids missing on either side are reported. Email, contact number and references are not compared, because `location-data.ts` doesn't carry them. Legacy admins can upload location CSVs in prod, so drift will happen. Fix it with a PR to `location-data.ts`. |
 | `location_metadata` | `location_metadata` | Replace. Keep `location_metadata_id`. Trim the four messages, converting empty strings to null. Set `updated_at` explicitly (`@updatedAt` is a Prisma default only). Reject unknown locations, rows with no message, and messages that fail `libs/location/src/validation/location-metadata-validation.ts`. |
 | `artefact` | `artefact` | Upsert and delete (§4). Scope: `display_to IS NULL OR display_to > now()`, which includes future `display_from` and `GENERAL_PUBLICATION` rows with no end date. Field rules are in the table below. Drop `search` (`artefact_search` replaces it) and `payload_size`. |
 | artefact payloads (`artefact` container) | `artefact` container | Legacy `payload` holds `https://<account>/artefact/<random uuid>`. Copy it to `artefact/<artefactId>`, matching the ingest path. The copy goes through the sync pod (SDK download, then upload), not server-side, because the payload has to be read anyway to detect flat-file types and check the JSON. Stamp `legacylastreceived` metadata on the blob. Legacy V1.25 copied rows that kept the same `payload` URL; each such artefact gets its own copy under its own id, so a shared blob is copied once per artefact and is not reported. |
@@ -259,7 +257,7 @@ Legacy runs these as cron-triggered endpoints (`pip-cron-trigger`). New has no e
 2. **Same public domain?** Will cutover be a Front Door/DNS switch on the same hostname? This affects cookies, bookmarks, links in already-sent emails, and the B2C redirect URIs.
 3. **Publisher routing.** Do all publishers (CFT, Crime, SNL, XHIBIT/PDDA, Courtel) reach legacy through APIM? If so, cutover is one APIM backend switch, since the API contract was aligned in #1026. Any that call pip-data-management directly need their own coordinated change.
 4. **`CASE_URN` subscriptions.** The new service has no URN search type. Do they become `CASE_NUMBER`? That only works if `artefact_search.caseNumber` holds URNs for crime lists. Or do we drop them and email those users?
-5. ~~**Location parity.**~~ **Decided (2026-10-09):** generate `location-data.ts` from legacy, with ids equal to legacy P&I IDs. The generator is built; the PR needs legacy access to run it.
+5. ~~**Location parity.**~~ **Decided (2026-10-09):** `location-data.ts` ids equal legacy P&I IDs. **Revised (2026-10-14):** no generator; the file is aligned by hand from the first prod dry run's drift report.
 6. **Third parties.** **Decided (2026-10-09):** Courtel to `legacy_third_party_*`, `ACTIVE` `api_*` rows only to `third_party_*`, with OAuth secrets copied. **Still open:** which vault holds the legacy OAuth secrets. It isn't named in the legacy repos and is probably pip-frontend's or publication-services'. Until the OAuth push exists (§8), migrated `api_*` data is unused.
 7. ~~**Flat-file extension.**~~ **Decided (2026-10-09):** append the detected extension to legacy `source_artefact_id`, keeping the publisher's id as a prefix.
 8. ~~**`NoMatch` artefacts.**~~ **Decided:** migrated as-is.
@@ -328,7 +326,7 @@ New has no `stg` environment; `aat` is staging. It deploys to the `DCD-CFTAPPS-S
 |---|---|---|---|
 | 1 | `OUTBOUND_ENABLED` guard (§10) | — | Built |
 | 2 | Access, cron helm and secrets for both scripts; dry run on `aat` against legacy `stg`, then a prod dry run | — | Helm built and disabled; access and vault secrets not done |
-| 3 | Location generator, parity PR and nightly drift report | — | Generator and drift report built; PR needs legacy access; references need a data-model change (§3) |
+| 3 | Location parity PR and nightly drift report | — | Drift report built; parity PR waits for the first prod dry run; references need a data-model change (§3) |
 | 4 | `last_verified_date`, location metadata, media applications + proof of ID, audit log | 2, 3 | Built |
 | 5 | Third parties + vault copy | Q6 vault | Built; secret copy skipped until the legacy vault is known |
 | 6 | Artefact rows, payload copy, blob cleanup, list search config | 3 | Built |
@@ -349,12 +347,12 @@ Scope: every domain in §5. Not built yet: verification beyond per-run reports (
 | Account transforms (pure; rows + rejections) | `user-`, `subscription-`, `list-type-subscription-`, `courtel-`, `oauth-third-party-`, `media-application-`, `audit-log-transform.ts` |
 | Publication transforms | `location-metadata-`, `list-search-config-`, `artefact-transform.ts`, `artefact-plan.ts`, `flat-file-type.ts` |
 | File and secret steps | `proof-of-id-copy.ts`, `oauth-secret-copy.ts`, `artefact-payload.ts`, `artefact-derived-data.ts` |
-| Locations | `location-drift.ts` (nightly report), `location-data-generator.ts` (one-off candidate) |
+| Locations | `location-drift.ts` (nightly report) |
 | Row-count guard | `row-count-guard.ts` |
 | Write check and rejection classification | `write-drift.ts`, `rejection-policy.ts`, `findBlockingIssues` in `sync-report.ts` |
 | Job wrapper: logging, failing on blocking issues, App Insights event | `run-sync-job.ts`; the crons runner passes its `MonitoringService` to each script |
 | Orchestrators | `run-legacy-sync.ts` (accounts: nine tables in one transaction), `run-publication-sync.ts` |
-| Cron entries | `apps/crons/src/legacy-sync.ts`, `legacy-sync-publications.ts`, `generate-location-data.ts` |
+| Cron entries | `apps/crons/src/legacy-sync.ts`, `legacy-sync-publications.ts` |
 | Deployment | `helm/cath-service`: two more releases of the crons chart (`cath-crons-legacy-sync` at 02:00, `cath-crons-legacy-sync-publications` at 03:00) behind `legacySync.enabled` (default `false`). The `example` cron is unchanged. |
 | Schema | `user.last_verified_date`, migration `20261008000000_add_user_last_verified_date`; `user.is_legacy_migrated`, migration `20261014000000_add_user_is_legacy_migrated` |
 | Supporting changes | `setBlobMetadata` and blob metadata on `getBlobProperties` (`@hmcts/azure-blob`); the `validateLocationMetadataInput` export (`@hmcts/location`) |
@@ -367,7 +365,7 @@ Config:
 - `LEGACY_SYNC_APPLY=true`: needed to write. Anything else is a dry run.
 - `LEGACY_SYNC_MAX_DROP_RATIO`: default `0.05`. An applied run aborts, with no writes, if any table would shrink by more than `max(50, ratio × existing rows)` or be emptied. A dry run reports the same check as `WOULD BE REFUSED` and carries on. Exceptions: artefacts allow 50% (§4), and `media_application` may be emptied, because every pending application can be approved.
 
-Transforms and orchestrators are unit tested (119 tests, plus 32 in `apps/crons`). The orchestrators use mocked transactions that read back what was written, to check write order, dry run, the guard, the write check, and the file and secret steps.
+Transforms and orchestrators are unit tested (114 tests, plus 32 in `apps/crons`). The orchestrators use mocked transactions that read back what was written, to check write order, dry run, the guard, the write check, and the file and secret steps.
 
 History: the prototype first used a ledger-based mirror. It was replaced by the wholesale reload once it was confirmed that no real user writes to new prod before cutover.
 
@@ -401,8 +399,6 @@ Publication sync:
 - **Re-run:** stamped artefacts were not re-copied or rebuilt; their blobs were unchanged.
 - **Legacy expiry:** removed the row and its payload.
 - **Empty legacy read:** refused, with no writes.
-
-Location generator: reproduced the current file exactly for the matching location, mapped the legacy-only location by name, and reported its reference as not carried. The output typechecks as a drop-in `location-data.ts` and needs `biome format --write` before review.
 
 Open items surfaced:
 1. Location references need a data-model change before cutover (§3).
