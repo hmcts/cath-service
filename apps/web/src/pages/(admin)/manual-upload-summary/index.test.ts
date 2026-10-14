@@ -690,6 +690,7 @@ describe("manual-upload-summary page", () => {
           artefactId: "test-artefact-id-123",
           locationId: "1",
           locale: "en",
+          payloadSizeBytes: mockUploadData.file.length,
           logPrefix: "[Manual Upload]"
         })
       );
