@@ -27,50 +27,14 @@ const HTML_TAG_PATTERN = /<[^>]{1,200}>/;
 // time columns validate. The wall-clock time is encoded in UTC by ExcelJS.
 const EXCEL_TIME_EPOCH_YEAR = 1899;
 
-function formatExcelTime(value: Date): string {
-  const hours = value.getUTCHours();
-  const minutes = value.getUTCMinutes();
-  const period = hours < 12 ? "am" : "pm";
-  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-  return minutes === 0 ? `${hour12}${period}` : `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
+export function readCellValue(value: unknown): string {
+  const normalised = normalizeCellValue(value);
+  return normalised === null || normalised === undefined ? "" : String(normalised).trim();
 }
 
-function formatDateValue(value: unknown): unknown {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    if (value.getUTCFullYear() === EXCEL_TIME_EPOCH_YEAR) {
-      return formatExcelTime(value);
-    }
-    const day = String(value.getDate()).padStart(2, "0");
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const year = value.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-  return value;
-}
-
-// ExcelJS returns rich objects for some cell types: hyperlinks as { text, hyperlink },
-// rich text as { richText: [...] }, and formulae as { result }. Extract the plain
-// text so downstream string handling doesn't produce "[object Object]".
-function normalizeCellValue(value: unknown): unknown {
-  if (value instanceof Date) {
-    return formatDateValue(value);
-  }
-  if (value && typeof value === "object") {
-    const cell = value as Record<string, unknown>;
-    if (Array.isArray(cell.richText)) {
-      return cell.richText.map((run) => (run as { text?: string }).text ?? "").join("");
-    }
-    if ("text" in cell) {
-      return normalizeCellValue(cell.text);
-    }
-    if ("result" in cell) {
-      return normalizeCellValue(cell.result);
-    }
-    if ("hyperlink" in cell) {
-      return cell.hyperlink;
-    }
-  }
-  return value;
+export function findFieldForHeader(fields: FieldConfig[], header: string): FieldConfig | undefined {
+  const normalisedHeader = header.toLowerCase().trim();
+  return fields.find((field) => field.header.toLowerCase() === normalisedHeader);
 }
 
 export function validateNoHtmlTags(value: string, fieldName: string, rowNumber: number): void {
@@ -117,7 +81,7 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
       row.eachCell((cell, colNumber) => {
         const header = headers[colNumber - 1];
         if (header) {
-          rowData[header] = normalizeCellValue(cell.value) ?? "";
+          rowData[header] = readCellValue(cell.value);
         }
       });
       jsonData.push(rowData);
@@ -154,6 +118,52 @@ export async function convertExcelToJson<T = Record<string, string>>(buffer: Buf
   return results;
 }
 
+// ExcelJS returns rich objects for some cell types: hyperlinks as { text, hyperlink },
+// rich text as { richText: [...] }, and formulae as { result }. Extract the plain
+// text so downstream string handling doesn't produce "[object Object]".
+function normalizeCellValue(value: unknown): unknown {
+  if (value instanceof Date) {
+    return formatDateValue(value);
+  }
+  if (value && typeof value === "object") {
+    const cell = value as Record<string, unknown>;
+    if (Array.isArray(cell.richText)) {
+      return cell.richText.map((run) => (run as { text?: string }).text ?? "").join("");
+    }
+    if ("text" in cell) {
+      return normalizeCellValue(cell.text);
+    }
+    if ("result" in cell) {
+      return normalizeCellValue(cell.result);
+    }
+    if ("hyperlink" in cell) {
+      return cell.hyperlink;
+    }
+  }
+  return value;
+}
+
+function formatDateValue(value: unknown): unknown {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    if (value.getUTCFullYear() === EXCEL_TIME_EPOCH_YEAR) {
+      return formatExcelTime(value);
+    }
+    const day = String(value.getDate()).padStart(2, "0");
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const year = value.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return value;
+}
+
+function formatExcelTime(value: Date): string {
+  const hours = value.getUTCHours();
+  const minutes = value.getUTCMinutes();
+  const period = hours < 12 ? "am" : "pm";
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  return minutes === 0 ? `${hour12}${period}` : `${hour12}:${String(minutes).padStart(2, "0")}${period}`;
+}
+
 function validateHeaders(actualHeaders: string[], fields: FieldConfig[]): void {
   const expectedHeaders = fields.map((f) => f.header.toLowerCase());
   const missingHeaders = expectedHeaders.filter((expected) => !actualHeaders.includes(expected));
@@ -169,7 +179,7 @@ function parseRow(row: Record<string, unknown>, rowNumber: number, fields: Field
   const result: Record<string, string> = {};
 
   for (const field of fields) {
-    const value = getField(row, field.header, rowNumber, field.required ?? true);
+    const value = getField(row, field, rowNumber);
 
     if (value && field.validators) {
       for (const validator of field.validators) {
@@ -183,18 +193,13 @@ function parseRow(row: Record<string, unknown>, rowNumber: number, fields: Field
   return result;
 }
 
-function getField(row: Record<string, unknown>, header: string, rowNumber: number, required: boolean): string {
-  const keys = Object.keys(row);
-  const key = keys.find((k) => k.toLowerCase().trim() === header.toLowerCase());
+function getField(row: Record<string, unknown>, field: FieldConfig, rowNumber: number): string {
+  const key = Object.keys(row).find((k) => findFieldForHeader([field], k));
+  const value = key ? readCellValue(row[key]) : "";
 
-  const value = key ? row[key] : undefined;
-
-  if (value === null || value === undefined || String(value).trim() === "") {
-    if (required) {
-      throw new Error(`Missing required field '${header}' in row ${rowNumber}`);
-    }
-    return "";
+  if (value === "" && (field.required ?? true)) {
+    throw new Error(`Missing required field '${field.header}' in row ${rowNumber}`);
   }
 
-  return String(value).trim();
+  return value;
 }

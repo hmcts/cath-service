@@ -1,6 +1,14 @@
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { convertExcelToJson, type ExcelConverterConfig, validateDateFormat, validateNoHtmlTags } from "./excel-to-json.js";
+import {
+  convertExcelToJson,
+  type ExcelConverterConfig,
+  type FieldConfig,
+  findFieldForHeader,
+  readCellValue,
+  validateDateFormat,
+  validateNoHtmlTags
+} from "./excel-to-json.js";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -375,6 +383,82 @@ describe("excel-to-json", () => {
       const result = await convertExcelToJson(buffer, config);
 
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("readCellValue", () => {
+    it("should return an empty string when the value is null or undefined", () => {
+      // Act
+      const results = [readCellValue(null), readCellValue(undefined)];
+
+      // Assert
+      expect(results).toEqual(["", ""]);
+    });
+
+    it("should trim string values", () => {
+      // Act
+      const result = readCellValue("  Court 1  ");
+
+      // Assert
+      expect(result).toBe("Court 1");
+    });
+
+    it("should stringify numeric values", () => {
+      // Act
+      const result = readCellValue(10.3);
+
+      // Assert
+      expect(result).toBe("10.3");
+    });
+
+    it("should format Date values as dd/MM/yyyy", () => {
+      // Act
+      const result = readCellValue(new Date(2025, 0, 5));
+
+      // Assert
+      expect(result).toBe("05/01/2025");
+    });
+
+    it("should stringify invalid Date values without formatting", () => {
+      // Arrange
+      const invalidDate = new Date("not a date");
+
+      // Act
+      const result = readCellValue(invalidDate);
+
+      // Assert
+      expect(result).toBe("Invalid Date");
+    });
+  });
+
+  describe("findFieldForHeader", () => {
+    const fields: FieldConfig[] = [
+      { header: "Case Number", fieldName: "caseNumber" },
+      { header: "Venue", fieldName: "venue" }
+    ];
+
+    it("should match a header case-insensitively", () => {
+      // Act
+      const result = findFieldForHeader(fields, "CASE NUMBER");
+
+      // Assert
+      expect(result?.fieldName).toBe("caseNumber");
+    });
+
+    it("should ignore surrounding whitespace in the header", () => {
+      // Act
+      const result = findFieldForHeader(fields, "  venue ");
+
+      // Assert
+      expect(result?.fieldName).toBe("venue");
+    });
+
+    it("should return undefined for an unknown header", () => {
+      // Act
+      const result = findFieldForHeader(fields, "Notes");
+
+      // Assert
+      expect(result).toBeUndefined();
     });
   });
 

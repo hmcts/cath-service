@@ -28,6 +28,7 @@ export {
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
 export { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
+export { type ReformatSheetConfig, reformatUploadedWorkbook } from "./excel/uploaded-workbook-reformatter.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { assertValidProvenances, PUBLISHER_PROVENANCES } from "./list-type-provenance.js";
 export { provenanceLabels as provenanceLabelsCy } from "./locales/cy.js";
@@ -74,7 +75,7 @@ export {
   type PddaCitizenName
 } from "./rendering/crown-utilities.js";
 export { formatDdMmYyyyDate, formatDisplayDate, formatHHMMTime, formatLastUpdatedDateTime, normalizeTime } from "./rendering/date-formatting.js";
-export { normaliseHearings } from "./rendering/hearing-normalisation.js";
+export { normaliseHearing, normaliseHearings } from "./rendering/hearing-normalisation.js";
 export * from "./sjp/json-parser.js";
 export * from "./sjp/sjp-paginator.js";
 export * from "./sjp/sjp-service.js";
