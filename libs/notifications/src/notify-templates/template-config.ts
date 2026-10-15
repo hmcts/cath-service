@@ -10,12 +10,6 @@ import {
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
-const SJP_LIST_TYPE_NAMES = ["SJP_PUBLIC_LIST", "SJP_DELTA_PUBLIC_LIST", "SJP_PRESS_LIST", "SJP_DELTA_PRESS_LIST"];
-
-export function isSjpListType(listTypeName: string): boolean {
-  return SJP_LIST_TYPE_NAMES.includes(listTypeName);
-}
-
 // hasPdf / hasExcel mean the file was generated AND is small enough to link (under 2MB), i.e. it will
 // be attached to the email. Each file is judged on its own: an oversized or missing file only drops
 // that file's link, never the other's. The PDF/Excel templates require pdf_link_*/excel_link_*

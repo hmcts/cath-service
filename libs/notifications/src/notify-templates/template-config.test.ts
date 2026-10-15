@@ -12,34 +12,6 @@ describe("template-config", () => {
     process.env = originalEnv;
   });
 
-  describe("isSjpListType", () => {
-    it("should return true for SJP_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return false for non-SJP list types", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
-      expect(isSjpListType("CROWN_DAILY_PDDA_LIST")).toBe(false);
-    });
-  });
-
   describe("getSubscriptionTemplateId", () => {
     const PDF_EXCEL = "42f65ada-6de0-45da-822a-9632f6f682fd";
     const PDF_ONLY = "ac63ed12-c179-416d-b9af-83b2b37752bf";

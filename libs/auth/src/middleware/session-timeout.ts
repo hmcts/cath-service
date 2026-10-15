@@ -1,4 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
+import { buildCftIdamLogoutUrl } from "../cft-idam/logout-url.js";
+import { getCftIdamConfig } from "../config/cft-idam-config.js";
 import { getTimeUntilExpiry, isSessionExpired, updateLastActivity } from "../session/timeout-tracker.js";
 
 /**
@@ -23,7 +25,9 @@ export function sessionTimeoutMiddleware(req: Request, res: Response, next: Next
   if (isSessionExpired(req.session)) {
     // Preserve the locale from cookie before destroying session
     const locale = req.cookies?.locale;
-    const redirectUrl = locale === "cy" ? "/session-expired?lng=cy" : "/session-expired";
+    const sessionExpiredUrl = locale === "cy" ? "/session-expired?lng=cy" : "/session-expired";
+    // CFT IDAM users must also end their IDAM session so they re-authenticate on next sign in
+    const redirectUrl = req.user?.provenance === "CFT_IDAM" ? buildCftIdamLogoutUrl(sessionExpiredUrl, getCftIdamConfig()) : sessionExpiredUrl;
 
     // Destroy session
     req.session.destroy((err: Error | null) => {
