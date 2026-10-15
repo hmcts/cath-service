@@ -1,11 +1,9 @@
-import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
-import ExcelJS from "exceljs";
+import { createSingleSheetExcelBuffer, saveExcelToStorage } from "@hmcts/list-types-common";
 import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
 import type { CrownAdvanceListData } from "../models/types.js";
 import { renderCrownAdvanceListData, TO_BE_ALLOCATED_KEY } from "../rendering/renderer.js";
 
-const MAX_SHEET_NAME_LENGTH = 31;
 const SHEET_NAME = "Crown Advance List";
 
 interface ExcelGenerationOptions {
@@ -32,40 +30,23 @@ export async function generateCrownAdvanceListExcel(options: ExcelGenerationOpti
 
     const { groupedCategories } = await renderCrownAdvanceListData(jsonData, { locale, locationId, contentDate });
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(SHEET_NAME.slice(0, MAX_SHEET_NAME_LENGTH));
+    const headers = [cols.hearing, cols.fixedFor, cols.caseReference, cols.defendant, cols.prosecutingAuthority, cols.linkedCases, cols.listingNotes];
 
-    const headerRow = worksheet.addRow([
-      cols.hearing,
-      cols.fixedFor,
-      cols.caseReference,
-      cols.defendant,
-      cols.prosecutingAuthority,
-      cols.linkedCases,
-      cols.listingNotes
-    ]);
-    headerRow.font = { bold: true };
-
-    for (const group of groupedCategories) {
+    const rows = groupedCategories.flatMap((group) => {
       const categoryLabel = group.category === TO_BE_ALLOCATED_KEY ? t.toBeAllocated : group.category;
-      for (const row of group.cases) {
-        worksheet.addRow([
-          sanitiseCellValue(categoryLabel ?? ""),
-          sanitiseCellValue(row.fixedFor ?? ""),
-          sanitiseCellValue(row.caseNumber ?? ""),
-          sanitiseCellValue(row.defendants ?? ""),
-          sanitiseCellValue(row.prosecutingAuthority ?? ""),
-          sanitiseCellValue(row.linkedCases ?? ""),
-          sanitiseCellValue(row.listingNotes ?? "")
-        ]);
-      }
-    }
+      return group.cases.map((row) => [
+        categoryLabel ?? "",
+        row.fixedFor ?? "",
+        row.caseNumber ?? "",
+        row.defendants ?? "",
+        row.prosecutingAuthority ?? "",
+        row.linkedCases ?? "",
+        row.listingNotes ?? ""
+      ]);
+    });
 
-    autoFitColumns(worksheet);
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    const { excelPath } = await saveExcelToStorage(artefactId, Buffer.from(buffer));
-
+    const buffer = await createSingleSheetExcelBuffer(SHEET_NAME, headers, rows);
+    const { excelPath } = await saveExcelToStorage(artefactId, buffer);
     return { success: true, excelPath };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

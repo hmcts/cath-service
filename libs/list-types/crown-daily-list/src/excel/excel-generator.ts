@@ -1,11 +1,9 @@
-import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
-import ExcelJS from "exceljs";
+import { createSingleSheetExcelBuffer, saveExcelToStorage } from "@hmcts/list-types-common";
 import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
 import type { CrownDailyListData } from "../models/types.js";
 import { renderCrownDailyListData } from "../rendering/renderer.js";
 
-const MAX_SHEET_NAME_LENGTH = 31;
 const SHEET_NAME = "Crown Daily List";
 
 interface ExcelGenerationOptions {
@@ -32,10 +30,7 @@ export async function generateCrownDailyListExcel(options: ExcelGenerationOption
 
     const { listData } = await renderCrownDailyListData(jsonData, { locale, locationId, contentDate });
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(SHEET_NAME.slice(0, MAX_SHEET_NAME_LENGTH));
-
-    const headerRow = worksheet.addRow([
+    const headers = [
       cols.courtHouse,
       cols.courtAddress,
       cols.courtPhone,
@@ -47,46 +42,37 @@ export async function generateCrownDailyListExcel(options: ExcelGenerationOption
       cols.hearingType,
       cols.prosecutingAuthority,
       cols.listingNotes
-    ]);
-    headerRow.font = { bold: true };
+    ];
 
-    for (const courtList of listData.courtLists) {
-      const courtHouseName = courtList.courtHouse.courtHouseName;
-      const courtHouseAddress = courtList.courtHouse.courtHouseAddressLines.join(", ");
-      const courtHousePhone = courtList.courtHouse.courtHousePhone;
-      for (const courtRoom of courtList.courtHouse.courtRoom) {
-        for (const session of courtRoom.session) {
+    const rows = listData.courtLists.flatMap(({ courtHouse }) =>
+      courtHouse.courtRoom.flatMap((courtRoom) =>
+        courtRoom.session.flatMap((session) => {
           const courtRoomLabel = session.formattedJudiciaries
             ? `${t.court} ${courtRoom.courtRoomName}: ${session.formattedJudiciaries}`
             : `${t.court} ${courtRoom.courtRoomName}`;
-          for (const sitting of session.sittings) {
-            for (const hearing of sitting.hearing) {
-              for (const caseItem of hearing.case) {
-                worksheet.addRow([
-                  sanitiseCellValue(courtHouseName ?? ""),
-                  sanitiseCellValue(courtHouseAddress ?? ""),
-                  sanitiseCellValue(courtHousePhone ?? ""),
-                  sanitiseCellValue(courtRoomLabel),
-                  sanitiseCellValue(sitting.time ?? ""),
-                  sanitiseCellValue(caseItem.timeMarkingNote ?? ""),
-                  sanitiseCellValue(caseItem.caseNumber ?? ""),
-                  sanitiseCellValue(caseItem.defendants ?? ""),
-                  sanitiseCellValue(hearing.displayHearingType ?? ""),
-                  sanitiseCellValue(caseItem.prosecutingAuthority ?? ""),
-                  sanitiseCellValue(caseItem.listingNotes ?? "")
-                ]);
-              }
-            }
-          }
-        }
-      }
-    }
+          return session.sittings.flatMap((sitting) =>
+            sitting.hearing.flatMap((hearing) =>
+              hearing.case.map((caseItem) => [
+                courtHouse.courtHouseName ?? "",
+                courtHouse.courtHouseAddressLines.join(", "),
+                courtHouse.courtHousePhone ?? "",
+                courtRoomLabel,
+                sitting.time ?? "",
+                caseItem.timeMarkingNote ?? "",
+                caseItem.caseNumber ?? "",
+                caseItem.defendants ?? "",
+                hearing.displayHearingType ?? "",
+                caseItem.prosecutingAuthority ?? "",
+                caseItem.listingNotes ?? ""
+              ])
+            )
+          );
+        })
+      )
+    );
 
-    autoFitColumns(worksheet);
-
-    const buffer = await workbook.xlsx.writeBuffer();
-    const { excelPath } = await saveExcelToStorage(artefactId, Buffer.from(buffer));
-
+    const buffer = await createSingleSheetExcelBuffer(SHEET_NAME, headers, rows);
+    const { excelPath } = await saveExcelToStorage(artefactId, buffer);
     return { success: true, excelPath };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
