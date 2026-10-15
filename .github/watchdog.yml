@@ -188,6 +188,25 @@ checks:
   # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
   # names the routes, without which a firing cannot distinguish a broken route from
   # someone probing the hostname.
+  #
+  # The floor was 200, and at that level this check measures the scanners rather than the
+  # service. AAT is on a public hostname and is continuously probed for paths CaTH has
+  # never routed (Django settings.py/manage.py, editor sftp.json, and so on); the 404s
+  # those earn are the notFoundHandler working. That background is roughly constant in
+  # absolute terms, so the *share* it represents rises as real traffic falls, with nothing
+  # about the service having changed. It fired on 2026-09-29 for exactly that reason:
+  # 44 of 207 = 21%, where the same 44 against the calibration figure of 544 is 8%.
+  # 500 keeps the denominator at the traffic level the 20% threshold was calibrated
+  # against, so the check stays dormant rather than lying when web is quiet.
+  #
+  # /favicon.ico is excluded for the same reason 'GET /health' is: browsers and crawlers
+  # request it at the root unprompted. CaTH serves its favicons from /assets/images/, per
+  # the GOV.UK Frontend template, so a root request is expected to miss and adding a root
+  # route to silence a monitoring check would be the wrong way round.
+  #
+  # sample_4xx is capped at 25 rather than 10 because triaging a firing means ruling out
+  # a real route hiding among the probes, and 10 distinct paths is not enough to do that
+  # when the scanners alone supply more than 10.
   - id: client-error-rate
     severity: medium
     description: 4xx responses as a share of non-health traffic over a day.
@@ -198,13 +217,14 @@ checks:
       | where timestamp > ago(24h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
+      | where name != 'GET /favicon.ico'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
       | extend is_client_error = toint(resultCode) between (400 .. 499)
       | summarize total = count(),
                   client_errors = countif(is_client_error),
-                  sample_4xx = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 10)
+                  sample_4xx = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 25)
           by app
-      | where total >= 200
+      | where total >= 500
       | extend rate = todouble(client_errors) / total
 
   # Observed p95 by operation over 24h: GET /cft-login/return 1257ms,
