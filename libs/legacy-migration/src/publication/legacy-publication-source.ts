@@ -8,13 +8,13 @@ export async function readLegacyPublicationData(connectionString: string): Promi
     // Same snapshot and UTC handling as the account reader (see legacy-account-source.ts).
     await client.query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
 
-    const locations = await client.query<LegacyLocation>("SELECT location_id, name, welsh_name, region, jurisdiction_type FROM location");
+    const locations = await client.query<LegacyLocation>("SELECT location_id, name, welsh_name, region, jurisdiction_type, email, contact_no FROM location");
     const locationMetadata = await client.query<LegacyLocationMetadata>(
       `SELECT location_metadata_id, location_id, caution_message, welsh_caution_message, no_list_message, welsh_no_list_message
          FROM location_metadata`
     );
     const listSearchConfigs = await client.query<LegacyListSearchConfig>(
-      "SELECT id, list_type, case_number_field_name, case_name_field_name FROM list_search_config"
+      "SELECT id, list_type, case_number_field_name, case_name_field_name FROM list_search_config ORDER BY id"
     );
     // Expired artefacts are about to be archived by legacy, so only displayable ones are read.
     const artefacts = await client.query<LegacyArtefact>(
@@ -47,6 +47,8 @@ export interface LegacyLocation {
   welsh_name: string | null;
   region: string[] | null;
   jurisdiction_type: string[] | null;
+  email: string | null;
+  contact_no: string | null;
 }
 
 export interface LegacyLocationMetadata {

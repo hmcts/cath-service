@@ -1,9 +1,9 @@
 import { CONTAINER, deleteBlob, getBlobProperties, uploadBlob } from "@hmcts/azure-blob";
 import { getContentTypeFromExtension } from "@hmcts/publication";
-import type { ArtefactLoad, MigratedArtefact } from "./artefact-transform.js";
-import { detectFlatFileExtension, withFlatFileExtension } from "./flat-file-type.js";
+import type { ArtefactLoad, MigratedArtefact } from "../publication/artefact-transform.js";
+import { detectFlatFileExtension, withFlatFileExtension } from "../publication/flat-file-type.js";
+import type { Rejection } from "../sync/sync-report.js";
 import type { LegacyStorageReader } from "./legacy-storage-source.js";
-import type { Rejection } from "./sync-report.js";
 
 const LEGACY_ARTEFACT_CONTAINER = "artefact";
 // Stamped on the copied payload only once its derived data is built, so a failure is retried.

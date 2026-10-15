@@ -1,6 +1,6 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { resolveListTypeId } from "../sync/value-mapping.js";
 import type { LegacySubscription, LegacyUser } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { resolveListTypeId } from "./value-mapping.js";
 
 // Legacy's pre-OAuth third parties are pi_user rows with THIRD_PARTY provenance whose
 // subscriptions use the API_COURTEL channel. This service's Courtel push reads the

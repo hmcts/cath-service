@@ -2,10 +2,10 @@ import { deleteBlob, uploadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 import { deleteSecrets, setSecret } from "@hmcts/third-party-user";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createLegacySecretReader } from "../key-vault/legacy-secret-source.js";
+import { SyncAbortedError } from "../sync/sync-report.js";
 import { type LegacyAccountData, readLegacyAccountData } from "./legacy-account-source.js";
-import { createLegacySecretReader } from "./legacy-secret-source.js";
 import { runLegacySync } from "./run-legacy-sync.js";
-import { SyncAbortedError } from "./sync-report.js";
 
 const { tx, storage, secrets } = vi.hoisted(() => {
   const model = () => ({ count: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn(), findMany: vi.fn() });
@@ -48,8 +48,8 @@ vi.mock("@hmcts/third-party-user", () => ({
 }));
 
 vi.mock("./legacy-account-source.js", () => ({ readLegacyAccountData: vi.fn() }));
-vi.mock("./legacy-storage-source.js", () => ({ createLegacyStorageReader: () => storage }));
-vi.mock("./legacy-secret-source.js", () => ({ createLegacySecretReader: vi.fn() }));
+vi.mock("../blob/legacy-storage-source.js", () => ({ createLegacyStorageReader: () => storage }));
+vi.mock("../key-vault/legacy-secret-source.js", () => ({ createLegacySecretReader: vi.fn() }));
 
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const COURTEL_ID = "22222222-2222-2222-2222-222222222222";

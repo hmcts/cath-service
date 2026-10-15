@@ -68,6 +68,30 @@ describe("transformListTypeSubscriptions", () => {
     expect(result.rejections.map(({ reason }) => reason)).toContain("no list types could be mapped");
   });
 
+  it.each([[[]], [null]])("should skip a legacy list type array of %j, which legacy reads as every list type", (listType) => {
+    // Arrange
+    const legacy = buildLegacyRow({ list_type: listType });
+
+    // Act
+    const result = transformListTypeSubscriptions([legacy], buildContext());
+
+    // Assert
+    expect(result.rows).toHaveLength(0);
+    expect(result.rejections).toEqual([{ entityId: "lts-1", reason: "empty list type filter is not migrated" }]);
+  });
+
+  it("should map the legacy Crown Advance List to the Crown Warned List", () => {
+    // Arrange
+    const legacy = buildLegacyRow({ list_type: ["CROWN_ADVANCE_PDDA_LIST"] });
+    const context = buildContext({ listTypeIdByName: new Map([["CROWN_WARNED_PDDA_LIST", 904]]) });
+
+    // Act
+    const result = transformListTypeSubscriptions([legacy], context);
+
+    // Assert
+    expect(result.rows[0].listTypeIds).toEqual([904]);
+  });
+
   it("should reject unsupported list languages", () => {
     // Arrange
     const legacy = buildLegacyRow({ list_language: ["BI_LINGUAL"] });

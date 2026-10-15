@@ -1,6 +1,6 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { mapSearchType } from "../sync/value-mapping.js";
 import type { LegacySubscription } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { mapSearchType } from "./value-mapping.js";
 
 export function transformSubscriptions(legacySubscriptions: LegacySubscription[], context: SubscriptionContext): DomainTransform<MigratedSubscription> {
   const rejections: Rejection[] = [];

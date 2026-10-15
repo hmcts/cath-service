@@ -1,5 +1,5 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
 import type { LegacyAuditLog } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
 
 // Roles and actions are copied as legacy recorded them: these are historical records,
 // so they are not remapped to the names this service uses.

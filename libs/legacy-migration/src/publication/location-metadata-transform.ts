@@ -1,6 +1,6 @@
 import { validateLocationMetadataInput } from "@hmcts/location";
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
 import type { LegacyLocationMetadata } from "./legacy-publication-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
 
 export function transformLocationMetadata(legacyRows: LegacyLocationMetadata[], context: LocationMetadataContext): DomainTransform<MigratedLocationMetadata> {
   const rejections: Rejection[] = [];

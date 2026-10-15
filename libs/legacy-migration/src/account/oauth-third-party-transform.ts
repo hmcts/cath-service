@@ -1,6 +1,6 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { resolveListTypeId } from "../sync/value-mapping.js";
 import type { LegacyApiOauthConfiguration, LegacyApiSubscription, LegacyApiUser } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { resolveListTypeId } from "./value-mapping.js";
 
 const SENSITIVITIES = new Set(["PUBLIC", "PRIVATE", "CLASSIFIED"]);
 

@@ -1,8 +1,8 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { resolveListTypeId } from "../sync/value-mapping.js";
 import type { LegacyArtefact } from "./legacy-publication-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { resolveListTypeId } from "./value-mapping.js";
 
-// This service only renders lists; legacy JUDGEMENTS_AND_OUTCOMES and GENERAL_PUBLICATION
+// This service only renders lists; legacy JUDGEMENTS_AND_OUTCOMES, GENERAL_PUBLICATION and LCSU
 // artefacts have no equivalent and are reported.
 const ARTEFACT_TYPES = new Set(["LIST"]);
 const LANGUAGE_MAP: Record<string, string> = { ENGLISH: "ENGLISH", WELSH: "WELSH", BI_LINGUAL: "BILINGUAL" };
