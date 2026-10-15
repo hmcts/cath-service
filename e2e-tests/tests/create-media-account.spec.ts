@@ -125,6 +125,10 @@ test.describe("Create Media Account", () => {
   test("should complete successful submission", async ({ page }) => {
     await page.goto("/create-media-account");
 
+    // Terms and conditions section, including the annual verification requirement, is shown before the checkbox
+    await expect(page.getByRole("heading", { name: "Terms and conditions" })).toBeVisible();
+    await expect(page.getByText("As part of our annual verification process")).toBeVisible();
+
     await page.fill("#fullName", "Jane Doe");
     await page.fill("#email", "jane.doe@example.com");
     await page.fill("#employer", "The Guardian");
@@ -220,6 +224,9 @@ test.describe("Create Media Account", () => {
     await page.goto("/create-media-account?lng=cy");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Creu cyfrif gwrandawiadau Llys a Thribiwnlys");
+
+    await expect(page.getByRole("heading", { name: "Telerau ac Amodau" })).toBeVisible();
+    await expect(page.getByText("Fel rhan o'n proses ddilysu flynyddol")).toBeVisible();
 
     await expect(page.getByRole("button", { name: /parhau/i })).toBeVisible();
   });

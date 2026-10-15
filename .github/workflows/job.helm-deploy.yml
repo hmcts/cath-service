@@ -36,6 +36,14 @@ on:
           Deploy an already-built image tag instead of deriving one from
           change-id. Either a bare tag or a JSON object of app -> tag. Used by
           the demo/ithc/perftest workflows, which do not build.
+      ref:
+        required: false
+        type: string
+        default: ""
+        description: >-
+          Commit to check out the Helm charts from. Empty checks out the ref
+          that triggered the run. The demo/perftest workflows set it because
+          under workflow_run that ref is master HEAD, not the promoted commit.
       cluster-suffix:
         required: false
         type: string
@@ -78,6 +86,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
 
       # Everything that varies per environment is derived here, once. Deliberately
       # not five if:-guarded deploy steps: byte-identical steps that differ by

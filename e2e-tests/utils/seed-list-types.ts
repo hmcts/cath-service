@@ -38,7 +38,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_DAILY_LIST",
+    name: "CROWN_DAILY_PDDA_LIST",
     friendlyName: "Crown Daily List",
     welshFriendlyName: "Crown Daily List",
     url: "crown-daily-cause-list",
@@ -47,7 +47,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: false
   },
   {
-    name: "CROWN_FIRM_LIST",
+    name: "CROWN_FIRM_PDDA_LIST",
     friendlyName: "Crown Firm List",
     welshFriendlyName: "Crown Firm List",
     url: "crown-firm-list",
@@ -83,7 +83,7 @@ const BASE_LIST_TYPES = [
     isNonStrategic: true
   },
   {
-    name: "COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST",
+    name: "COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST",
     friendlyName: "Court of Appeal (Civil Division) Daily Cause List",
     welshFriendlyName: "Rhestr Achosion Dyddiol y Llys Apêl (Adran Sifil)",
     url: "court-of-appeal-civil-division-daily-cause-list",

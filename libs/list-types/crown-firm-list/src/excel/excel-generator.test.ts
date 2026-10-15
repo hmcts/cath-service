@@ -29,7 +29,7 @@ const baseOptions = {
   locationId: "1",
   contentDate: new Date("2025-01-13"),
   locale: "en",
-  listTypeName: "CROWN_FIRM_LIST",
+  listTypeName: "CROWN_FIRM_PDDA_LIST",
   jsonData: {} as any
 };
 

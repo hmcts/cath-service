@@ -87,8 +87,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
@@ -115,8 +114,7 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
@@ -148,13 +146,12 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -191,13 +188,12 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -234,13 +230,12 @@ describe("requirePublicationAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -324,8 +319,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
@@ -352,8 +346,7 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue(artefact);
@@ -404,13 +397,12 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -460,13 +452,12 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 
@@ -503,13 +494,12 @@ describe("requirePublicationDataAccess", () => {
       displayFrom: new Date(),
       displayTo: new Date(),
       isFlatFile: false,
-      provenance: "CFT_IDAM",
-      noMatch: false
+      provenance: "CFT_IDAM"
     };
 
     const listType = {
       id: 1,
-      allowedProvenance: "CFT_IDAM",
+      allowedProvenance: ["CFT_IDAM"],
       isNonStrategic: false
     };
 

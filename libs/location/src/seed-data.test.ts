@@ -29,6 +29,9 @@ const mockPrisma = {
   locationReference: {
     deleteMany: vi.fn(),
     create: vi.fn()
+  },
+  locationMetadata: {
+    upsert: vi.fn()
   }
 };
 
@@ -66,7 +69,9 @@ const mockLocationData = {
       name: "Test Location 1",
       welshName: "Lleoliad Prawf 1",
       regions: [1],
-      subJurisdictions: [1]
+      subJurisdictions: [1],
+      cautionMessage: "<strong>Please note:</strong> Test caution",
+      welshCautionMessage: "<strong>Sylwer:</strong> Rhybudd prawf"
     },
     {
       locationId: 2,
@@ -410,6 +415,39 @@ describe("seed-data", () => {
       // But createMany should only be called 2 times (for locations 1 and 2 that have data)
       expect(mockPrisma.locationRegion.createMany).toHaveBeenCalledTimes(2);
       expect(mockPrisma.locationSubJurisdiction.createMany).toHaveBeenCalledTimes(2);
+    });
+
+    it("should create caution message metadata only for locations that define one, without overwriting existing rows", async () => {
+      // Arrange
+      const { seedLocationData } = await import("./seed-data.js");
+
+      // Act
+      await seedLocationData();
+
+      // Assert
+      expect(mockPrisma.locationMetadata.upsert).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.locationMetadata.upsert).toHaveBeenCalledWith({
+        where: { locationId: 1 },
+        create: {
+          locationId: 1,
+          cautionMessage: "<strong>Please note:</strong> Test caution",
+          welshCautionMessage: "<strong>Sylwer:</strong> Rhybudd prawf"
+        },
+        update: {}
+      });
+    });
+
+    it("should seed caution message metadata when reference tables already contain data", async () => {
+      // Arrange
+      mockPrisma.region.count.mockResolvedValue(5);
+      const { seedLocationData } = await import("./seed-data.js");
+
+      // Act
+      await seedLocationData();
+
+      // Assert
+      expect(mockPrisma.locationMetadata.upsert).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.locationMetadata.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { locationId: 1 }, update: {} }));
     });
 
     it("should log completion message", async () => {
