@@ -1,92 +1,108 @@
 import ExcelJSPkg from "exceljs";
 import { type FieldConfig, findFieldForHeader, readCellValue } from "../conversion/excel-to-json.js";
-import { resolveWorksheet } from "../conversion/multi-sheet-converter.js";
+import { resolveWorksheet, type WorksheetLocator } from "../conversion/multi-sheet-converter.js";
+import { sanitiseCellValue } from "./excel-utilities.js";
 
 const { Workbook } = ExcelJSPkg;
 
 const HEADER_ROW_NUMBER = 1;
 
 export async function reformatUploadedWorkbook(buffer: Buffer, sheets: ReformatSheetConfig[]): Promise<Buffer> {
-  const workbook = new Workbook();
+  const upload = new Workbook();
   // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
-  await workbook.xlsx.load(buffer);
+  await upload.xlsx.load(buffer);
 
+  // Copy only what the PDF shows into a fresh workbook. Stripping the upload in place would let through anything
+  // nobody thought to remove: hidden sheets, notes, formulas, header/footer text, defined names or author metadata.
+  const output = new Workbook();
   // A single-sheet upload can resolve to the same worksheet for several configs; only the first config fed the PDF
-  const reformattedWorksheets = new Set<ExcelJSPkg.Worksheet>();
+  const copiedWorksheets = new Set<ExcelJSPkg.Worksheet>();
 
   for (const sheet of sheets) {
-    const worksheet = resolveWorksheet(workbook, sheet);
-    if (worksheet && !reformattedWorksheets.has(worksheet)) {
-      reformattedWorksheets.add(worksheet);
-      reformatWorksheet(worksheet, sheet);
+    const worksheet = resolveWorksheet(upload, sheet);
+    if (!worksheet || copiedWorksheets.has(worksheet)) {
+      continue;
     }
+
+    const columns = mapColumnsToFields(worksheet.getRow(HEADER_ROW_NUMBER), sheet.fields);
+    if (columns.length === 0) {
+      continue;
+    }
+
+    copiedWorksheets.add(worksheet);
+    copyWorksheet(worksheet, output.addWorksheet(worksheet.name), columns, sheet);
   }
 
-  return Buffer.from(await workbook.xlsx.writeBuffer());
-}
-
-function reformatWorksheet(worksheet: ExcelJSPkg.Worksheet, sheet: ReformatSheetConfig): void {
-  const headerRow = worksheet.getRow(HEADER_ROW_NUMBER);
-  const fieldNameByColumn = mapColumnsToFieldNames(headerRow, sheet.fields);
-
-  if (fieldNameByColumn.size === 0) {
-    return;
+  if (output.worksheets.length === 0) {
+    throw new Error("No recognised worksheet to reformat");
   }
 
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber !== HEADER_ROW_NUMBER) {
-      rewriteDataRow(row, fieldNameByColumn, sheet);
-    }
-  });
-
-  rewriteHeaderRow(headerRow, fieldNameByColumn, sheet.headers);
+  return Buffer.from(await output.xlsx.writeBuffer());
 }
 
-function mapColumnsToFieldNames(headerRow: ExcelJSPkg.Row, fields: FieldConfig[]): Map<number, string> {
-  const fieldNameByColumn = new Map<number, string>();
+function mapColumnsToFields(headerRow: ExcelJSPkg.Row, fields: FieldConfig[]): MappedColumn[] {
+  const columns: MappedColumn[] = [];
 
   headerRow.eachCell((cell, colNumber) => {
     const field = findFieldForHeader(fields, readCellValue(cell.value));
-    if (field) {
-      fieldNameByColumn.set(colNumber, field.fieldName);
+    if (field && !columns.some((column) => column.fieldName === field.fieldName)) {
+      columns.push({ sourceColumn: colNumber, fieldName: field.fieldName });
     }
   });
 
-  return fieldNameByColumn;
+  return columns;
 }
 
-function rewriteDataRow(row: ExcelJSPkg.Row, fieldNameByColumn: Map<number, string>, sheet: ReformatSheetConfig): void {
-  const emptyRow = Object.fromEntries(sheet.fields.map((field) => [field.fieldName, ""]));
-  const rawRow = { ...emptyRow };
+function copyWorksheet(source: ExcelJSPkg.Worksheet, target: ExcelJSPkg.Worksheet, columns: MappedColumn[], sheet: ReformatSheetConfig): void {
+  columns.forEach(({ sourceColumn }, index) => {
+    const { width } = source.getColumn(sourceColumn);
+    if (width !== undefined) {
+      target.getColumn(index + 1).width = width;
+    }
+  });
+  target.views = [{ state: "frozen", ySplit: HEADER_ROW_NUMBER }];
 
-  for (const [colNumber, fieldName] of fieldNameByColumn) {
-    rawRow[fieldName] = readCellValue(row.getCell(colNumber).value);
+  source.eachRow((row, rowNumber) => {
+    const isHeader = rowNumber === HEADER_ROW_NUMBER;
+    const values = isHeader ? readHeadings(row, columns, sheet.headers) : formatDataRow(row, columns, sheet);
+    const targetRow = target.getRow(rowNumber);
+
+    if (row.height !== undefined) {
+      targetRow.height = row.height;
+    }
+
+    columns.forEach(({ sourceColumn }, index) => {
+      const targetCell = targetRow.getCell(index + 1);
+      const style = structuredClone(row.getCell(sourceColumn).style);
+
+      targetCell.value = sanitiseCellValue(values[index]);
+      targetCell.style = isHeader ? { ...style, font: { ...style.font, bold: true } } : style;
+    });
+  });
+}
+
+function readHeadings(headerRow: ExcelJSPkg.Row, columns: MappedColumn[], headers: Readonly<Record<string, string>>): string[] {
+  return columns.map(({ sourceColumn, fieldName }) => headers[fieldName] ?? readCellValue(headerRow.getCell(sourceColumn).value));
+}
+
+function formatDataRow(row: ExcelJSPkg.Row, columns: MappedColumn[], sheet: ReformatSheetConfig): string[] {
+  const rawRow: Record<string, string> = Object.fromEntries(sheet.fields.map((field) => [field.fieldName, ""]));
+
+  for (const { sourceColumn, fieldName } of columns) {
+    rawRow[fieldName] = readCellValue(row.getCell(sourceColumn).value);
   }
 
   const formattedRow = sheet.formatRow(rawRow);
-
-  for (const [colNumber, fieldName] of fieldNameByColumn) {
-    row.getCell(colNumber).value = formattedRow[fieldName] ?? "";
-  }
+  return columns.map(({ fieldName }) => formattedRow[fieldName] ?? "");
 }
 
-function rewriteHeaderRow(headerRow: ExcelJSPkg.Row, fieldNameByColumn: Map<number, string>, headers: Readonly<Record<string, string>>): void {
-  for (const [colNumber, fieldName] of fieldNameByColumn) {
-    const cell = headerRow.getCell(colNumber);
-    const heading = headers[fieldName];
-
-    if (heading !== undefined) {
-      cell.value = heading;
-    }
-    // Replace the style object rather than mutating it, as ExcelJS can share style objects between cells
-    cell.style = { ...cell.style, font: { ...cell.style.font, bold: true } };
-  }
-}
-
-export interface ReformatSheetConfig {
-  worksheetName?: string;
-  worksheetIndex: number;
+export interface ReformatSheetConfig extends WorksheetLocator {
   fields: FieldConfig[];
   headers: Readonly<Record<string, string>>;
   formatRow: (row: Record<string, string>) => Record<string, string>;
+}
+
+interface MappedColumn {
+  sourceColumn: number;
+  fieldName: string;
 }

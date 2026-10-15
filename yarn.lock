@@ -2335,6 +2335,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
