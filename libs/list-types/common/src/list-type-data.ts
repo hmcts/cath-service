@@ -746,6 +746,15 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [7]
   },
+  {
+    name: "TRAFFIC_VIRTUAL_COURTS_LIST",
+    englishFriendlyName: "Traffic Virtual Courts List",
+    welshFriendlyName: "Rhestr y Llys ar gyfer Achosion Traffig sydd i'w cynnal yn rhithiol",
+    provenance: ["CRIME_IDAM"],
+    isNonStrategic: false,
+    defaultSensitivity: null,
+    subJurisdictionIds: [7]
+  },
   // Business and Property Division Rolls Building — Excel non-strategic multi-tab lists
   {
     name: "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST",
@@ -767,7 +776,6 @@ export const listTypeData: ListTypeData[] = [
     defaultSensitivity: "Public",
     subJurisdictionIds: [10]
   },
-  // High Court flat-file daily cause lists (manual upload)
   {
     name: "BUSINESS_AND_PROPERTY_DAILY_CAUSE_LIST",
     englishFriendlyName: "Business & Property Daily Cause List",
