@@ -3,6 +3,12 @@ import { convertExcelToJson, type ExcelConverterConfig } from "./excel-to-json.j
 
 const { Workbook } = ExcelJSPkg;
 
+// Excel truncates worksheet names to 31 characters, so a section named longer than that
+// (e.g. "Intellectual Property and Enterprise Court") is stored under its truncated form.
+// Match on the exact name first, then fall back to the truncated form so long section names
+// still resolve by name rather than needing the positional-index fallback.
+const EXCEL_WORKSHEET_NAME_MAX_LENGTH = 31;
+
 /**
  * Converts a single worksheet to JSON using the provided configuration
  * This is a helper for multi-sheet Excel converters
@@ -88,21 +94,24 @@ export async function createMultiSheetConverter(
   const result: Record<string, any[]> = {};
 
   for (const sheet of sheets) {
-    const worksheet = options.matchByNameOnly
-      ? findWorksheetByName(workbook, sheet.worksheetName)
-      : workbook.getWorksheet(sheet.worksheetName) || workbook.worksheets[sheet.worksheetIndex];
+    const worksheet = resolveWorksheet(workbook, sheet, options.matchByNameOnly);
     result[sheet.dataKey] = worksheet ? await convertSheetToJson(worksheet, sheet.config) : [];
   }
 
   return result;
 }
 
-// Excel truncates worksheet names to 31 characters, so a section named longer than that
-// (e.g. "Intellectual Property and Enterprise Court") is stored under its truncated form.
-// Match on the exact name first, then fall back to the truncated form so long section names
-// still resolve by name rather than needing the positional-index fallback.
-const EXCEL_WORKSHEET_NAME_MAX_LENGTH = 31;
+export function resolveWorksheet(workbook: ExcelJSPkg.Workbook, sheet: WorksheetLocator, matchByNameOnly = false): ExcelJSPkg.Worksheet | undefined {
+  // getWorksheet(undefined) returns the first sheet, so only look up by name when one is given
+  const namedWorksheet = sheet.worksheetName ? findWorksheetByName(workbook, sheet.worksheetName) : undefined;
+  return matchByNameOnly ? namedWorksheet : namedWorksheet || workbook.worksheets[sheet.worksheetIndex];
+}
 
-function findWorksheetByName(workbook: InstanceType<typeof Workbook>, worksheetName: string): any {
+function findWorksheetByName(workbook: ExcelJSPkg.Workbook, worksheetName: string): ExcelJSPkg.Worksheet | undefined {
   return workbook.getWorksheet(worksheetName) || workbook.getWorksheet(worksheetName.slice(0, EXCEL_WORKSHEET_NAME_MAX_LENGTH));
+}
+
+export interface WorksheetLocator {
+  worksheetName?: string;
+  worksheetIndex: number;
 }

@@ -12,89 +12,47 @@ describe("template-config", () => {
     process.env = originalEnv;
   });
 
-  describe("isSjpListType", () => {
-    it("should return true for SJP_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return false for non-SJP list types", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
-      expect(isSjpListType("CROWN_DAILY_PDDA_LIST")).toBe(false);
-    });
-  });
-
   describe("getSubscriptionTemplateId", () => {
     it("should return no-links template when files exceed 2MB", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: true, hasExcel: true, filesUnder2MB: false })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: false })).toBe("no-links-template");
     });
 
-    it("should return no-links template for non-SJP when files exceed 2MB", async () => {
+    it("should return no-links template when PDF only exceeds 2MB", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: false, filesUnder2MB: false })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: false })).toBe("no-links-template");
     });
 
-    it("should return subscription PDF+Excel template when SJP with both formats under 2MB", async () => {
+    it("should return subscription PDF+Excel template when both formats are under 2MB", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "subscription-pdf-excel-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("subscription-pdf-excel-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("subscription-pdf-excel-template");
     });
 
-    it("should return SJP Excel-only template when SJP with Excel only under 2MB", async () => {
+    it("should return Excel-only template when there is Excel but no PDF", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY = "sjp-excel-only-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: false, hasExcel: true, filesUnder2MB: true })).toBe("sjp-excel-only-template");
+      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toBe("sjp-excel-only-template");
     });
 
-    it("should return subscription PDF+Excel template when non-SJP with both formats under 2MB", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "subscription-pdf-excel-template";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("subscription-pdf-excel-template");
-    });
-
-    it("should return non-SJP PDF template when non-SJP with PDF under 2MB", async () => {
+    it("should return PDF template when there is PDF but no Excel", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF = "non-sjp-pdf-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("non-sjp-pdf-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("non-sjp-pdf-template");
     });
 
     it("should return no-links template when there are no files", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
-    });
-
-    it("should return no-links template when SJP but no Excel and no PDF", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = "no-links-template";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: true, hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
+      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("no-links-template");
     });
 
     it("should fall back to GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION for no-links when new var not set", async () => {
@@ -102,15 +60,15 @@ describe("template-config", () => {
       delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS;
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: false, hasExcel: false, filesUnder2MB: false })).toBe("legacy-subscription-template");
+      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: false })).toBe("legacy-subscription-template");
     });
 
-    it("should fall back to GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY for non-SJP PDF when new var not set", async () => {
+    it("should fall back to GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY for PDF when new var not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "legacy-pdf-template";
       delete process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF;
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("legacy-pdf-template");
+      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("legacy-pdf-template");
     });
 
     it("should throw when no-links template is not set", async () => {
@@ -118,25 +76,16 @@ describe("template-config", () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION = "";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ isSjp: false, hasPdf: false, hasExcel: false, filesUnder2MB: false })).toThrow(
+      expect(() => getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: false })).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS environment variable is not set"
       );
     });
 
-    it("should throw when subscription PDF+Excel template is not set for SJP with both formats", async () => {
-      process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "";
-
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ isSjp: true, hasPdf: true, hasExcel: true, filesUnder2MB: true })).toThrow(
-        "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set"
-      );
-    });
-
-    it("should throw when SJP Excel-only template is not set", async () => {
+    it("should throw when Excel-only template is not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY = "";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ isSjp: true, hasPdf: false, hasExcel: true, filesUnder2MB: true })).toThrow(
+      expect(() => getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY environment variable is not set"
       );
     });
@@ -145,17 +94,17 @@ describe("template-config", () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = "";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: true, filesUnder2MB: true })).toThrow(
+      expect(() => getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set"
       );
     });
 
-    it("should throw when non-SJP PDF template is not set", async () => {
+    it("should throw when PDF template is not set", async () => {
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF = "";
       process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY = "";
 
       const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(() => getSubscriptionTemplateId({ isSjp: false, hasPdf: true, hasExcel: false, filesUnder2MB: true })).toThrow(
+      expect(() => getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toThrow(
         "GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF environment variable is not set"
       );
     });
