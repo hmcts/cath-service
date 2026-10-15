@@ -9,11 +9,35 @@ import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { deleteTestArtefact, deleteTestFlatFileFromWeb, uploadTestFlatFileToWeb } from "../../utils/test-support-api.js";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const PUBLICATION_ENDPOINT = `${API_BASE_URL}/publication`;
 const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 // When running tests from e2e-tests/, go up to monorepo root then to storage
 const MONOREPO_ROOT = path.join(process.cwd(), "..");
 const STORAGE_PATH = process.env.FILE_STORAGE_PATH || path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
+
+// Publication metadata travels in x-* headers; the request body is the payload itself.
+function publicationHeaders(options: {
+  provenance: string;
+  courtId: string;
+  contentDate: string;
+  listType: string;
+  sensitivity: string;
+  language: string;
+  displayFrom: string;
+  displayTo: string;
+}) {
+  return {
+    "x-provenance": options.provenance,
+    "x-court-id": options.courtId,
+    "x-content-date": options.contentDate,
+    "x-list-type": options.listType,
+    "x-language": options.language,
+    "x-type": "LIST",
+    "x-sensitivity": options.sensitivity,
+    "x-display-from": options.displayFrom,
+    "x-display-to": options.displayTo
+  };
+}
 
 function createSjpPublicListPayload(locationId: number) {
   const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
@@ -75,15 +99,17 @@ function createSjpPublicListPayload(locationId: number) {
   const contentDate = today.toISOString().split("T")[0];
 
   return {
-    court_id: locationId.toString(),
-    provenance: "MANUAL_UPLOAD",
-    content_date: contentDate,
-    list_type: "SJP_PUBLIC_LIST",
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    display_from: displayFrom.toISOString(),
-    display_to: displayTo.toISOString(),
-    hearing_list: {
+    headers: publicationHeaders({
+      provenance: "MANUAL_UPLOAD",
+      courtId: locationId.toString(),
+      contentDate: contentDate,
+      listType: "SJP_PUBLIC_LIST",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      displayFrom: displayFrom.toISOString(),
+      displayTo: displayTo.toISOString()
+    }),
+    payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00Z`,
         version: "1.0"
@@ -126,21 +152,21 @@ async function uploadSjpPublicListViaApi(request: APIRequestContext, locationId:
   const token = await getApiAuthToken();
 
   const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload,
-    headers: { Authorization: `Bearer ${token}` }
+    data: payload.payload,
+    headers: { ...payload.headers, Authorization: `Bearer ${token}` }
   });
 
   const result = await response.json();
 
   expect(response.status()).toBe(201);
-  expect(result.artefact_id).toBeDefined();
+  expect(result.artefactId).toBeDefined();
 
   if (IS_DEPLOYED) {
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.hearing_list));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefact_id, content: jsonBuffer, extension: ".json" });
+    const jsonBuffer = Buffer.from(JSON.stringify(payload.payload));
+    await uploadTestFlatFileToWeb({ artefactId: result.artefactId, content: jsonBuffer, extension: ".json" });
   }
 
-  return result.artefact_id;
+  return result.artefactId;
 }
 
 async function uploadDownloadableFiles(artefactId: string): Promise<void> {

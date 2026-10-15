@@ -173,8 +173,7 @@ function buildMockArtefact(artefactId: string, listTypeName: string, listTypeId:
     lastReceivedDate: new Date("2025-01-13"),
     isFlatFile: false,
     provenance: "CRIME_IDAM",
-    supersededCount: 0,
-    noMatch: false
+    supersededCount: 0
   } as any;
 }
 

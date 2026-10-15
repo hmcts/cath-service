@@ -24,14 +24,17 @@ const CHROMIUM_PATHS = [
   "/usr/bin/chromium" // Alpine Linux alternative
 ];
 
-function findChromiumExecutable(): string | undefined {
-  for (const chromiumPath of CHROMIUM_PATHS) {
-    if (chromiumPath && existsSync(chromiumPath)) return chromiumPath;
-  }
-  return undefined;
+// Each render launches its own Chromium. Running several at once exceeds the API pod's
+// memory limit and gets it OOM-killed, so renders are queued and run one at a time.
+let renderQueue: Promise<unknown> = Promise.resolve();
+
+export function generatePdfFromHtml(html: string): Promise<PdfGenerationResult> {
+  const render = renderQueue.then(() => renderPdf(html));
+  renderQueue = render.catch(() => undefined);
+  return render;
 }
 
-export async function generatePdfFromHtml(html: string): Promise<PdfGenerationResult> {
+async function renderPdf(html: string): Promise<PdfGenerationResult> {
   // Dynamically import puppeteer to avoid ESM/CJS issues in tests
   const puppeteer = await import("puppeteer");
   let browser: Awaited<ReturnType<typeof puppeteer.default.launch>> | undefined;
@@ -69,4 +72,11 @@ export async function generatePdfFromHtml(html: string): Promise<PdfGenerationRe
       await browser.close();
     }
   }
+}
+
+function findChromiumExecutable(): string | undefined {
+  for (const chromiumPath of CHROMIUM_PATHS) {
+    if (chromiumPath && existsSync(chromiumPath)) return chromiumPath;
+  }
+  return undefined;
 }

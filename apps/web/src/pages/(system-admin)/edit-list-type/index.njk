@@ -97,11 +97,7 @@
           legend: { text: t.allowedProvenanceLabel }
         },
         hint: { text: t.allowedProvenanceHint },
-        items: [
-          { value: "CFT_IDAM", text: "CFT_IDAM", checked: checkedProvenance.CFT_IDAM },
-          { value: "PI_AAD", text: "PI_AAD", checked: checkedProvenance.PI_AAD },
-          { value: "CRIME_IDAM", text: "CRIME_IDAM", checked: checkedProvenance.CRIME_IDAM }
-        ],
+        items: provenanceOptions,
         errorMessage: errors.allowedProvenance if errors else undefined
       }) }}
 

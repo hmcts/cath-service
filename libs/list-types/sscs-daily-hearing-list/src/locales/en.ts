@@ -40,6 +40,7 @@ export const en = {
     respondent: "FTA/Respondent",
     additionalInformation: "Additional information"
   },
+  excelWorksheetName: "SSCS Daily Hearing List",
   dataSource: "Data source",
   backToTop: "Back to top",
   provenanceLabels
