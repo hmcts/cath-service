@@ -277,6 +277,16 @@ checks:
   # afternoon would false-positive constantly. The expected_for_window floor
   # suppresses the check entirely when the baseline is too thin to judge.
   #
+  # The baseline is the quietest comparable day, not the mean of them. avg() defeated
+  # the floor above: with days as low as 2, one busy day carries the average over 20
+  # on its own and the check starts judging a 15-minute window against traffic that
+  # slot does not reliably see. Observed 2026-09-23 — baseline_per_hour 86 from 2 days
+  # against an actual ~12 non-health requests/hour (287 in 24h), so an empty window is
+  # the normal case and drop_ratio pinned at 1.0. min() makes the floor mean what the
+  # comment above says: the check stays dormant until every comparable day sustains
+  # real traffic in this slot, and once traffic is steady min ≈ avg so a genuine drop
+  # still registers.
+  #
   # Baseline is whole past days rather than ago({{baseline}}): a range starting and ending
   # mid-hour only matches clipped fragments at its two edges, and the later one is today —
   # the traffic the drop would be measured against. 28d because the same-day-of-week filter
@@ -301,7 +311,7 @@ checks:
       | where dayofweek(timestamp) == dayofweek(now())
         and hourofday(timestamp) == hourofday(now())
       | summarize per_day = count() by bin(timestamp, 1d)
-      | summarize baseline_per_hour = avg(per_day), days = count()
+      | summarize baseline_per_hour = min(per_day), days = count()
       | extend expected_for_window = baseline_per_hour * (totimespan('{{window}}') / 1h)
       | where days >= 2 and expected_for_window >= 20.0
       | extend current = current
