@@ -52,6 +52,33 @@ checks:
       | summarize occurrences = count(), sample = any(outerMessage)
           by problemId, app, type
 
+  # A/B tests: 5xx on a flagged page. Triage recommends whether to switch the flag off;
+  # nothing switches it automatically. Threshold is two, not zero, so one transient 5xx
+  # is left to server-errors, which alerts on the first.
+  #
+  # Unlike the other checks, preview deployments are included: they share the LaunchDarkly
+  # test environment with STG, so a broken variant on a preview is a broken variant.
+  #
+  # To add a page, add its path and flag to the case() below.
+  - id: feature-flag-errors
+    severity: high
+    description: Two or more 5xx responses on a page behind a feature flag.
+    fingerprint-by: [app, deployment, flag]
+    rule: { column: occurrences, value: '> 1' }
+    query: |
+      requests
+      | where timestamp > ago({{window}})
+      | where toint(resultCode) >= 500
+      | extend flag = case(
+          url has '/subscriptions/manage', 'third-party-subscriptions-radio-buttons',
+          url has '/view-option', 'watchdog-integration-test',
+          '')
+      | where isnotempty(flag)
+      | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance),
+               deployment = coalesce(extract(@'-(pr-[0-9]+)-', 1, cloud_RoleInstance), 'stg')
+      | summarize occurrences = count(), resultCodes = make_set(resultCode), names = make_set(name, 10)
+          by app, deployment, flag
+
   - id: server-errors
     severity: high
     description: Any 5xx response, health probes excluded.
@@ -212,6 +239,21 @@ checks:
   # everything else below 660ms. Ratio-based rather than absolute so it adapts as the
   # service changes; the row-count floors stop a handful of slow requests in a quiet
   # window from registering as a regression.
+  #
+  # now_n alone cannot do that at AAT traffic levels, hence the p95_now floor below.
+  # In a 1h window the only operation clearing now_n >= 5 is typically GET / at around
+  # 20 requests, and percentile() over 20 points returns the slowest one — observed
+  # 2026-10-14, where p95_now and p99_ms came back as the same 413.4958 for GET /. So a
+  # single ordinary slow request (GC pause, TLS reconnect, pod cold start) on a route
+  # with a 30ms baseline reads as a 13x regression. Raising now_n cannot fix this: a
+  # stable p95 needs ~100 samples and web serves ~23 non-health requests/hour, so the
+  # floor that would make the percentile meaningful also switches the check off.
+  #
+  # The floor asks "is this slow enough to matter" instead: a ratio only counts once the
+  # operation is past 1000ms, which is beyond every normal p95 above except the two
+  # login/preview operations, and those still fire if they double. Doublings between
+  # 1000ms and 5s are this check's to catch; latency-p99-absolute takes it from 5s.
+  # Revisit the floor alongside the thresholds when AAT traffic changes materially.
   - id: latency-p95-regression
     severity: medium
     description: Operation p95 more than double its trailing baseline.
@@ -232,6 +274,7 @@ checks:
       | where now_n >= 5
       | join kind=inner base on name
       | where p95_base > 0
+      | where p95_now > 1000
       | extend ratio = p95_now / p95_base
       | project name, p95_now, p95_base, ratio, now_n
 
