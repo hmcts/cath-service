@@ -241,6 +241,50 @@ describe("reformatUploadedWorkbook", () => {
       expect(rowValues(workbook.getWorksheet("Third"), 2)).toEqual(["Court 3", "9:00am", ""]);
     });
 
+    it("should not fall back to a sheet position when matchByNameOnly is set", async () => {
+      // Arrange
+      const upload = await buildUpload({
+        "Appeal List": [UPLOADED_HEADER, UPLOADED_ROW],
+        Notes: [UPLOADED_HEADER, ["Court 9", "9.00", "Working copy"]]
+      });
+      const sheets = [
+        sheetConfig({ worksheetName: "Appeal List", worksheetIndex: 0, matchByNameOnly: true }),
+        sheetConfig({ worksheetName: "Business List", worksheetIndex: 1, matchByNameOnly: true })
+      ];
+
+      // Act
+      const workbook = await load(await reformatUploadedWorkbook(upload, sheets));
+
+      // Assert
+      expect(workbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Appeal List"]);
+    });
+
+    it("should still fall back to a sheet position when matchByNameOnly is not set", async () => {
+      // Arrange
+      const upload = await buildUpload({
+        "Appeal List": [UPLOADED_HEADER, UPLOADED_ROW],
+        Notes: [UPLOADED_HEADER, ["Court 9", "9.00", "Working copy"]]
+      });
+      const sheets = [sheetConfig({ worksheetName: "Appeal List", worksheetIndex: 0 }), sheetConfig({ worksheetName: "Business List", worksheetIndex: 1 })];
+
+      // Act
+      const workbook = await load(await reformatUploadedWorkbook(upload, sheets));
+
+      // Assert
+      expect(workbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Appeal List", "Notes"]);
+    });
+
+    it("should throw when matchByNameOnly is set and no sheet name matches", async () => {
+      // Arrange
+      const upload = await buildUpload({ "Sheet 1": [UPLOADED_HEADER, UPLOADED_ROW] });
+
+      // Act
+      const result = reformatUploadedWorkbook(upload, [sheetConfig({ worksheetName: "Appeal List", matchByNameOnly: true })]);
+
+      // Assert
+      await expect(result).rejects.toThrow("No recognised worksheet to reformat");
+    });
+
     it("should drop sheets that no config resolves", async () => {
       // Arrange
       const upload = await buildUpload({ Main: [UPLOADED_HEADER, UPLOADED_ROW], Extra: [UPLOADED_HEADER, UPLOADED_ROW] });

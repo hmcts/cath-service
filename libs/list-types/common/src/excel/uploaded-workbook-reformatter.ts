@@ -19,7 +19,7 @@ export async function reformatUploadedWorkbook(buffer: Buffer, sheets: ReformatS
   const copiedWorksheets = new Set<ExcelJSPkg.Worksheet>();
 
   for (const sheet of sheets) {
-    const worksheet = resolveWorksheet(upload, sheet);
+    const worksheet = resolveWorksheet(upload, sheet, sheet.matchByNameOnly);
     if (!worksheet || copiedWorksheets.has(worksheet)) {
       continue;
     }
@@ -100,6 +100,8 @@ export interface ReformatSheetConfig extends WorksheetLocator {
   fields: FieldConfig[];
   headers: Readonly<Record<string, string>>;
   formatRow: (row: Record<string, string>) => Record<string, string>;
+  // Must match the converter's option, otherwise the Excel could publish a tab the PDF never showed
+  matchByNameOnly?: boolean;
 }
 
 interface MappedColumn {
