@@ -1,6 +1,6 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { resolveListTypeId } from "../sync/value-mapping.js";
 import type { LegacyListTypeSubscription } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { resolveListTypeId } from "./value-mapping.js";
 
 const LIST_LANGUAGES = new Set(["ENGLISH", "WELSH"]);
 
@@ -40,6 +40,12 @@ function transformListTypeSubscription(legacy: LegacyListTypeSubscription, conte
 
   if (!context.migratedUserIds.has(legacy.user_id)) {
     return { ok: false, reason: "user not migrated", droppedNames };
+  }
+
+  // Legacy delivers every list type at the user's locations for an empty array. Here that is a user
+  // with no list type row, so the row is skipped. Legacy's language filter is lost with it.
+  if (legacyNames.length === 0) {
+    return { ok: false, reason: "empty list type filter is not migrated", droppedNames };
   }
 
   if (listTypeIds.length === 0) {

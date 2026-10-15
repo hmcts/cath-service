@@ -1,6 +1,6 @@
 import type { locationData } from "@hmcts/location";
+import type { Rejection } from "../sync/sync-report.js";
 import type { LegacyLocation } from "./legacy-publication-source.js";
-import type { Rejection } from "./sync-report.js";
 
 // location-data.ts is the source of truth here and the deploy seed overwrites names from it,
 // so drift is reported for a PR rather than synced. Region and sub-jurisdiction are compared
@@ -28,6 +28,9 @@ export function findLocationDrift(legacyLocations: LegacyLocation[], current: Lo
     const currentSubJurisdictionNames = location.subJurisdictions.map((id) => subJurisdictionNames.get(id));
     if (!sameNames(legacy.region, currentRegionNames)) drift.push({ entityId, reason: "regions differ" });
     if (!sameNames(legacy.jurisdiction_type, currentSubJurisdictionNames)) drift.push({ entityId, reason: "sub-jurisdictions differ" });
+    // location-data.ts has no contact details and the seed writes them as null, so any legacy value is lost.
+    if (legacy.email?.trim()) drift.push({ entityId, reason: "email not in location-data.ts" });
+    if (legacy.contact_no?.trim()) drift.push({ entityId, reason: "contact number not in location-data.ts" });
   }
 
   for (const location of current.locations.filter((currentLocation) => !legacyIds.has(currentLocation.locationId))) {

@@ -1,8 +1,8 @@
 import path from "node:path";
 import { CONTAINER, deleteBlob, getContentType, uploadBlob } from "@hmcts/azure-blob";
+import type { MediaApplicationLoad } from "../account/media-application-transform.js";
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
 import type { LegacyStorageReader } from "./legacy-storage-source.js";
-import type { MediaApplicationLoad } from "./media-application-transform.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
 
 const LEGACY_FILES_CONTAINER = "files";
 

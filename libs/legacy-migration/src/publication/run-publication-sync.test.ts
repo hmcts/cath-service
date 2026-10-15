@@ -2,10 +2,10 @@ import { deleteBlob, getBlobProperties, setBlobMetadata, uploadBlob } from "@hmc
 import { prisma } from "@hmcts/postgres-prisma";
 import { extractAndStoreArtefactSearch } from "@hmcts/publication";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SyncAbortedError } from "../sync/sync-report.js";
 import type { MigratedArtefact } from "./artefact-transform.js";
 import { type LegacyArtefact, readLegacyPublicationData } from "./legacy-publication-source.js";
 import { runPublicationSync } from "./run-publication-sync.js";
-import { SyncAbortedError } from "./sync-report.js";
 
 const { tx, storage } = vi.hoisted(() => ({
   tx: {
@@ -46,7 +46,7 @@ vi.mock("@hmcts/location", () => ({
   validateLocationMetadataInput: () => ({ valid: true })
 }));
 vi.mock("./legacy-publication-source.js", () => ({ readLegacyPublicationData: vi.fn() }));
-vi.mock("./legacy-storage-source.js", () => ({ createLegacyStorageReader: () => storage }));
+vi.mock("../blob/legacy-storage-source.js", () => ({ createLegacyStorageReader: () => storage }));
 
 const OPTIONS = { legacyPublicationDatabaseUrl: "postgres://legacy", maxDropRatio: 0.05 };
 

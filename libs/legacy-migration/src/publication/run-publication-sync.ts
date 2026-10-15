@@ -1,17 +1,17 @@
 import { locationData } from "@hmcts/location";
 import { type Prisma, prisma } from "@hmcts/postgres-prisma";
-import { buildDerivedData } from "./artefact-derived-data.js";
-import { deleteRemovedArtefactFiles, stageArtefactPayloads } from "./artefact-payload.js";
+import { buildDerivedData } from "../blob/artefact-derived-data.js";
+import { deleteRemovedArtefactFiles, stageArtefactPayloads } from "../blob/artefact-payload.js";
+import { createLegacyStorageReader } from "../blob/legacy-storage-source.js";
+import { findDropLimitViolation } from "../sync/row-count-guard.js";
+import { type DomainReport, type DomainTransform, type StepReport, SyncAbortedError, type SyncReport } from "../sync/sync-report.js";
+import { findWriteDrift } from "../sync/write-drift.js";
 import { type ArtefactWritePlan, planArtefactWrites } from "./artefact-plan.js";
 import { type MigratedArtefact, transformArtefacts } from "./artefact-transform.js";
 import { readLegacyPublicationData } from "./legacy-publication-source.js";
-import { createLegacyStorageReader } from "./legacy-storage-source.js";
 import { type MigratedListSearchConfig, transformListSearchConfigs } from "./list-search-config-transform.js";
 import { findLocationDrift } from "./location-drift.js";
 import { type MigratedLocationMetadata, transformLocationMetadata } from "./location-metadata-transform.js";
-import { findDropLimitViolation } from "./row-count-guard.js";
-import { type DomainReport, type DomainTransform, type StepReport, SyncAbortedError, type SyncReport } from "./sync-report.js";
-import { findWriteDrift } from "./write-drift.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 

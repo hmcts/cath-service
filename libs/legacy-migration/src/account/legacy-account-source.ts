@@ -8,6 +8,7 @@ export async function readLegacyAccountData(connectionString: string): Promise<L
   await client.connect();
 
   try {
+    // Rows are ordered so that wherever two legacy rows collapse into one, the same one wins every night.
     // Legacy timestamps are UTC LocalDateTimes in "timestamp without time zone" columns;
     // AT TIME ZONE 'UTC' stops pg parsing them in the pod's local zone.
     // A read-only, repeatable-read snapshot so every table is consistent with the others
@@ -19,14 +20,18 @@ export async function readLegacyAccountData(connectionString: string): Promise<L
               created_date AT TIME ZONE 'UTC' AS created_date,
               last_signed_in_date AT TIME ZONE 'UTC' AS last_signed_in_date,
               last_verified_date AT TIME ZONE 'UTC' AS last_verified_date
-         FROM pi_user`
+         FROM pi_user
+        ORDER BY created_date, user_id`
     );
     const subscriptions = await client.query<LegacySubscription>(
       `SELECT id, user_id, search_type, search_value, channel, case_number, case_name,
               created_date AT TIME ZONE 'UTC' AS created_date
-         FROM subscription`
+         FROM subscription
+        ORDER BY created_date, id`
     );
-    const listTypeSubscriptions = await client.query<LegacyListTypeSubscription>("SELECT id, user_id, list_type, list_language FROM subscription_list_type");
+    const listTypeSubscriptions = await client.query<LegacyListTypeSubscription>(
+      "SELECT id, user_id, list_type, list_language FROM subscription_list_type ORDER BY id"
+    );
     // Approved and rejected applications have already lost their proof of ID and are purged by legacy.
     const mediaApplications = await client.query<LegacyMediaApplication>(
       `SELECT id, full_name, email, employer, image, image_name,
@@ -42,9 +47,9 @@ export async function readLegacyAccountData(connectionString: string): Promise<L
       [AUDIT_LOG_RETENTION_DAYS]
     );
     const apiUsers = await client.query<LegacyApiUser>("SELECT user_id, name, status, created_date AT TIME ZONE 'UTC' AS created_date FROM api_user");
-    const apiSubscriptions = await client.query<LegacyApiSubscription>("SELECT id, user_id, list_type, sensitivity FROM api_subscription");
+    const apiSubscriptions = await client.query<LegacyApiSubscription>("SELECT id, user_id, list_type, sensitivity FROM api_subscription ORDER BY id");
     const apiOauthConfigurations = await client.query<LegacyApiOauthConfiguration>(
-      "SELECT user_id, destination_url, token_url, client_id_key, client_secret_key, scope_key FROM api_oauth_configuration"
+      "SELECT user_id, destination_url, token_url, client_id_key, client_secret_key, scope_key FROM api_oauth_configuration ORDER BY created_date, id"
     );
 
     await client.query("COMMIT");

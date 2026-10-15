@@ -13,7 +13,9 @@ const ACCEPTED_REJECTION_REASONS: RegExp[] = [
   /^third party not migrated$/,
   // This service has no INTERNAL sensitivity and publishes lists only.
   /^unsupported sensitivity INTERNAL$/,
-  /^artefact type (JUDGEMENTS_AND_OUTCOMES|GENERAL_PUBLICATION) is not supported$/
+  /^artefact type (JUDGEMENTS_AND_OUTCOMES|GENERAL_PUBLICATION|LCSU) is not supported$/,
+  // Legacy reads an empty list type array as "every list type", which here is having no row.
+  /^empty list type filter is not migrated$/
 ];
 
 export function isAcceptedRejection(reason: string): boolean {

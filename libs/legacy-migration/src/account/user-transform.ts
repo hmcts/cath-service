@@ -1,6 +1,6 @@
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { isUserProvenance, mapProvenanceUserId, mapRole, normaliseEmail } from "../sync/value-mapping.js";
 import type { LegacyUser } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { isUserProvenance, mapProvenanceUserId, mapRole, normaliseEmail } from "./value-mapping.js";
 
 export function transformUsers(legacyUsers: LegacyUser[]): DomainTransform<MigratedUser> {
   const rejections: Rejection[] = [];

@@ -1,7 +1,7 @@
 import { createKeyVaultSecretName, deleteSecrets, setSecret } from "@hmcts/third-party-user";
+import type { OauthCredentialSource } from "../account/oauth-third-party-transform.js";
+import type { Rejection, StepReport } from "../sync/sync-report.js";
 import type { LegacySecretReader } from "./legacy-secret-source.js";
-import type { OauthCredentialSource } from "./oauth-third-party-transform.js";
-import type { Rejection, StepReport } from "./sync-report.js";
 
 const STEP_NAME = "third_party_secret";
 

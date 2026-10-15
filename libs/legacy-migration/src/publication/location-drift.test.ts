@@ -19,6 +19,8 @@ function buildLegacyLocation(overrides: Partial<LegacyLocation> = {}): LegacyLoc
     welsh_name: "Canolfan Rhydychen",
     region: ["South East"],
     jurisdiction_type: ["Civil Court"],
+    email: null,
+    contact_no: null,
     ...overrides
   };
 }
@@ -34,7 +36,10 @@ describe("findLocationDrift", () => {
 
   it("should compare regions and sub-jurisdictions by name, ignoring case and order", () => {
     // Act
-    const drift = findLocationDrift([buildLegacyLocation({ region: ["south east"], jurisdiction_type: [" Civil Court "] })], CURRENT);
+    const drift = findLocationDrift(
+      [buildLegacyLocation({ region: ["south east"], jurisdiction_type: [" Civil Court "], email: " ", contact_no: "" })],
+      CURRENT
+    );
 
     // Assert
     expect(drift.filter(({ entityId }) => entityId === "1")).toEqual([]);
@@ -43,7 +48,14 @@ describe("findLocationDrift", () => {
   it("should report each kind of difference", () => {
     // Arrange
     const legacy = [
-      buildLegacyLocation({ name: "Oxford Court", welsh_name: "Llys Rhydychen", region: ["London"], jurisdiction_type: [] }),
+      buildLegacyLocation({
+        name: "Oxford Court",
+        welsh_name: "Llys Rhydychen",
+        region: ["London"],
+        jurisdiction_type: [],
+        email: "court@justice.gov.uk",
+        contact_no: "0300 123 1234"
+      }),
       buildLegacyLocation({ location_id: 99 })
     ];
 
@@ -56,6 +68,8 @@ describe("findLocationDrift", () => {
       { entityId: "1", reason: "Welsh name differs" },
       { entityId: "1", reason: "regions differ" },
       { entityId: "1", reason: "sub-jurisdictions differ" },
+      { entityId: "1", reason: "email not in location-data.ts" },
+      { entityId: "1", reason: "contact number not in location-data.ts" },
       { entityId: "99", reason: "missing from location-data.ts" },
       { entityId: "2", reason: "in location-data.ts but not in legacy" }
     ]);

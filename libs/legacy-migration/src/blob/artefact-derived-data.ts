@@ -1,10 +1,10 @@
 import { CONTAINER, deleteBlob, downloadBlob, setBlobMetadata, uploadBlob } from "@hmcts/azure-blob";
 import { type ListTypeInfo, validateListTypeJson } from "@hmcts/list-types-common";
 import { deleteArtefactSearchByArtefactId, extractAndStoreArtefactSearch } from "@hmcts/publication";
+import type { MigratedArtefact } from "../publication/artefact-transform.js";
+import type { Rejection, StepReport } from "../sync/sync-report.js";
 import { SYNC_MARKER_KEY, syncMarker } from "./artefact-payload.js";
-import type { MigratedArtefact } from "./artefact-transform.js";
 import type { LegacyStorageReader } from "./legacy-storage-source.js";
-import type { Rejection, StepReport } from "./sync-report.js";
 
 const LEGACY_PUBLICATIONS_CONTAINER = "publications";
 

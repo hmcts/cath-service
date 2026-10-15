@@ -11,7 +11,9 @@ describe("isAcceptedRejection", () => {
     "third party not migrated",
     "unsupported sensitivity INTERNAL",
     "artefact type JUDGEMENTS_AND_OUTCOMES is not supported",
-    "artefact type GENERAL_PUBLICATION is not supported"
+    "artefact type GENERAL_PUBLICATION is not supported",
+    "artefact type LCSU is not supported",
+    "empty list type filter is not migrated"
   ])("should accept %s", (reason) => {
     // Act
     const result = isAcceptedRejection(reason);
@@ -29,7 +31,9 @@ describe("isAcceptedRejection", () => {
     "payload fails schema validation",
     "unsupported sensitivity SECRET",
     "status DELETED is not migrated",
-    "name differs"
+    "name differs",
+    "no list types could be mapped",
+    "email not in location-data.ts"
   ])("should block %s", (reason) => {
     // Act
     const result = isAcceptedRejection(reason);

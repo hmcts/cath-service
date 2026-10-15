@@ -1,19 +1,19 @@
 import { type Prisma, prisma } from "@hmcts/postgres-prisma";
+import { createLegacyStorageReader, type LegacyStorageReader } from "../blob/legacy-storage-source.js";
+import { deleteOrphanedProofOfIdFiles, stageProofOfIdFiles } from "../blob/proof-of-id-copy.js";
+import { createLegacySecretReader } from "../key-vault/legacy-secret-source.js";
+import { copyOauthSecrets, deleteRemovedOauthSecrets } from "../key-vault/oauth-secret-copy.js";
+import { findDropLimitViolation } from "../sync/row-count-guard.js";
+import { type DomainReport, type DomainTransform, SyncAbortedError, type SyncReport } from "../sync/sync-report.js";
+import { findWriteDrift } from "../sync/write-drift.js";
 import { transformAuditLogs } from "./audit-log-transform.js";
 import { transformCourtelSubscriptions, transformCourtelUsers } from "./courtel-transform.js";
 import { type LegacyAccountData, readLegacyAccountData } from "./legacy-account-source.js";
-import { createLegacySecretReader } from "./legacy-secret-source.js";
-import { createLegacyStorageReader, type LegacyStorageReader } from "./legacy-storage-source.js";
 import { transformListTypeSubscriptions } from "./list-type-subscription-transform.js";
 import { type MigratedMediaApplication, transformMediaApplications } from "./media-application-transform.js";
-import { copyOauthSecrets, deleteRemovedOauthSecrets } from "./oauth-secret-copy.js";
 import { transformOauthCredentials, transformOauthSubscriptions, transformOauthUsers } from "./oauth-third-party-transform.js";
-import { deleteOrphanedProofOfIdFiles, stageProofOfIdFiles } from "./proof-of-id-copy.js";
-import { findDropLimitViolation } from "./row-count-guard.js";
 import { transformSubscriptions } from "./subscription-transform.js";
-import { type DomainReport, type DomainTransform, SyncAbortedError, type SyncReport } from "./sync-report.js";
 import { type MigratedUser, transformUsers } from "./user-transform.js";
-import { findWriteDrift } from "./write-drift.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 

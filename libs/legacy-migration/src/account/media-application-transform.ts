@@ -1,7 +1,7 @@
 import path from "node:path";
+import type { DomainTransform, Rejection } from "../sync/sync-report.js";
+import { normaliseEmail } from "../sync/value-mapping.js";
 import type { LegacyMediaApplication } from "./legacy-account-source.js";
-import type { DomainTransform, Rejection } from "./sync-report.js";
-import { normaliseEmail } from "./value-mapping.js";
 
 // The file types the new media application upload accepts.
 const PROOF_OF_ID_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png"]);
