@@ -79,6 +79,13 @@ describe("template-config", () => {
     });
   });
 
+  describe("getLocationSubscriptionDeletionTemplateId", () => {
+    it("should return the location subscription deletion template id", async () => {
+      const { getLocationSubscriptionDeletionTemplateId } = await import("./template-config.js");
+      expect(getLocationSubscriptionDeletionTemplateId()).toBe("79f6b1a5-49a2-43a4-84db-b6e791b5d59a");
+    });
+  });
+
   describe("getApiKey", () => {
     it("should return API key when environment variable is set", async () => {
       process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";

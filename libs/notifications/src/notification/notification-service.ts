@@ -101,6 +101,7 @@ import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
+  getLocationSubscriptionDeletionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
@@ -394,6 +395,38 @@ export async function sendSystemAdminNotification(adminEmails: string[], details
 
       if (!result.success) {
         console.error(`Failed to send system admin notification to ${emailAddress}: ${result.error}`);
+      }
+    })
+  );
+}
+
+export interface LocationSubscriberRecipient {
+  email: string;
+  firstName: string | null;
+  surname: string | null;
+}
+
+export async function sendSubscriptionDeletedNotification(subscribers: LocationSubscriberRecipient[], locationName: string): Promise<void> {
+  if (subscribers.length === 0) {
+    return;
+  }
+
+  const templateId = getLocationSubscriptionDeletionTemplateId();
+  const personalisation = {
+    "location-name": locationName
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      const result = await sendEmail({
+        emailAddress: subscriber.email,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send subscription deleted notification to ${subscriber.email}: ${result.error}`);
       }
     })
   );

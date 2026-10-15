@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications, sendSystemAdminNotification } from "./notification-service.js";
+import {
+  sendListTypePublicationNotifications,
+  sendLocationAndCaseSubscriptionNotifications,
+  sendSubscriptionDeletedNotification,
+  sendSystemAdminNotification
+} from "./notification-service.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
   downloadBlob: vi.fn().mockResolvedValue(null),
@@ -37,6 +42,7 @@ vi.mock("../notify-templates/template-config.js", () => ({
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
   getSystemAdminTemplateId: vi.fn().mockReturnValue("location-deleted-template-id"),
+  getLocationSubscriptionDeletionTemplateId: vi.fn().mockReturnValue("subscription-deleted-template-id"),
   getEnvName: vi.fn().mockReturnValue("Local")
 }));
 
@@ -576,5 +582,46 @@ describe("sendSystemAdminNotification", () => {
     vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
 
     await expect(sendSystemAdminNotification(["admin1@example.com"], notification)).resolves.toBeUndefined();
+  });
+});
+
+describe("sendSubscriptionDeletedNotification", () => {
+  const subscribers = [
+    { email: "subscriber1@example.com", firstName: "Jane", surname: "Doe" },
+    { email: "subscriber2@example.com", firstName: null, surname: null }
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should send an email to every subscriber using the subscription deleted template", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
+
+    await sendSubscriptionDeletedNotification(subscribers, "Test Court");
+
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    expect(sendEmail).toHaveBeenCalledWith({
+      emailAddress: "subscriber1@example.com",
+      templateId: "subscription-deleted-template-id",
+      templateParameters: { "location-name": "Test Court" }
+    });
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailAddress: "subscriber2@example.com" }));
+  });
+
+  it("should not send any email when there are no subscribers", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+
+    await sendSubscriptionDeletedNotification([], "Test Court");
+
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should not throw when an email send fails (best-effort)", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
+
+    await expect(sendSubscriptionDeletedNotification(subscribers, "Test Court")).resolves.toBeUndefined();
   });
 });
