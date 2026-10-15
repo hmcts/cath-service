@@ -1,5 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendListTypePublicationNotifications, sendLocationAndCaseSubscriptionNotifications, sendSystemAdminNotification } from "./notification-service.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  sendListTypePublicationNotifications,
+  sendLocationAndCaseSubscriptionNotifications,
+  sendSubscriptionDeletedNotification,
+  sendSystemAdminNotification
+} from "./notification-service.js";
 
 vi.mock("@hmcts/azure-blob", () => ({
   downloadBlob: vi.fn().mockResolvedValue(null),
@@ -11,14 +16,14 @@ vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
   formatCaseSummaryForEmail: vi.fn().mockReturnValue("Case 123 - Smith v Jones")
 }));
 
-vi.mock("../govnotify/govnotify-client.js", () => ({
+vi.mock("../notify-templates/send-email.js", () => ({
   sendEmail: vi.fn().mockResolvedValue({
     success: true,
     notificationId: "notif-123"
   })
 }));
 
-vi.mock("../govnotify/template-config.js", () => ({
+vi.mock("../notify-templates/template-config.js", () => ({
   buildTemplateParameters: vi.fn().mockReturnValue({
     locations: "Test Court",
     ListType: "Daily Cause List",
@@ -37,6 +42,7 @@ vi.mock("../govnotify/template-config.js", () => ({
   }),
   getSubscriptionTemplateId: vi.fn().mockReturnValue("template-id-123"),
   getSystemAdminTemplateId: vi.fn().mockReturnValue("location-deleted-template-id"),
+  getLocationSubscriptionDeletionTemplateId: vi.fn().mockReturnValue("subscription-deleted-template-id"),
   getEnvName: vi.fn().mockReturnValue("Local")
 }));
 
@@ -78,10 +84,10 @@ describe("sendListTypePublicationNotifications", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
     vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-lt-1" });
 
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
     vi.mocked(buildTemplateParameters).mockReturnValue({
       locations: "Test Court",
       ListType: "Daily Cause List",
@@ -116,7 +122,7 @@ describe("sendListTypePublicationNotifications", () => {
     ];
 
     const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
 
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
 
@@ -136,7 +142,7 @@ describe("sendListTypePublicationNotifications", () => {
     ];
 
     const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
 
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
 
@@ -167,7 +173,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscribers = [{ userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } }];
 
     const { findListTypeSubscribersByListTypeAndLanguage } = await import("./subscription-queries.js");
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
 
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue(mockSubscribers as never);
     vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "API Error" });
@@ -193,7 +199,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
 
     vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
     vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([{ userId: "user-1", searchValue: "AB-123" }]);
@@ -207,7 +213,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildEnhancedTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
@@ -223,7 +229,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
@@ -244,8 +250,8 @@ describe("sendListTypePublicationNotifications", () => {
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
     const { downloadBlob } = await import("@hmcts/azure-blob");
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
-    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    const { buildEnhancedTemplateParameters } = await import("../notify-templates/template-config.js");
 
     vi.mocked(buildEnhancedTemplateParameters).mockReturnValue({
       locations: "Test Court",
@@ -273,7 +279,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildEnhancedTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildEnhancedTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
@@ -290,7 +296,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
@@ -316,7 +322,7 @@ describe("sendListTypePublicationNotifications", () => {
     const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
 
     const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
-    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildEnhancedTemplateParameters, buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
@@ -348,6 +354,51 @@ describe("sendListTypePublicationNotifications", () => {
     // Assert
     expect(result.sent).toBe(1);
   });
+
+  describe("subscription template selection by generated file size", () => {
+    const TWO_MB = 2 * 1024 * 1024;
+    const UNDER = Buffer.alloc(1024);
+    const OVER = Buffer.alloc(TWO_MB + 1);
+    const EXACTLY_TWO_MB = Buffer.alloc(TWO_MB);
+
+    afterEach(async () => {
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      vi.mocked(downloadBlob).mockResolvedValue(null);
+    });
+
+    it.each([
+      { scenario: "both under 2MB", pdf: UNDER, excel: UNDER, hasPdf: true, hasExcel: true },
+      { scenario: "PDF under 2MB and Excel over 2MB", pdf: UNDER, excel: OVER, hasPdf: true, hasExcel: false },
+      { scenario: "PDF under 2MB and no Excel generated", pdf: UNDER, excel: null, hasPdf: true, hasExcel: false },
+      { scenario: "PDF over 2MB and Excel under 2MB", pdf: OVER, excel: UNDER, hasPdf: false, hasExcel: true },
+      { scenario: "no PDF generated and Excel under 2MB", pdf: null, excel: UNDER, hasPdf: false, hasExcel: true },
+      { scenario: "both over 2MB", pdf: OVER, excel: OVER, hasPdf: false, hasExcel: false },
+      { scenario: "neither generated", pdf: null, excel: null, hasPdf: false, hasExcel: false },
+      { scenario: "PDF exactly 2MB (not less than 2MB) and Excel under 2MB", pdf: EXACTLY_TWO_MB, excel: UNDER, hasPdf: false, hasExcel: true }
+    ])("should select the template and attachments correctly when $scenario", async ({ pdf, excel, hasPdf, hasExcel }) => {
+      // Arrange
+      const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+      const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { downloadBlob } = await import("@hmcts/azure-blob");
+      const { sendEmail } = await import("../notify-templates/send-email.js");
+      const { getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([mockSubscriber] as never);
+      vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+      vi.mocked(downloadBlob).mockImplementation(async (key: string) => (key === "artefact-1.pdf" ? pdf : excel));
+
+      // Act
+      await sendListTypePublicationNotifications({ ...baseEvent, jsonData: { someData: true }, pdfFilePath: "artefact-1.pdf" });
+
+      // Assert
+      expect(getSubscriptionTemplateId).toHaveBeenCalledWith({ hasPdf, hasExcel });
+      const sent = vi.mocked(sendEmail).mock.calls[0][0];
+      expect(sent.pdfBuffer !== undefined).toBe(hasPdf);
+      expect(sent.excelBuffer !== undefined).toBe(hasExcel);
+    });
+  });
 });
 
 describe("sendLocationAndCaseSubscriptionNotifications", () => {
@@ -363,10 +414,10 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
     vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-combined-1" });
 
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
     vi.mocked(buildTemplateParameters).mockReturnValue({
       locations: "Test Court",
       ListType: "Daily Cause List",
@@ -410,7 +461,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
 
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([locationSubscriber]);
     vi.mocked(createNotificationAuditLog).mockResolvedValue({
@@ -443,7 +494,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
     const { findActiveSubscriptionsByLocation } = await import("./subscription-queries.js");
     const { findActiveSubscriptionsByCaseNumber } = await import("./subscription-queries.js");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
@@ -479,7 +530,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
       "./subscription-queries.js"
     );
     const { createNotificationAuditLog } = await import("./notification-queries.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
@@ -514,7 +565,7 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
       "./subscription-queries.js"
     );
     const { createNotificationAuditLog } = await import("./notification-queries.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
     const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([]);
@@ -549,8 +600,8 @@ describe("sendLocationAndCaseSubscriptionNotifications", () => {
 
     const { findActiveSubscriptionsByLocation, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
     const { createNotificationAuditLog } = await import("./notification-queries.js");
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
-    const { buildTemplateParameters } = await import("../govnotify/template-config.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    const { buildTemplateParameters } = await import("../notify-templates/template-config.js");
 
     vi.mocked(findActiveSubscriptionsByLocation).mockResolvedValue([locationSubscriber]);
     vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([{ userId: "user-1", searchValue: "AB-123" }]);
@@ -589,7 +640,7 @@ describe("sendSystemAdminNotification", () => {
   });
 
   it("should send an email to each system admin with the five personalisation fields", async () => {
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
     vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
 
     await sendSystemAdminNotification(["admin1@example.com", "admin2@example.com"], notification);
@@ -612,7 +663,7 @@ describe("sendSystemAdminNotification", () => {
   });
 
   it("should use the provided action result when set", async () => {
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
     vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
 
     await sendSystemAdminNotification(["admin1@example.com"], { ...notification, actionResult: "attempted" });
@@ -625,7 +676,7 @@ describe("sendSystemAdminNotification", () => {
   });
 
   it("should not send any email when there are no admins", async () => {
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
 
     await sendSystemAdminNotification([], notification);
 
@@ -633,9 +684,50 @@ describe("sendSystemAdminNotification", () => {
   });
 
   it("should not throw when an email send fails (best-effort)", async () => {
-    const { sendEmail } = await import("../govnotify/govnotify-client.js");
+    const { sendEmail } = await import("../notify-templates/send-email.js");
     vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
 
     await expect(sendSystemAdminNotification(["admin1@example.com"], notification)).resolves.toBeUndefined();
+  });
+});
+
+describe("sendSubscriptionDeletedNotification", () => {
+  const subscribers = [
+    { email: "subscriber1@example.com", firstName: "Jane", surname: "Doe" },
+    { email: "subscriber2@example.com", firstName: null, surname: null }
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should send an email to every subscriber using the subscription deleted template", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-1" });
+
+    await sendSubscriptionDeletedNotification(subscribers, "Test Court");
+
+    expect(sendEmail).toHaveBeenCalledTimes(2);
+    expect(sendEmail).toHaveBeenCalledWith({
+      emailAddress: "subscriber1@example.com",
+      templateId: "subscription-deleted-template-id",
+      templateParameters: { "location-name": "Test Court" }
+    });
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ emailAddress: "subscriber2@example.com" }));
+  });
+
+  it("should not send any email when there are no subscribers", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+
+    await sendSubscriptionDeletedNotification([], "Test Court");
+
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should not throw when an email send fails (best-effort)", async () => {
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: false, error: "Notify down" });
+
+    await expect(sendSubscriptionDeletedNotification(subscribers, "Test Court")).resolves.toBeUndefined();
   });
 });

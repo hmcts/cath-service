@@ -99,15 +99,16 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../govnotify/govnotify-client.js";
+import { sendEmail } from "../notify-templates/send-email.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
+  getLocationSubscriptionDeletionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
-} from "../govnotify/template-config.js";
+} from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { MAX_SUMMARY_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 import {
@@ -122,7 +123,7 @@ import {
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
-const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_LINKED_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -403,6 +404,38 @@ export async function sendSystemAdminNotification(adminEmails: string[], details
   );
 }
 
+export interface LocationSubscriberRecipient {
+  email: string;
+  firstName: string | null;
+  surname: string | null;
+}
+
+export async function sendSubscriptionDeletedNotification(subscribers: LocationSubscriberRecipient[], locationName: string): Promise<void> {
+  if (subscribers.length === 0) {
+    return;
+  }
+
+  const templateId = getLocationSubscriptionDeletionTemplateId();
+  const personalisation = {
+    "location-name": locationName
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      const result = await sendEmail({
+        emailAddress: subscriber.email,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send subscription deleted notification to ${subscriber.email}: ${result.error}`);
+      }
+    })
+  );
+}
+
 async function processUserNotification(
   subscription: SubscriptionWithUser,
   event: PublicationEvent,
@@ -507,29 +540,19 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
 }
 
 async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | undefined, templateParameters: TemplateParameters): Promise<EmailTemplateData> {
-  const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
-  const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
-
-  const hasPdf = !!pdfBuffer;
-  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const hasExcel = !!excelBuffer;
-  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
-
-  const templateId = getSubscriptionTemplateId({
-    hasPdf: hasPdf && pdfUnder2MB,
-    hasExcel: hasExcel && excelUnder2MB,
-    filesUnder2MB
-  });
+  const pdfBuffer = toLinkableFile(pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null);
+  const excelBuffer = toLinkableFile(await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS));
 
   return {
     templateParameters,
-    templateId,
-    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
-    excelBuffer: excelUnder2MB ? excelBuffer : undefined
+    templateId: getSubscriptionTemplateId({ hasPdf: !!pdfBuffer, hasExcel: !!excelBuffer }),
+    pdfBuffer,
+    excelBuffer
   };
+}
+
+function toLinkableFile(buffer: Buffer | null): Buffer | undefined {
+  return buffer && buffer.length < MAX_LINKED_FILE_SIZE_BYTES ? buffer : undefined;
 }
 
 async function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): Promise<EmailTemplateData> {
