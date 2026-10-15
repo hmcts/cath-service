@@ -131,6 +131,20 @@ jobs:
               ;;
           esac
 
+          # Legacy sync CronJob schedules, in UTC. Platform auto-shutdown stops the demo,
+          # ithc and perftest clusters from about 19:15 to 05:35 UTC, and the job chart
+          # skips a run more than 20 minutes late, so night-time runs never happen there.
+          case "$ENVIRONMENT" in
+            demo|ithc|perftest)
+              LEGACY_SYNC_SCHEDULE="0 6 * * *"
+              LEGACY_SYNC_PUBLICATIONS_SCHEDULE="0 7 * * *"
+              ;;
+            *)
+              LEGACY_SYNC_SCHEDULE="0 2 * * *"
+              LEGACY_SYNC_PUBLICATIONS_SCHEDULE="0 3 * * *"
+              ;;
+          esac
+
           # CNP cluster and resource group names are a pure function of the
           # environment, so no lookup table is needed.
           CLUSTER="cft-${ENVIRONMENT}-${{ inputs.cluster-suffix }}"
@@ -141,6 +155,8 @@ jobs:
             echo "GLOBAL_ENVIRONMENT=${GLOBAL_ENVIRONMENT}"
             echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
             echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
+            echo "LEGACY_SYNC_SCHEDULE=${LEGACY_SYNC_SCHEDULE}"
+            echo "LEGACY_SYNC_PUBLICATIONS_SCHEDULE=${LEGACY_SYNC_PUBLICATIONS_SCHEDULE}"
             echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
           } >> "$GITHUB_ENV"
 

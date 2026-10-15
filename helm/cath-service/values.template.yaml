@@ -24,7 +24,7 @@ crons:
 # Off until legacy-account-database-url, legacy-publication-database-url and
 # legacy-storage-account-name exist in the cath vault: the CSI mount fails the pod if a
 # listed secret is missing. Never enable on aat, where an applied run
-# would wipe E2E users and subscriptions (docs/migration/legacy-data-migration.md §11).
+# would wipe E2E users and subscriptions (docs/migration/legacy-data-migration.md §1).
 legacySync:
   enabled: false
 
@@ -60,7 +60,7 @@ cath-web:
       # job.helm-deploy.yml; the :-true default keeps aat behaviour if unset.
       ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-      # "false" on any environment holding migrated legacy subscriptions (§10 of the migration doc).
+      # "false" on any environment holding migrated legacy subscriptions (§4 of the migration doc).
       OUTBOUND_ENABLED: "${OUTBOUND_ENABLED:-true}"
 
 # API application configuration
@@ -71,7 +71,7 @@ cath-api:
     environment:
       ENABLE_TEST_SUPPORT: "${ENABLE_TEST_SUPPORT:-true}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
-      # "false" on any environment holding migrated legacy subscriptions (§10 of the migration doc).
+      # "false" on any environment holding migrated legacy subscriptions (§4 of the migration doc).
       OUTBOUND_ENABLED: "${OUTBOUND_ENABLED:-true}"
 
 # Crons application configuration
@@ -83,7 +83,8 @@ cath-crons:
     kind: CronJob
 
 # Legacy CaTH sync (docs/migration/legacy-data-migration.md): accounts at 02:00, then
-# publications at 03:00. Dry runs unless LEGACY_SYNC_APPLY is "true". keyVaults replaces the
+# publications at 03:00 UTC. job.helm-deploy.yml moves both to the morning where the cluster
+# auto-shuts down overnight. Dry runs unless LEGACY_SYNC_APPLY is "true". keyVaults replaces the
 # subchart list rather than merging, so the default secrets are repeated. The legacy OAuth
 # vault (LEGACY_THIRD_PARTY_KEY_VAULT) is unset until confirmed, so that copy reports as skipped.
 # The syncs keep the active-cluster check on (the crons chart turns it off by default): two
@@ -94,7 +95,7 @@ cath-crons-legacy-sync:
     disableActiveClusterCheck: false
     image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     releaseNameOverride: "{{ .Release.Name }}-legacy-sync"
-    schedule: "0 2 * * *"
+    schedule: "${LEGACY_SYNC_SCHEDULE:-0 2 * * *}"
     suspend: false
     kind: CronJob
     environment:
@@ -121,7 +122,7 @@ cath-crons-legacy-sync-publications:
     disableActiveClusterCheck: false
     image: "hmctsprod.azurecr.io/cath/cath-crons:${CRONS_IMAGE}"
     releaseNameOverride: "{{ .Release.Name }}-legacy-sync-publications"
-    schedule: "0 3 * * *"
+    schedule: "${LEGACY_SYNC_PUBLICATIONS_SCHEDULE:-0 3 * * *}"
     suspend: false
     kind: CronJob
     environment:
