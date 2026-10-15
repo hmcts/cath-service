@@ -3,6 +3,7 @@ import "./conversion/siac-poac-paac-config.js"; // Register converter on module 
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatSiacPoacPaacWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as siacPoacPaacWeeklyHearingListCy } from "./locales/cy.js";
 // Locale exports
 export { en as siacPoacPaacWeeklyHearingListEn } from "./locales/en.js";

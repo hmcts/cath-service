@@ -1,4 +1,4 @@
-import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
+import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
 import type { SiacPoacPaacHearing, SiacPoacPaacHearingList } from "../models/types.js";
 
 export interface RenderOptions {
@@ -25,7 +25,7 @@ export function renderSiacPoacPaacData(hearingList: SiacPoacPaacHearingList, opt
 
   const renderedHearings = hearingList.map((hearing) => ({
     date: formatDdMmYyyyDate(hearing.date, options.locale),
-    time: hearing.time,
+    time: normalizeTime(hearing.time),
     appellant: hearing.appellant,
     caseReferenceNumber: hearing.caseReferenceNumber,
     hearingType: hearing.hearingType,

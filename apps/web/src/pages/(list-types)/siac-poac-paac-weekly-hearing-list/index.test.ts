@@ -41,9 +41,9 @@ vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
     siacCourtName: "Special Immigration Appeals Commission",
     poacCourtName: "Proscribed Organisations Appeal Commission",
     paacCourtName: "Pathogens Access Appeal Commission",
-    siacPageTitle: "Special Immigration Appeals Commission Weekly Hearing List",
-    poacPageTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
-    paacPageTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
+    siacPageTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mewnfudo Arbennig",
+    poacPageTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Sefydliadau Gwaharddedig",
+    paacPageTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mynediad Pathogenau",
     provenanceLabels: { MANUAL_UPLOAD: "Lanlwytho â Llaw", SNL: "ListAssist" },
     importantInformationText: "The tribunal sometimes uses reference numbers or initials to protect the anonymity of those involved in the appeal.",
     importantInformationVenue: "All hearings take place at Field House, 15-25 Bream's Buildings, London EC4A 1DZ."
@@ -57,22 +57,25 @@ import { GET } from "./index.js";
 
 const LIST_TYPE_CASES = [
   {
-    listTypeId: 28,
+    listTypeId: 999,
     listTypeName: "SIAC_WEEKLY_HEARING_LIST",
     courtName: "Special Immigration Appeals Commission",
-    listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+    listTitle: "Special Immigration Appeals Commission Weekly Hearing List",
+    cyListTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mewnfudo Arbennig"
   },
   {
-    listTypeId: 29,
+    listTypeId: 998,
     listTypeName: "POAC_WEEKLY_HEARING_LIST",
     courtName: "Proscribed Organisations Appeal Commission",
-    listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List"
+    listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List",
+    cyListTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Sefydliadau Gwaharddedig"
   },
   {
-    listTypeId: 30,
+    listTypeId: 997,
     listTypeName: "PAAC_WEEKLY_HEARING_LIST",
     courtName: "Pathogens Access Appeal Commission",
-    listTitle: "Pathogens Access Appeal Commission Weekly Hearing List"
+    listTitle: "Pathogens Access Appeal Commission Weekly Hearing List",
+    cyListTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mynediad Pathogenau"
   }
 ];
 
@@ -227,7 +230,7 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
       );
     });
 
-    for (const { listTypeId, listTypeName, courtName, listTitle } of LIST_TYPE_CASES) {
+    for (const { listTypeId, listTypeName, courtName, listTitle, cyListTitle } of LIST_TYPE_CASES) {
       it(`should render correctly for ${listTypeName} (${courtName})`, async () => {
         // Arrange
         const mockArtefact = {
@@ -254,8 +257,32 @@ describe("SIAC/POAC/PAAC Weekly Hearing List page controller", () => {
 
         // Assert
         expect(getPublicationJson).toHaveBeenCalledWith(`test-artefact-${listTypeId}`);
-        expect(renderSiacPoacPaacData).toHaveBeenCalledWith(MOCK_JSON_DATA, expect.objectContaining({ courtName }));
+        expect(renderSiacPoacPaacData).toHaveBeenCalledWith(MOCK_JSON_DATA, expect.objectContaining({ courtName, listTitle }));
         expect(res.render).toHaveBeenCalledWith("siac-poac-paac-weekly-hearing-list", expect.objectContaining({ dataSource: "Manual Upload" }));
+      });
+
+      it(`should pass the Welsh list title for ${listTypeName} when locale is cy`, async () => {
+        // Arrange
+        const mockArtefact = {
+          artefactId: `test-artefact-${listTypeId}`,
+          listTypeId,
+          listTypeName,
+          contentDate: new Date("2026-01-01"),
+          lastReceivedDate: new Date("2026-01-01T12:00:00Z"),
+          provenance: "MANUAL_UPLOAD"
+        };
+        res.locals = { locale: "cy" };
+        req.query = { artefactId: `test-artefact-${listTypeId}` };
+        vi.mocked(getArtefactById).mockResolvedValue(mockArtefact as any);
+        vi.mocked(getPublicationJson).mockResolvedValue(MOCK_JSON_DATA);
+        mockValidate.mockReturnValue({ isValid: true, errors: [] });
+        vi.mocked(renderSiacPoacPaacData).mockReturnValue({ header: { listTitle: cyListTitle }, hearings: [] } as any);
+
+        // Act
+        await GET(req as Request, res as Response);
+
+        // Assert
+        expect(renderSiacPoacPaacData).toHaveBeenCalledWith(MOCK_JSON_DATA, expect.objectContaining({ listTitle: cyListTitle, locale: "cy" }));
       });
     }
   });

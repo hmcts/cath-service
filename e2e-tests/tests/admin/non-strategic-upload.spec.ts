@@ -59,6 +59,45 @@ const INTERIM_APPLICATIONS_LIST_TYPE_NAME = "INTERIM_APPLICATIONS_DAILY_CAUSE_LI
 const ROLLS_BUILDING_UPLOADED_HEADER = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
 const BUSINESS_AND_PROPERTY_EN_HEADINGS = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
 const INTERIM_APPLICATIONS_CY_HEADINGS = ["Barnwr", "Amser", "Lleoliad", "Math", "Rhif yr achos", "Enw’r achos", "Gwybodaeth ychwanegol"];
+const GRC_LIST_TYPE_NAME = "GRC_WEEKLY_HEARING_LIST";
+const GRC_SHEET_NAME = "GRC hearings";
+const GRC_UPLOADED_HEADER = [
+  "Date",
+  "Hearing time",
+  "Case reference number",
+  "Case name",
+  "Judge(s)",
+  "Member(s)",
+  "Mode of hearing",
+  "Venue",
+  "Additional information"
+];
+const GRC_EN_HEADINGS = [
+  "Date",
+  "Hearing time",
+  "Case reference number",
+  "Case name",
+  "Judge(s)",
+  "Member(s)",
+  "Mode of hearing",
+  "Venue",
+  "Additional information"
+];
+const GRC_ROW = ["02/01/2026", "10:30am", "EA/2026/0001", "Smith v Information Commissioner", "Judge Jones", "Ms Patel", "Video", "Field House", "Public"];
+const CIC_LIST_TYPE_NAME = "CIC_WEEKLY_HEARING_LIST";
+const CIC_SHEET_NAME = "CIC hearings";
+const CIC_UPLOADED_HEADER = ["Date", "Hearing time", "Case reference number", "Case name", "Venue/platform", "Judge(s)", "Member(s)", "Additional information"];
+const CIC_ROW = ["02/01/2026", "2pm", "CIC/2026/001", "AN Other v CICA", "Video", "Judge Lee", "Dr Patel", "Remote"];
+const CIC_CY_HEADINGS = [
+  "Dyddiad",
+  "Amser y gwrandawiad",
+  "Cyfeirnod yr achos",
+  "Enw'r achos",
+  "Lleoliad/Platfform",
+  "Barnwyr",
+  "Aelod(au)",
+  "Gwybodaeth ychwanegol"
+];
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
@@ -131,6 +170,16 @@ async function createInterimApplicationsExcelFile(): Promise<Buffer> {
   workbook.addWorksheet("Open Justice Statement Details").addRows([
     ["Name to be displayed", "Email"],
     ["Mr Justice Smith", "interim.applications@justice.gov.uk"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createTribunalExcelFile(sheetName: string, header: string[], row: string[]): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(sheetName).addRows([
+    [...header, "Internal notes"],
+    [...row, "Appellant is vulnerable"]
   ]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
@@ -444,7 +493,7 @@ test.describe
     });
 
     // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-    test("RCJ, SSCS and Rolls Building Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
+    test("RCJ, SSCS, Rolls Building and Tribunal Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
       test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
       const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -453,7 +502,9 @@ test.describe
       const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
       const businessAndPropertyListType = (await getListTypeByName(BUSINESS_AND_PROPERTY_LIST_TYPE_NAME)) as { id: number } | null;
       const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
-      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType) {
+      const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
+      const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
+      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !grcListType || !cicListType) {
         throw new Error("Expected list types are not seeded");
       }
       const artefactIds: string[] = [];
@@ -547,6 +598,37 @@ test.describe
           "Acme v Widget",
           "In person"
         ]);
+
+        // STEP 8: An English GRC upload gets English headings, the PDF's long-form date, its unknown column dropped, and both email links
+        const grcArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: grcListType.id,
+          language: "ENGLISH",
+          fileName: "grc-weekly.xlsx",
+          buffer: await createTribunalExcelFile(GRC_SHEET_NAME, GRC_UPLOADED_HEADER, GRC_ROW)
+        });
+        artefactIds.push(grcArtefactId);
+
+        const grcWorksheet = await downloadReformattedWorksheet(page, grcArtefactId, GRC_SHEET_NAME);
+        expect(rowValues(grcWorksheet, 1)).toEqual(GRC_EN_HEADINGS);
+        expect(grcWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(grcWorksheet, 2)).toEqual(["2 January 2026", ...GRC_ROW.slice(1)]);
+        expect(rowValues(grcWorksheet, 1)).not.toContain("Internal notes");
+        expect(rowValues(grcWorksheet, 2)).not.toContain("Appellant is vulnerable");
+        await expectPdfAndExcelLinksInEmail(grcArtefactId);
+
+        // STEP 9: A Welsh CIC upload gets the Welsh headings, including the venue/platform alias, the Welsh long-form date, and both email links
+        const cicArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: cicListType.id,
+          language: "WELSH",
+          fileName: "cic-weekly-cy.xlsx",
+          buffer: await createTribunalExcelFile(CIC_SHEET_NAME, CIC_UPLOADED_HEADER, CIC_ROW)
+        });
+        artefactIds.push(cicArtefactId);
+
+        const cicWorksheet = await downloadReformattedWorksheet(page, cicArtefactId, CIC_SHEET_NAME);
+        expect(rowValues(cicWorksheet, 1)).toEqual(CIC_CY_HEADINGS);
+        expect(rowValues(cicWorksheet, 2)).toEqual(["2 Ionawr 2026", ...CIC_ROW.slice(1)]);
+        await expectPdfAndExcelLinksInEmail(cicArtefactId);
       } finally {
         if (artefactIds.length > 0) {
           await cleanupTestNotifications(artefactIds);
