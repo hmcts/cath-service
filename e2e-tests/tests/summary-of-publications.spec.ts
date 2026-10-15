@@ -335,7 +335,7 @@ test.describe("Summary of Publications Page", () => {
     await expect(factLink).toBeVisible();
 
     // Check for empty state message
-    await expect(page.getByText(/sorry, no lists found for this court/i)).toBeVisible();
+    await expect(page.getByText("There are no lists available for this court or tribunal today.")).toBeVisible();
 
     // Verify select list message is NOT displayed when no publications
     await expect(page.getByText("Select the list you want to view from the link(s) below:")).not.toBeVisible();
@@ -469,7 +469,7 @@ test.describe("Summary of Publications Page", () => {
     await page.waitForSelector("h1.govuk-heading-l");
 
     // Verify Welsh empty state message
-    await expect(page.getByText(/mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau/i)).toBeVisible();
+    await expect(page.getByText("Nid oes unrhyw restrau ar gael ar gyfer y llys na’r tribiwnlys hwn heddiw.")).toBeVisible();
 
     // Verify language toggle still shows English option
     const languageToggle = page.locator(".app-phase-banner__language");
