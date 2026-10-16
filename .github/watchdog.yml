@@ -185,12 +185,26 @@ checks:
   #
   # Measured over a day rather than {{window}}, like no-user-traffic above: web serves
   # around 544 non-health requests in 24h, so a 15-minute denominator is too small for a
-  # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
-  # names the routes, without which a firing cannot distinguish a broken route from
-  # someone probing the hostname.
+  # share and the old `total >= 20` floor could only be crossed by a burst.
+  # sample_client_errors names the routes, without which a firing cannot distinguish a
+  # broken route from someone probing the hostname.
+  #
+  # 404 is excluded from the numerator (2026-10-13). The threshold was the only thing
+  # keeping ordinary 404s out, and it relied on a denominator of ~1800/day; web was down
+  # to 225 non-health requests in 24h, so one run of a scanner probing for leaked keys
+  # (/id_rsa, /key.pem, /config/jwt/private.pem — all correctly 404 by notFoundHandler)
+  # was 56 requests and put the share at 25%. Probe volume against a public hostname is
+  # not something this service controls, and at AAT's volume it will always dominate a
+  # share of total traffic, so counting it cannot be made to mean anything.
+  #
+  # What this gives up: routing broken badly enough to 404 real pages no longer shows up
+  # here. availability-failures (zero threshold, 15m, hits the home page) and
+  # no-user-traffic cover that case and cover it faster. What is left — 400, 401, 403,
+  # 405, 429 as a share of traffic — is the broken-auth half of the original intent,
+  # which is the half this check was the only one watching.
   - id: client-error-rate
     severity: medium
-    description: 4xx responses as a share of non-health traffic over a day.
+    description: 4xx responses other than 404 as a share of non-health traffic over a day.
     fingerprint-by: [app]
     rule: { column: rate, value: '> 0.2' }
     query: |
@@ -200,9 +214,10 @@ checks:
       | where name !startswith 'GET /health'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
       | extend is_client_error = toint(resultCode) between (400 .. 499)
+          and toint(resultCode) != 404
       | summarize total = count(),
                   client_errors = countif(is_client_error),
-                  sample_4xx = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 10)
+                  sample_client_errors = make_set_if(strcat(name, ' -> ', resultCode), is_client_error, 10)
           by app
       | where total >= 200
       | extend rate = todouble(client_errors) / total
