@@ -71,6 +71,25 @@ checks:
   # artefact GUID and object path, so fingerprinting on them turns one underlying
   # problem into a new finding per object and nothing ever dedupes. Observed doing
   # exactly that — 17 findings from a single blob issue.
+  #
+  # The two container-create exclusions below are the dependency-side counterpart of the
+  # ContainerAlreadyExists entries in suppressions: uploadBlob calls createIfNotExists()
+  # on every upload and the containers are pre-created in infrastructure/storage.tf, so
+  # the 409 is a handled success-path response — createIfNotExists returns
+  # succeeded: false and the upload proceeds. Not done as a suppression because this
+  # check fingerprints on [type, operation, app] and not on resultCode, so suppressing
+  # the fingerprint would also silence a 403, a 5xx or a timeout on the same container —
+  # the failures the BlobNotFound suppression below depends on this check to catch.
+  #
+  #   409 on 'Azure blob' is excluded by result code rather than by container so that the
+  #   files container, and any container added later, stay covered. blob-client.ts is the
+  #   only @azure/storage-blob caller and uses no leases or conditional headers, so a 409
+  #   has no other source here. If one is introduced, narrow this.
+  #
+  #   ContainerClient-create is the SDK's own InProc span for that call, reported with
+  #   resultCode 0. Excluding it wholesale is safe: the HTTP span underneath carries the
+  #   real result code and is still checked, so a create that fails for a real reason
+  #   still fires.
   - id: dependency-failures
     severity: high
     description: Any failed outbound call.
@@ -83,6 +102,8 @@ checks:
       | where success == false
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
       | extend operation = trim_end(@':\d+$', tostring(name))
+      | where not(type == 'Azure blob' and tostring(resultCode) == '409')
+      | where operation != 'ContainerClient-create'
       | summarize failures = count(),
                   sample = any(resultCode),
                   sample_target = any(target)
