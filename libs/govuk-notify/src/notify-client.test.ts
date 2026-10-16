@@ -109,6 +109,32 @@ describe("prepareNotifyFileUpload", () => {
       retentionPeriod: "26 weeks"
     });
   });
+
+  it("should forward the filename and retention period to prepareUpload", async () => {
+    const { prepareNotifyFileUpload } = await import("./notify-client.js");
+    const fileBuffer = Buffer.from("file content");
+
+    prepareNotifyFileUpload("test-api-key", fileBuffer, { filename: "hearing-list.pdf", retentionPeriod: "2 weeks" });
+
+    expect(mockPrepareUpload).toHaveBeenCalledWith(fileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "2 weeks",
+      filename: "hearing-list.pdf"
+    });
+  });
+
+  it("should keep the default retention period when only the filename is provided", async () => {
+    const { prepareNotifyFileUpload } = await import("./notify-client.js");
+    const fileBuffer = Buffer.from("file content");
+
+    prepareNotifyFileUpload("test-api-key", fileBuffer, { filename: "hearing-list.docx" });
+
+    expect(mockPrepareUpload).toHaveBeenCalledWith(fileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week",
+      filename: "hearing-list.docx"
+    });
+  });
 });
 
 describe("sendNotifyEmailWithRetry", () => {

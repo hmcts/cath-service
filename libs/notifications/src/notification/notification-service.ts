@@ -99,7 +99,7 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../notify-templates/send-email.js";
+import { type FlatFileAttachment, sendEmail } from "../notify-templates/send-email.js";
 import {
   IS_MAGISTRATES_MEDIA_PROTOCOL,
   IS_NOT_MAGISTRATES_MEDIA_PROTOCOL,
@@ -110,6 +110,7 @@ import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
+  getFlatFileSubscriptionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
@@ -370,6 +371,7 @@ interface EmailTemplateData {
   templateId?: string;
   pdfBuffer?: Buffer;
   excelBuffer?: Buffer;
+  flatFile?: FlatFileAttachment;
 }
 
 export interface SystemAdminNotification {
@@ -436,7 +438,8 @@ async function processUserNotification(
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
       pdfBuffer: emailData.pdfBuffer,
-      excelBuffer: emailData.excelBuffer
+      excelBuffer: emailData.excelBuffer,
+      flatFile: emailData.flatFile
     });
 
     if (emailResult.success) {
@@ -474,9 +477,7 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 }
 
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
-  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
-
-  const emailData = await buildBaseEmailData(event, userName, config, caseValue);
+  const emailData = await buildListEmailData(event, userName, listTypeName, caseValue);
 
   return {
     ...emailData,
@@ -488,12 +489,13 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
   };
 }
 
-async function buildBaseEmailData(
-  event: PublicationEvent,
-  userName: string,
-  config: EmailBuilderConfig | undefined,
-  caseValue?: string
-): Promise<EmailTemplateData> {
+async function buildListEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+  if (event.flatFile) {
+    return buildFlatFileEmailData(event, event.flatFile, userName, caseValue);
+  }
+
+  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
+
   if (config && event.jsonData) {
     const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
     if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
@@ -507,6 +509,24 @@ async function buildBaseEmailData(
   }
 
   return buildFallbackEmailData(event, userName, caseValue);
+}
+
+// Flat files are sent as the uploaded document itself, so the derived PDF/Excel
+// blobs are never consulted. The flat-file template uses the legacy list_type key.
+function buildFlatFileEmailData(event: PublicationEvent, flatFile: FlatFileAttachment, userName: string, caseValue?: string): EmailTemplateData {
+  const templateParameters = buildTemplateParameters({
+    userName,
+    hearingListName: event.hearingListName,
+    publicationDate: event.publicationDate,
+    locationName: event.locationName,
+    caseValue
+  });
+
+  return {
+    templateParameters: { ...templateParameters, list_type: event.hearingListName },
+    templateId: getFlatFileSubscriptionTemplateId(),
+    flatFile
+  };
 }
 
 async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
@@ -610,6 +630,7 @@ export interface ListTypePublicationEvent {
   jsonData?: unknown;
   payloadSizeBytes?: number;
   pdfFilePath?: string;
+  flatFile?: FlatFileAttachment;
 }
 
 export async function sendListTypePublicationNotifications(event: ListTypePublicationEvent, excludeUserIds?: string[]): Promise<NotificationResult> {
@@ -664,7 +685,8 @@ async function processListTypeUserNotification(
       listTypeId: event.listTypeId,
       jsonData: event.jsonData,
       payloadSizeBytes: event.payloadSizeBytes,
-      pdfFilePath: event.pdfFilePath
+      pdfFilePath: event.pdfFilePath,
+      flatFile: event.flatFile
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
@@ -673,7 +695,8 @@ async function processListTypeUserNotification(
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
       pdfBuffer: emailData.pdfBuffer,
-      excelBuffer: emailData.excelBuffer
+      excelBuffer: emailData.excelBuffer,
+      flatFile: emailData.flatFile
     });
 
     if (emailResult.success) {
