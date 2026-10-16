@@ -25,7 +25,7 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<AdministrativeCo
 const LIST_TITLE_MAP: Record<string, string> = {
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Birmingham Administrative Court Daily Cause List",
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Leeds Administrative Court Daily Cause List",
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Bristol and Cardiff Administrative Court Daily Cause List",
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Bristol and Cardiff Administrative Court Daily Cause List",
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Manchester Administrative Court Daily Cause List"
 };
 
