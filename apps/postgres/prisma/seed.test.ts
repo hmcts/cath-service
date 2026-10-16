@@ -56,6 +56,7 @@ describe("Seed Script", () => {
     it("should handle errors and disconnect from database", async () => {
       // Arrange
       mockSeedLocationData.mockRejectedValue(new Error("Database connection failed"));
+      const processExitSpy = vi.spyOn(process, "exit").mockImplementation(() => undefined as never);
 
       // Act
       await import("./seed.js");
@@ -63,6 +64,9 @@ describe("Seed Script", () => {
 
       // Assert
       expect(consoleErrorSpy).toHaveBeenCalledWith("Error during seed:", expect.any(Error));
+      expect(mockPrisma.$disconnect).toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+      processExitSpy.mockRestore();
     });
   });
 });

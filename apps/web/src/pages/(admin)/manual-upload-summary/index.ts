@@ -106,8 +106,7 @@ const postHandler = async (req: Request, res: Response) => {
       displayTo,
       lastReceivedDate: new Date(),
       isFlatFile,
-      provenance: Provenance.MANUAL_UPLOAD,
-      noMatch: false
+      provenance: Provenance.MANUAL_UPLOAD
     });
 
     // Save file to blob storage with artefactId as blob name (will overwrite if exists)
@@ -140,6 +139,7 @@ const postHandler = async (req: Request, res: Response) => {
       contentDate,
       locale: uploadData.language === "WELSH" ? "cy" : "en",
       jsonData,
+      payloadSizeBytes: uploadData.file.length,
       provenance: Provenance.MANUAL_UPLOAD,
       sensitivity: uploadData.sensitivity,
       language: uploadData.language,

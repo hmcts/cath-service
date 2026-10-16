@@ -17,7 +17,7 @@ const mockListType = {
   caseNumberJsonFieldName: "caseNo",
   caseNameJsonFieldName: "caseName",
   defaultSensitivity: "Public",
-  allowedProvenance: "CFT_IDAM",
+  allowedProvenance: ["CFT_IDAM"],
   isNonStrategic: false,
   deletedAt: null,
   subJurisdictions: [

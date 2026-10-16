@@ -5,6 +5,10 @@ import {
 import { extractCaseSummary as extractAstSummary, formatCaseSummaryForEmail as formatAstSummaryForEmail } from "@hmcts/ast-daily-hearing-list";
 import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import {
+  extractCaseSummary as extractBusinessAndPropertyRollsSummary,
+  formatCaseSummaryForEmail as formatBusinessAndPropertyRollsSummaryForEmail
+} from "@hmcts/business-and-property-division-rolls-building-daily-cause-list";
+import {
   extractCaseSummary as extractCareStandardsSummary,
   formatCaseSummaryForEmail as formatCareStandardsSummaryForEmail
 } from "@hmcts/care-standards-tribunal-weekly-hearing-list";
@@ -14,25 +18,20 @@ import {
   formatCaseSummaryForEmail as formatCivilFamilySummaryForEmail
 } from "@hmcts/civil-and-family-daily-cause-list";
 import { extractCaseSummary as extractCivilSummary, formatCaseSummaryForEmail as formatCivilSummaryForEmail } from "@hmcts/civil-daily-cause-list";
-import {
-  extractCaseSummary as extractCompaniesWindingUpChdSummary,
-  formatCaseSummaryForEmail as formatCompaniesWindingUpChdSummaryForEmail
-} from "@hmcts/companies-winding-up-chd-daily-cause-list";
 import { extractCaseSummary as extractCopSummary, formatCaseSummaryForEmail as formatCopSummaryForEmail } from "@hmcts/cop-daily-cause-list";
 import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import {
+  extractCaseSummary as extractCrownAdvanceSummary,
+  formatCaseSummaryForEmail as formatCrownAdvanceSummaryForEmail
+} from "@hmcts/crown-advanced-pdda-list";
 import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
 import { extractCaseSummary as extractCrownFirmSummary, formatCaseSummaryForEmail as formatCrownFirmSummaryForEmail } from "@hmcts/crown-firm-list";
-import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEmail as formatCrownWarnedSummaryForEmail } from "@hmcts/crown-warned-list";
 import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
-import {
-  extractCaseSummary as extractFinancialListChdKbSummary,
-  formatCaseSummaryForEmail as formatFinancialListChdKbSummaryForEmail
-} from "@hmcts/financial-list-chd-kb-daily-cause-list";
 import {
   extractCaseSummary as extractFttLrtSummary,
   formatCaseSummaryForEmail as formatFttLrtSummaryForEmail
@@ -44,6 +43,10 @@ import {
 } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { extractCaseSummary as extractGrcSummary, formatCaseSummaryForEmail as formatGrcSummaryForEmail } from "@hmcts/grc-weekly-hearing-list";
 import { extractCaseSummary as extractIacDailySummary, formatCaseSummaryForEmail as formatIacDailySummaryForEmail } from "@hmcts/iac-daily-list";
+import {
+  extractCaseSummary as extractInterimApplicationsSummary,
+  formatCaseSummaryForEmail as formatInterimApplicationsSummaryForEmail
+} from "@hmcts/interim-applications-daily-cause-list";
 import type { CaseSummary } from "@hmcts/list-types-common";
 import {
   extractCaseSummary as extractLondonAdminSummary,
@@ -112,6 +115,7 @@ import {
   type TemplateParameters
 } from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
+import { MAX_SUMMARY_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 import {
   type CaseSubscriberWithUser,
   findActiveSubscriptionsByCaseName,
@@ -198,29 +202,29 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractLondonAdminSummary as SummaryExtractor,
     format: formatLondonAdminSummaryForEmail
   },
+  BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST: {
+    extract: extractBusinessAndPropertyRollsSummary as SummaryExtractor,
+    format: formatBusinessAndPropertyRollsSummaryForEmail
+  },
+  INTERIM_APPLICATIONS_DAILY_CAUSE_LIST: {
+    extract: extractInterimApplicationsSummary as SummaryExtractor,
+    format: formatInterimApplicationsSummaryForEmail
+  },
   COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST: {
     extract: extractCourtOfAppealSummary as SummaryExtractor,
     format: formatCourtOfAppealSummaryForEmail
   },
-  COMPANIES_WINDING_UP_CHD_DAILY_CAUSE_LIST: {
-    extract: extractCompaniesWindingUpChdSummary as SummaryExtractor,
-    format: formatCompaniesWindingUpChdSummaryForEmail
-  },
-  FINANCIAL_LIST_CHD_KB_DAILY_CAUSE_LIST: {
-    extract: extractFinancialListChdKbSummary as SummaryExtractor,
-    format: formatFinancialListChdKbSummaryForEmail
-  },
-  CROWN_DAILY_LIST: {
+  CROWN_DAILY_PDDA_LIST: {
     extract: extractCrownDailySummary as SummaryExtractor,
     format: formatCrownDailySummaryForEmail
   },
-  CROWN_FIRM_LIST: {
+  CROWN_FIRM_PDDA_LIST: {
     extract: extractCrownFirmSummary as SummaryExtractor,
     format: formatCrownFirmSummaryForEmail
   },
-  CROWN_WARNED_LIST: {
-    extract: extractCrownWarnedSummary as SummaryExtractor,
-    format: formatCrownWarnedSummaryForEmail
+  CROWN_ADVANCED_PDDA_LIST: {
+    extract: extractCrownAdvanceSummary as SummaryExtractor,
+    format: formatCrownAdvanceSummaryForEmail
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
@@ -472,8 +476,7 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
-  const emailData =
-    config && event.jsonData ? await buildEnhancedEmailData(event, userName, config, caseValue) : await buildFallbackEmailData(event, userName, caseValue);
+  const emailData = await buildBaseEmailData(event, userName, config, caseValue);
 
   return {
     ...emailData,
@@ -483,6 +486,27 @@ async function buildEmailTemplateData(event: PublicationEvent, userName: string,
       [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
     }
   };
+}
+
+async function buildBaseEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig | undefined,
+  caseValue?: string
+): Promise<EmailTemplateData> {
+  if (config && event.jsonData) {
+    const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
+    if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
+      console.log(`Email summary skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_SUMMARY_PAYLOAD_BYTES}`, {
+        publicationId: event.publicationId
+      });
+      return buildFallbackEmailData(event, userName, caseValue);
+    }
+
+    return buildEnhancedEmailData(event, userName, config, caseValue);
+  }
+
+  return buildFallbackEmailData(event, userName, caseValue);
 }
 
 async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
@@ -584,6 +608,7 @@ export interface ListTypePublicationEvent {
   listTypeId: number;
   language: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   pdfFilePath?: string;
 }
 
@@ -638,6 +663,7 @@ async function processListTypeUserNotification(
       publicationDate: event.publicationDate,
       listTypeId: event.listTypeId,
       jsonData: event.jsonData,
+      payloadSizeBytes: event.payloadSizeBytes,
       pdfFilePath: event.pdfFilePath
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
