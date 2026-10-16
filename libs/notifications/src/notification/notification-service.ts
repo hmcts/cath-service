@@ -99,7 +99,13 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../govnotify/govnotify-client.js";
+import { sendEmail } from "../notify-templates/send-email.js";
+import {
+  IS_MAGISTRATES_MEDIA_PROTOCOL,
+  IS_NOT_MAGISTRATES_MEDIA_PROTOCOL,
+  isMagistratesMediaProtocol,
+  isNotMagistratesMediaProtocol
+} from "../notify-templates/subscription-template-helper.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
@@ -107,7 +113,7 @@ import {
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
-} from "../govnotify/template-config.js";
+} from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
 import { MAX_SUMMARY_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 import {
@@ -470,6 +476,24 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
+  const emailData = await buildBaseEmailData(event, userName, config, caseValue);
+
+  return {
+    ...emailData,
+    templateParameters: {
+      ...emailData.templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    }
+  };
+}
+
+async function buildBaseEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig | undefined,
+  caseValue?: string
+): Promise<EmailTemplateData> {
   if (config && event.jsonData) {
     const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
     if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
