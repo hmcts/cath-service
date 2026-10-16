@@ -5,24 +5,24 @@ import "@hmcts/web-core"; // Import for Express type augmentation
 import { fileUploadRoutes as adminFileUploadRoutes, moduleRoot as adminModuleRoot } from "@hmcts/admin-pages/config";
 import { moduleRoot as adminCourtModuleRoot } from "@hmcts/administrative-court-daily-cause-list/config";
 import { moduleRoot as authModuleRoot } from "@hmcts/auth/config";
+import { moduleRoot as businessAndPropertyRollsModuleRoot } from "@hmcts/business-and-property-division-rolls-building-daily-cause-list/config";
 import { moduleRoot as careStandardsTribunalModuleRoot } from "@hmcts/care-standards-tribunal-weekly-hearing-list/config";
 import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-family-daily-cause-list/config";
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
-import { moduleRoot as companiesWindingUpChdModuleRoot } from "@hmcts/companies-winding-up-chd-daily-cause-list/config";
 import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as crownAdvanceListModuleRoot } from "@hmcts/crown-advanced-pdda-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
 import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
-import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-list/config";
 import { moduleRoot as etDailyListModuleRoot } from "@hmcts/et-daily-list/config";
 import { moduleRoot as etFortnightlyListModuleRoot } from "@hmcts/et-fortnightly-list/config";
 import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
-import { moduleRoot as financialListChdKbModuleRoot } from "@hmcts/financial-list-chd-kb-daily-cause-list/config";
 import { moduleRoot as fttLrtModuleRoot } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list/config";
 import { moduleRoot as fttRptModuleRoot } from "@hmcts/ftt-rpt-weekly-hearing-list/config";
 import { moduleRoot as fttTaxChamberModuleRoot } from "@hmcts/ftt-tax-chamber-weekly-hearing-list/config";
 import { moduleRoot as grcWeeklyHearingListModuleRoot } from "@hmcts/grc-weekly-hearing-list/config";
 import { moduleRoot as iacDailyListModuleRoot } from "@hmcts/iac-daily-list/config";
+import { moduleRoot as interimApplicationsModuleRoot } from "@hmcts/interim-applications-daily-cause-list/config";
 import { moduleRoot as listTypesCommonModuleRoot } from "@hmcts/list-types-common/config";
 import { apiRoutes as locationApiRoutes } from "@hmcts/location/config";
 import { moduleRoot as londonAdminModuleRoot } from "@hmcts/london-administrative-court-daily-cause-list/config";
@@ -82,13 +82,14 @@ export async function createApp(): Promise<Express> {
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
   // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
   // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
-  const { authNavigationMiddleware, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
+  const { authNavigationMiddleware, cftIdamHealthCheck, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
 
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
+  app.get("/health", cftIdamHealthCheck());
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
@@ -140,9 +141,9 @@ export async function createApp(): Promise<Express> {
     sjpPublicListModuleRoot,
     rcjStandardModuleRoot,
     londonAdminModuleRoot,
+    businessAndPropertyRollsModuleRoot,
+    interimApplicationsModuleRoot,
     civilAppealModuleRoot,
-    companiesWindingUpChdModuleRoot,
-    financialListChdKbModuleRoot,
     adminCourtModuleRoot,
     magistratesPublicAdultCourtListModuleRoot,
     magistratesPublicListModuleRoot,
@@ -150,7 +151,7 @@ export async function createApp(): Promise<Express> {
     magistratesAdultCourtListModuleRoot,
     crownDailyListModuleRoot,
     crownFirmListModuleRoot,
-    crownWarnedListModuleRoot,
+    crownAdvanceListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     grcWeeklyHearingListModuleRoot,

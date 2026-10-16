@@ -22,6 +22,7 @@ export interface PublicationEvent {
   pdfFilePath?: string;
   excelPath?: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   flatFile?: FlatFileAttachment;
 }
 

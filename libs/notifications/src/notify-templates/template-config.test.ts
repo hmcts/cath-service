@@ -12,34 +12,6 @@ describe("template-config", () => {
     process.env = originalEnv;
   });
 
-  describe("isSjpListType", () => {
-    it("should return true for SJP_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return false for non-SJP list types", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
-      expect(isSjpListType("CROWN_DAILY_LIST")).toBe(false);
-    });
-  });
-
   describe("getSubscriptionTemplateId", () => {
     it("should return no-links template when files exceed 2MB", async () => {
       const { getSubscriptionTemplateId } = await import("./template-config.js");

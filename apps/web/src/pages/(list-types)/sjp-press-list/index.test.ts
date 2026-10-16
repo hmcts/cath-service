@@ -531,7 +531,7 @@ describe("SJP Press List Controller", () => {
       const res = mockResponse();
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
       await middleware(req, res, mockNext);
 
@@ -548,7 +548,7 @@ describe("SJP Press List Controller", () => {
       const res = mockResponse();
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD" } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD"] } as never);
 
       await middleware(req, res, mockNext);
 
@@ -566,7 +566,7 @@ describe("SJP Press List Controller", () => {
       const res = mockResponse();
 
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ artefactId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890", listTypeId: 24 } as never);
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: "PI_AAD,CFT_IDAM" } as never);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 24, allowedProvenance: ["PI_AAD", "CFT_IDAM"] } as never);
 
       await middleware(req, res, mockNext);
 

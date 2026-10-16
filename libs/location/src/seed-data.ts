@@ -93,6 +93,7 @@ export async function seedLocationData() {
     }
 
     await seedListTypes();
+    await seedLocationMetadata();
     return;
   }
 
@@ -218,7 +219,28 @@ export async function seedLocationData() {
   }
   console.log(`Seeded ${locationData.locations.length} locations`);
 
+  await seedLocationMetadata();
+
   console.log("Location reference data seeding completed successfully");
+}
+
+// Create-only: an existing row belongs to admins (location-metadata-manage), so leave it untouched.
+async function seedLocationMetadata() {
+  for (const location of locationData.locations) {
+    if (!location.cautionMessage && !location.welshCautionMessage) {
+      continue;
+    }
+
+    await prisma.locationMetadata.upsert({
+      where: { locationId: location.locationId },
+      create: {
+        locationId: location.locationId,
+        cautionMessage: location.cautionMessage,
+        welshCautionMessage: location.welshCautionMessage
+      },
+      update: {}
+    });
+  }
 }
 
 // Allow running directly
