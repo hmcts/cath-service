@@ -2,6 +2,10 @@ import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateLocationInput } from "../../types.js";
 
+const PRISMA_UNIQUE_CONSTRAINT_CODE = "P2002";
+const LOCATION_ID_COLUMN = "location_id";
+const MAX_GENERATED_ID_ATTEMPTS = 5;
+
 export const GET = async (req: Request, res: Response) => {
   try {
     const { first, includeRelationships } = req.query;
@@ -40,31 +44,8 @@ export const POST = async (req: Request, res: Response) => {
       });
     }
 
-    // NOSONAR: Math.random() is safe here - test-only code, no security requirement, just needs unique ID
-    const locationId = input.locationId || 90000 + Math.floor(Math.random() * 9000) + (Date.now() % 1000);
-
-    const location = await prisma.location.upsert({
-      where: { locationId },
-      create: {
-        locationId,
-        name: input.name,
-        welshName: input.welshName,
-        email: input.email || `${input.name.toLowerCase().replaceAll(/\s+/g, "-")}@test.hmcts.net`,
-        contactNo: input.contactNo || "01234567890",
-        locationRegions: {
-          create: (input.regionIds || [4]).map((regionId) => ({ regionId }))
-        },
-        locationSubJurisdictions: {
-          create: (input.subJurisdictionIds || [1]).map((subJurisdictionId) => ({ subJurisdictionId }))
-        }
-      },
-      update: {
-        name: input.name,
-        welshName: input.welshName,
-        email: input.email || `${input.name.toLowerCase().replaceAll(/\s+/g, "-")}@test.hmcts.net`,
-        contactNo: input.contactNo || "01234567890"
-      }
-    });
+    // An explicit id is a fixed fixture the caller wants reset; a generated one must never overwrite another test's location
+    const location = input.locationId ? await upsertLocation(input.locationId, input) : await createLocationWithGeneratedId(input);
 
     return res.status(201).json({
       locationId: location.locationId,
@@ -97,3 +78,74 @@ export const DELETE = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to delete locations" });
   }
 };
+
+function upsertLocation(locationId: number, input: CreateLocationInput) {
+  return prisma.location.upsert({
+    where: { locationId },
+    create: buildLocationCreateData(locationId, input),
+    update: {
+      name: input.name,
+      welshName: input.welshName,
+      email: defaultEmail(input),
+      contactNo: input.contactNo || "01234567890"
+    }
+  });
+}
+
+// Parallel e2e workers draw from the same small id range, so a clash is retried with a fresh id rather than upserted
+async function createLocationWithGeneratedId(input: CreateLocationInput) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await prisma.location.create({ data: buildLocationCreateData(generateLocationId(), input) });
+    } catch (error) {
+      if (!isLocationIdClash(error) || attempt >= MAX_GENERATED_ID_ATTEMPTS) {
+        throw error;
+      }
+    }
+  }
+}
+
+function buildLocationCreateData(locationId: number, input: CreateLocationInput) {
+  return {
+    locationId,
+    name: input.name,
+    welshName: input.welshName,
+    email: defaultEmail(input),
+    contactNo: input.contactNo || "01234567890",
+    locationRegions: {
+      create: (input.regionIds || [4]).map((regionId) => ({ regionId }))
+    },
+    locationSubJurisdictions: {
+      create: (input.subJurisdictionIds || [1]).map((subJurisdictionId) => ({ subJurisdictionId }))
+    }
+  };
+}
+
+function defaultEmail(input: CreateLocationInput): string {
+  return input.email || `${input.name.toLowerCase().replaceAll(/\s+/g, "-")}@test.hmcts.net`;
+}
+
+function generateLocationId(): number {
+  // NOSONAR: Math.random() is safe here - test-only code, no security requirement, just needs unique ID
+  return 90000 + Math.floor(Math.random() * 9000) + (Date.now() % 1000);
+}
+
+// name and welsh_name are unique too; a clash on those will not be fixed by a new id, so only location_id is retried
+function isLocationIdClash(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || (error as PrismaKnownError).code !== PRISMA_UNIQUE_CONSTRAINT_CODE) {
+    return false;
+  }
+
+  const { meta } = error as PrismaKnownError;
+  // The pg driver adapter reports the columns under driverAdapterError; the native engine uses target
+  const fields = meta?.driverAdapterError?.cause?.constraint?.fields ?? meta?.target ?? [];
+  return fields.includes(LOCATION_ID_COLUMN);
+}
+
+interface PrismaKnownError {
+  code?: unknown;
+  meta?: {
+    target?: string[];
+    driverAdapterError?: { cause?: { constraint?: { fields?: string[] } } };
+  };
+}
