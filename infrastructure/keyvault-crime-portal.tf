@@ -17,17 +17,3 @@ module "kv_cp" {
   common_tags             = local.common_tags
   create_managed_identity = true
 }
-
-# APIM's api-policy.xml requires the api.publisher.user role, so Crime Portal's
-# token needs it too. Gated like the APIM data sources it reads.
-data "azuread_service_principal" "cath_api" {
-  count     = local.deploy_apim ? 1 : 0
-  client_id = data.azurerm_key_vault_secret.apim_client_id[0].value
-}
-
-resource "azuread_app_role_assignment" "cp_mi_publisher" {
-  count               = local.deploy_apim ? 1 : 0
-  app_role_id         = data.azuread_service_principal.cath_api[0].app_role_ids["api.publisher.user"]
-  principal_object_id = module.kv_cp.managed_identity_objectid[0]
-  resource_object_id  = data.azuread_service_principal.cath_api[0].object_id
-}

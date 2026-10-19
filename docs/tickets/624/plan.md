@@ -71,7 +71,13 @@ If they stop sending to PIP, this is config only. If they have to send to both P
 
 3. **`count` over the connections (decided)**, as the ticket's AC says. `connections` must be treated as append-only (see section 3).
 
-4. **App role assignment in Terraform, gated on `local.deploy_apim`.** The role only matters where APIM validates it, and the CaTH API client ID is only read (`data.azurerm_key_vault_secret.apim_client_id`) when `local.deploy_apim` is true. PIP did not do this in Terraform (it is not in `pip-shared-infrastructures`), so it was presumably done by hand in Entra. Doing it in code makes it repeatable for each environment, but the CI principal needs extra Entra permission (Clarification 3).
+4. **App role assignment done by hand, not in Terraform (revised).** APIM requires the `api.publisher.user` role, so `cath-cp-<env>-mi` must hold it on the CaTH API app. `azuread_app_role_assignment` needs Graph `AppRoleAssignment.ReadWrite.All`, which the CI principal is not expected to hold, and PIP does not do it in Terraform either. A managed identity has no "API permissions" blade, so an Entra admin assigns it through Graph once per environment after the identity exists:
+
+   ```bash
+   az rest --method POST \
+     --uri "https://graph.microsoft.com/v1.0/servicePrincipals/<cath-cp-<env>-mi principalId>/appRoleAssignments" \
+     --body '{"principalId":"<cath-cp-<env>-mi principalId>","resourceId":"<CaTH API service principal objectId>","appRoleId":"<api.publisher.user role id>"}'
+   ```
 
 5. **`trimspace()` on issuer and subject (decided).** The real SIT issuer has a trailing space.
 
@@ -83,7 +89,7 @@ If they stop sending to PIP, this is config only. If they have to send to both P
 
 ## 2. Implementation Details
 
-### Crime Portal vault and app role
+### Crime Portal vault
 
 **Create `infrastructure/keyvault-crime-portal.tf`**
 
@@ -107,19 +113,6 @@ module "kv_cp" {
   create_managed_identity = true
 }
 
-# APIM's api-policy.xml requires the api.publisher.user role, so Crime Portal's
-# token needs it too. Gated like the APIM data sources it reads.
-data "azuread_service_principal" "cath_api" {
-  count     = local.deploy_apim ? 1 : 0
-  client_id = data.azurerm_key_vault_secret.apim_client_id[0].value
-}
-
-resource "azuread_app_role_assignment" "cp_mi_publisher" {
-  count               = local.deploy_apim ? 1 : 0
-  app_role_id         = data.azuread_service_principal.cath_api[0].app_role_ids["api.publisher.user"]
-  principal_object_id = module.kv_cp.managed_identity_objectid[0]
-  resource_object_id  = data.azuread_service_principal.cath_api[0].object_id
-}
 ```
 
 Vault name length (Azure limit 24, globally unique):
@@ -133,17 +126,6 @@ Vault name length (Azure limit 24, globally unique):
 | prod (future) | `cath-cp-prod` | 12 |
 
 This matches the `${var.product}-tp-${var.env}` pattern in `keyvault-third-party.tf`. Passing `name` is redundant (the module's default is `product-env`, which gives the same value), but it is explicit and matches the third-party vault.
-
-**Modify `infrastructure/state.tf`.** The `terraform { required_providers }` block is here, not in `provider.tf`. Add:
-
-```hcl
-azuread = {
-  source  = "hashicorp/azuread"
-  version = "~> 3.10"
-}
-```
-
-The key vault module already uses `azuread` data sources (`azuread_group`, `azuread_service_principal`) without a constraint, so Terraform resolves `hashicorp/azuread` implicitly today with the default (empty) provider config and the CI credentials. No `.terraform.lock.hcl` is committed, and CI inits fresh on each run. The latest master aat apply (run 38719495336) installed `hashicorp/azuread v3.10.0`, so pin `~> 3.10`, which changes nothing. No `provider "azuread"` block is needed. The default config already works for the module.
 
 ### Manual step (before merge)
 
@@ -224,7 +206,7 @@ On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be s
 | Concurrent writes on one MI | Azure rejects parallel federated credential writes on the same identity | azurerm serialises writes per parent identity. If `ConcurrentFederatedIdentityCredentialsWritesForSingleManagedIdentity` appears, re-run the apply. |
 | KV name length / uniqueness | Max 24 characters, global | Longest is `cath-cp-perftest` (16). Check that no live or soft-deleted `cath-cp-*` vault exists: `az keyvault list-deleted --query "[?name.starts_with(@,'cath-cp')]"`. |
 | Soft-deleted vault collision | `purge_protection_enabled` defaults to true and soft-delete lasts 90 days, so a destroyed `cath-cp-<env>` blocks the name (as `cath-ithc` does today) | Do not destroy and recreate. If it happens, the name is blocked until expiry, same as ithc. |
-| CI principal lacks Entra permission for app role assignment | `azuread_app_role_assignment` returns 403 `Authorization_RequestDenied` and the apply fails | Grant `AppRoleAssignment.ReadWrite.All` (Graph app permission), or make the CI principal an owner of the CaTH API enterprise app. If neither is granted, drop the resource and assign by hand (Clarification 3). Reading the SP also needs Directory read (`Application.Read.All` or similar). |
+| App role not assigned after apply | Token exchange works but APIM returns 401 (no `roles` claim) | An Entra admin assigns `api.publisher.user` by hand (decision 4). |
 | New MI not yet replicated in Entra | The role assignment can fail with "principal not found" on the first apply | Re-run the apply. |
 | `api.publisher.user` missing from the app, or not allowed for applications | `app_role_ids["api.publisher.user"]` errors at plan, or Graph rejects the assignment | Confirm the role exists with `allowedMemberTypes` including `Application`. |
 | `deploy_apim = false` (ithc) | Role assignment and SP lookup are skipped (`count = 0`). The vault and MI are still created. | Consistent with APIM. The ithc rollout (#1160) picks it up automatically. |
@@ -243,13 +225,13 @@ On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be s
 | `crime-oidc-config` populated before apply | Manual step before merge | `az keyvault secret show --vault-name cath-bootstrap-<env> -n crime-oidc-config --query id` per env | **Manual** |
 | `terraform plan` runs cleanly after prerequisites | Secret populated before merge; trimmed input | Green `Terraform aat/demo/perftest` plan jobs on the PR; aat plan comment | |
 | "cath-service can authenticate with Crime Portal" | Reworded: **Crime Portal can authenticate to CaTH** (through APIM) with workload identity federation, no static credentials | CP-side test in their STE/SIT: token exchange succeeds, and `POST /cath/publication` through aat APIM returns non-401 | **Manual, needs CP**. Also depends on CP config changes (section 1). |
-| (Added) MI has the `api.publisher.user` role | `azuread_app_role_assignment` (gated on `local.deploy_apim`) | Enterprise app > Users and groups shows `cath-cp-aat-mi`, or decoded token `roles` | |
+| (Added) MI has the `api.publisher.user` role | Manual Graph assignment by an Entra admin (decision 4) | Enterprise app > Users and groups shows `cath-cp-aat-mi`, or decoded token `roles` | |
 
 ## 5. CLARIFICATIONS NEEDED
 
 1. ~~**`count` vs `for_each`**~~ **Resolved:** `count`, append-only.
 2. **Service account subject**: The current subjects are `system:serviceaccount:<ns>:stagingpubhub-service-wildfly-app`, which is the legacy `cpp-context-staging-pubhub`. Which service account does `cp-court-list-publishing-service` run as? A wrong subject means the exchange fails.
-3. **Entra permission for the CI principal**: Resolved to keep the role assignment in Terraform. Still to confirm: does the CI service principal have `AppRoleAssignment.ReadWrite.All`, or ownership of the CaTH API enterprise app, in each tenant/environment? If not, who grants it?
+3. **Entra permission for the CI principal**: Resolved. The role assignment was removed from Terraform and is assigned by hand (decision 4). Still to confirm: who in Entra makes the assignment for each environment.
 4. **PRP issuer in a different tenant** (`77f54315...` vs `e2995d11...` for STE/SIT): Is it right to trust PRP (pre-prod) on our aat (staging) identity, or should PRP federate to a different CaTH environment?
 5. **CP environment mapping**: Do demo and perftest have CP counterparts? If not, confirm `{"connections": []}` for those vaults. Which CaTH environment will CP prod target (no prod root here yet)?
 6. ~~**Secret location**~~ **Resolved:** bootstrap vault `cath-bootstrap-<env>`, one PR.
