@@ -1,8 +1,7 @@
 # Crime Portal's AKS workloads exchange their service account tokens for
 # cath-cp-<env>-mi tokens. Issuer/subject pairs come from Crime Portal via the
-# crime-oidc-config secret in the bootstrap vault, which already exists, so the
-# plan-time read works. The secret must exist in every planned environment
-# before merge.
+# crime-oidc-config secret in the app vault, set by hand like the APIM secrets
+# in data.tf. It must exist in every planned environment before merge.
 #
 # Deliberately no try() around jsondecode: a silent fallback to no connections
 # would destroy every credential. Keep "connections" append-only - with count,
@@ -12,12 +11,12 @@ locals {
   crime_oidc_json_config = jsondecode(data.azurerm_key_vault_secret.crime_oidc_config.value)
 }
 
-# The module output, not data.azurerm_key_vault.bootstrap_key_vault: that data
-# source's depends_on would defer this read whenever the vault module has a
-# pending change, leaving count unknown and failing the plan.
+# The module output, not data.azurerm_key_vault.key_vault: that data source's
+# depends_on would defer this read whenever the vault module has a pending
+# change, leaving count unknown and failing the plan.
 data "azurerm_key_vault_secret" "crime_oidc_config" {
   name         = "crime-oidc-config"
-  key_vault_id = module.bootstrap_key_vault.key_vault_id
+  key_vault_id = module.key_vault.key_vault_id
 }
 
 # Created directly rather than through a key vault module like PIP's kv_cp: CaTH

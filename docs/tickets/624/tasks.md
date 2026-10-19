@@ -1,11 +1,11 @@
 # Tasks: #624 Crime Portal OIDC Federated Identity
 
-One PR. `crime-oidc-config` is read from the bootstrap vault (`cath-bootstrap-<env>`) and must be populated in aat, demo and perftest before merge.
+One PR. `crime-oidc-config` is read from the app vault (`cath-<env>`) and must be populated in aat, demo and perftest before merge.
 
 ## Implementation Tasks
 
 ### Before starting
-- [x] Resolve Clarifications 1 and 6 in plan.md (`count`; bootstrap vault, one PR)
+- [x] Resolve Clarifications 1 and 6 in plan.md (`count`; app vault, one PR)
 
 ### Managed identity
 - [x] Create `azurerm_user_assigned_identity.app_cp_mi` (`cath-cp-<env>-mi` in `managed-identities-<env>-rg`) directly, with no Crime Portal vault
@@ -14,15 +14,15 @@ One PR. `crime-oidc-config` is read from the bootstrap vault (`cath-bootstrap-<e
 - [ ] Ask an Entra admin to assign `cath-cp-<env>-mi` the `api.publisher.user` app role on the CaTH API enterprise app, per environment (see plan.md decision 4)
 
 ### Federated credentials
-- [x] Create `infrastructure/tf-crime-connection-mi.tf`: locals, `data.azurerm_key_vault_secret.crime_oidc_config` (bootstrap vault), `azurerm_federated_identity_credential.cath_crime_federated_connection`
+- [x] Create `infrastructure/tf-crime-connection-mi.tf`: locals, `data.azurerm_key_vault_secret.crime_oidc_config` (app vault), `azurerm_federated_identity_credential.cath_crime_federated_connection`
 - [x] Use `count = length(local.crime_oidc_json_config.connections)`
 - [x] Wrap `name`, `issuer` and `subject` in `sensitive()`, and wrap `issuer`/`subject` in `trimspace()`
 - [x] No `try()` fallback around `jsondecode`
 
 ### Manual step: populate secrets (before merge)
 - [ ] Get final issuer/subject values from CP (correct service account for `cp-court-list-publishing-service`, PRP decision)
-- [ ] Set `crime-oidc-config` in `cath-bootstrap-aat`
-- [ ] Set `crime-oidc-config` in `cath-bootstrap-demo` and `cath-bootstrap-perftest` (`{"connections": []}` unless CP supplies values)
+- [ ] Set `crime-oidc-config` in `cath-aat`
+- [ ] Set `crime-oidc-config` in `cath-demo` and `cath-perftest` (`{"connections": []}` unless CP supplies values)
 - [ ] Check each secret parses (`az keyvault secret show ... --query value -o tsv | jq .`) and names are unique
 - [ ] After apply, send `cath-cp-<env>-mi` client IDs, the HMCTS tenant ID and CaTH API app ID to the CP team
 - [ ] Correct the ticket's MI-provisioning, secret-location and auth-direction text
