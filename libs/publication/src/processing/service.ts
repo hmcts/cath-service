@@ -16,9 +16,9 @@ import {
   generateCourtOfAppealCivilDailyCauseListPdf,
   reformatCourtOfAppealCivilDailyCauseListExcel
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import { type CrownAdvanceListData, generateCrownAdvanceListPdf } from "@hmcts/crown-advanced-pdda-list";
 import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
 import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
-import { type CrownWarnedListData, generateCrownWarnedListPdf } from "@hmcts/crown-warned-list";
 import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } from "@hmcts/et-daily-list";
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
@@ -90,6 +90,7 @@ import {
 import { generateUtiacStatutoryAppealDailyHearingListPdf, type UtiacStatutoryAppealHearingList } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
+import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
   en: "ENGLISH",
@@ -239,7 +240,7 @@ const PDF_GENERATOR_REGISTRY: Partial<Record<string, PdfGenerator>> = {
   SJP_DELTA_PRESS_LIST: sjpPressGenerator,
   CROWN_DAILY_PDDA_LIST: (p) => generateCrownDailyListPdf({ ...p, jsonData: p.jsonData as CrownDailyListData }),
   CROWN_FIRM_PDDA_LIST: (p) => generateCrownFirmListPdf({ ...p, jsonData: p.jsonData as CrownFirmListData }),
-  CROWN_WARNED_PDDA_LIST: (p) => generateCrownWarnedListPdf({ ...p, jsonData: p.jsonData as CrownWarnedListData }),
+  CROWN_ADVANCED_PDDA_LIST: (p) => generateCrownAdvanceListPdf({ ...p, jsonData: p.jsonData as CrownAdvanceListData }),
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_MIDLANDS_DAILY_HEARING_LIST"),
   SSCS_SOUTH_EAST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_SOUTH_EAST_DAILY_HEARING_LIST"),
   SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST: sscsGeneratorForListType("SSCS_WALES_AND_SOUTH_WEST_DAILY_HEARING_LIST"),
@@ -566,6 +567,7 @@ interface SendNotificationsParams {
   listTypeId: number;
   contentDate: Date;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   pdfFilePath?: string;
   excelPath?: string;
   locale?: string;
@@ -617,6 +619,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
       publicationDate: contentDate,
       listTypeId,
       jsonData,
+      payloadSizeBytes: params.payloadSizeBytes,
       pdfFilePath,
       excelPath
     });
@@ -642,6 +645,7 @@ export async function sendPublicationNotificationsForArtefact(params: SendNotifi
             listTypeId,
             language,
             jsonData,
+            payloadSizeBytes: params.payloadSizeBytes,
             pdfFilePath
           },
           result.notifiedUserIds
@@ -679,6 +683,8 @@ interface ProcessPublicationParams {
   contentDate: Date;
   locale: string;
   jsonData?: unknown;
+  /** Size of the payload as received (raw bytes, including whitespace). Falls back to the re-serialised jsonData size. */
+  payloadSizeBytes?: number;
   provenance?: string;
   displayFrom?: Date | null;
   displayTo?: Date | null;
@@ -709,6 +715,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     contentDate,
     locale,
     jsonData,
+    payloadSizeBytes: receivedPayloadBytes,
     provenance,
     displayFrom,
     displayTo,
@@ -724,6 +731,10 @@ export async function processPublication(params: ProcessPublicationParams): Prom
 
   const result: ProcessPublicationResult = {};
 
+  if (isUpdate) {
+    await deletePreviousPublicationFiles(artefactId, logPrefix);
+  }
+
   if (jsonData) {
     try {
       await extractAndStoreArtefactSearch(artefactId, listTypeId, jsonData);
@@ -734,40 +745,52 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       });
     }
 
-    const pdfResult = await generatePublicationPdf({
-      artefactId,
-      listTypeId,
-      contentDate,
-      locale,
-      locationId,
-      jsonData,
-      provenance,
-      displayFrom,
-      displayTo,
-      logPrefix
-    });
+    const payloadBytes = receivedPayloadBytes ?? payloadSizeBytes(jsonData);
 
-    result.pdfPath = pdfResult.pdfPath;
-    result.pdfSizeBytes = pdfResult.sizeBytes;
-    result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+    let listTypeName = "";
 
-    const excelResult = await generatePublicationExcel({
-      artefactId,
-      listTypeName: pdfResult.listTypeName ?? "",
-      contentDate,
-      locale,
-      locationId,
-      jsonData,
-      uploadedExcel,
-      logPrefix
-    });
+    if (payloadBytes < MAX_PDF_PAYLOAD_BYTES) {
+      const pdfResult = await generatePublicationPdf({
+        artefactId,
+        listTypeId,
+        contentDate,
+        locale,
+        locationId,
+        jsonData,
+        provenance,
+        displayFrom,
+        displayTo,
+        logPrefix
+      });
 
-    if (excelResult.hasExcel) {
-      result.excelPath = `${artefactId}.xlsx`;
+      result.pdfPath = pdfResult.pdfPath;
+      result.pdfSizeBytes = pdfResult.sizeBytes;
+      result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
+      listTypeName = pdfResult.listTypeName ?? "";
+    } else {
+      console.log(`${logPrefix} PDF skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_PDF_PAYLOAD_BYTES}`, { artefactId });
+      const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+      listTypeName = listType?.name ?? "";
     }
-  } else if (isUpdate) {
-    // A flat-file republish reuses the artefactId but cannot produce an Excel, so one from an earlier upload must go
-    await deleteStaleExcel(artefactId, logPrefix);
+
+    if (payloadBytes < MAX_EXCEL_PAYLOAD_BYTES) {
+      const excelResult = await generatePublicationExcel({
+        artefactId,
+        listTypeName,
+        contentDate,
+        locale,
+        locationId,
+        jsonData,
+        uploadedExcel,
+        logPrefix
+      });
+
+      if (excelResult.hasExcel) {
+        result.excelPath = `${artefactId}.xlsx`;
+      }
+    } else {
+      console.log(`${logPrefix} Excel skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_EXCEL_PAYLOAD_BYTES}`, { artefactId });
+    }
   }
 
   if (!skipNotifications) {
@@ -777,6 +800,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       listTypeId,
       contentDate,
       jsonData,
+      payloadSizeBytes: receivedPayloadBytes,
       pdfFilePath: result.pdfPath,
       excelPath: result.excelPath,
       locale,
@@ -811,13 +835,20 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   return result;
 }
 
-async function deleteStaleExcel(artefactId: string, logPrefix: string): Promise<void> {
-  try {
-    await deleteBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
-  } catch (error) {
-    console.error(`${logPrefix} Failed to delete stale Excel:`, {
-      artefactId,
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
+// An update reuses the artefactId, so files from the previous version would otherwise still be served and
+// attached to emails when the new version skips them. Mirrors legacy deleteFiles on update.
+async function deletePreviousPublicationFiles(artefactId: string, logPrefix: string) {
+  await Promise.all(
+    [`${artefactId}.pdf`, `${artefactId}.xlsx`].map(async (blobName) => {
+      try {
+        await deleteBlob(blobName, CONTAINER.PUBLICATIONS);
+      } catch (error) {
+        console.error(`${logPrefix} Failed to delete previous publication file:`, {
+          artefactId,
+          blobName,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    })
+  );
 }
