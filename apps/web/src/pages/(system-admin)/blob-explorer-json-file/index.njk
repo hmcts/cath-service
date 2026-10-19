@@ -1,6 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 
@@ -30,102 +30,58 @@
 
       <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ jsonFileMetadataHeading }}</h2>
 
-      {{ govukTable({
+      {{ govukSummaryList({
         rows: [
-          [
-            {
-              text: metadataArtefactId
-            },
-            {
-              text: metadata.artefactId
-            }
-          ],
-          [
-            {
-              text: metadataLocationId
-            },
-            {
-              text: metadata.locationId
-            }
-          ],
-          [
-            {
-              text: metadataLocationName
-            },
-            {
-              text: metadata.locationName
-            }
-          ],
-          [
-            {
-              text: metadataPublicationType
-            },
-            {
-              text: metadata.publicationType
-            }
-          ],
-          [
-            {
-              text: metadataListType
-            },
-            {
-              text: metadata.listType
-            }
-          ],
-          [
-            {
-              text: metadataProvenance
-            },
-            {
-              text: metadata.provenance
-            }
-          ],
-          [
-            {
-              text: metadataLanguage
-            },
-            {
-              text: metadata.language
-            }
-          ],
-          [
-            {
-              text: metadataSensitivity
-            },
-            {
-              text: metadata.sensitivity
-            }
-          ],
-          [
-            {
-              text: metadataContentDate
-            },
-            {
-              text: formatDateTime(metadata.contentDate)
-            }
-          ],
-          [
-            {
-              text: metadataDisplayFrom
-            },
-            {
-              text: formatDateTime(metadata.displayFrom)
-            }
-          ],
-          [
-            {
-              text: metadataDisplayTo
-            },
-            {
-              text: formatDateTime(metadata.displayTo)
-            }
-          ]
+          {
+            key: { text: metadataArtefactId },
+            value: { text: metadata.artefactId }
+          },
+          {
+            key: { text: metadataLocationId },
+            value: { text: metadata.locationId }
+          },
+          {
+            key: { text: metadataLocationName },
+            value: { text: metadata.locationName }
+          },
+          {
+            key: { text: metadataPublicationType },
+            value: { text: metadata.publicationType }
+          },
+          {
+            key: { text: metadataListType },
+            value: { text: metadata.listType }
+          },
+          {
+            key: { text: metadataProvenance },
+            value: { text: metadata.provenance }
+          },
+          {
+            key: { text: metadataLanguage },
+            value: { text: metadata.language }
+          },
+          {
+            key: { text: metadataSensitivity },
+            value: { text: metadata.sensitivity }
+          },
+          {
+            key: { text: metadataContentDate },
+            value: { text: formatDateTime(metadata.contentDate) }
+          },
+          {
+            key: { text: metadataDisplayFrom },
+            value: { text: formatDateTime(metadata.displayFrom) }
+          },
+          {
+            key: { text: metadataDisplayTo },
+            value: { text: formatDateTime(metadata.displayTo) }
+          }
         ]
       }) }}
 
       {% if renderedTemplateUrl %}
         <p class="govuk-body govuk-!-margin-top-4">
-          <a href="{{ renderedTemplateUrl }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ jsonFileLinkToTemplate }}</a>
+          <a href="{{ renderedTemplateUrl }}" class="govuk-link">{{ jsonFileLinkToTemplate }}</a>
         </p>
       {% endif %}
 

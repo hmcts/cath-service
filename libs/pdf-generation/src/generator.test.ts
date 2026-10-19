@@ -152,6 +152,45 @@ describe("generatePdfFromHtml", () => {
 
     expect(mockClose).toHaveBeenCalled();
   });
+
+  it("should not launch a second browser until the previous render has closed", async () => {
+    // Arrange
+    let openBrowsers = 0;
+    let maxOpenBrowsers = 0;
+    mockLaunch.mockImplementation(async () => {
+      openBrowsers++;
+      maxOpenBrowsers = Math.max(maxOpenBrowsers, openBrowsers);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      return {
+        newPage: mockNewPage,
+        close: async () => {
+          openBrowsers--;
+        }
+      };
+    });
+    const { generatePdfFromHtml } = await import("./generator.js");
+
+    // Act
+    const results = await Promise.all([generatePdfFromHtml("<p>1</p>"), generatePdfFromHtml("<p>2</p>"), generatePdfFromHtml("<p>3</p>")]);
+
+    // Assert
+    expect(results.every((result) => result.success)).toBe(true);
+    expect(mockLaunch).toHaveBeenCalledTimes(3);
+    expect(maxOpenBrowsers).toBe(1);
+  });
+
+  it("should continue rendering queued PDFs after a render fails", async () => {
+    // Arrange
+    mockLaunch.mockRejectedValueOnce(new Error("Launch failed"));
+    const { generatePdfFromHtml } = await import("./generator.js");
+
+    // Act
+    const [failed, succeeded] = await Promise.all([generatePdfFromHtml("<p>1</p>"), generatePdfFromHtml("<p>2</p>")]);
+
+    // Assert
+    expect(failed.success).toBe(false);
+    expect(succeeded.success).toBe(true);
+  });
 });
 
 describe("pdf-generation module exports", () => {

@@ -32,5 +32,14 @@ export const cy = {
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
   error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
-  backToTop: "Yn ôl i frig y dudalen"
+  backToTop: "Yn ôl i frig y dudalen",
+  excelColumns: {
+    courtHouse: "Llys",
+    sittingAt: "Yn eistedd yn",
+    lja: "LJA",
+    sessionStart: "Amser cychwyn y sesiwn",
+    listingTime: "Amser rhestru",
+    defendantName: "Enw'r Diffynnydd",
+    caseNumber: "Cyfeirnod yr Achos"
+  }
 };

@@ -22,6 +22,7 @@ export const cy = {
     respondent: "ATC/Ymatebydd",
     additionalInformation: "Gwybodaeth Ychwanegol"
   },
+  excelWorksheetName: "Rhestr Gwrandawiadau Dyddiol",
   dataSource: "Ffynhonnell data",
   backToTop: "Yn ôl i frig y dudalen",
   provenanceLabels

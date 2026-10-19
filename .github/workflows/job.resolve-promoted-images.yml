@@ -1,7 +1,7 @@
 name: Resolve Promoted Images Job
 
-# Resolves the image tag the master build already pushed, so the demo, ithc and
-# perftest deploys reuse it instead of rebuilding.
+# Resolves the image tag the master build already pushed, so the demo and
+# perftest deploys (and ithc, once #1082 lands) reuse it instead of rebuilding.
 #
 # Why aat-<short-sha> and not the promote stage's tags:
 #   - prod-<sha>-<timestamp> (job.promote-images.yml) generates the timestamp
@@ -10,12 +10,17 @@ name: Resolve Promoted Images Job
 #     produces an identical pod spec and Kubernetes performs no rollout at all -
 #     the deploy silently no-ops
 #
-# Per #1020 the demo/ithc/perftest branches are synced from master, so github.sha
-# is the same commit master built, promoted and smoke-tested, and aat-<short-sha>
-# names exactly that image and changes on every promotion.
+# The demo/perftest workflows pass the commit Main built, smoke-tested and
+# promoted (see job.check-promoted.yml), and aat-<short-sha> names exactly that
+# image. A workflow_dispatch resolves the dispatched ref's HEAD the same way.
 
 on:
   workflow_call:
+    inputs:
+      sha:
+        required: true
+        type: string
+        description: "Full SHA of the commit whose image to resolve"
     outputs:
       helm-apps:
         description: "JSON array of all apps with Helm charts"
@@ -52,12 +57,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.sha }}
 
       - name: Generate metadata
         id: meta
         run: |
           echo "timestamp=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
-          echo "short-sha=$(echo '${{ github.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          echo "short-sha=$(echo '${{ inputs.sha }}' | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
       - name: Find Helm apps
         id: apps

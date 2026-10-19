@@ -41,9 +41,9 @@ test.describe("Page Structure", () => {
     const footer = page.locator(".govuk-footer");
     await expect(footer).toBeVisible();
 
-    // Verify 8 footer meta links
+    // Verify 9 footer meta links
     const footerMetaLinks = page.locator(".govuk-footer__meta .govuk-footer__inline-list-item");
-    await expect(footerMetaLinks).toHaveCount(8);
+    await expect(footerMetaLinks).toHaveCount(9);
 
     // All footer meta links should open in the current tab
     const footerLinks = [
@@ -54,7 +54,8 @@ test.describe("Page Structure", () => {
       { text: "Contact us", href: "https://www.gov.uk/contact" },
       { text: "Terms and conditions", href: "https://www.gov.uk/help/terms-conditions" },
       { text: "Welsh", href: "https://www.gov.uk/cymraeg" },
-      { text: "Government Digital Service", href: "https://www.gov.uk/government/organisations/government-digital-service" }
+      { text: "Government Digital Service", href: "https://www.gov.uk/government/organisations/government-digital-service" },
+      { text: "Publishing policy", href: "/publishing-policy" }
     ];
 
     for (const link of footerLinks) {

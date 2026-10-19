@@ -1,4 +1,4 @@
-import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normaliseHearings, normalizeTime } from "@hmcts/list-types-common";
+import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normaliseHearing, normaliseHearings } from "@hmcts/list-types-common";
 import type { CourtOfAppealCivilData, FutureJudgment, StandardHearing } from "../models/types.js";
 
 export interface RenderOptions {
@@ -18,19 +18,6 @@ export interface RenderedData {
   futureJudgments: FutureJudgment[];
 }
 
-function renderFutureJudgments(judgments: FutureJudgment[], locale: string): FutureJudgment[] {
-  return judgments.map((judgment) => ({
-    date: formatDdMmYyyyDate(judgment.date, locale),
-    venue: judgment.venue,
-    judge: judgment.judge,
-    time: normalizeTime(judgment.time),
-    caseNumber: judgment.caseNumber,
-    caseDetails: judgment.caseDetails,
-    hearingType: judgment.hearingType,
-    additionalInformation: judgment.additionalInformation || ""
-  }));
-}
-
 export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: RenderOptions): RenderedData {
   const listDate = formatDisplayDate(options.contentDate, options.locale);
   const { date: lastUpdatedDate, time: lastUpdatedTime } = formatLastUpdatedDateTime(options.lastReceivedDate, options.locale);
@@ -43,6 +30,19 @@ export function renderCourtOfAppealCivil(data: CourtOfAppealCivilData, options: 
       lastUpdatedTime
     },
     dailyHearings: normaliseHearings(data.dailyHearings),
-    futureJudgments: renderFutureJudgments(data.futureJudgments, options.locale)
+    futureJudgments: data.futureJudgments.map((judgment) => formatFutureJudgment(judgment, options.locale))
   };
+}
+
+export function formatFutureJudgment<T extends FormattableFutureJudgment>(judgment: T, locale: string): T {
+  return {
+    ...normaliseHearing(judgment),
+    date: judgment.date ? formatDdMmYyyyDate(judgment.date, locale) : ""
+  };
+}
+
+interface FormattableFutureJudgment {
+  date?: string;
+  time?: string;
+  additionalInformation?: string;
 }

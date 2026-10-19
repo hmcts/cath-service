@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getArtefactById } from "@hmcts/publication";
+import { getArtefactById, isWithinDisplayWindow } from "@hmcts/publication";
 import type { Request, Response } from "express";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,8 +27,7 @@ export const GET = async (req: Request, res: Response) => {
     return res.status(404).json({ error: "Artefact not found" });
   }
 
-  const now = new Date();
-  if (now < artefact.displayFrom || now > artefact.displayTo) {
+  if (!isWithinDisplayWindow(artefact.displayFrom, artefact.displayTo)) {
     res.setHeader("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     return res.status(410).json({ error: "File has expired" });
   }

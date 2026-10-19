@@ -190,10 +190,43 @@ describe("civil-and-family-daily-cause-list template", () => {
       expect(footer).toContain(en.dataSource);
       expect(footer).toContain("Civil Data Platform");
     });
+
+    it("should render exactly the header address lines it is given", () => {
+      const { $ } = renderList([], { header: { ...baseData().header, addressLines: ["1 Venue Street", "VN1 1AA"] } });
+
+      const addressParagraph = $("p.govuk-body")
+        .filter((_, el) => $(el).text().includes("1 Venue Street"))
+        .first();
+      expect(
+        addressParagraph
+          .html()
+          ?.split("<br>")
+          .map((part) => part.trim())
+      ).toEqual(["1 Venue Street", "VN1 1AA"]);
+    });
+  });
+
+  describe("Important information", () => {
+    it("should name the open justice venue in the details block", () => {
+      const { $ } = renderList([], { openJustice: { venueName: "Barnet Civil and Family Courts Centre", email: "cf@example.com", phone: "0300 123 5577" } });
+
+      const details = $("details.govuk-details");
+      expect(details).toHaveLength(1);
+      expect(details.find(".govuk-details__summary-text").text()).toContain(en.importantInformation);
+      expect(details.text()).toContain(en.openJusticeContact("Barnet Civil and Family Courts Centre", "cf@example.com", "0300 123 5577"));
+    });
+
+    it("should name the open justice venue in the Welsh details block", () => {
+      const { $ } = renderList([], { openJustice: { venueName: "Llys Prawf", email: "cf@example.com", phone: "0300 123 5577" } }, cy);
+
+      const details = $("details.govuk-details");
+      expect(details.find(".govuk-details__summary-text").text()).toContain(cy.importantInformation);
+      expect(details.text()).toContain(cy.openJusticeContact("Llys Prawf", "cf@example.com", "0300 123 5577"));
+    });
   });
 
   describe("Court house address variations", () => {
-    it("should render court house name and full address", () => {
+    it("should render court house name, address lines, town and county", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Main Court House",
@@ -202,14 +235,15 @@ describe("civil-and-family-daily-cause-list template", () => {
         })
       ]);
 
-      const container = $("#court-lists-container").text();
       expect($("#court-lists-container h2.govuk-heading-l").text()).toContain("Main Court House");
-      for (const value of ["1 Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]) {
-        expect(container).toContain(value);
-      }
+      expect(
+        $("#court-lists-container > div p.govuk-body")
+          .map((_, el) => $(el).text().trim())
+          .get()
+      ).toEqual(["1 Court Street", "Building B", "London", "Greater London", "SW1A 1AA"]);
     });
 
-    it("should render partial address without the omitted county", () => {
+    it("should render the address lines, town and postcode when no county is supplied", () => {
       const { $ } = renderList([
         buildCourtHouse({
           courtHouseName: "Branch Court",
@@ -218,12 +252,29 @@ describe("civil-and-family-daily-cause-list template", () => {
         })
       ]);
 
-      const container = $("#court-lists-container").text();
-      expect(container).toContain("Branch Court");
-      expect(container).toContain("2 Branch Road");
-      expect(container).toContain("Manchester");
-      expect(container).toContain("M1 1AA");
-      expect(container).not.toContain("Greater London");
+      expect($("#court-lists-container").text()).toContain("Branch Court");
+      expect(
+        $("#court-lists-container > div p.govuk-body")
+          .map((_, el) => $(el).text().trim())
+          .get()
+      ).toEqual(["2 Branch Road", "Manchester", "M1 1AA"]);
+    });
+
+    it("should render the town and county when no address lines or postcode are supplied", () => {
+      const { $ } = renderList([
+        buildCourtHouse({
+          courtHouseName: "Town Only Court",
+          courtHouseAddress: { town: "Leeds", county: "West Yorkshire" },
+          courtRoom: []
+        })
+      ]);
+
+      expect($("#court-lists-container h2.govuk-heading-l").text()).toContain("Town Only Court");
+      expect(
+        $("#court-lists-container > div p.govuk-body")
+          .map((_, el) => $(el).text().trim())
+          .get()
+      ).toEqual(["Leeds", "West Yorkshire"]);
     });
 
     it("should skip empty address lines", () => {

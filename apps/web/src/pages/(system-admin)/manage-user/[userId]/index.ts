@@ -21,7 +21,7 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).render("errors/404");
     }
 
-    const PROVENANCE_DISPLAY: Record<string, string> = { B2C_IDAM: "B2C" };
+    const PROVENANCE_DISPLAY: Record<string, string> = { PI_AAD: "B2C" };
 
     const formattedUser = {
       ...user,

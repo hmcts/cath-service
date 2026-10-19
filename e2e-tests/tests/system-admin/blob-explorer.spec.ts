@@ -84,9 +84,9 @@ test.describe
           await expect(page).toHaveURL(/blob-explorer-json-file.*artefactId=/);
           await expect(page.getByRole("heading", { name: /Blob Explorer – JSON file/i })).toBeVisible();
 
-          // Verify metadata table is visible
-          const metadataTable = page.locator("table.govuk-table").first();
-          await expect(metadataTable).toBeVisible();
+          // Verify metadata summary list is visible
+          const metadataSummaryList = page.locator(".govuk-summary-list").first();
+          await expect(metadataSummaryList).toBeVisible();
 
           // Verify Re-submit subscription button exists
           const resubmitButton = page.getByRole("button", { name: /Re-submit subscription/i });
