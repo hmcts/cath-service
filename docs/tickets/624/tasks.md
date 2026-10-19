@@ -6,16 +6,15 @@ One PR. `crime-oidc-config` is read from the bootstrap vault (`cath-bootstrap-<e
 
 ### Before starting
 - [x] Resolve Clarifications 1 and 6 in plan.md (`count`; bootstrap vault, one PR)
-- [ ] Confirm no live or soft-deleted `cath-cp-*` vault exists (`az keyvault list-deleted`, `az keyvault show -n cath-cp-<env>`)
 
-### Crime Portal vault and managed identity
-- [x] Create `infrastructure/keyvault-crime-portal.tf` with `module "kv_cp"` (`name = "${var.product}-cp-${var.env}"`, `product = "${var.product}-cp"`, `create_managed_identity = true`, same source/ref and access settings as `keyvault-third-party.tf`)
+### Managed identity
+- [x] Create `azurerm_user_assigned_identity.app_cp_mi` (`cath-cp-<env>-mi` in `managed-identities-<env>-rg`) directly, with no Crime Portal vault
 
 ### App role (manual, after apply)
 - [ ] Ask an Entra admin to assign `cath-cp-<env>-mi` the `api.publisher.user` app role on the CaTH API enterprise app, per environment (see plan.md decision 4)
 
 ### Federated credentials
-- [x] Create `infrastructure/tf-crime-connection-mi.tf`: locals, `data.azurerm_key_vault_secret.crime_oidc_config` (bootstrap vault), `data.azurerm_user_assigned_identity.app_cp_mi` (`depends_on = [module.kv_cp]`), `azurerm_federated_identity_credential.cath_crime_federated_connection`
+- [x] Create `infrastructure/tf-crime-connection-mi.tf`: locals, `data.azurerm_key_vault_secret.crime_oidc_config` (bootstrap vault), `azurerm_federated_identity_credential.cath_crime_federated_connection`
 - [x] Use `count = length(local.crime_oidc_json_config.connections)`
 - [x] Wrap `name`, `issuer` and `subject` in `sensitive()`, and wrap `issuer`/`subject` in `trimspace()`
 - [x] No `try()` fallback around `jsondecode`
@@ -31,7 +30,7 @@ One PR. `crime-oidc-config` is read from the bootstrap vault (`cath-bootstrap-<e
 ## Testing Tasks
 - [x] `terraform fmt -check -recursive` in `infrastructure/` (CI: `job.terraform-fmt.yml`)
 - [x] `terraform init -backend=false && terraform validate` locally (Terraform 1.15.8; local 1.5.7 fails the `>= 1.14.0` constraint)
-- [ ] Review the CI plan: aat plan comment on the PR, and demo/perftest plans in the Actions logs (`stage.infrastructure.yml`). Expect vault `cath-cp-<env>`, `cath-cp-<env>-mi`, access policies, no changes to existing resources
+- [ ] Review the CI plan: aat plan comment on the PR, and demo/perftest plans in the Actions logs (`stage.infrastructure.yml`). Expect `cath-cp-<env>-mi` and one federated credential per connection, no changes to existing resources
 - [ ] aat plan: 3 federated credentials to add, name/issuer/subject shown as `(sensitive value)`; demo/perftest: 0 to add
 - [ ] After apply: `az identity show -n cath-cp-aat-mi -g managed-identities-aat-rg`; check the role assignment on the CaTH API enterprise app
 - [ ] After apply: `az identity federated-credential list --identity-name cath-cp-aat-mi -g managed-identities-aat-rg`, check names and exact issuer/subject (no whitespace)

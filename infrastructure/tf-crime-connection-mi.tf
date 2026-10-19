@@ -1,8 +1,8 @@
 # Crime Portal's AKS workloads exchange their service account tokens for
 # cath-cp-<env>-mi tokens. Issuer/subject pairs come from Crime Portal via the
-# crime-oidc-config secret in the bootstrap vault rather than the Crime Portal
-# vault, so the plan-time read does not depend on a vault this same apply
-# creates. The secret must exist in every planned environment before merge.
+# crime-oidc-config secret in the bootstrap vault, which already exists, so the
+# plan-time read works. The secret must exist in every planned environment
+# before merge.
 #
 # Deliberately no try() around jsondecode: a silent fallback to no connections
 # would destroy every credential. Keep "connections" append-only - with count,
@@ -20,11 +20,14 @@ data "azurerm_key_vault_secret" "crime_oidc_config" {
   key_vault_id = module.bootstrap_key_vault.key_vault_id
 }
 
-data "azurerm_user_assigned_identity" "app_cp_mi" {
-  name                = "cath-cp-${var.env}-mi"
+# Created directly rather than through a key vault module like PIP's kv_cp: CaTH
+# shares no secrets with Crime Portal, and that module would also give this
+# identity, and so Crime Portal, read access to the vault it creates.
+resource "azurerm_user_assigned_identity" "app_cp_mi" {
+  name                = "${var.product}-cp-${var.env}-mi"
   resource_group_name = local.mi_resource_group_name
-
-  depends_on = [module.kv_cp]
+  location            = var.location
+  tags                = local.common_tags
 }
 
 # Federation needs an exact string match, and Crime Portal's config has had
@@ -36,6 +39,6 @@ resource "azurerm_federated_identity_credential" "cath_crime_federated_connectio
   resource_group_name = local.mi_resource_group_name
   audience            = ["api://AzureADTokenExchange"]
   issuer              = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].issuer))
-  parent_id           = data.azurerm_user_assigned_identity.app_cp_mi.id
+  parent_id           = azurerm_user_assigned_identity.app_cp_mi.id
   subject             = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].subject))
 }

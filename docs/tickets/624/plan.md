@@ -57,17 +57,9 @@ If they stop sending to PIP, this is config only. If they have to send to both P
 
 ### Architecture decisions
 
-1. **One PR. Secret read from the bootstrap vault (decided).** `crime-oidc-config` lives in the existing `cath-bootstrap-<env>` vault (read via `module.bootstrap_key_vault.key_vault_id`, not the `depends_on` data source, so the read is never deferred and `count` stays known at plan), like PIP reads `crime-oidc-issuer-config` from its bootstrap vault. That vault already exists, so the plan-time read works in the same PR that creates `module.kv_cp`. The secret must be populated by hand in **every** environment that plans in CI (aat, demo, perftest) **before merge**, otherwise the PR plan fails. `module.kv_cp` is still created here: it owns `cath-cp-<env>-mi` and matches PIP's structure.
+1. **One PR. Secret read from the bootstrap vault (decided).** `crime-oidc-config` lives in the existing `cath-bootstrap-<env>` vault (read via `module.bootstrap_key_vault.key_vault_id`, not the `depends_on` data source, so the read is never deferred and `count` stays known at plan), like PIP reads `crime-oidc-issuer-config` from its bootstrap vault. That vault already exists, so the plan-time read works. The secret must be populated by hand in **every** environment that plans in CI (aat, demo, perftest) **before merge**, otherwise the PR plan fails.
 
-2. **The `kv_cp` module creates the MI. Crime Portal does not.** The ticket's "Coordination Required" section is wrong here. In `cnp-module-key-vault` (branch `DTSPO-31965/remove-jenkins-ptl-access`, `managed-identity.tf`):
-   ```hcl
-   resource "azurerm_user_assigned_identity" "managed_identity" {
-     resource_group_name = "managed-identities-${local.env}-rg"
-     name                = "${var.product}-${local.env}-mi"
-     count               = var.create_managed_identity ? 1 : 0
-   }
-   ```
-   With `product = "${var.product}-cp"` (`cath-cp`) this gives **`cath-cp-<env>-mi` in `managed-identities-<env>-rg`**, created with the default `azurerm` provider (`var.subscription`, the same subscription as the existing `cath-<env>-mi`). Module outputs: `managed_identity_objectid`, `managed_identity_clientid`, `managed_identity_id` (all lists, index `[0]`).
+2. **We create the MI directly. Crime Portal does not, and there is no Crime Portal vault (revised).** The ticket's "Coordination Required" section is wrong: the MI is ours. PIP gets its MI from its `kv_cp` key vault module (`create_managed_identity = true`), but that vault holds secrets shared with CP, and the module gives the MI Get/List on it. CaTH shares no secrets with CP: the OIDC config is in the bootstrap vault and CP only needs non-secret IDs. So `azurerm_user_assigned_identity.app_cp_mi` creates **`cath-cp-<env>-mi` in `managed-identities-<env>-rg`** with the default `azurerm` provider (`var.subscription`, the CNP subscription, the same as the existing `cath-<env>-mi`). This avoids an empty vault, five access policies, and a vault CP could read.
 
 3. **`count` over the connections (decided)**, as the ticket's AC says. `connections` must be treated as append-only (see section 3).
 
@@ -88,44 +80,6 @@ If they stop sending to PIP, this is config only. If they have to send to both P
 - CP's OIDC config is per CP environment. Today CP has STE, SIT and PRP and they all map to our `aat`. demo and perftest probably have no CP counterpart. Those get `{"connections": []}`.
 
 ## 2. Implementation Details
-
-### Crime Portal vault
-
-**Create `infrastructure/keyvault-crime-portal.tf`**
-
-```hcl
-# Crime Portal vault. Its managed identity (cath-cp-<env>-mi) is the identity
-# Crime Portal's AKS workloads federate into to call CaTH through APIM.
-module "kv_cp" {
-  source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
-
-  name                = "${var.product}-cp-${var.env}"
-  product             = "${var.product}-cp"
-  env                 = var.env
-  object_id           = var.ci_service_principal_object_id
-  tenant_id           = var.tenant_id
-  resource_group_name = azurerm_resource_group.shared.name
-
-  # Write access - see the note in infrastructure/keyvault.tf.
-  product_group_name = "DTS PIP Non-Prod"
-
-  common_tags             = local.common_tags
-  create_managed_identity = true
-}
-
-```
-
-Vault name length (Azure limit 24, globally unique):
-
-| env | name | length |
-|---|---|---|
-| aat | `cath-cp-aat` | 11 |
-| demo | `cath-cp-demo` | 12 |
-| ithc | `cath-cp-ithc` | 12 |
-| perftest | `cath-cp-perftest` | 16 |
-| prod (future) | `cath-cp-prod` | 12 |
-
-This matches the `${var.product}-tp-${var.env}` pattern in `keyvault-third-party.tf`. Passing `name` is redundant (the module's default is `product-env`, which gives the same value), but it is explicit and matches the third-party vault.
 
 ### Manual step (before merge)
 
@@ -158,10 +112,11 @@ data "azurerm_key_vault_secret" "crime_oidc_config" {
   key_vault_id = module.bootstrap_key_vault.key_vault_id
 }
 
-data "azurerm_user_assigned_identity" "app_cp_mi" {
-  name                = "cath-cp-${var.env}-mi"
+resource "azurerm_user_assigned_identity" "app_cp_mi" {
+  name                = "${var.product}-cp-${var.env}-mi"
   resource_group_name = local.mi_resource_group_name
-  depends_on          = [module.kv_cp]
+  location            = var.location
+  tags                = local.common_tags
 }
 
 resource "azurerm_federated_identity_credential" "cath_crime_federated_connection" {
@@ -171,7 +126,7 @@ resource "azurerm_federated_identity_credential" "cath_crime_federated_connectio
   resource_group_name = local.mi_resource_group_name
   audience            = ["api://AzureADTokenExchange"]
   issuer              = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].issuer))
-  parent_id           = data.azurerm_user_assigned_identity.app_cp_mi.id
+  parent_id           = azurerm_user_assigned_identity.app_cp_mi.id
   subject             = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].subject))
 }
 ```
@@ -185,8 +140,6 @@ resource "azurerm_federated_identity_credential" "cath_crime_federated_connectio
 | Matches PIP / AC | Yes | No (AC wording needs updating) |
 
 Decision: `count`, with `connections` append-only.
-
-On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be simpler and would avoid deferring the data read whenever `kv_cp` has a pending change. The data source plus `depends_on` is kept because the ticket asks for it and it mirrors PIP. Either works.
 
 ### Not changed
 
@@ -205,7 +158,6 @@ On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be s
 | Too many connections | Azure limit is 20 federated credentials per managed identity | 3 today. Not enforced in code. |
 | Concurrent writes on one MI | Azure rejects parallel federated credential writes on the same identity | azurerm serialises writes per parent identity. If `ConcurrentFederatedIdentityCredentialsWritesForSingleManagedIdentity` appears, re-run the apply. |
 | KV name length / uniqueness | Max 24 characters, global | Longest is `cath-cp-perftest` (16). Check that no live or soft-deleted `cath-cp-*` vault exists: `az keyvault list-deleted --query "[?name.starts_with(@,'cath-cp')]"`. |
-| Soft-deleted vault collision | `purge_protection_enabled` defaults to true and soft-delete lasts 90 days, so a destroyed `cath-cp-<env>` blocks the name (as `cath-ithc` does today) | Do not destroy and recreate. If it happens, the name is blocked until expiry, same as ithc. |
 | App role not assigned after apply | Token exchange works but APIM returns 401 (no `roles` claim) | An Entra admin assigns `api.publisher.user` by hand (decision 4). |
 | New MI not yet replicated in Entra | The role assignment can fail with "principal not found" on the first apply | Re-run the apply. |
 | `api.publisher.user` missing from the app, or not allowed for applications | `app_role_ids["api.publisher.user"]` errors at plan, or Graph rejects the assignment | Confirm the role exists with `allowedMemberTypes` including `Application`. |
@@ -221,7 +173,7 @@ On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be s
 | Credentials named `cath-${env}-crime-federated-credential-${name}` | `name` argument | `az identity federated-credential list --identity-name cath-cp-aat-mi -g managed-identities-aat-rg` after apply | |
 | Sensitive values (name, issuer, subject) use `sensitive()` | Wrapped on all three | PR review, plan shows `(sensitive value)` | |
 | Multiple connections via `count` iteration | `count = length(...connections)` | Plan shows 3 credentials for aat | |
-| `cath-cp-${env}-mi` exists in `managed-identities-${env}-rg` before apply | Created by `module.kv_cp` in this PR, not by the CP team | `az identity show -n cath-cp-aat-mi -g managed-identities-aat-rg` after the master apply | |
+| `cath-cp-${env}-mi` exists in `managed-identities-${env}-rg` before apply | Created by `azurerm_user_assigned_identity.app_cp_mi` in this PR, not by the CP team | `az identity show -n cath-cp-aat-mi -g managed-identities-aat-rg` after the master apply | |
 | `crime-oidc-config` populated before apply | Manual step before merge | `az keyvault secret show --vault-name cath-bootstrap-<env> -n crime-oidc-config --query id` per env | **Manual** |
 | `terraform plan` runs cleanly after prerequisites | Secret populated before merge; trimmed input | Green `Terraform aat/demo/perftest` plan jobs on the PR; aat plan comment | |
 | "cath-service can authenticate with Crime Portal" | Reworded: **Crime Portal can authenticate to CaTH** (through APIM) with workload identity federation, no static credentials | CP-side test in their STE/SIT: token exchange succeeds, and `POST /cath/publication` through aat APIM returns non-401 | **Manual, needs CP**. Also depends on CP config changes (section 1). |
@@ -237,4 +189,4 @@ On the data source: `parent_id = module.kv_cp.managed_identity_id[0]` would be s
 6. ~~**Secret location**~~ **Resolved:** bootstrap vault `cath-bootstrap-<env>`, one PR.
 7. **`api.publisher.user` on the CaTH API app**: Confirm the role exists with `allowedMemberTypes` including `Application` in each environment's app registration.
 8. **Dual sending**: Will CP stop sending to PIP when they point at CaTH (config-only change), or send to both for a period (code change on their side)? This affects their timeline, not this Terraform.
-9. **Ticket text**: OK to correct the ticket? The MI is created by `module.kv_cp`, not provisioned by CP, and the last AC is inbound (CP to CaTH), not outbound.
+9. **Ticket text**: OK to correct the ticket? The MI is created by our Terraform, not provisioned by CP, and the last AC is inbound (CP to CaTH), not outbound.
