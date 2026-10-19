@@ -87,23 +87,6 @@ describe("generateMagistratesPublicAdultCourtListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
-  });
-
-  it("should return exceedsMaxSize true when PDF exceeds 2MB", async () => {
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: largePdfBuffer, sizeBytes: 3 * 1024 * 1024 });
-
-    const result = await generateMagistratesPublicAdultCourtListPdf({
-      artefactId: "large-pdf-123",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: mockJsonData
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 
   it("should return error when PDF generation fails", async () => {

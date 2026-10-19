@@ -4,7 +4,7 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
   return {
     ...actual,
-    generateListPdf: vi.fn().mockResolvedValue({ success: true, pdfPath: "/stored/path.pdf", sizeBytes: 1024, exceedsMaxSize: false })
+    generateListPdf: vi.fn().mockResolvedValue({ success: true, pdfPath: "/stored/path.pdf", sizeBytes: 1024 })
   };
 });
 
@@ -40,7 +40,7 @@ describe("generatePhtWeeklyHearingListPdf", () => {
   it("should return the result from generateListPdf", async () => {
     const result = await generatePhtWeeklyHearingListPdf(BASE_OPTIONS);
 
-    expect(result).toEqual({ success: true, pdfPath: "/stored/path.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    expect(result).toEqual({ success: true, pdfPath: "/stored/path.pdf", sizeBytes: 1024 });
   });
 
   it("should call generateListPdf with PHT_LIST_TITLE", async () => {
@@ -98,5 +98,41 @@ describe("generatePhtWeeklyHearingListPdf", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("PDF generation failed");
+  });
+
+  it("should render hearings with the PHT renderer when generateListPdf invokes renderData", async () => {
+    // Arrange
+    const { generateListPdf } = await import("@hmcts/list-types-common");
+    const { renderPhtData } = await import("../rendering/renderer.js");
+    const renderOptions = {
+      locale: "en",
+      contentDate: BASE_OPTIONS.contentDate,
+      lastReceivedDate: "2025-01-02T09:00:00.000Z",
+      listTitle: "Primary Health Tribunal Weekly Hearing List"
+    };
+    await generatePhtWeeklyHearingListPdf(BASE_OPTIONS);
+    const { renderData } = vi.mocked(generateListPdf).mock.calls[0][0];
+
+    // Act
+    const rendered = renderData(BASE_OPTIONS.jsonData, renderOptions);
+
+    // Assert
+    expect(rendered).toEqual(renderPhtData(BASE_OPTIONS.jsonData, renderOptions));
+    expect(rendered).toEqual(expect.objectContaining({ hearings: [expect.objectContaining({ caseName: "A Vs B", venue: "Primary Health Tribunal" })] }));
+  });
+
+  it("should load English and Welsh translations from the package locale files when generating", async () => {
+    // Arrange
+    const { generateListPdf } = await import("@hmcts/list-types-common");
+    const { en } = await import("../locales/en.js");
+    const { cy } = await import("../locales/cy.js");
+
+    // Act
+    await generatePhtWeeklyHearingListPdf(BASE_OPTIONS);
+    const { importEn, importCy } = vi.mocked(generateListPdf).mock.calls[0][0];
+
+    // Assert
+    await expect(importEn()).resolves.toEqual(expect.objectContaining({ en }));
+    await expect(importCy()).resolves.toEqual(expect.objectContaining({ cy }));
   });
 });

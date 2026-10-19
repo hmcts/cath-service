@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { expect } from "@playwright/test";
 import { NotifyClient } from "notifications-node-client";
 import {
   createTestSubscription as createSubscriptionApi,
@@ -9,6 +11,10 @@ import {
   getNotificationsBySubscriptionId as getNotificationsBySubscriptionIdApi,
   type NotificationRecord
 } from "./test-support-api.js";
+
+// Notify document links are /d/<service-id>/<document-id>; the service id is shared by every document,
+// so the document id segment is required to tell the PDF and Excel links apart
+export const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+/;
 
 export interface TestSubscription {
   subscriptionId: string;
@@ -30,6 +36,8 @@ export async function createTestUser(email: string, firstName = "Test", surname 
     firstName,
     surname,
     userProvenance: "CFT_IDAM",
+    // Parallel workers create users within the same millisecond, so the API's timestamp default can collide
+    userProvenanceId: `e2e-${randomUUID()}`,
     role: "VERIFIED"
   });
 
@@ -96,7 +104,16 @@ export async function getNotificationsBySubscriptionId(subscriptionId: string): 
   return getNotificationsBySubscriptionIdApi(subscriptionId);
 }
 
-export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, delayMs = 2000) {
+export async function assertEmailDownloadLinks(govNotifyId: string, expectedLinkCount: number): Promise<GovNotifyEmail> {
+  const email = await getGovNotifyEmail(govNotifyId);
+  const links = new Set(Array.from(email.body.matchAll(new RegExp(GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN.source, "g")), (match) => match[0]));
+
+  expect([...links], `document download links in Notify email ${govNotifyId}`).toHaveLength(expectedLinkCount);
+
+  return email;
+}
+
+export async function getGovNotifyEmail(notificationId: string, maxRetries = 5, delayMs = 2000): Promise<GovNotifyEmail> {
   const apiKey = process.env.GOVUK_NOTIFY_API_KEY;
   if (!apiKey) {
     throw new Error("GOVUK_NOTIFY_API_KEY not set");
@@ -145,4 +162,10 @@ export async function cleanupTestUsers(userIds: string[]) {
   if (userIds.length === 0) return;
 
   await deleteTestUsers(userIds);
+}
+
+export interface GovNotifyEmail {
+  body: string;
+  email_address?: string;
+  status: string;
 }

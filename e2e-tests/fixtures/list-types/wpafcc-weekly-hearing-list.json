@@ -1,0 +1,12 @@
+[
+  {
+    "date": "01/01/2025",
+    "hearingTime": "10:30am",
+    "caseReferenceNumber": "12345",
+    "caseName": "A Vs B",
+    "panel": "Firstname Surname",
+    "modeOfHearing": "Oral Hearing",
+    "venue": "This is the venue of the hearing",
+    "additionalInformation": "This is additional information"
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "document": {
+    "info": {
+      "start_time": "09:00:00"
+    },
+    "data": {
+      "job": {
+        "printdate": "13/09/2020",
+        "sessions": {
+          "session": [
+            {
+              "lja": "North Northumbria Magistrates' Court",
+              "court": "North Shields Magistrates' Court",
+              "room": 1,
+              "sstart": "09:00",
+              "blocks": {
+                "block": [
+                  {
+                    "bstart": "09:00",
+                    "cases": {
+                      "case": [
+                        {
+                          "caseno": "AB12345678",
+                          "def_name": "Smith, John"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

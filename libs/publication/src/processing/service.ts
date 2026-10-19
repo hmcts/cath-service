@@ -101,7 +101,6 @@ interface GeneratePdfParams {
 interface GeneratePdfResult {
   pdfPath?: string;
   sizeBytes?: number;
-  exceedsMaxSize?: boolean;
   listTypeName?: string;
 }
 
@@ -109,7 +108,6 @@ interface PdfResult {
   success: boolean;
   pdfPath?: string;
   sizeBytes?: number;
-  exceedsMaxSize?: boolean;
   error?: string;
 }
 
@@ -520,7 +518,6 @@ export async function generatePublicationPdf(params: GeneratePdfParams): Promise
       return {
         pdfPath: pdfResult.pdfPath,
         sizeBytes: pdfResult.sizeBytes,
-        exceedsMaxSize: pdfResult.exceedsMaxSize,
         listTypeName
       };
     }
@@ -673,7 +670,6 @@ interface ProcessPublicationParams {
 interface ProcessPublicationResult {
   pdfPath?: string;
   pdfSizeBytes?: number;
-  pdfExceedsMaxSize?: boolean;
   excelPath?: string;
   notificationsSent?: number;
   notificationsFailed?: number;
@@ -737,7 +733,6 @@ export async function processPublication(params: ProcessPublicationParams): Prom
 
       result.pdfPath = pdfResult.pdfPath;
       result.pdfSizeBytes = pdfResult.sizeBytes;
-      result.pdfExceedsMaxSize = pdfResult.exceedsMaxSize;
       listTypeName = pdfResult.listTypeName ?? "";
     } else {
       console.log(`${logPrefix} PDF skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_PDF_PAYLOAD_BYTES}`, { artefactId });

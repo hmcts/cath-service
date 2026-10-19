@@ -1,0 +1,43 @@
+{
+  "document": {
+    "publicationDate": "2025-01-01T10:00:00.000Z"
+  },
+  "venue": {
+    "venueName": "Test Court",
+    "venueAddress": {
+      "line": ["Line 1"],
+      "postCode": "AB1 2CD"
+    }
+  },
+  "courtLists": [
+    {
+      "courtHouse": {
+        "courtHouseName": "Test Court House",
+        "courtRoom": [
+          {
+            "courtRoomName": "Room 1",
+            "session": [
+              {
+                "sittings": [
+                  {
+                    "sittingStart": "2025-01-01T09:00:00.000Z",
+                    "hearing": [
+                      {
+                        "case": [
+                          {
+                            "caseName": "Test v Test",
+                            "caseNumber": "12345"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

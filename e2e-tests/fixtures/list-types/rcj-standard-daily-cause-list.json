@@ -1,0 +1,10 @@
+[
+  {
+    "venue": "Court 1",
+    "judge": "Judge Smith",
+    "time": "10am",
+    "caseNumber": "T20257890",
+    "caseDetails": "R v Smith",
+    "hearingType": "Trial"
+  }
+]

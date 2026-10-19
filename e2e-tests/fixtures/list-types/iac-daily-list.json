@@ -1,0 +1,40 @@
+{
+  "document": {
+    "publicationDate": "2026-07-23T09:30:00Z"
+  },
+  "venue": {
+    "venueName": "Manchester"
+  },
+  "courtLists": [
+    {
+      "courtListName": "Substantive List",
+      "courtHouse": {
+        "courtRoom": [
+          {
+            "courtRoomName": "Court 1",
+            "session": [
+              {
+                "sessionChannel": ["VIDEO HEARING"],
+                "sittings": [
+                  {
+                    "sittingStart": "2026-07-23T09:30:00Z",
+                    "sittingEnd": "2026-07-23T12:30:00Z",
+                    "hearing": [
+                      {
+                        "case": [
+                          {
+                            "caseNumber": "45684548"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
