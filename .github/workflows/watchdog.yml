@@ -38,70 +38,29 @@ concurrency:
 permissions: {}
 
 jobs:
+  # The Azure OIDC login, the state cache and the verdict artefact all belong to the
+  # library's reusable workflow, so none of them are done here. @main carries the
+  # detection logic with it: the workflow calls its composite action at @main and
+  # `uses` takes no expression, so pinning this reference would not have pinned the
+  # logic either.
   detect:
     name: Detect
-    runs-on: ubuntu-latest
+    uses: hmcts/cnp-githubactions-library/.github/workflows/appinsights-health-check.yaml@main
+    # A called workflow can only lower the permissions it is given, never raise them,
+    # so the top-level `permissions: {}` has to be opened up here or the Azure login
+    # inside it has no id-token to request.
     permissions:
       id-token: write
       contents: read
-    outputs:
-      breached: ${{ steps.check.outputs.breached }}
-      findings: ${{ steps.check.outputs.findings }}
-      deferred-count: ${{ steps.check.outputs.deferred-count }}
-      resolved: ${{ steps.check.outputs.resolved }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Azure login
-        uses: azure/login@v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      # Deduplication is what stands between the team and 96 Slack messages a day, and
-      # it only works if state survives between runs. The key is per-attempt so the save
-      # never collides; the restore-keys prefix is what actually finds the last one.
-      #
-      # run_attempt as well as run_id, because re-running a workflow reuses run_id and
-      # caches are immutable — without it a re-run cannot persist what it newly found.
-      # The prefix is scoped to this monitor so a second one added later cannot read
-      # this one's state and report its fingerprints as resolved.
-      - name: Restore watchdog state
-        uses: actions/cache/restore@v5
-        with:
-          path: .watchdog-state.json
-          key: watchdog-state-aat-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: watchdog-state-aat-
-
-      - name: Run health checks
-        id: check
-        # Pinned to a commit, not @main. cnp-githubactions-library has no tags yet, and
-        # a scheduled job on a moving ref means someone else's merge silently changes
-        # what this does. Bump deliberately when there is a reason to.
-        uses: hmcts/cnp-githubactions-library/appinsights-health-check@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
-        with:
-          config-path: .github/watchdog.yml
-          window: ${{ inputs.window || '15m' }}
-          max-findings: 3
-
-      # always(): a failed run must not lose the state, or the next run re-reports
-      # everything it already reported.
-      - name: Save watchdog state
-        if: always()
-        uses: actions/cache/save@v5
-        with:
-          path: .watchdog-state.json
-          key: watchdog-state-aat-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Upload the verdict artefact
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: watchdog-findings-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ steps.check.outputs.findings-path }}
-          if-no-files-found: ignore
-          retention-days: 14
+    with:
+      config-path: .github/watchdog.yml
+      window: ${{ inputs.window || '15m' }}
+      max-findings: 3
+      # Deduplication is what stands between the team and 96 Slack messages a day,
+      # and it only works if the next run finds the state this one saved. Changing
+      # this scope restores nothing and re-reports every open finding.
+      state-key: aat
+    secrets: inherit
 
   triage:
     name: Triage
@@ -148,7 +107,7 @@ jobs:
       - name: Download the verdict artefact
         uses: actions/download-artifact@v6
         with:
-          name: watchdog-findings-${{ github.run_id }}-${{ github.run_attempt }}
+          name: appinsights-health-check-findings-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/watchdog
 
       # Written to a file rather than interpolated into the prompt. Exception messages
@@ -207,16 +166,13 @@ jobs:
               .sort((a, b) =>
                 Date.parse(b.closed_at || b.updated_at) - Date.parse(a.closed_at || a.updated_at));
 
-            // Matching is on a normalised fingerprint, not the exact one. An exceptions
-            // problemId carries the throw site — including the absolute path and the
-            // line:column — so a dependency bump moves it and an already-tracked problem
-            // would otherwise look new. Dropping the path and the position keeps the
-            // exception type and the function, which is what identifies the problem.
-            const similar = (fp) => fp
-              .replace(/\(([^)]*\/)?([^/)]+?):\d+:\d+\)/g, '($2)')
-              .replace(/\s+/g, ' ')
-              .trim();
-            const marker = (fp) => `<!-- watchdog-problem: ${similar(fp)} -->`;
+            // Matching is on the normalised fingerprint the detect job supplies, not on
+            // the exact one. An exceptions problemId carries the throw site — including
+            // the absolute path and the line:column — so a dependency bump moves it and
+            // an already-tracked problem would otherwise look new. Dropping the path and
+            // the position keeps the exception type and the function, which is what
+            // identifies the problem.
+            const marker = (normalised) => `<!-- watchdog-problem: ${normalised} -->`;
 
             // The other half of the memory: a check whose fix is already in review must
             // not collect a second, competing fix from the next run. Labelled PRs are
@@ -250,17 +206,17 @@ jobs:
             const claimed = [];
             const prior = [];
             for (const finding of findings) {
-              const existing = open.find(i => i.body?.includes(marker(finding.fingerprint)));
+              const existing = open.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
               if (existing) {
                 core.info(`${finding.fingerprint}: already tracked in #${existing.number} — skipping`);
                 continue;
               }
               const issue = await github.rest.issues.create({
                 owner, repo,
-                title: `Watchdog: ${finding.checkId} — ${similar(finding.fingerprint)}`,
+                title: `Watchdog: ${finding.checkId} — ${finding.normalisedFingerprint}`,
                 labels: ['claude:watchdog'],
                 body: [
-                  marker(finding.fingerprint),
+                  marker(finding.normalisedFingerprint),
                   `Detected by the [watchdog run](${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}).`,
                   '',
                   `- **Check:** \`${finding.checkId}\``,
@@ -279,7 +235,7 @@ jobs:
 
               // Comments are fetched for the one matched issue only — every closed
               // issue would be a request each, every 15 minutes, forever.
-              const previous = closed.find(i => i.body?.includes(marker(finding.fingerprint)));
+              const previous = closed.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
               prior.push({
                 fingerprint: finding.fingerprint,
                 checkId: finding.checkId,
@@ -767,11 +723,9 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
-            const similar = (fp) => fp
-              .replace(/\(([^)]*\/)?([^/)]+?):\d+:\d+\)/g, '($2)')
-              .replace(/\s+/g, ' ')
-              .trim();
-            const marker = (fp) => `<!-- watchdog-problem: ${similar(fp)} -->`;
+            // Already normalised by the detect job, which is the form the tracking
+            // issues carry.
+            const marker = (normalised) => `<!-- watchdog-problem: ${normalised} -->`;
 
             const alerted = await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: 'all', labels: 'claude:watchdog-alerted', per_page: 100,
@@ -787,7 +741,7 @@ jobs:
               await github.rest.issues.removeLabel({
                 owner, repo, issue_number: issue.number, name: 'claude:watchdog-alerted',
               });
-              recovered.push(`\`${similar(fingerprint)}\` (#${issue.number})`);
+              recovered.push(`\`${fingerprint}\` (#${issue.number})`);
             }
             core.setOutput('text', recovered.length
               ? `:white_check_mark: *CaTH watchdog* — recovered: ${recovered.join(', ')}`
