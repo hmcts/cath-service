@@ -58,6 +58,7 @@ vi.mock("@hmcts/auth", () => ({
   b2cCallbackPostHandler: vi.fn(),
   b2cForgotPasswordHandler: vi.fn(),
   cftCallbackHandler: vi.fn(),
+  cftIdamHealthCheck: vi.fn(() => vi.fn()),
   configurePassport: vi.fn(),
   crimeCallbackHandler: vi.fn(),
   sessionTimeoutMiddleware: vi.fn((_req: any, _res: any, next: any) => next()),
@@ -202,6 +203,11 @@ describe("Web Application", () => {
     it("should configure healthcheck middleware", async () => {
       const { healthcheck } = await import("@hmcts-cft/cloud-native-platform");
       expect(healthcheck).toHaveBeenCalled();
+    });
+
+    it("should configure the CFT IDAM health check", async () => {
+      const { cftIdamHealthCheck } = await import("@hmcts/auth");
+      expect(cftIdamHealthCheck).toHaveBeenCalled();
     });
 
     it("should configure monitoring middleware", async () => {
