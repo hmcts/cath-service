@@ -28,6 +28,12 @@ export {
   SPECIAL_CATEGORY_DATA_WARNING
 } from "./email-summary/case-summary-formatter.js";
 export { autoFitColumns, createSingleSheetExcelBuffer, sanitiseCellValue, saveExcelToStorage } from "./excel/excel-utilities.js";
+export {
+  type FlatListExcelColumn,
+  type FlatListExcelOptions,
+  type FlatListExcelResult,
+  generateFlatListExcel
+} from "./excel/flat-list-excel-generator.js";
 export { type ReformatSheetConfig, reformatUploadedWorkbook } from "./excel/uploaded-workbook-reformatter.js";
 export { type ListTypeData, listTypeData } from "./list-type-data.js";
 export { assertValidProvenances, PUBLISHER_PROVENANCES } from "./list-type-provenance.js";
