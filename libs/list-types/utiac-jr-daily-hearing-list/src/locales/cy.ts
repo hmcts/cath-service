@@ -14,13 +14,13 @@ export const pageTitleByListTypeCy: Record<string, string> = {
 };
 
 export const londonTableHeadersCy = {
-  hearingTime: "[WELSH TRANSLATION REQUIRED: 'Hearing time']",
-  caseTitle: "[WELSH TRANSLATION REQUIRED: 'Case title']",
-  representative: "[WELSH TRANSLATION REQUIRED: 'Representative']",
-  caseReferenceNumber: "[WELSH TRANSLATION REQUIRED: 'Case reference number']",
-  judges: "[WELSH TRANSLATION REQUIRED: 'Judge(s)']",
-  hearingType: "[WELSH TRANSLATION REQUIRED: 'Hearing type']",
-  location: "[WELSH TRANSLATION REQUIRED: 'Location']",
+  hearingTime: "Amser y gwrandawiad",
+  caseTitle: "Deitl yr achos",
+  representative: "Cynrychiolir gan",
+  caseReferenceNumber: "Cyfeirnod yr achos",
+  judges: "Barnwr/Barnwyr",
+  hearingType: "Math o wrandawiad",
+  location: "Lleoliad",
   additionalInformation: "Gwybodaeth ychwanegol"
 };
 
@@ -40,12 +40,12 @@ export const cy = {
   searchCasesTitle: "Chwilio Achosion",
   searchCasesLabel: "[WELSH TRANSLATION REQUIRED: 'Search by case reference number, case title, judge, venue, or other details']",
   tableHeaders: {
-    venue: "[WELSH TRANSLATION REQUIRED: 'Venue']",
-    judges: "[WELSH TRANSLATION REQUIRED: 'Judge(s)']",
-    hearingTime: "[WELSH TRANSLATION REQUIRED: 'Hearing time']",
-    caseReferenceNumber: "[WELSH TRANSLATION REQUIRED: 'Case reference number']",
-    caseTitle: "[WELSH TRANSLATION REQUIRED: 'Case title']",
-    hearingType: "[WELSH TRANSLATION REQUIRED: 'Hearing type']",
+    venue: "Lleoliad",
+    judges: "Barnwr/Barnwyr",
+    hearingTime: "Amser y gwrandawiad",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    caseTitle: "Deitl yr achos",
+    hearingType: "Math o wrandawiad",
     additionalInformation: "Gwybodaeth ychwanegol"
   },
   dataSource: "Ffynhonnell data",
