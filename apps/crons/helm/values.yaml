@@ -11,6 +11,8 @@ job:
     NODE_ENV: 'production'
     SCRIPT_NAME: 'example'
     POSTGRES_DATABASE: cath
+    ENV_NAME: "{{ .Values.global.environment }}"
+    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT: c59c90a3-1806-4649-b4b5-b6bce8f8f72c
   keyVaults:
     cath:
       secrets:
@@ -18,5 +20,9 @@ job:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: postgres-url
           alias: DATABASE_URL
+        - name: govuk-notify-api-key
+          alias: GOVUK_NOTIFY_API_KEY
+        - name: pip-team-email
+          alias: MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
