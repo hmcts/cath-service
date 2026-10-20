@@ -193,12 +193,19 @@ jobs:
             // re-notify window; this stops two concurrent runs both triaging the same
             // thing, and gives a human somewhere to comment.
             //
-            // Only open issues are consulted. A problem that recurs after someone closed
-            // its issue is news, and deserves a new one rather than reopening a thread
-            // that was deliberately ended.
-            const open = await github.paginate(github.rest.issues.listForRepo, {
-              owner, repo, state: 'open', labels: 'claude:watchdog', per_page: 100,
+            // A problem that recurs after someone closed its issue still gets a new
+            // issue rather than reopening a thread that was deliberately ended. Closed
+            // issues are read only as history: whatever was concluded last time is
+            // handed to the next triage so it starts from that conclusion instead of
+            // inventing a competing one.
+            const tracked = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'all', labels: 'claude:watchdog', per_page: 100,
             });
+            const open = tracked.filter(i => i.state === 'open');
+            const closed = tracked
+              .filter(i => i.state === 'closed')
+              .sort((a, b) =>
+                Date.parse(b.closed_at || b.updated_at) - Date.parse(a.closed_at || a.updated_at));
 
             // Matching is on a normalised fingerprint, not the exact one. An exceptions
             // problemId carries the throw site — including the absolute path and the
@@ -211,7 +218,37 @@ jobs:
               .trim();
             const marker = (fp) => `<!-- watchdog-problem: ${similar(fp)} -->`;
 
+            // The other half of the memory: a check whose fix is already in review must
+            // not collect a second, competing fix from the next run. Labelled PRs are
+            // picked out client-side because the label is created by the PR step below,
+            // so a label filter would 404 before the first fix is ever opened.
+            const fixPrs = await github.paginate(github.rest.pulls.list, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+            const openFixPrs = [];
+            for (const pr of fixPrs.filter(p => p.labels.some(l => l.name === 'claude:watchdog-fix'))) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner, repo, pull_number: pr.number, per_page: 100,
+              });
+              openFixPrs.push({
+                number: pr.number, url: pr.html_url, title: pr.title,
+                files: files.map(f => f.filename),
+              });
+            }
+
+            // The recovery notice this job posts on close is a bot comment too, and is
+            // always the last one, so the report is identified by its heading rather
+            // than by being last.
+            const lastTriageReport = async (issue_number) => {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner, repo, issue_number, per_page: 100,
+              });
+              const reports = comments.filter(c => c.user?.type === 'Bot' && c.body?.startsWith('## '));
+              return reports.length ? reports[reports.length - 1].body : null;
+            };
+
             const claimed = [];
+            const prior = [];
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.fingerprint)));
               if (existing) {
@@ -239,6 +276,18 @@ jobs:
                 ].join('\n'),
               });
               claimed.push({ ...finding, issue: issue.data.number });
+
+              // Comments are fetched for the one matched issue only — every closed
+              // issue would be a request each, every 15 minutes, forever.
+              const previous = closed.find(i => i.body?.includes(marker(finding.fingerprint)));
+              prior.push({
+                fingerprint: finding.fingerprint,
+                checkId: finding.checkId,
+                issue: issue.data.number,
+                priorIssue: previous ? { number: previous.number, url: previous.html_url } : null,
+                priorTriage: previous ? await lastTriageReport(previous.number) : null,
+                openFixPrs,
+              });
             }
 
             // Close out anything that has recovered, so the tracking issues do not
@@ -256,6 +305,8 @@ jobs:
             }
 
             fs.writeFileSync('/tmp/watchdog/claimed.json', JSON.stringify(claimed, null, 2));
+            // Written even when empty, so the prompt can read it unconditionally.
+            fs.writeFileSync('/tmp/watchdog/prior.json', JSON.stringify(prior, null, 2));
             core.setOutput('count', String(claimed.length));
             core.setOutput('issues', claimed.map(c => `#${c.issue}`).join(', '));
             core.setOutput('numbers', JSON.stringify(claimed.map(c => c.issue)));
@@ -312,6 +363,18 @@ jobs:
             has the full picture, including the checks that stayed clean — useful for
             ruling things out.
 
+            Read /tmp/watchdog/prior.json before any of that. It is what the watchdog
+            already knows about these findings: for each one, the last closed tracking
+            issue for the same problem, the triage report from it, and every fix that is
+            currently open for review. Where a finding has a `priorTriage`, that
+            diagnosis stands. Do not re-derive a threshold and do not work the problem
+            out again from scratch. Either you have evidence the prior triage did not —
+            in which case say what has changed since — or the finding is already
+            diagnosed: say so, reference the prior issue, and change nothing. Where an
+            `openFixPrs` entry already changes the check a finding belongs to, that fix
+            is in review: say which PR covers it and stop. Two changes to the same check
+            is worse than none.
+
             The queries and thresholds live in .github/watchdog.yml. Read it: a check
             firing does not mean the code is broken, it means a query matched.
 
@@ -335,6 +398,11 @@ jobs:
                the query is too broad, mis-scoped, or its threshold is wrong. Fix the
                query or threshold in .github/watchdog.yml and commit that. Do NOT
                change application code to satisfy a bad check.
+            6. RETIRE — the check is structurally unable to work on this environment:
+               the traffic volume cannot support the statistic it computes, or it
+               measures something the service does not control. Do not retune the
+               threshold. Explain why the check cannot be made to work, say what would
+               have to change for it to be meaningful, and change nothing.
 
             CHANGING NOTHING IS OFTEN CORRECT. Infrastructure flake, a dependency
             outage, an AKS eviction and a genuine regression can look identical from
@@ -421,9 +489,12 @@ jobs:
             git log --oneline "${BASE_SHA}..HEAD"
           fi
 
+      # Only from the default branch, because the PR is opened --base master off
+      # whatever this run checked out: dispatched from a feature branch it would carry
+      # that branch's unrelated commits in as well.
       - name: Open a draft pull request
         id: pr
-        if: steps.outcome.outputs.state == 'changed'
+        if: steps.outcome.outputs.state == 'changed' && github.ref_name == 'master'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
@@ -436,14 +507,15 @@ jobs:
           git push "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" \
             "HEAD:refs/heads/${branch}"
 
+          # The report runs to thousands of words for a one-line diff, and it is posted
+          # in full on the tracking issues either way. Inlining it here buries the thing
+          # a reviewer actually has to read.
           {
             echo "Opened by the [watchdog run](${{ github.server_url }}/${REPO}/actions/runs/${{ github.run_id }})."
             echo
             echo "Tracking: ${ISSUES}"
             echo
-            echo '---'
-            echo
-            cat /tmp/watchdog/report.md 2>/dev/null || echo '_No report was produced._'
+            echo "The full triage report — diagnosis, reasoning and the conclusion reached for each finding — is a comment on the tracking issue(s) above."
             echo
             echo '---'
             echo
@@ -464,6 +536,14 @@ jobs:
             --body-file /tmp/watchdog/pr-body.md \
             --label "claude:watchdog-fix")
           echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # Otherwise a branch run looks as though the commits simply vanished.
+      - name: Explain the pull request that was not opened
+        if: steps.outcome.outputs.state == 'changed' && github.ref_name != 'master'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::warning::no pull request was opened: this run is on ${REF_NAME}, not master. The commits stayed on the runner; the report is still on the tracking issues."
 
       - name: Comment the report on the tracking issues
         if: always() && steps.claim.outputs.count != '0'
@@ -554,8 +634,17 @@ jobs:
           COUNT: ${{ steps.claim.outputs.count }}
           PR_URL: ${{ steps.pr.outputs.url }}
           CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+          DEFERRED: ${{ needs.detect.outputs.deferred-count }}
         run: |
           set -uo pipefail
+
+          # The per-run cap is the watchdog's own mechanics, which the prompt tells
+          # Claude not to describe, so the surplus is only ever visible if this step
+          # says it.
+          deferred_line() {
+            [ "${DEFERRED:-0}" != "0" ] && [ -n "${DEFERRED:-}" ] || return 0
+            printf '_%s further finding(s) were deferred by the per-run cap and will be reported on a later run._\n' "$DEFERRED"
+          }
 
           fallback() {
             echo "::warning::posting a fallback message: $1"
@@ -566,6 +655,7 @@ jobs:
                 "$COUNT" "$ISSUES" "$1"
               [ -n "${PR_URL:-}" ] && printf 'Draft fix: %s\n' "$PR_URL"
               printf '<%s|View the run>\n' "$RUN_URL"
+              deferred_line
               echo "SLACKEOF"
             } >> "$GITHUB_OUTPUT"
           }
@@ -612,10 +702,12 @@ jobs:
             text="${text:0:2500}"$'\n'"_(truncated — full detail on ${ISSUES})_"
           fi
 
+          # After the cap, so the deferred line cannot be the part that gets cut.
           {
             echo "notify=true"
             echo "text<<SLACKEOF"
             printf '%s\n' "$text"
+            deferred_line
             echo "SLACKEOF"
           } >> "$GITHUB_OUTPUT"
           echo "Notifying. Claude's reason: ${reason}"
