@@ -159,6 +159,8 @@ test.describe("Bulk Unsubscribe", () => {
     const errorSummary = page.locator(".govuk-error-summary");
     await expect(errorSummary).toBeVisible();
     await expect(page.getByText(/at least one subscription must be selected/i)).toBeVisible();
+    // The error page renders before select_all.js binds its handlers, so a click now would only tick the select-all box
+    await page.waitForLoadState("load");
 
     // STEP 9: Test select-all functionality for court subscriptions
     // Note: Use click() instead of check() to trigger JavaScript event handler
@@ -223,6 +225,8 @@ test.describe("Bulk Unsubscribe", () => {
     const errorSummaryConfirm = page.locator(".govuk-error-summary");
     await expect(errorSummaryConfirm).toBeVisible();
     await expect(page.getByText(/an option must be selected/i).first()).toBeVisible();
+    // GOV.UK Frontend focuses the error summary when it initialises, which would steal focus from the radios mid-test
+    await page.waitForLoadState("load");
 
     // STEP 16: Test keyboard navigation for radio buttons
     const yesRadio = page.getByRole("radio", { name: /yes/i });
