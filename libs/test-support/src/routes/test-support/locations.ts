@@ -1,4 +1,5 @@
-import { prisma } from "@hmcts/postgres-prisma";
+import { randomInt } from "node:crypto";
+import { type Location, prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateLocationInput } from "../../types.js";
 
@@ -93,15 +94,14 @@ function upsertLocation(locationId: number, input: CreateLocationInput) {
 }
 
 // Parallel e2e workers draw from the same small id range, so a clash is retried with a fresh id rather than upserted
-async function createLocationWithGeneratedId(input: CreateLocationInput) {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await prisma.location.create({ data: buildLocationCreateData(generateLocationId(), input) });
-    } catch (error) {
-      if (!isLocationIdClash(error) || attempt >= MAX_GENERATED_ID_ATTEMPTS) {
-        throw error;
-      }
+async function createLocationWithGeneratedId(input: CreateLocationInput, attempt = 1): Promise<Location> {
+  try {
+    return await prisma.location.create({ data: buildLocationCreateData(generateLocationId(), input) });
+  } catch (error) {
+    if (!isLocationIdClash(error) || attempt >= MAX_GENERATED_ID_ATTEMPTS) {
+      throw error;
     }
+    return createLocationWithGeneratedId(input, attempt + 1);
   }
 }
 
@@ -126,8 +126,7 @@ function defaultEmail(input: CreateLocationInput): string {
 }
 
 function generateLocationId(): number {
-  // NOSONAR: Math.random() is safe here - test-only code, no security requirement, just needs unique ID
-  return 90000 + Math.floor(Math.random() * 9000) + (Date.now() % 1000);
+  return randomInt(90000, 100000);
 }
 
 // name and welsh_name are unique too; a clash on those will not be fixed by a new id, so only location_id is retried
