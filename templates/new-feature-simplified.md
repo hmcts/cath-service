@@ -1,6 +1,7 @@
-> Keep every section short enough that the whole ticket can be read and refined
-> in a refinement session. No technical detail anywhere: no interfaces, classes,
-> data structures or implementation notes.
+> Keep the ticket short enough to be read and refined in a refinement session. It is short
+> because generic material is left out, not because specifications are cut down: write out
+> in full anything specific to this page, and leave out anything that is true of every page.
+> No technical detail anywhere: no interfaces, classes, data structures or implementation notes.
 
 ## 1. User Story
 (Omit if the issue already has one - do not repeat it)
@@ -11,6 +12,8 @@
 [2-3 sentences on what already exists today. No technical detail]
 
 ## 3. Acceptance Criteria
+One scenario per distinct outcome, including the error paths - not just the happy path.
+
 * **Scenario:** [Title]
     * **Given** [Context]
     * **When** [Action]
@@ -20,14 +23,19 @@
 [The steps the user takes, in plain language. No technical detail]
 
 ## 5. Page Details
-A line or two per item. Leave out anything that does not apply.
+Leave out anything that does not apply. Nothing here is capped by length - each item is as long as
+it needs to be to be true. Write out in full what is specific to this page: the copy, the exact
+error text, every input rule, every destination. Leave out what is generic - standard GOV.UK
+component behaviour, conventions already in the design system, anything true of every page in the
+service. Refinement cannot discuss what the ticket does not say.
 
 * **Layout:** [What the user sees - headings, fields, buttons]
-* **Content:** [Copy and text requirements]
+* **Reference:** [Equivalent page in the existing service, a wireframe link, or an ASCII sketch]
+* **Content:** [The actual copy, in full]
 * **URL:** [The page path only]
-* **Validation:** [Input rules and constraints]
-* **Error messages:** [Specific error text]
-* **Navigation:** [Where the user can go from here]
+* **Validation:** [Every input rule and constraint that applies to this page]
+* **Error messages:** [The exact error text, in full]
+* **Navigation:** [Every route out of this page, and what triggers each]
 
 ## 6. Assumptions & Open Questions
 Only include items that are genuinely unclear - do not force this section. It is
