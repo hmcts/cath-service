@@ -58,7 +58,7 @@ function findPdfTemplates(): PdfTemplate[] {
   return templates;
 }
 
-describe("guard: every PDF template has a grey caution box and no undefined restriction/warning classes", () => {
+describe("guard: every PDF template renders reporting restrictions with a grey background and no undefined restriction/warning classes", () => {
   const templates = findPdfTemplates();
 
   it("should find at least one PDF template to guard (sanity check the glob covers src/pdf/*.njk)", () => {
@@ -67,12 +67,6 @@ describe("guard: every PDF template has a grey caution box and no undefined rest
     // pdf-template.njk - if the glob only matched the fixed filename this would be 1 less.
     const utiacTemplates = templates.filter((t) => t.packageName === "utiac-jr-daily-hearing-list");
     expect(utiacTemplates.map((t) => t.fileName).sort()).toEqual(["pdf-template-london.njk", "pdf-template.njk"]);
-  });
-
-  it("should find no template missing a caution-box in its footer", () => {
-    const violations = templates.filter((t) => !t.content.includes("caution-box")).map((t) => `${t.packageName}/${t.fileName}: missing caution-box`);
-
-    expect(violations).toEqual([]);
   });
 
   it("should find no template with an unstyled or cream-background reporting-restriction row", () => {

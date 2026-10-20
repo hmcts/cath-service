@@ -1,5 +1,7 @@
 # Technical Plan — Issue #845: PDF restriction grey background and caution message consistency
 
+> **Scope update (2026-10-20):** Defect C is out of scope. Lists without a caution message must be left alone — do not add a `caution-box` or caution locale keys to them, and the guard test must not require a `caution-box` in every template. Only lists that already have a caution message are in scope, and those already render it grey via `PDF_BASE_STYLES`.
+
 ## 0. Re-verification against current `master` (supersedes `b265fb5a` / Aug 20 plan)
 
 The Aug 20 plan was re-derived from scratch against the current working tree (not assumed correct). Findings:

@@ -11,7 +11,10 @@
 ## Description
 
 Some of list types PDF are missing grey background for reporting restriction section. Check all the list types and make it consistent across all the list with grey background.
-Also check the caution message at the end of each PDF to make sure it is there.
+
+**Caution message:** only lists whose PDF already includes a caution message at the end should be checked, to make sure that message has the grey background. If a list does not have a caution message, leave it as it is — do not add one.
+
+> **Scope update (2026-10-20):** the original wording ("check the caution message at the end of each PDF to make sure it is there") was incorrect. Defect C below (15 templates without a `caution-box`) is **out of scope** — those lists intentionally have no caution message and must not get one. All 25 templates that do have a caution message already render it in the grey `.caution-box` from `PDF_BASE_STYLES`.
 
 ## Comments
 
@@ -113,7 +116,7 @@ Seven templates render a GOV.UK-style warning inside the top-of-document restric
 
 The surrounding panel itself is `<div class="info-box">` in all seven, so the **panel background is already correctly grey**. The bug here is the warning icon inside it, not the panel.
 
-### 2.6 Audit — Defect C: caution message missing from 15 of 40 PDFs
+### 2.6 Audit — Defect C: caution message missing from 15 of 40 PDFs (OUT OF SCOPE — see scope update above)
 
 25 of the 40 templates end with a `<div class="caution-box">` inside `<div class="footer">`. **These 15 do not** — their footer contains only the `dataSource` line:
 

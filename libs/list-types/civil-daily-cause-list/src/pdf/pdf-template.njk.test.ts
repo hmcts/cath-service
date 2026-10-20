@@ -184,21 +184,4 @@ describe("civil-daily-cause-list pdf-template", () => {
       expect($("tr.restriction-row")).toHaveLength(0);
     });
   });
-
-  describe("Caution box", () => {
-    it("should render the caution box with the caution note and reporting text", () => {
-      const { $ } = renderPdf();
-
-      const cautionBox = $(".caution-box");
-      expect(cautionBox).toHaveLength(1);
-      expect(cautionBox.text()).toContain(en.cautionNote);
-      expect(cautionBox.text()).toContain(en.cautionReporting);
-    });
-
-    it("should render the caution box in Welsh when the cy locale is used", () => {
-      const { $ } = renderPdf([], {}, cy);
-
-      expect($(".caution-box").text()).toContain(cy.cautionNote);
-    });
-  });
 });

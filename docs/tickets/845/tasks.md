@@ -12,7 +12,10 @@
 - [x] `magistrates-standard-list/src/pdf/pdf-template.njk`: wrap **both** restriction occurrences (party-level and offence-level) in the new block-level grey wrapper (`.restriction-row-block`, already available via `PDF_BASE_STYLES`)
 - [x] `sjp-press-list/src/pdf/pdf-template.njk`: confirm `restriction-tag` picks up the new grey-background rule, keep red text (rule added to the package's own `pdf-styles.ts`)
 
-### Markup + locale — Defect C (15 templates missing caution-box)
+### Markup + locale — Defect C (15 templates missing caution-box) — REVERTED
+
+> Scope update (2026-10-20): lists without a caution message must not get one. The caution boxes, `cautionNote`/`cautionReporting` locale keys, `locales.test.ts` files and caution-box test blocks added for these 15 packages have been removed. Existing caution boxes (25 templates) already render grey via `PDF_BASE_STYLES`.
+
 - [x] Add `<div class="caution-box">` with `t.cautionNote` / `t.cautionReporting` (outside the `{% if dataSource %}` block, inside `.footer`) to each of: `ast-daily-hearing-list`, `cic-weekly-hearing-list`, `civil-daily-cause-list`, `crown-daily-list`, `crown-firm-list`, `crown-warned-list`, `et-daily-list`, `et-fortnightly-list`, `family-daily-cause-list`, `magistrates-adult-court-list`, `magistrates-public-adult-court-list`, `magistrates-public-list`, `magistrates-standard-list`, `send-daily-hearing-list`, `sscs-daily-hearing-list`
 - [x] Add `cautionNote` + `cautionReporting` keys (English text per plan §2.5) to each of the 15 packages' `src/locales/en.ts`
 - [x] Add `cautionNote` + `cautionReporting` keys to each of the 15 packages' `src/locales/cy.ts` — Q1 was not confirmed by a human reviewer during this autonomous implementation pass, so each uses the `[WELSH TRANSLATION REQUIRED: '<English text>']` placeholder convention; no new Welsh wording was invented and the spec comment's Welsh (wrong "GLlTEM" acronym) was not copied
@@ -30,7 +33,7 @@
 
 ### CI guard test (durable fix)
 - [x] Create `libs/list-types/common/src/validation/pdf-template-guard.test.ts`, modelled on the existing `guard.test.ts`, globbing `src/pdf/*.njk` (not a fixed filename, to catch `utiac-jr-daily-hearing-list`'s second `pdf-template-london.njk`)
-- [x] Guard assertion: every templated package has a `caution-box` in its footer
+- [~] ~~Guard assertion: every templated package has a `caution-box` in its footer~~ — removed (out of scope)
 - [x] Guard assertion: every template that renders reporting-restriction content resolves to a grey background class (no cream `#fff7e6`, no unstyled row/paragraph) — implemented using the `case|hearing|offence|application).(formattedReportingRestriction|reportingRestriction...)` property-access heuristic re-derived during implementation (the ticket's own `reportingRestriction` substring match produced false positives against `crown-warned-list`'s static legal-notice heading, which has no per-case restriction markup at all)
 - [x] Guard assertion: no template references `warning-row`/`warning-icon`/`warning-text` unless those classes are defined in `PDF_BASE_STYLES`, `PDF_CIVIL_FAMILY_STYLES`, or the template's own local `<style>` block
 - [x] Guard assertion: no template uses a bare `common.cautionNote`-style context reference — only `t.cautionNote` or `t.common.cautionNote` are valid
