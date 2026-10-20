@@ -15,9 +15,9 @@ import {
   generateCourtOfAppealCivilDailyCauseListPdf,
   reformatCourtOfAppealCivilDailyCauseListExcel
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
-import { type CrownAdvanceListData, generateCrownAdvanceListPdf } from "@hmcts/crown-advanced-pdda-list";
-import { type CrownDailyListData, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
-import { type CrownFirmListData, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
+import { type CrownAdvanceListData, generateCrownAdvanceListExcel, generateCrownAdvanceListPdf } from "@hmcts/crown-advanced-pdda-list";
+import { type CrownDailyListData, generateCrownDailyListExcel, generateCrownDailyListPdf } from "@hmcts/crown-daily-list";
+import { type CrownFirmListData, generateCrownFirmListExcel, generateCrownFirmListPdf } from "@hmcts/crown-firm-list";
 import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } from "@hmcts/et-daily-list";
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
@@ -425,6 +425,9 @@ const sscsExcelGenerator = createUploadedExcelGenerator(reformatSscsDailyHearing
 const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   MAGISTRATES_PUBLIC_LIST: (p) => generateMagistratesPublicListExcel({ ...p, jsonData: p.jsonData as MagistratesPublicListData }),
   MAGISTRATES_STANDARD_LIST: (p) => generateMagistratesStandardListExcel({ ...p, jsonData: p.jsonData as MagistratesStandardList }),
+  CROWN_DAILY_PDDA_LIST: (p) => generateCrownDailyListExcel({ ...p, jsonData: p.jsonData as CrownDailyListData }),
+  CROWN_FIRM_PDDA_LIST: (p) => generateCrownFirmListExcel({ ...p, jsonData: p.jsonData as CrownFirmListData }),
+  CROWN_ADVANCED_PDDA_LIST: (p) => generateCrownAdvanceListExcel({ ...p, jsonData: p.jsonData as CrownAdvanceListData }),
   MAGISTRATES_ADULT_COURT_LIST_DAILY: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
   MAGISTRATES_ADULT_COURT_LIST_FUTURE: (p) => generateMagistratesAdultCourtListExcel({ ...p, jsonData: p.jsonData as MagistratesAdultCourtListData }),
   MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY: (p) =>
