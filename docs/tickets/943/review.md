@@ -3,12 +3,9 @@
 ## Post-review correction (see plan.md §5, Clarification 4 and tasks.md §7)
 
 This review's description of date handling (Summary, HIGH 1 evidence, Suggestion 1, Positive
-Feedback) reflects the **original** implementation, which rewrote the date to match the PDF's long
-form (`15 January 2026` / `15 Ionawr 2026`). A real LRT Welsh upload showed this was wrong: the PO
-confirmed the uploaded date must never change, so AC2 ("the uploaded excel file will be re-used")
-takes priority over AC3 for this one column. All 4 affected reformatters (WPAFCC, Tax, LRT, RPT) now
-pass the date through unchanged, the same identity pattern SEND always used. The Excel's date column
-no longer matches the PDF's — that mismatch is the correct, confirmed outcome.
+Feedback) is correct: the Excel date is rewritten to match the PDF's long form (`15 January 2026` /
+`15 Ionawr 2026`). A follow-up briefly kept the uploaded date unchanged instead; the PO confirmed
+that was wrong and it has been reverted, so the Excel matches the PDF on every column.
 
 Separately, the Welsh-headings gap described in HIGH 2 below is now **resolved** for WPAFCC, Tax
 Chamber and LRT: the PO supplied real Welsh `tableHeaders`, replacing the `[WELSH TRANSLATION

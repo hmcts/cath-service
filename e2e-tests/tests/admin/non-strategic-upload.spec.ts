@@ -583,7 +583,7 @@ test.describe
           "In person"
         ]);
 
-        // STEP 8: A Welsh RPT London upload gets the Welsh headings, keeps the uploaded date unchanged, drops the extra column, and links both files
+        // STEP 8: A Welsh RPT London upload gets the Welsh headings and the long Welsh date, drops the extra column, and links both files
         const fttRptArtefactId = await uploadExcelAndConfirm(page, {
           listTypeId: fttRptLondonListType.id,
           language: "WELSH",
@@ -595,7 +595,7 @@ test.describe
         const fttRptWorksheet = await downloadReformattedWorksheet(page, fttRptArtefactId, FTT_RPT_SHEET_NAME);
         expect(rowValues(fttRptWorksheet, 1)).toEqual(FTT_RPT_CY_HEADINGS);
         expect(rowValues(fttRptWorksheet, 2)).toEqual([
-          "15/01/2026",
+          "15 Ionawr 2026",
           "10.30am",
           "10 Alfred Place",
           "Rent repairs",

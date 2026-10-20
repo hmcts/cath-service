@@ -99,24 +99,24 @@ describe("reformatWpafccWeeklyHearingListExcel", () => {
     expect(rowValues(workbook.getWorksheet(SHEET_NAME), 1)).toEqual(headings(cy));
   });
 
-  it.each(["en", "cy"])("should match the non-date hearing fields the %s PDF prints", async (locale) => {
+  it.each(["en", "cy"])("should match the hearings the %s PDF prints", async (locale) => {
     // Arrange
     const upload = await buildUpload();
     const expectedRows = await renderedRows(upload, locale);
-    const nonDateColumns = FIELD_ORDER.map((_, index) => index).filter((index) => FIELD_ORDER[index] !== "date");
 
     // Act
     const workbook = await load(await reformatWpafccWeeklyHearingListExcel(upload, locale));
 
     // Assert
     const worksheet = workbook.getWorksheet(SHEET_NAME);
-    const actualRows = [rowValues(worksheet, 2), rowValues(worksheet, 3)].map((row) => nonDateColumns.map((index) => row[index]));
-    const expectedNonDateRows = expectedRows.map((row) => nonDateColumns.map((index) => row[index]));
-    expect(actualRows).toEqual(expectedNonDateRows);
+    expect([rowValues(worksheet, 2), rowValues(worksheet, 3)]).toEqual(expectedRows);
     expect(worksheet?.rowCount).toBe(3);
   });
 
-  it.each(["en", "cy"])("should keep the uploaded date and time exactly as uploaded, not the PDF's long date", async (locale) => {
+  it.each([
+    ["en", "15 January 2026"],
+    ["cy", "15 Ionawr 2026"]
+  ])("should write the %s long date and keep the uploaded time", async (locale, expectedDate) => {
     // Arrange
     const upload = await buildUpload();
 
@@ -125,7 +125,7 @@ describe("reformatWpafccWeeklyHearingListExcel", () => {
 
     // Assert
     const row = rowValues(workbook.getWorksheet(SHEET_NAME), 2);
-    expect(row[0]).toBe("15/01/2026");
+    expect(row[0]).toBe(expectedDate);
     expect(row[1]).toBe("10.30am");
   });
 

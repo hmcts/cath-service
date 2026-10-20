@@ -266,15 +266,12 @@ None.
    not a side effect to avoid. The rest of each lib's `cy.ts` (page title, important-information text,
    search label) is unchanged and still English/placeholder for WPAFCC and Tax Chamber — out of scope
    here, raise separately if needed.
-4. **Dates as PDF text or as uploaded? — RESOLVED, keep the uploaded value.** Confirmed by the PO
-   after testing a real LRT upload in Welsh: the date must never be changed from what was uploaded.
-   The default of writing `15 January 2026` / `15 Ionawr 2026` to match the PDF (the original choice,
-   reasoned at line 229 and in the decision table at line 43) is wrong — it broke "the uploaded excel
-   file will be re-used" (AC2) for the one column that was being rewritten. All 4 affected reformatters
-   (WPAFCC, Tax, LRT, RPT) now use `formatRow: (row) => row` (the same identity pattern SEND always
-   used), so the date stays exactly as uploaded, e.g. `16/12/2024`, in both English and Welsh
-   publications. This means the Excel's date column no longer matches the PDF's long-date column —
-   that mismatch is accepted as the correct outcome of AC2 taking priority over AC3 for this field.
+4. **Dates as PDF text or as uploaded? — RESOLVED, match the PDF.** A follow-up fix briefly
+   switched the 4 affected reformatters (WPAFCC, Tax, LRT, RPT) to `formatRow: (row) => row`, keeping
+   the uploaded date (`16/12/2024`). The PO has since confirmed that was wrong: the date column must
+   be formatted to match the PDF (`15 January 2026` / `15 Ionawr 2026`). The original
+   `formatRow: (row) => ({ ...row, date: formatDdMmYyyyDate(row.date, locale) })` is restored, so the
+   Excel matches the PDF on every column (AC3). SEND stays identity because its PDF prints no date.
 5. **No backfill.** Only publications processed after release get an Excel. Please confirm that is acceptable.
 
 Carried from the series, and not re-asked unless the PO says otherwise:
