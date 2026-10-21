@@ -164,7 +164,7 @@ Flat files are only stamped. An artefact whose step fails is reported and retrie
 
 ### 3.3 Mappings
 
-`value-mapping.ts` holds the role, provenance, search type and email mappings, and `LIST_TYPE_RENAMES`. `LIST_TYPE_RENAMES` maps legacy `ListType` enum names to `list_types.name` where they differ, for example `UT_IAC_JR_*`→`UTIAC_JR_*`, `RPT_*`→`FTT_RPT_*` and `CROWN_ADVANCE_PDDA_LIST`→`CROWN_WARNED_PDDA_LIST` (legacy V1.25/V1.26 renamed the Crown Warned List to the Crown Advance List). Names with no mapping and no matching list type are reported as `unknown list type`.
+`value-mapping.ts` holds the role, provenance, search type and email mappings, and `LIST_TYPE_RENAMES`. `LIST_TYPE_RENAMES` maps legacy `ListType` enum names to `list_types.name` where they differ, for example `UT_IAC_JR_*`→`UTIAC_JR_*`, `RPT_*`→`FTT_RPT_*` and `CROWN_ADVANCE_PDDA_LIST` and `CROWN_WARNED_PDDA_LIST`→`CROWN_ADVANCED_PDDA_LIST` (legacy V1.25/V1.26 renamed the Crown Warned List to the Crown Advance List, and #957 renamed it here). Names with no mapping and no matching list type are reported as `unknown list type`.
 
 Legacy reads are ordered (by created date, then id), so wherever two legacy rows collapse into one, the same row wins every night.
 

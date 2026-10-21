@@ -43,13 +43,15 @@ const LIST_TYPE_RENAMES: Record<string, string> = {
   UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
   UT_LC_DAILY_HEARING_LIST: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
   UT_T_AND_CC_DAILY_HEARING_LIST: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
-  // Legacy V1.25/V1.26 moved every Crown Warned artefact and subscription to the Crown Advance List.
-  CROWN_ADVANCE_PDDA_LIST: "CROWN_WARNED_PDDA_LIST",
+  // Legacy V1.25/V1.26 moved every Crown Warned artefact and subscription to the Crown Advance List,
+  // and this service renamed its Crown Warned list type to CROWN_ADVANCED_PDDA_LIST (#957).
+  CROWN_ADVANCE_PDDA_LIST: "CROWN_ADVANCED_PDDA_LIST",
+  CROWN_WARNED_PDDA_LIST: "CROWN_ADVANCED_PDDA_LIST",
   // Unconfirmed: legacy has both CROWN_*_LIST (Common Platform) and CROWN_*_PDDA_LIST,
   // while this service renamed its CROWN_*_LIST rows to the PDDA names.
   CROWN_DAILY_LIST: "CROWN_DAILY_PDDA_LIST",
   CROWN_FIRM_LIST: "CROWN_FIRM_PDDA_LIST",
-  CROWN_WARNED_LIST: "CROWN_WARNED_PDDA_LIST"
+  CROWN_WARNED_LIST: "CROWN_ADVANCED_PDDA_LIST"
 };
 
 export function mapRole(legacyRole: string | null): string | null {

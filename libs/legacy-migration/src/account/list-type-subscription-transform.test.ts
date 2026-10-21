@@ -80,10 +80,10 @@ describe("transformListTypeSubscriptions", () => {
     expect(result.rejections).toEqual([{ entityId: "lts-1", reason: "empty list type filter is not migrated" }]);
   });
 
-  it("should map the legacy Crown Advance List to the Crown Warned List", () => {
+  it.each(["CROWN_ADVANCE_PDDA_LIST", "CROWN_WARNED_PDDA_LIST"])("should map the legacy %s to the Crown Advanced List", (legacyName) => {
     // Arrange
-    const legacy = buildLegacyRow({ list_type: ["CROWN_ADVANCE_PDDA_LIST"] });
-    const context = buildContext({ listTypeIdByName: new Map([["CROWN_WARNED_PDDA_LIST", 904]]) });
+    const legacy = buildLegacyRow({ list_type: [legacyName] });
+    const context = buildContext({ listTypeIdByName: new Map([["CROWN_ADVANCED_PDDA_LIST", 904]]) });
 
     // Act
     const result = transformListTypeSubscriptions([legacy], context);
