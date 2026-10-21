@@ -8,7 +8,7 @@ Code lives in `libs/legacy-migration`. The cron entry points are in `apps/crons`
 
 | Script (`SCRIPT_NAME`) | Reads | Writes |
 |---|---|---|
-| `legacy-sync` (accounts) | account-management DB, legacy `files` container, legacy OAuth vault | `user`, `subscription`, `subscription_list_type`, `legacy_third_party_user`, `legacy_third_party_subscription`, `third_party_user`, `third_party_subscription`, `media_application`, `audit_log`, proof-of-ID files, third-party secrets |
+| `legacy-sync` (accounts) | account-management DB, legacy `files` container, legacy OAuth vault | `user`, `subscription`, `subscription_list_type`, `legacy_third_party_user`, `legacy_third_party_subscription`, `third_party_user`, `third_party_subscription`, `media_application`, `audit_log`, `user_archive`, proof-of-ID files, third-party secrets |
 | `legacy-sync-publications` | data-management DB, legacy `artefact` and `publications` containers | `location_metadata`, `list_search_config`, `artefact`, `artefact_search`, payload blobs, PDF and Excel files; location drift report |
 
 - Legacy DBs are read with raw `pg` queries, inside one read-only, repeatable-read snapshot per run, with timestamps read as UTC. Legacy schemas are not in Prisma. All writes go through the Prisma client.
@@ -61,10 +61,11 @@ All nine account tables are replaced in one transaction: delete children first, 
 
 ### Row-count guard
 
-`row-count-guard.ts`. A table may shrink by at most `max(50, ratio × existing rows)`, and a populated table is never emptied. On an applied run a violation aborts the run with no writes. A dry run reports it as `WOULD BE REFUSED` and carries on. There are two exceptions:
+`row-count-guard.ts`. A table may shrink by at most `max(50, ratio × existing rows)`, and a populated table is never emptied. On an applied run a violation aborts the run with no writes. A dry run reports it as `WOULD BE REFUSED` and carries on. There are three exceptions:
 
 - **Artefacts** use a ratio of at least 0.5, because displayable lists churn daily and drop sharply over weekends.
 - **`media_application`** may be emptied, because every pending application can be approved or rejected.
+- **`user_archive`** may be emptied, because legacy purges archived accounts after 90 days.
 
 For `user`, `subscription` and `subscription_list_type`, the guard counts migrated users' rows only.
 
@@ -127,6 +128,7 @@ Legacy primary keys are kept throughout. List type names are mapped to `list_typ
 | `api_oauth_configuration` + legacy vault | `third-party-<id>-{client-id,client-secret,scope,destination-url,token-url}` in `THIRD_PARTY_KEY_VAULT` | Secret names come from the legacy row and values from the legacy vault. `destination_url` and `token_url` come from the legacy columns. Writes are idempotent sets, done outside the transaction. Values are never logged. |
 | `media_application` | `media_application` | `PENDING` only. Keep `id`. Map `full_name`→`name`, lowercased `email`, `employer`, `request_date`→`applied_date`. Copy legacy `files/<image>` to `files/<id><ext>`, with the lowercased extension taken from `image_name`. Set `proof_of_id_path` to that key and `proof_of_id_original_name` to `image_name`. Reject missing images and extensions the upload page would not accept. |
 | `audit_log` | `audit_log` | The rolling 90 days legacy keeps. Keep `id`. Copy `user_id`, `user_email`, `user_provenance`, `details` and `timestamp`. Copy `roles`→`user_role` and `action` raw. |
+| `pi_user_archived` | `user_archive` | All rows; legacy purges them after 90 days (`account.archived.deletion-days`). Keep `user_id`. Copy every column raw, including provenances not migrated as users, so the deleted-accounts MI report shows what legacy recorded. Reject rows with no `archived_date`. |
 
 ### 3.2 Publications
 
@@ -170,7 +172,7 @@ Legacy reads are ordered (by created date, then id), so wherever two legacy rows
 
 ### 3.4 Not migrated
 
-`pi_user_archived`, `artefact_archived`, `location_reference`, legacy MI views, and the new-only tables (`notification_audit_log`, `legacy_third_party_push_log`, `ingestion_log`, `third_party_secret`).
+`artefact_archived`, `location_reference`, legacy MI views, and the new-only tables (`notification_audit_log`, `legacy_third_party_push_log`, `ingestion_log`, `third_party_secret`).
 
 ## 4. Outbound switch
 
@@ -252,7 +254,7 @@ The legacy enums live in `pip-data-models`, which wasn't available, so they were
 |---|---|
 | Prod environment | #1097 |
 | Artefact expiry and audit log retention | #352 |
-| Inactive accounts and media re-verification, which use `last_verified_date` | #351, with #894 and #918 for the deleted-accounts archive |
+| Inactive accounts and media re-verification, which use `last_verified_date` | #351, with #894 and #918 for the deleted-accounts archive. Once this service archives accounts itself, the account sync must stop replacing the whole of `user_archive`. Nothing writes it here yet. |
 | B2C login using `oid` before `sub`, so media users match their migrated row | No ticket. #1032 (`PI_AAD` provenance) was partly done in #1052 and is still open. |
 | Crime login using `subname`, to match migrated `CRIME_IDAM:<subname>` ids | No ticket. #624 covers Crime OIDC setup, not this. |
 | Lowercasing emails on every write, and refreshing them from the IdP on login | No ticket |

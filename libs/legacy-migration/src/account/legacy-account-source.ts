@@ -46,6 +46,13 @@ export async function readLegacyAccountData(connectionString: string): Promise<L
         WHERE "timestamp" >= (now() AT TIME ZONE 'UTC') - make_interval(days => $1)`,
       [AUDIT_LOG_RETENTION_DAYS]
     );
+    // Legacy purges archived accounts itself (account.archived.deletion-days), so this is all there is.
+    const archivedUsers = await client.query<LegacyArchivedUser>(
+      `SELECT user_id, user_provenance, provenance_user_id, email, roles,
+              last_signed_in_date AT TIME ZONE 'UTC' AS last_signed_in_date,
+              archived_date AT TIME ZONE 'UTC' AS archived_date
+         FROM pi_user_archived`
+    );
     const apiUsers = await client.query<LegacyApiUser>("SELECT user_id, name, status, created_date AT TIME ZONE 'UTC' AS created_date FROM api_user");
     const apiSubscriptions = await client.query<LegacyApiSubscription>("SELECT id, user_id, list_type, sensitivity FROM api_subscription ORDER BY id");
     const apiOauthConfigurations = await client.query<LegacyApiOauthConfiguration>(
@@ -60,6 +67,7 @@ export async function readLegacyAccountData(connectionString: string): Promise<L
       listTypeSubscriptions: listTypeSubscriptions.rows,
       mediaApplications: mediaApplications.rows,
       auditLogs: auditLogs.rows,
+      archivedUsers: archivedUsers.rows,
       apiUsers: apiUsers.rows,
       apiSubscriptions: apiSubscriptions.rows,
       apiOauthConfigurations: apiOauthConfigurations.rows
@@ -122,6 +130,16 @@ export interface LegacyAuditLog {
   timestamp: Date | null;
 }
 
+export interface LegacyArchivedUser {
+  user_id: string;
+  user_provenance: string | null;
+  provenance_user_id: string | null;
+  email: string | null;
+  roles: string | null;
+  last_signed_in_date: Date | null;
+  archived_date: Date | null;
+}
+
 export interface LegacyApiUser {
   user_id: string;
   name: string | null;
@@ -152,6 +170,7 @@ export interface LegacyAccountData {
   listTypeSubscriptions: LegacyListTypeSubscription[];
   mediaApplications: LegacyMediaApplication[];
   auditLogs: LegacyAuditLog[];
+  archivedUsers: LegacyArchivedUser[];
   apiUsers: LegacyApiUser[];
   apiSubscriptions: LegacyApiSubscription[];
   apiOauthConfigurations: LegacyApiOauthConfiguration[];

@@ -13,12 +13,14 @@ import { transformListTypeSubscriptions } from "./list-type-subscription-transfo
 import { type MigratedMediaApplication, transformMediaApplications } from "./media-application-transform.js";
 import { transformOauthCredentials, transformOauthSubscriptions, transformOauthUsers } from "./oauth-third-party-transform.js";
 import { transformSubscriptions } from "./subscription-transform.js";
+import { transformArchivedUsers } from "./user-archive-transform.js";
 import { type MigratedUser, transformUsers } from "./user-transform.js";
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 10 * 60_000 };
 
-// Every pending application can be approved or rejected, leaving none to migrate.
-const TABLES_THAT_CAN_BE_EMPTIED = new Set<TableName>(["media_application"]);
+// Every pending application can be approved or rejected, leaving none to migrate, and legacy
+// purges archived accounts after 90 days, so a quiet quarter leaves none of those either.
+const TABLES_THAT_CAN_BE_EMPTIED = new Set<TableName>(["media_application", "user_archive"]);
 
 // Users this service created themselves (testers signing in) are kept, along with their subscriptions.
 const MIGRATED_USER = { isLegacyMigrated: true } as const;
@@ -115,6 +117,7 @@ async function buildAccountPlan(legacy: LegacyAccountData, referenceData: Refere
     oauthCredentials: transformOauthCredentials(legacy.apiOauthConfigurations, oauthContext),
     mediaApplications,
     auditLogs: transformAuditLogs(legacy.auditLogs),
+    archivedUsers: transformArchivedUsers(legacy.archivedUsers),
     readCounts: {
       user: legacy.users.length,
       subscription: legacy.subscriptions.length,
@@ -124,7 +127,8 @@ async function buildAccountPlan(legacy: LegacyAccountData, referenceData: Refere
       third_party_user: legacy.apiUsers.length,
       third_party_subscription: legacy.apiSubscriptions.length,
       media_application: legacy.mediaApplications.length,
-      audit_log: legacy.auditLogs.length
+      audit_log: legacy.auditLogs.length,
+      user_archive: legacy.archivedUsers.length
     }
   };
 }
@@ -139,7 +143,8 @@ async function buildReports(tx: Prisma.TransactionClient, plan: AccountPlan, max
     ["third_party_user", plan.oauthUsers, () => tx.thirdPartyUser.count()],
     ["third_party_subscription", plan.oauthSubscriptions, () => tx.thirdPartySubscription.count()],
     ["media_application", plan.mediaApplications, () => tx.mediaApplication.count()],
-    ["audit_log", plan.auditLogs, () => tx.auditLog.count()]
+    ["audit_log", plan.auditLogs, () => tx.auditLog.count()],
+    ["user_archive", plan.archivedUsers, () => tx.userArchive.count()]
   ];
 
   const reports: DomainReport[] = [];
@@ -192,6 +197,7 @@ async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPla
   await tx.thirdPartyUser.deleteMany();
   await tx.mediaApplication.deleteMany();
   await tx.auditLog.deleteMany();
+  await tx.userArchive.deleteMany();
 
   await tx.user.createMany({ data: plan.users.rows });
   await tx.subscription.createMany({ data: plan.subscriptions.rows });
@@ -202,6 +208,7 @@ async function replaceAccountData(tx: Prisma.TransactionClient, plan: AccountPla
   await tx.thirdPartySubscription.createMany({ data: plan.oauthSubscriptions.rows });
   await tx.mediaApplication.createMany({ data: plan.mediaApplications.rows });
   await tx.auditLog.createMany({ data: plan.auditLogs.rows });
+  await tx.userArchive.createMany({ data: plan.archivedUsers.rows });
 }
 
 async function findAccountWriteDrift(tx: Prisma.TransactionClient, plan: AccountPlan): Promise<string[]> {
@@ -219,7 +226,8 @@ async function findAccountWriteDrift(tx: Prisma.TransactionClient, plan: Account
     findWriteDrift("third_party_user", plan.oauthUsers.rows, await tx.thirdPartyUser.findMany(), "id"),
     findWriteDrift("third_party_subscription", plan.oauthSubscriptions.rows, await tx.thirdPartySubscription.findMany(), "id"),
     findWriteDrift("media_application", plan.mediaApplications.rows, await tx.mediaApplication.findMany(), "id"),
-    findWriteDrift("audit_log", plan.auditLogs.rows, await tx.auditLog.findMany(), "id")
+    findWriteDrift("audit_log", plan.auditLogs.rows, await tx.auditLog.findMany(), "id"),
+    findWriteDrift("user_archive", plan.archivedUsers.rows, await tx.userArchive.findMany(), "userId")
   ].filter((message) => message !== null);
 }
 

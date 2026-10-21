@@ -19,7 +19,8 @@ const { tx, storage, secrets } = vi.hoisted(() => {
       thirdPartyUser: model(),
       thirdPartySubscription: model(),
       mediaApplication: model(),
-      auditLog: model()
+      auditLog: model(),
+      userArchive: model()
     },
     storage: { download: vi.fn(), exists: vi.fn() },
     secrets: { read: vi.fn() }
@@ -55,6 +56,7 @@ const USER_ID = "11111111-1111-1111-1111-111111111111";
 const COURTEL_ID = "22222222-2222-2222-2222-222222222222";
 const OAUTH_ID = "33333333-3333-3333-3333-333333333333";
 const APPLICATION_ID = "44444444-4444-4444-4444-444444444444";
+const ARCHIVED_USER_ID = "55555555-5555-5555-5555-555555555555";
 const OPTIONS = { legacyAccountDatabaseUrl: "postgres://legacy", maxDropRatio: 0.05 };
 
 function buildLegacyData(): LegacyAccountData {
@@ -132,6 +134,17 @@ function buildLegacyData(): LegacyAccountData {
         timestamp: created
       }
     ],
+    archivedUsers: [
+      {
+        user_id: ARCHIVED_USER_ID,
+        user_provenance: "PI_AAD",
+        provenance_user_id: "aad-oid-archived",
+        email: "former@example.com",
+        roles: "VERIFIED",
+        last_signed_in_date: created,
+        archived_date: created
+      }
+    ],
     apiUsers: [{ user_id: OAUTH_ID, name: "Subscriber", status: "ACTIVE", created_date: created }],
     apiSubscriptions: [{ id: "api-sub-1", user_id: OAUTH_ID, list_type: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }],
     apiOauthConfigurations: [
@@ -201,6 +214,7 @@ describe("runLegacySync", () => {
       data: [expect.objectContaining({ id: APPLICATION_ID, proofOfIdPath: `${APPLICATION_ID}.pdf` })]
     });
     expect(createManyIds(tx.auditLog, "id")).toEqual(["audit-1"]);
+    expect(createManyIds(tx.userArchive, "userId")).toEqual([ARCHIVED_USER_ID]);
   });
 
   it("should replace only migrated users and their subscriptions, keeping users created in this service", async () => {
@@ -276,7 +290,8 @@ describe("runLegacySync", () => {
       ["third_party_user", 1],
       ["third_party_subscription", 1],
       ["media_application", 1],
-      ["audit_log", 1]
+      ["audit_log", 1],
+      ["user_archive", 1]
     ]);
   });
 
@@ -317,6 +332,19 @@ describe("runLegacySync", () => {
     expect(setSecret).not.toHaveBeenCalled();
   });
 
+  it("should replace the archived accounts even when legacy has purged them all", async () => {
+    // Arrange
+    vi.mocked(readLegacyAccountData).mockResolvedValue({ ...buildLegacyData(), archivedUsers: [] });
+
+    // Act
+    const report = await runLegacySync({ ...OPTIONS, isDryRun: false });
+
+    // Assert
+    expect(tx.userArchive.deleteMany).toHaveBeenCalled();
+    expect(tx.userArchive.createMany).toHaveBeenCalledWith({ data: [] });
+    expect(report.domains.find(({ entityType }) => entityType === "user_archive")?.dropLimitViolation).toBeNull();
+  });
+
   it("should abort before copying files or secrets when a table does not hold what was written", async () => {
     // Arrange
     tx.subscription.createMany.mockImplementation(async () => {
@@ -354,7 +382,8 @@ describe("runLegacySync", () => {
       "third_party_user",
       "third_party_subscription",
       "media_application",
-      "audit_log"
+      "audit_log",
+      "user_archive"
     ]);
   });
 
