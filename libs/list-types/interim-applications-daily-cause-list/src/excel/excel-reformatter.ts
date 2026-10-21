@@ -8,6 +8,13 @@ export async function reformatInterimApplicationsDailyCauseListExcel(buffer: Buf
 
   // The PDF prints hearings as uploaded. The open justice tab only feeds a paragraph in the PDF, not a table, so it is left out
   return reformatUploadedWorkbook(buffer, [
-    { worksheetName: "Hearing List", worksheetIndex: 0, fields: INTERIM_APPLICATIONS_HEARINGS_CONFIG.fields, headers: t.tableHeaders, formatRow: (row) => row }
+    {
+      worksheetName: "Hearing List",
+      worksheetIndex: 0,
+      outputWorksheetName: "Sheet1",
+      fields: INTERIM_APPLICATIONS_HEARINGS_CONFIG.fields,
+      headers: t.tableHeaders,
+      formatRow: (row) => row
+    }
   ]);
 }

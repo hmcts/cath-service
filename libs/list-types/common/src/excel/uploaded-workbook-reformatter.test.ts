@@ -392,6 +392,18 @@ describe("reformatUploadedWorkbook", () => {
       expect(result.getRow(2).height).toBe(40);
     });
 
+    it("should name the output sheet with outputWorksheetName when it is set", async () => {
+      // Arrange
+      const upload = await buildUpload({ "Hearing List": [UPLOADED_HEADER, UPLOADED_ROW] });
+
+      // Act
+      const result = await reformatFirstSheet(upload, [sheetConfig({ worksheetName: "Hearing List", outputWorksheetName: "Sheet1" })]);
+
+      // Assert
+      expect(result.name).toBe("Sheet1");
+      expect(rowValues(result, 2)).toEqual(["Court 1", "10:30", ""]);
+    });
+
     it("should not share a style object between the header cells it makes bold", async () => {
       // Arrange
       const workbook = buildWorkbook({ Sheet1: [UPLOADED_HEADER, UPLOADED_ROW] });
