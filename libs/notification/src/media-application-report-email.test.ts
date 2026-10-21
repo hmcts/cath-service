@@ -14,7 +14,7 @@ vi.mock("notifications-node-client", () => ({
 
 const { sendMediaApplicationReportEmail } = await import("./media-application-report-email.js");
 
-const TEMPLATE_ID = "c59c90a3-1806-4649-b4b5-b6bce8f8f72c";
+const TEMPLATE_ID = "0f53936f-c91b-4c3f-9f42-52f9e5e1e203";
 const RECIPIENT = "team@example.com";
 const REPORT_DATE = new Date("2026-10-19T00:00:00Z");
 const PREPARED_UPLOAD = {
