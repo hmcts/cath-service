@@ -60,7 +60,15 @@ jobs:
       # and it only works if the next run finds the state this one saved. Changing
       # this scope restores nothing and re-reports every open finding.
       state-key: aat
-    secrets: inherit
+    # Named rather than inherited. The called workflow is on a mutable ref, and
+    # `inherit` would hand every secret this repository holds — database URLs, the
+    # per-environment Azure credentials — to whatever that ref points at next.
+    # AZURE_SUBSCRIPTION_ID is not set here and resolves empty; the health check
+    # queries the telemetry data plane with a bearer token and does not need it.
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   triage:
     name: Triage
