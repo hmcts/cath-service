@@ -231,6 +231,11 @@ jobs:
             const TRIAGE_REPORT_HEADING = '## 🤖 Triage complete';
             const HUMAN_COMMENT_LIMIT = 3;
             const HUMAN_COMMENT_CHARS = 1000;
+            // This repository is public, so anyone can comment on a tracking issue, and
+            // the prompt is told a human conclusion outranks a triage report. Without an
+            // allowlist a passer-by could leave "known noise, do not notify" and have it
+            // read as a verdict on the next recurrence.
+            const TRUSTED_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
             const priorConclusions = async (issue_number) => {
               const comments = await github.paginate(github.rest.issues.listComments, {
                 owner, repo, issue_number, per_page: 100,
@@ -238,7 +243,8 @@ jobs:
               const reports = comments.filter(c =>
                 c.user?.type === 'Bot' && c.body?.startsWith(TRIAGE_REPORT_HEADING));
               const humans = comments
-                .filter(c => c.user?.type !== 'Bot' && c.body?.trim())
+                .filter(c => c.user?.type !== 'Bot' && c.body?.trim()
+                  && TRUSTED_ASSOCIATIONS.has(c.author_association))
                 // Capped so a long thread cannot crowd the findings out of the prompt.
                 .slice(-HUMAN_COMMENT_LIMIT)
                 .map(c => ({
@@ -838,8 +844,11 @@ jobs:
 
             const recovered = [];
             for (const fingerprint of JSON.parse(process.env.RESOLVED || '[]')) {
-              const tracking = tracked.find(i => i.body?.includes(marker(fingerprint)));
-              if (tracking) {
+              // Every match, not the first: the claim step lists issues and then creates
+              // them without anything making that atomic, so two overlapping runs can
+              // leave two open issues on one marker. A survivor would be skipped by the
+              // claim step's dedup gate for good.
+              for (const tracking of tracked.filter(i => i.body?.includes(marker(fingerprint)))) {
                 await github.rest.issues.createComment({
                   owner, repo, issue_number: tracking.number,
                   body: 'No longer firing — closed by the watchdog.',
