@@ -59,6 +59,30 @@ const INTERIM_APPLICATIONS_LIST_TYPE_NAME = "INTERIM_APPLICATIONS_DAILY_CAUSE_LI
 const ROLLS_BUILDING_UPLOADED_HEADER = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
 const BUSINESS_AND_PROPERTY_EN_HEADINGS = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
 const INTERIM_APPLICATIONS_CY_HEADINGS = ["Barnwr", "Amser", "Lleoliad", "Math", "Rhif yr achos", "Enw’r achos", "Gwybodaeth ychwanegol"];
+const FTT_RPT_LONDON_LIST_TYPE_NAME = "FTT_RPT_LONDON_WEEKLY_HEARING_LIST";
+const FTT_RPT_SHEET_NAME = "RPT London";
+const FTT_RPT_UPLOADED_HEADER = [
+  "Date",
+  "Time",
+  "Venue",
+  "Case Type",
+  "Case Reference Number",
+  "Judge(s)",
+  "Member(s)",
+  "Hearing Method",
+  "Additional Information"
+];
+const FTT_RPT_CY_HEADINGS = [
+  "Dyddiad",
+  "Amser",
+  "Lleoliad",
+  "Math o achos",
+  "Cyfeirnod yr achos",
+  "Barnwr/Barnwyr",
+  "Aelod(au)",
+  "Math o wrandawiad",
+  "Gwybodaeth ychwanegol"
+];
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
@@ -131,6 +155,16 @@ async function createInterimApplicationsExcelFile(): Promise<Buffer> {
   workbook.addWorksheet("Open Justice Statement Details").addRows([
     ["Name to be displayed", "Email"],
     ["Mr Justice Smith", "interim.applications@justice.gov.uk"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createFttRptExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(FTT_RPT_SHEET_NAME).addRows([
+    [...FTT_RPT_UPLOADED_HEADER, "Internal notes"],
+    ["15/01/2026", "10.30am", "10 Alfred Place", "Rent repairs", "LON/00AA/2026/0001", "Judge Jones", "Mr Patel", "In person", "None", "Vulnerable party"]
   ]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
@@ -444,7 +478,7 @@ test.describe
     });
 
     // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-    test("RCJ, SSCS and Rolls Building Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
+    test("RCJ, SSCS, Rolls Building and First-tier Tribunal Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
       test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
       const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
@@ -453,7 +487,8 @@ test.describe
       const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
       const businessAndPropertyListType = (await getListTypeByName(BUSINESS_AND_PROPERTY_LIST_TYPE_NAME)) as { id: number } | null;
       const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
-      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType) {
+      const fttRptLondonListType = (await getListTypeByName(FTT_RPT_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
+      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !fttRptLondonListType) {
         throw new Error("Expected list types are not seeded");
       }
       const artefactIds: string[] = [];
@@ -547,6 +582,31 @@ test.describe
           "Acme v Widget",
           "In person"
         ]);
+
+        // STEP 8: A Welsh RPT London upload gets the Welsh headings and the long Welsh date, drops the extra column, and links both files
+        const fttRptArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: fttRptLondonListType.id,
+          language: "WELSH",
+          fileName: "ftt-rpt-london-cy.xlsx",
+          buffer: await createFttRptExcelFile()
+        });
+        artefactIds.push(fttRptArtefactId);
+
+        const fttRptWorksheet = await downloadReformattedWorksheet(page, fttRptArtefactId, FTT_RPT_SHEET_NAME);
+        expect(rowValues(fttRptWorksheet, 1)).toEqual(FTT_RPT_CY_HEADINGS);
+        expect(rowValues(fttRptWorksheet, 2)).toEqual([
+          "15 Ionawr 2026",
+          "10.30am",
+          "10 Alfred Place",
+          "Rent repairs",
+          "LON/00AA/2026/0001",
+          "Judge Jones",
+          "Mr Patel",
+          "In person",
+          "None"
+        ]);
+        expect(rowValues(fttRptWorksheet, 1)).not.toContain("Internal notes");
+        await expectPdfAndExcelLinksInEmail(fttRptArtefactId);
       } finally {
         if (artefactIds.length > 0) {
           await cleanupTestNotifications(artefactIds);
