@@ -61,7 +61,6 @@ export {
   generateListPdf,
   type ListPdfOptions,
   loadTranslations,
-  MAX_PDF_SIZE_BYTES,
   type PdfFromHtmlResult,
   type PdfGenerationResult,
   type RenderedListData,

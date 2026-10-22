@@ -106,6 +106,7 @@ import {
   getEnvName,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
+  isWithinNotifyAttachmentLimit,
   type TemplateParameters
 } from "../govnotify/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -121,8 +122,6 @@ import {
   type SubscriptionWithUser
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
-
-const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -511,24 +510,17 @@ async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | 
   const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
 
   const hasPdf = !!pdfBuffer;
-  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-
   const hasExcel = !!excelBuffer;
-  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
+  const filesUnder2MB = (!pdfBuffer || isWithinNotifyAttachmentLimit(pdfBuffer)) && (!excelBuffer || isWithinNotifyAttachmentLimit(excelBuffer));
 
-  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
+  const templateId = getSubscriptionTemplateId({ hasPdf, hasExcel, filesUnder2MB });
 
-  const templateId = getSubscriptionTemplateId({
-    hasPdf: hasPdf && pdfUnder2MB,
-    hasExcel: hasExcel && excelUnder2MB,
-    filesUnder2MB
-  });
-
+  // Only upload files to Notify when the chosen template links them; the no-links template ignores them
   return {
     templateParameters,
     templateId,
-    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
-    excelBuffer: excelUnder2MB ? excelBuffer : undefined
+    pdfBuffer: filesUnder2MB && pdfBuffer ? pdfBuffer : undefined,
+    excelBuffer: filesUnder2MB && excelBuffer ? excelBuffer : undefined
   };
 }
 

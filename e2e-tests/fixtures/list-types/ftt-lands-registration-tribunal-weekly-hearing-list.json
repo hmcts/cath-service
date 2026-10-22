@@ -1,0 +1,10 @@
+[
+  {
+    "date": "02/01/2025",
+    "hearingTime": "10:00am",
+    "caseName": "A Vs B",
+    "caseReferenceNumber": "LRT/00001/2025",
+    "judge": "Judge Smith",
+    "venuePlatform": "London"
+  }
+]

@@ -7,6 +7,13 @@ const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = process.env.GOVUK_NOTIFY
 const GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
+// Notify rejects attachments only when they are larger than 2 MB, so a file of exactly 2 MB can still be linked
+export const MAX_NOTIFY_ATTACHMENT_SIZE_BYTES = 2 * 1024 * 1024;
+
+export function isWithinNotifyAttachmentLimit(file: Buffer): boolean {
+  return file.length <= MAX_NOTIFY_ATTACHMENT_SIZE_BYTES;
+}
+
 export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
   const { hasPdf, hasExcel, filesUnder2MB } = params;
 

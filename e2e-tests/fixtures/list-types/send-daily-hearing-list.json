@@ -1,0 +1,10 @@
+[
+  {
+    "time": "10am",
+    "caseReferenceNumber": "REF001",
+    "respondent": "Respondent Name",
+    "hearingType": "Hearing",
+    "venue": "Venue",
+    "timeEstimate": "1 hour"
+  }
+]

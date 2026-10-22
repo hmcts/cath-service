@@ -1,0 +1,93 @@
+{
+  "WarnedList": {
+    "DocumentID": {
+      "UniqueID": "CWPL-2025-001",
+      "DocumentType": "crown_warned_pdda_list"
+    },
+    "ListHeader": {
+      "StartDate": "2025-01-01",
+      "PublishedTime": "2025-01-01T09:00:00Z",
+      "Version": "1.0"
+    },
+    "CrownCourt": {
+      "CourtHouseType": "Crown Court",
+      "CourtHouseCode": 1001,
+      "CourtHouseName": "Crown Court at Birmingham"
+    },
+    "CourtLists": [
+      {
+        "CourtHouse": {
+          "CourtHouseType": "Crown Court",
+          "CourtHouseCode": 1001,
+          "CourtHouseName": "Crown Court at Birmingham"
+        },
+        "WithFixedDate": [
+          {
+            "Fixture": [
+              {
+                "Cases": [
+                  {
+                    "CaseNumber": "T12345678",
+                    "CaseNumberCaTH": "C12345678",
+                    "Defendants": [
+                      {
+                        "PersonalDetails": {
+                          "Name": {
+                            "CitizenNameSurname": "Doe"
+                          },
+                          "IsMasked": "no"
+                        },
+                        "PrisonLocation": {
+                          "Location": ["HMP Birmingham"]
+                        },
+                        "Charges": [
+                          {
+                            "OffenceStatement": "Theft contrary to section 1 of the Theft Act 1968"
+                          }
+                        ]
+                      }
+                    ],
+                    "Hearing": [
+                      {
+                        "HearingDescription": "Trial"
+                      }
+                    ],
+                    "LinkedCases": [
+                      {
+                        "CaseNumber": "T87654321"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "WithoutFixedDate": [
+          {
+            "Fixture": [
+              {
+                "Cases": [
+                  {
+                    "CaseNumber": "T11111111",
+                    "CaseNumberCaTH": "C11111111",
+                    "Defendants": [
+                      {
+                        "PersonalDetails": {
+                          "Name": {
+                            "CitizenNameSurname": "Smith"
+                          },
+                          "IsMasked": "no"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

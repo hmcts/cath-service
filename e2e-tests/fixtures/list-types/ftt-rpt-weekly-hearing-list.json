@@ -1,0 +1,13 @@
+[
+  {
+    "date": "02/01/2025",
+    "time": "10:00am",
+    "venue": "London",
+    "caseType": "Leasehold",
+    "caseReferenceNumber": "RPT/00001/2025",
+    "judges": "Judge Smith",
+    "members": "Member Jones",
+    "hearingMethod": "In person",
+    "additionalInformation": "Remote hearing"
+  }
+]

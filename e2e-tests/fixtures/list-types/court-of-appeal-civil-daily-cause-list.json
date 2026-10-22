@@ -1,0 +1,23 @@
+{
+  "dailyHearings": [
+    {
+      "venue": "Court 1",
+      "judge": "Judge Smith",
+      "time": "10am",
+      "caseNumber": "A/2025/001",
+      "caseDetails": "Appellant v Respondent",
+      "hearingType": "Appeal"
+    }
+  ],
+  "futureJudgments": [
+    {
+      "date": "01/02/2025",
+      "venue": "Court 2",
+      "judge": "Judge Jones",
+      "time": "2pm",
+      "caseNumber": "A/2025/002",
+      "caseDetails": "Claimant v Defendant",
+      "hearingType": "Judgment"
+    }
+  ]
+}
