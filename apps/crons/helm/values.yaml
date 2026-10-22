@@ -12,7 +12,6 @@ job:
     SCRIPT_NAME: 'example'
     POSTGRES_DATABASE: cath
     ENV_NAME: "{{ .Values.global.environment }}"
-    GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT: 0f53936f-c91b-4c3f-9f42-52f9e5e1e203
   keyVaults:
     cath:
       secrets:

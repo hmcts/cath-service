@@ -1,5 +1,4 @@
-import { NotifyClient } from "notifications-node-client";
-import { extractNotifyError } from "./govuk-notify-service.js";
+import { extractNotifyError, GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT, prepareNotifyFileUpload, sendNotifyEmail } from "@hmcts/govuk-notify";
 
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 const RETENTION_PERIOD = "78 weeks";
@@ -13,7 +12,6 @@ const ENV_DISPLAY_NAMES: Record<string, string> = {
 
 export async function sendMediaApplicationReportEmail({ csvBuffer, reportDate, applicationCount }: MediaApplicationReportEmailData): Promise<void> {
   const apiKey = getRequiredEnv("GOVUK_NOTIFY_API_KEY");
-  const templateId = getRequiredEnv("GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT");
   const recipient = getRecipient();
 
   if (csvBuffer.length > MAX_UPLOAD_BYTES) {
@@ -23,14 +21,16 @@ export async function sendMediaApplicationReportEmail({ csvBuffer, reportDate, a
   const isoDate = reportDate.toISOString();
 
   try {
-    const notifyClient = new NotifyClient(apiKey);
-    const linkToFile = notifyClient.prepareUpload(csvBuffer, {
+    const linkToFile = prepareNotifyFileUpload(apiKey, csvBuffer, {
       filename: `media-application-report-${isoDate.slice(0, 10)}.csv`,
       confirmEmailBeforeDownload: false,
       retentionPeriod: RETENTION_PERIOD
     });
 
-    await notifyClient.sendEmail(templateId, recipient, {
+    await sendNotifyEmail({
+      apiKey,
+      templateId: GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT,
+      emailAddress: recipient,
       personalisation: {
         link_to_file: linkToFile,
         env_name: getEnvDisplayName()

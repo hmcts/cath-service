@@ -13,8 +13,8 @@ vi.mock("notifications-node-client", () => ({
 }));
 
 const { sendMediaApplicationReportEmail } = await import("./media-application-report-email.js");
+const { GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT } = await import("@hmcts/govuk-notify");
 
-const TEMPLATE_ID = "0f53936f-c91b-4c3f-9f42-52f9e5e1e203";
 const RECIPIENT = "team@example.com";
 const REPORT_DATE = new Date("2026-10-19T00:00:00Z");
 const PREPARED_UPLOAD = {
@@ -23,7 +23,7 @@ const PREPARED_UPLOAD = {
   confirm_email_before_download: false,
   retention_period: "78 weeks"
 };
-const ENV_KEYS = ["GOVUK_NOTIFY_API_KEY", "GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT", "MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL", "ENV_NAME"];
+const ENV_KEYS = ["GOVUK_NOTIFY_API_KEY", "MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL", "ENV_NAME"];
 
 function buildData(csvBuffer = Buffer.from("csv", "utf8")) {
   return { csvBuffer, reportDate: REPORT_DATE, applicationCount: 3 };
@@ -36,11 +36,10 @@ describe("sendMediaApplicationReportEmail", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "log").mockImplementation(() => {});
     process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
-    process.env.GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT = TEMPLATE_ID;
     process.env.MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL = RECIPIENT;
     process.env.ENV_NAME = "aat";
     mockPrepareUpload.mockReturnValue(PREPARED_UPLOAD);
-    mockSendEmail.mockResolvedValue({});
+    mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
   });
 
   afterEach(() => {
@@ -62,7 +61,7 @@ describe("sendMediaApplicationReportEmail", () => {
     await sendMediaApplicationReportEmail(data);
 
     // Assert
-    expect(mockSendEmail).toHaveBeenCalledWith(TEMPLATE_ID, RECIPIENT, {
+    expect(mockSendEmail).toHaveBeenCalledWith(GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT, RECIPIENT, {
       personalisation: { link_to_file: PREPARED_UPLOAD, env_name: "AAT" },
       reference: `media-application-report-${REPORT_DATE.getTime()}`
     });
@@ -111,17 +110,14 @@ describe("sendMediaApplicationReportEmail", () => {
     expect(mockSendEmail.mock.calls[0][2].personalisation.env_name).toBe("Local");
   });
 
-  it.each(["GOVUK_NOTIFY_API_KEY", "GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_APPLICATION_REPORT", "MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL"])(
-    "should throw when %s is not set",
-    async (key) => {
-      // Arrange
-      delete process.env[key];
+  it.each(["GOVUK_NOTIFY_API_KEY", "MEDIA_APPLICATION_REPORT_RECIPIENT_EMAIL"])("should throw when %s is not set", async (key) => {
+    // Arrange
+    delete process.env[key];
 
-      // Act & Assert
-      await expect(sendMediaApplicationReportEmail(buildData())).rejects.toThrow(`${key} environment variable is not set`);
-      expect(mockSendEmail).not.toHaveBeenCalled();
-    }
-  );
+    // Act & Assert
+    await expect(sendMediaApplicationReportEmail(buildData())).rejects.toThrow(`${key} environment variable is not set`);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
 
   it("should throw when the recipient is not a valid email address", async () => {
     // Arrange
