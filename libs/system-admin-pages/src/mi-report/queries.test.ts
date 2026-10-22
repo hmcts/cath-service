@@ -2,6 +2,7 @@ import { prisma } from "@hmcts/postgres-prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildAllSubscriptionsSheet,
+  buildDeletedAccountsSheet,
   buildLocationSubscriptionsSheet,
   buildPublicationsSheet,
   buildUserAccountsSheet,
@@ -13,7 +14,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     user: { findMany: vi.fn() },
     artefact: { findMany: vi.fn() },
     subscription: { findMany: vi.fn() },
-    location: { findMany: vi.fn() }
+    location: { findMany: vi.fn() },
+    userArchive: { findMany: vi.fn() }
   }
 }));
 
@@ -194,6 +196,107 @@ describe("mi-report queries", () => {
       expect(sheet.rows[0]).toMatchObject({ search_type: "LOCATION_ID", court_name: "Test Court" });
       expect(sheet.rows[1]).toMatchObject({ search_type: "CASE_ID", court_name: "" });
       expect(prisma.subscription.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: undefined }));
+    });
+  });
+
+  describe("buildDeletedAccountsSheet", () => {
+    it("should map archive rows to the anonymised headers with user_id and deleted_date", async () => {
+      // Arrange
+      vi.mocked(prisma.userArchive.findMany).mockResolvedValue([
+        {
+          userId: "11111111-1111-1111-1111-111111111111",
+          userProvenance: "PI_AAD",
+          provenanceUserId: "prov-1",
+          email: "should-not-appear@example.com",
+          roles: "INTERNAL_ADMIN_CTSC",
+          lastSignedInDate: new Date("2026-07-01T00:00:00.000Z"),
+          archivedDate: new Date("2026-08-15T00:00:00.000Z")
+        }
+      ] as never);
+
+      // Act
+      const sheet = await buildDeletedAccountsSheet(CUTOFF);
+
+      // Assert
+      expect(sheet.name).toBe("Deleted Accounts");
+      expect(sheet.headers).toEqual(["user_id", "provenance_user_id", "user_provenance", "roles", "last_signed_in_date", "deleted_date"]);
+      expect(sheet.headers).not.toContain("email");
+      expect(sheet.rows[0]).toEqual({
+        user_id: "11111111-1111-1111-1111-111111111111",
+        provenance_user_id: "prov-1",
+        user_provenance: "PI_AAD",
+        roles: "INTERNAL_ADMIN_CTSC",
+        last_signed_in_date: "2026-07-01T00:00:00.000Z",
+        deleted_date: "2026-08-15T00:00:00.000Z"
+      });
+    });
+
+    it("should apply the archivedDate cutoff and order by archivedDate desc when a cutoff is supplied", async () => {
+      // Arrange
+      vi.mocked(prisma.userArchive.findMany).mockResolvedValue([] as never);
+
+      // Act
+      await buildDeletedAccountsSheet(CUTOFF);
+
+      // Assert
+      expect(prisma.userArchive.findMany).toHaveBeenCalledWith({
+        where: { archivedDate: { gte: CUTOFF } },
+        orderBy: { archivedDate: "desc" }
+      });
+    });
+
+    it("should omit the where clause entirely when no cutoff is supplied", async () => {
+      // Arrange
+      vi.mocked(prisma.userArchive.findMany).mockResolvedValue([] as never);
+
+      // Act
+      await buildDeletedAccountsSheet(undefined);
+
+      // Assert
+      expect(prisma.userArchive.findMany).toHaveBeenCalledWith({
+        where: undefined,
+        orderBy: { archivedDate: "desc" }
+      });
+    });
+
+    it("should return a valid header-only sheet with zero rows when the table is empty", async () => {
+      // Arrange
+      vi.mocked(prisma.userArchive.findMany).mockResolvedValue([] as never);
+
+      // Act
+      const sheet = await buildDeletedAccountsSheet(undefined);
+
+      // Assert
+      expect(sheet.rows).toEqual([]);
+      expect(sheet.headers).toHaveLength(6);
+    });
+
+    it("should coalesce nullable text and date columns to empty strings", async () => {
+      // Arrange
+      vi.mocked(prisma.userArchive.findMany).mockResolvedValue([
+        {
+          userId: "22222222-2222-2222-2222-222222222222",
+          userProvenance: null,
+          provenanceUserId: null,
+          email: null,
+          roles: null,
+          lastSignedInDate: null,
+          archivedDate: new Date("2026-09-01T00:00:00.000Z")
+        }
+      ] as never);
+
+      // Act
+      const sheet = await buildDeletedAccountsSheet(undefined);
+
+      // Assert
+      expect(sheet.rows[0]).toEqual({
+        user_id: "22222222-2222-2222-2222-222222222222",
+        provenance_user_id: "",
+        user_provenance: "",
+        roles: "",
+        last_signed_in_date: "",
+        deleted_date: "2026-09-01T00:00:00.000Z"
+      });
     });
   });
 });
