@@ -81,6 +81,14 @@ checks:
       | where timestamp > ago({{window}})
       | where cloud_RoleInstance !has '-pr-'
       | where success == false
+      // InProc | Microsoft.Storage rows are the Azure SDK's own wrapper spans around a
+      // blob call. They report resultCode 0 — no status of their own — and are marked
+      // failed only because the HTTP call beneath them failed. That HTTP span is still
+      // checked here on its real result code, so counting both reports one response
+      // twice. Reasoned through for ContainerClient-create in #1163; the same argument
+      // holds for every wrapper (BlobClient-delete, BlobClient-download), hence the
+      // class-wide filter rather than one operation name at a time.
+      | where not(type == 'InProc | Microsoft.Storage' and tostring(resultCode) == '0')
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
       | extend operation = trim_end(@':\d+$', tostring(name))
       | summarize failures = count(),
