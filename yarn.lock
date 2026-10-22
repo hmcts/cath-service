@@ -1417,6 +1417,7 @@ __metadata:
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
     "@hmcts/account": "npm:*"
+    "@hmcts/redis": "workspace:*"
     "@microsoft/microsoft-graph-client": "npm:3.0.7"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
