@@ -62,7 +62,7 @@ describe("create-media-account template", () => {
       const bodyText = $(".govuk-body").text();
       expect(bodyText).toContain(en.openingText1);
       expect(bodyText).toContain(en.openingText2);
-      expect(bodyText).toContain(en.openingText3);
+      expect($(".govuk-hint").text()).toContain(en.openingText3);
     });
 
     it("should render the form fields with labels and hints", () => {
@@ -75,19 +75,44 @@ describe("create-media-account template", () => {
       expect($("#email-hint").text()).toContain(en.emailHint);
       expect($('label[for="employer"]').text()).toContain(en.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(en.uploadLabel);
-      expect($("#idProof-hint").text()).toContain(en.uploadHint);
+      expect($("#idProof-hint-identity").text()).toContain(en.uploadHintIdentity);
+      expect($("#idProof-hint-consent").text()).toContain(en.uploadHintConsent);
+      expect($("#idProof-hint-filetype").text()).toContain(en.uploadHintFileType);
       expect($('input[name="email"]').attr("type")).toBe("email");
       expect($('input[name="idProof"]').attr("type")).toBe("file");
       expect($('input[name="termsAccepted"]').attr("type")).toBe("checkbox");
     });
 
-    it("should render the terms and conditions text and checkbox label", () => {
+    it("should render the terms and conditions heading and paragraphs before the checkbox", () => {
       const data = buildData(en);
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("#termsAccepted-hint").text()).toContain(en.termsText);
+      const heading = $("h2.govuk-heading-l");
+      expect(heading.text()).toContain(en.termsHeading);
+
+      const paragraphs = $("form p.govuk-body");
+      const paragraphTexts = paragraphs.map((_, el) => $(el).text()).get();
+      expect(paragraphTexts).toContain(en.termsText1);
+      expect(paragraphTexts).toContain(en.termsText2);
+      expect(paragraphTexts).toContain(en.termsText3);
+
+      // Terms content sits after the ID upload field and before the consent checkbox
+      const headingIndex = $("*").index(heading);
+      const uploadIndex = $("*").index($("#idProof"));
+      const checkboxIndex = $("*").index($('input[name="termsAccepted"]'));
+      expect(headingIndex).toBeGreaterThan(uploadIndex);
+      expect(headingIndex).toBeLessThan(checkboxIndex);
+
       expect($('label[for="termsAccepted"]').text()).toContain(en.termsCheckboxLabel);
+    });
+
+    it("should not render a hint on the terms checkbox", () => {
+      const data = buildData(en);
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#termsAccepted-hint")).toHaveLength(0);
     });
 
     it("should render every field validation message in the error summary", () => {
@@ -179,13 +204,20 @@ describe("create-media-account template", () => {
       const bodyText = $(".govuk-body").text();
       expect(bodyText).toContain(cy.openingText1);
       expect(bodyText).toContain(cy.openingText2);
-      expect(bodyText).toContain(cy.openingText3);
+      expect($(".govuk-hint").text()).toContain(cy.openingText3);
       expect($('label[for="employer"]').text()).toContain(cy.employerLabel);
       expect($('label[for="idProof"]').text()).toContain(cy.uploadLabel);
-      expect($("#idProof-hint").text()).toContain(cy.uploadHint);
+      expect($("#idProof-hint-identity").text()).toContain(cy.uploadHintIdentity);
+      expect($("#idProof-hint-consent").text()).toContain(cy.uploadHintConsent);
+      expect($("#idProof-hint-filetype").text()).toContain(cy.uploadHintFileType);
       expect($("#email-hint").text()).toContain(cy.emailHint);
-      expect($("#termsAccepted-hint").text()).toContain(cy.termsText);
+      expect($("h2.govuk-heading-l").text()).toContain(cy.termsHeading);
+      expect(bodyText).toContain(cy.termsText1);
+      expect(bodyText).toContain(cy.termsText2);
+      expect(bodyText).toContain(cy.termsText3);
       expect($('label[for="termsAccepted"]').text()).toContain(cy.termsCheckboxLabel);
+      // No English terms content leaks into the Welsh render
+      expect(bodyText).not.toContain(en.termsText2);
     });
 
     it("should render the Welsh error summary", () => {
@@ -239,8 +271,13 @@ describe("create-media-account template", () => {
         "emailHint",
         "employerLabel",
         "uploadLabel",
-        "uploadHint",
-        "termsText",
+        "uploadHintIdentity",
+        "uploadHintConsent",
+        "uploadHintFileType",
+        "termsHeading",
+        "termsText1",
+        "termsText2",
+        "termsText3",
         "termsCheckboxLabel",
         "continueButton",
         "backToTop",
