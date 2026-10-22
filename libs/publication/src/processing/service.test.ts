@@ -33,15 +33,18 @@ vi.mock("@hmcts/ast-daily-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list", () => ({
-  generateUtaacDailyHearingListPdf: vi.fn()
+  generateUtaacDailyHearingListPdf: vi.fn(),
+  generateUtaacDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list", () => ({
-  generateUtlcDailyHearingListPdf: vi.fn()
+  generateUtlcDailyHearingListPdf: vi.fn(),
+  generateUtlcDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list", () => ({
-  generateUtccDailyHearingListPdf: vi.fn()
+  generateUtccDailyHearingListPdf: vi.fn(),
+  generateUtccDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/civil-and-family-daily-cause-list", () => ({
@@ -82,7 +85,8 @@ vi.mock("@hmcts/wpafcc-weekly-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/utiac-statutory-appeal-daily-hearing-list", () => ({
-  generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn()
+  generateUtiacStatutoryAppealDailyHearingListPdf: vi.fn(),
+  generateUtiacStatutoryAppealDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
@@ -110,7 +114,9 @@ vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
     ...actual,
     generateUtiacJrLeedsDailyHearingListPdf: vi.fn(),
     generateUtiacJrLondonDailyHearingListPdf: vi.fn(),
-    createUtiacJrDailyHearingListPdfGenerator: vi.fn()
+    createUtiacJrDailyHearingListPdfGenerator: vi.fn(),
+    generateUtiacJrDailyHearingListExcel: vi.fn(),
+    generateUtiacJrLondonDailyHearingListExcel: vi.fn()
   };
 });
 vi.mock("@hmcts/location", () => ({
@@ -123,15 +129,18 @@ vi.mock("@hmcts/notifications", () => ({
 }));
 
 vi.mock("@hmcts/crown-daily-list", () => ({
-  generateCrownDailyListPdf: vi.fn()
+  generateCrownDailyListPdf: vi.fn(),
+  generateCrownDailyListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/crown-firm-list", () => ({
-  generateCrownFirmListPdf: vi.fn()
+  generateCrownFirmListPdf: vi.fn(),
+  generateCrownFirmListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/crown-advanced-pdda-list", () => ({
-  generateCrownAdvanceListPdf: vi.fn()
+  generateCrownAdvanceListPdf: vi.fn(),
+  generateCrownAdvanceListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/civil-daily-cause-list", () => ({
@@ -212,9 +221,9 @@ describe("publication-processor", async () => {
   );
   const { generateSjpPublicListPdf } = await import("@hmcts/sjp-public-list");
   const { generateSjpPressListPdf } = await import("@hmcts/sjp-press-list");
-  const { generateCrownDailyListPdf } = await import("@hmcts/crown-daily-list");
-  const { generateCrownFirmListPdf } = await import("@hmcts/crown-firm-list");
-  const { generateCrownAdvanceListPdf } = await import("@hmcts/crown-advanced-pdda-list");
+  const { generateCrownDailyListPdf, generateCrownDailyListExcel } = await import("@hmcts/crown-daily-list");
+  const { generateCrownFirmListPdf, generateCrownFirmListExcel } = await import("@hmcts/crown-firm-list");
+  const { generateCrownAdvanceListPdf, generateCrownAdvanceListExcel } = await import("@hmcts/crown-advanced-pdda-list");
   const { generateSendDailyHearingListPdf } = await import("@hmcts/send-daily-hearing-list");
   const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
   const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
@@ -1358,6 +1367,70 @@ describe("publication-processor", async () => {
       consoleErrorSpy.mockRestore();
     });
 
+    it("should set excelPath for an Upper Tribunal list type and pass it to notifications", async () => {
+      // Arrange
+      const { generateUtccDailyHearingListExcel } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" } as any);
+      vi.mocked(generateUtccDailyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/utcc.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateUtccDailyHearingListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 1,
+        sent: 1,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // Act
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      // Assert
+      expect(generateUtccDailyHearingListExcel).toHaveBeenCalledWith(
+        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" })
+      );
+      expect(result.pdfPath).toBe("/path/to/utcc.pdf");
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "test-artefact-id",
+        expect.objectContaining({ publicationId: "test-artefact-id", pdfFilePath: "/path/to/utcc.pdf", excelPath: "test-artefact-id.xlsx" })
+      );
+    });
+
+    it("should still return pdfPath and send notifications when an Upper Tribunal Excel generator rejects", async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
+      vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
+        success: true,
+        pdfPath: "/path/to/utiac-london.pdf",
+        sizeBytes: 1024,
+        exceedsMaxSize: false
+      });
+      vi.mocked(generateUtiacJrLondonDailyHearingListExcel).mockRejectedValue(new Error("Excel crash"));
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 2,
+        sent: 2,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      // Act
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      // Assert
+      expect(result.pdfPath).toBe("/path/to/utiac-london.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(result.notificationsSent).toBe(2);
+
+      consoleErrorSpy.mockRestore();
+    });
+
     it("should call extractAndStoreArtefactSearch when jsonData is provided", async () => {
       vi.mocked(generateCauseListPdf).mockResolvedValue({
         success: true,
@@ -1842,20 +1915,87 @@ describe("publication-processor", async () => {
       expect(result.excelPath).toBeUndefined();
       consoleWarnSpy.mockRestore();
     });
+
+    it("should call Excel generator for CROWN_DAILY_PDDA_LIST and derive excelPath", async () => {
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List" } as any);
+      vi.mocked(generateCrownDailyListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/crown-daily.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCrownDailyListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      expect(generateCrownDailyListExcel).toHaveBeenCalledWith(
+        expect.objectContaining({ artefactId: "test-artefact-id", listTypeName: "CROWN_DAILY_PDDA_LIST" })
+      );
+      expect(result.excelPath).toBe("test-artefact-id.xlsx");
+    });
+
+    it("should still complete with the PDF path when a Crown Excel generator reports failure", async () => {
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "CROWN_FIRM_PDDA_LIST", friendlyName: "Crown Firm List" } as any);
+      vi.mocked(generateCrownFirmListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/crown-firm.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+      vi.mocked(generateCrownFirmListExcel).mockResolvedValue({ success: false, error: "Excel generation failed" });
+      vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      vi.mocked(sendLocationAndCaseSubscriptionNotifications).mockResolvedValue({
+        totalSubscriptions: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+        errors: [],
+        notifiedUserIds: []
+      });
+
+      const result = await processPublication({ ...baseParams, listTypeId: 999 });
+
+      expect(result.pdfPath).toBe("/path/to/crown-firm.pdf");
+      expect(result.excelPath).toBeUndefined();
+      consoleWarnSpy.mockRestore();
+    });
   });
 
   describe("listTypeHasExcel", () => {
-    const CIVIL_AND_FAMILY_EXCEL_LIST_TYPES = ["CIVIL_DAILY_CAUSE_LIST", "FAMILY_DAILY_CAUSE_LIST", "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"];
-
-    it.each(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES)("should return true for the in-scope list type %s", (listTypeName) => {
+    it.each([
+      "CROWN_DAILY_PDDA_LIST",
+      "CROWN_FIRM_PDDA_LIST",
+      "CROWN_ADVANCED_PDDA_LIST",
+      "CIVIL_DAILY_CAUSE_LIST",
+      "FAMILY_DAILY_CAUSE_LIST",
+      "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"
+    ])("should return true for %s", (listTypeName) => {
       expect(listTypeHasExcel(listTypeName)).toBe(true);
     });
 
-    it("should register exactly the 3 in-scope Civil and Family cause lists", () => {
-      expect(CIVIL_AND_FAMILY_EXCEL_LIST_TYPES).toHaveLength(3);
+    it("should return false for a list type without an Excel generator", () => {
+      expect(listTypeHasExcel("COP_DAILY_CAUSE_LIST")).toBe(false);
     });
 
-    it("should return false for an undefined list type name", () => {
+    it.each([
+      "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+      "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+      "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+      "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+      "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+      "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+      "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+      "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+      "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST"
+    ])("should return true for the Upper Tribunal list type %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it("should return false when listTypeName is undefined", () => {
       expect(listTypeHasExcel(undefined)).toBe(false);
     });
   });
@@ -1901,6 +2041,54 @@ describe("publication-processor", async () => {
         jsonData: {}
       });
 
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_DAILY_PDDA_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownDailyListExcel).mockResolvedValue({ success: true, excelPath: "crown-daily.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_DAILY_PDDA_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownDailyListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_DAILY_PDDA_LIST" }));
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_FIRM_PDDA_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownFirmListExcel).mockResolvedValue({ success: true, excelPath: "crown-firm.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_FIRM_PDDA_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownFirmListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_FIRM_PDDA_LIST" }));
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it("should return hasExcel for CROWN_ADVANCED_PDDA_LIST when generator succeeds", async () => {
+      vi.mocked(generateCrownAdvanceListExcel).mockResolvedValue({ success: true, excelPath: "crown-advance.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName: "CROWN_ADVANCED_PDDA_LIST",
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generateCrownAdvanceListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_ADVANCED_PDDA_LIST" }));
       expect(result).toEqual({ hasExcel: true });
     });
 

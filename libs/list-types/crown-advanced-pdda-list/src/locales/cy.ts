@@ -9,13 +9,13 @@ export const cy = {
   headingP1: "Dylid cyflwyno unrhyw sylwadau am restru achos i’r Swyddog Rhestru yn ddi-oed",
   headingP2: "Yr awdurdod erlyn yw Gwasanaeth Erlyn y Goron oni nodir yn wahanol",
   headingP3: "Mae (*) yn dynodi diffynnydd a gedwir yn y ddalfa",
-  fixedFor: "Wedi'i bennu ar gyfer",
-  caseRef: "Cyfeirnod Achos",
-  defendant: "Enw(au) Diffynyddion",
-  prosecutingAuthority: "Awdurdod Erlyn",
-  linkedCases: "Achosion Cysylltiedig",
-  listingNotes: "Nodiadau Rhestru",
-  toBeAllocated: "I'w ddyrannu",
+  fixedFor: "Pennu ar gyfer",
+  caseRef: "Cyfeirnod yr Achos",
+  defendant: "Enw'r Diffynnydd",
+  prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
+  linkedCases: "Achosion cysylltiedig",
+  listingNotes: "Nodiadau rhestru",
+  toBeAllocated: "I'w neilltuo",
   searchCases: "Chwilio Achosion",
   reportingRestrictions: "Cyfyngiad Adrodd",
   reportingRestrictionsTitle: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn",
@@ -36,5 +36,14 @@ export const cy = {
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
+  excelColumns: {
+    hearing: "Disgrifiad o'r Gwrandawiad",
+    fixedFor: "Pennu ar gyfer",
+    caseReference: "Cyfeirnod yr Achos",
+    defendant: "Enw'r Diffynnydd",
+    prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
+    linkedCases: "Achosion cysylltiedig",
+    listingNotes: "Nodiadau rhestru"
+  }
 };

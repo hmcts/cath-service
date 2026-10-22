@@ -7,7 +7,7 @@ global.fetch = vi.fn();
 describe("Token Client", () => {
   const mockConfig: CftIdamConfig = {
     cftIdamUrl: "https://idam.example.com",
-    clientId: "app-pip-frontend",
+    clientId: "app-cath-frontend",
     clientSecret: "test-secret",
     redirectUri: "https://localhost:8080/cft-login/return",
     authorizationEndpoint: "https://idam.example.com/o/authorize",
@@ -39,7 +39,7 @@ describe("Token Client", () => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: expect.stringContaining("client_id=app-pip-frontend")
+        body: expect.stringContaining("client_id=app-cath-frontend")
       });
 
       expect(result).toEqual(mockResponse);
@@ -56,7 +56,7 @@ describe("Token Client", () => {
       const callArgs = (fetch as any).mock.calls[0];
       const bodyParams = new URLSearchParams(callArgs[1].body);
 
-      expect(bodyParams.get("client_id")).toBe("app-pip-frontend");
+      expect(bodyParams.get("client_id")).toBe("app-cath-frontend");
       expect(bodyParams.get("client_secret")).toBe("test-secret");
       expect(bodyParams.get("grant_type")).toBe("authorization_code");
       expect(bodyParams.get("redirect_uri")).toBe("https://localhost:8080/cft-login/return");
