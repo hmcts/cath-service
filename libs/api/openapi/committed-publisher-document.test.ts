@@ -43,7 +43,7 @@ describe("committed publisher document", () => {
 
     it("should be sorted", () => {
       // Assert
-      expect(enumValues).toEqual([...enumValues].sort());
+      expect(enumValues).toEqual([...enumValues].sort((a, b) => a.localeCompare(b, "en")));
     });
   });
 

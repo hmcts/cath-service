@@ -100,8 +100,8 @@ function buildListTypeParameter(source: OpenApiDocument, publisher: PublisherOve
     throw new Error(`docs/api/openapi.yaml has no ${LIST_TYPE_PARAMETER_REF}`);
   }
 
-  // Plain code-unit order rather than localeCompare, so the committed file is identical on every machine.
-  const names = [...new Set(listTypes.map((listType) => listType.name))].sort();
+  // A fixed locale, not the machine default, so the committed file is identical on every machine.
+  const names = [...new Set(listTypes.map((listType) => listType.name))].sort((a, b) => a.localeCompare(b, "en"));
 
   return {
     ...structuredClone(parameter),

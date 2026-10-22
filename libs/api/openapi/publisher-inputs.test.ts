@@ -41,7 +41,7 @@ describe("readPublisherInputs", () => {
     const schemaPaths = listTypes.find((listType) => listType.name === "UTIAC_JR_LEEDS_DAILY_HEARING_LIST")?.schemaPaths ?? [];
     expect(schemaPaths.length).toBeGreaterThan(1);
     expect(schemaPaths.every((schemaPath) => schemaPath.startsWith("libs/list-types/utiac-jr-daily-hearing-list/src/schemas/"))).toBe(true);
-    expect(schemaPaths).toEqual([...schemaPaths].sort());
+    expect(schemaPaths).toEqual([...schemaPaths].sort((a, b) => a.localeCompare(b, "en")));
   });
 
   it("should return no schemas for a flat-file-only list type", () => {

@@ -25,7 +25,7 @@ const PACKAGE_ALIASES: Record<string, string> = {
  * Example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST -> civil-and-family-daily-cause-list
  */
 export function convertListTypeNameToKebabCase(name: string): string {
-  return name.toLowerCase().replace(/_/g, "-");
+  return name.toLowerCase().replaceAll("_", "-");
 }
 
 /**

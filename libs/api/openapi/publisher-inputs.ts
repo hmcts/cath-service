@@ -33,7 +33,7 @@ function findListTypeSchemas(repoRoot: string, name: string): ListTypeSchemas {
 
   const schemaPaths = readdirSync(absoluteSchemaDirectory)
     .filter((fileName) => fileName.endsWith(".json"))
-    .sort()
+    .sort((a, b) => a.localeCompare(b, "en"))
     .map((fileName) => `${schemaDirectory}/${fileName}`);
 
   return { name, schemaPaths };
