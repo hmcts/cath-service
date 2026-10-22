@@ -6,7 +6,7 @@
   "redis": {
     "url": "redis://localhost:6380"
   },
-  "CFT_IDAM_URL": "https://idam-web-public.aat.platform.hmcts.net",
+  "CFT_IDAM_URL": "https://hmcts-access.aat.platform.hmcts.net",
   "CATH_SERVICE_URL": "https://www.court-tribunal-hearings.service.gov.uk",
   "gtm": {
     "containerId": "GTM-XXXXXX",

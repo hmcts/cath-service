@@ -496,6 +496,24 @@ async function buildListEmailData(event: PublicationEvent, userName: string, lis
 
   const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
 
+  const emailData = await buildBaseEmailData(event, userName, config, caseValue);
+
+  return {
+    ...emailData,
+    templateParameters: {
+      ...emailData.templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    }
+  };
+}
+
+async function buildBaseEmailData(
+  event: PublicationEvent,
+  userName: string,
+  config: EmailBuilderConfig | undefined,
+  caseValue?: string
+): Promise<EmailTemplateData> {
   if (config && event.jsonData) {
     const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
     if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
