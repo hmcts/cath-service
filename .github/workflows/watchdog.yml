@@ -260,12 +260,32 @@ jobs:
               };
             };
 
+            // Coverage is decided here rather than left to the triage prompt, which is
+            // told to stop when it sees an open fix and therefore reaches the quietest
+            // conclusion available to it. A finding skipped below never reaches the
+            // prompt at all, so nothing downstream would otherwise know the problem is
+            // live with its fix sitting in review.
+            const awaitingReview = [];
+            const noteAwaitingReview = (finding, issue) => {
+              const pr = openFixPrs.find(p => p.checkIds.includes(finding.checkId));
+              // No issue number means there is nothing a reader could open, so the
+              // nudge would name a fix without saying what is still firing.
+              if (!pr || !issue) return;
+              awaitingReview.push({
+                fingerprint: finding.fingerprint,
+                checkId: finding.checkId,
+                issue,
+                pr: { number: pr.number, url: pr.url },
+              });
+            };
+
             const claimed = [];
             const prior = [];
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
               if (existing) {
                 core.info(`${finding.fingerprint}: already tracked in #${existing.number} — skipping`);
+                noteAwaitingReview(finding, existing.number);
                 continue;
               }
               const issue = await github.rest.issues.create({
@@ -289,6 +309,7 @@ jobs:
                 ].join('\n'),
               });
               claimed.push({ ...finding, issue: issue.data.number });
+              noteAwaitingReview(finding, issue.data.number);
 
               // Two lookups, because duplicated work is per check and not per problem.
               // A fingerprint carrying a build hash or a request path mints a fresh one
@@ -324,9 +345,13 @@ jobs:
             fs.writeFileSync('/tmp/watchdog/claimed.json', JSON.stringify(claimed, null, 2));
             // Written even when empty, so the prompt can read it unconditionally.
             fs.writeFileSync('/tmp/watchdog/prior.json', JSON.stringify(prior, null, 2));
+            fs.writeFileSync('/tmp/watchdog/awaiting-review.json', JSON.stringify(awaitingReview, null, 2));
             core.setOutput('count', String(claimed.length));
             core.setOutput('issues', claimed.map(c => `#${c.issue}`).join(', '));
             core.setOutput('numbers', JSON.stringify(claimed.map(c => c.issue)));
+            // Gates the Slack step on its own, because a run where every finding was
+            // skipped claims nothing and so leaves `count` at zero.
+            core.setOutput('awaiting', String(awaitingReview.length));
 
       - name: Enable Corepack
         if: steps.claim.outputs.count != '0'
@@ -683,7 +708,10 @@ jobs:
       # crashed or throttled triage must not pass for a quiet channel.
       - name: Resolve the Slack message
         id: message
-        if: always() && steps.claim.outputs.count != '0'
+        # Also when nothing was claimed: a recurrence whose tracking issue is still
+        # open is skipped by the claim step, so triage never runs and `count` is zero
+        # while the problem is live and its fix is waiting for a reviewer.
+        if: always() && (steps.claim.outputs.count != '0' || steps.claim.outputs.awaiting != '0')
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           ISSUES: ${{ steps.claim.outputs.issues }}
@@ -702,6 +730,27 @@ jobs:
             printf '_%s further finding(s) were deferred by the per-run cap and will be reported on a later run._\n' "$DEFERRED"
           }
 
+          AWAITING_FILE=/tmp/watchdog/awaiting-review.json
+          # Several problems can be waiting on review at once, and the point of the
+          # message is the pull requests, not an inventory of the findings.
+          AWAITING_SHOWN=3
+
+          awaiting_count() {
+            jq 'length' "$AWAITING_FILE" 2>/dev/null || echo 0
+          }
+
+          awaiting_lines() {
+            [ "$(awaiting_count)" != "0" ] || return 0
+            printf ':mag: *CaTH watchdog* — a fix for this is already open and waiting for a reviewer.\n'
+            jq -r --argjson shown "$AWAITING_SHOWN" \
+              '.[:$shown][] | "• <\(.pr.url)|#\(.pr.number)> fixes `\(.checkId)`, still firing on #\(.issue)"' \
+              "$AWAITING_FILE"
+            jq -r --argjson shown "$AWAITING_SHOWN" \
+              '(length - $shown) | select(. > 0) | "_…and \(.) more awaiting review._"' \
+              "$AWAITING_FILE"
+            printf 'Nothing was changed this run — reviewing the open fix is what clears it.\n'
+          }
+
           fallback() {
             echo "::warning::posting a fallback message: $1"
             {
@@ -711,10 +760,31 @@ jobs:
                 "$COUNT" "$ISSUES" "$1"
               [ -n "${PR_URL:-}" ] && printf 'Draft fix: %s\n' "$PR_URL"
               printf '<%s|View the run>\n' "$RUN_URL"
+              awaiting_lines
               deferred_line
               echo "SLACKEOF"
             } >> "$GITHUB_OUTPUT"
           }
+
+          # Nothing was claimed, so triage was gated off and wrote no decision to read.
+          # The fallback's wording is for a triage that went wrong; a fix waiting for
+          # review is not that.
+          if [ "$COUNT" = "0" ]; then
+            if [ "$(awaiting_count)" = "0" ]; then
+              echo "notify=false" >> "$GITHUB_OUTPUT"
+              echo "Nothing claimed and nothing awaiting review."
+              exit 0
+            fi
+            {
+              echo "notify=true"
+              echo "text<<SLACKEOF"
+              awaiting_lines
+              deferred_line
+              echo "SLACKEOF"
+            } >> "$GITHUB_OUTPUT"
+            echo "Notifying: every finding was already tracked, and an open fix covers it."
+            exit 0
+          fi
 
           if [ "$CLAUDE_OUTCOME" != "success" ]; then
             fallback "triage exited $CLAUDE_OUTCOME"
@@ -734,6 +804,19 @@ jobs:
           reason=$(jq -r '.reason // "(none given)"' /tmp/watchdog/notify.json)
 
           if [ "$(jq -r .notify /tmp/watchdog/notify.json)" != "true" ]; then
+            # Staying quiet is the right default and usually correct, but not while a
+            # fix for the thing that just fired is sitting unread in review.
+            if [ "$(awaiting_count)" != "0" ]; then
+              {
+                echo "notify=true"
+                echo "text<<SLACKEOF"
+                awaiting_lines
+                deferred_line
+                echo "SLACKEOF"
+              } >> "$GITHUB_OUTPUT"
+              echo "Notifying despite notify=false: a fix is awaiting review. Claude's reason: ${reason}"
+              exit 0
+            fi
             echo "notify=false" >> "$GITHUB_OUTPUT"
             echo "Not notifying. Claude's reason: ${reason}"
             {
@@ -758,11 +841,13 @@ jobs:
             text="${text:0:2500}"$'\n'"_(truncated — full detail on ${ISSUES})_"
           fi
 
-          # After the cap, so the deferred line cannot be the part that gets cut.
+          # After the cap, so neither the awaiting-review lines nor the deferred line can
+          # be the part that gets cut.
           {
             echo "notify=true"
             echo "text<<SLACKEOF"
             printf '%s\n' "$text"
+            awaiting_lines
             deferred_line
             echo "SLACKEOF"
           } >> "$GITHUB_OUTPUT"
