@@ -1,4 +1,4 @@
-import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime } from "@hmcts/list-types-common";
+import { formatDdMmYyyyDate, formatDisplayDate, formatLastUpdatedDateTime, normalizeTime } from "@hmcts/list-types-common";
 import type { GrcWeeklyHearing, GrcWeeklyHearingList } from "../models/types.js";
 
 export interface RenderOptions {
@@ -25,7 +25,7 @@ export function renderGrcWeeklyHearingListData(hearingList: GrcWeeklyHearingList
 
   const renderedHearings = hearingList.map((hearing) => ({
     date: formatDdMmYyyyDate(hearing.date, options.locale),
-    hearingTime: hearing.hearingTime,
+    hearingTime: normalizeTime(hearing.hearingTime),
     caseReferenceNumber: hearing.caseReferenceNumber,
     caseName: hearing.caseName,
     judges: hearing.judges,

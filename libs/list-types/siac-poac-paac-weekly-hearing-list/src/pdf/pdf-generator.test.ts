@@ -17,6 +17,8 @@ vi.mock("../rendering/renderer.js", () => ({
 }));
 
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import { renderSiacPoacPaacData } from "../rendering/renderer.js";
 import { generateSiacPoacPaacWeeklyHearingListPdf } from "./pdf-generator.js";
 
@@ -66,8 +68,7 @@ describe("generateSiacPoacPaacWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "Special Immigration Appeals Commission",
-      listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+      listTypeName: "SIAC_WEEKLY_HEARING_LIST"
     });
 
     // Assert
@@ -93,8 +94,7 @@ describe("generateSiacPoacPaacWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "Special Immigration Appeals Commission",
-      listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+      listTypeName: "SIAC_WEEKLY_HEARING_LIST"
     });
 
     // Assert
@@ -116,8 +116,7 @@ describe("generateSiacPoacPaacWeeklyHearingListPdf", () => {
       locale: "en",
       locationId: "240",
       jsonData: mockHearingList,
-      courtName: "Special Immigration Appeals Commission",
-      listTitle: "Special Immigration Appeals Commission Weekly Hearing List"
+      listTypeName: "SIAC_WEEKLY_HEARING_LIST"
     });
 
     // Assert
@@ -142,17 +141,94 @@ describe("generateSiacPoacPaacWeeklyHearingListPdf", () => {
       locale: "cy",
       locationId: "999",
       jsonData: mockHearingList,
-      courtName: "Proscribed Organisations Appeal Commission",
-      listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List"
+      listTypeName: "POAC_WEEKLY_HEARING_LIST"
     });
 
     // Assert
     expect(renderSiacPoacPaacData).toHaveBeenCalledWith(mockHearingList, {
       locale: "cy",
-      courtName: "Proscribed Organisations Appeal Commission",
+      courtName: cy.poacCourtName,
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Proscribed Organisations Appeal Commission Weekly Hearing List"
+      listTitle: cy.poacPageTitle
     });
+  });
+
+  it.each([
+    ["SIAC_WEEKLY_HEARING_LIST", en.siacPageTitle, cy.siacPageTitle],
+    ["POAC_WEEKLY_HEARING_LIST", en.poacPageTitle, cy.poacPageTitle],
+    ["PAAC_WEEKLY_HEARING_LIST", en.paacPageTitle, cy.paacPageTitle]
+  ])("should use the locale list title for %s", async (listTypeName, enTitle, cyTitle) => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+    const baseOptions = { artefactId: "title-test", contentDate: new Date("2025-01-01"), locationId: "999", jsonData: mockHearingList, listTypeName };
+
+    // Act
+    await generateSiacPoacPaacWeeklyHearingListPdf({ ...baseOptions, locale: "en" });
+    await generateSiacPoacPaacWeeklyHearingListPdf({ ...baseOptions, locale: "cy" });
+
+    // Assert
+    expect(renderSiacPoacPaacData).toHaveBeenNthCalledWith(1, mockHearingList, expect.objectContaining({ listTitle: enTitle }));
+    expect(renderSiacPoacPaacData).toHaveBeenNthCalledWith(2, mockHearingList, expect.objectContaining({ listTitle: cyTitle }));
+  });
+
+  it("should give the Welsh PDF the legacy Welsh title", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    // Act
+    await generateSiacPoacPaacWeeklyHearingListPdf({
+      artefactId: "welsh-title",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy",
+      locationId: "999",
+      jsonData: mockHearingList,
+      listTypeName: "SIAC_WEEKLY_HEARING_LIST"
+    });
+
+    // Assert
+    expect(renderSiacPoacPaacData).toHaveBeenCalledWith(
+      mockHearingList,
+      expect.objectContaining({ listTitle: "Rhestr o Wrandawiadau Wythnosol y Comisiwn Apeliadau Mewnfudo Arbennig" })
+    );
+  });
+
+  it("should return an error without generating a PDF for an unsupported list type", async () => {
+    // Act
+    const result = await generateSiacPoacPaacWeeklyHearingListPdf({
+      artefactId: "unsupported",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "999",
+      jsonData: mockHearingList,
+      listTypeName: "UNKNOWN_LIST"
+    });
+
+    // Assert
+    expect(result).toEqual({ success: false, error: "Unsupported list type: UNKNOWN_LIST" });
+    expect(generatePdfFromHtml).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["en", "MANUAL_UPLOAD", "Manual Upload"],
+    ["cy", "MANUAL_UPLOAD", "Lanlwytho â Llaw"],
+    ["cy", "SNL", "ListAssist"]
+  ])("should show the %s locale data source label for %s, as legacy does", async (locale, provenance, expectedLabel) => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    // Act
+    await generateSiacPoacPaacWeeklyHearingListPdf({
+      artefactId: "provenance-label",
+      contentDate: new Date("2025-01-01"),
+      locale,
+      locationId: "999",
+      jsonData: mockHearingList,
+      provenance,
+      listTypeName: "SIAC_WEEKLY_HEARING_LIST"
+    });
+
+    // Assert
+    expect(vi.mocked(generatePdfFromHtml).mock.calls[0][0]).toContain(expectedLabel);
   });
 });
