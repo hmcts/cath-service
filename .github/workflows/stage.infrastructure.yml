@@ -23,6 +23,33 @@ jobs:
     name: Terraform Format
     uses: ./.github/workflows/job.terraform-fmt.yml
 
+  # APIM imports the committed infrastructure/resources/swagger/api-swagger.json. The
+  # Build stage (and so job.test.yml) is skipped for a PR that only touches
+  # docs/api/openapi.yaml or infrastructure/, so the drift guard runs here as well,
+  # before any plan or apply, so a stale publisher document never reaches APIM.
+  openapi-publisher-check:
+    name: OpenAPI Publisher Document
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.17.0'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Check the publisher document matches its source
+        run: yarn workspace @hmcts/blob-ingestion vitest run openapi
+
   # cnp-githubactions-library resolves the state store names but never creates the
   # container, unlike the Jenkins library every other CNP service uses - see
   # stateStoreInit.groovy and resources/uk/gov/hmcts/contino/stateStoreInit.sh in
@@ -96,7 +123,7 @@ jobs:
 
   terraform:
     name: Terraform ${{ matrix.environment }}
-    needs: [terraform-fmt, state-store-init]
+    needs: [terraform-fmt, state-store-init, openapi-publisher-check]
     # fail-fast: false so a broken perftest plan cannot cancel the aat apply.
     strategy:
       fail-fast: false
