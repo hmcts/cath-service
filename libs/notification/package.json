@@ -18,6 +18,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/govuk-notify": "workspace:*",
     "notifications-node-client": "^8.2.1"
   },
   "devDependencies": {
