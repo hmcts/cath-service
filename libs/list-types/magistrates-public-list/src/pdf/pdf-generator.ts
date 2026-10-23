@@ -6,7 +6,6 @@ import {
   createPdfErrorResult,
   loadTranslations,
   PDF_BASE_STYLES,
-  PDF_CIVIL_FAMILY_STYLES,
   type PdfGenerationResult,
   savePdfToStorage
 } from "@hmcts/list-types-common";
@@ -46,7 +45,7 @@ export async function generateMagistratesPublicListPdf(options: PdfGenerationOpt
       listData: renderedData.listData,
       dataSource: provenanceLabel,
       t: translations,
-      pdfStyles: PDF_BASE_STYLES + PDF_CIVIL_FAMILY_STYLES
+      pdfStyles: PDF_BASE_STYLES
     });
 
     const pdfResult = await generatePdfFromHtml(html);

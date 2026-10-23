@@ -105,10 +105,14 @@ export const PDF_BASE_STYLES = `
       padding: 10px;
       margin-bottom: 10px;
     }
+    .restriction-row td {
+      background-color: #f3f2f1;
+      font-style: italic;
+    }
 `;
 
 /**
- * Additional styles for civil-and-family list type (court sections, restrictions, etc.)
+ * Additional styles for civil-and-family list type (court sections, section headings, etc.)
  */
 export const PDF_CIVIL_FAMILY_STYLES = `
     .court-section {
@@ -125,9 +129,5 @@ export const PDF_CIVIL_FAMILY_STYLES = `
       margin-bottom: 10px;
       font-size: 16px;
       font-weight: 700;
-    }
-    .restriction-row td {
-      background-color: #f3f2f1;
-      font-style: italic;
     }
 `;
