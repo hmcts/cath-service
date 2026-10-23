@@ -1504,7 +1504,7 @@ describe("publication-processor", async () => {
     it("should set excelPath for an Upper Tribunal list type and pass it to notifications", async () => {
       // Arrange
       const { generateUtccDailyHearingListExcel } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" } as any);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_T_AND_CC_DAILY_HEARING_LIST" } as any);
       vi.mocked(generateUtccDailyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/utcc.pdf", sizeBytes: 1024, exceedsMaxSize: false });
       vi.mocked(generateUtccDailyHearingListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
       vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
@@ -1522,7 +1522,7 @@ describe("publication-processor", async () => {
 
       // Assert
       expect(generateUtccDailyHearingListExcel).toHaveBeenCalledWith(
-        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" })
+        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_T_AND_CC_DAILY_HEARING_LIST" })
       );
       expect(result.pdfPath).toBe("/path/to/utcc.pdf");
       expect(result.excelPath).toBe("test-artefact-id.xlsx");
@@ -1536,7 +1536,7 @@ describe("publication-processor", async () => {
       // Arrange
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const { generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
       vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
         success: true,
         pdfPath: "/path/to/utiac-london.pdf",
@@ -2112,15 +2112,15 @@ describe("publication-processor", async () => {
     });
 
     it.each([
-      "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
-      "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
-      "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
-      "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
-      "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
-      "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
-      "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
-      "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
-      "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST"
+      "UT_T_AND_CC_DAILY_HEARING_LIST",
+      "UT_LC_DAILY_HEARING_LIST",
+      "UT_AAC_DAILY_HEARING_LIST",
+      "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
+      "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
+      "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
+      "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+      "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+      "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST"
     ])("should return true for the Upper Tribunal list type %s", (listTypeName) => {
       // Act
       const result = listTypeHasExcel(listTypeName);
@@ -2378,7 +2378,7 @@ describe("publication-processor", async () => {
       "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
       "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
       "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
-      "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+      "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
       "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
     ];
     const RCJ_LIST_TYPES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>][] = [
@@ -2481,7 +2481,7 @@ describe("publication-processor", async () => {
 
     it("should not store an Excel for a non-strategic list without an Excel generator given an uploaded Excel", async () => {
       // Act
-      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", uploadedExcel });
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "CST_WEEKLY_HEARING_LIST", uploadedExcel });
 
       // Assert
       expect(saveExcelToStorage).not.toHaveBeenCalled();
