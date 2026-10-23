@@ -95,6 +95,7 @@
       "@hmcts/sjp-public-list/config": ["libs/list-types/sjp-public-list/src/config"],
       "@hmcts/subscriptions/config": ["libs/subscriptions/src/config"],
       "@hmcts/notification": ["libs/notification/src"],
+      "@hmcts/media-reporting": ["libs/media-reporting/src"],
       "@hmcts/notifications": ["libs/notifications/src"],
       "@hmcts/govuk-notify": ["libs/govuk-notify/src"],
       "@hmcts/pdda-html-upload": ["libs/pdda-html-upload/src"],
