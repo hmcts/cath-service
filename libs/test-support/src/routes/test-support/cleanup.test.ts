@@ -93,7 +93,9 @@ describe("cleanup routes", () => {
       mockRequest.body = { prefix: "test_" };
 
       vi.mocked(prisma.location.findMany).mockResolvedValue([{ locationId: 1 }, { locationId: 2 }] as any);
-      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 3 } as any);
+      vi.mocked(prisma.artefact.deleteMany)
+        .mockResolvedValueOnce({ count: 3 } as any) // artefacts at prefixed locations
+        .mockResolvedValueOnce({ count: 2 } as any); // artefacts referencing prefixed list types
       vi.mocked(prisma.user.findMany).mockResolvedValue([{ userId: "user1" }] as any);
       vi.mocked(prisma.subscription.deleteMany)
         .mockResolvedValueOnce({ count: 2 } as any) // user subscriptions
@@ -111,9 +113,9 @@ describe("cleanup routes", () => {
       // Assert
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_",
-        deleted: 13,
+        deleted: 15,
         details: {
-          artefacts: 3,
+          artefacts: 5,
           subscriptions: 4,
           users: 1,
           locations: 2,
@@ -124,11 +126,41 @@ describe("cleanup routes", () => {
       });
     });
 
+    it("should delete artefacts referencing prefixed list types before deleting the list types", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_1_" };
+
+      vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 4 } as any);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.location.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.listType.deleteMany).mockResolvedValue({ count: 1 } as any);
+      vi.mocked(prisma.mediaApplication.deleteMany).mockResolvedValue({ count: 0 } as any);
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 0 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { listType: { name: { startsWith: "E2E_1_" } } }
+      });
+      expect(vi.mocked(prisma.artefact.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(prisma.listType.deleteMany).mock.invocationCallOrder[0]);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          details: expect.objectContaining({ artefacts: 4, listTypes: 1 })
+        })
+      );
+    });
+
     it("should handle empty test locations", async () => {
       // Arrange
       mockRequest.body = { prefix: "test_prefix" };
 
       vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.findMany).mockResolvedValue([]);
       vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
@@ -140,8 +172,11 @@ describe("cleanup routes", () => {
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
 
-      // Assert
-      expect(prisma.artefact.deleteMany).not.toHaveBeenCalled();
+      // Assert - only the list-type-scoped delete runs; there are no locations to scope by
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledTimes(1);
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { listType: { name: { startsWith: "test_prefix" } } }
+      });
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_prefix",
         deleted: 0,
@@ -162,6 +197,7 @@ describe("cleanup routes", () => {
       mockRequest.body = { prefix: "test_prefix" };
 
       vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.findMany).mockResolvedValue([]);
       vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
@@ -189,6 +225,7 @@ describe("cleanup routes", () => {
       mockRequest.body = { prefix: "E2E_123_" };
 
       vi.mocked(prisma.location.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.findMany).mockResolvedValue([]);
       vi.mocked(prisma.subscription.deleteMany).mockResolvedValue({ count: 0 } as any);
       vi.mocked(prisma.user.deleteMany).mockResolvedValue({ count: 0 } as any);
