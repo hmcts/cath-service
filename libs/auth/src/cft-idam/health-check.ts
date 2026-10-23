@@ -12,10 +12,9 @@ export function cftIdamHealthCheck() {
       return;
     }
 
-    const { cftIdamUrl, hmctsAccessUrl } = getCftIdamConfig();
-    const [cftIdam, hmctsAccess] = await Promise.all([checkStatus(`${cftIdamUrl}/health`), checkStatus(`${hmctsAccessUrl}/health`)]);
-    const services = { "cft-idam": cftIdam, "hmcts-access": hmctsAccess };
-    const status = cftIdam === "UP" && hmctsAccess === "UP" ? "UP" : "DOWN";
+    const { cftIdamUrl } = getCftIdamConfig();
+    const status = await checkStatus(`${cftIdamUrl}/health`);
+    const services = { "hmcts-access": status };
 
     res.status(status === "UP" ? 200 : 503).json({ status, services });
   };

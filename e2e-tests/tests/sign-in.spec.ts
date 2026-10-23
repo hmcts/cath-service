@@ -60,7 +60,7 @@ test.describe("Sign In Account Selection Page", () => {
       // Verify navigation to CFT IDAM login (external or internal)
       await page.waitForTimeout(1000); // Wait for redirect
       const currentUrl = page.url();
-      expect(currentUrl).toMatch(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+      expect(currentUrl).toMatch(/hmcts-access\.aat\.platform\.hmcts\.net|cft-login/);
     });
   });
 

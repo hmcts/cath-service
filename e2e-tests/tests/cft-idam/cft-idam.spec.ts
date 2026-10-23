@@ -21,7 +21,7 @@ test.describe("CFT IDAM Login Flow", () => {
     await continueButton.click();
 
     // Should redirect to CFT IDAM
-    await expect(page).toHaveURL(/idam-web-public\.aat\.platform\.hmcts\.net|cft-login/);
+    await expect(page).toHaveURL(/hmcts-access\.aat\.platform\.hmcts\.net|cft-login/);
 
     // Perform CFT IDAM login
     await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);

@@ -15,6 +15,10 @@
       "production": "./dist/list-type-provenance.js",
       "default": "./src/list-type-provenance.ts"
     },
+    "./list-type-package": {
+      "production": "./dist/validation/list-type-package.js",
+      "default": "./src/validation/list-type-package.ts"
+    },
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
