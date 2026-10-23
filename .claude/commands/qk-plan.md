@@ -73,18 +73,40 @@ TASK 1: Fetch GitHub Issue Details
 ## PHASE 3: Technical Planning
 *Mark "Create technical implementation plan" as in_progress*
 
+### Step 3.0: Determine ticket format
+
+Read docs/tickets/$ARGUMENT/ticket.md and check for a `## 5. Page Details` heading. That heading is
+unique to `templates/new-feature-simplified.md` — the full template says "Page Specifications".
+
+* Present → set TICKET FORMAT to `simplified`. The ticket was written to be refined, so it carries
+  no wireframe, accessibility or test-scenario sections. The agent below reconstructs them.
+* Absent → set TICKET FORMAT to `full`. The ticket already carries that material; nothing is
+  reconstructed.
+
+Pass the value into the prompt below as TICKET FORMAT.
+
 ### Step 3.1: Determine template source
 
-Read docs/tickets/$ARGUMENT/ticket.md. If it needs a new rendered page or list-type view, set
-TEMPLATE SOURCE to "migrate from pip-frontend <page>" — migrating the `.njk` from pip-frontend is
-the default. Set TEMPLATE SOURCE to "n/a" for flat-file / manual-upload list
-types or registration-only work. Pass this value into the prompt below as TEMPLATE SOURCE.
+Read docs/tickets/$ARGUMENT/ticket.md and set TEMPLATE SOURCE to one of three values:
+
+* `migrate from pip-frontend <path>` — a rendered page or list-type view that exists upstream. This
+  is the default for a new page. Locate the candidate in github.com/hmcts/pip-frontend:
+  `src/main/routes/routes.ts` maps routes to views, `src/main/controllers/<Name>Controller.ts` names
+  the exact view, and views live under `src/main/views/**` (cause lists are often in
+  `views/style-guide/`). Record the path only — `/qk-implement` runs the migrate-pip-pages skill.
+* `write fresh` — a rendered page with no upstream equivalent. Never name a sibling page as the
+  source of a migration. If pip-frontend could not be reached at all, say so and stop rather than
+  falling back to this value — "not found" and "could not look" are different answers.
+* `n/a` — flat-file / manual-upload list types, or registration-only work.
+
+Pass the resulting value into the prompt below as TEMPLATE SOURCE.
 
 ### Step 3.2: Generate Implementation Plan [ISOLATED AGENT]
 
 ```
 AGENT: full-stack-engineer
-TEMPLATE SOURCE: <migrate from pip-frontend <page> | write fresh | n/a>
+TEMPLATE SOURCE: <migrate from pip-frontend <path> | write fresh | n/a>
+TICKET FORMAT: <simplified | full>
 TASK: Create a technical implementation plan and task list for the issue
 INPUT: docs/tickets/$ARGUMENT/ticket.md
 OUTPUT: docs/tickets/$ARGUMENT/plan.md AND docs/tickets/$ARGUMENT/tasks.md
@@ -94,8 +116,35 @@ PROMPT FOR AGENT:
 
 IMPORTANT: The ticket.md includes comments from the issue. These comments may contain clarifications, additional requirements, or context from stakeholders - consider them when creating the plan.
 
+IF TICKET FORMAT is `simplified`, the ticket came from `templates/new-feature-simplified.md`. It is
+written to be read and refined in one session, so it deliberately omits three sections the full
+template carried. Reconstruct them as your first act, from the ticket plus `.claude/rules/design.md`
+— the same material that generated them in the first place. They are not gaps the author forgot:
+
+- **Wireframe** — an ASCII sketch of the page, from the `Layout` and `Content` bullets. If the
+  `Reference` bullet names an equivalent page or a pip-frontend view, cite that instead of sketching.
+  Treat a `Reference` you cannot verify as absent.
+- **Accessibility** — from `.claude/rules/design.md` and the layout. Only what is specific to this
+  page beyond standard GOV.UK component behaviour; do not restate WCAG boilerplate.
+- **Test scenarios** — from the Acceptance Criteria plus the User Journey Flow, covering the error
+  paths the AC does not name. Bound by CLAUDE.md's minimise-test-count rule: one test per user
+  journey, not one per validation.
+
+Take the ticket's `Validation`, `Navigation`, `Content` and `Error messages` as authoritative and
+complete — carry them through, do not re-derive or summarise them. Re-derive the open questions from
+your own expansion: an empty 'Assumptions & Open Questions' section means the author saw nothing
+obvious in refinement, not that nothing is unclear.
+
+IF TICKET FORMAT is `full`, the ticket already carries all of the above. Use it as written and do
+not reconstruct anything.
+
 **FILE 1: docs/tickets/$ARGUMENT/plan.md**
 This is the technical specification/plan including:
+
+0. **Specification** (ONLY when TICKET FORMAT is `simplified` - omit this section entirely otherwise)
+   - The ASCII wireframe, or the cited reference page it was taken from
+   - Accessibility needs specific to this page
+   - This section is the reconstructed user-facing spec, not technical approach. Keep it short
 
 1. **Technical Approach**
    - High-level implementation strategy
@@ -118,7 +167,12 @@ This is the technical specification/plan including:
    - How each acceptance criterion will be satisfied
    - Verification approach for each criterion
 
-5. **Open Questions**
+5. **Test Scenarios**
+   - One scenario per user journey, not one per validation (see CLAUDE.md and `.claude/rules/testing.md`)
+   - Include the error paths the acceptance criteria do not name
+   - Every scenario here must have a corresponding task in tasks.md
+
+6. **Open Questions**
    - Any ambiguities that need clarification
    - Technical decisions that need input
    - Listed in a 'CLARIFICATIONS NEEDED' section at the end

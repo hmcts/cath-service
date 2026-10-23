@@ -3,9 +3,58 @@ import { expect, test } from "@playwright/test";
 import ExcelJSPkg from "exceljs";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import {
+  cleanupTestNotifications,
+  cleanupTestSubscriptions,
+  cleanupTestUsers,
+  createTestSubscription,
+  createTestUser,
+  getGovNotifyEmail,
+  waitForNotifications
+} from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
+import { checkFlatFileExists, deleteTestArtefacts, getLatestArtefactByLocationAndListType, getListTypeByName } from "../../utils/test-support-api.js";
 
 const { Workbook } = ExcelJSPkg;
+
+const KB_DIVISION_LIST_TYPE_NAME = "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST";
+const SSCS_LONDON_LIST_TYPE_NAME = "SSCS_LONDON_DAILY_HEARING_LIST";
+const SSCS_SHEET_NAME = "SSCS hearings";
+const SSCS_UPLOADED_HEADER = [
+  "Venue",
+  "Appeal Reference Number",
+  "Hearing Type",
+  "Appellant",
+  "Courtroom",
+  "Hearing Time",
+  "Tribunal",
+  "FTA/Respondent",
+  "Additional Information"
+];
+const SSCS_ROW = ["London Tribunal", "SC123/45/67890", "Oral", "A Smith", "Room 1", "10:30am", "Judge Jones", "DWP", "Interpreter required"];
+const SSCS_EN_HEADINGS = [
+  "Venue",
+  "Appeal reference number",
+  "Hearing type",
+  "Appellant",
+  "Courtroom",
+  "Hearing time",
+  "Tribunal",
+  "FTA/Respondent",
+  "Additional information"
+];
+const SSCS_CY_HEADINGS = [
+  "Lleoliad",
+  "Cyfeirnod Apêl",
+  "Math o Wrandawiad",
+  "Apellydd",
+  "Ystafell y Llys",
+  "Amser y Gwrandawiad",
+  "Tribiwnlys",
+  "ATC/Ymatebydd",
+  "Gwybodaeth Ychwanegol"
+];
+const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
 
@@ -21,6 +70,111 @@ async function createMinimalExcelFile(): Promise<Buffer> {
   worksheet.addRow(["01/01/2026", "Test Case A vs B", "1 hour", "Substantive hearing", "Care Standards Tribunal", "Remote hearing"]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createKbDivisionExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet("KB hearings");
+
+  worksheet.addRow(["Venue", "Judge", "Time", "Case Number", "Case Details", "Hearing Type", "Additional Information", "Notes"]);
+  worksheet.addRow(["Court 1", "Mr Justice Smith", "10.30am", "KB-2026-000001", "Smith v Jones", "Trial", "", "Bring bundle"]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createSscsExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet(SSCS_SHEET_NAME);
+
+  worksheet.addRow([...SSCS_UPLOADED_HEADER, "Internal notes"]);
+  worksheet.addRow([...SSCS_ROW, "Appellant is vulnerable"]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function uploadExcelAndConfirm(page: Page, upload: ExcelUpload): Promise<string> {
+  const today = new Date();
+  const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+  await page.selectOption('select[name="listType"]', String(upload.listTypeId));
+  await fillDate(page, "hearingStartDate", today);
+  await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+  await page.selectOption('select[name="language"]', upload.language);
+  await fillDate(page, "displayFrom", today);
+  await fillDate(page, "displayTo", nextWeek);
+  await page.locator('input[name="file"]').setInputFiles({
+    name: upload.fileName,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: upload.buffer
+  });
+  await page.getByRole("button", { name: /continue/i }).click();
+  await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+  await expect(page.locator("h1")).toHaveText("File upload summary");
+  if (upload.checkAccessibility) {
+    expect((await axeCheck(page).analyze()).violations).toEqual([]);
+  }
+
+  await page.getByRole("button", { name: "Confirm" }).click();
+  await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+  await expect(page.locator(".govuk-panel__title")).toHaveText("File upload successful");
+  if (upload.checkAccessibility) {
+    expect((await axeCheck(page).analyze()).violations).toEqual([]);
+    await page.goto("/non-strategic-upload-success?lng=cy");
+    await expect(page.locator(".govuk-panel__title")).toHaveText("Wedi llwyddo i uwchlwytho ffeiliau");
+  }
+
+  const artefact = await getLatestArtefactByLocationAndListType(testLocationId, upload.listTypeId);
+  if (!artefact) {
+    throw new Error(`No artefact was created for list type ${upload.listTypeId}`);
+  }
+  return artefact.artefactId;
+}
+
+async function downloadReformattedWorksheet(page: Page, artefactId: string, sheetName: string): Promise<ExcelJSPkg.Worksheet> {
+  await expect.poll(async () => (await checkFlatFileExists(artefactId)).exists, { timeout: 60000, intervals: [2000] }).toBe(true);
+  const excelBuffer = await waitForExcelDownload(page, artefactId);
+
+  const workbook = new Workbook();
+  // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
+  await workbook.xlsx.load(excelBuffer);
+  const worksheet = workbook.getWorksheet(sheetName);
+  if (!worksheet) {
+    throw new Error(`Reformatted workbook is missing the uploaded sheet ${sheetName}`);
+  }
+  return worksheet;
+}
+
+async function expectPdfAndExcelLinksInEmail(artefactId: string): Promise<void> {
+  const notifications = await waitForNotifications(artefactId, 30, 2000, true);
+  const sentNotification = notifications.find((n) => n.govNotifyId !== null);
+  if (!sentNotification?.govNotifyId) {
+    throw new Error(`No sent notification for ${artefactId}`);
+  }
+
+  const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
+  expect(govNotifyEmail.body.match(GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN)).toHaveLength(2);
+}
+
+function rowValues(worksheet: ExcelJSPkg.Worksheet, rowNumber: number): unknown[] {
+  return (worksheet.getRow(rowNumber).values as unknown[]).slice(1);
+}
+
+async function fillDate(page: Page, prefix: string, date: Date) {
+  await page.fill(`input[name="${prefix}-day"]`, String(date.getDate()));
+  await page.fill(`input[name="${prefix}-month"]`, String(date.getMonth() + 1));
+  await page.fill(`input[name="${prefix}-year"]`, String(date.getFullYear()));
+}
+
+async function waitForExcelDownload(page: Page, artefactId: string, maxRetries = 30, delayMs = 2000): Promise<Buffer> {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await page.request.get(`/api/flat-file/${artefactId}/download?format=excel`);
+    if (response.ok()) {
+      return Buffer.from(await response.body());
+    }
+    await page.waitForTimeout(delayMs);
+  }
+  throw new Error(`Excel download for ${artefactId} was not available`);
 }
 
 async function authenticateSystemAdmin(page: Page) {
@@ -240,6 +394,76 @@ test.describe
       await expect(page).toHaveURL("/non-strategic-upload");
     });
 
+    test("RCJ and SSCS Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
+      test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
+
+      const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
+      const subscription = await createTestSubscription(testUser.userId, testLocationId);
+      const kbListType = (await getListTypeByName(KB_DIVISION_LIST_TYPE_NAME)) as { id: number } | null;
+      const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
+      if (!kbListType || !sscsListType) {
+        throw new Error("Expected list types are not seeded");
+      }
+      const artefactIds: string[] = [];
+
+      try {
+        // STEP 1: Upload a KB Division workbook with an unformatted time and an extra column, checking accessibility on the way
+        const kbArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: kbListType.id,
+          language: "ENGLISH",
+          fileName: "kb-division.xlsx",
+          buffer: await createKbDivisionExcelFile(),
+          checkAccessibility: true
+        });
+        artefactIds.push(kbArtefactId);
+
+        // STEP 2: The KB Excel has localised headings and formatted values, and the unknown column is dropped
+        const kbWorksheet = await downloadReformattedWorksheet(page, kbArtefactId, "KB hearings");
+        expect(rowValues(kbWorksheet, 1)).toEqual(["Venue", "Judge", "Time", "Case number", "Case details", "Hearing type", "Additional information"]);
+        expect(kbWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(kbWorksheet, 2)).toEqual(["Court 1", "Mr Justice Smith", "10:30am", "KB-2026-000001", "Smith v Jones", "Trial", ""]);
+
+        // STEP 3: The KB subscription email links both the PDF and the Excel
+        await expectPdfAndExcelLinksInEmail(kbArtefactId);
+
+        // STEP 4: An English SSCS upload gets English headings, its unknown column dropped, and both email links
+        const sscsArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: sscsListType.id,
+          language: "ENGLISH",
+          fileName: "sscs-london.xlsx",
+          buffer: await createSscsExcelFile()
+        });
+        artefactIds.push(sscsArtefactId);
+
+        const sscsWorksheet = await downloadReformattedWorksheet(page, sscsArtefactId, SSCS_SHEET_NAME);
+        expect(rowValues(sscsWorksheet, 1)).toEqual(SSCS_EN_HEADINGS);
+        expect(sscsWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(sscsWorksheet, 2)).toEqual(SSCS_ROW);
+        expect(rowValues(sscsWorksheet, 1)).not.toContain("Internal notes");
+        await expectPdfAndExcelLinksInEmail(sscsArtefactId);
+
+        // STEP 5: A Welsh SSCS upload gets the Welsh headings
+        const welshSscsArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: sscsListType.id,
+          language: "WELSH",
+          fileName: "sscs-london-cy.xlsx",
+          buffer: await createSscsExcelFile()
+        });
+        artefactIds.push(welshSscsArtefactId);
+
+        const welshSscsWorksheet = await downloadReformattedWorksheet(page, welshSscsArtefactId, SSCS_SHEET_NAME);
+        expect(rowValues(welshSscsWorksheet, 1)).toEqual(SSCS_CY_HEADINGS);
+        expect(rowValues(welshSscsWorksheet, 2)).toEqual(SSCS_ROW);
+      } finally {
+        if (artefactIds.length > 0) {
+          await cleanupTestNotifications(artefactIds);
+          await deleteTestArtefacts({ artefactIds });
+        }
+        await cleanupTestSubscriptions([subscription.subscriptionId]);
+        await cleanupTestUsers([testUser.userId]);
+      }
+    });
+
     test("court name validation and autocomplete functionality @nightly", async ({ page }) => {
       await page.goto("/non-strategic-upload");
 
@@ -354,3 +578,11 @@ test.describe
       await expect(page).toHaveURL("/non-strategic-upload-success");
     });
   });
+
+interface ExcelUpload {
+  listTypeId: number;
+  language: "ENGLISH" | "WELSH";
+  fileName: string;
+  buffer: Buffer;
+  checkAccessibility?: boolean;
+}

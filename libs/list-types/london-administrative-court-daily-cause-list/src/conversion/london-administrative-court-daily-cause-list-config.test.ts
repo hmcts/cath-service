@@ -1,7 +1,7 @@
 import { convertExcelToJson } from "@hmcts/list-types-common";
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { STANDARD_CONFIG } from "./london-administrative-court-daily-cause-list-config.js";
+import { LONDON_ADMIN_SHEETS, STANDARD_CONFIG } from "./london-administrative-court-daily-cause-list-config.js";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -165,5 +165,15 @@ describe("STANDARD_CONFIG", () => {
       hearingType: "Permission hearing",
       additionalInformation: ""
     });
+  });
+});
+
+describe("LONDON_ADMIN_SHEETS", () => {
+  it("should resolve main hearings and planning court sheets by name with index fallback", () => {
+    // Assert
+    expect(LONDON_ADMIN_SHEETS).toEqual([
+      { worksheetName: "Main hearings", worksheetIndex: 0, dataKey: "mainHearings", config: STANDARD_CONFIG },
+      { worksheetName: "Planning Court", worksheetIndex: 1, dataKey: "planningCourt", config: STANDARD_CONFIG }
+    ]);
   });
 });

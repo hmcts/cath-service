@@ -17,7 +17,7 @@ const testListTypes: ListTypeInfo[] = [
   { id: 99, name: "CROWN_COURT_DAILY_LIST", friendlyName: "Crown Court Daily List" },
   { id: 100, name: "CROWN_DAILY_PDDA_LIST", friendlyName: "Crown Daily List" },
   { id: 101, name: "CROWN_FIRM_PDDA_LIST", friendlyName: "Crown Firm List" },
-  { id: 102, name: "CROWN_WARNED_PDDA_LIST", friendlyName: "Crown Warned List" },
+  { id: 102, name: "CROWN_ADVANCED_PDDA_LIST", friendlyName: "Crown Advance List" },
   { id: 201, name: "CST_WEEKLY_HEARING_LIST", friendlyName: "Care Standards Tribunal Weekly Hearing List" },
   { id: 202, name: "FTT_LR_WEEKLY_HEARING_LIST", friendlyName: "First-tier Tribunal (Lands Registration Tribunal) Weekly Hearing List" },
   { id: 203, name: "FTT_TAX_WEEKLY_HEARING_LIST", friendlyName: "First-tier Tribunal (Tax Chamber) Weekly Hearing List" },
@@ -102,8 +102,8 @@ vi.mock("@hmcts/crown-firm-list", () => ({
   })
 }));
 
-vi.mock("@hmcts/crown-warned-list", () => ({
-  validateCrownWarnedList: vi.fn().mockReturnValue({
+vi.mock("@hmcts/crown-advanced-pdda-list", () => ({
+  validateCrownAdvanceList: vi.fn().mockReturnValue({
     isValid: true,
     errors: [],
     schemaVersion: "1.0"
@@ -256,10 +256,15 @@ describe("list-type-validator", () => {
       ["60", "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE", "magistrates-public-adult-court-list"],
       ["71", "IAC_DAILY_LIST_ADDITIONAL_CASES", "iac-daily-list"],
       ["100", "CROWN_DAILY_PDDA_LIST", "crown-daily-list"],
-      ["101", "CROWN_FIRM_PDDA_LIST", "crown-firm-list"],
-      ["102", "CROWN_WARNED_PDDA_LIST", "crown-warned-list"]
+      ["101", "CROWN_FIRM_PDDA_LIST", "crown-firm-list"]
     ])("should validate %s (%s) using the %s package alias", async (id) => {
       const result = await validateListTypeJson(id, { test: "data" }, testListTypes);
+
+      expect(result.isValid).toBe(true);
+    });
+
+    it("should validate CROWN_ADVANCED_PDDA_LIST using its own package without an alias", async () => {
+      const result = await validateListTypeJson("102", { test: "data" }, testListTypes);
 
       expect(result.isValid).toBe(true);
     });
