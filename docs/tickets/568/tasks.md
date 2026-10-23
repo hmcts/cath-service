@@ -1,0 +1,28 @@
+## Implementation Tasks
+
+- [x] Add `"@hmcts/redis": "workspace:*"` to `dependencies` in `libs/auth/package.json` and run `yarn install`
+- [x] Create `libs/auth/src/oauth-token-cache/token-cache.ts`, a port of legacy `ThirdPartyTokenCachingService`:
+  - `CACHE_KEY_PREFIX = "oauth:token:"` and `TOKEN_EXPIRY_BUFFER_SECONDS = 60`
+  - exported `getCachedAccessToken(name, fetchToken)`
+  - private `getCachedToken`: parses `{ accessToken, expiry }` and returns null if missing or `Date.now() >= expiry`
+  - private `cacheToken`: skips when `expiresIn - 60 <= 0`, otherwise `setEx(key, expiresIn - 60, JSON.stringify({ accessToken, expiry }))`
+  - exported `OAuthToken` and private `CachedToken` interfaces at the bottom
+  - no try/catch around Redis (legacy parity); no token values in logs
+- [x] Refactor `libs/auth/src/graph-api/client.ts`:
+  - add `GRAPH_API_TOKEN_CACHE_NAME = "graph-api"`
+  - keep the `isB2CMocked()` early return
+  - move the fetch logic into a private `fetchGraphApiToken(): Promise<OAuthToken>` (missing `expires_in` becomes `0`)
+  - make `getGraphApiAccessToken` return `getCachedAccessToken(...)`
+  - keep the existing thrown error on a non-2xx response
+- [x] Create `libs/auth/src/oauth-token-cache/token-cache.test.ts` (AAA, `@hmcts/redis` mocked via `vi.hoisted`, fake timers) covering:
+  - cache hit: no fetch, no store
+  - expired entry: re-fetch and re-store
+  - not found: fetch, then store with TTL `expiresIn - 60` and the matching `expiry`
+  - `expiresIn` of 60 or less: no store
+  - fetcher rejects: propagates, no store
+- [x] Update `libs/auth/src/graph-api/client.test.ts`:
+  - add the `@hmcts/redis` mock (`get` resolves null by default) and `expires_in` in the fetch mocks
+  - add a miss test: `setEx("oauth:token:graph-api", 3539, ...)` for `expires_in: 3599`
+  - add a hit test: `fetch` not called
+  - assert Redis is not touched in `MOCK_AZURE_B2C` mode
+- [x] Run `yarn test` (auth, plus the `apps/web` approve tests), `yarn lint:fix`, and the `libs/auth` build/type check, then fix any issues
