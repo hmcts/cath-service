@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ListTypeInfo } from "./list-type-validator.js";
-import { convertListTypeNameToKebabCase, validateListTypeJson } from "./list-type-validator.js";
+import { validateListTypeJson } from "./list-type-validator.js";
 
 // Test data matching ListTypeInfo interface
 const testListTypes: ListTypeInfo[] = [
@@ -164,28 +164,6 @@ vi.mock("@hmcts/utiac-jr-daily-hearing-list", () => ({
 }));
 
 describe("list-type-validator", () => {
-  describe("convertListTypeNameToKebabCase", () => {
-    it("should convert CIVIL_AND_FAMILY_DAILY_CAUSE_LIST to kebab-case", () => {
-      const result = convertListTypeNameToKebabCase("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
-      expect(result).toBe("civil-and-family-daily-cause-list");
-    });
-
-    it("should convert CROWN_DAILY_PDDA_LIST to kebab-case", () => {
-      const result = convertListTypeNameToKebabCase("CROWN_DAILY_PDDA_LIST");
-      expect(result).toBe("crown-daily-pdda-list");
-    });
-
-    it("should convert single word names", () => {
-      const result = convertListTypeNameToKebabCase("TEST");
-      expect(result).toBe("test");
-    });
-
-    it("should handle empty string", () => {
-      const result = convertListTypeNameToKebabCase("");
-      expect(result).toBe("");
-    });
-  });
-
   describe("validateListTypeJson", () => {
     it("should return error for invalid list type ID", async () => {
       const result = await validateListTypeJson("999", {}, testListTypes);

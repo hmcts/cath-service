@@ -23,6 +23,12 @@ info:
     change a route or a request/response shape in `apps/api` or `libs/public-pages`,
     update this file in the same change.
 
+    The publisher-facing document that APIM imports
+    (`infrastructure/resources/swagger/api-swagger.json`) is generated from this file, its
+    `x-publisher` block and the list type reference data. After changing either operation
+    exposed through APIM, its components, or `x-publisher`, run `yarn openapi:publisher`
+    and commit the regenerated file. A test fails if you forget.
+
     Not documented here, deliberately:
       - `/users` and `/users/{id}` — placeholder routes returning example data.
       - `/test-support/**` — test-only routes, enabled by `ENABLE_TEST_SUPPORT`.
@@ -173,9 +179,38 @@ paths:
       tags: [Publication]
       summary: Publish a hearing list
       description: |
-        Root path form of the CaTH Inbound Publication API, matching the incumbent
-        `pip-data-management` contract exactly. Identical behaviour to
-        `POST /v1/publication` — see that operation for the full description.
+        Ingests a hearing list into CaTH. All publication metadata travels in `x-*` request
+        headers; the body carries only the payload. One path serves three modes, selected by
+        `Content-Type` and then by `x-type`:
+
+        | `Content-Type` | `x-type` | Behaviour |
+        |---|---|---|
+        | `application/json` | `LIST` | Body **is** the publication payload, validated against the JSON Schema registered for `x-list-type`. Stored in blob storage, artefact persisted. |
+        | `multipart/form-data` | `LIST` | A single part named `file`. Stored in blob storage, artefact persisted with `isFlatFile: true`. |
+        | `multipart/form-data` | `LCSU` | An `.htm`/`.html` file. Uploaded to the AWS S3 bucket. **No artefact is persisted**, so the `201` body carries a blank `artefactId` (with `isFlatFile: true`). `x-list-type` is not required. |
+        | `application/json` | `LCSU` | Rejected with `400` — LCSU is file-only. |
+        | either | anything else | Rejected with `400`. `x-type` is never defaulted. |
+
+        `x-type` is matched case-sensitively. For every mode the full `x-*` header set is
+        validated *before* any file or database work, so an LCSU request with a missing
+        header is rejected before anything reaches S3.
+
+        There is no `hearing_list` wrapper, and no metadata is ever read from multipart form
+        fields — a `type` form field is ignored.
+
+        `x-sensitivity` defaults to `PUBLIC`. `x-display-from` and `x-display-to` are
+        optional and persist as `null` when omitted; when both are supplied `x-display-to`
+        must not be earlier than `x-display-from`.
+
+        A publication supersedes an existing one when `x-court-id`, `x-content-date`,
+        `x-language`, `x-list-type` and `x-provenance` all match.
+
+        When `x-court-id` cannot be resolved against reference data the request is still
+        accepted with `201`; the artefact is retained but PDF generation and subscriber
+        notifications are skipped.
+
+        Maximum payload is 100 MB. LCSU uploads are capped separately by
+        `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
       operationId: createPublicationAtRoot
       security:
         - azureAd: []
@@ -212,38 +247,7 @@ paths:
       tags: [Publication]
       summary: Publish a hearing list
       description: |
-        Ingests a hearing list into CaTH. All publication metadata travels in `x-*` request
-        headers; the body carries only the payload. One path serves three modes, selected by
-        `Content-Type` and then by `x-type`:
-
-        | `Content-Type` | `x-type` | Behaviour |
-        |---|---|---|
-        | `application/json` | `LIST` | Body **is** the publication payload, validated against the JSON Schema registered for `x-list-type`. Stored in blob storage, artefact persisted. |
-        | `multipart/form-data` | `LIST` | A single part named `file`. Stored in blob storage, artefact persisted with `isFlatFile: true`. |
-        | `multipart/form-data` | `LCSU` | An `.htm`/`.html` file. Uploaded to the AWS S3 bucket. **No artefact is persisted**, so the `201` body carries a blank `artefactId` (with `isFlatFile: true`). `x-list-type` is not required. |
-        | `application/json` | `LCSU` | Rejected with `400` — LCSU is file-only. |
-        | either | anything else | Rejected with `400`. `x-type` is never defaulted. |
-
-        `x-type` is matched case-sensitively. For every mode the full `x-*` header set is
-        validated *before* any file or database work, so an LCSU request with a missing
-        header is rejected before anything reaches S3.
-
-        There is no `hearing_list` wrapper, and no metadata is ever read from multipart form
-        fields — a `type` form field is ignored.
-
-        `x-sensitivity` defaults to `PUBLIC`. `x-display-from` and `x-display-to` are
-        optional and persist as `null` when omitted; when both are supplied `x-display-to`
-        must not be earlier than `x-display-from`.
-
-        A publication supersedes an existing one when `x-court-id`, `x-content-date`,
-        `x-language`, `x-list-type` and `x-provenance` all match.
-
-        When `x-court-id` cannot be resolved against reference data the request is still
-        accepted with `201`; the artefact is retained but PDF generation and subscriber
-        notifications are skipped.
-
-        Maximum payload is 100 MB. LCSU uploads are capped separately by
-        `PDDA_HTML_MAX_FILE_SIZE` (default 10 MB).
+        Versioned alias of `POST /publication`; identical behaviour.
       operationId: createPublication
       security:
         - azureAd: []
@@ -1001,3 +1005,74 @@ components:
       properties:
         error:
           type: string
+
+# Publisher-facing overrides. `yarn openapi:publisher` applies these to the operations
+# listed in infrastructure/resources/apim-operations.json to produce
+# infrastructure/resources/swagger/api-swagger.json, the document APIM imports and
+# publishers integrate against. Everything else in that document comes from above.
+x-publisher:
+  info:
+    title: CaTH Inbound Publication API
+    description: |
+      Publish hearing lists into the Court and Tribunal Hearings (CaTH) service.
+
+      All publication metadata travels in `x-*` request headers; the body carries only the
+      payload. One path, `POST /publication`, serves three modes, selected by `Content-Type`
+      and then by `x-type`:
+
+      | `Content-Type`        | `x-type` | Behaviour                                                          |
+      |-----------------------|----------|--------------------------------------------------------------------|
+      | `application/json`    | `LIST`   | The body is the publication payload, validated against the JSON schema for `x-list-type`. |
+      | `multipart/form-data` | `LIST`   | A single part named `file`, stored as a flat file.                 |
+      | `multipart/form-data` | `LCSU`   | An `.htm` or `.html` file. Nothing is persisted, so the `201` body carries a blank `artefactId`, and `x-list-type` is not required. |
+      | `application/json`    | `LCSU`   | Rejected with `400` — LCSU is file-only.                           |
+      | either                | anything else | Rejected with `400`. `x-type` is never defaulted.             |
+
+      Call this API through the CFT API Management gateway for your environment. The gateway
+      validates your bearer token and app role, then calls CaTH with its own token, so you
+      never address CaTH directly.
+
+      Maximum payload is 100 MB. LCSU uploads are capped separately at 10 MB.
+
+      To be granted the `api.publisher.user` app role, or to report a problem with this API,
+      contact the CaTH team at publicationinformation@hmcts.net.
+    contact:
+      name: Court and Tribunal Hearings team
+      email: publicationinformation@hmcts.net
+  servers:
+    - url: https://cft-api-mgmt.{environment}.platform.hmcts.net/cath
+      description: >-
+        CFT API Management gateway. Validates the bearer token and app role, then calls CaTH with
+        its own token. This is the only entry point for publishing source systems.
+      variables:
+        environment:
+          default: aat
+          enum:
+            - aat
+            - demo
+            - perftest
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Microsoft Entra ID (Azure AD) bearer token. Send it as `Authorization: Bearer <token>`.
+
+        The token must carry the `api.publisher.user` app role in its `roles` claim. That is an
+        Entra ID app role, not an OAuth scope, so it is granted to your application by role
+        assignment rather than requested at token time. Contact the CaTH team at
+        publicationinformation@hmcts.net to be granted it.
+
+        A missing, malformed, expired or unverifiable token is rejected with `401`. A valid token
+        without the role is rejected with `401` at the gateway, and with `403` if the request
+        reaches the service directly.
+  listTypeDescription: |
+    List type name. Required when `x-type` is `LIST`; not required for `x-type: LCSU`, in
+    which case the `201` response reports `listType: null`. An unrecognised value is rejected
+    with `400`, with the permitted values in the message. Non-strategic list types are
+    published by manual upload only and are not accepted here.
+
+    List types that accept a JSON payload link to the JSON schema that payload is validated
+    against. A list type without a link accepts flat-file publication only.
+  schemaBaseUrl: https://github.com/hmcts/cath-service/blob/master/
