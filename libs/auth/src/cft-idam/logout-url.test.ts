@@ -4,7 +4,7 @@ import { buildCftIdamLogoutUrl } from "./logout-url.js";
 
 const config = {
   baseUrl: "https://localhost:8080",
-  endSessionEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/endSession"
+  endSessionEndpoint: "https://hmcts-access.aat.platform.hmcts.net/o/endSession"
 } as CftIdamConfig;
 
 describe("buildCftIdamLogoutUrl", () => {
@@ -14,7 +14,7 @@ describe("buildCftIdamLogoutUrl", () => {
 
     // Assert
     expect(result).toBe(
-      "https://idam-web-public.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Den"
+      "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Den"
     );
   });
 
@@ -24,7 +24,7 @@ describe("buildCftIdamLogoutUrl", () => {
 
     // Assert
     expect(result).toBe(
-      "https://idam-web-public.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy%26reSignInUrl%3DCFT"
+      "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy%26reSignInUrl%3DCFT"
     );
   });
 });

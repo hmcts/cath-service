@@ -32,7 +32,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
@@ -45,7 +45,7 @@ describe("CFT Login Handler", () => {
     GET(mockReq as Request, mockRes as Response);
 
     expect(mockRes.redirect).toHaveBeenCalledWith(
-      "https://idam.example.com/o/authorize?client_id=app-pip-frontend&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fcft-login%2Freturn&scope=openid+profile+roles&ui_locales=en"
+      "https://idam.example.com/o/authorize?client_id=app-cath-frontend&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fcft-login%2Freturn&scope=openid+profile+roles&ui_locales=en"
     );
   });
 
@@ -53,7 +53,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
@@ -72,7 +72,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
@@ -89,7 +89,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
@@ -118,7 +118,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
@@ -137,7 +137,7 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",

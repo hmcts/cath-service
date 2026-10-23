@@ -372,6 +372,98 @@ describe("send-email", () => {
     );
   });
 
+  it("should set link_to_file from the flat file buffer with the original filename when flatFile is provided", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    const flatFileBuffer = Buffer.from("uploaded document");
+    mockPrepareUpload.mockReturnValue({ file: "flat-file-reference" });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        list_type: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: flatFileBuffer, fileName: "hearing-list.pdf" }
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledTimes(1);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(flatFileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week",
+      filename: "hearing-list.pdf"
+    });
+    const personalisation = mockSendEmail.mock.calls[0][2].personalisation;
+    expect(personalisation.link_to_file).toEqual({ file: "flat-file-reference" });
+    expect(personalisation.list_type).toBe("Daily Cause List");
+    expect(personalisation).not.toHaveProperty("excel_link_to_file");
+    expect(personalisation).not.toHaveProperty("pdf_link_to_file");
+  });
+
+  it("should omit the filename when the flat file has no file name", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    const flatFileBuffer = Buffer.from("uploaded document");
+    mockPrepareUpload.mockReturnValue({ file: "flat-file-reference" });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: flatFileBuffer }
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(flatFileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockPrepareUpload.mock.calls[0][1]).not.toHaveProperty("filename");
+  });
+
+  it("should return failure when the flat file cannot be prepared for upload", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    mockPrepareUpload.mockImplementation(() => {
+      throw new Error("File is larger than 2MB");
+    });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: Buffer.from("large document"), fileName: "large.pdf" }
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("File is larger than 2MB");
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
   it("should send email without file links when no buffers are provided", async () => {
     const { sendEmail } = await import("./send-email.js");
 
