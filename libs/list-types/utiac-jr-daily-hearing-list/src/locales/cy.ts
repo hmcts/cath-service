@@ -1,16 +1,11 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const pageTitleByListTypeCy: Record<string, string> = {
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST:
-    "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST:
-    "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST:
-    "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST:
-    "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST:
-    "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']"
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Leeds",
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Birmingham",
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Bryste a Caerdydd",
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Manceinion",
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Llundain"
 };
 
 export const londonTableHeadersCy = {
@@ -25,8 +20,8 @@ export const londonTableHeadersCy = {
 };
 
 export const cy = {
-  courtName: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber']",
-  listForDate: "[WELSH TRANSLATION REQUIRED: 'List for']",
+  courtName: "Uwch Dribiwnlys (Siambr Mewnfudo a Lloches)",
+  listForDate: "Rhestr ar gyfer",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
   factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
@@ -34,7 +29,7 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'The following list is subject to change until 4:30pm. Any alterations after this time will be telephoned or emailed direct to the parties or their legal representatives.']",
+    "Gall y rhestr ganlynol newid tan 4:30pm. Bydd unrhyw newidiadau ar ôl yr amser hwn yn cael eu cyfathrebu dros y ffôn neu drwy e-bost yn uniongyrchol at y partïon neu eu cynrychiolwyr cyfreithiol.",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio Achosion",
