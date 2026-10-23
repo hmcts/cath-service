@@ -1,0 +1,70 @@
+name: One-Shot - Delete Stray cath A Records
+
+# Deletes the `cath` A records in the demo and perftest private DNS zones so that
+# hmcts/azure-private-dns#1085 can create `cath` as a CNAME to Front Door.
+#
+# Before #1111 the pipeline release also claimed cath.<env>.platform.hmcts.net, so
+# job.helm-deploy.yml "Register DNS" created an A record for it pointing at the
+# internal traefik IP. On VPN that bypasses Front Door and returns 404. A name can
+# hold an A record or a CNAME, not both, so the azure-private-dns apply fails with
+# 409 Conflict until the A record is gone. Terraform there does not manage the A
+# record, so it cannot remove it.
+#
+# Uses the AZURE_CREDENTIALS_CFT_<ENV> service principal, the identity that created
+# the records. A record is only deleted if it still points at that environment's
+# traefik IP, so a record someone has since changed is left alone.
+#
+# After running: re-run the azure-private-dns pipeline, then delete this workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  delete-a-record:
+    name: Delete cath A record - ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: demo
+            credentials: AZURE_CREDENTIALS_CFT_DEMO
+            traefik-ip: 10.50.79.221
+          - environment: perftest
+            credentials: AZURE_CREDENTIALS_CFT_PERFTEST
+            traefik-ip: 10.48.79.250
+    env:
+      RESOURCE_GROUP: core-infra-intsvc-rg
+      SUBSCRIPTION: DTS-CFTPTL-INTSVC
+      ZONE: ${{ matrix.environment }}.platform.hmcts.net
+      EXPECTED_IP: ${{ matrix.traefik-ip }}
+    steps:
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets[matrix.credentials] }}
+
+      - name: Delete cath A record
+        run: |
+          CURRENT_IP=$(az network private-dns record-set a show \
+            -g "$RESOURCE_GROUP" -z "$ZONE" -n cath \
+            --subscription "$SUBSCRIPTION" \
+            --query "aRecords[0].ipv4Address" -o tsv 2>/dev/null || true)
+
+          if [ -z "$CURRENT_IP" ]; then
+            echo "No cath A record in ${ZONE}, nothing to delete"
+            exit 0
+          fi
+
+          if [ "$CURRENT_IP" != "$EXPECTED_IP" ]; then
+            echo "::error::cath A record in ${ZONE} points at ${CURRENT_IP}, expected ${EXPECTED_IP}. Not deleting."
+            exit 1
+          fi
+
+          az network private-dns record-set a delete \
+            -g "$RESOURCE_GROUP" -z "$ZONE" -n cath \
+            --subscription "$SUBSCRIPTION" --yes
+          echo "Deleted cath A record (${CURRENT_IP}) from ${ZONE}"
