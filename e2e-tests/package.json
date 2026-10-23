@@ -15,6 +15,7 @@
     "test:cft-idam": "node run-with-credentials.js tests/cft-idam",
     "test:cft-idam:ui": "node run-with-credentials.js tests/cft-idam --ui",
     "test:cft-idam:debug": "node run-with-credentials.js tests/cft-idam --debug",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "playwright:install": "npx playwright install"
   },
   "dependencies": {

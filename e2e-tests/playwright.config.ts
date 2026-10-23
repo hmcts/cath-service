@@ -7,6 +7,8 @@ const baseURL = deployedWebUrl || "https://localhost:8080";
 
 export default defineConfig({
   testDir: "./tests",
+  // Smoke specs run only in the smoke job via playwright.smoke.config.ts
+  testIgnore: ["smoke/**"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
