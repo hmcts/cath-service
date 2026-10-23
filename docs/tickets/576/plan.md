@@ -17,7 +17,7 @@ The ticket is stale in several places that change the design. Each one below was
 |---|---|---|
 | Request contract | JSON envelope with `court_id`, `provenance`, ..., `hearing_list` | All metadata goes in `x-*` **headers** (`libs/api/src/blob-ingestion/publication-headers.ts`). The body is the bare payload, with no `hearing_list` wrapper (`validation.ts` `validateBlobRequest`). Required headers: `x-provenance`, `x-court-id` (or `x-location-id`), `x-content-date`, `x-language`, `x-type`, plus `x-list-type` when `x-type=LIST`. Optional: `x-sensitivity` (default PUBLIC), `x-display-from`, `x-display-to` (ISO datetimes, must contain `T`), `x-source-artefact-id`. |
 | Response | 201 with `artefact_id` | 201 with the camelCase `ArtefactResponse` (`artefactId`, `locationId`, `listType`, ...). `tests/api/blob-ingestion.spec.ts` checks that `artefact_id` is **absent**. |
-| Endpoint file | `libs/api/src/routes/v1/publication.ts` | The route is `apps/api/src/routes/v1/publication.ts`. `apps/api/src/routes/publication.ts` re-exports it at `POST /publication`, and the code comments say `/v1` is kept only until the gateway path is settled. `libs/api` is the package `@hmcts/blob-ingestion`. |
+| Endpoint file | `libs/api/src/routes/v1/publication.ts` | The route is `apps/api/src/routes/v1/publication.ts`. `apps/api/src/routes/publication.ts` re-exports it at `POST /publication`, and the code comment says `/v1` is kept until the gateway path question is settled. No removal is decided. `libs/api` is the package `@hmcts/blob-ingestion`. |
 | Auth | Valid OAuth token | `authenticateApi()` (`libs/api/src/middleware/oauth-middleware.ts`) needs role `api.publisher.user` and returns 401/403 otherwise. The existing E2E API client already has this role (non-nightly `summary-of-publications.spec.ts` gets 201 from it). |
 | Env var names | `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`, `CATH_API_AZ_API` | `getApiAuthToken()` (`e2e-tests/utils/api-auth-helpers.ts`) reads `AZURE_TENANT_ID`, `CATH_SERVICE_API_CLIENT_ID`, `CATH_SERVICE_API_CLIENT_SECRET`, with scope `${clientId}/.default`. `CATH_API_AZ_API` is not used anywhere in the code. The API URL comes from `CATH_SERVICE_API_URL` (`test-support-api.ts`; falls back to `API_URL`, then localhost). |
 | Secrets | `secrets.AZURE_CLIENT_ID/SECRET/TENANT_ID` | `secrets.AZURE_CLIENT_ID` / `AZURE_TENANT_ID` belong to the **CI OIDC identity** used by `azure/login`. They are not the API client. `job.e2e-test.yml` logs in with OIDC (`id-token: write`) and reads `app-tenant`, `cath-service-api-client-id` and `cath-service-api-client-secret` from Key Vault `cath-bootstrap-aat`. No `AZURE_CLIENT_SECRET` secret is used. |
@@ -35,7 +35,7 @@ The ticket is stale in several places that change the design. Each one below was
 
 ### Key design decisions
 
-- **Endpoint:** POST to `/v1/publication`, as the ticket asks. It is the same handler as `/publication`. See Clarification 1.
+- **Endpoint:** POST to `/publication`, the same path every other E2E spec uses. It runs the same handler as `/v1/publication`. See Clarification 1.
 - **Separate config:** add `e2e-tests/playwright.smoke.config.ts` with `testDir: ./tests/smoke`, no `globalSetup`, `globalTeardown` or `webServer`, `retries: 0`, `workers: 1`, and `line`/`github`/`junit` reporters. Add `testIgnore: ["smoke/**"]` to the main `playwright.config.ts`. `test:e2e` (PR E2E) and `test:e2e:all` (nightly) both call `playwright test` without `--config`, so this keeps the spec out of both. Add a `test:smoke` script to `e2e-tests/package.json`.
 - **Opt-in input:** add a `run-publication-smoke` boolean input (default `false`) to `stage.smoke-test.yml` and `job.smoke-test.yml`. Set it to `true` only from `workflow.preview.yml` and `workflow.main.yml`. Demo, ithc and perftest keep curl-only smoke tests.
 - **Credentials:** use the same OIDC + Key Vault pattern as `job.e2e-test.yml`, fetching only the 3 secrets needed (`app-tenant`, `cath-service-api-client-id`, `cath-service-api-client-secret`). Add `permissions: { contents: read, id-token: write }` to the smoke job.
@@ -71,7 +71,7 @@ e2e-tests/
 ### API call
 
 ```
-POST {CATH_SERVICE_API_URL}/v1/publication
+POST {CATH_SERVICE_API_URL}/publication
 Authorization: Bearer {token}
 Content-Type: application/json
 x-provenance: MANUAL_UPLOAD
@@ -132,7 +132,7 @@ Move the "Smoke test summary" step to after the new step. Also note that the exi
 |---|---|
 | Spec created at `e2e-tests/tests/smoke/publication-upload.spec.ts` | New file (Task 3) |
 | Uniquely named location created before and cleaned up after | `beforeEach` / `afterEach` with timestamp+random name (Task 3) |
-| Real OAuth `client_credentials` token, POST to the endpoint | `getApiAuthToken()` + `request.post` to `/v1/publication` (Task 3) |
+| Real OAuth `client_credentials` token, POST to the endpoint | `getApiAuthToken()` + `request.post` to `/publication` (Task 3). **Amended:** the ticket says `/v1/publication`; it is the same handler (Clarification 1) |
 | Asserts HTTP 201 and `artefact_id` | **Amended:** asserts 201 and `artefactId`. The current API returns camelCase and no longer returns `artefact_id` (Clarification 2) |
 | Non-201 fails the test and the pipeline | `expect(status).toBe(201)` fails the spec, the step exits non-zero and the job fails. On main, promote and E2E stages are gated on smoke (Tasks 3, 6) |
 | `job.smoke-test.yml` runs the spec after health checks | New steps after "Health check - API" (Task 6) |
@@ -161,7 +161,7 @@ Verification (not separate tests):
 
 **Required secrets:** repo secrets `AZURE_CLIENT_ID` and `AZURE_TENANT_ID` (the CI OIDC identity used by `azure/login`), and Key Vault `cath-bootstrap-aat` secrets `app-tenant`, `cath-service-api-client-id` and `cath-service-api-client-secret` (an API client with the `api.publisher.user` role). `AZURE_CLIENT_SECRET` and `CATH_API_AZ_API` are not used.
 
-1. ~~**`/v1/publication` vs `/publication`**~~ **RESOLVED:** use `/v1/publication`, as the ticket asks.
+1. ~~**`/v1/publication` vs `/publication`**~~ **RESOLVED (revised):** use `/publication`. Every E2E spec on master except the `/v1` parity check in `api/blob-ingestion.spec.ts` uses `/publication`, and so did pip (`PublicationController` `@RequestMapping("/publication")`, `SmokeTest.java`). It is also the primary path in `docs/api/openapi.yaml` and the APIM publisher swagger. `/v1/publication` is an alias of the same handler and has no removal decision. The ticket's AC wording (`POST /v1/publication`) should be updated to match.
 2. **Response field:** the ticket asks for `artefact_id`, but the API deliberately returns `artefactId`, and the nightly spec asserts `artefact_id` is absent. Confirm the AC should be amended to `artefactId`.
 3. **Request shape:** the ticket's JSON envelope (`court_id`, `hearing_list`, ...) is obsolete. The plan uses `x-*` headers with the bare payload. Confirm.
 4. **Secrets/env names:** the ticket's `CLIENT_ID`/`CLIENT_SECRET`/`TENANT_ID`/`CATH_API_AZ_API` mapping does not match the code. `secrets.AZURE_CLIENT_ID` is the CI OIDC identity, not the API client. The plan reuses the e2e job's Key Vault pattern. Confirm that is acceptable, and that `CATH_API_AZ_API` is not needed. The helper uses `${clientId}/.default`, and the `CATH_SERVICE_API_CLIENT_SCOPE` Key Vault entry is loaded by `run-with-credentials.js` but never read.

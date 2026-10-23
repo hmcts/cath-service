@@ -7,7 +7,7 @@ import { createTestLocation, deleteTestArtefact, deleteTestArtefacts, deleteTest
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL;
-const ENDPOINT = `${API_BASE_URL}/v1/publication`;
+const ENDPOINT = `${API_BASE_URL}/publication`;
 const LIST_TYPE = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
 const FIXTURE_PATH = path.join(__dirname, "../../fixtures/civil-and-family-daily-cause-list-smoke.json");
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
