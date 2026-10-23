@@ -17,7 +17,8 @@ export function readPublisherInputs(repoRoot: string): PublisherInputs {
   return {
     source: parse(readFileSync(path.join(repoRoot, SOURCE_DOCUMENT_PATH), "utf-8")) as OpenApiDocument,
     apimOperations: JSON.parse(readFileSync(path.join(repoRoot, APIM_OPERATIONS_PATH), "utf-8")) as ApimOperations,
-    listTypes: listTypeData.map(({ name }) => findListTypeSchemas(repoRoot, name))
+    // Non-strategic list types are published by manual upload only; POST /publication cannot accept them.
+    listTypes: listTypeData.filter(({ isNonStrategic }) => !isNonStrategic).map(({ name }) => findListTypeSchemas(repoRoot, name))
   };
 }
 

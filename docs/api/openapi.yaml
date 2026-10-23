@@ -1070,7 +1070,8 @@ x-publisher:
   listTypeDescription: |
     List type name. Required when `x-type` is `LIST`; not required for `x-type: LCSU`, in
     which case the `201` response reports `listType: null`. An unrecognised value is rejected
-    with `400`, with the permitted values in the message.
+    with `400`, with the permitted values in the message. Non-strategic list types are
+    published by manual upload only and are not accepted here.
 
     List types that accept a JSON payload link to the JSON schema that payload is validated
     against. A list type without a link accepts flat-file publication only.

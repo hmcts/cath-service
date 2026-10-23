@@ -22,10 +22,10 @@ describe("committed publisher document", () => {
   });
 
   describe("x-list-type enum", () => {
-    const listTypeNames = listTypeData.map((listType) => listType.name);
+    const listTypeNames = listTypeData.filter((listType) => !listType.isNonStrategic).map((listType) => listType.name);
     const enumValues = (committed.components?.parameters?.ListType.schema?.enum ?? []) as string[];
 
-    it("should contain every list type in listTypeData", () => {
+    it("should contain every strategic list type in listTypeData", () => {
       // Act
       const missing = listTypeNames.filter((name) => !enumValues.includes(name));
 
@@ -33,12 +33,12 @@ describe("committed publisher document", () => {
       expect(missing, `${REGENERATE_MESSAGE}: list types missing from the enum`).toEqual([]);
     });
 
-    it("should contain no list type absent from listTypeData", () => {
+    it("should contain no non-strategic list type or name absent from listTypeData", () => {
       // Act
       const extra = enumValues.filter((name) => !listTypeNames.includes(name));
 
       // Assert
-      expect(extra, `${REGENERATE_MESSAGE}: enum values not in listTypeData`).toEqual([]);
+      expect(extra, `${REGENERATE_MESSAGE}: enum values that are non-strategic or not in listTypeData`).toEqual([]);
     });
 
     it("should be sorted", () => {
