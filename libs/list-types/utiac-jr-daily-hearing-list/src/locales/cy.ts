@@ -1,15 +1,15 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const pageTitleByListTypeCy: Record<string, string> = {
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST:
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST:
     "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']",
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST:
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST:
     "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List']",
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST:
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST:
     "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List']",
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST:
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST:
     "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List']",
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST:
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST:
     "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: London Daily Hearing List']"
 };
 
