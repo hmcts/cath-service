@@ -80,6 +80,8 @@ jobs:
       change-id: aat
       urls: ${{ needs.deploy-stage.outputs.urls }}
       runner-group: azure-prod
+      run-publication-smoke: true
+    secrets: inherit
 
   e2e-stage:
     name: E2E
@@ -87,8 +89,9 @@ jobs:
     # Same condition as workflow.preview.yml. CFT IDAM login needs the app-cath-frontend client,
     # which registers this release's /cft-login/return redirect URI on aat.
     #
-    # promote-stage deliberately still gates on smoke-test-stage, not on this, so a flaky
-    # run against the shared aat environment cannot block image promotion.
+    # promote-stage deliberately still gates on smoke-test-stage, not on this, so the full E2E suite
+    # cannot block image promotion. The smoke stage does now run the publication upload smoke spec,
+    # so promotion depends on Entra ID, the cath-bootstrap-aat Key Vault and test-support on aat.
     if: always() && needs.deploy-stage.result == 'success' && needs.smoke-test-stage.result == 'success'
     uses: ./.github/workflows/stage.e2e.yml
     with:

@@ -75,6 +75,8 @@ jobs:
       change-id: ${{ github.event.pull_request.number }}
       urls: ${{ needs.deploy-stage.outputs.urls }}
       is-pr: true
+      run-publication-smoke: true
+    secrets: inherit
 
   e2e-stage:
     name: E2E
