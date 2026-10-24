@@ -91,7 +91,7 @@
                         <td class="no-wrap">{{ sitting.caseHearingChannel }}</td>
                       </tr>
                       {% if case.formattedReportingRestriction | length %}
-                        <tr>
+                        <tr class="restriction-row">
                           <td colspan="7"><strong>{{ t.reportingRestrictions }}:</strong> {{ case.formattedReportingRestriction }}</td>
                         </tr>
                       {% endif %}

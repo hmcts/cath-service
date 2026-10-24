@@ -123,7 +123,9 @@
                   <p><span class="label">{{ t.prosecutingAuthority }}</span>{{ hearing.prosecutingAuthority }}</p>
                   <p><span class="label">{{ t.attendanceMethod }}</span>{{ hearing.attendanceMethod }}</p>
                   {% if hearing.reportingRestriction %}
-                    <p><span class="label">{{ t.reportingRestrictions }}</span>{{ hearing.reportingRestrictionDetails }}</p>
+                    <div class="restriction-row-block">
+                      <p><span class="label">{{ t.reportingRestrictions }}</span>{{ hearing.reportingRestrictionDetails }}</p>
+                    </div>
                   {% endif %}
                 </div>
                 <div>
@@ -153,7 +155,11 @@
                     {% if offence.pleaDate %}<p><span class="label">{{ t.dateOfPlea }}:</span> {{ offence.pleaDate }}</p>{% endif %}
                     {% if offence.convictionDate %}<p><span class="label">{{ t.convictedOn }}:</span> {{ offence.convictionDate }}</p>{% endif %}
                     {% if offence.adjournedDate %}<p><span class="label">{{ t.adjournedFrom }}:</span> {{ offence.adjournedDate }} - {{ t.adjournedText }}</p>{% endif %}
-                    {% if offence.reportingRestriction %}<p><span class="label">{{ t.reportingRestrictions }}</span> {{ offence.reportingRestrictionDetails }}</p>{% endif %}
+                    {% if offence.reportingRestriction %}
+                      <div class="restriction-row-block">
+                        <p><span class="label">{{ t.reportingRestrictions }}</span> {{ offence.reportingRestrictionDetails }}</p>
+                      </div>
+                    {% endif %}
                   </div>
                 {% endif %}
               {% endfor %}

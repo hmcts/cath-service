@@ -38,5 +38,8 @@ export const SJP_PRESS_LIST_PDF_STYLES = `
     .restriction-tag {
       font-weight: 700;
       color: #d4351c;
+      background-color: #f3f2f1;
+      padding: 5px 8px;
+      display: inline-block;
     }
 `;

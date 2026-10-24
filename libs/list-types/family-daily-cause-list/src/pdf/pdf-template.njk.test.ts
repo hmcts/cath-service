@@ -27,6 +27,47 @@ function buildCourtHouse({
   return { courtHouse: { courtHouseName, courtHouseAddress, courtRoom } };
 }
 
+function buildCourtRoomWithCase(overrides: Record<string, unknown> = {}) {
+  return {
+    courtHouse: {
+      courtHouseName: "Main Family Court House",
+      courtHouseAddress: { line: ["1 Family Court Street"], postCode: "SW1A 1AA" },
+      courtRoom: [
+        {
+          courtRoomName: "Courtroom 1",
+          session: [
+            {
+              formattedJudiciaries: "",
+              sittings: [
+                {
+                  time: "10:00am",
+                  durationAsHours: 0,
+                  durationAsMinutes: 0,
+                  caseHearingChannel: "In person",
+                  hearing: [
+                    {
+                      hearingType: "Hearing",
+                      case: [
+                        {
+                          caseNumber: "CASE-123",
+                          caseName: "Smith v Jones",
+                          caseType: "Family",
+                          formattedReportingRestriction: "",
+                          ...overrides
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  };
+}
+
 function baseData(locale: typeof en | typeof cy = en) {
   return {
     t: locale,
@@ -125,6 +166,22 @@ describe("family-daily-cause-list pdf-template", () => {
 
       expect($(".court-section .address")).toHaveLength(0);
       expect($(".court-section h2")).toHaveLength(0);
+    });
+  });
+
+  describe("Reporting restriction row", () => {
+    it("should render the restriction-row class on the restriction row when a case has a reporting restriction", () => {
+      const { $ } = renderPdf([buildCourtRoomWithCase({ formattedReportingRestriction: "No reporting until trial concludes" })]);
+
+      const restrictionRow = $("tr.restriction-row");
+      expect(restrictionRow).toHaveLength(1);
+      expect(restrictionRow.text()).toContain("No reporting until trial concludes");
+    });
+
+    it("should not render a restriction row when a case has no reporting restriction", () => {
+      const { $ } = renderPdf([buildCourtRoomWithCase({ formattedReportingRestriction: "" })]);
+
+      expect($("tr.restriction-row")).toHaveLength(0);
     });
   });
 });
