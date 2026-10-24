@@ -1,5 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { validateDate, validateManualUploadForm, validateNonStrategicUploadForm } from "./validation.js";
+
+// Pins the DB-backed list type lookup to a deterministic set so JSON validation tests
+// below don't depend on live database content or schema state. The real
+// @hmcts/list-types-common validateListTypeJson is NOT mocked, so dynamic imports of
+// list-type validator packages still execute for real.
+vi.mock("@hmcts/system-admin-pages", () => ({
+  findAllListTypes: vi.fn().mockResolvedValue([
+    { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
+    { id: 999, name: "TRAFFIC_VIRTUAL_COURTS_LIST", friendlyName: "Traffic Virtual Courts List" }
+  ])
+}));
 
 const mockTranslations = {
   title: "Manual upload",
@@ -489,6 +500,51 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, file, mockTranslations);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors.some((e) => e.text.includes("Invalid JSON file format"))).toBe(true);
+    });
+
+    it("should accept a .pdf upload for a flat-file-only list type without attempting schema validation", async () => {
+      const body = {
+        locationId: "123",
+        listType: "TRAFFIC_VIRTUAL_COURTS_LIST",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({ originalname: "traffic-virtual-courts-list.pdf" });
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
+
+      expect(errors).toHaveLength(0);
+    });
+
+    it("should return the 'No JSON schema available' error, not throw, when a .json file is uploaded for a list type with no validator package", async () => {
+      // TRAFFIC_VIRTUAL_COURTS_LIST (id 999 in the mocked findAllListTypes above) has no
+      // @hmcts/traffic-virtual-courts-list package, so the real validateListTypeJson's
+      // dynamic import fails and must be caught, returning a clean message rather than
+      // throwing a stack trace back through validateManualUploadForm.
+      const body = {
+        locationId: "123",
+        listType: "999",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      const file = createMockFile({
+        originalname: "test.json",
+        buffer: Buffer.from(JSON.stringify({ test: "data" }))
+      });
+
+      const errors = await validateManualUploadForm(body, file, mockTranslations);
+
+      expect(errors).toContainEqual({
+        text: "Invalid JSON file format. No JSON schema available for Traffic Virtual Courts List. This list type does not support JSON uploads.",
+        href: "#file"
+      });
     });
 
     it("should error when Civil and Family JSON file is malformed", async () => {
