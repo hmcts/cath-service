@@ -15,7 +15,7 @@ import {
 import type { Response } from "express";
 import { createSimpleListTypeHandler, LIST_LOAD_SERVER_ERROR, resolveDataSource } from "../list-type-handler.js";
 
-const LONDON_LIST_TYPE_NAME = "UTIAC_JR_LONDON_DAILY_HEARING_LIST";
+const LONDON_LIST_TYPE_NAME = "UT_IAC_JR_LONDON_DAILY_HEARING_LIST";
 
 function renderUtiacJr({ artefact, jsonData, locale, res }: { artefact: Artefact; jsonData: unknown; locale: string; res: Response }): void {
   const listTypeName = artefact.listTypeName ?? "";

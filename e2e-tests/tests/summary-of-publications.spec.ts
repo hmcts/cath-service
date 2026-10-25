@@ -525,7 +525,7 @@ test.describe
 
       // Step 2: Ensure CST list type exists (it's a non-strategic list type)
       const cstListType = await createOrGetListType({
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        name: "CST_WEEKLY_HEARING_LIST",
         friendlyName: "Care Standards Tribunal Weekly Hearing List",
         welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
         url: "/care-standards-tribunal-weekly-hearing-list",
@@ -602,7 +602,7 @@ test.describe
       await authenticateSystemAdmin(page);
 
       const cstListType = await createOrGetListType({
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        name: "CST_WEEKLY_HEARING_LIST",
         friendlyName: "Care Standards Tribunal Weekly Hearing List",
         welshFriendlyName: "Rhestr Wrandawiadau Wythnosol Tribiwnlys Safonau Gofal",
         url: "/care-standards-tribunal-weekly-hearing-list",
