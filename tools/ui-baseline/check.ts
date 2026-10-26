@@ -24,6 +24,8 @@ const SIDE_BY_SIDE_WIDTH = 1600;
 const { values: args } = parseArgs({
   options: {
     ticket: { type: "string" },
+    // Every list type in the fixtures and every mapped page, with the full report and no PR evidence
+    all: { type: "boolean", default: false },
     "list-type": { type: "string", multiple: true },
     route: { type: "string", multiple: true },
     target: { type: "string" },
@@ -51,10 +53,12 @@ if (!existsSync(path.join(baseline, "lists/index.jsonl")))
 
 // ---------- 1. What to check ----------
 const requirements = args.ticket ? await ticketText(args.ticket) : null;
-const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? []);
+const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? [], args.all);
 const name = args.ticket
   ? `ticket-${args.ticket}`
-  : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-"))].slice(0, 3).join("+") || "check";
+  : args.all
+    ? "all"
+    : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-"))].slice(0, 3).join("+") || "check";
 const out = path.resolve(args.out ?? path.join(PARITY_DIR, "output/checks", name));
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
@@ -63,9 +67,11 @@ if (requirements) await writeFile(path.join(out, "requirements.md"), requirement
 step(`Checking ${targetBase} against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
 console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
-for (const skipped of scope.skipped) console.log(`  skipped:    ${skipped}`);
+// --all skips most of the route map (journey steps, sign-in pages), so count those by reason instead
+const skippedReasons = Object.entries(Object.groupBy(scope.skipped, (s) => s.slice(s.indexOf(": ") + 2).replace(/ \(.*\)/, "")));
+for (const line of args.all ? skippedReasons.map(([reason, items]) => `${items?.length} ${reason}`) : scope.skipped) console.log(`  skipped:    ${line}`);
 if (!scope.publications.length && !scope.routes.length) {
-  console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route.");
+  console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --all.");
   process.exit(2);
 }
 
@@ -185,10 +191,11 @@ const reportArgs = [
   path.join(PARITY_DIR, "pip/KNOWN-DEFECTS.md"),
   "--govuk",
   path.join(REPO_DIR, "node_modules/govuk-frontend/dist/govuk"),
-  "--only",
-  [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.id)].join(","),
+  ...(args.all
+    ? ["--journeys", path.join(baseline, "journeys"), "--run", path.join(baseline, "run.json")]
+    : ["--only", [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.id)].join(",")]),
   "--title",
-  args.ticket ? `Parity check: ticket ${args.ticket}` : "Parity check",
+  args.ticket ? `Parity check: ticket ${args.ticket}` : args.all ? "pip baseline against CaTH" : "Parity check",
   "--out",
   path.join(out, "report"),
   ...(captured.pages ? ["--cath-pages", captured.pages] : []),
@@ -218,6 +225,8 @@ console.log(
     : `  ${pagesDiffer} (not reviewed against a ticket)`
 );
 for (const line of differing) console.log(`    ${line}`);
+
+if (args.all) await finish();
 
 // ---------- Evidence for the PR ----------
 // GitHub only takes attachments through its web editor, so the dev drags these into the comment
@@ -259,15 +268,18 @@ console.log(`  evidence: ${evidence}`);
 console.log(
   `    ${args["post-pr"] ? "edit the comment and drag" : "paste pr-comment.md into a PR comment, then drag"} report.zip${screenshots.length ? ` and the ${screenshots.length} screenshot${screenshots.length === 1 ? "" : "s"}` : ""} into it`
 );
-console.log(`  report: ${path.join(out, "report/index.html")}`);
-if (args.serve) {
-  spawn("node", [path.join(PARITY_DIR, "report/serve.mjs"), path.join(out, "report"), String(REPORT_PORT)], { stdio: "inherit", detached: false });
-  console.log(`  serving on http://localhost:${REPORT_PORT}/ (Ctrl+C to stop)`);
-} else {
-  process.exit(defects > 0 ? 1 : 0);
-}
+await finish();
 
 // ---------- helpers ----------
+async function finish(): Promise<void> {
+  console.log(`  report: ${path.join(out, "report/index.html")}`);
+  if (!args.serve) process.exit(defects > 0 ? 1 : 0);
+  spawn("node", [path.join(PARITY_DIR, "report/serve.mjs"), path.join(out, "report"), String(REPORT_PORT)], { stdio: "inherit", detached: false });
+  console.log(`  serving on http://localhost:${REPORT_PORT}/ (Ctrl+C to stop)`);
+  // Keeps the evidence step from running for --all while the server holds the process open
+  await new Promise(() => {});
+}
+
 // The report reaches its captures through symlinks into the whole baseline; the bundle copies just
 // the pages this check covers, so it can be zipped and attached to the PR
 async function bundleReport(): Promise<string> {
@@ -337,16 +349,18 @@ async function ticketText(ticket: string): Promise<string> {
 }
 
 // List types the ticket names (pip or CaTH name), and pages it names by route, plus explicit choices
-function selectScope(text: string | null, listTypes: string[], routes: string[]): Scope {
+function selectScope(text: string | null, listTypes: string[], routes: string[], everything: boolean): Scope {
   const skipped: string[] = [];
   const named = new Set([...(text?.match(/\b[A-Z][A-Z0-9_]{6,}\b/g) ?? []), ...listTypes]);
-  const publications = manifest.publications.filter((p: PublicationFixture) => named.has(p.listType) || (p.cathListType !== null && named.has(p.cathListType)));
+  const publications = manifest.publications.filter(
+    (p: PublicationFixture) => everything || named.has(p.listType) || (p.cathListType !== null && named.has(p.cathListType))
+  );
   for (const p of publications.filter((p) => !p.paths.cath)) skipped.push(`${p.listType}: CaTH has no page for it`);
 
   const mentioned = new Set([...(text?.match(/(?<=[\s`(])\/[a-z0-9][a-z0-9/-]*[a-z0-9]/g) ?? []), ...routes]);
   const selected: Scope["routes"] = [];
   for (const entry of routeMap) {
-    if (!mentioned.has(entry.pip) && !(entry.cath && mentioned.has(entry.cath))) continue;
+    if (!everything && !mentioned.has(entry.pip) && !(entry.cath && mentioned.has(entry.cath))) continue;
     const id = `page${entry.pip.replace(/\//g, "--")}`;
     const confident = entry.reviewed || entry.match === "same-path" || entry.confidence === "high";
     if (!entry.cath) skipped.push(`${entry.pip}: no CaTH page mapped`);

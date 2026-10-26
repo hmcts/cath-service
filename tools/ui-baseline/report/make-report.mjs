@@ -69,7 +69,8 @@ for (const [name, target] of [
 
 const NAV = [
   ["index.html", "Overview"],
-  ["comparison.html", "Comparison"],
+  // Only written when there is a comparison: the baseline report on its own has none
+  ...(comparison ? [["comparison.html", "Comparison"]] : []),
   ["lists.html", "List pages"],
   ["pages.html", "Other pages"],
   ["journeys.html", "Journeys"],
@@ -639,14 +640,14 @@ if (!ONLY)
     body: `<h1 class="govuk-heading-xl">${esc(args.title ?? "pip baseline")}</h1>
   <p class="govuk-body-l">What pip-frontend shows, captured from pip running locally on its real backends, ready to compare CaTH against.</p>
   <div class="parity-stats">
-    ${statCard(manifest.publications.length, "list pages", `${cathLists} also captured in CaTH`)}
+    ${statCard(manifest.publications.length, "list pages", cathLists ? `${cathLists} also captured in CaTH` : "in English and Welsh")}
     ${statCard(pageEntries.length, "other pages", "public, verified, admin, system admin")}
     ${statCard(journeyIds.length, "journeys", `${journeyRuns} runs · ${checkpointTotal} steps${journeyFailures ? ` · ${journeyFailures} stopped` : ""}`)}
     ${statCard(defectRows.length, "known pip defects", "recorded, not reproduced in CaTH")}
   </div>
   <div class="parity-stats">
     ${statCard(pipListAxe, "axe violations on pip list pages", "English")}
-    ${statCard(cathListAxe, "axe violations on CaTH list pages", "English")}
+    ${cathLists ? statCard(cathListAxe, "axe violations on CaTH list pages", "English") : ""}
     ${statCard(pipPageAxe, "axe violations on other pip pages", "English")}
   </div>
   ${
@@ -661,7 +662,7 @@ if (!ONLY)
   }
   <h2 class="govuk-heading-m">How to read this</h2>
   <ul class="govuk-list govuk-list--bullet">
-    <li><a class="govuk-link" href="comparison.html">Comparison</a> summarises pip against CaTH on the list pages: findings after normalisation, and the patterns that repeat across pages.</li>
+    ${comparison ? `<li><a class="govuk-link" href="comparison.html">Comparison</a> summarises pip against CaTH on the list pages: findings after normalisation, and the patterns that repeat across pages.</li>` : ""}
     <li><a class="govuk-link" href="lists.html">List pages</a> put pip and CaTH side by side for the same publication, with the accessibility-tree and text differences.</li>
     <li><a class="govuk-link" href="pages.html">Other pages</a> and <a class="govuk-link" href="journeys.html">journeys</a> are the pip baseline only until CaTH routes and journeys are mapped.</li>
     <li>Differences here are raw. The comparison step will remove known noise (IDs, dates from seeding, formatting-only markup) and classify what is left against the ticket.</li>

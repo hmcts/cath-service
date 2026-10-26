@@ -3,7 +3,8 @@ import { createReadStream, statSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 
-const [root, port = "9500"] = process.argv.slice(2);
+const [rootArg, port = "9500"] = process.argv.slice(2);
+const root = path.resolve(rootArg);
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".png": "image/png",
@@ -29,7 +30,7 @@ createServer((req, res) => {
     return res.writeHead(400).end("bad request");
   }
   const file = path.join(root, urlPath.endsWith("/") ? `${urlPath}index.html` : urlPath);
-  if (!file.startsWith(path.resolve(root))) return res.writeHead(403).end();
+  if (!file.startsWith(root)) return res.writeHead(403).end();
   try {
     if (!statSync(file).isFile()) throw new Error();
     res.writeHead(200, { "content-type": TYPES[path.extname(file)] ?? "application/octet-stream" });
