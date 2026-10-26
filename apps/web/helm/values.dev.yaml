@@ -37,7 +37,7 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-        # GOV.UK Notify
+        # GOV.UK Notify - test key by default; a live key in .env overrides it and sends real emails
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
         # Azure AD B2C secrets (media user account management)

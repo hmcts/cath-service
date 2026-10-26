@@ -25,6 +25,27 @@ async function createAppWithLocalDev(localDev: string | undefined) {
   return createApp();
 }
 
+const KEY_VAULT_SECRETS = {
+  GOVUK_NOTIFY_API_KEY: "key-vault-notify-key",
+  AZURE_TENANT_ID: "key-vault-tenant-id"
+};
+
+// Stubbing every Key Vault key first means vi.unstubAllEnvs() also undoes the fake's writes.
+async function fakeKeyVault(localEnv: Partial<Record<keyof typeof KEY_VAULT_SECRETS, string>>) {
+  for (const key of Object.keys(KEY_VAULT_SECRETS) as (keyof typeof KEY_VAULT_SECRETS)[]) {
+    vi.stubEnv(key, localEnv[key]);
+  }
+  const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
+  vi.mocked(getPropertiesVolumeSecrets).mockClear();
+  vi.mocked(getPropertiesVolumeSecrets).mockImplementationOnce(async (options) => {
+    for (const [key, value] of Object.entries(KEY_VAULT_SECRETS)) {
+      if (!options?.omit?.includes(key)) process.env[key] = value;
+    }
+    return {};
+  });
+  return () => vi.mocked(getPropertiesVolumeSecrets).mock.calls.at(-1)?.[0]?.omit;
+}
+
 describe("API Application", () => {
   let app: Express;
 
@@ -110,6 +131,92 @@ describe("API Application", () => {
 
       // Assert
       expect(getPropertiesVolumeSecrets).toHaveBeenCalledWith(expect.objectContaining({ chartPath: expect.stringContaining("helm/values.yaml") }));
+    });
+  });
+
+  describe("local .env precedence over Key Vault", () => {
+    it("should use the .env value when LOCAL_DEV is true and the variable is set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe("env-notify-key");
+      expect(getOmit()).toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is empty", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is absent", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({});
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is whitespace only", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "   " });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the .env value for any Key Vault secret when LOCAL_DEV is true", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ AZURE_TENANT_ID: "env-tenant-id" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.AZURE_TENANT_ID).toBe("env-tenant-id");
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toContain("AZURE_TENANT_ID");
+    });
+
+    it("should still omit DATABASE_URL when LOCAL_DEV is true", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(getOmit()).toEqual(expect.arrayContaining(["DATABASE_URL", "GOVUK_NOTIFY_API_KEY"]));
+    });
+
+    it("should let Key Vault win when LOCAL_DEV is not set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev(undefined);
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toEqual(["DATABASE_URL"]);
     });
   });
 });
