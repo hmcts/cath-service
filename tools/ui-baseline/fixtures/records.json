@@ -1,0 +1,19 @@
+{
+  "$comment": "Account-side records the parity seeders create so pages that show them have data: a subscription, a media application, a legacy third-party user, a third-party API subscriber and an audit entry. Each is matched on its natural key before creating, so re-seeding never duplicates them.",
+  "subscriptions": [
+    { "id": "location-subscription", "user": "verified-media", "searchType": "LOCATION_ID", "publication": "civil-and-family-daily-cause-list" }
+  ],
+  "mediaApplications": [
+    {
+      "id": "pending-application",
+      "fullName": "Parity Applicant",
+      "email": "parity.applicant@example.com",
+      "employer": "Parity News",
+      "image": "records/media-application-id.png",
+      "imageOrigin": "hmcts/pip-account-management@0c1016af:src/functionalTest/resources/files/test-image.png"
+    }
+  ],
+  "legacyThirdPartyUsers": [{ "id": "legacy-third-party", "provenanceUserId": "parity-legacy-third-party", "role": "GENERAL_THIRD_PARTY" }],
+  "thirdPartySubscribers": [{ "id": "third-party-subscriber", "name": "Parity Third Party Subscriber" }],
+  "auditEntries": [{ "id": "manage-user-audit", "user": "system-admin", "action": "MANAGE_USER", "details": "Parity audit entry" }]
+}

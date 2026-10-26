@@ -1,0 +1,86 @@
+{
+  "$comment": "Users the parity seeders create, one per pip role and verified provenance plus dedicated users for journeys that change their own data, so pages behind sign-in can be captured as each role. They only exist in the local app databases; sign-in goes through each app's local parity sign-in (pip: /parity-login), never a real identity provider.",
+  "users": [
+    {
+      "id": "verified-media",
+      "provenance": "PI_AAD",
+      "role": "VERIFIED",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a1",
+      "email": "parity.media@example.com",
+      "forenames": "Parity",
+      "surname": "Media"
+    },
+    {
+      "id": "verified-cft",
+      "provenance": "CFT_IDAM",
+      "role": "VERIFIED",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000b1",
+      "email": "parity.cft@example.com",
+      "forenames": "Parity",
+      "surname": "Cft"
+    },
+    {
+      "id": "verified-crime",
+      "provenance": "CRIME_IDAM",
+      "role": "VERIFIED",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000c1",
+      "email": "parity.crime@example.com",
+      "forenames": "Parity",
+      "surname": "Crime"
+    },
+    {
+      "id": "journey-subscriber",
+      "provenance": "PI_AAD",
+      "role": "VERIFIED",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000d1",
+      "email": "parity.subscriber@example.com",
+      "forenames": "Parity",
+      "surname": "Subscriber"
+    },
+    {
+      "id": "system-admin",
+      "provenance": "SSO",
+      "role": "SYSTEM_ADMIN",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a2",
+      "email": "parity.sysadmin@example.com",
+      "forenames": "Parity",
+      "surname": "SystemAdmin"
+    },
+    {
+      "id": "super-admin-ctsc",
+      "provenance": "SSO",
+      "role": "INTERNAL_SUPER_ADMIN_CTSC",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a4",
+      "email": "parity.superadmin.ctsc@example.com",
+      "forenames": "Parity",
+      "surname": "SuperAdminCtsc"
+    },
+    {
+      "id": "super-admin-local",
+      "provenance": "SSO",
+      "role": "INTERNAL_SUPER_ADMIN_LOCAL",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a3",
+      "email": "parity.superadmin@example.com",
+      "forenames": "Parity",
+      "surname": "SuperAdminLocal"
+    },
+    {
+      "id": "admin-ctsc",
+      "provenance": "SSO",
+      "role": "INTERNAL_ADMIN_CTSC",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a5",
+      "email": "parity.admin.ctsc@example.com",
+      "forenames": "Parity",
+      "surname": "AdminCtsc"
+    },
+    {
+      "id": "admin-local",
+      "provenance": "SSO",
+      "role": "INTERNAL_ADMIN_LOCAL",
+      "provenanceUserId": "00000000-0000-4000-8000-0000000000a6",
+      "email": "parity.admin.local@example.com",
+      "forenames": "Parity",
+      "surname": "AdminLocal"
+    }
+  ]
+}
