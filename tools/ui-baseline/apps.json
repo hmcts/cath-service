@@ -1,0 +1,15 @@
+{
+  "$comment": "Where each app runs locally for parity captures, and the cookies that record cookie consent so banners stay out of the page frame and screenshots.",
+  "pip": {
+    "baseUrl": "https://localhost:8180",
+    "$signIn": "Local parity sign-in from pip-frontend.patch. {key} is oid for B2C and SSO users, uid for CFT and Crime IDAM.",
+    "signIn": "/parity-login?{key}={provenanceUserId}&flow={flow}&redirect=/",
+    "cookies": [{ "name": "court-and-tribunal-hearings-cookie-preferences", "value": "{\"essential\":true,\"analytics\":\"off\",\"apm\":\"off\"}" }]
+  },
+  "cath": {
+    "baseUrl": "http://localhost:8080",
+    "$signIn": "CaTH has no local sign-in; pages that need one are not captured for CaTH yet.",
+    "signIn": null,
+    "cookies": [{ "name": "cookies_preferences_set", "value": "true" }, { "name": "cookie_policy", "value": "{\"analytics\":false,\"preferences\":false}" }]
+  }
+}

@@ -1,0 +1,37 @@
+diff --git a/src/main/app.ts b/src/main/app.ts
+index 9bc6d18c..1324f306 100644
+--- a/src/main/app.ts
++++ b/src/main/app.ts
+@@ -78,6 +78,14 @@ export async function appSetup() {
+     app.use(cookieParser(sessionSecret));
+     new I18next().enableFor(app);
+ 
++    if (process.env.PARITY_AUTH === 'true') {
++        app.get('/parity-login', (req: any, res, next) => {
++            const { oid, uid, flow = 'AAD', redirect = '/' } = req.query as Record<string, string>;
++            // CFT sessions are keyed by uid, Crime by subname, B2C and SSO by oid
++            req.login({ oid, uid, subname: uid, flow }, err => (err ? next(err) : res.redirect(redirect)));
++        });
++    }
++
+     //main routes
+     routes.default(app);
+ 
+diff --git a/src/main/authentication/authentication.ts b/src/main/authentication/authentication.ts
+index a7d1a63e..8a8892a3 100644
+--- a/src/main/authentication/authentication.ts
++++ b/src/main/authentication/authentication.ts
+@@ -73,6 +73,13 @@ export async function oidcSetup(): Promise<void> {
+     passport.serializeUser(serializeUser);
+     passport.deserializeUser(deserializeUser);
+ 
++    // Parity baselines run pip locally with no identity providers. Sign-in is done by
++    // /parity-login instead, which hands passport the same session payload a real
++    // provider would, so users are still loaded from account-management on every request.
++    if (process.env.PARITY_AUTH === 'true') {
++        return;
++    }
++
+     passport.use('login', new OIDCStrategy(await getB2cConfig(), piAadVerifyFunction));
+     passport.use('media-verification', new OIDCStrategy(await getB2cMediaVerificationConfig(), piAadVerifyFunction));
+     passport.use('sso', new OIDCStrategy(await getSsoConfig(), ssoVerifyFunction));

@@ -1,0 +1,97 @@
+# Local pip backends for parity baselines: data-management and account-management in their
+# `dev` (insecure) profile, with testing-support enabled. publication-services is deliberately
+# absent: it only sends emails and uploads PDDA HTML, and both callers swallow its failures.
+# Ports are offset from CaTH's so both apps can run side by side.
+name: pip-parity
+
+x-dev-profile: &dev-profile
+  SPRING_PROFILES_ACTIVE: dev
+  # Rendered dates must not depend on the host clock's timezone
+  TZ: Europe/London
+  JAVA_TOOL_OPTIONS: -Duser.timezone=Europe/London
+  ENABLE_TESTING_SUPPORT_API: "true"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USER: pip_user
+  DB_PASS: pip_password
+  # Schema comes from Flyway alone, as on the clusters; Hibernate ddl updates conflict with its materialised views
+  ENABLE_FLYWAY: "true"
+  CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+  STORAGE_ACCOUNT_NAME: devstoreaccount1
+  # Required by application.yaml but unused while Azure AD is disabled by the dev profile
+  TENANT_ID: 00000000-0000-0000-0000-000000000000
+  CLIENT_ID: 00000000-0000-0000-0000-000000000000
+  CLIENT_SECRET: unused
+  APP_URI: api://unused
+  ACCOUNT_MANAGEMENT_AZ_API: api://unused
+  DATA_MANAGEMENT_AZ_API: api://unused
+  PUBLICATION_SERVICES_AZ_API: api://unused
+  IDENTITY_ISSUER: unused.onmicrosoft.com
+  PUBLICATION_SERVICES_URL: http://publication-services.invalid:8081
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: pip_user
+      POSTGRES_PASSWORD: pip_password
+      POSTGRES_DB: postgres
+    volumes:
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pip_user"]
+      interval: 2s
+      retries: 30
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.35.0
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+    ports:
+      - "20000:10000"
+
+  redis:
+    image: redis:7
+    ports:
+      - "16379:6379"
+
+  data-management:
+    image: eclipse-temurin:21-jre
+    command: ["java", "-jar", "/opt/app/app.jar"]
+    environment:
+      <<: *dev-profile
+      DB_NAME: pip_data_management
+      # The dev profile hard-codes localhost/postgres for the datasource
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pip_data_management
+      ACCOUNT_MANAGEMENT_URL: http://account-management:6969
+    volumes:
+      - ${PIP_SRC:?set PIP_SRC to the directory holding the pip checkouts}/pip-data-management/build/libs/pip-data-management.jar:/opt/app/app.jar:ro
+      - ${PIP_SRC}/pip-data-management/lib/openSans.ttf:/opt/app/openSans.ttf:ro
+    ports:
+      - "18090:8090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+
+  account-management:
+    image: eclipse-temurin:21-jre
+    command: ["java", "-jar", "/opt/app/app.jar"]
+    environment:
+      <<: *dev-profile
+      DB_NAME: pip_account_management
+      # account-management's migrations assume tables Hibernate originally created, and miss
+      # columns such as pi_user.forenames, so Hibernate adds what is missing after Flyway
+      DB_UPDATE: update
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pip_account_management
+    volumes:
+      - ${PIP_SRC}/pip-account-management/build/libs/pip-account-management.jar:/opt/app/app.jar:ro
+    ports:
+      - "16969:6969"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      azurite:
+        condition: service_started
