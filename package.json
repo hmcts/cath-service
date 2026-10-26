@@ -37,6 +37,7 @@
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
     "ui-baseline:check": "tsx tools/ui-baseline/check.ts",
     "ui-baseline:record-pip": "bash tools/ui-baseline/pip/baseline.sh",
+    "ui-baseline:report": "bash tools/ui-baseline/report/baseline-report.sh",
     "ui-baseline:stop-pip": "bash tools/ui-baseline/pip/stop.sh",
     "db:seed": "tsx --env-file-if-exists=.env apps/postgres/prisma/seed.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
