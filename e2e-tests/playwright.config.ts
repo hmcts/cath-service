@@ -5,24 +5,6 @@ import { defineConfig, devices } from "@playwright/test";
 const deployedWebUrl = process.env.CATH_SERVICE_WEB_URL;
 const baseURL = deployedWebUrl || "https://localhost:8080";
 
-// Every subscription template id getSubscriptionTemplateId can select. Missing ones either throw
-// or silently fall back to a legacy template, so all of them are forwarded to the local server.
-const NOTIFY_TEMPLATE_ENV_VARS = [
-  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION",
-  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY",
-  "GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL",
-  "GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY",
-  "GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS",
-  "GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF"
-];
-
-const notifyEnv = [
-  `GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}"`,
-  ...NOTIFY_TEMPLATE_ENV_VARS.map((name) => `${name}="${process.env[name] || ""}"`)
-].join(" ");
-
-const webServerEnv = `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_CRIME_IDAM=true CRIME_IDAM_BASE_URL="${process.env.CRIME_IDAM_BASE_URL || "https://login.sit.cjscp.org.uk"}" CRIME_IDAM_CLIENT_ID="${process.env.CRIME_IDAM_CLIENT_ID || ""}" CRIME_IDAM_CLIENT_SECRET="${process.env.CRIME_IDAM_CLIENT_SECRET || ""}" ${notifyEnv}`;
-
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -56,10 +38,12 @@ export default defineConfig({
         // ENABLE_SSO=true required to test SSO flows (SSO disabled by default in development)
         // ENABLE_CFT_IDAM=true required to test CFT IDAM flows
         // ENABLE_CRIME_IDAM=true required to test Crime IDAM flows
-        // GOVUK_NOTIFY_* required for notification tests
+        // GOVUK_NOTIFY_API_KEY required for notification tests
         // In CI: use dev:ci (skips docker-compose, service containers are used instead)
         // Locally: use dev:nowatch (starts docker-compose and runs migrations)
-        command: process.env.CI ? `${webServerEnv} yarn dev:ci` : `${webServerEnv} yarn dev:nowatch`,
+        command: process.env.CI
+          ? `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_CRIME_IDAM=true CRIME_IDAM_BASE_URL="${process.env.CRIME_IDAM_BASE_URL || "https://login.sit.cjscp.org.uk"}" CRIME_IDAM_CLIENT_ID="${process.env.CRIME_IDAM_CLIENT_ID || ""}" CRIME_IDAM_CLIENT_SECRET="${process.env.CRIME_IDAM_CLIENT_SECRET || ""}" GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" yarn dev:ci`
+          : `NODE_ENV=development ENABLE_SSO=true ENABLE_CFT_IDAM=true ENABLE_CRIME_IDAM=true CRIME_IDAM_BASE_URL="${process.env.CRIME_IDAM_BASE_URL || "https://login.sit.cjscp.org.uk"}" CRIME_IDAM_CLIENT_ID="${process.env.CRIME_IDAM_CLIENT_ID || ""}" CRIME_IDAM_CLIENT_SECRET="${process.env.CRIME_IDAM_CLIENT_SECRET || ""}" GOVUK_NOTIFY_API_KEY="${process.env.GOVUK_NOTIFY_API_KEY || ""}" yarn dev:nowatch`,
         // Check port instead of URL to avoid HTTPS certificate issues
         port: 8080,
         reuseExistingServer: !process.env.CI,

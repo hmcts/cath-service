@@ -17,7 +17,7 @@ export const en = {
     judgmentsText:
       "Judgments handed down by the judge remotely will be released by circulation to the parties' representatives by email and release to the National Archives. The date and time for hand-down will be deemed to be not before time listed. A copy of the judgment in final form as handed down can be made available after that time, on request by email."
   },
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     pageTitle: "Bristol and Cardiff Administrative Court Daily Cause List",
     importantInfoText:
       "Hearings take place in public unless otherwise indicated. When considering the use of telephone and video technology the judiciary will have regard to the principles of open justice. The court may exclude observers where necessary to secure the proper administration of justice.",

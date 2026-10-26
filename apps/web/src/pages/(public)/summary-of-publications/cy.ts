@@ -1,7 +1,7 @@
 export const cy = {
   titlePrefix: "Beth ydych chi eisiau edrych arno gan",
   titleSuffix: "?",
-  noPublicationsMessage: "Mae'n ddrwg gennym, nid ydym wedi dod o hyd i unrhyw restrau i'r llys hwn",
+  noPublicationsMessage: "Nid oes unrhyw restrau ar gael ar gyfer y llys na’r tribiwnlys hwn heddiw.",
   selectListMessage: "Dewiswch y rhestr rydych chi am ei gweld o'r ddolen(nau) isod:",
   forWeekCommencing: "ar gyfer yr wythnos yn dechrau ar",
   languageEnglish: "Saesneg (English)",

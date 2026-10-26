@@ -8,7 +8,6 @@ vi.mock("../config/cft-idam-config.js", () => ({
   isCftIdamConfigured: vi.fn()
 }));
 
-const CFT_IDAM_HEALTH_URL = "https://idam-web-public.aat.platform.hmcts.net/health";
 const HMCTS_ACCESS_HEALTH_URL = "https://hmcts-access.aat.platform.hmcts.net/health";
 
 describe("cftIdamHealthCheck", () => {
@@ -20,8 +19,7 @@ describe("cftIdamHealthCheck", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
-      cftIdamUrl: "https://idam-web-public.aat.platform.hmcts.net",
-      hmctsAccessUrl: "https://hmcts-access.aat.platform.hmcts.net"
+      cftIdamUrl: "https://hmcts-access.aat.platform.hmcts.net"
     } as ReturnType<typeof getCftIdamConfig>);
     res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as unknown as Response;
   });
@@ -30,9 +28,8 @@ describe("cftIdamHealthCheck", () => {
     vi.unstubAllGlobals();
   });
 
-  function mockHealthResponses(responses: Record<string, unknown>) {
-    fetchMock.mockImplementation(async (url: string) => {
-      const response = responses[url];
+  function mockHealthResponse(response: unknown) {
+    fetchMock.mockImplementation(async () => {
       if (response instanceof Error) {
         throw response;
       }
@@ -40,42 +37,42 @@ describe("cftIdamHealthCheck", () => {
     });
   }
 
-  it("should return 200 when both CFT IDAM services are UP", async () => {
+  it("should return 200 when hmcts-access is UP", async () => {
     // Arrange
-    mockHealthResponses({ [CFT_IDAM_HEALTH_URL]: { status: "UP" }, [HMCTS_ACCESS_HEALTH_URL]: { status: "UP" } });
+    mockHealthResponse({ status: "UP" });
 
     // Act
     await cftIdamHealthCheck()({} as Request, res);
 
     // Assert
-    expect(fetchMock).toHaveBeenCalledWith(CFT_IDAM_HEALTH_URL, expect.anything());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(HMCTS_ACCESS_HEALTH_URL, expect.anything());
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ status: "UP", services: { "cft-idam": "UP", "hmcts-access": "UP" } });
+    expect(res.json).toHaveBeenCalledWith({ status: "UP", services: { "hmcts-access": "UP" } });
   });
 
-  it("should return 503 when a service reports a status other than UP", async () => {
+  it("should return 503 when hmcts-access reports a status other than UP", async () => {
     // Arrange
-    mockHealthResponses({ [CFT_IDAM_HEALTH_URL]: { status: "UP" }, [HMCTS_ACCESS_HEALTH_URL]: { status: "DOWN" } });
+    mockHealthResponse({ status: "DOWN" });
 
     // Act
     await cftIdamHealthCheck()({} as Request, res);
 
     // Assert
     expect(res.status).toHaveBeenCalledWith(503);
-    expect(res.json).toHaveBeenCalledWith({ status: "DOWN", services: { "cft-idam": "UP", "hmcts-access": "DOWN" } });
+    expect(res.json).toHaveBeenCalledWith({ status: "DOWN", services: { "hmcts-access": "DOWN" } });
   });
 
-  it("should return 503 when a service cannot be reached", async () => {
+  it("should return 503 when hmcts-access cannot be reached", async () => {
     // Arrange
-    mockHealthResponses({ [CFT_IDAM_HEALTH_URL]: new Error("timeout"), [HMCTS_ACCESS_HEALTH_URL]: { status: "UP" } });
+    mockHealthResponse(new Error("timeout"));
 
     // Act
     await cftIdamHealthCheck()({} as Request, res);
 
     // Assert
     expect(res.status).toHaveBeenCalledWith(503);
-    expect(res.json).toHaveBeenCalledWith({ status: "DOWN", services: { "cft-idam": "DOWN", "hmcts-access": "UP" } });
+    expect(res.json).toHaveBeenCalledWith({ status: "DOWN", services: { "hmcts-access": "DOWN" } });
   });
 
   it("should report UP with no services when CFT IDAM is not configured", async () => {

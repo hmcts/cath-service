@@ -134,7 +134,7 @@ describe("generateUtccDailyHearingListPdf", () => {
       locale: "cy",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri"
+      listTitle: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Treth a Siawnsri)"
     });
   });
 });
