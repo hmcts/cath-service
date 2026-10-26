@@ -8,6 +8,7 @@ import {
   deleteSubscriptionsByIds as deleteSubscriptionsByIdsQuery,
   deleteSubscriptionsByLocationIdRecord,
   findCaseSubscriptionsByUserId,
+  findSubscribersByLocationIdRecord,
   findSubscriptionById,
   findSubscriptionByUserAndLocation,
   findSubscriptionsByIds,
@@ -92,6 +93,19 @@ export async function deleteSubscriptionsByLocationId(locationId: number): Promi
   }
 
   return deleteSubscriptionsByLocationIdRecord(locationId);
+}
+
+export interface LocationSubscriber {
+  userId: string;
+  user: {
+    email: string;
+    firstName: string | null;
+    surname: string | null;
+  };
+}
+
+export async function findSubscribersByLocationId(locationId: number): Promise<LocationSubscriber[]> {
+  return findSubscribersByLocationIdRecord(locationId);
 }
 
 export async function removeSubscription(subscriptionId: string, userId: string) {
