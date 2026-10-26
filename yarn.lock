@@ -2437,6 +2437,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/ui-baseline@workspace:tools/ui-baseline":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/ui-baseline@workspace:tools/ui-baseline"
+  dependencies:
+    "@axe-core/playwright": "npm:4.13.0"
+    "@types/node": "npm:24.10.4"
+    playwright: "npm:1.62.1"
+    tsx: "npm:4.22.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  bin:
+    ui-baseline: ./src/cli.ts
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:*, @hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list@workspace:libs/list-types/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
