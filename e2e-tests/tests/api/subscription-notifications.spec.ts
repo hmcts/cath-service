@@ -263,7 +263,7 @@ test.describe("Subscription Notifications", () => {
     });
   }
 
-  test("flat-file publication sends the no-links email", async ({ request }) => {
+  test("flat-file publication sends the flat-file email with 1 link to the uploaded document", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(120_000);
 
@@ -280,7 +280,8 @@ test.describe("Subscription Notifications", () => {
     // Flat files carry no JSON, so nothing is generated into the publications container
     await expectFilesNotStored(publicationId, ALL_STORED_FILES);
 
-    const email = await assertEmailDownloadLinks(notification.govNotifyId, 0);
+    // The flat-file template links the uploaded document itself rather than any generated PDF/Excel
+    const email = await assertEmailDownloadLinks(notification.govNotifyId, 1);
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
   });
 
