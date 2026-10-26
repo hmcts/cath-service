@@ -9,7 +9,9 @@ test.describe("System Admin Dashboard", () => {
     await page.waitForURL("/system-admin-dashboard");
   });
 
-  test("system admin can view dashboard and navigate to upload page", async ({ page }) => {
+  // Quarantined: flaky in CI. The beforeEach Azure AD SSO login exceeded the 60s test timeout on
+  // master (run 39750219208, commit 2e9a081) and passed on re-run. See the flaky test tracker report.
+  test.skip("system admin can view dashboard and navigate to upload page", async ({ page }) => {
     // Verify page title and heading
     await expect(page).toHaveTitle(/Court and tribunal hearings/i);
     const heading = page.locator("h1");
