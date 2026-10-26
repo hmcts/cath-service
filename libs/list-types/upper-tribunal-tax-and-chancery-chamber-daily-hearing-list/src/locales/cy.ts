@@ -1,5 +1,5 @@
 export const cy = {
-  pageTitle: "Rhestr Gwrandawiadau Dyddiol Tribiwnlys Uwch Siambr Dreth a Siawnsri",
+  pageTitle: "Rhestr o Wrandawiadau Dyddiol Uwch Dribiwnlys (Siambr Treth a Siawnsri)",
   downloadPdf: "Lawrlwytho fel PDF",
   factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",

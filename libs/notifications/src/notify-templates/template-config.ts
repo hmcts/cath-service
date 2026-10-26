@@ -1,48 +1,48 @@
+import {
+  GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN
+} from "@hmcts/govuk-notify";
+
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS = process.env.GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF =
-  process.env.GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF || process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL || "";
-const GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN = process.env.GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
-export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
-  const { hasPdf, hasExcel, filesUnder2MB } = params;
-
-  // Each template must only reference personalisation that is actually set:
-  // pdf_link_*/excel_link_* are only populated when the matching buffer exists.
-  // No attachments (e.g. flat-file lists) or files too large to link: no-links template.
-  if (!filesUnder2MB || (!hasPdf && !hasExcel)) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS environment variable is not set");
-    }
-    return GOVUK_NOTIFY_TEMPLATE_ID_NO_LINKS;
-  }
-
-  // Excel without PDF happens for any list type whose payload exceeds the PDF gate but not the Excel gate
-  if (hasExcel && !hasPdf) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY environment variable is not set");
-    }
-    return GOVUK_NOTIFY_TEMPLATE_ID_SJP_EXCEL_ONLY;
-  }
+// hasPdf / hasExcel mean the file was generated AND is small enough to link (under 2MB), i.e. it will
+// be attached to the email. Each file is judged on its own: an oversized or missing file only drops
+// that file's link, never the other's. The PDF/Excel templates require pdf_link_*/excel_link_*
+// personalisation that is only set when a buffer is attached, so the template must match what is attached.
+export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean }): string {
+  const { hasPdf, hasExcel } = params;
 
   if (hasPdf && hasExcel) {
-    if (!GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL) {
-      throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL environment variable is not set");
-    }
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL;
   }
 
-  if (!GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF) {
-    throw new Error("GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF environment variable is not set");
+  if (hasPdf) {
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
   }
-  return GOVUK_NOTIFY_TEMPLATE_ID_NON_SJP_PDF;
+
+  if (hasExcel) {
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY;
+  }
+
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS;
+}
+
+export function getFlatFileSubscriptionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE;
 }
 
 export function getSystemAdminTemplateId(): string {
   return GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN;
+}
+
+export function getLocationSubscriptionDeletionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION;
 }
 
 export function getEnvName(): string {
