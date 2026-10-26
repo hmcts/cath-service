@@ -34,7 +34,7 @@ describe("readPublisherInputs", () => {
     const { listTypes } = readPublisherInputs(REPO_ROOT);
 
     // Assert
-    expect(nonStrategicNames).toContain("UTIAC_JR_LEEDS_DAILY_HEARING_LIST");
+    expect(nonStrategicNames).toContain("UT_IAC_JR_LEEDS_DAILY_HEARING_LIST");
     expect(listTypes.filter((listType) => nonStrategicNames.includes(listType.name))).toEqual([]);
   });
 

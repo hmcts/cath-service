@@ -15,7 +15,7 @@ const TEMPLATE = "administrative-court-daily-cause-list.njk";
 type ListTypeKey =
   | "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
   | "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
-  | "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+  | "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
   | "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
 
 interface HearingOverrides {
@@ -295,10 +295,10 @@ describe("administrative-court-daily-cause-list template", () => {
     });
 
     it("should render the Bristol and Cardiff list type", () => {
-      const { $ } = renderList([], {}, en, "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST");
+      const { $ } = renderList([], {}, en, "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST");
 
-      expect($("h1#top").text()).toContain(en.BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle);
-      expect($(".govuk-details").text()).toContain(en.BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.importantInfoText.split("\n\n")[0]);
+      expect($("h1#top").text()).toContain(en.BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.pageTitle);
+      expect($(".govuk-details").text()).toContain(en.BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST.importantInfoText.split("\n\n")[0]);
     });
 
     it("should render the Manchester list type with its contact details", () => {
