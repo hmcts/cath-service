@@ -36,6 +36,14 @@ It uses ports 8180, 15432, 16379, 16969, 18090 and 20000, so it can run alongsid
 running afterwards so you can look at it; `yarn ui-baseline:stop-pip` stops it. The check itself
 only needs the recorded baseline, not pip.
 
+To browse the baseline on its own, with neither pip nor CaTH running:
+
+```bash
+yarn ui-baseline:report    # builds the report from output/baseline and serves it on http://localhost:9500
+```
+
+It takes a baseline directory and a port as arguments, or reads `$PARITY_BASELINE`.
+
 ## Checking a ticket
 
 With CaTH running locally (`yarn dev`) and a recorded baseline:
@@ -69,6 +77,17 @@ tell when the evidence is out of date.
 
 Expected differences come only from the ticket. If the reviewer marks something a defect that the
 team has agreed to change, update the ticket and re-run; there is no allow-list.
+
+To compare the whole of CaTH against the whole baseline, rather than one ticket:
+
+```bash
+yarn ui-baseline:check --all --serve
+```
+
+That checks every list type in the fixtures and every page `routes/route-map.json` maps
+confidently, skipping the same pages a ticket check would (sign-in, unreviewed suggestions). It
+writes the full report, with journeys and the Comparison page, to `output/checks/all/`, and no PR
+evidence.
 
 Other options: `--list-type NAME` and `--route /path` to check without a ticket, `--locale en|cy`,
 `--no-seed`, `--no-review`, `--reviewer "<command>"` (default: `claude -p` with no tools),
