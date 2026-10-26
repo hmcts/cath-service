@@ -79,7 +79,7 @@ Service principal JSON secrets used to log in to Azure for Helm deploys and Terr
 
 | Secret Name | Principal | Used By | Scopes | Credential Expiry | Rotation Owner | Rotation Route |
 |------------|-----------|---------|--------|-------------------|----------------|----------------|
-| `AZURE_CREDENTIALS_CFT_PROD` | `cath-service-prod` (hmcts/central-app-registration#262) | PROD Helm deploy (#1099) and PROD Terraform (#1096); `one-shot.verify-prod-credentials.yml` | See [PROD scopes](#azure_credentials_cft_prod-scopes) below | TBC (ask PlatOps on DTSPO-35946) | TBC (ask PlatOps on DTSPO-35946) | DTSPO Jira ticket to Platform Operations (original request: DTSPO-35946) |
+| `AZURE_CREDENTIALS_CFT_PROD` | `cath-service-prod` (hmcts/central-app-registration#262) | PROD Helm deploy (#1099) and PROD Terraform (#1096); `one-shot.verify-prod-credentials.yml` | See [PROD scopes](#azure_credentials_cft_prod-scopes) below | 20 October 2028 | @junaidiqbalmoj | DTSPO Jira ticket to Platform Operations (original request: DTSPO-35946) |
 | `AZURE_CREDENTIALS_CFT_PREVIEW` | TBC (ask PlatOps on DTSPO-35946) | `job.helm-deploy.yml` (preview); every non-prod Terraform leg and `state-store-init` in `stage.infrastructure.yml` / `job.terraform.yml` | AKS cluster admin on `cft-preview-*-aks`; Terraform scopes in `DCD-CNP-DEV` / `DCD-CNP-QA` and the matching `DCD-CFTAPPS-*` subscriptions; listKeys on `mgmtstatestorenonprod` and `mgmtstatestoreqa` | TBC (ask PlatOps on DTSPO-35946) | TBC (ask PlatOps on DTSPO-35946) | DTSPO Jira ticket to Platform Operations |
 | `AZURE_CREDENTIALS_CFT_AAT` | TBC (ask PlatOps on DTSPO-35946) | `job.helm-deploy.yml` (aat) | AKS cluster admin on `cft-aat-*-aks` (`DCD-CFTAPPS-STG`); Private DNS Zone Contributor on `aat.platform.hmcts.net` (`core-infra-intsvc-rg`, `DTS-CFTPTL-INTSVC`) | TBC (ask PlatOps on DTSPO-35946) | TBC (ask PlatOps on DTSPO-35946) | DTSPO Jira ticket to Platform Operations |
 | `AZURE_CREDENTIALS_CFT_DEMO` | TBC (ask PlatOps on DTSPO-35946) | `job.helm-deploy.yml` (demo) | AKS cluster admin on `cft-demo-*-aks` (`DCD-CFTAPPS-DEMO`); Private DNS Zone Contributor on `demo.platform.hmcts.net` (`core-infra-intsvc-rg`, `DTS-CFTPTL-INTSVC`) | TBC (ask PlatOps on DTSPO-35946) | TBC (ask PlatOps on DTSPO-35946) | DTSPO Jira ticket to Platform Operations |
@@ -92,16 +92,20 @@ The non-prod scopes above are what the workflows need, not a confirmed list of g
 
 One principal is used for both deploy and Terraform. The JSON's `subscriptionId` must be `DCD-CFTAPPS-PROD`, because `aks-set-context` in the deploy uses the subscription that `azure/login` leaves active.
 
+Verified by [run 40354863343](https://github.com/hmcts/cath-service/actions/runs/40354863343) of `one-shot.verify-prod-credentials.yml` on 26 October 2026.
+
 **Deploy**
 - Azure Kubernetes Service Cluster Admin Role on `cft-prod-00-aks` and `cft-prod-01-aks` (`DCD-CFTAPPS-PROD`)
-- Private DNS Zone Contributor on the PROD private zone (`prod.platform.hmcts.net`; resource group and subscription TBC, ask PlatOps on DTSPO-35946)
+- Private DNS Zone Contributor on `platform.hmcts.net` (`core-infra-intsvc-rg`, `DTS-CFTPTL-INTSVC`). Not yet exercised: the DNS check was deferred to the PROD DNS ticket
 - No Key Vault read. Secrets are mounted in the cluster through the `cath` workload identity
 
 **Terraform**
-- Contributor on the cath resource groups in `DCD-CNP-PROD`, plus rights to create them
-- Network read and `subnets/join` on the PROD vnets in `DCD-CFTAPPS-PROD`
-- listKeys on the state store `mgmtstatestoreprod` (`mgmt-state-store-prod`, `DCD-CNP-PROD`)
-- Key Vault management for `cath-prod`, `cath-bootstrap-prod` and `cath-tp-prod`
+- Contributor on the whole `DCD-CNP-PROD` subscription, which covers creating the cath resource groups and managing the `cath-prod`, `cath-bootstrap-prod` and `cath-tp-prod` vaults
+- Storage Blob Data Contributor on the state store `mgmtstatestoreprod` (`mgmt-state-store-prod`, `DCD-CNP-PROD`)
+- Network Contributor on the `postgres-expanded` subnet of `cft-prod-vnet` (`cft-prod-network-rg`, `DCD-CFTAPPS-PROD`) only, so PROD Postgres must use the expanded subnet
+- Managed Identity Contributor on `managed-identities-prod-rg` (`DCD-CNP-PROD`)
+- Log Analytics Contributor on `hmcts-prod` (`oms-automation`, `DCD-CNP-PROD`)
+- API Management Service Contributor on `cft-api-mgmt-prod` (`cft-prod-network-rg`, `DCD-CFTAPPS-PROD`)
 - Graph read on its own service principal (`az ad sp show`)
 
 Terraform makes this principal the Postgres Entra admin and gives it Key Vault access policies, so it is the data-plane admin of PROD. Treat a leak as a PROD incident and ask Platform Operations to rotate immediately.
