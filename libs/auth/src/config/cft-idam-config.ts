@@ -2,7 +2,6 @@ import config from "config";
 
 export interface CftIdamConfig {
   cftIdamUrl: string;
-  hmctsAccessUrl: string;
   baseUrl: string;
   clientId: string;
   clientSecret: string;
@@ -34,9 +33,8 @@ export function getCftIdamConfig(): CftIdamConfig {
 
   return {
     cftIdamUrl,
-    hmctsAccessUrl: cftIdamUrl.replace("idam-web-public", "hmcts-access"),
     baseUrl,
-    clientId: "app-pip-frontend",
+    clientId: "app-cath-frontend",
     clientSecret: getConfigValue("CFT_IDAM_CLIENT_SECRET"),
     redirectUri,
     scope,

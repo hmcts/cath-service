@@ -8,9 +8,9 @@ import {
   hasActiveSubscriptions,
   type LocationDetails
 } from "@hmcts/location";
-import { sendSystemAdminNotification } from "@hmcts/notifications";
+import { sendSubscriptionDeletedNotification, sendSystemAdminNotification } from "@hmcts/notifications";
 import { deleteArtefactsByLocationId } from "@hmcts/publication";
-import { deleteSubscriptionsByLocationId } from "@hmcts/subscriptions";
+import { deleteSubscriptionsByLocationId, findSubscribersByLocationId } from "@hmcts/subscriptions";
 
 export const VALIDATION_ERROR_CODES = {
   LOCATION_NOT_FOUND: "LOCATION_NOT_FOUND",
@@ -92,7 +92,14 @@ export async function performLocationPublicationsDeletion(locationId: number, lo
 }
 
 export async function performLocationSubscriptionsDeletion(locationId: number, locationName: string, requesterEmail: string): Promise<void> {
+  const subscribers = await findSubscribersByLocationId(locationId);
+
   await deleteSubscriptionsByLocationId(locationId);
+
+  await sendSubscriptionDeletedNotification(
+    subscribers.map((subscriber) => subscriber.user),
+    locationName
+  );
 
   const adminEmails = await findSystemAdminEmails();
   await sendSystemAdminNotification(adminEmails, {

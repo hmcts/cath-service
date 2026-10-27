@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { autoFitColumns, sanitiseCellValue } from "./excel-utilities.js";
+import { autoFitColumns, createSingleSheetExcelBuffer, sanitiseCellValue } from "./excel-utilities.js";
 
 function makeWorksheet(rows: string[][]): ExcelJS.Worksheet {
   const worksheet = new ExcelJS.Workbook().addWorksheet("test");
@@ -111,5 +111,53 @@ describe("autoFitColumns", () => {
 
     // Act & Assert
     expect(() => autoFitColumns(worksheet)).not.toThrow();
+  });
+});
+
+describe("createSingleSheetExcelBuffer", () => {
+  async function readFirstSheet(buffer: Buffer): Promise<ExcelJS.Worksheet> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
+    return workbook.worksheets[0];
+  }
+
+  it("should write a bold header row followed by the data rows", async () => {
+    // Arrange
+    const headers = ["Court", "Case"];
+    const rows = [
+      ["Court 1", "T001"],
+      ["Court 2", "T002"]
+    ];
+
+    // Act
+    const worksheet = await readFirstSheet(await createSingleSheetExcelBuffer("List", headers, rows));
+
+    // Assert
+    expect(worksheet.getRow(1).values).toEqual([undefined, "Court", "Case"]);
+    expect(worksheet.getRow(1).font?.bold).toBe(true);
+    expect(worksheet.getRow(2).values).toEqual([undefined, "Court 1", "T001"]);
+    expect(worksheet.getRow(3).values).toEqual([undefined, "Court 2", "T002"]);
+  });
+
+  it("should sanitise data cells against formula injection", async () => {
+    // Arrange
+    const rows = [["=SUM(A1)"]];
+
+    // Act
+    const worksheet = await readFirstSheet(await createSingleSheetExcelBuffer("List", ["Value"], rows));
+
+    // Assert
+    expect(worksheet.getCell("A2").value).toBe("'=SUM(A1)");
+  });
+
+  it("should truncate the sheet name to the Excel limit of 31 characters", async () => {
+    // Arrange
+    const longName = "A".repeat(40);
+
+    // Act
+    const worksheet = await readFirstSheet(await createSingleSheetExcelBuffer(longName, ["Value"], []));
+
+    // Assert
+    expect(worksheet.name).toBe("A".repeat(31));
   });
 });
