@@ -14,31 +14,31 @@ import { createSimpleListTypeHandler, resolveDataSource } from "../list-type-han
 const validate = createJsonValidator(schemaPath);
 
 const LIST_TYPE_CONFIG: Record<string, { enCourtName: string; cyCourtName: string; enTitle: string; cyTitle: string }> = {
-  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
+  RPT_EASTERN_WEEKLY_HEARING_LIST: {
     enCourtName: en.rptEasternCourtName,
     cyCourtName: cy.rptEasternCourtName,
     enTitle: en.rptEasternPageTitle,
     cyTitle: cy.rptEasternPageTitle
   },
-  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
+  RPT_LONDON_WEEKLY_HEARING_LIST: {
     enCourtName: en.rptLondonCourtName,
     cyCourtName: cy.rptLondonCourtName,
     enTitle: en.rptLondonPageTitle,
     cyTitle: cy.rptLondonPageTitle
   },
-  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
+  RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
     enCourtName: en.rptMidlandsCourtName,
     cyCourtName: cy.rptMidlandsCourtName,
     enTitle: en.rptMidlandsPageTitle,
     cyTitle: cy.rptMidlandsPageTitle
   },
-  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
+  RPT_NORTHERN_WEEKLY_HEARING_LIST: {
     enCourtName: en.rptNorthernCourtName,
     cyCourtName: cy.rptNorthernCourtName,
     enTitle: en.rptNorthernPageTitle,
     cyTitle: cy.rptNorthernPageTitle
   },
-  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+  RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     enCourtName: en.rptSouthernCourtName,
     cyCourtName: cy.rptSouthernCourtName,
     enTitle: en.rptSouthernPageTitle,

@@ -1,0 +1,189 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+describe("template-config", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  describe("getSubscriptionTemplateId", () => {
+    const PDF_EXCEL = "42f65ada-6de0-45da-822a-9632f6f682fd";
+    const PDF_ONLY = "ac63ed12-c179-416d-b9af-83b2b37752bf";
+    const EXCEL_ONLY = "2117d63a-eb4d-4e0b-996c-56367f719905";
+    const NO_LINKS = "5b5c31d0-27a3-466b-b750-bd1a858cd50f";
+
+    it.each([
+      { scenario: "PDF and Excel both generated and under 2MB", hasPdf: true, hasExcel: true, expected: PDF_EXCEL },
+      { scenario: "PDF under 2MB and Excel over 2MB", hasPdf: true, hasExcel: false, expected: PDF_ONLY },
+      { scenario: "PDF under 2MB and no Excel generated", hasPdf: true, hasExcel: false, expected: PDF_ONLY },
+      { scenario: "PDF over 2MB and Excel under 2MB", hasPdf: false, hasExcel: true, expected: EXCEL_ONLY },
+      { scenario: "no PDF generated and Excel under 2MB", hasPdf: false, hasExcel: true, expected: EXCEL_ONLY },
+      { scenario: "PDF and Excel both over 2MB", hasPdf: false, hasExcel: false, expected: NO_LINKS },
+      { scenario: "neither PDF nor Excel generated", hasPdf: false, hasExcel: false, expected: NO_LINKS }
+    ])("should return the correct template when $scenario", async ({ hasPdf, hasExcel, expected }) => {
+      const { getSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getSubscriptionTemplateId({ hasPdf, hasExcel })).toBe(expected);
+    });
+  });
+
+  describe("getFlatFileSubscriptionTemplateId", () => {
+    it("should return the flat-file subscription template id", async () => {
+      const { getFlatFileSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getFlatFileSubscriptionTemplateId()).toBe("c10e561d-651e-45b1-a955-c8ec09ffa300");
+    });
+  });
+
+  describe("getSystemAdminTemplateId", () => {
+    it("should return the system admin template id", async () => {
+      const { getSystemAdminTemplateId } = await import("./template-config.js");
+      expect(getSystemAdminTemplateId()).toBe("ec6c863f-3c6f-4d75-82b9-c3e805be20b9");
+    });
+  });
+
+  describe("getLocationSubscriptionDeletionTemplateId", () => {
+    it("should return the location subscription deletion template id", async () => {
+      const { getLocationSubscriptionDeletionTemplateId } = await import("./template-config.js");
+      expect(getLocationSubscriptionDeletionTemplateId()).toBe("79f6b1a5-49a2-43a4-84db-b6e791b5d59a");
+    });
+  });
+
+  describe("getApiKey", () => {
+    it("should return API key when environment variable is set", async () => {
+      process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
+
+      const { getApiKey } = await import("./template-config.js");
+      expect(getApiKey()).toBe("test-api-key");
+    });
+
+    it("should throw error when environment variable is not set", async () => {
+      process.env.GOVUK_NOTIFY_API_KEY = "";
+
+      const { getApiKey } = await import("./template-config.js");
+      expect(() => getApiKey()).toThrow("GOVUK_NOTIFY_API_KEY environment variable is not set");
+    });
+  });
+
+  describe("getEnvName", () => {
+    it("should return the configured environment name when set", async () => {
+      process.env.ENV_NAME = "Staging";
+
+      const { getEnvName } = await import("./template-config.js");
+      expect(getEnvName()).toBe("Staging");
+    });
+
+    it("should default to Local when the environment variable is not set", async () => {
+      delete process.env.ENV_NAME;
+
+      const { getEnvName } = await import("./template-config.js");
+      expect(getEnvName()).toBe("Local");
+    });
+  });
+
+  describe("getServiceUrl", () => {
+    it("should return service URL when environment variable is set", async () => {
+      process.env.CATH_SERVICE_URL = "https://custom-service.gov.uk";
+
+      const { getServiceUrl } = await import("./template-config.js");
+      expect(getServiceUrl()).toBe("https://custom-service.gov.uk");
+    });
+
+    it("should return default URL when environment variable is not set", async () => {
+      delete process.env.CATH_SERVICE_URL;
+
+      const { getServiceUrl } = await import("./template-config.js");
+      expect(getServiceUrl()).toBe("https://www.court-tribunal-hearings.service.gov.uk");
+    });
+  });
+
+  describe("formatPublicationDate", () => {
+    it("should format date correctly", async () => {
+      const { formatPublicationDate } = await import("./template-config.js");
+      const date = new Date("2025-01-15");
+      expect(formatPublicationDate(date)).toBe("15 January 2025");
+    });
+
+    it("should handle single digit days", async () => {
+      const { formatPublicationDate } = await import("./template-config.js");
+      const date = new Date("2025-03-05");
+      expect(formatPublicationDate(date)).toBe("5 March 2025");
+    });
+  });
+
+  describe("buildTemplateParameters", () => {
+    it("should build template parameters with all new fields", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Civil And Family Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: "Oxford Court",
+        caseValue: "AB-1234"
+      });
+
+      expect(result).toEqual({
+        locations: "Oxford Court",
+        ListType: "Civil And Family Daily Cause List",
+        content_date: "20 January 2025",
+        start_page_link: "https://test-service.gov.uk",
+        subscription_page_link: "https://test-service.gov.uk",
+        display_locations: "yes",
+        display_case: "yes",
+        case: "AB-1234",
+        display_case_num: "yes",
+        case_num: "AB-1234",
+        display_case_urn: "no",
+        case_urn: "",
+        display_summary: "no",
+        summary_of_cases: ""
+      });
+    });
+
+    it("should set display_case_num to no when no case value", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildTemplateParameters } = await import("./template-config.js");
+      const result = buildTemplateParameters({
+        userName: "John Doe",
+        hearingListName: "Daily Cause List",
+        publicationDate: new Date("2025-01-20"),
+        locationName: "Oxford Court"
+      });
+
+      expect(result.display_case_num).toBe("no");
+      expect(result.case_num).toBe("");
+      expect(result.display_case_urn).toBe("no");
+      expect(result.case_urn).toBe("");
+    });
+  });
+
+  describe("buildEnhancedTemplateParameters", () => {
+    it("should build enhanced template parameters with case summary and new fields", async () => {
+      process.env.CATH_SERVICE_URL = "https://test-service.gov.uk";
+
+      const { buildEnhancedTemplateParameters } = await import("./template-config.js");
+      const result = buildEnhancedTemplateParameters({
+        userName: "Jane Smith",
+        hearingListName: "Civil And Family Daily Cause List",
+        publicationDate: new Date("2025-02-10"),
+        locationName: "Birmingham Court",
+        caseSummary: "Case 123 - Smith v Jones",
+        caseValue: "AB-123"
+      });
+
+      expect(result.display_summary).toBe("yes");
+      expect(result.summary_of_cases).toBe("Case 123 - Smith v Jones");
+      expect(result.display_case_num).toBe("yes");
+      expect(result.case_num).toBe("AB-123");
+      expect(result.display_case_urn).toBe("no");
+      expect(result.case_urn).toBe("");
+    });
+  });
+});

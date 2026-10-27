@@ -30,7 +30,7 @@ export async function reformatUploadedWorkbook(buffer: Buffer, sheets: ReformatS
     }
 
     copiedWorksheets.add(worksheet);
-    copyWorksheet(worksheet, output.addWorksheet(worksheet.name), columns, sheet);
+    copyWorksheet(worksheet, output.addWorksheet(sheet.outputWorksheetName ?? worksheet.name), columns, sheet);
   }
 
   if (output.worksheets.length === 0) {
@@ -102,6 +102,7 @@ export interface ReformatSheetConfig extends WorksheetLocator {
   formatRow: (row: Record<string, string>) => Record<string, string>;
   // Must match the converter's option, otherwise the Excel could publish a tab the PDF never showed
   matchByNameOnly?: boolean;
+  outputWorksheetName?: string;
 }
 
 interface MappedColumn {

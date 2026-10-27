@@ -23,6 +23,7 @@ export const cy = {
     { value: "publications", text: "Cyhoeddiadau", description: "Cyhoeddiadau gyda data llys a math o restr" },
     { value: "location-subscriptions", text: "Tanysgrifiadau Lleoliad", description: "Tanysgrifiadau yn ôl lleoliad gydag enwau llysoedd" },
     { value: "all-subscriptions", text: "Pob Tanysgrifiad", description: "Pob tanysgrifiad gan gynnwys math o chwiliad" },
+    { value: "deleted-accounts", text: "Cyfrifon a Ddilëwyd", description: "Cyfrifon a ddilëwyd yn dilyn y broses ddilysu flynyddol" },
     { value: "all-data", text: "Pob Data", description: "Pob un o'r uchod mewn un ffeil gyda thabiau lluosog" }
   ]
 };
