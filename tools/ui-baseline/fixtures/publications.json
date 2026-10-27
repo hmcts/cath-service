@@ -362,7 +362,7 @@
     {
       "id": "cst-weekly-hearing-list",
       "listType": "CST_WEEKLY_HEARING_LIST",
-      "cathListType": "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+      "cathListType": "CST_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/cst-weekly-hearing-list",
         "cath": "/care-standards-tribunal-weekly-hearing-list"
@@ -376,11 +376,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "grc-weekly-hearing-list",
@@ -423,7 +419,7 @@
     {
       "id": "ut-iac-jr-london-daily-hearing-list",
       "listType": "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-jr-london-daily-hearing-list",
         "cath": "/utiac-jr-daily-hearing-list"
@@ -437,16 +433,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_JR_LONDON_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-iac-jr-manchester-daily-hearing-list",
       "listType": "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-jr-manchester-daily-hearing-list",
         "cath": "/utiac-jr-daily-hearing-list"
@@ -460,16 +452,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-iac-jr-birmingham-daily-hearing-list",
       "listType": "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-jr-birmingham-daily-hearing-list",
         "cath": "/utiac-jr-daily-hearing-list"
@@ -483,16 +471,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-iac-jr-cardiff-daily-hearing-list",
       "listType": "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-jr-cardiff-daily-hearing-list",
         "cath": "/utiac-jr-daily-hearing-list"
@@ -506,16 +490,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_JR_CARDIFF_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-iac-jr-leeds-daily-hearing-list",
       "listType": "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-jr-leeds-daily-hearing-list",
         "cath": "/utiac-jr-daily-hearing-list"
@@ -529,16 +509,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-iac-statutory-appeals-daily-hearing-list",
       "listType": "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
-      "cathListType": "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+      "cathListType": "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-iac-statutory-appeals-daily-hearing-list",
         "cath": "/utiac-statutory-appeal-daily-hearing-list"
@@ -552,11 +528,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "siac-weekly-hearing-list",
@@ -618,7 +590,7 @@
     {
       "id": "ftt-tax-weekly-hearing-list",
       "listType": "FTT_TAX_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST",
+      "cathListType": "FTT_TAX_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/ftt-tax-weekly-hearing-list",
         "cath": "/ftt-tax-chamber-weekly-hearing-list"
@@ -632,16 +604,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ftt-lr-weekly-hearing-list",
       "listType": "FTT_LR_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST",
+      "cathListType": "FTT_LR_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/ftt-lr-weekly-hearing-list",
         "cath": "/ftt-lands-registration-tribunal-weekly-hearing-list"
@@ -655,16 +623,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "rpt-eastern-weekly-hearing-list",
       "listType": "RPT_EASTERN_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST",
+      "cathListType": "RPT_EASTERN_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/rpt-eastern-weekly-hearing-list",
         "cath": "/ftt-rpt-weekly-hearing-list"
@@ -678,12 +642,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to FTT_RPT_EASTERN_WEEKLY_HEARING_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "rpt-london-weekly-hearing-list",
       "listType": "RPT_LONDON_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_RPT_LONDON_WEEKLY_HEARING_LIST",
+      "cathListType": "RPT_LONDON_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/rpt-london-weekly-hearing-list",
         "cath": "/ftt-rpt-weekly-hearing-list"
@@ -697,7 +661,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to FTT_RPT_LONDON_WEEKLY_HEARING_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "ftt-rpt-market-rents-weekly-hearing-list",
@@ -724,7 +688,7 @@
     {
       "id": "rpt-midlands-weekly-hearing-list",
       "listType": "RPT_MIDLANDS_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST",
+      "cathListType": "RPT_MIDLANDS_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/rpt-midlands-weekly-hearing-list",
         "cath": "/ftt-rpt-weekly-hearing-list"
@@ -738,12 +702,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "rpt-northern-weekly-hearing-list",
       "listType": "RPT_NORTHERN_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST",
+      "cathListType": "RPT_NORTHERN_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/rpt-northern-weekly-hearing-list",
         "cath": "/ftt-rpt-weekly-hearing-list"
@@ -757,12 +721,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "rpt-southern-weekly-hearing-list",
       "listType": "RPT_SOUTHERN_WEEKLY_HEARING_LIST",
-      "cathListType": "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST",
+      "cathListType": "RPT_SOUTHERN_WEEKLY_HEARING_LIST",
       "paths": {
         "pip": "/rpt-southern-weekly-hearing-list",
         "cath": "/ftt-rpt-weekly-hearing-list"
@@ -776,12 +740,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "ut-t-and-cc-daily-hearing-list",
       "listType": "UT_T_AND_CC_DAILY_HEARING_LIST",
-      "cathListType": "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+      "cathListType": "UT_T_AND_CC_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-t-and-cc-daily-hearing-list",
         "cath": "/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"
@@ -795,16 +759,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-lc-daily-hearing-list",
       "listType": "UT_LC_DAILY_HEARING_LIST",
-      "cathListType": "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+      "cathListType": "UT_LC_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-lc-daily-hearing-list",
         "cath": "/upper-tribunal-lands-chamber-daily-hearing-list"
@@ -818,16 +778,12 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ut-aac-daily-hearing-list",
       "listType": "UT_AAC_DAILY_HEARING_LIST",
-      "cathListType": "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+      "cathListType": "UT_AAC_DAILY_HEARING_LIST",
       "paths": {
         "pip": "/ut-aac-daily-hearing-list",
         "cath": "/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
@@ -841,11 +797,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": [
-        "renamed in CaTH to UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
-        "non-strategic: uploaded as Excel and converted by each app",
-        "no CaTH location hosts this list type; using location 1"
-      ]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app", "no CaTH location hosts this list type; using location 1"]
     },
     {
       "id": "ast-daily-hearing-list",
@@ -1176,7 +1128,7 @@
     {
       "id": "mayor-and-city-civil-daily-cause-list",
       "listType": "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
-      "cathListType": "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+      "cathListType": "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
       "paths": {
         "pip": "/mayor-and-city-civil-daily-cause-list",
         "cath": "/mayor-city-civil-daily-cause-list"
@@ -1190,7 +1142,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "interim-applications-chd-daily-cause-list",
@@ -1252,7 +1204,7 @@
     {
       "id": "bristol-and-cardiff-administrative-court-daily-cause-list",
       "listType": "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
-      "cathListType": "BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "cathListType": "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
       "paths": {
         "pip": "/bristol-and-cardiff-administrative-court-daily-cause-list",
         "cath": "/bristol-cardiff-administrative-court-daily-cause-list"
@@ -1266,7 +1218,7 @@
       "language": "ENGLISH",
       "sensitivity": "PUBLIC",
       "provenance": "MANUAL_UPLOAD",
-      "notes": ["renamed in CaTH to BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", "non-strategic: uploaded as Excel and converted by each app"]
+      "notes": ["non-strategic: uploaded as Excel and converted by each app"]
     },
     {
       "id": "manchester-administrative-court-daily-cause-list",
