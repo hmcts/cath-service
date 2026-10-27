@@ -1,14 +1,16 @@
+import type { UserRole } from "../roles.js";
+
 export interface User {
   email: string;
   firstName?: string;
   surname?: string;
-  userProvenance: "SSO" | "CFT_IDAM" | "CRIME_IDAM" | "B2C_IDAM" | "PI_AAD";
+  userProvenance: "SSO" | "CFT_IDAM" | "CRIME_IDAM" | "PI_AAD";
   userProvenanceId: string;
-  role: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
+  role: UserRole;
 }
 
 export interface UpdateUserInput {
-  role?: "VERIFIED" | "LOCAL_ADMIN" | "CTSC_ADMIN" | "SYSTEM_ADMIN";
+  role?: UserRole;
   lastSignedInDate?: Date;
   firstName?: string;
   surname?: string;

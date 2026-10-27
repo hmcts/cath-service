@@ -23,9 +23,12 @@ import {
   extractCaseSummary as extractCourtOfAppealSummary,
   formatCaseSummaryForEmail as formatCourtOfAppealSummaryForEmail
 } from "@hmcts/court-of-appeal-civil-daily-cause-list";
+import {
+  extractCaseSummary as extractCrownAdvanceSummary,
+  formatCaseSummaryForEmail as formatCrownAdvanceSummaryForEmail
+} from "@hmcts/crown-advanced-pdda-list";
 import { extractCaseSummary as extractCrownDailySummary, formatCaseSummaryForEmail as formatCrownDailySummaryForEmail } from "@hmcts/crown-daily-list";
 import { extractCaseSummary as extractCrownFirmSummary, formatCaseSummaryForEmail as formatCrownFirmSummaryForEmail } from "@hmcts/crown-firm-list";
-import { extractCaseSummary as extractCrownWarnedSummary, formatCaseSummaryForEmail as formatCrownWarnedSummaryForEmail } from "@hmcts/crown-warned-list";
 import { extractCaseSummary as extractEtDailySummary, formatCaseSummaryForEmail as formatEtDailySummaryForEmail } from "@hmcts/et-daily-list";
 import { extractCaseSummary as extractEtFortnightlySummary, formatCaseSummaryForEmail as formatEtFortnightlySummaryForEmail } from "@hmcts/et-fortnightly-list";
 import { extractCaseSummary as extractFamilySummary, formatCaseSummaryForEmail as formatFamilySummaryForEmail } from "@hmcts/family-daily-cause-list";
@@ -96,17 +99,25 @@ import {
   formatCaseSummaryForEmail as formatUtiacSaSummaryForEmail
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
 import { extractCaseSummary as extractWpafccSummary, formatCaseSummaryForEmail as formatWpafccSummaryForEmail } from "@hmcts/wpafcc-weekly-hearing-list";
-import { sendEmail } from "../govnotify/govnotify-client.js";
+import { type FlatFileAttachment, sendEmail } from "../notify-templates/send-email.js";
+import {
+  IS_MAGISTRATES_MEDIA_PROTOCOL,
+  IS_NOT_MAGISTRATES_MEDIA_PROTOCOL,
+  isMagistratesMediaProtocol,
+  isNotMagistratesMediaProtocol
+} from "../notify-templates/subscription-template-helper.js";
 import {
   buildEnhancedTemplateParameters,
   buildTemplateParameters,
   getEnvName,
+  getFlatFileSubscriptionTemplateId,
+  getLocationSubscriptionDeletionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
-  isSjpListType,
   type TemplateParameters
-} from "../govnotify/template-config.js";
+} from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
+import { MAX_SUMMARY_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 import {
   type CaseSubscriberWithUser,
   findActiveSubscriptionsByCaseName,
@@ -119,7 +130,7 @@ import {
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
-const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_LINKED_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -159,7 +170,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractFamilySummary as SummaryExtractor,
     format: formatFamilySummaryForEmail
   },
-  CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  CST_WEEKLY_HEARING_LIST: {
     extract: extractCareStandardsSummary as SummaryExtractor,
     format: formatCareStandardsSummaryForEmail
   },
@@ -187,7 +198,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardConfig,
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardConfig,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     extract: extractLondonAdminSummary as SummaryExtractor,
@@ -213,9 +224,9 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractCrownFirmSummary as SummaryExtractor,
     format: formatCrownFirmSummaryForEmail
   },
-  CROWN_WARNED_PDDA_LIST: {
-    extract: extractCrownWarnedSummary as SummaryExtractor,
-    format: formatCrownWarnedSummaryForEmail
+  CROWN_ADVANCED_PDDA_LIST: {
+    extract: extractCrownAdvanceSummary as SummaryExtractor,
+    format: formatCrownAdvanceSummaryForEmail
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
@@ -240,31 +251,31 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractSiacPoacPaacSummary as SummaryExtractor,
     format: formatSiacPoacPaacSummaryForEmail
   },
-  FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: {
+  FTT_TAX_WEEKLY_HEARING_LIST: {
     extract: extractFttTaxSummary as SummaryExtractor,
     format: formatFttTaxSummaryForEmail
   },
-  FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  FTT_LR_WEEKLY_HEARING_LIST: {
     extract: extractFttLrtSummary as SummaryExtractor,
     format: formatFttLrtSummaryForEmail
   },
-  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
+  RPT_EASTERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
+  RPT_LONDON_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
+  RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
+  RPT_NORTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+  RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
@@ -280,39 +291,39 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractWpafccSummary as SummaryExtractor,
     format: formatWpafccSummaryForEmail
   },
-  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+  UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST: {
     extract: extractUtiacSaSummary as SummaryExtractor,
     format: formatUtiacSaSummaryForEmail
   },
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLondonSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+  UT_T_AND_CC_DAILY_HEARING_LIST: {
     extract: extractUtccSummary as SummaryExtractor,
     format: formatUtccSummaryForEmail
   },
-  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_LC_DAILY_HEARING_LIST: {
     extract: extractUtlcSummary as SummaryExtractor,
     format: formatUtlcSummaryForEmail
   },
-  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_AAC_DAILY_HEARING_LIST: {
     extract: extractUtaacSummary as SummaryExtractor,
     format: formatUtaacSummaryForEmail
   },
@@ -361,6 +372,7 @@ interface EmailTemplateData {
   templateId?: string;
   pdfBuffer?: Buffer;
   excelBuffer?: Buffer;
+  flatFile?: FlatFileAttachment;
 }
 
 export interface SystemAdminNotification {
@@ -400,6 +412,38 @@ export async function sendSystemAdminNotification(adminEmails: string[], details
   );
 }
 
+export interface LocationSubscriberRecipient {
+  email: string;
+  firstName: string | null;
+  surname: string | null;
+}
+
+export async function sendSubscriptionDeletedNotification(subscribers: LocationSubscriberRecipient[], locationName: string): Promise<void> {
+  if (subscribers.length === 0) {
+    return;
+  }
+
+  const templateId = getLocationSubscriptionDeletionTemplateId();
+  const personalisation = {
+    "location-name": locationName
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      const result = await sendEmail({
+        emailAddress: subscriber.email,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send subscription deleted notification to ${subscriber.email}: ${result.error}`);
+      }
+    })
+  );
+}
+
 async function processUserNotification(
   subscription: SubscriptionWithUser,
   event: PublicationEvent,
@@ -427,7 +471,8 @@ async function processUserNotification(
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
       pdfBuffer: emailData.pdfBuffer,
-      excelBuffer: emailData.excelBuffer
+      excelBuffer: emailData.excelBuffer,
+      flatFile: emailData.flatFile
     });
 
     if (emailResult.success) {
@@ -465,22 +510,77 @@ async function skipNotification(subscription: SubscriptionWithUser, publicationI
 }
 
 async function buildEmailTemplateData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
-  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
+  const emailData = await buildListEmailData(event, userName, listTypeName, caseValue);
 
-  if (config && event.jsonData) {
-    return buildEnhancedEmailData(event, userName, config, listTypeName, caseValue);
-  }
-
-  return buildFallbackEmailData(event, userName, listTypeName, caseValue);
+  return {
+    ...emailData,
+    templateParameters: {
+      ...emailData.templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    }
+  };
 }
 
-async function buildEnhancedEmailData(
+async function buildListEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+  if (event.flatFile) {
+    return buildFlatFileEmailData(event, event.flatFile, userName, caseValue);
+  }
+
+  const config = listTypeName ? EMAIL_BUILDER_REGISTRY[listTypeName] : undefined;
+
+  const emailData = await buildBaseEmailData(event, userName, config, caseValue);
+
+  return {
+    ...emailData,
+    templateParameters: {
+      ...emailData.templateParameters,
+      [IS_MAGISTRATES_MEDIA_PROTOCOL]: isMagistratesMediaProtocol(listTypeName) ? "yes" : "no",
+      [IS_NOT_MAGISTRATES_MEDIA_PROTOCOL]: isNotMagistratesMediaProtocol(listTypeName) ? "yes" : "no"
+    }
+  };
+}
+
+async function buildBaseEmailData(
   event: PublicationEvent,
   userName: string,
-  config: EmailBuilderConfig,
-  listTypeName?: string,
+  config: EmailBuilderConfig | undefined,
   caseValue?: string
 ): Promise<EmailTemplateData> {
+  if (config && event.jsonData) {
+    const payloadBytes = event.payloadSizeBytes ?? payloadSizeBytes(event.jsonData);
+    if (payloadBytes >= MAX_SUMMARY_PAYLOAD_BYTES) {
+      console.log(`Email summary skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_SUMMARY_PAYLOAD_BYTES}`, {
+        publicationId: event.publicationId
+      });
+      return buildFallbackEmailData(event, userName, caseValue);
+    }
+
+    return buildEnhancedEmailData(event, userName, config, caseValue);
+  }
+
+  return buildFallbackEmailData(event, userName, caseValue);
+}
+
+// Flat files are sent as the uploaded document itself, so the derived PDF/Excel
+// blobs are never consulted. The flat-file template uses the legacy list_type key.
+function buildFlatFileEmailData(event: PublicationEvent, flatFile: FlatFileAttachment, userName: string, caseValue?: string): EmailTemplateData {
+  const templateParameters = buildTemplateParameters({
+    userName,
+    hearingListName: event.hearingListName,
+    publicationDate: event.publicationDate,
+    locationName: event.locationName,
+    caseValue
+  });
+
+  return {
+    templateParameters: { ...templateParameters, list_type: event.hearingListName },
+    templateId: getFlatFileSubscriptionTemplateId(),
+    flatFile
+  };
+}
+
+async function buildEnhancedEmailData(event: PublicationEvent, userName: string, config: EmailBuilderConfig, caseValue?: string): Promise<EmailTemplateData> {
   try {
     const caseSummaryItems = config.extract(event.jsonData);
     const caseSummary = config.format(caseSummaryItems);
@@ -494,48 +594,30 @@ async function buildEnhancedEmailData(
       caseValue
     });
 
-    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
+    return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, templateParameters);
   } catch (error) {
     console.error("Failed to build enhanced template parameters, falling back to standard template:", error);
-    return buildFallbackEmailData(event, userName, listTypeName, caseValue);
+    return buildFallbackEmailData(event, userName, caseValue);
   }
 }
 
-async function buildEmailDataWithFiles(
-  artefactId: string,
-  pdfBlobKey: string | undefined,
-  listTypeName: string | undefined,
-  templateParameters: TemplateParameters
-): Promise<EmailTemplateData> {
-  const isSjp = listTypeName ? isSjpListType(listTypeName) : false;
-
-  const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
-  const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
-
-  const hasPdf = !!pdfBuffer;
-  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const hasExcel = !!excelBuffer;
-  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
-
-  const templateId = getSubscriptionTemplateId({
-    isSjp,
-    hasPdf: hasPdf && pdfUnder2MB,
-    hasExcel: hasExcel && excelUnder2MB,
-    filesUnder2MB
-  });
+async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | undefined, templateParameters: TemplateParameters): Promise<EmailTemplateData> {
+  const pdfBuffer = toLinkableFile(pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null);
+  const excelBuffer = toLinkableFile(await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS));
 
   return {
     templateParameters,
-    templateId,
-    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
-    excelBuffer: excelUnder2MB ? excelBuffer : undefined
+    templateId: getSubscriptionTemplateId({ hasPdf: !!pdfBuffer, hasExcel: !!excelBuffer }),
+    pdfBuffer,
+    excelBuffer
   };
 }
 
-async function buildFallbackEmailData(event: PublicationEvent, userName: string, listTypeName?: string, caseValue?: string): Promise<EmailTemplateData> {
+function toLinkableFile(buffer: Buffer | null): Buffer | undefined {
+  return buffer && buffer.length < MAX_LINKED_FILE_SIZE_BYTES ? buffer : undefined;
+}
+
+async function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): Promise<EmailTemplateData> {
   const templateParameters = buildTemplateParameters({
     userName,
     hearingListName: event.hearingListName,
@@ -544,7 +626,7 @@ async function buildFallbackEmailData(event: PublicationEvent, userName: string,
     caseValue
   });
 
-  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, listTypeName, templateParameters);
+  return await buildEmailDataWithFiles(event.publicationId, event.pdfFilePath, templateParameters);
 }
 
 function aggregateResults(results: PromiseSettledResult<UserNotificationResult>[], totalSubscriptions: number): NotificationResult {
@@ -587,7 +669,9 @@ export interface ListTypePublicationEvent {
   listTypeId: number;
   language: string;
   jsonData?: unknown;
+  payloadSizeBytes?: number;
   pdfFilePath?: string;
+  flatFile?: FlatFileAttachment;
 }
 
 export async function sendListTypePublicationNotifications(event: ListTypePublicationEvent, excludeUserIds?: string[]): Promise<NotificationResult> {
@@ -641,7 +725,9 @@ async function processListTypeUserNotification(
       publicationDate: event.publicationDate,
       listTypeId: event.listTypeId,
       jsonData: event.jsonData,
-      pdfFilePath: event.pdfFilePath
+      payloadSizeBytes: event.payloadSizeBytes,
+      pdfFilePath: event.pdfFilePath,
+      flatFile: event.flatFile
     };
     const emailData = await buildEmailTemplateData(publicationEvent, userName, listTypeName, caseValue);
 
@@ -650,7 +736,8 @@ async function processListTypeUserNotification(
       templateParameters: emailData.templateParameters,
       templateId: emailData.templateId,
       pdfBuffer: emailData.pdfBuffer,
-      excelBuffer: emailData.excelBuffer
+      excelBuffer: emailData.excelBuffer,
+      flatFile: emailData.flatFile
     });
 
     if (emailResult.success) {

@@ -1,0 +1,485 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Set environment variables BEFORE any imports
+process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";
+process.env.CATH_SERVICE_URL = "https://www.court-tribunal-hearings.service.gov.uk";
+
+const mockSendEmail = vi.fn();
+const mockPrepareUpload = vi.fn();
+
+vi.mock("notifications-node-client", () => ({
+  NotifyClient: vi.fn(function NotifyClient() {
+    return {
+      sendEmail: mockSendEmail,
+      prepareUpload: mockPrepareUpload
+    };
+  })
+}));
+
+describe("send-email", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockSendEmail.mockResolvedValue({
+      data: {
+        id: "notification-123",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-123",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
+      }
+    });
+  });
+
+  it("should send email successfully", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.notificationId).toBe("notification-123");
+    expect(mockSendEmail).toHaveBeenCalledWith("test-template-id", "user@example.com", {
+      personalisation: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+  });
+
+  it("should fail when no templateId is provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      }
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Template ID is required");
+  });
+
+  it("should handle errors and return failure result", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    mockSendEmail.mockRejectedValue(new Error("API Error"));
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("GOV.UK Notify error: API Error");
+    expect(result.notificationId).toBeUndefined();
+  });
+
+  it("should retry on failure and succeed", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    // Fail once, succeed on retry (with default NOTIFICATION_RETRY_ATTEMPTS=1)
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
+      data: {
+        id: "notification-456",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-456",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
+      }
+    });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.notificationId).toBe("notification-456");
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
+  });
+
+  it("should fail after exhausting all retries", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    // Fail consistently (more failures than retry attempts)
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockRejectedValueOnce(new Error("Second failure"));
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("GOV.UK Notify error: Second failure");
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
+  });
+
+  it("should handle non-Error exceptions", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    mockSendEmail.mockRejectedValue("String error");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("GOV.UK Notify error: String error");
+    expect(result.notificationId).toBeUndefined();
+  });
+
+  it("should implement exponential backoff in retry logic", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    // Mock setTimeout to track delay values
+    const originalSetTimeout = global.setTimeout;
+    const delays: number[] = [];
+    vi.spyOn(global, "setTimeout").mockImplementation((callback: any, delay?: number) => {
+      if (delay !== undefined) {
+        delays.push(delay);
+      }
+      return originalSetTimeout(callback, 0) as any;
+    });
+
+    // Fail once, succeed on retry
+    mockSendEmail.mockRejectedValueOnce(new Error("First failure")).mockResolvedValueOnce({
+      data: {
+        id: "notification-789",
+        reference: null,
+        uri: "https://api.notifications.service.gov.uk/v2/notifications/notification-789",
+        template: {
+          id: "test-template-id",
+          version: 1,
+          uri: "https://api.notifications.service.gov.uk/v2/templates/test-template-id"
+        },
+        content: {
+          subject: "Test Subject",
+          body: "Test Body",
+          from_email: "noreply@notifications.service.gov.uk"
+        }
+      }
+    });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(delays.length).toBeGreaterThan(0);
+    expect(delays[0]).toBe(1000); // Default NOTIFICATION_RETRY_DELAY_MS
+
+    vi.restoreAllMocks();
+  });
+
+  it("should use custom templateId when provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "custom-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockSendEmail).toHaveBeenCalledWith("custom-template-id", "user@example.com", expect.any(Object));
+  });
+
+  it("should upload PDF and include link_to_file and pdf_link_to_file when pdfBuffer is provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const pdfBuffer = Buffer.from("PDF content");
+    mockPrepareUpload.mockReturnValue({ file: "uploaded-file-reference" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      pdfBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(pdfBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          link_to_file: { file: "uploaded-file-reference" },
+          pdf_link_to_file: { file: "uploaded-file-reference" },
+          pdf_link_text: "Download PDF version"
+        })
+      })
+    );
+  });
+
+  it("should upload Excel and include excel_link_to_file when excelBuffer is provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const excelBuffer = Buffer.from("Excel content");
+    mockPrepareUpload.mockReturnValue({ file: "uploaded-excel-reference" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      excelBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(excelBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          excel_link_to_file: { file: "uploaded-excel-reference" },
+          excel_link_text: "Download Excel version"
+        })
+      })
+    );
+  });
+
+  it("should upload both PDF and Excel when both buffers are provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const pdfBuffer = Buffer.from("PDF content");
+    const excelBuffer = Buffer.from("Excel content");
+    mockPrepareUpload.mockReturnValueOnce({ file: "pdf-ref" }).mockReturnValueOnce({ file: "excel-ref" });
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id",
+      pdfBuffer,
+      excelBuffer
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledTimes(2);
+    expect(mockSendEmail).toHaveBeenCalledWith(
+      "test-template-id",
+      "user@example.com",
+      expect.objectContaining({
+        personalisation: expect.objectContaining({
+          link_to_file: { file: "pdf-ref" },
+          pdf_link_to_file: { file: "pdf-ref" },
+          pdf_link_text: "Download PDF version",
+          excel_link_to_file: { file: "excel-ref" },
+          excel_link_text: "Download Excel version"
+        })
+      })
+    );
+  });
+
+  it("should set link_to_file from the flat file buffer with the original filename when flatFile is provided", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    const flatFileBuffer = Buffer.from("uploaded document");
+    mockPrepareUpload.mockReturnValue({ file: "flat-file-reference" });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        list_type: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: flatFileBuffer, fileName: "hearing-list.pdf" }
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledTimes(1);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(flatFileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week",
+      filename: "hearing-list.pdf"
+    });
+    const personalisation = mockSendEmail.mock.calls[0][2].personalisation;
+    expect(personalisation.link_to_file).toEqual({ file: "flat-file-reference" });
+    expect(personalisation.list_type).toBe("Daily Cause List");
+    expect(personalisation).not.toHaveProperty("excel_link_to_file");
+    expect(personalisation).not.toHaveProperty("pdf_link_to_file");
+  });
+
+  it("should omit the filename when the flat file has no file name", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    const flatFileBuffer = Buffer.from("uploaded document");
+    mockPrepareUpload.mockReturnValue({ file: "flat-file-reference" });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: flatFileBuffer }
+    });
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).toHaveBeenCalledWith(flatFileBuffer, {
+      confirmEmailBeforeDownload: false,
+      retentionPeriod: "1 week"
+    });
+    expect(mockPrepareUpload.mock.calls[0][1]).not.toHaveProperty("filename");
+  });
+
+  it("should return failure when the flat file cannot be prepared for upload", async () => {
+    // Arrange
+    const { sendEmail } = await import("./send-email.js");
+    mockPrepareUpload.mockImplementation(() => {
+      throw new Error("File is larger than 2MB");
+    });
+
+    // Act
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "flat-file-template-id",
+      flatFile: { buffer: Buffer.from("large document"), fileName: "large.pdf" }
+    });
+
+    // Assert
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("File is larger than 2MB");
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("should send email without file links when no buffers are provided", async () => {
+    const { sendEmail } = await import("./send-email.js");
+
+    const result = await sendEmail({
+      emailAddress: "user@example.com",
+      templateParameters: {
+        locations: "Test Court",
+        ListType: "Daily Cause List",
+        content_date: "1 December 2024",
+        start_page_link: "https://www.court-tribunal-hearings.service.gov.uk",
+        subscription_page_link: "https://www.court-tribunal-hearings.service.gov.uk"
+      },
+      templateId: "test-template-id"
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockPrepareUpload).not.toHaveBeenCalled();
+  });
+});

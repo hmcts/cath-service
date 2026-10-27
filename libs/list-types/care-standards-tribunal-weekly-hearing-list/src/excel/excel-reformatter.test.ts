@@ -8,7 +8,7 @@ import type { CareStandardsTribunalHearingList } from "../models/types.js";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
 import { reformatCareStandardsTribunalWeeklyHearingListExcel } from "./excel-reformatter.js";
 
-const LIST_TYPE_NAME = "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST";
+const LIST_TYPE_NAME = "CST_WEEKLY_HEARING_LIST";
 const SHEET_NAME = "CST hearings";
 const FIELD_ORDER = ["date", "caseName", "hearingLength", "hearingType", "venue", "additionalInformation"] as const;
 const UPLOADED_HEADER = ["Date", "Case name", "Hearing length", "Hearing type", "Venue", "Additional information", "Internal notes"];

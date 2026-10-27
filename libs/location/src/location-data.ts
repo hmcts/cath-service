@@ -1,7 +1,7 @@
 import type { Jurisdiction, Location, Region, SubJurisdiction } from "./repository/model.js";
 
 export const locationData: {
-  locations: Location[];
+  locations: SeedLocation[];
   regions: Region[];
   jurisdictions: Jurisdiction[];
   subJurisdictions: SubJurisdiction[];
@@ -68,7 +68,11 @@ export const locationData: {
       name: "Single Justice Procedure",
       welshName: "Gweithdrefn Un Ynad",
       regions: [1, 2, 3, 4, 5],
-      subJurisdictions: [7]
+      subJurisdictions: [7],
+      cautionMessage:
+        "<strong>Please note:</strong> SJP hearing lists are published up until 10:15am. If no lists are currently displayed, please check again after this time.",
+      welshCautionMessage:
+        "<strong>Sylwer:</strong> Caiff rhestrau gwrandawiadau'r Weithdrefn Un Ynad (SJP) eu cyhoeddi tan 10:15am. Os nad oes unrhyw restrau yn ymddangos ar hyn o bryd, gwiriwch eto ar ôl yr amser hwn."
     },
     {
       locationId: 10,
@@ -471,4 +475,11 @@ export const locationData: {
       jurisdictionId: 4
     }
   ]
+};
+
+// Seeded into location_metadata only when a location has no metadata row, so admin edits made
+// through location-metadata-manage are never overwritten by a later deploy.
+type SeedLocation = Location & {
+  cautionMessage?: string;
+  welshCautionMessage?: string;
 };

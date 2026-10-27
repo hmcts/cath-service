@@ -49,7 +49,7 @@
 - [x] `libs/publication/src/processing/service.ts`:
   - [x] Move `createUploadedExcelGenerator` (`:735-753`) above `EXCEL_GENERATOR_REGISTRY`
   - [x] In `processPublication`, when there is no `jsonData` and `isUpdate` is true, delete `${artefactId}.xlsx` from `CONTAINER.PUBLICATIONS`. Log a failure and do not throw
-- [x] `service.test.ts`: the flat-file republish deletes the stale xlsx, and a failed delete is logged without throwing
+- [x] `service.test.ts`: the flat-file republish deletes the previous pdf and xlsx (now via master's `deletePreviousPublicationFiles` on every update; the separate `deleteStaleExcel` was removed in the master merge)
 
 ### Commit 2: SSCS
 - [x] Add `"exceljs": "4.4.0"` to `devDependencies` in `libs/list-types/sscs-daily-hearing-list/package.json`, then run `yarn install`
