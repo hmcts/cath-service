@@ -170,6 +170,36 @@ vi.mock("@hmcts/web-core/config", () => ({
   moduleRoot: "/mock/web-core"
 }));
 
+const KEY_VAULT_SECRETS = {
+  GOVUK_NOTIFY_API_KEY: "key-vault-notify-key",
+  SSO_CLIENT_ID: "key-vault-sso-client-id"
+};
+
+// app.ts resolves LOCAL_DEV at module load, so the module has to be
+// re-imported after LOCAL_DEV changes for the new value to take effect.
+async function createAppWithLocalDev(localDev: string | undefined) {
+  vi.stubEnv("LOCAL_DEV", localDev);
+  vi.resetModules();
+  const { createApp } = await import("./app.js");
+  return createApp();
+}
+
+// Stubbing every Key Vault key first means vi.unstubAllEnvs() also undoes the fake's writes.
+async function fakeKeyVault(localEnv: Partial<Record<keyof typeof KEY_VAULT_SECRETS, string>>) {
+  for (const key of Object.keys(KEY_VAULT_SECRETS) as (keyof typeof KEY_VAULT_SECRETS)[]) {
+    vi.stubEnv(key, localEnv[key]);
+  }
+  const { getPropertiesVolumeSecrets } = await import("@hmcts-cft/cloud-native-platform");
+  vi.mocked(getPropertiesVolumeSecrets).mockClear();
+  vi.mocked(getPropertiesVolumeSecrets).mockImplementationOnce(async (options) => {
+    for (const [key, value] of Object.entries(KEY_VAULT_SECRETS)) {
+      if (!options?.omit?.includes(key)) process.env[key] = value;
+    }
+    return {};
+  });
+  return () => vi.mocked(getPropertiesVolumeSecrets).mock.calls.at(-1)?.[0]?.omit;
+}
+
 describe("Web Application", () => {
   let app: Express;
 
@@ -180,6 +210,7 @@ describe("Web Application", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.resetModules();
   });
 
@@ -283,6 +314,81 @@ describe("Web Application", () => {
     it("should configure file upload middleware with error handling", async () => {
       const { createFileUploadMiddleware } = await import("@hmcts/web-core");
       expect(createFileUploadMiddleware).toHaveBeenCalled();
+    });
+  });
+
+  describe("local .env precedence over Key Vault", () => {
+    it("should use the .env value when LOCAL_DEV is true and the variable is set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe("env-notify-key");
+      expect(getOmit()).toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is empty", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is absent", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({});
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the Key Vault value when LOCAL_DEV is true and the variable is whitespace only", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "   " });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).not.toContain("GOVUK_NOTIFY_API_KEY");
+    });
+
+    it("should use the .env value for any Key Vault secret when LOCAL_DEV is true", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ SSO_CLIENT_ID: "env-sso-client-id" });
+
+      // Act
+      await createAppWithLocalDev("true");
+
+      // Assert
+      expect(process.env.SSO_CLIENT_ID).toBe("env-sso-client-id");
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toContain("SSO_CLIENT_ID");
+    });
+
+    it("should let Key Vault win when LOCAL_DEV is not set", async () => {
+      // Arrange
+      const getOmit = await fakeKeyVault({ GOVUK_NOTIFY_API_KEY: "env-notify-key" });
+
+      // Act
+      await createAppWithLocalDev(undefined);
+
+      // Assert
+      expect(process.env.GOVUK_NOTIFY_API_KEY).toBe(KEY_VAULT_SECRETS.GOVUK_NOTIFY_API_KEY);
+      expect(getOmit()).toEqual([]);
     });
   });
 
