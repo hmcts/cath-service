@@ -8,7 +8,7 @@ import type { FttLrtHearingList } from "../models/types.js";
 import { renderFttLrtData } from "../rendering/renderer.js";
 import { reformatFttLrtWeeklyHearingListExcel } from "./excel-reformatter.js";
 
-const LIST_TYPE_NAME = "FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST";
+const LIST_TYPE_NAME = "FTT_LR_WEEKLY_HEARING_LIST";
 const FIELD_ORDER = ["date", "hearingTime", "caseName", "caseReferenceNumber", "judge", "venuePlatform"] as const;
 const UPLOADED_HEADER = ["Date", "Hearing Time", "Case Name", "Case Reference Number", "Judge", "Venue/Platform", "Internal notes"];
 const HEARING_ROWS = [

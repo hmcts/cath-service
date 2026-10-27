@@ -4,11 +4,13 @@ import { generatePublicationExcel, generatePublicationPdf, listTypeHasExcel, pro
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
 
 vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
-  generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn()
+  generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn(),
+  reformatCareStandardsTribunalWeeklyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/pht-weekly-hearing-list", () => ({
-  generatePhtWeeklyHearingListPdf: vi.fn()
+  generatePhtWeeklyHearingListPdf: vi.fn(),
+  reformatPhtWeeklyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/sscs-daily-hearing-list", () => ({
@@ -26,11 +28,13 @@ vi.mock("@hmcts/send-daily-hearing-list", () => ({
 }));
 
 vi.mock("@hmcts/cic-weekly-hearing-list", () => ({
-  generateCicWeeklyHearingListPdf: vi.fn()
+  generateCicWeeklyHearingListPdf: vi.fn(),
+  reformatCicWeeklyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/ast-daily-hearing-list", () => ({
-  generateAstDailyHearingListPdf: vi.fn()
+  generateAstDailyHearingListPdf: vi.fn(),
+  reformatAstDailyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list", () => ({
@@ -88,7 +92,8 @@ vi.mock("@hmcts/sjp-press-list", () => ({
 }));
 
 vi.mock("@hmcts/grc-weekly-hearing-list", () => ({
-  generateGrcWeeklyHearingListPdf: vi.fn()
+  generateGrcWeeklyHearingListPdf: vi.fn(),
+  reformatGrcWeeklyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/wpafcc-weekly-hearing-list", () => ({
@@ -117,7 +122,8 @@ vi.mock("@hmcts/list-types-common", async (importOriginal) => ({
 }));
 
 vi.mock("@hmcts/administrative-court-daily-cause-list", () => ({
-  generateAdministrativeCourtDailyCauseListPdf: vi.fn()
+  generateAdministrativeCourtDailyCauseListPdf: vi.fn(),
+  reformatAdministrativeCourtDailyCauseListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/utiac-jr-daily-hearing-list", async (importOriginal) => {
@@ -166,7 +172,8 @@ vi.mock("@hmcts/family-daily-cause-list", () => ({
 }));
 
 vi.mock("@hmcts/siac-poac-paac-weekly-hearing-list", () => ({
-  generateSiacPoacPaacWeeklyHearingListPdf: vi.fn()
+  generateSiacPoacPaacWeeklyHearingListPdf: vi.fn(),
+  reformatSiacPoacPaacWeeklyHearingListExcel: vi.fn()
 }));
 
 vi.mock("@hmcts/ftt-tax-chamber-weekly-hearing-list", () => ({
@@ -208,8 +215,15 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     listType: {
       findUnique: vi.fn()
+    },
+    artefact: {
+      findUnique: vi.fn()
     }
   }
+}));
+
+vi.mock("../file-storage/file-retrieval.js", () => ({
+  getFileBuffer: vi.fn()
 }));
 
 vi.mock("../artefact-search-extractor.js", () => ({
@@ -219,13 +233,19 @@ vi.mock("../artefact-search-extractor.js", () => ({
 describe("publication-processor", async () => {
   const { generateMagistratesPublicListPdf, generateMagistratesPublicListExcel } = await import("@hmcts/magistrates-public-list");
   const { generateMagistratesStandardListPdf, generateMagistratesStandardListExcel } = await import("@hmcts/magistrates-standard-list");
-  const { generateCareStandardsTribunalWeeklyHearingListPdf } = await import("@hmcts/care-standards-tribunal-weekly-hearing-list");
+  const { generateCareStandardsTribunalWeeklyHearingListPdf, reformatCareStandardsTribunalWeeklyHearingListExcel } = await import(
+    "@hmcts/care-standards-tribunal-weekly-hearing-list"
+  );
   const { generateSscsDailyHearingListPdf, generateSscsDailyHearingListExcel, reformatSscsDailyHearingListExcel } = await import(
     "@hmcts/sscs-daily-hearing-list"
   );
-  const { generateUtaacDailyHearingListPdf } = await import("@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list");
-  const { generateUtlcDailyHearingListPdf } = await import("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list");
-  const { generateUtccDailyHearingListPdf } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
+  const { generateUtaacDailyHearingListPdf, generateUtaacDailyHearingListExcel } = await import(
+    "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"
+  );
+  const { generateUtlcDailyHearingListPdf, generateUtlcDailyHearingListExcel } = await import("@hmcts/upper-tribunal-lands-chamber-daily-hearing-list");
+  const { generateUtccDailyHearingListPdf, generateUtccDailyHearingListExcel } = await import(
+    "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list"
+  );
   const { generateCauseListPdf } = await import("@hmcts/civil-and-family-daily-cause-list");
   const { generateCourtOfAppealCivilDailyCauseListPdf, reformatCourtOfAppealCivilDailyCauseListExcel } = await import(
     "@hmcts/court-of-appeal-civil-daily-cause-list"
@@ -245,22 +265,27 @@ describe("publication-processor", async () => {
   const { generateCrownFirmListPdf, generateCrownFirmListExcel } = await import("@hmcts/crown-firm-list");
   const { generateCrownAdvanceListPdf, generateCrownAdvanceListExcel } = await import("@hmcts/crown-advanced-pdda-list");
   const { generateSendDailyHearingListPdf, reformatSendDailyHearingListExcel } = await import("@hmcts/send-daily-hearing-list");
-  const { generateCicWeeklyHearingListPdf } = await import("@hmcts/cic-weekly-hearing-list");
-  const { generateAstDailyHearingListPdf } = await import("@hmcts/ast-daily-hearing-list");
-  const { generateGrcWeeklyHearingListPdf } = await import("@hmcts/grc-weekly-hearing-list");
+  const { generateCicWeeklyHearingListPdf, reformatCicWeeklyHearingListExcel } = await import("@hmcts/cic-weekly-hearing-list");
+  const { generateAstDailyHearingListPdf, reformatAstDailyHearingListExcel } = await import("@hmcts/ast-daily-hearing-list");
+  const { generateGrcWeeklyHearingListPdf, reformatGrcWeeklyHearingListExcel } = await import("@hmcts/grc-weekly-hearing-list");
   const { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel } = await import("@hmcts/wpafcc-weekly-hearing-list");
-  const { generateUtiacStatutoryAppealDailyHearingListPdf } = await import("@hmcts/utiac-statutory-appeal-daily-hearing-list");
+  const { generateUtiacStatutoryAppealDailyHearingListPdf, generateUtiacStatutoryAppealDailyHearingListExcel } = await import(
+    "@hmcts/utiac-statutory-appeal-daily-hearing-list"
+  );
   const { generateUtiacJrLondonDailyHearingListPdf, generateUtiacJrLeedsDailyHearingListPdf, createUtiacJrDailyHearingListPdfGenerator } = await import(
     "@hmcts/utiac-jr-daily-hearing-list"
   );
+  const { generateUtiacJrDailyHearingListExcel, generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
   const { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel } = await import("@hmcts/rcj-standard-daily-cause-list");
   const { deleteBlob } = await import("@hmcts/azure-blob");
   const { listTypeData, saveExcelToStorage } = await import("@hmcts/list-types-common");
-  const { generateAdministrativeCourtDailyCauseListPdf } = await import("@hmcts/administrative-court-daily-cause-list");
-  const { generatePhtWeeklyHearingListPdf } = await import("@hmcts/pht-weekly-hearing-list");
+  const { generateAdministrativeCourtDailyCauseListPdf, reformatAdministrativeCourtDailyCauseListExcel } = await import(
+    "@hmcts/administrative-court-daily-cause-list"
+  );
+  const { generatePhtWeeklyHearingListPdf, reformatPhtWeeklyHearingListExcel } = await import("@hmcts/pht-weekly-hearing-list");
   const { generateCivilDailyCauseListPdf } = await import("@hmcts/civil-daily-cause-list");
   const { generateFamilyDailyCauseListPdf } = await import("@hmcts/family-daily-cause-list");
-  const { generateSiacPoacPaacWeeklyHearingListPdf } = await import("@hmcts/siac-poac-paac-weekly-hearing-list");
+  const { generateSiacPoacPaacWeeklyHearingListPdf, reformatSiacPoacPaacWeeklyHearingListExcel } = await import("@hmcts/siac-poac-paac-weekly-hearing-list");
   const { generateFttTaxChamberWeeklyHearingListPdf, reformatFttTaxChamberWeeklyHearingListExcel } = await import("@hmcts/ftt-tax-chamber-weekly-hearing-list");
   const { generateFttLrtWeeklyHearingListPdf, reformatFttLrtWeeklyHearingListExcel } = await import(
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list"
@@ -271,10 +296,12 @@ describe("publication-processor", async () => {
   const { sendLocationAndCaseSubscriptionNotifications, sendListTypePublicationNotifications } = await import("@hmcts/notifications");
   const { prisma } = await import("@hmcts/postgres-prisma");
   const { extractAndStoreArtefactSearch } = await import("../artefact-search-extractor.js");
+  const { getFileBuffer } = await import("../file-storage/file-retrieval.js");
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSendThirdPartyPublications.mockResolvedValue(undefined);
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
       friendlyName: "Civil And Family Daily Cause List"
@@ -433,7 +460,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for Care Standards Tribunal Weekly Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST",
+        name: "CST_WEEKLY_HEARING_LIST",
         friendlyName: "Care Standards Tribunal Weekly Hearing List"
       } as any);
 
@@ -739,7 +766,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UTIAC Statutory Appeal Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
+        name: "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
         friendlyName: "UTIAC Statutory Appeal Daily Hearing List"
       } as any);
       vi.mocked(generateUtiacStatutoryAppealDailyHearingListPdf).mockResolvedValue({
@@ -757,7 +784,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UTIAC JR London Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
+        name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
         friendlyName: "UTIAC JR London Daily Hearing List"
       } as any);
       vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
@@ -775,7 +802,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UTIAC JR Leeds Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+        name: "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
         friendlyName: "UTIAC JR Leeds Daily Hearing List"
       } as any);
       vi.mocked(generateUtiacJrLeedsDailyHearingListPdf).mockResolvedValue({
@@ -793,7 +820,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UT Tax and Chancery Chamber Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
+        name: "UT_T_AND_CC_DAILY_HEARING_LIST",
         friendlyName: "Upper Tribunal Tax and Chancery Chamber Daily Hearing List"
       } as any);
       vi.mocked(generateUtccDailyHearingListPdf).mockResolvedValue({
@@ -811,7 +838,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UT Lands Chamber Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
+        name: "UT_LC_DAILY_HEARING_LIST",
         friendlyName: "Upper Tribunal Lands Chamber Daily Hearing List"
       } as any);
       vi.mocked(generateUtlcDailyHearingListPdf).mockResolvedValue({
@@ -829,7 +856,7 @@ describe("publication-processor", async () => {
 
     it("should generate PDF for UT Administrative Appeals Chamber Daily Hearing List", async () => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({
-        name: "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
+        name: "UT_AAC_DAILY_HEARING_LIST",
         friendlyName: "Upper Tribunal Administrative Appeals Chamber Daily Hearing List"
       } as any);
       vi.mocked(generateUtaacDailyHearingListPdf).mockResolvedValue({
@@ -886,8 +913,8 @@ describe("publication-processor", async () => {
     it.each([
       ["CIVIL_DAILY_CAUSE_LIST", "Civil Daily Cause List"],
       ["FAMILY_DAILY_CAUSE_LIST", "Family Daily Cause List"],
-      ["FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST", "FTT Tax Chamber Weekly Hearing List"],
-      ["FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST", "FTT LRT Weekly Hearing List"],
+      ["FTT_TAX_WEEKLY_HEARING_LIST", "FTT Tax Chamber Weekly Hearing List"],
+      ["FTT_LR_WEEKLY_HEARING_LIST", "FTT LRT Weekly Hearing List"],
       ["MAGISTRATES_STANDARD_LIST", "Magistrates Standard List"],
       ["MAGISTRATES_PUBLIC_LIST", "Magistrates Public List"]
     ])("should route %s to the correct generator", async (listTypeName, friendlyName) => {
@@ -895,8 +922,8 @@ describe("publication-processor", async () => {
       const genMockMap: Record<string, ReturnType<typeof vi.fn>> = {
         CIVIL_DAILY_CAUSE_LIST: vi.mocked(generateCivilDailyCauseListPdf),
         FAMILY_DAILY_CAUSE_LIST: vi.mocked(generateFamilyDailyCauseListPdf),
-        FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: vi.mocked(generateFttTaxChamberWeeklyHearingListPdf),
-        FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: vi.mocked(generateFttLrtWeeklyHearingListPdf),
+        FTT_TAX_WEEKLY_HEARING_LIST: vi.mocked(generateFttTaxChamberWeeklyHearingListPdf),
+        FTT_LR_WEEKLY_HEARING_LIST: vi.mocked(generateFttLrtWeeklyHearingListPdf),
         MAGISTRATES_STANDARD_LIST: vi.mocked(generateMagistratesStandardListPdf),
         MAGISTRATES_PUBLIC_LIST: vi.mocked(generateMagistratesPublicListPdf)
       };
@@ -908,27 +935,25 @@ describe("publication-processor", async () => {
       expect(result).toEqual(expect.objectContaining({ pdfPath: "/test.pdf", sizeBytes: 1024, exceedsMaxSize: false }));
     });
 
-    it.each([
-      ["SIAC_WEEKLY_HEARING_LIST", "Special Immigration Appeals Commission", "Special Immigration Appeals Commission Weekly Hearing List"],
-      ["POAC_WEEKLY_HEARING_LIST", "Proscribed Organisations Appeal Commission", "Proscribed Organisations Appeal Commission Weekly Hearing List"],
-      ["PAAC_WEEKLY_HEARING_LIST", "Pathogens Access Appeal Commission", "Pathogens Access Appeal Commission Weekly Hearing List"]
-    ])("should generate PDF for %s with correct courtName and listTitle", async (listTypeName, expectedCourtName, expectedListTitle) => {
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName, friendlyName: listTypeName } as any);
-      vi.mocked(generateSiacPoacPaacWeeklyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/test.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    it.each(["SIAC_WEEKLY_HEARING_LIST", "POAC_WEEKLY_HEARING_LIST", "PAAC_WEEKLY_HEARING_LIST"])(
+      "should generate PDF for %s with its listTypeName so the title comes from the locale",
+      async (listTypeName) => {
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName, friendlyName: listTypeName } as any);
+        vi.mocked(generateSiacPoacPaacWeeklyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/test.pdf", sizeBytes: 1024, exceedsMaxSize: false });
 
-      await generatePublicationPdf({ ...baseParams });
+        await generatePublicationPdf({ ...baseParams });
 
-      expect(generateSiacPoacPaacWeeklyHearingListPdf).toHaveBeenCalledWith(
-        expect.objectContaining({ courtName: expectedCourtName, listTitle: expectedListTitle })
-      );
-    });
+        expect(generateSiacPoacPaacWeeklyHearingListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTypeName }));
+        expect(generateSiacPoacPaacWeeklyHearingListPdf).toHaveBeenCalledWith(expect.not.objectContaining({ courtName: expect.anything() }));
+      }
+    );
 
     it.each([
-      ["FTT_RPT_EASTERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"],
-      ["FTT_RPT_LONDON_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"],
-      ["FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List"],
-      ["FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"],
-      ["FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"]
+      ["RPT_EASTERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List"],
+      ["RPT_LONDON_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): London region Weekly Hearing List"],
+      ["RPT_MIDLANDS_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Midlands region Weekly Hearing List"],
+      ["RPT_NORTHERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Northern region Weekly Hearing List"],
+      ["RPT_SOUTHERN_WEEKLY_HEARING_LIST", "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List"]
     ])("should generate PDF for %s with correct listTitle", async (listTypeName, expectedListTitle) => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName, friendlyName: listTypeName } as any);
       vi.mocked(generateFttRptWeeklyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/test.pdf", sizeBytes: 1024, exceedsMaxSize: false });
@@ -956,9 +981,9 @@ describe("publication-processor", async () => {
     });
 
     it.each([
-      ["UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List"],
-      ["UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List"],
-      ["UTIAC_JR_CARDIFF_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Cardiff Daily Hearing List"]
+      ["UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Manchester Daily Hearing List"],
+      ["UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Birmingham Daily Hearing List"],
+      ["UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", "Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Bristol and Cardiff Daily Hearing List"]
     ])("should generate PDF for %s via createUtiacJrDailyHearingListPdfGenerator", async (listTypeName, expectedTitle) => {
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName, friendlyName: listTypeName } as any);
       const innerGenerator = vi.fn().mockResolvedValue({ success: true, pdfPath: "/test.pdf", sizeBytes: 1024, exceedsMaxSize: false });
@@ -1298,6 +1323,131 @@ describe("publication-processor", async () => {
 
       consoleErrorSpy.mockRestore();
     });
+
+    describe("flat-file publications", () => {
+      const flatFileParams = {
+        artefactId: "test-artefact-id",
+        locationId: "123",
+        listTypeId: 999,
+        contentDate: new Date("2025-01-25"),
+        locale: "en"
+      };
+
+      beforeEach(() => {
+        vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+      });
+
+      it("should pass the flat file buffer and source file name to both notification functions", async () => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("uploaded document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.pdf" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        const expectedFlatFile = { buffer: flatFileBuffer, fileName: "hearing-list.pdf" };
+        expect(result.success).toBe(true);
+        expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+          where: { artefactId: "test-artefact-id" },
+          select: { isFlatFile: true, sourceArtefactId: true }
+        });
+        expect(getFileBuffer).toHaveBeenCalledTimes(1);
+        expect(getFileBuffer).toHaveBeenCalledWith("test-artefact-id");
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "test-artefact-id",
+          expect.objectContaining({ flatFile: expectedFlatFile, jsonData: undefined })
+        );
+        expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ flatFile: expectedFlatFile }), []);
+      });
+
+      it("should not load a flat file for a JSON publication", async () => {
+        // Arrange
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
+
+        // Act
+        await sendPublicationNotificationsForArtefact({ ...flatFileParams, jsonData: { courtLists: [] } });
+
+        // Assert
+        expect(getFileBuffer).not.toHaveBeenCalled();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", expect.objectContaining({ flatFile: undefined }));
+        expect(sendListTypePublicationNotifications).toHaveBeenCalledWith(expect.objectContaining({ flatFile: undefined }), []);
+      });
+
+      it.each([
+        { description: "is null", sourceArtefactId: null },
+        { description: "has no file extension", sourceArtefactId: "ABC123" }
+      ])("should omit the file name when source_artefact_id $description", async ({ sourceArtefactId }) => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("api ingested document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        const { flatFile } = vi.mocked(sendLocationAndCaseSubscriptionNotifications).mock.calls[0][1];
+        expect(flatFile).toEqual({ buffer: flatFileBuffer, fileName: undefined });
+      });
+
+      it("should send no subscription emails and log an error when the flat file blob is missing", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(null);
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        expect(result).toEqual({ success: false });
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Flat file not found in blob storage, no subscription emails sent:", {
+          artefactId: "test-artefact-id"
+        });
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should treat the publication as not a flat file when the artefact lookup fails", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(prisma.artefact.findUnique).mockRejectedValue(new Error("Database unavailable"));
+
+        // Act
+        const result = await sendPublicationNotificationsForArtefact(flatFileParams);
+
+        // Assert
+        expect(result.success).toBe(true);
+        expect(getFileBuffer).not.toHaveBeenCalled();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith("test-artefact-id", expect.objectContaining({ flatFile: undefined }));
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Artefact lookup failed, treating publication as not a flat file:", {
+          artefactId: "test-artefact-id",
+          error: "Database unavailable"
+        });
+
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should send flat-file notifications when processPublication is called without jsonData", async () => {
+        // Arrange
+        const flatFileBuffer = Buffer.from("api ingested document");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "api-upload.docx" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(flatFileBuffer);
+
+        // Act
+        await processPublication({ ...flatFileParams, skipThirdPartyPush: true });
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "test-artefact-id",
+          expect.objectContaining({ flatFile: { buffer: flatFileBuffer, fileName: "api-upload.docx" } })
+        );
+      });
+    });
   });
 
   describe("processPublication", () => {
@@ -1391,8 +1541,7 @@ describe("publication-processor", async () => {
 
     it("should set excelPath for an Upper Tribunal list type and pass it to notifications", async () => {
       // Arrange
-      const { generateUtccDailyHearingListExcel } = await import("@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list");
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" } as any);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_T_AND_CC_DAILY_HEARING_LIST" } as any);
       vi.mocked(generateUtccDailyHearingListPdf).mockResolvedValue({ success: true, pdfPath: "/path/to/utcc.pdf", sizeBytes: 1024, exceedsMaxSize: false });
       vi.mocked(generateUtccDailyHearingListExcel).mockResolvedValue({ success: true, excelPath: "test-artefact-id.xlsx" });
       vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
@@ -1410,7 +1559,7 @@ describe("publication-processor", async () => {
 
       // Assert
       expect(generateUtccDailyHearingListExcel).toHaveBeenCalledWith(
-        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST" })
+        expect.objectContaining({ artefactId: "test-artefact-id", locale: "en", listTypeName: "UT_T_AND_CC_DAILY_HEARING_LIST" })
       );
       expect(result.pdfPath).toBe("/path/to/utcc.pdf");
       expect(result.excelPath).toBe("test-artefact-id.xlsx");
@@ -1423,8 +1572,7 @@ describe("publication-processor", async () => {
     it("should still return pdfPath and send notifications when an Upper Tribunal Excel generator rejects", async () => {
       // Arrange
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const { generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
-      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UTIAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST" } as any);
       vi.mocked(generateUtiacJrLondonDailyHearingListPdf).mockResolvedValue({
         success: true,
         pdfPath: "/path/to/utiac-london.pdf",
@@ -2000,15 +2148,15 @@ describe("publication-processor", async () => {
     });
 
     it.each([
-      "UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST",
-      "UT_LANDS_CHAMBER_DAILY_HEARING_LIST",
-      "UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST",
-      "UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST",
-      "UTIAC_JR_LONDON_DAILY_HEARING_LIST",
-      "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
-      "UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST",
-      "UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
-      "UTIAC_JR_CARDIFF_DAILY_HEARING_LIST"
+      "UT_T_AND_CC_DAILY_HEARING_LIST",
+      "UT_LC_DAILY_HEARING_LIST",
+      "UT_AAC_DAILY_HEARING_LIST",
+      "UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST",
+      "UT_IAC_JR_LONDON_DAILY_HEARING_LIST",
+      "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
+      "UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST",
+      "UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST",
+      "UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST"
     ])("should return true for the Upper Tribunal list type %s", (listTypeName) => {
       // Act
       const result = listTypeHasExcel(listTypeName);
@@ -2111,6 +2259,32 @@ describe("publication-processor", async () => {
       });
 
       expect(generateCrownAdvanceListExcel).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName: "CROWN_ADVANCED_PDDA_LIST" }));
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each([
+      ["UT_T_AND_CC_DAILY_HEARING_LIST", generateUtccDailyHearingListExcel],
+      ["UT_LC_DAILY_HEARING_LIST", generateUtlcDailyHearingListExcel],
+      ["UT_AAC_DAILY_HEARING_LIST", generateUtaacDailyHearingListExcel],
+      ["UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST", generateUtiacStatutoryAppealDailyHearingListExcel],
+      ["UT_IAC_JR_LONDON_DAILY_HEARING_LIST", generateUtiacJrLondonDailyHearingListExcel],
+      ["UT_IAC_JR_LEEDS_DAILY_HEARING_LIST", generateUtiacJrDailyHearingListExcel],
+      ["UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST", generateUtiacJrDailyHearingListExcel],
+      ["UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST", generateUtiacJrDailyHearingListExcel],
+      ["UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST", generateUtiacJrDailyHearingListExcel]
+    ])("should return hasExcel for %s using its Upper Tribunal Excel generator", async (listTypeName, generator) => {
+      vi.mocked(generator).mockResolvedValue({ success: true, excelPath: "test-id.xlsx" });
+
+      const result = await generatePublicationExcel({
+        artefactId: "test-id",
+        listTypeName,
+        contentDate: new Date(),
+        locale: "en",
+        locationId: "123",
+        jsonData: {}
+      });
+
+      expect(generator).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-id", listTypeName }));
       expect(result).toEqual({ hasExcel: true });
     });
 
@@ -2266,7 +2440,7 @@ describe("publication-processor", async () => {
       "FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST",
       "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST",
       "KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST",
-      "MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST",
+      "MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST",
       "SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST"
     ];
     const RCJ_LIST_TYPES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>][] = [
@@ -2367,9 +2541,9 @@ describe("publication-processor", async () => {
       consoleErrorSpy.mockRestore();
     });
 
-    it("should not store an Excel for a non-strategic list without an Excel generator given an uploaded Excel", async () => {
+    it("should not store an Excel for a list without an Excel generator given an uploaded Excel", async () => {
       // Act
-      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", uploadedExcel });
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName: "UNKNOWN_LIST_TYPE", uploadedExcel });
 
       // Assert
       expect(saveExcelToStorage).not.toHaveBeenCalled();
@@ -2716,6 +2890,140 @@ describe("publication-processor", async () => {
     );
   });
 
+  describe("uploaded Excel for Tribunal lists", () => {
+    const TRIBUNAL_URL_PATHS = [
+      "pht-weekly-hearing-list",
+      "care-standards-tribunal-weekly-hearing-list",
+      "siac-poac-paac-weekly-hearing-list",
+      "grc-weekly-hearing-list",
+      "cic-weekly-hearing-list",
+      "ast-daily-hearing-list"
+    ];
+    const TRIBUNAL_LIST_TYPES = listTypeData.filter((listType) => TRIBUNAL_URL_PATHS.includes(listType.urlPath ?? "")).map((listType) => listType.name);
+    const TRIBUNAL_CASES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>, ReturnType<typeof vi.fn>][] = [
+      ["PHT_WEEKLY_HEARING_LIST", reformatPhtWeeklyHearingListExcel, vi.mocked(generatePhtWeeklyHearingListPdf)],
+      ["CST_WEEKLY_HEARING_LIST", reformatCareStandardsTribunalWeeklyHearingListExcel, vi.mocked(generateCareStandardsTribunalWeeklyHearingListPdf)],
+      ["SIAC_WEEKLY_HEARING_LIST", reformatSiacPoacPaacWeeklyHearingListExcel, vi.mocked(generateSiacPoacPaacWeeklyHearingListPdf)],
+      ["POAC_WEEKLY_HEARING_LIST", reformatSiacPoacPaacWeeklyHearingListExcel, vi.mocked(generateSiacPoacPaacWeeklyHearingListPdf)],
+      ["PAAC_WEEKLY_HEARING_LIST", reformatSiacPoacPaacWeeklyHearingListExcel, vi.mocked(generateSiacPoacPaacWeeklyHearingListPdf)],
+      ["GRC_WEEKLY_HEARING_LIST", reformatGrcWeeklyHearingListExcel, vi.mocked(generateGrcWeeklyHearingListPdf)],
+      ["CIC_WEEKLY_HEARING_LIST", reformatCicWeeklyHearingListExcel, vi.mocked(generateCicWeeklyHearingListPdf)],
+      ["AST_DAILY_HEARING_LIST", reformatAstDailyHearingListExcel, vi.mocked(generateAstDailyHearingListPdf)]
+    ];
+    const uploadedExcel = Buffer.from("uploaded-tribunal-excel");
+    const reformattedExcel = Buffer.from("reformatted-tribunal-excel");
+    const excelParams = {
+      artefactId: "tribunal-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: [{ date: "02/01/2025", caseName: "A v B" }]
+    };
+    const pdfResult = { success: true, pdfPath: "/path/to/tribunal.pdf", sizeBytes: 1024, exceedsMaxSize: false };
+
+    beforeEach(() => {
+      for (const [, reformatter, pdfGenerator] of TRIBUNAL_CASES) {
+        vi.mocked(reformatter).mockResolvedValue(reformattedExcel);
+        pdfGenerator.mockResolvedValue(pdfResult);
+      }
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "tribunal-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+      vi.mocked(getLocationById).mockResolvedValue({ locationId: 123, name: "Field House", welshName: "Field House", regions: [], subJurisdictions: [] });
+    });
+
+    it("should find exactly the eight Tribunal list types in the list type data", () => {
+      // Assert
+      expect([...TRIBUNAL_LIST_TYPES].sort()).toEqual(TRIBUNAL_CASES.map(([name]) => name).sort());
+    });
+
+    it.each(TRIBUNAL_LIST_TYPES)("should register an Excel generator for %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it.each(TRIBUNAL_CASES)("should reformat and save the uploaded Excel for %s", async (listTypeName, reformatter) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatter).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("tribunal-artefact", reformattedExcel);
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(TRIBUNAL_CASES)(
+      "should pass the uploaded Excel through processPublication and notify with both files for %s",
+      async (listTypeName, reformatter) => {
+        // Arrange
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+
+        // Act
+        const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+        // Assert
+        expect(reformatter).toHaveBeenCalledWith(uploadedExcel, "en");
+        expect(result.pdfPath).toBe("/path/to/tribunal.pdf");
+        expect(result.excelPath).toBe("tribunal-artefact.xlsx");
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "tribunal-artefact",
+          expect.objectContaining({ pdfFilePath: "/path/to/tribunal.pdf", excelPath: "tribunal-artefact.xlsx" })
+        );
+      }
+    );
+
+    it.each(TRIBUNAL_CASES)("should delete the stale Excel and notify with the PDF only when %s has no upload", async (listTypeName, reformatter) => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("tribunal-artefact.xlsx", "publications");
+      expect(reformatter).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result.pdfPath).toBe("/path/to/tribunal.pdf");
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "tribunal-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/tribunal.pdf", excelPath: undefined })
+      );
+    });
+
+    it.each(TRIBUNAL_CASES)(
+      "should delete the stale Excel and still send the PDF and notifications when reformatting fails for %s",
+      async (listTypeName, reformatter, pdfGenerator) => {
+        // Arrange
+        const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+        vi.mocked(reformatter).mockRejectedValue(new Error("No recognised worksheet to reformat"));
+
+        // Act
+        const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+        // Assert
+        expect(deleteBlob).toHaveBeenCalledWith("tribunal-artefact.xlsx", "publications");
+        expect(saveExcelToStorage).not.toHaveBeenCalled();
+        expect(pdfGenerator).toHaveBeenCalled();
+        expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", {
+          artefactId: "tribunal-artefact",
+          error: "No recognised worksheet to reformat"
+        });
+        expect(result.pdfPath).toBe("/path/to/tribunal.pdf");
+        expect(result.excelPath).toBeUndefined();
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+          "tribunal-artefact",
+          expect.objectContaining({ pdfFilePath: "/path/to/tribunal.pdf", excelPath: undefined })
+        );
+        consoleWarnSpy.mockRestore();
+      }
+    );
+  });
+
   describe("uploaded Excel for First-tier Tribunal lists", () => {
     const FTT_URL_PATHS = [
       "wpafcc-weekly-hearing-list",
@@ -2727,14 +3035,14 @@ describe("publication-processor", async () => {
     const FTT_LIST_TYPES = listTypeData.filter((listType) => FTT_URL_PATHS.includes(listType.urlPath ?? "")).map((listType) => listType.name);
     const FTT_CASES: [string, (buffer: Buffer, locale: string) => Promise<Buffer>, ReturnType<typeof vi.fn>][] = [
       ["WPAFCC_WEEKLY_HEARING_LIST", reformatWpafccWeeklyHearingListExcel, vi.mocked(generateWpafccWeeklyHearingListPdf)],
-      ["FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST", reformatFttTaxChamberWeeklyHearingListExcel, vi.mocked(generateFttTaxChamberWeeklyHearingListPdf)],
-      ["FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST", reformatFttLrtWeeklyHearingListExcel, vi.mocked(generateFttLrtWeeklyHearingListPdf)],
+      ["FTT_TAX_WEEKLY_HEARING_LIST", reformatFttTaxChamberWeeklyHearingListExcel, vi.mocked(generateFttTaxChamberWeeklyHearingListPdf)],
+      ["FTT_LR_WEEKLY_HEARING_LIST", reformatFttLrtWeeklyHearingListExcel, vi.mocked(generateFttLrtWeeklyHearingListPdf)],
       ["SEND_DAILY_HEARING_LIST", reformatSendDailyHearingListExcel, vi.mocked(generateSendDailyHearingListPdf)],
-      ["FTT_RPT_EASTERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
-      ["FTT_RPT_LONDON_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
-      ["FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
-      ["FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
-      ["FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
+      ["RPT_EASTERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
+      ["RPT_LONDON_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
+      ["RPT_MIDLANDS_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
+      ["RPT_NORTHERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
+      ["RPT_SOUTHERN_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)],
       ["FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST", reformatFttRptWeeklyHearingListExcel, vi.mocked(generateFttRptWeeklyHearingListPdf)]
     ];
     const FTT_REFORMATTERS = [
@@ -2882,6 +3190,137 @@ describe("publication-processor", async () => {
         consoleWarnSpy.mockRestore();
       }
     );
+  });
+
+  describe("uploaded Excel for Administrative Court lists", () => {
+    const ADMIN_COURT_URL_PATHS = [
+      "birmingham-administrative-court-daily-cause-list",
+      "leeds-administrative-court-daily-cause-list",
+      "bristol-cardiff-administrative-court-daily-cause-list",
+      "manchester-administrative-court-daily-cause-list"
+    ];
+    const ADMIN_COURT_LIST_TYPES = listTypeData.filter((listType) => ADMIN_COURT_URL_PATHS.includes(listType.urlPath ?? "")).map((listType) => listType.name);
+    const EXPECTED_ADMIN_COURT_LIST_TYPES = [
+      "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST",
+      "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST"
+    ];
+    const uploadedExcel = Buffer.from("uploaded-admin-court-excel");
+    const reformattedExcel = Buffer.from("reformatted-admin-court-excel");
+    const excelParams = {
+      artefactId: "admin-court-artefact",
+      contentDate: new Date("2025-01-25"),
+      locale: "cy",
+      locationId: "123",
+      jsonData: [{ venue: "Court 1", time: "10:30am" }]
+    };
+    const pdfResult = { success: true, pdfPath: "/path/to/admin-court.pdf", sizeBytes: 1024, exceedsMaxSize: false };
+
+    beforeEach(() => {
+      vi.mocked(reformatAdministrativeCourtDailyCauseListExcel).mockResolvedValue(reformattedExcel);
+      vi.mocked(generateAdministrativeCourtDailyCauseListPdf).mockResolvedValue(pdfResult);
+      vi.mocked(saveExcelToStorage).mockResolvedValue({ excelPath: "admin-court-artefact.xlsx" });
+      vi.mocked(deleteBlob).mockResolvedValue(undefined);
+      vi.mocked(getLocationById).mockResolvedValue({
+        locationId: 123,
+        name: "Birmingham Civil and Family Justice Centre",
+        welshName: "Canolfan Gyfiawnder Sifil a Theulu Birmingham",
+        regions: [],
+        subJurisdictions: []
+      });
+    });
+
+    it("should find exactly the four Administrative Court list types in the list type data", () => {
+      // Assert
+      expect([...ADMIN_COURT_LIST_TYPES].sort()).toEqual(EXPECTED_ADMIN_COURT_LIST_TYPES);
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should register an Excel generator for %s", (listTypeName) => {
+      // Act
+      const result = listTypeHasExcel(listTypeName);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should reformat and save the uploaded Excel for %s", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName, uploadedExcel });
+
+      // Assert
+      expect(reformatAdministrativeCourtDailyCauseListExcel).toHaveBeenCalledWith(uploadedExcel, "cy");
+      expect(saveExcelToStorage).toHaveBeenCalledWith("admin-court-artefact", reformattedExcel);
+      expect(deleteBlob).not.toHaveBeenCalled();
+      expect(result).toEqual({ hasExcel: true });
+    });
+
+    it.each(EXPECTED_ADMIN_COURT_LIST_TYPES)("should delete the stale Excel without reformatting when %s has no upload", async (listTypeName) => {
+      // Act
+      const result = await generatePublicationExcel({ ...excelParams, listTypeName });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(reformatAdministrativeCourtDailyCauseListExcel).not.toHaveBeenCalled();
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(result).toEqual({});
+    });
+
+    it("should pass the uploaded Excel through processPublication and notify with both files", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(reformatAdministrativeCourtDailyCauseListExcel).toHaveBeenCalledWith(uploadedExcel, "en");
+      expect(result.pdfPath).toBe("/path/to/admin-court.pdf");
+      expect(result.excelPath).toBe("admin-court-artefact.xlsx");
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "admin-court-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/admin-court.pdf", excelPath: "admin-court-artefact.xlsx" })
+      );
+    });
+
+    it("should notify with the PDF only when the list was not uploaded as Excel", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en" });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(reformatAdministrativeCourtDailyCauseListExcel).not.toHaveBeenCalled();
+      expect(result.excelPath).toBeUndefined();
+      expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalledWith(
+        "admin-court-artefact",
+        expect.objectContaining({ pdfFilePath: "/path/to/admin-court.pdf", excelPath: undefined })
+      );
+    });
+
+    it("should delete the stale Excel and log only the artefact id and message when reformatting fails", async () => {
+      // Arrange
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(reformatAdministrativeCourtDailyCauseListExcel).mockRejectedValue(new Error("No recognised worksheet to reformat"));
+
+      // Act
+      const result = await processPublication({ ...excelParams, listTypeId: 999, locale: "en", uploadedExcel });
+
+      // Assert
+      expect(deleteBlob).toHaveBeenCalledWith("admin-court-artefact.xlsx", "publications");
+      expect(saveExcelToStorage).not.toHaveBeenCalled();
+      expect(generateAdministrativeCourtDailyCauseListPdf).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith("[Publication] Excel generation failed:", {
+        artefactId: "admin-court-artefact",
+        error: "No recognised worksheet to reformat"
+      });
+      expect(result.pdfPath).toBe("/path/to/admin-court.pdf");
+      expect(result.excelPath).toBeUndefined();
+      consoleWarnSpy.mockRestore();
+    });
   });
 
   describe("stale Excel on a flat-file republish", () => {

@@ -6,7 +6,7 @@ import { sessionTimeoutMiddleware } from "./session-timeout.js";
 vi.mock("../config/cft-idam-config.js", () => ({
   getCftIdamConfig: vi.fn(() => ({
     baseUrl: "https://localhost:8080",
-    endSessionEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/endSession"
+    endSessionEndpoint: "https://hmcts-access.aat.platform.hmcts.net/o/endSession"
   }))
 }));
 
@@ -107,7 +107,7 @@ describe("Session Timeout Middleware", () => {
     // Assert
     expect(req.session?.destroy).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith(
-      "https://idam-web-public.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired"
+      "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired"
     );
   });
 
@@ -124,7 +124,7 @@ describe("Session Timeout Middleware", () => {
 
     // Assert
     expect(res.redirect).toHaveBeenCalledWith(
-      "https://idam-web-public.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy"
+      "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy"
     );
   });
 

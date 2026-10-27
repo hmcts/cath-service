@@ -15,11 +15,11 @@ export const en = {
   importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   rptRegionalEmail: {
-    FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
-    FTT_RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
-    FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
-    FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
-    FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
+    RPT_EASTERN_WEEKLY_HEARING_LIST: "RPEastern@justice.gov.uk",
+    RPT_LONDON_WEEKLY_HEARING_LIST: "London.Rap@justice.gov.uk",
+    RPT_MIDLANDS_WEEKLY_HEARING_LIST: "rpmidland@justice.gov.uk",
+    RPT_NORTHERN_WEEKLY_HEARING_LIST: "rpnorthern@justice.gov.uk",
+    RPT_SOUTHERN_WEEKLY_HEARING_LIST: "RPSouthern@justice.gov.uk",
     FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: "marketrents@justice.gov.uk"
   },
   marketRentsExtraInformation:

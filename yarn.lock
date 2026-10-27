@@ -1345,6 +1345,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -1402,6 +1403,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -1490,6 +1492,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -1508,6 +1511,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -1831,6 +1835,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hmcts/govuk-notify@workspace:*, @hmcts/govuk-notify@workspace:libs/govuk-notify":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/govuk-notify@workspace:libs/govuk-notify"
+  dependencies:
+    "@types/node": "npm:^22.10.2"
+    notifications-node-client: "npm:8.4.0"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
+  languageName: unknown
+  linkType: soft
+
 "@hmcts/grc-weekly-hearing-list@workspace:*, @hmcts/grc-weekly-hearing-list@workspace:libs/list-types/grc-weekly-hearing-list":
   version: 0.0.0-use.local
   resolution: "@hmcts/grc-weekly-hearing-list@workspace:libs/list-types/grc-weekly-hearing-list"
@@ -1840,6 +1855,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -2025,6 +2041,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hmcts/notification@workspace:libs/notification"
   dependencies:
+    "@hmcts/govuk-notify": "workspace:*"
     "@types/node": "npm:^22.10.2"
     notifications-node-client: "npm:^8.2.1"
     typescript: "npm:6.0.3"
@@ -2055,6 +2072,7 @@ __metadata:
     "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-rpt-weekly-hearing-list": "workspace:*"
     "@hmcts/ftt-tax-chamber-weekly-hearing-list": "workspace:*"
+    "@hmcts/govuk-notify": "workspace:*"
     "@hmcts/grc-weekly-hearing-list": "workspace:*"
     "@hmcts/iac-daily-list": "workspace:*"
     "@hmcts/interim-applications-daily-cause-list": "workspace:*"
@@ -2119,6 +2137,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
@@ -2288,6 +2307,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@types/luxon": "npm:3.7.5"
     "@types/node": "npm:24.10.4"
+    exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
     typescript: "npm:6.0.3"
