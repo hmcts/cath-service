@@ -1,4 +1,5 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import type { ThirdPartyUserStatus } from "./third-party-user-status.js";
 
 export async function findAllThirdPartyUsers() {
   return prisma.thirdPartyUser.findMany({
@@ -60,4 +61,8 @@ export async function updateThirdPartySubscriptions(userId: string, subscription
 
 export async function deleteThirdPartyUser(id: string) {
   await prisma.thirdPartyUser.delete({ where: { id } });
+}
+
+export async function updateThirdPartyUserStatus(id: string, status: ThirdPartyUserStatus) {
+  return prisma.thirdPartyUser.update({ where: { id }, data: { status } });
 }

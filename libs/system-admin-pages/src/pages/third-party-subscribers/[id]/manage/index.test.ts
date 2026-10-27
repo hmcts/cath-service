@@ -35,6 +35,7 @@ describe("third-party-subscribers manage user page", () => {
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
         id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
+        status: "PENDING",
         createdAt: new Date("2026-01-15"),
         subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listType: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }]
       } as never);
@@ -48,7 +49,9 @@ describe("third-party-subscribers manage user page", () => {
         expect.objectContaining({
           pageTitle: "Manage subscriber",
           name: "Test Corp",
-          subscriptionCount: 1
+          subscriptionCount: 1,
+          status: "Pending",
+          userId: "00000000-0000-0000-0000-000000000001"
         })
       );
     });
@@ -58,6 +61,7 @@ describe("third-party-subscribers manage user page", () => {
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
         id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
+        status: "ACTIVE",
         createdAt: new Date(),
         subscriptions: []
       } as never);
@@ -67,6 +71,65 @@ describe("third-party-subscribers manage user page", () => {
 
       // Assert
       expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ subscriptionCount: 0 }));
+    });
+
+    it.each([
+      ["PENDING", "Pending"],
+      ["ACTIVE", "Active"],
+      ["SUSPENDED", "Suspended"]
+    ])("should render the %s status as %s", async (status, label) => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue({
+        id: "00000000-0000-0000-0000-000000000001",
+        name: "Test Corp",
+        status,
+        createdAt: new Date(),
+        subscriptions: []
+      } as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ status: label }));
+    });
+
+    it("should render the Welsh status label and Change text when the locale is cy", async () => {
+      // Arrange
+      res.locals = { locale: "cy" };
+      vi.mocked(findThirdPartyUserById).mockResolvedValue({
+        id: "00000000-0000-0000-0000-000000000001",
+        name: "Test Corp",
+        status: "SUSPENDED",
+        createdAt: new Date(),
+        subscriptions: []
+      } as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith(
+        "third-party-subscribers/[id]/manage/index",
+        expect.objectContaining({ status: "Wedi'i atal", change: "Newid", lngParam: "?lng=cy" })
+      );
+    });
+
+    it("should fall back to the stored value when the status has no label", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue({
+        id: "00000000-0000-0000-0000-000000000001",
+        name: "Test Corp",
+        status: "UNKNOWN",
+        createdAt: new Date(),
+        subscriptions: []
+      } as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ status: "UNKNOWN" }));
     });
   });
 });

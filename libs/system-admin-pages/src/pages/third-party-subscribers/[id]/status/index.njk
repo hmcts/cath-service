@@ -1,0 +1,77 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% set manageUrl = "/third-party-subscribers/" + userId + "/manage" + lngParam %}
+
+{% block pageTitle %}
+  {% if errors %}{{ errorPrefix }} {% endif %}{% include "components/page-title.njk" %}
+{% endblock %}
+
+{% block backLink %}
+  <a href="{{ manageUrl }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+
+      {% set statusError = null %}
+      {% if errors %}
+        {% for error in errors %}
+          {% if error.href == "#status" %}
+            {% set statusError = { text: error.text } %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% set radioItems = [] %}
+      {% for item in statusItems %}
+        {% set radioItems = (radioItems.push({
+          value: item.value,
+          text: item.text,
+          checked: item.value == selectedStatus
+        }), radioItems) %}
+      {% endfor %}
+
+      {{ govukRadios({
+        idPrefix: "status",
+        name: "status",
+        fieldset: {
+          legend: {
+            text: statusLegend,
+            classes: "govuk-fieldset__legend--m"
+          }
+        },
+        errorMessage: statusError,
+        items: radioItems
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: confirmButton
+        }) }}
+
+        {{ govukButton({
+          text: cancelButton,
+          href: manageUrl,
+          classes: "govuk-button--secondary"
+        }) }}
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

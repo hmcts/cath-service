@@ -4,7 +4,8 @@ import {
   deleteThirdPartyUser,
   findAllThirdPartyUsers,
   findThirdPartyUserById,
-  updateThirdPartySubscriptions
+  updateThirdPartySubscriptions,
+  updateThirdPartyUserStatus
 } from "./third-party-user-service.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -14,6 +15,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn()
     },
     thirdPartySubscription: {
@@ -169,6 +171,21 @@ describe("third-party-user-service", () => {
       await deleteThirdPartyUser("00000000-0000-0000-0000-000000000001");
 
       expect(prisma.thirdPartyUser.delete).toHaveBeenCalledWith({ where: { id: "00000000-0000-0000-0000-000000000001" } });
+    });
+  });
+
+  describe("updateThirdPartyUserStatus", () => {
+    it("should update the status of the user with the given id", async () => {
+      const updatedUser = { id: "00000000-0000-0000-0000-000000000001", name: "User", status: "ACTIVE", createdAt: new Date() };
+      vi.mocked(prisma.thirdPartyUser.update).mockResolvedValue(updatedUser as never);
+
+      const result = await updateThirdPartyUserStatus("00000000-0000-0000-0000-000000000001", "ACTIVE");
+
+      expect(result).toEqual(updatedUser);
+      expect(prisma.thirdPartyUser.update).toHaveBeenCalledWith({
+        where: { id: "00000000-0000-0000-0000-000000000001" },
+        data: { status: "ACTIVE" }
+      });
     });
   });
 });

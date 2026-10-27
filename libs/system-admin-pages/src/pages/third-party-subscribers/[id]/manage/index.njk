@@ -25,6 +25,19 @@
         {
           key: { text: tableHeadings.subscriptionCount },
           value: { text: subscriptionCount }
+        },
+        {
+          key: { text: tableHeadings.status },
+          value: { text: status },
+          actions: {
+            items: [
+              {
+                href: "/third-party-subscribers/" + userId + "/status" + lngParam,
+                text: change,
+                visuallyHiddenText: tableHeadings.status
+              }
+            ]
+          }
         }
       ]
     }) }}

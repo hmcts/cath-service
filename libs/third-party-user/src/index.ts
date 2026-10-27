@@ -6,5 +6,7 @@ export {
   findAllThirdPartyUsers,
   findThirdPartyUserById,
   findThirdPartyUserByName,
-  updateThirdPartySubscriptions
+  updateThirdPartySubscriptions,
+  updateThirdPartyUserStatus
 } from "./third-party-user-service.js";
+export { isThirdPartyUserStatus, THIRD_PARTY_USER_STATUSES, type ThirdPartyUserStatus } from "./third-party-user-status.js";

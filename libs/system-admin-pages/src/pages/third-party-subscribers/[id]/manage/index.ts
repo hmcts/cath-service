@@ -16,6 +16,8 @@ export const getHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-subscribers${lngParam}`);
   }
 
+  const statusLabels: Record<string, string> = t.statusLabels;
+
   res.render("third-party-subscribers/[id]/manage/index", {
     ...t,
     en,
@@ -24,7 +26,8 @@ export const getHandler = async (req: Request, res: Response) => {
     userId: user.id,
     name: user.name,
     createdAt: user.createdAt.toLocaleDateString("en-GB"),
-    subscriptionCount: user.subscriptions.length
+    subscriptionCount: user.subscriptions.length,
+    status: statusLabels[user.status] ?? user.status
   });
 };
 
