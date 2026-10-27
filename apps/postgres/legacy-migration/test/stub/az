@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Stands in for az in run.sh. Reading csecret-key fails, to check that no empty secret is written.
+args="$*"
+name=$(sed -E 's/.*--name ([^ ]+).*/\1/' <<<"$args")
+case "$2 $3" in
+  "secret show")
+    [ "$name" = "csecret-key" ] && { echo "ERROR: forbidden" >&2; exit 1; }
+    echo "value-of-$name" ;;
+  "secret set")
+    [[ "$args" == *--value* ]] && { echo "secret passed with --value" >&2; exit 1; }
+    file=$(sed -E 's/.*--file ([^ ]+).*/\1/' <<<"$args")
+    echo "SET $name=$(cat "$file") mode=$(stat -c %a "$file")" ;;
+esac

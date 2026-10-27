@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stands in for azcopy in run.sh.
+echo "azcopy $*"

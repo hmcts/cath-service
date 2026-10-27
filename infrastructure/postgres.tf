@@ -29,6 +29,14 @@ module "postgresql" {
   auto_grow_enabled             = true
   admin_user_object_id          = var.ci_service_principal_object_id
   preserve_legacy_jenkins_admin = false
+
+  # apps/postgres/legacy-migration reads the legacy CaTH databases through postgres_fdw.
+  pgsql_server_configuration = [
+    {
+      name  = "azure.extensions"
+      value = "POSTGRES_FDW"
+    }
+  ]
 }
 
 resource "azurerm_key_vault_secret" "postgres_host" {
