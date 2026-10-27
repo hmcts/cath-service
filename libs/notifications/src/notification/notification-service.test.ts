@@ -395,7 +395,7 @@ describe("sendListTypePublicationNotifications", () => {
       { scenario: "no PDF generated and Excel under 2MB", pdf: null, excel: UNDER, hasPdf: false, hasExcel: true },
       { scenario: "both over 2MB", pdf: OVER, excel: OVER, hasPdf: false, hasExcel: false },
       { scenario: "neither generated", pdf: null, excel: null, hasPdf: false, hasExcel: false },
-      { scenario: "PDF exactly 2MB and Excel under 2MB", pdf: EXACTLY_TWO_MB, excel: UNDER, hasPdf: true, hasExcel: true }
+      { scenario: "PDF exactly 2MB (not less than 2MB) and Excel under 2MB", pdf: EXACTLY_TWO_MB, excel: UNDER, hasPdf: false, hasExcel: true }
     ])("should select the template and attachments correctly when $scenario", async ({ pdf, excel, hasPdf, hasExcel }) => {
       // Arrange
       const mockSubscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
@@ -468,10 +468,10 @@ describe("Notify attachment size limit", () => {
     expect(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES).toBe(2_097_152);
   });
 
-  it("should link a PDF of exactly 2 MB using the PDF-only template", async () => {
+  it("should link a PDF one byte under 2 MB using the PDF-only template", async () => {
     // Arrange
     const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
-    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
+    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1);
 
     // Act
     const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel: null });
@@ -482,10 +482,10 @@ describe("Notify attachment size limit", () => {
     expect(sent.excelBuffer).toBeUndefined();
   });
 
-  it("should withhold a PDF one byte over 2 MB and use the no-links template", async () => {
+  it("should withhold a PDF of exactly 2 MB and use the no-links template", async () => {
     // Arrange
     const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
-    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES + 1);
+    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
 
     // Act
     const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel: null });
@@ -496,11 +496,11 @@ describe("Notify attachment size limit", () => {
     expect(sent.excelBuffer).toBeUndefined();
   });
 
-  it("should link an Excel of exactly 2 MB alongside the PDF using the PDF and Excel template", async () => {
+  it("should link an Excel one byte under 2 MB alongside the PDF using the PDF and Excel template", async () => {
     // Arrange
     const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
     const pdf = Buffer.from("pdf");
-    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
+    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1);
 
     // Act
     const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel });
@@ -511,11 +511,11 @@ describe("Notify attachment size limit", () => {
     expect(sent.excelBuffer).toBe(excel);
   });
 
-  it("should drop only the Excel link when the Excel is one byte over 2 MB", async () => {
+  it("should drop only the Excel link when the Excel is exactly 2 MB", async () => {
     // Arrange
     const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
     const pdf = Buffer.from("pdf");
-    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES + 1);
+    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
 
     // Act
     const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel });

@@ -64,9 +64,9 @@ describe("template-config", () => {
       expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1))).toBe(true);
     });
 
-    it("should accept a file exactly at the limit", async () => {
+    it("should reject a file exactly at the limit", async () => {
       const { isWithinNotifyAttachmentLimit, MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("./template-config.js");
-      expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES))).toBe(true);
+      expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES))).toBe(false);
     });
 
     it("should reject a file one byte over the limit", async () => {

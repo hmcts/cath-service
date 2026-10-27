@@ -54,7 +54,7 @@ Line numbers have drifted and several claims are wrong or incomplete. The plan i
 - **One constant, renamed for what it is (defect D).** The limit belongs to Notify file attachments, not to PDF generation. Once the flag is gone, `list-types-common` has no use for the constant. So:
   - Remove `MAX_PDF_SIZE_BYTES` from `libs/list-types/common/src/pdf/pdf-utilities.ts` and its re-export in `libs/list-types/common/src/index.ts`. Its only importer is its own test.
   - Define it once as `MAX_NOTIFY_ATTACHMENT_SIZE_BYTES = 2 * 1024 * 1024` in `libs/notifications/src/govnotify/template-config.ts`, next to the other Notify config. Use it from `notification-service.ts` through a single predicate, `isWithinNotifyAttachmentLimit(buffer)`, used for both PDF and Excel.
-- **Boundary semantics: `size <= 2,097,152` gets a link.** This matches `notifications-node-client`, which throws only when `file.length > 2 * 1024 * 1024` (`client/notification.js:183`). Today's `<` withholds a link from a file Notify would accept. See CLARIFICATIONS #1.
+- **Boundary semantics: `size < 2,097,152` gets a link (master's #907 rule, kept on review).** `notifications-node-client` throws only when `file.length > 2 * 1024 * 1024` (`client/notification.js:183`), so a file of exactly 2 MB would be accepted by Notify, but the team chose to keep master's strict "less than 2 MB" rule. See CLARIFICATIONS #1.
 
 **Pinning the boundary**
 
