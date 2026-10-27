@@ -53,3 +53,9 @@
 - [x] `yarn test:e2e` passes locally: changed spec 76/76 including nightly; full suite 104 passed, 0 failed, 30 skipped by pre-existing `.skip` blocks
 - [x] `yarn lint` passes (2 pre-existing warnings in `@hmcts/web` and `@hmcts/web-core`). `yarn test`: 68 of 69 workspaces pass; `@hmcts/web` had 2 timeouts under full-parallel load (`app.test.ts`, `remove-list-search-results/index.test.ts`) and passes 3957/3957 when run alone. `apps/web/src` is not changed by this branch
 - [ ] (needs CI) Record the PR-gate duration from the first CI run (52 untagged tests in the spec; 2.8 minutes locally with 7 workers, CI uses 4). If it is over budget, tag more rows `nightly`
+
+## E2E runtime reduction (post-review)
+
+- [x] Replace the per-list-type `EMAIL_LINK_CASES` loop (71 tests, 48 in the PR gate) with one strategic test (`CIVIL_AND_FAMILY_DAILY_CAUSE_LIST`: PDF + Excel, 2 links, every subscriber notified) and one non-strategic test (`CST_WEEKLY_HEARING_LIST`: PDF only, 1 link). Per-list-type generator and template selection stay covered by unit tests in `libs/publication` and `libs/notifications`.
+- [x] Move the flat-file, Excel-only and over-2 MB template tests to `@nightly`
+- [x] Rename `list-type-email-cases.ts` to `publication-payloads.ts` and delete the fixtures no longer used

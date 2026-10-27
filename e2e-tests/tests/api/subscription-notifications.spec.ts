@@ -2,15 +2,6 @@ import { type APIRequestContext, expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
-  buildExcelOnlyCivilAndFamilyPayload,
-  buildOversizedCivilAndFamilyPayload,
-  EMAIL_LINK_CASES,
-  expectedLinkCount,
-  NOTIFY_ATTACHMENT_LIMIT_BYTES,
-  PDF_PAYLOAD_GATE_BYTES,
-  type StoredFileExtension
-} from "../../utils/list-type-email-cases.js";
-import {
   assertEmailDownloadLinks,
   cleanupTestNotifications,
   cleanupTestSubscriptions,
@@ -20,6 +11,14 @@ import {
   type GovNotifyEmail,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
+import {
+  buildExcelOnlyCivilAndFamilyPayload,
+  buildOversizedCivilAndFamilyPayload,
+  loadListTypeFixture,
+  NOTIFY_ATTACHMENT_LIMIT_BYTES,
+  PDF_PAYLOAD_GATE_BYTES,
+  type StoredFileExtension
+} from "../../utils/publication-payloads.js";
 import { checkFlatFileExists, deleteTestArtefacts, type FlatFileInfo, getListTypes, type NotificationRecord } from "../../utils/test-support-api.js";
 
 const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
@@ -27,6 +26,8 @@ const ENDPOINT = `${API_BASE_URL}/publication`;
 const NOTIFY_KEY_MISSING = "GOVUK_NOTIFY_API_KEY not set - the email body cannot be read back from Notify";
 const NOTIFY_STATUS_PATTERN = /delivered|sending|pending|created|permanent-failure/;
 const ALL_STORED_FILES: StoredFileExtension[] = [".pdf", ".xlsx"];
+const STRATEGIC_LIST_TYPE = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
+const NON_STRATEGIC_LIST_TYPE = "CST_WEEKLY_HEARING_LIST";
 
 function generatePublicationDates(daysFromNow = 1) {
   const now = new Date();
@@ -184,13 +185,13 @@ test.describe("Subscription Notifications", () => {
     return friendlyName!;
   }
 
-  test("notification delivery to single and multiple subscribers", async ({ request }) => {
+  test("strategic list publication notifies every subscriber with PDF and Excel download links", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(180_000);
 
     const location = await createUniqueTestLocation({ namePrefix: "Subscription Notification Court" });
-    const listTypeName = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
-    const payload = EMAIL_LINK_CASES.find((c) => c.listTypeName === listTypeName)!.buildPayload();
+    const listTypeName = STRATEGIC_LIST_TYPE;
+    const payload = loadListTypeFixture("civil-and-family-daily-cause-list");
 
     // PART 1: single subscriber receives an email with the standard subscription content
     const subscription1 = await subscribeTestAccount(location.locationId);
@@ -199,6 +200,7 @@ test.describe("Subscription Notifications", () => {
     testData.publicationIds.push(publicationId1);
 
     const notification1 = await waitForSentNotification(publicationId1, subscription1.subscriptionId);
+    await waitForStoredFiles(publicationId1, ALL_STORED_FILES);
     const email = await assertEmailDownloadLinks(notification1.govNotifyId, 2);
 
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates1.formattedContentDate });
@@ -219,9 +221,9 @@ test.describe("Subscription Notifications", () => {
 
   test("no notifications sent when no subscriptions exist for location @nightly", async ({ request }) => {
     const location = await createUniqueTestLocation({ namePrefix: "Unsubscribed Notification Court" });
-    const payload = EMAIL_LINK_CASES.find((c) => c.listTypeName === "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")!.buildPayload();
+    const payload = loadListTypeFixture("civil-and-family-daily-cause-list");
 
-    const publicationId = await publishJson(request, "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", payload, generatePublicationDates(3), location.locationId);
+    const publicationId = await publishJson(request, STRATEGIC_LIST_TYPE, payload, generatePublicationDates(3), location.locationId);
     testData.publicationIds.push(publicationId);
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -230,44 +232,38 @@ test.describe("Subscription Notifications", () => {
     expect(notifications).toHaveLength(0);
   });
 
-  for (const emailCase of EMAIL_LINK_CASES) {
-    const linkCount = expectedLinkCount(emailCase.expectedFiles);
+  test("non-strategic list publication sends the PDF-only email with 1 download link", async ({ request }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
+    // Puppeteer PDF generation can take 40-60 seconds on a CI cold start, and notifications follow it
+    test.setTimeout(120_000);
 
-    test(`${emailCase.listTypeName} email has ${linkCount} document download link(s)${emailCase.nightly ? " @nightly" : ""}`, async ({ request }) => {
-      test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
-      // Puppeteer PDF generation can take 40-60 seconds on a CI cold start, and notifications follow it
-      test.setTimeout(120_000);
+    const location = await createUniqueTestLocation({ namePrefix: "Non-strategic Email Court" });
+    const subscription = await subscribeTestAccount(location.locationId);
+    const dates = generatePublicationDates(1);
 
-      const location = await createUniqueTestLocation({ namePrefix: "Email Link Court" });
-      const subscription = await subscribeTestAccount(location.locationId);
-      const dates = generatePublicationDates(1);
+    const payload = loadListTypeFixture("care-standards-tribunal-weekly-hearing-list");
+    const publicationId = await publishJson(request, NON_STRATEGIC_LIST_TYPE, payload, dates, location.locationId);
+    testData.publicationIds.push(publicationId);
 
-      const publicationId = await publishJson(request, emailCase.listTypeName, emailCase.buildPayload(), dates, location.locationId);
-      testData.publicationIds.push(publicationId);
+    const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
 
-      const notification = await waitForSentNotification(publicationId, subscription.subscriptionId);
+    // A JSON publication carries no uploaded workbook, so a non-strategic list gets a PDF and no Excel
+    await waitForStoredFiles(publicationId, [".pdf"]);
+    await expectFilesNotStored(publicationId, [".xlsx"]);
 
-      // A missing file would also lower the link count, so prove generation matched expectations first
-      await waitForStoredFiles(publicationId, emailCase.expectedFiles);
-      await expectFilesNotStored(
-        publicationId,
-        ALL_STORED_FILES.filter((extension) => !emailCase.expectedFiles.includes(extension))
-      );
-
-      const email = await assertEmailDownloadLinks(notification.govNotifyId, linkCount);
-      expectEmailContent(email, {
-        friendlyName: friendlyNameOf(emailCase.listTypeName),
-        locationName: location.name,
-        formattedContentDate: dates.formattedContentDate
-      });
+    const email = await assertEmailDownloadLinks(notification.govNotifyId, 1);
+    expectEmailContent(email, {
+      friendlyName: friendlyNameOf(NON_STRATEGIC_LIST_TYPE),
+      locationName: location.name,
+      formattedContentDate: dates.formattedContentDate
     });
-  }
+  });
 
-  test("flat-file publication sends the flat-file email with 1 link to the uploaded document", async ({ request }) => {
+  test("flat-file publication sends the flat-file email with 1 link to the uploaded document @nightly", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(120_000);
 
-    const listTypeName = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
+    const listTypeName = STRATEGIC_LIST_TYPE;
     const location = await createUniqueTestLocation({ namePrefix: "Flat File Email Court" });
     const subscription = await subscribeTestAccount(location.locationId);
     const dates = generatePublicationDates(1);
@@ -285,11 +281,11 @@ test.describe("Subscription Notifications", () => {
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
   });
 
-  test("publication over the PDF payload gate sends the Excel-only email with 1 link", async ({ request }) => {
+  test("publication over the PDF payload gate sends the Excel-only email with 1 link @nightly", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(120_000);
 
-    const listTypeName = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
+    const listTypeName = STRATEGIC_LIST_TYPE;
     const payload = buildExcelOnlyCivilAndFamilyPayload();
     const payloadBytes = Buffer.byteLength(JSON.stringify(payload), "utf8");
     expect(payloadBytes, `payload is ${payloadBytes} bytes; recalibrate buildExcelOnlyCivilAndFamilyPayload`).toBeGreaterThan(PDF_PAYLOAD_GATE_BYTES);
@@ -312,11 +308,11 @@ test.describe("Subscription Notifications", () => {
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
   });
 
-  test("publication with a generated file over 2 MB stores the file but sends the no-links email", async ({ request }) => {
+  test("publication with a generated file over 2 MB stores the file but sends the no-links email @nightly", async ({ request }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
     test.setTimeout(180_000);
 
-    const listTypeName = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
+    const listTypeName = STRATEGIC_LIST_TYPE;
     const location = await createUniqueTestLocation({ namePrefix: "Oversize Email Court" });
     const subscription = await subscribeTestAccount(location.locationId);
     const dates = generatePublicationDates(1);
