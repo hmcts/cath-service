@@ -54,6 +54,53 @@ const SSCS_CY_HEADINGS = [
   "ATC/Ymatebydd",
   "Gwybodaeth Ychwanegol"
 ];
+const BUSINESS_AND_PROPERTY_LIST_TYPE_NAME = "BUSINESS_AND_PROPERTY_DIVISION_ROLLS_BUILDING_DAILY_CAUSE_LIST";
+const INTERIM_APPLICATIONS_LIST_TYPE_NAME = "INTERIM_APPLICATIONS_DAILY_CAUSE_LIST";
+const ROLLS_BUILDING_UPLOADED_HEADER = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
+const BUSINESS_AND_PROPERTY_EN_HEADINGS = ["Judge", "Time", "Venue", "Type", "Case Number", "Case Name", "Additional Information"];
+const INTERIM_APPLICATIONS_CY_HEADINGS = ["Barnwr", "Amser", "Lleoliad", "Math", "Rhif yr achos", "Enw’r achos", "Gwybodaeth ychwanegol"];
+const GRC_LIST_TYPE_NAME = "GRC_WEEKLY_HEARING_LIST";
+const GRC_SHEET_NAME = "GRC hearings";
+const GRC_UPLOADED_HEADER = [
+  "Date",
+  "Hearing time",
+  "Case reference number",
+  "Case name",
+  "Judge(s)",
+  "Member(s)",
+  "Mode of hearing",
+  "Venue",
+  "Additional information"
+];
+const GRC_EN_HEADINGS = [
+  "Date",
+  "Hearing time",
+  "Case reference number",
+  "Case name",
+  "Judge(s)",
+  "Member(s)",
+  "Mode of hearing",
+  "Venue",
+  "Additional information"
+];
+const GRC_ROW = ["02/01/2026", "10:30am", "EA/2026/0001", "Smith v Information Commissioner", "Judge Jones", "Ms Patel", "Video", "Field House", "Public"];
+const CIC_LIST_TYPE_NAME = "CIC_WEEKLY_HEARING_LIST";
+const CIC_SHEET_NAME = "CIC hearings";
+const CIC_UPLOADED_HEADER = ["Date", "Hearing time", "Case reference number", "Case name", "Venue/platform", "Judge(s)", "Member(s)", "Additional information"];
+const CIC_ROW = ["02/01/2026", "2pm", "CIC/2026/001", "AN Other v CICA", "Video", "Judge Lee", "Dr Patel", "Remote"];
+const CIC_CY_HEADINGS = [
+  "Dyddiad",
+  "Amser y gwrandawiad",
+  "Cyfeirnod yr achos",
+  "Enw'r achos",
+  "Lleoliad/Platfform",
+  "Barnwyr",
+  "Aelod(au)",
+  "Gwybodaeth ychwanegol"
+];
+const BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME = "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
+const BIRMINGHAM_ADMIN_COURT_SHEET_NAME = "Birmingham hearings";
+const ADMIN_COURT_CY_HEADINGS = ["Lleoliad", "Barnwr", "Amser", "Rhif yr achos", "Manylion yr achos", "Math o wrandawiad", "Gwybodaeth ychwanegol"];
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
@@ -88,6 +135,65 @@ async function createSscsExcelFile(): Promise<Buffer> {
 
   worksheet.addRow([...SSCS_UPLOADED_HEADER, "Internal notes"]);
   worksheet.addRow([...SSCS_ROW, "Appellant is vulnerable"]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createBusinessAndPropertyExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  const sheets: Record<string, unknown[][]> = {
+    "Appeal List": [
+      [...ROLLS_BUILDING_UPLOADED_HEADER, "Internal notes"],
+      ["Mr Justice Smith", "10.30am", "Court 1", "Appeal", "BL-2026-000001", "Smith v Jones", "Remote", "Vulnerable party"]
+    ],
+    "Insolvency & Companies Court": [
+      [...ROLLS_BUILDING_UPLOADED_HEADER, "Internal notes"],
+      ["ICC Judge Green", "2pm", "Court 7", "Winding up", "CR-2026-000010", "Re Example Ltd", "Hybrid", "Staff only"]
+    ],
+    Notes: [ROLLS_BUILDING_UPLOADED_HEADER, ["Judge X", "9am", "Court 9", "Note", "N-1", "Working copy", "Draft"]]
+  };
+  for (const [name, rows] of Object.entries(sheets)) {
+    const worksheet = workbook.addWorksheet(name);
+    for (const row of rows) {
+      worksheet.addRow(row);
+    }
+  }
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createInterimApplicationsExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook
+    .addWorksheet("Hearing List")
+    .addRows([
+      ROLLS_BUILDING_UPLOADED_HEADER,
+      ["Mr Justice Smith", "10.30am", "Court 1", "Interim application", "BL-2026-000002", "Acme v Widget", "In person"]
+    ]);
+  workbook.addWorksheet("Open Justice Statement Details").addRows([
+    ["Name to be displayed", "Email"],
+    ["Mr Justice Smith", "interim.applications@justice.gov.uk"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createTribunalExcelFile(sheetName: string, header: string[], row: string[]): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(sheetName).addRows([
+    [...header, "Internal notes"],
+    [...row, "Appellant is vulnerable"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createAdminCourtExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(BIRMINGHAM_ADMIN_COURT_SHEET_NAME).addRows([
+    ["Venue", "Judge", "Time", "Case Number", "Case Details", "Hearing Type", "Additional Information", "Internal notes"],
+    ["Court 1", "Mr Justice Smith", "10.30am", "AC-2026-000001", "R (Smith) v Secretary of State", "Judicial Review", "", "Claimant is vulnerable"]
+  ]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
@@ -131,13 +237,18 @@ async function uploadExcelAndConfirm(page: Page, upload: ExcelUpload): Promise<s
   return artefact.artefactId;
 }
 
-async function downloadReformattedWorksheet(page: Page, artefactId: string, sheetName: string): Promise<ExcelJSPkg.Worksheet> {
+async function downloadReformattedWorkbook(page: Page, artefactId: string): Promise<ExcelJSPkg.Workbook> {
   await expect.poll(async () => (await checkFlatFileExists(artefactId)).exists, { timeout: 60000, intervals: [2000] }).toBe(true);
   const excelBuffer = await waitForExcelDownload(page, artefactId);
 
   const workbook = new Workbook();
   // @ts-expect-error - ExcelJS types expect Node Buffer but accepts our Buffer type at runtime
   await workbook.xlsx.load(excelBuffer);
+  return workbook;
+}
+
+async function downloadReformattedWorksheet(page: Page, artefactId: string, sheetName: string): Promise<ExcelJSPkg.Worksheet> {
+  const workbook = await downloadReformattedWorkbook(page, artefactId);
   const worksheet = workbook.getWorksheet(sheetName);
   if (!worksheet) {
     throw new Error(`Reformatted workbook is missing the uploaded sheet ${sheetName}`);
@@ -394,14 +505,22 @@ test.describe
       await expect(page).toHaveURL("/non-strategic-upload");
     });
 
-    test("RCJ and SSCS Excel uploads send reformatted Excel and PDF links in email @nightly", async ({ page }) => {
+    // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
+    test("RCJ, SSCS, Rolls Building, Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
+      page
+    }) => {
       test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
       const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
       const subscription = await createTestSubscription(testUser.userId, testLocationId);
       const kbListType = (await getListTypeByName(KB_DIVISION_LIST_TYPE_NAME)) as { id: number } | null;
       const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
-      if (!kbListType || !sscsListType) {
+      const businessAndPropertyListType = (await getListTypeByName(BUSINESS_AND_PROPERTY_LIST_TYPE_NAME)) as { id: number } | null;
+      const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
+      const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
+      const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
+      const adminCourtListType = (await getListTypeByName(BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME)) as { id: number } | null;
+      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !grcListType || !cicListType || !adminCourtListType) {
         throw new Error("Expected list types are not seeded");
       }
       const artefactIds: string[] = [];
@@ -454,6 +573,104 @@ test.describe
         const welshSscsWorksheet = await downloadReformattedWorksheet(page, welshSscsArtefactId, SSCS_SHEET_NAME);
         expect(rowValues(welshSscsWorksheet, 1)).toEqual(SSCS_CY_HEADINGS);
         expect(rowValues(welshSscsWorksheet, 2)).toEqual(SSCS_ROW);
+
+        // STEP 6: A Business and Property upload keeps only its section tabs, drops the extra tab and column, and normalises the time
+        const businessAndPropertyArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: businessAndPropertyListType.id,
+          language: "ENGLISH",
+          fileName: "business-and-property-rolls.xlsx",
+          buffer: await createBusinessAndPropertyExcelFile()
+        });
+        artefactIds.push(businessAndPropertyArtefactId);
+
+        const businessAndPropertyWorkbook = await downloadReformattedWorkbook(page, businessAndPropertyArtefactId);
+        expect(businessAndPropertyWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Appeal List", "Insolvency & Companies Court"]);
+        const appealWorksheet = businessAndPropertyWorkbook.getWorksheet("Appeal List") as ExcelJSPkg.Worksheet;
+        expect(rowValues(appealWorksheet, 1)).toEqual(BUSINESS_AND_PROPERTY_EN_HEADINGS);
+        expect(appealWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(appealWorksheet, 2)).toEqual(["Mr Justice Smith", "10:30am", "Court 1", "Appeal", "BL-2026-000001", "Smith v Jones", "Remote"]);
+        expect(rowValues(appealWorksheet, 1)).not.toContain("Internal notes");
+        await expectPdfAndExcelLinksInEmail(businessAndPropertyArtefactId);
+
+        // STEP 7: A Welsh Interim Applications upload gets the Welsh headings and only the Hearing List tab
+        const interimArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: interimApplicationsListType.id,
+          language: "WELSH",
+          fileName: "interim-applications-cy.xlsx",
+          buffer: await createInterimApplicationsExcelFile()
+        });
+        artefactIds.push(interimArtefactId);
+
+        const interimWorkbook = await downloadReformattedWorkbook(page, interimArtefactId);
+        expect(interimWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Hearing List"]);
+        const interimWorksheet = interimWorkbook.getWorksheet("Hearing List") as ExcelJSPkg.Worksheet;
+        expect(rowValues(interimWorksheet, 1)).toEqual(INTERIM_APPLICATIONS_CY_HEADINGS);
+        expect(rowValues(interimWorksheet, 2)).toEqual([
+          "Mr Justice Smith",
+          "10.30am",
+          "Court 1",
+          "Interim application",
+          "BL-2026-000002",
+          "Acme v Widget",
+          "In person"
+        ]);
+
+        // STEP 8: An English GRC upload gets English headings, the PDF's long-form date, its unknown column dropped, and both email links
+        const grcArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: grcListType.id,
+          language: "ENGLISH",
+          fileName: "grc-weekly.xlsx",
+          buffer: await createTribunalExcelFile(GRC_SHEET_NAME, GRC_UPLOADED_HEADER, GRC_ROW)
+        });
+        artefactIds.push(grcArtefactId);
+
+        const grcWorksheet = await downloadReformattedWorksheet(page, grcArtefactId, GRC_SHEET_NAME);
+        expect(rowValues(grcWorksheet, 1)).toEqual(GRC_EN_HEADINGS);
+        expect(grcWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(grcWorksheet, 2)).toEqual(["2 January 2026", ...GRC_ROW.slice(1)]);
+        expect(rowValues(grcWorksheet, 1)).not.toContain("Internal notes");
+        expect(rowValues(grcWorksheet, 2)).not.toContain("Appellant is vulnerable");
+        await expectPdfAndExcelLinksInEmail(grcArtefactId);
+
+        // STEP 9: A Welsh CIC upload gets the Welsh headings, including the venue/platform alias, the Welsh long-form date, and both email links
+        const cicArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: cicListType.id,
+          language: "WELSH",
+          fileName: "cic-weekly-cy.xlsx",
+          buffer: await createTribunalExcelFile(CIC_SHEET_NAME, CIC_UPLOADED_HEADER, CIC_ROW)
+        });
+        artefactIds.push(cicArtefactId);
+
+        const cicWorksheet = await downloadReformattedWorksheet(page, cicArtefactId, CIC_SHEET_NAME);
+        expect(rowValues(cicWorksheet, 1)).toEqual(CIC_CY_HEADINGS);
+        expect(rowValues(cicWorksheet, 2)).toEqual(["2 Ionawr 2026", ...CIC_ROW.slice(1)]);
+        await expectPdfAndExcelLinksInEmail(cicArtefactId);
+
+        // STEP 10: A Welsh Birmingham Administrative Court upload gets the Welsh headings, the normalised time, its unknown column dropped, and both email links
+        const adminCourtArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: adminCourtListType.id,
+          language: "WELSH",
+          fileName: "birmingham-administrative-court-cy.xlsx",
+          buffer: await createAdminCourtExcelFile(),
+          checkAccessibility: true
+        });
+        artefactIds.push(adminCourtArtefactId);
+
+        const adminCourtWorksheet = await downloadReformattedWorksheet(page, adminCourtArtefactId, BIRMINGHAM_ADMIN_COURT_SHEET_NAME);
+        expect(rowValues(adminCourtWorksheet, 1)).toEqual(ADMIN_COURT_CY_HEADINGS);
+        expect(adminCourtWorksheet.getCell("A1").font?.bold).toBe(true);
+        expect(rowValues(adminCourtWorksheet, 2)).toEqual([
+          "Court 1",
+          "Mr Justice Smith",
+          "10:30am",
+          "AC-2026-000001",
+          "R (Smith) v Secretary of State",
+          "Judicial Review",
+          ""
+        ]);
+        expect(rowValues(adminCourtWorksheet, 1)).not.toContain("Internal notes");
+        expect(rowValues(adminCourtWorksheet, 2)).not.toContain("Claimant is vulnerable");
+        await expectPdfAndExcelLinksInEmail(adminCourtArtefactId);
       } finally {
         if (artefactIds.length > 0) {
           await cleanupTestNotifications(artefactIds);
