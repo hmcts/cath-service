@@ -50,4 +50,4 @@ export const FTT_LRT_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const fttLrtConverter = createConverter(FTT_LRT_EXCEL_CONFIG);
-registerConverterByName("FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST", fttLrtConverter);
+registerConverterByName("FTT_LR_WEEKLY_HEARING_LIST", fttLrtConverter);

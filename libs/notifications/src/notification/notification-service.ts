@@ -111,6 +111,7 @@ import {
   buildTemplateParameters,
   getEnvName,
   getFlatFileSubscriptionTemplateId,
+  getLocationSubscriptionDeletionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
   type TemplateParameters
@@ -129,7 +130,7 @@ import {
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
 
-const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_LINKED_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -169,7 +170,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractFamilySummary as SummaryExtractor,
     format: formatFamilySummaryForEmail
   },
-  CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  CST_WEEKLY_HEARING_LIST: {
     extract: extractCareStandardsSummary as SummaryExtractor,
     format: formatCareStandardsSummaryForEmail
   },
@@ -197,7 +198,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: rcjStandardConfig,
   KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: rcjStandardConfig,
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: rcjStandardConfig,
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: rcjStandardConfig,
   LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     extract: extractLondonAdminSummary as SummaryExtractor,
@@ -229,7 +230,7 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
   },
   BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
-  BRISTOL_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
+  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: adminCourtConfig,
   SSCS_LONDON_DAILY_HEARING_LIST: sscsConfig,
   SSCS_MIDLANDS_DAILY_HEARING_LIST: sscsConfig,
@@ -250,31 +251,31 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractSiacPoacPaacSummary as SummaryExtractor,
     format: formatSiacPoacPaacSummaryForEmail
   },
-  FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST: {
+  FTT_TAX_WEEKLY_HEARING_LIST: {
     extract: extractFttTaxSummary as SummaryExtractor,
     format: formatFttTaxSummaryForEmail
   },
-  FTT_LANDS_REGISTRATION_TRIBUNAL_WEEKLY_HEARING_LIST: {
+  FTT_LR_WEEKLY_HEARING_LIST: {
     extract: extractFttLrtSummary as SummaryExtractor,
     format: formatFttLrtSummaryForEmail
   },
-  FTT_RPT_EASTERN_WEEKLY_HEARING_LIST: {
+  RPT_EASTERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_LONDON_WEEKLY_HEARING_LIST: {
+  RPT_LONDON_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
+  RPT_MIDLANDS_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_NORTHERN_WEEKLY_HEARING_LIST: {
+  RPT_NORTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
-  FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
+  RPT_SOUTHERN_WEEKLY_HEARING_LIST: {
     extract: extractFttRptSummary as SummaryExtractor,
     format: formatFttRptSummaryForEmail
   },
@@ -290,39 +291,39 @@ const EMAIL_BUILDER_REGISTRY: Partial<Record<string, EmailBuilderConfig>> = {
     extract: extractWpafccSummary as SummaryExtractor,
     format: formatWpafccSummaryForEmail
   },
-  UTIAC_STATUTORY_APPEAL_DAILY_HEARING_LIST: {
+  UT_IAC_STATUTORY_APPEALS_DAILY_HEARING_LIST: {
     extract: extractUtiacSaSummary as SummaryExtractor,
     format: formatUtiacSaSummaryForEmail
   },
-  UTIAC_JR_LONDON_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LONDON_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLondonSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_LEEDS_DAILY_HEARING_LIST: {
+  UT_IAC_JR_LEEDS_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
+  UT_IAC_JR_MANCHESTER_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
+  UT_IAC_JR_BIRMINGHAM_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UTIAC_JR_CARDIFF_DAILY_HEARING_LIST: {
+  UT_IAC_JR_CARDIFF_DAILY_HEARING_LIST: {
     extract: extractUtiacJrLeedsSummary as SummaryExtractor,
     format: formatUtiacJrLeedsSummaryForEmail
   },
-  UT_TAX_AND_CHANCERY_CHAMBER_DAILY_HEARING_LIST: {
+  UT_T_AND_CC_DAILY_HEARING_LIST: {
     extract: extractUtccSummary as SummaryExtractor,
     format: formatUtccSummaryForEmail
   },
-  UT_LANDS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_LC_DAILY_HEARING_LIST: {
     extract: extractUtlcSummary as SummaryExtractor,
     format: formatUtlcSummaryForEmail
   },
-  UT_ADMINISTRATIVE_APPEALS_CHAMBER_DAILY_HEARING_LIST: {
+  UT_AAC_DAILY_HEARING_LIST: {
     extract: extractUtaacSummary as SummaryExtractor,
     format: formatUtaacSummaryForEmail
   },
@@ -406,6 +407,38 @@ export async function sendSystemAdminNotification(adminEmails: string[], details
 
       if (!result.success) {
         console.error(`Failed to send system admin notification to ${emailAddress}: ${result.error}`);
+      }
+    })
+  );
+}
+
+export interface LocationSubscriberRecipient {
+  email: string;
+  firstName: string | null;
+  surname: string | null;
+}
+
+export async function sendSubscriptionDeletedNotification(subscribers: LocationSubscriberRecipient[], locationName: string): Promise<void> {
+  if (subscribers.length === 0) {
+    return;
+  }
+
+  const templateId = getLocationSubscriptionDeletionTemplateId();
+  const personalisation = {
+    "location-name": locationName
+  };
+
+  // Best-effort: notification failure must not roll back the delete.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      const result = await sendEmail({
+        emailAddress: subscriber.email,
+        templateId,
+        templateParameters: personalisation as unknown as TemplateParameters
+      });
+
+      if (!result.success) {
+        console.error(`Failed to send subscription deleted notification to ${subscriber.email}: ${result.error}`);
       }
     })
   );
@@ -569,29 +602,19 @@ async function buildEnhancedEmailData(event: PublicationEvent, userName: string,
 }
 
 async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | undefined, templateParameters: TemplateParameters): Promise<EmailTemplateData> {
-  const pdfBuffer = pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null;
-  const excelBuffer = await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS);
-
-  const hasPdf = !!pdfBuffer;
-  const pdfUnder2MB = hasPdf && pdfBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const hasExcel = !!excelBuffer;
-  const excelUnder2MB = hasExcel && excelBuffer.length < MAX_PDF_SIZE_BYTES;
-
-  const filesUnder2MB = (hasPdf ? pdfUnder2MB : true) && (hasExcel ? excelUnder2MB : true);
-
-  const templateId = getSubscriptionTemplateId({
-    hasPdf: hasPdf && pdfUnder2MB,
-    hasExcel: hasExcel && excelUnder2MB,
-    filesUnder2MB
-  });
+  const pdfBuffer = toLinkableFile(pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null);
+  const excelBuffer = toLinkableFile(await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS));
 
   return {
     templateParameters,
-    templateId,
-    pdfBuffer: pdfUnder2MB ? pdfBuffer : undefined,
-    excelBuffer: excelUnder2MB ? excelBuffer : undefined
+    templateId: getSubscriptionTemplateId({ hasPdf: !!pdfBuffer, hasExcel: !!excelBuffer }),
+    pdfBuffer,
+    excelBuffer
   };
+}
+
+function toLinkableFile(buffer: Buffer | null): Buffer | undefined {
+  return buffer && buffer.length < MAX_LINKED_FILE_SIZE_BYTES ? buffer : undefined;
 }
 
 async function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): Promise<EmailTemplateData> {

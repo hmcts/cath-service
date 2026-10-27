@@ -1,8 +1,8 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const cy = {
-  courtName: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (War Pensions and Armed Forces Compensation)']",
-  pageTitle: "[WELSH TRANSLATION REQUIRED: 'First-tier Tribunal (War Pensions and Armed Forces Compensation) Weekly Hearing List']",
+  courtName: "Tribiwnlys Haen Gyntaf (Iawndal Pensiynau Rhyfel a'r Lluoedd Arfog)",
+  pageTitle: "Tribiwnlys Haen Gyntaf (Iawndal Pensiynau Rhyfel a'r Lluoedd Arfog) - Rhestr o Wrandawiadau Wythnosol",
   listForWeekCommencing: "Rhestr ar gyfer yr wythnos yn dechrau ar",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
@@ -11,19 +11,19 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at armedforces.listing@justice.gov.uk with the following details in the subject line \"[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date] (need to include any other information required by the tribunal)\" and appropriate arrangements will be made to allow access where reasonably practicable.']",
+    "Gall aelodau o'r cyhoedd sy'n dymuno arsylwi gwrandawiad neu gynrychiolwyr y cyfryngau ymuno ag unrhyw wrandawiad dros y ffôn neu drwy fideo o bell ar gais tra'u bod yn cael eu cynnal drwy anfon e-bost ymlaen llaw at y tribiwnlys yn armedforces.listing@justice.gov.uk gyda'r manylion canlynol yn y llinell bwnc \"CAIS [ARSYLLWR/CYFRYNGAU] – [cyfeirnod yr achos] – [dyddiad y gwrandawiad] (angen cynnwys unrhyw wybodaeth arall sy'n ofynnol gan y tribiwnlys)\" a gwneir trefniadau priodol i ganiatáu mynediad lle bo hynny'n rhesymol ymarferol.",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
   searchCasesTitle: "Chwilio Achosion",
   searchCasesLabel: "[WELSH TRANSLATION REQUIRED: 'Search by case reference number, case name, date, venue, or other details']",
   tableHeaders: {
-    date: "[WELSH TRANSLATION REQUIRED: 'Date']",
-    hearingTime: "[WELSH TRANSLATION REQUIRED: 'Hearing time']",
-    caseReferenceNumber: "[WELSH TRANSLATION REQUIRED: 'Case reference number']",
-    caseName: "[WELSH TRANSLATION REQUIRED: 'Case name']",
-    panel: "[WELSH TRANSLATION REQUIRED: 'Panel']",
-    modeOfHearing: "[WELSH TRANSLATION REQUIRED: 'Mode of hearing']",
-    venue: "[WELSH TRANSLATION REQUIRED: 'Venue']",
+    date: "Dyddiad",
+    hearingTime: "Amser y gwrandawiad",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    caseName: "Enw'r achos",
+    panel: "Panel",
+    modeOfHearing: "Math o wrandawiad",
+    venue: "Lleoliad",
     additionalInformation: "Gwybodaeth ychwanegol"
   },
   dataSource: "Ffynhonnell data",
