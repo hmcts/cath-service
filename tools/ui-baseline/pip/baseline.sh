@@ -57,6 +57,8 @@ wait_for "$PIP_FRONTEND_URL/"
 cd "$REPO_DIR"
 step "Seeding pip"
 npx tsx tools/ui-baseline/pip/seed.ts
+# The ids pip gave each publication, record and user; a check maps those in page URLs to CaTH's
+cp tools/ui-baseline/output/seed/pip.json "$OUT/seed.json"
 
 commit() { git -C "$PIP_SRC/$1" rev-parse --short=8 HEAD; }
 PIP_COMMITS="pip-frontend@$(commit pip-frontend)+pip-data-management@$(commit pip-data-management)+pip-account-management@$(commit pip-account-management)"
