@@ -108,6 +108,8 @@ export interface SeedResult {
   publications: Record<string, { artefactId: string; locationId: number; metadata: PublicationMetadata }>;
   // Publications the app refused, with its reason; a finding in its own right
   rejected: Record<string, string>;
-  // Account-side records from records.json, keyed by record id (pip only for now)
+  // Account-side records from records.json, keyed by record id
   records?: Record<string, Record<string, string>>;
+  // Each fixture user's id in the app, keyed by fixture user id
+  users?: Record<string, string>;
 }

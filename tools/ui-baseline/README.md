@@ -57,7 +57,8 @@ The check:
 
 1. works out what to check from the ticket: list types it names (e.g. `COP_DAILY_CAUSE_LIST`) and
    page routes it names (e.g. `/summary-of-publications`)
-2. seeds local CaTH with the same publications the baseline was made from
+2. seeds local CaTH with the same publications the baseline was made from, and signs in the same
+   users for pages behind sign-in (see [Signing in to CaTH](#signing-in-to-cath))
 3. captures those CaTH screens in English and Welsh
 4. compares them with the baseline
 5. has a reviewer judge each difference against the ticket: **intended** (the ticket asks for it,
@@ -85,13 +86,25 @@ yarn ui-baseline:check --all --serve
 ```
 
 That checks every list type in the fixtures and every page `routes/route-map.json` maps
-confidently, skipping the same pages a ticket check would (sign-in, unreviewed suggestions). It
+confidently, skipping the same pages a ticket check would (unreviewed suggestions, journey steps). It
 writes the full report, with journeys and the Comparison page, to `output/checks/all/`, and no PR
 evidence.
 
 Other options: `--list-type NAME` and `--route /path` to check without a ticket, `--locale en|cy`,
 `--no-seed`, `--no-review`, `--reviewer "<command>"` (default: `claude -p` with no tools),
 `--serve` to browse the report on <http://localhost:9500>. It exits 1 when there are defects.
+
+### Signing in to CaTH
+
+Pages behind sign-in are captured as the same fixture user pip's baseline used (`captureAs` in
+`routes/pip-routes.json`, `viewAs` for classified lists). Local CaTH has no identity providers, and
+CaTH gets no sign-in route for this: `cath/sign-in.ts` creates the users in `fixtures/users.json`
+in CaTH's database, writes the session a real sign-in leaves behind into CaTH's Redis, and the
+check sends that session's cookie. It needs the `SESSION_SECRET` and `REDIS_URL` from the root
+`.env` that CaTH's web app runs with, so it only works against a local CaTH.
+
+CaTH has no super admins, so pip's super admins are signed in to CaTH as the admin role with the
+same reach (CTSC or local).
 
 ## What the baseline covers
 
@@ -144,13 +157,23 @@ intended.
 `routes/route-map.json` maps each pip page and journey step to its CaTH route. Same-path matches,
 and suggestions whose headings are identical, are used by the check; low-confidence suggestions are
 skipped until someone checks them and sets `reviewed: true` (re-running `routes/route-map.ts` keeps
-reviewed entries). Renamed list types are in `list-type-map.json`.
+reviewed entries). A reviewed entry with `cath: null` records that CaTH has no such page. Renamed
+list types are in `list-type-map.json`.
+
+pip's ids in the baseline's page URLs (publications, users, and the records in
+`fixtures/records.json`) are swapped for the CaTH ids of the same fixtures. Both apps are seeded with
+the same records (`pip/records.ts`, `cath/records.ts`) and the baseline keeps pip's ids in
+`seed.json`. Where CaTH takes a value under another name or in the path, the route's `cathParams`
+in `route-map.json` says where it comes from: `{ "id": "applicantId" }` fills
+`/media-applications/[id]` from pip's `applicantId`, and `publication:<fixture>` names the list for
+a page CaTH offers for one list only. A page CaTH still does not serve as asked, an error or a
+redirect elsewhere, is reported as not compared rather than as a difference: for example
+`/location-metadata-manage`, which CaTH only reaches by submitting its search form.
 
 ## Not done yet
 
 Planned next, roughly in this order:
 
-- Pages behind CaTH sign-in, and classified lists, are skipped: local CaTH has no sign-in.
 - CaTH journeys are not compared yet; only single screens are.
 - Recording only the pages a ticket needs, rather than the whole of pip, so a first run is quicker.
 - Once CaTH moves past being a copy of pip, the baseline will be updated per feature with CaTH's

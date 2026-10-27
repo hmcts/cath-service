@@ -8,7 +8,7 @@
   },
   "cath": {
     "baseUrl": "http://localhost:8080",
-    "$signIn": "CaTH has no local sign-in; pages that need one are not captured for CaTH yet.",
+    "$signIn": "CaTH has no sign-in route for parity: cath/sign-in.ts writes each fixture user's session into local CaTH's Redis and the check sends its cookie.",
     "signIn": null,
     "cookies": [{ "name": "cookies_preferences_set", "value": "true" }, { "name": "cookie_policy", "value": "{\"analytics\":false,\"preferences\":false}" }]
   }

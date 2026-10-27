@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { type CompareSummary, captureBatch, compareRuns, type ReviewResult, reviewFindings } from "@hmcts/ui-baseline";
 import { chromium } from "playwright";
+import type { SignInResult } from "./cath/sign-in.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
 
@@ -76,17 +77,29 @@ if (!scope.publications.length && !scope.routes.length) {
 }
 
 // ---------- 2. Seed CaTH with the baseline's fixtures ----------
+// The ids pip gave its publications, records and users, which appear in the baseline's page URLs
+const pipSeed = existsSync(path.join(baseline, "seed.json")) ? (JSON.parse(await readFile(path.join(baseline, "seed.json"), "utf-8")) as SeedResult) : null;
+const pageUrls = new Map(
+  await Promise.all(
+    scope.routes.map(
+      async (route) =>
+        [route.id, new URL(JSON.parse(await readFile(path.join(baseline, "pages", route.id, "en/default/provenance.json"), "utf-8")).url)] as const
+    )
+  )
+);
+// Pages that show a publication need it seeded in CaTH too, even when the list itself is not in scope
+const pipArtefacts = new Map(Object.entries(pipSeed?.publications ?? {}).map(([id, p]) => [p.artefactId, id]));
+const pageFixtures = scope.routes.flatMap((route) => [
+  ...[...(pageUrls.get(route.id)?.searchParams.values() ?? [])].flatMap((value) => pipArtefacts.get(value) ?? []),
+  ...Object.values(route.cathParams ?? {}).flatMap((source) => (source.startsWith("publication:") ? [source.slice("publication:".length)] : []))
+]);
+const seedIds = [...new Set([...scope.publications.map((p) => p.id), ...pageFixtures])];
 const seedFile = path.join(PARITY_DIR, "output/seed/cath-check.json");
-if (scope.publications.length && !args["no-seed"]) {
+if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
   const seeding = spawnSync(
     "npx",
-    [
-      "tsx",
-      ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []),
-      "tools/ui-baseline/cath/seed.ts",
-      `--only=${scope.publications.map((p) => p.id).join(",")}`
-    ],
+    ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "tools/ui-baseline/cath/seed.ts", `--only=${seedIds.join(",")}`],
     {
       cwd: REPO_DIR,
       env: { ...process.env, PARITY_SEED_OUTPUT: seedFile },
@@ -98,33 +111,62 @@ if (scope.publications.length && !args["no-seed"]) {
 }
 const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
 
+// ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
+const signInFile = path.join(PARITY_DIR, "output/seed/cath-sign-in.json");
+const needsSignIn = scope.routes.some((r) => r.viewAs) || scope.publications.some((p) => p.viewAs);
+if (needsSignIn) {
+  step("Signing in to CaTH");
+  const signingIn = spawnSync("npx", ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "tools/ui-baseline/cath/sign-in.ts"], {
+    cwd: REPO_DIR,
+    env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
+    encoding: "utf-8"
+  });
+  for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|Error/.test(l))) console.log(`  ${line.trim()}`);
+  if (signingIn.status !== 0) throw new Error("signing in to CaTH failed");
+}
+const signedIn = needsSignIn ? (JSON.parse(await readFile(signInFile, "utf-8")) as SignInResult) : null;
+// Signed-in targets are split per language, each with that language's own session
+const signedInTargets = <T extends { locales: string[] }>(target: T, viewAs: string | null | undefined) =>
+  viewAs
+    ? target.locales.map((locale) => {
+        const { locales: _, ...rest } = target;
+        const cookie = required(signedIn?.users[viewAs]?.cookies[locale], `CaTH sign-in for ${viewAs} (${locale})`);
+        return { ...rest, locale, cookies: [...apps.cath.cookies, cookie] };
+      })
+    : [{ ...target, cookies: apps.cath.cookies }];
+
 // ---------- 3. Capture CaTH ----------
 step("Capturing CaTH");
 const listTargets = scope.publications.flatMap((publication) => {
   const seeded = seed?.publications[publication.id];
   if (!seeded || !publication.paths.cath) return [];
-  return [
+  return signedInTargets(
     {
       id: publication.id,
       url: `${targetBase}${publication.paths.cath}?artefactId=${seeded.artefactId}`,
       locales,
-      cookies: apps.cath.cookies,
-      source: { app: "cath", fixture: publication.id, ingestion: seed?.ingestion, ...seeded }
-    }
-  ];
+      source: { app: "cath", fixture: publication.id, ingestion: seed?.ingestion, viewAs: publication.viewAs ?? null, ...seeded }
+    },
+    publication.viewAs
+  );
 });
-const pageTargets = await Promise.all(
-  scope.routes.map(async (route) => {
-    const baselineUrl = new URL(JSON.parse(await readFile(path.join(baseline, "pages", route.id, "en/default/provenance.json"), "utf-8")).url);
-    return {
+const cathIds = cathIdsFor(pipSeed, seed, signedIn);
+const pageTargets = scope.routes.flatMap((route) => {
+  const cathUrl = cathUrlFor(route, required(pageUrls.get(route.id), route.id), cathIds);
+  if ("unmapped" in cathUrl) {
+    console.log(`    not compared: ${route.id}: ${cathUrl.unmapped}`);
+    return [];
+  }
+  return signedInTargets(
+    {
       id: route.id,
-      url: `${targetBase}${route.cath}${baselineUrl.search}`,
+      url: `${targetBase}${cathUrl.path}`,
       locales,
-      cookies: apps.cath.cookies,
-      source: { app: "cath", kind: "page", route: route.cath, pipRoute: route.pip }
-    };
-  })
-);
+      source: { app: "cath", kind: "page", route: route.cath, pipRoute: route.pip, viewAs: route.viewAs }
+    },
+    route.viewAs
+  );
+});
 const captured: Record<string, string> = {};
 for (const [area, targets] of [
   ["lists", listTargets],
@@ -136,6 +178,7 @@ for (const [area, targets] of [
   const results = await captureBatch(targetsFile, { outDir: path.join(out, "cath", area) }, 4);
   console.log(`  ${area}: ${results.filter((r) => r.ok).length} captured, ${results.filter((r) => !r.ok).length} failed`);
   captured[area] = path.join(out, "cath", area);
+  for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
 }
 
 // ---------- 4. Compare with the baseline ----------
@@ -271,6 +314,82 @@ console.log(
 await finish();
 
 // ---------- helpers ----------
+// pip id -> CaTH id for everything both apps were seeded with: publications, account records and
+// users, each paired through the fixture it came from. List type names map to CaTH's numeric ids,
+// which only CaTH routes that take one in the path use.
+function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: SignInResult | null): CathIds {
+  const ids = new Map<string, string>();
+  for (const [fixture, publication] of Object.entries(pip?.publications ?? {})) {
+    const cathArtefact = cath?.publications[fixture]?.artefactId;
+    if (cathArtefact) ids.set(publication.artefactId, cathArtefact);
+  }
+  for (const [record, fields] of Object.entries(pip?.records ?? {})) {
+    for (const [field, value] of Object.entries(fields)) {
+      const cathValue = signedIn?.records[record]?.[field];
+      if (cathValue) ids.set(value, cathValue);
+    }
+  }
+  for (const [user, value] of Object.entries(pip?.users ?? {})) {
+    const cathUser = signedIn?.users[user]?.userId;
+    if (cathUser) ids.set(value, cathUser);
+  }
+  const publications = new Map(Object.entries(cath?.publications ?? {}).map(([fixture, p]) => [fixture, p.artefactId]));
+  return { ids, publications, listTypes: new Map(Object.entries(signedIn?.listTypes ?? {})) };
+}
+
+// The CaTH URL for a pip page: pip's query with each id swapped for CaTH's, and the route's
+// cathParams (CaTH name -> pip query parameter, or publication:<fixture>) filling path segments
+// and renamed parameters
+function cathUrlFor(route: Scope["routes"][number], pipUrl: URL, cathIds: CathIds): { path: string } | { unmapped: string } {
+  const query = new URLSearchParams();
+  const consumed = new Set(Object.values(route.cathParams ?? {}));
+  for (const [name, value] of pipUrl.searchParams) if (!consumed.has(name)) query.set(name, cathIds.ids.get(value) ?? value);
+  let cathPath = route.cath;
+  for (const [name, source] of Object.entries(route.cathParams ?? {})) {
+    const pipValue = source.startsWith("publication:") ? null : pipUrl.searchParams.get(source);
+    const value = source.startsWith("publication:")
+      ? cathIds.publications.get(source.slice("publication:".length))
+      : pipValue === null
+        ? undefined
+        : (cathIds.ids.get(pipValue) ?? cathIds.listTypes.get(pipValue));
+    if (value === undefined) return { unmapped: `no CaTH value for ${name} (from ${source}${pipValue ? ` = ${pipValue}` : ""})` };
+    if (cathPath.includes(`[${name}]`)) cathPath = cathPath.replace(`[${name}]`, encodeURIComponent(value));
+    else query.set(name, value);
+  }
+  const unfilled = cathPath.match(/\[[^\]]+\]/);
+  if (unfilled) return { unmapped: `CaTH route ${route.cath} needs ${unfilled[0]}: add it to the route's cathParams in routes/route-map.json` };
+  return { path: `${cathPath}${query.size ? `?${query}` : ""}` };
+}
+
+// A capture of an error page, or of the page CaTH redirected to (e.g. sign-in, because a pip id in
+// the URL means nothing to CaTH), is not the page that was asked for. Leaving it out of the index
+// makes the comparison report it as not captured, rather than as a difference from pip.
+async function dropUnservedCaptures(dir: string, targets: { id: string; url: string; locale?: string; locales?: string[] }[]): Promise<string[]> {
+  const indexFile = path.join(dir, "index.jsonl");
+  if (!existsSync(indexFile)) return [];
+  const requested = new Map(targets.flatMap((t) => (t.locales ?? [t.locale ?? "en"]).map((locale) => [`${t.id} ${locale}`, new URL(t.url).pathname])));
+  const unserved = new Map<string, string>();
+  const entries = (await readFile(indexFile, "utf-8"))
+    .trim()
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as CaptureEntry);
+  for (const entry of entries) {
+    const key = `${entry.id} ${entry.locale}`;
+    const servedPath = new URL(entry.url).pathname;
+    if (entry.status !== null && entry.status >= 400) unserved.set(key, `${key}: CaTH answered ${entry.status}`);
+    else if (requested.has(key) && servedPath !== requested.get(key)) unserved.set(key, `${key}: CaTH redirected to ${servedPath}`);
+  }
+  if (!unserved.size) return [];
+  const kept = entries.filter((entry) => !unserved.has(`${entry.id} ${entry.locale}`));
+  await writeFile(indexFile, kept.map((entry) => `${JSON.stringify(entry)}\n`).join(""));
+  for (const key of unserved.keys()) {
+    const [id, locale] = key.split(" ");
+    await rm(path.join(dir, id, locale), { recursive: true, force: true });
+  }
+  return [...unserved.values()];
+}
+
 async function finish(): Promise<void> {
   console.log(`  report: ${path.join(out, "report/index.html")}`);
   if (!args.serve) process.exit(defects > 0 ? 1 : 0);
@@ -365,18 +484,31 @@ function selectScope(text: string | null, listTypes: string[], routes: string[],
     const confident = entry.reviewed || entry.match === "same-path" || entry.confidence === "high";
     if (!entry.cath) skipped.push(`${entry.pip}: no CaTH page mapped`);
     else if (!confident) skipped.push(`${entry.pip}: route-map suggestion (${entry.cath}) not reviewed yet`);
-    else if (entry.pipRole) skipped.push(`${entry.pip}: needs CaTH sign-in, which is not available yet`);
     else if (!existsSync(path.join(baseline, "pages", id, "en/default/provenance.json"))) skipped.push(`${entry.pip}: not in the pip baseline`);
-    else selected.push({ id, pip: entry.pip, cath: entry.cath });
+    else selected.push({ id, pip: entry.pip, cath: entry.cath, viewAs: entry.pipRole, cathParams: entry.cathParams });
   }
   return { publications: publications.filter((p) => p.paths.cath), routes: selected, skipped };
+}
+
+function required<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`missing ${what}`);
+  return value;
 }
 
 function step(message: string): void {
   console.log(`\n== ${message}`);
 }
 
+interface CathIds {
+  ids: Map<string, string>;
+  publications: Map<string, string>;
+  listTypes: Map<string, string>;
+}
+
 interface RouteEntry {
+  // CaTH parameter (path segment or query) -> the pip query parameter it takes its value from, or
+  // publication:<fixture> for a page CaTH only offers for one list
+  cathParams?: Record<string, string>;
   pip: string;
   cath: string | null;
   match: string;
@@ -385,8 +517,17 @@ interface RouteEntry {
   pipRole: string | null;
 }
 
+interface CaptureEntry {
+  id: string;
+  locale: string;
+  state: string;
+  status: number | null;
+  url: string;
+}
+
 interface Scope {
   publications: PublicationFixture[];
-  routes: { id: string; pip: string; cath: string }[];
+  // The fixture user the page is captured as, the same one pip's baseline used
+  routes: { id: string; pip: string; cath: string; viewAs: string | null; cathParams?: Record<string, string> }[];
   skipped: string[];
 }
