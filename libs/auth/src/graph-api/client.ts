@@ -1,10 +1,8 @@
 import crypto from "node:crypto";
 import { Client } from "@microsoft/microsoft-graph-client";
-import { getCachedAccessToken, type OAuthToken } from "../oauth-token-cache/token-cache.js";
 import type { UserProfile } from "../user-profile.js";
 
 const GRAPH_API_SCOPE = "https://graph.microsoft.com/.default";
-const GRAPH_API_TOKEN_CACHE_NAME = "graph-api";
 
 function isB2CMocked(): boolean {
   return process.env.MOCK_AZURE_B2C === "true";
@@ -71,9 +69,9 @@ export async function fetchUserProfile(accessToken: string): Promise<UserProfile
 }
 
 /**
- * Obtains an access token using OAuth2 client credentials flow, reusing a Redis-cached token while it is valid.
+ * Obtains an access token using OAuth2 client credentials flow.
  * Requires AZURE_B2C_TENANT_ID, B2C_GRAPH_CLIENT_ID, B2C_GRAPH_CLIENT_SECRET env vars.
- * When MOCK_AZURE_B2C=true, returns a mock token without calling Azure or Redis.
+ * When MOCK_AZURE_B2C=true, returns a mock token without calling Azure.
  */
 export async function getGraphApiAccessToken(): Promise<string> {
   if (isB2CMocked()) {
@@ -81,7 +79,36 @@ export async function getGraphApiAccessToken(): Promise<string> {
     return "mock-access-token";
   }
 
-  return getCachedAccessToken(GRAPH_API_TOKEN_CACHE_NAME, fetchGraphApiToken);
+  const tenantId = process.env.AZURE_B2C_TENANT_ID;
+  const clientId = process.env.B2C_GRAPH_CLIENT_ID;
+  const clientSecret = process.env.B2C_GRAPH_CLIENT_SECRET;
+
+  if (!tenantId || !clientId || !clientSecret) {
+    throw new Error("Azure B2C credentials not configured: AZURE_B2C_TENANT_ID, B2C_GRAPH_CLIENT_ID, B2C_GRAPH_CLIENT_SECRET are required");
+  }
+
+  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: clientId,
+    client_secret: clientSecret,
+    scope: GRAPH_API_SCOPE
+  });
+
+  const response = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString()
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Failed to obtain Graph API access token: ${response.status} ${errorBody}`);
+  }
+
+  const data = (await response.json()) as { access_token: string };
+  return data.access_token;
 }
 
 /**
@@ -223,41 +250,4 @@ export async function createMediaUser(
     console.error("Graph API createMediaUser error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
     throw new Error(`Failed to create media user in Azure AD: ${graphError.message || "Unknown error"}`);
   }
-}
-
-async function fetchGraphApiToken(): Promise<OAuthToken> {
-  const tenantId = process.env.AZURE_B2C_TENANT_ID;
-  const clientId = process.env.B2C_GRAPH_CLIENT_ID;
-  const clientSecret = process.env.B2C_GRAPH_CLIENT_SECRET;
-
-  if (!tenantId || !clientId || !clientSecret) {
-    throw new Error("Azure B2C credentials not configured: AZURE_B2C_TENANT_ID, B2C_GRAPH_CLIENT_ID, B2C_GRAPH_CLIENT_SECRET are required");
-  }
-
-  const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-
-  const body = new URLSearchParams({
-    grant_type: "client_credentials",
-    client_id: clientId,
-    client_secret: clientSecret,
-    scope: GRAPH_API_SCOPE
-  });
-
-  const response = await fetch(tokenUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString()
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Failed to obtain Graph API access token: ${response.status} ${errorBody}`);
-  }
-
-  const data = (await response.json()) as { access_token?: string; expires_in?: number };
-  if (!data.access_token) {
-    throw new Error("Failed to obtain Graph API access token: response did not include an access_token");
-  }
-
-  return { accessToken: data.access_token, expiresIn: data.expires_in ?? 0 };
 }

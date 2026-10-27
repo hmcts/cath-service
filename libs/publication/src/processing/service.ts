@@ -64,6 +64,7 @@ import {
   reformatSscsDailyHearingListExcel,
   type SscsDailyHearingList
 } from "@hmcts/sscs-daily-hearing-list";
+import { sendPublicationToThirdParties } from "@hmcts/third-party-subscription-fulfilment";
 import {
   generateUtaacDailyHearingListExcel,
   generateUtaacDailyHearingListPdf,
@@ -881,6 +882,10 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       logPrefix
     }).catch((error) => {
       console.error(`${logPrefix} Third-party push failed:`, error);
+    });
+
+    sendPublicationToThirdParties({ artefactId, isUpdate, jsonData, logPrefix }).catch((error) => {
+      console.error(`${logPrefix} Third-party OAuth fulfilment failed:`, { artefactId, error: error instanceof Error ? error.message : String(error) });
     });
   }
 

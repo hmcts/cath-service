@@ -10,15 +10,6 @@ vi.mock("@microsoft/microsoft-graph-client", () => ({
   }
 }));
 
-const mockRedisClient = vi.hoisted(() => ({
-  get: vi.fn(),
-  setEx: vi.fn()
-}));
-
-vi.mock("@hmcts/redis", () => ({
-  getRedisClient: vi.fn().mockResolvedValue(mockRedisClient)
-}));
-
 // Mock global fetch for client credentials tests
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
@@ -252,8 +243,6 @@ describe("MOCK_AZURE_B2C", () => {
 
     expect(token).toBe("mock-access-token");
     expect(mockFetch).not.toHaveBeenCalled();
-    expect(mockRedisClient.get).not.toHaveBeenCalled();
-    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
   });
 
   it("should return null for findUserByEmail when MOCK_AZURE_B2C is true", async () => {
@@ -290,8 +279,6 @@ describe("getGraphApiAccessToken", () => {
     process.env.AZURE_B2C_TENANT_ID = "test-tenant-id";
     process.env.B2C_GRAPH_CLIENT_ID = "test-client-id";
     process.env.B2C_GRAPH_CLIENT_SECRET = "test-client-secret";
-    mockRedisClient.get.mockResolvedValue(null);
-    mockRedisClient.setEx.mockResolvedValue("OK");
   });
 
   it("should obtain token via client credentials flow", async () => {
@@ -299,7 +286,7 @@ describe("getGraphApiAccessToken", () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ access_token: "test-access-token-123", expires_in: 3599 })
+      json: async () => ({ access_token: "test-access-token-123" })
     });
 
     const token = await getGraphApiAccessToken();
@@ -332,67 +319,6 @@ describe("getGraphApiAccessToken", () => {
     });
 
     await expect(getGraphApiAccessToken()).rejects.toThrow("Failed to obtain Graph API access token: 401 Unauthorized");
-    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
-  });
-
-  it("should throw and not cache when the token response has no access_token", async () => {
-    // Arrange
-    const { getGraphApiAccessToken } = await import("./client.js");
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ expires_in: 3599 })
-    });
-
-    // Act & Assert
-    await expect(getGraphApiAccessToken()).rejects.toThrow("response did not include an access_token");
-    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
-  });
-
-  it("should cache the fetched token under the graph-api key with a TTL of expires_in minus 60 seconds", async () => {
-    // Arrange
-    const { getGraphApiAccessToken } = await import("./client.js");
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ access_token: "test-access-token-123", expires_in: 3599 })
-    });
-
-    // Act
-    const token = await getGraphApiAccessToken();
-
-    // Assert
-    expect(token).toBe("test-access-token-123");
-    expect(mockRedisClient.get).toHaveBeenCalledWith("oauth:token:graph-api");
-    expect(mockRedisClient.setEx).toHaveBeenCalledWith("oauth:token:graph-api", 3539, expect.any(String));
-  });
-
-  it("should not cache the token when expires_in is missing", async () => {
-    // Arrange
-    const { getGraphApiAccessToken } = await import("./client.js");
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ access_token: "test-access-token-123" })
-    });
-
-    // Act
-    const token = await getGraphApiAccessToken();
-
-    // Assert
-    expect(token).toBe("test-access-token-123");
-    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
-  });
-
-  it("should return the cached token without calling the identity provider on a cache hit", async () => {
-    // Arrange
-    const { getGraphApiAccessToken } = await import("./client.js");
-    mockRedisClient.get.mockResolvedValue(JSON.stringify({ accessToken: "cached-access-token", expiry: Date.now() + 60_000 }));
-
-    // Act
-    const token = await getGraphApiAccessToken();
-
-    // Assert
-    expect(token).toBe("cached-access-token");
-    expect(mockFetch).not.toHaveBeenCalled();
-    expect(mockRedisClient.setEx).not.toHaveBeenCalled();
   });
 });
 

@@ -26,7 +26,12 @@ vi.mock("@hmcts/notifications", () => ({
 }));
 
 vi.mock("@hmcts/publication", () => ({
-  deleteArtefactsByLocationId: vi.fn()
+  deleteArtefactsByLocationId: vi.fn(),
+  getArtefactsByLocation: vi.fn()
+}));
+
+vi.mock("@hmcts/third-party-subscription-fulfilment", () => ({
+  sendPublicationDeletionToThirdParties: vi.fn()
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
@@ -38,7 +43,8 @@ const { getLocationWithDetails, hasActiveSubscriptions, hasActiveArtefacts, dele
   await import("@hmcts/location");
 const { findSystemAdminEmails } = await import("@hmcts/account/repository/query");
 const { sendSystemAdminNotification, sendSubscriptionDeletedNotification } = await import("@hmcts/notifications");
-const { deleteArtefactsByLocationId } = await import("@hmcts/publication");
+const { deleteArtefactsByLocationId, getArtefactsByLocation } = await import("@hmcts/publication");
+const { sendPublicationDeletionToThirdParties } = await import("@hmcts/third-party-subscription-fulfilment");
 const { deleteSubscriptionsByLocationId, findSubscribersByLocationId } = await import("@hmcts/subscriptions");
 
 const mockLocation = {
@@ -152,6 +158,11 @@ describe("performLocationDeletion", () => {
 });
 
 describe("performLocationPublicationsDeletion", () => {
+  beforeEach(() => {
+    vi.mocked(getArtefactsByLocation).mockResolvedValue([]);
+    vi.mocked(sendPublicationDeletionToThirdParties).mockResolvedValue(undefined);
+  });
+
   it("should delete artefacts for the location and notify admins", async () => {
     vi.mocked(findSystemAdminEmails).mockResolvedValue(["admin@example.com"]);
 
@@ -163,6 +174,73 @@ describe("performLocationPublicationsDeletion", () => {
       changeType: "Delete Location Artefact(s)",
       additionalChangeDetail: "Publications for location Test Court with Id 5 have been deleted."
     });
+  });
+
+  it("should send a third-party OAuth deletion for each artefact of the location after deleting them", async () => {
+    // Arrange
+    vi.mocked(findSystemAdminEmails).mockResolvedValue([]);
+    vi.mocked(getArtefactsByLocation).mockResolvedValue([
+      { artefactId: "art-1", listTypeId: 999, sensitivity: "PUBLIC", displayTo: null },
+      { artefactId: "art-2", listTypeId: 999, sensitivity: "PRIVATE", displayTo: new Date(Date.now() + 86_400_000) }
+    ] as never);
+
+    // Act
+    await performLocationPublicationsDeletion(5, "Test Court", "requester@example.com");
+
+    // Assert
+    expect(getArtefactsByLocation).toHaveBeenCalledWith("5");
+    expect(vi.mocked(getArtefactsByLocation).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(deleteArtefactsByLocationId).mock.invocationCallOrder[0]);
+    expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledTimes(2);
+    expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledWith({ artefactId: "art-1", listTypeId: 999, sensitivity: "PUBLIC" });
+    expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledWith({ artefactId: "art-2", listTypeId: 999, sensitivity: "PRIVATE" });
+    expect(vi.mocked(deleteArtefactsByLocationId).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(sendPublicationDeletionToThirdParties).mock.invocationCallOrder[0]
+    );
+  });
+
+  it("should delete an expired artefact without sending it a third-party deletion", async () => {
+    // Arrange
+    vi.mocked(findSystemAdminEmails).mockResolvedValue([]);
+    vi.mocked(getArtefactsByLocation).mockResolvedValue([
+      { artefactId: "art-live", listTypeId: 999, sensitivity: "PUBLIC", displayTo: new Date(Date.now() + 86_400_000) },
+      { artefactId: "art-expired", listTypeId: 999, sensitivity: "PUBLIC", displayTo: new Date(Date.now() - 86_400_000) }
+    ] as never);
+
+    // Act
+    await performLocationPublicationsDeletion(5, "Test Court", "requester@example.com");
+
+    // Assert
+    expect(deleteArtefactsByLocationId).toHaveBeenCalledWith("5");
+    expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledTimes(1);
+    expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledWith({ artefactId: "art-live", listTypeId: 999, sensitivity: "PUBLIC" });
+  });
+
+  it("should send no third-party deletions when the location has no artefacts", async () => {
+    // Arrange
+    vi.mocked(findSystemAdminEmails).mockResolvedValue([]);
+
+    // Act
+    await performLocationPublicationsDeletion(5, "Test Court", "requester@example.com");
+
+    // Assert
+    expect(sendPublicationDeletionToThirdParties).not.toHaveBeenCalled();
+  });
+
+  it("should still notify admins when a third-party OAuth deletion rejects", async () => {
+    // Arrange
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(findSystemAdminEmails).mockResolvedValue(["admin@example.com"]);
+    vi.mocked(getArtefactsByLocation).mockResolvedValue([{ artefactId: "art-1", listTypeId: 999, sensitivity: "PUBLIC" }] as never);
+    vi.mocked(sendPublicationDeletionToThirdParties).mockRejectedValue(new Error("OAuth down"));
+
+    // Act
+    await performLocationPublicationsDeletion(5, "Test Court", "requester@example.com");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Assert
+    expect(sendSystemAdminNotification).toHaveBeenCalledWith(["admin@example.com"], expect.objectContaining({ changeType: "Delete Location Artefact(s)" }));
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Third-party OAuth deletion failed:", { artefactId: "art-1", error: "OAuth down" });
+    consoleErrorSpy.mockRestore();
   });
 });
 
