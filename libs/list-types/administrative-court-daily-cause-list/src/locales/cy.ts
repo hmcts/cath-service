@@ -12,7 +12,7 @@ export const cy = {
   LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol Llys Gweinyddol Leeds",
     importantInfoText:
-      "Mae gwrandawiad gerbron y Llys Gweinyddol yn Leeds yn wrandawiad cyhoeddus oni nodir fel arall. Os yw unrhyw unigolyn neu gynrychiolydd o'r cyfryngau yn dymuno mynychu gwrandawiad o bell, dylent gysylltu â'r swyddfa restru mewn da bryd cyn y gwrandawiad yn leeds@administrativecourtoffice.justice.gov.uk.\n\nOs oes gennych unrhyw ymholiadau rhestr eraill cysylltwch â'r Llys Gweinyddol yn Leeds dros y ffôn ar 0113 306 2578 neu fel arall ar y cyfeiriad e-bost uchod.",
+      "Mae gwrandawiad gerbron y Llys Gweinyddol yn Leeds yn wrandawiad cyhoeddus oni nodir fel arall. Os yw unrhyw unigolyn neu gynrychiolydd o'r cyfryngau yn dymuno mynychu gwrandawiad o bell, dylent gysylltu â'r swyddfa restru mewn da bryd cyn y gwrandawiad yn leeds@administrativecourtoffice.justice.gov.uk.\n\nOs oes gennych unrhyw ymholiadau rhestru eraill, cysylltwch â'r Llys Gweinyddol yn Leeds dros y ffôn ar 0113 306 2578 neu fel arall yn y cyfeiriad e-bost uchod.",
     judgmentsTitle: "Dyfarniadau",
     judgmentsText:
       "Bydd dyfarniadau a draddodir gan y barnwr o bell yn cael eu rhyddhau trwy gylchrediad i gynrychiolwyr y partïon trwy e-bost a'u rhyddhau i'r Archifau Cenedlaethol. Ystyrir na fydd y dyddiad a'r amser ar gyfer traddodi yn digwydd cyn yr amser a restrwyd. Gellir darparu copi o'r dyfarniad ar ffurf derfynol fel y'i traddodwyd ar ôl yr amser hwnnw, ar gais drwy e-bost."
@@ -49,15 +49,15 @@ export const cy = {
       hearingType: "Math o wrandawiad",
       additionalInformation: "Gwybodaeth ychwanegol"
     },
-    dataSource: "Ffynhonnell data",
+    dataSource: "Ffynhonnell y Data",
     backToTop: "Yn ôl i frig y dudalen",
     listFor: "Rhestr ar gyfer",
     lastUpdated: "Diweddarwyd ddiwethaf",
     at: "am",
     cautionNote:
-      "Sylwer bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwir yn ffurfiol yn Ddata Personol Sensitif, a dylid ei thrin yn briodol.",
+      "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
     cautionReporting:
-      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd â'r bwriad o gynorthwyo â chywirdeb adroddiadau ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig a gynhwysir ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y caiff ei ddefnyddio.",
+      "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
     provenanceLabels
   }
 };

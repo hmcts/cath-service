@@ -18,7 +18,7 @@ vi.mock("@hmcts/list-types-common", () => ({
     SNL: "SNL"
   },
   provenanceLabelsCy: {
-    MANUAL_UPLOAD: "Lanlwytho â llaw",
+    MANUAL_UPLOAD: "Lanlwytho â Llaw",
     SNL: "SNL"
   }
 }));
@@ -32,6 +32,8 @@ vi.mock("../rendering/renderer.js", () => ({
 }));
 
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import { renderGrcWeeklyHearingListData } from "../rendering/renderer.js";
 import { generateGrcWeeklyHearingListPdf } from "./pdf-generator.js";
 
@@ -156,7 +158,7 @@ describe("generateGrcWeeklyHearingListPdf", () => {
       courtName: "General Regulatory Chamber",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "General Regulatory Chamber Weekly Hearing List"
+      listTitle: cy.pageTitle
     });
   });
 
@@ -247,5 +249,41 @@ describe("generateGrcWeeklyHearingListPdf", () => {
     expect(locale).toBe("cy");
     await expect(importEn()).resolves.toEqual(expect.objectContaining({ en }));
     await expect(importCy()).resolves.toEqual(expect.objectContaining({ cy }));
+  });
+
+  it("should pass the en locale list title to the renderer", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    // Act
+    await generateGrcWeeklyHearingListPdf({
+      artefactId: "en-title",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "999",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(renderGrcWeeklyHearingListData).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: en.pageTitle }));
+  });
+
+  it("should use the Welsh data source label for a Welsh PDF, as legacy does", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "welsh-provenance.pdf", sizeBytes: 100 });
+
+    // Act
+    await generateGrcWeeklyHearingListPdf({
+      artefactId: "welsh-provenance",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy",
+      locationId: "999",
+      jsonData: mockHearingList,
+      provenance: "MANUAL_UPLOAD"
+    });
+
+    // Assert
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith("pdf-template.njk", expect.objectContaining({ dataSource: "Lanlwytho â Llaw" }));
   });
 });
