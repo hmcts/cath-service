@@ -72,6 +72,8 @@ for (const publication of manifest.publications) {
 
 // Records reference seeded publications (e.g. a subscription to a list's location), so they come last
 result.records = await seedRecords(users, result.publications);
+// pip's own user ids appear in page URLs (e.g. /manage-user?id=), so a check can map them to CaTH's
+result.users = await pipUserIds(users);
 console.log(`ensured ${Object.keys(result.records).length} account records`);
 
 await mkdir(path.dirname(OUTPUT), { recursive: true });
@@ -124,6 +126,18 @@ async function createUsers(users: ParityUser[]): Promise<void> {
     if (!response.ok || body.includes('"ERRORED_ACCOUNTS":[{')) throw new Error(`pip refused user ${user.id}: ${response.status} ${body.slice(0, 300)}`);
   }
   console.log(`ensured ${users.length} users`);
+}
+
+async function pipUserIds(users: ParityUser[]): Promise<Record<string, string>> {
+  const ids: Record<string, string> = {};
+  for (const user of users) {
+    const response = await fetch(`${ACCOUNT_MANAGEMENT_URL}/account/provenance/${user.provenance}/${user.provenanceUserId}`, {
+      headers: { "x-requester-id": REQUESTER_ID }
+    });
+    if (!response.ok) throw new Error(`pip has no user ${user.id} after creating it: ${response.status}`);
+    ids[user.id] = ((await response.json()) as { userId: string }).userId;
+  }
+  return ids;
 }
 
 // Search config has to exist before publications are uploaded: pip indexes cases at upload time
