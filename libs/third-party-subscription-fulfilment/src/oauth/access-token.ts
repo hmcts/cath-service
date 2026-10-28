@@ -6,13 +6,13 @@ const CACHE_KEY_PREFIX = "third-party_token-cache:";
 const CACHE_EXPIRY_SECONDS = 86_400;
 const TOKEN_EXPIRY_BUFFER_SECONDS = 60;
 
-export async function getAccessToken(userId: string, isHealthCheck = false): Promise<string | null> {
+export async function getAccessToken(name: string, userId: string, isHealthCheck = false): Promise<string | null> {
   const cachedToken = await getCachedToken(userId);
   if (cachedToken) {
     return cachedToken;
   }
 
-  return requestAccessToken(userId, isHealthCheck);
+  return requestAccessToken(name, userId, isHealthCheck);
 }
 
 async function getCachedToken(userId: string): Promise<string | null> {
@@ -36,10 +36,10 @@ function parseCachedToken(value: string | null): CachedToken | null {
   }
 }
 
-async function requestAccessToken(userId: string, isHealthCheck: boolean): Promise<string | null> {
+async function requestAccessToken(name: string, userId: string, isHealthCheck: boolean): Promise<string | null> {
   let token: { accessToken: string; expiresIn: number };
   try {
-    const credentials = await getTokenCredentials(userId);
+    const credentials = await getTokenCredentials(name, userId);
     if (!credentials) {
       throw new Error("Incomplete OAuth token configuration");
     }

@@ -3,19 +3,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getDestinationUrl, getTokenCredentials } from "./oauth-config.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
-  createKeyVaultSecretName: (userId: string, type: string) => `third-party-${userId}-${type}`,
+  createKeyVaultSecretName: (name: string, userId: string, type: string) => `${name}-${userId}-${type}`,
   getSecret: vi.fn()
 }));
 
+const SUBSCRIBER_NAME = "courtel";
 const USER_ID = "user-1";
+const SECRET_PREFIX = `${SUBSCRIBER_NAME}-${USER_ID}-`;
 const CREDENTIAL_TYPES = ["token-url", "scope", "client-id", "client-secret"];
 
 const SECRETS: Record<string, string> = {
-  [`third-party-${USER_ID}-destination-url`]: "https://subscriber.example/publication",
-  [`third-party-${USER_ID}-token-url`]: "https://idp.example/token",
-  [`third-party-${USER_ID}-scope`]: "api://subscriber/.default",
-  [`third-party-${USER_ID}-client-id`]: "client-id",
-  [`third-party-${USER_ID}-client-secret`]: "client-secret"
+  [`${SECRET_PREFIX}destination-url`]: "https://subscriber.example/publication",
+  [`${SECRET_PREFIX}token-url`]: "https://idp.example/token",
+  [`${SECRET_PREFIX}scope`]: "api://subscriber/.default",
+  [`${SECRET_PREFIX}client-id`]: "client-id",
+  [`${SECRET_PREFIX}client-secret`]: "client-secret"
 };
 
 function mockSecrets(overrides: Record<string, string | undefined> = {}) {
@@ -33,12 +35,12 @@ describe("getDestinationUrl", () => {
     mockSecrets();
 
     // Act
-    const result = await getDestinationUrl(USER_ID);
+    const result = await getDestinationUrl(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("https://subscriber.example/publication");
     expect(getSecret).toHaveBeenCalledTimes(1);
-    expect(getSecret).toHaveBeenCalledWith(`third-party-${USER_ID}-destination-url`);
+    expect(getSecret).toHaveBeenCalledWith(`${SECRET_PREFIX}destination-url`);
   });
 
   it.each([
@@ -46,10 +48,10 @@ describe("getDestinationUrl", () => {
     ["empty", ""]
   ])("should return null when the destination URL is %s", async (_label, value) => {
     // Arrange
-    mockSecrets({ [`third-party-${USER_ID}-destination-url`]: value });
+    mockSecrets({ [`${SECRET_PREFIX}destination-url`]: value });
 
     // Act
-    const result = await getDestinationUrl(USER_ID);
+    const result = await getDestinationUrl(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -60,7 +62,7 @@ describe("getDestinationUrl", () => {
     vi.mocked(getSecret).mockRejectedValue(new Error("Key Vault unavailable"));
 
     // Act
-    const result = await getDestinationUrl(USER_ID);
+    const result = await getDestinationUrl(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -77,7 +79,7 @@ describe("getTokenCredentials", () => {
     mockSecrets();
 
     // Act
-    const result = await getTokenCredentials(USER_ID);
+    const result = await getTokenCredentials(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toEqual({
@@ -87,15 +89,15 @@ describe("getTokenCredentials", () => {
       clientSecret: "client-secret"
     });
     expect(getSecret).toHaveBeenCalledTimes(4);
-    expect(getSecret).not.toHaveBeenCalledWith(`third-party-${USER_ID}-destination-url`);
+    expect(getSecret).not.toHaveBeenCalledWith(`${SECRET_PREFIX}destination-url`);
   });
 
   it.each(CREDENTIAL_TYPES)("should return null when %s is missing", async (type) => {
     // Arrange
-    mockSecrets({ [`third-party-${USER_ID}-${type}`]: undefined });
+    mockSecrets({ [`${SECRET_PREFIX}${type}`]: undefined });
 
     // Act
-    const result = await getTokenCredentials(USER_ID);
+    const result = await getTokenCredentials(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -103,10 +105,10 @@ describe("getTokenCredentials", () => {
 
   it.each(CREDENTIAL_TYPES)("should return null when %s is empty", async (type) => {
     // Arrange
-    mockSecrets({ [`third-party-${USER_ID}-${type}`]: "" });
+    mockSecrets({ [`${SECRET_PREFIX}${type}`]: "" });
 
     // Act
-    const result = await getTokenCredentials(USER_ID);
+    const result = await getTokenCredentials(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -117,7 +119,7 @@ describe("getTokenCredentials", () => {
     vi.mocked(getSecret).mockRejectedValue(new Error("Key Vault unavailable"));
 
     // Act
-    const result = await getTokenCredentials(USER_ID);
+    const result = await getTokenCredentials(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();

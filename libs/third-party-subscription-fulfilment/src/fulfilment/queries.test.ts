@@ -16,20 +16,26 @@ describe("third-party fulfilment queries", () => {
   });
 
   describe("findMatchingSubscriptions", () => {
-    it("should query subscriptions by list type name and sensitivities", async () => {
+    it("should return the id and name of each subscriber matching the list type name and sensitivities", async () => {
       // Arrange
       vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 999 } as never);
-      vi.mocked(prisma.thirdPartySubscription.findMany).mockResolvedValue([{ thirdPartyUserId: "user-1" }, { thirdPartyUserId: "user-2" }] as never);
+      vi.mocked(prisma.thirdPartySubscription.findMany).mockResolvedValue([
+        { thirdPartyUser: { id: "user-1", name: "Courtel" } },
+        { thirdPartyUser: { id: "user-2", name: "Snl" } }
+      ] as never);
 
       // Act
       const result = await findMatchingSubscriptions("CIVIL_DAILY_CAUSE_LIST", ["PRIVATE", "CLASSIFIED"]);
 
       // Assert
-      expect(result).toEqual(["user-1", "user-2"]);
+      expect(result).toEqual([
+        { id: "user-1", name: "Courtel" },
+        { id: "user-2", name: "Snl" }
+      ]);
       expect(prisma.listType.findUnique).toHaveBeenCalledWith({ where: { name: "CIVIL_DAILY_CAUSE_LIST" }, select: { id: true } });
       expect(prisma.thirdPartySubscription.findMany).toHaveBeenCalledWith({
         where: { listTypeId: 999, sensitivity: { in: ["PRIVATE", "CLASSIFIED"] } },
-        select: { thirdPartyUserId: true }
+        select: { thirdPartyUser: { select: { id: true, name: true } } }
       });
     });
 

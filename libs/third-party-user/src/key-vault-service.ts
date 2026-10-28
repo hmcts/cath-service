@@ -9,8 +9,14 @@ function createSecretClient(): SecretClient | undefined {
   return new SecretClient(`https://${vaultName}.vault.azure.net`, credential);
 }
 
-export function createKeyVaultSecretName(userId: string, type: "scope" | "client-id" | "client-secret" | "destination-url" | "token-url"): string {
-  return `third-party-${userId}-${type}`;
+// Legacy ThirdPartyHelper.createSecretKeyPrefix: Key Vault secret names only allow alphanumerics and hyphens
+export function createKeyVaultSecretName(name: string, userId: string, type: SecretType): string {
+  const prefix = `${name}-${userId}-`
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+/, "");
+  return `${prefix}${type}`;
 }
 
 export async function getSecret(secretName: string): Promise<string | undefined> {
@@ -27,24 +33,18 @@ export async function getSecret(secretName: string): Promise<string | undefined>
   }
 }
 
-export async function deleteSecrets(userId: string): Promise<void> {
-  const secretTypes: Array<"scope" | "client-id" | "client-secret" | "destination-url" | "token-url"> = [
-    "destination-url",
-    "token-url",
-    "scope",
-    "client-id",
-    "client-secret"
-  ];
+export async function deleteSecrets(name: string, userId: string): Promise<void> {
+  const secretTypes: SecretType[] = ["destination-url", "token-url", "scope", "client-id", "client-secret"];
   const client = createSecretClient();
   await Promise.all(
     secretTypes.map(async (type) => {
-      const name = createKeyVaultSecretName(userId, type);
+      const secretName = createKeyVaultSecretName(name, userId, type);
       if (!client) {
-        await prisma.thirdPartySecret.deleteMany({ where: { name } });
+        await prisma.thirdPartySecret.deleteMany({ where: { name: secretName } });
         return;
       }
       try {
-        await client.beginDeleteSecret(name);
+        await client.beginDeleteSecret(secretName);
       } catch {
         // secret may not exist — ignore
       }
@@ -64,3 +64,5 @@ export async function setSecret(secretName: string, value: string): Promise<void
   }
   await client.setSecret(secretName, value);
 }
+
+type SecretType = "scope" | "client-id" | "client-secret" | "destination-url" | "token-url";

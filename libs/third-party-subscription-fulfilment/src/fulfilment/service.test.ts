@@ -48,6 +48,9 @@ function buildArtefact(overrides: Partial<FulfilmentArtefact> = {}): FulfilmentA
   };
 }
 
+const SUBSCRIBER_1 = { id: "user-1", name: "Courtel" };
+const SUBSCRIBER_2 = { id: "user-2", name: "Snl" };
+
 function destinationUrlFor(userId: string): string {
   return `https://${userId}.example/publication`;
 }
@@ -91,9 +94,9 @@ describe("third-party fulfilment service", () => {
     mockFetch.mockImplementation(async () => new Response(null, { status: 200 }));
     vi.mocked(findArtefactForFulfilment).mockResolvedValue(buildArtefact());
     vi.mocked(findListTypeName).mockResolvedValue("CIVIL_DAILY_CAUSE_LIST");
-    vi.mocked(findMatchingSubscriptions).mockResolvedValue(["user-1"]);
-    vi.mocked(getDestinationUrl).mockImplementation(async (userId) => destinationUrlFor(userId));
-    vi.mocked(getAccessToken).mockImplementation(async (userId) => `token-for-${userId}`);
+    vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1]);
+    vi.mocked(getDestinationUrl).mockImplementation(async (_name, userId) => destinationUrlFor(userId));
+    vi.mocked(getAccessToken).mockImplementation(async (_name, userId) => `token-for-${userId}`);
     vi.mocked(getLocationWithDetails).mockResolvedValue({
       locationId: 123,
       name: "Test Court",
@@ -208,6 +211,8 @@ describe("third-party fulfilment service", () => {
       expect(parts[1].contentType).toBe("application/json");
       expect(JSON.parse(parts[1].content)).toEqual(JSON_DATA);
       expect(getLocationWithDetails).toHaveBeenCalledWith(123);
+      expect(getDestinationUrl).toHaveBeenCalledWith("Courtel", "user-1");
+      expect(getAccessToken).toHaveBeenCalledWith("Courtel", "user-1");
     });
 
     it.each([
@@ -267,8 +272,8 @@ describe("third-party fulfilment service", () => {
 
     it("should skip a subscriber with no destination URL, log the user ID only, and still deliver to the others", async () => {
       // Arrange
-      vi.mocked(findMatchingSubscriptions).mockResolvedValue(["user-1", "user-2"]);
-      vi.mocked(getDestinationUrl).mockImplementation(async (userId) => (userId === "user-1" ? null : destinationUrlFor(userId)));
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
+      vi.mocked(getDestinationUrl).mockImplementation(async (_name, userId) => (userId === "user-1" ? null : destinationUrlFor(userId)));
 
       // Act
       await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
@@ -294,7 +299,7 @@ describe("third-party fulfilment service", () => {
 
     it("should log the user and publication ID when retries are exhausted, without throwing or affecting other subscribers", async () => {
       // Arrange
-      vi.mocked(findMatchingSubscriptions).mockResolvedValue(["user-1", "user-2"]);
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
       mockFetch.mockImplementation(async (url: string) => new Response(null, { status: url.includes("user-1") ? 500 : 200 }));
 
       // Act
@@ -308,8 +313,8 @@ describe("third-party fulfilment service", () => {
 
     it("should log and carry on when a subscriber throws unexpectedly", async () => {
       // Arrange
-      vi.mocked(findMatchingSubscriptions).mockResolvedValue(["user-1", "user-2"]);
-      vi.mocked(getAccessToken).mockImplementation(async (userId) => {
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
+      vi.mocked(getAccessToken).mockImplementation(async (_name, userId) => {
         if (userId === "user-1") throw new Error("Redis down");
         return "token";
       });
@@ -363,7 +368,7 @@ describe("third-party fulfilment service", () => {
 
     it("should never log tokens, secrets, URLs or payload content", async () => {
       // Arrange
-      vi.mocked(findMatchingSubscriptions).mockResolvedValue(["user-1", "user-2"]);
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
       mockFetch.mockImplementation(async (url: string) => new Response(null, { status: url.includes("user-1") ? 500 : 200 }));
 
       // Act

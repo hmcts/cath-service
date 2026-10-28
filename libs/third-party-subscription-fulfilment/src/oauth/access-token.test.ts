@@ -12,6 +12,7 @@ vi.mock("@hmcts/redis", () => ({
 }));
 vi.mock("./oauth-config.js", () => ({ getTokenCredentials: vi.fn() }));
 
+const SUBSCRIBER_NAME = "courtel";
 const USER_ID = "user-1";
 const CACHE_KEY = `third-party_token-cache:${USER_ID}`;
 const NOW = new Date("2026-03-15T10:00:00Z").getTime();
@@ -51,7 +52,7 @@ describe("getAccessToken", () => {
     mockRedisClient.getEx.mockResolvedValue(JSON.stringify({ accessToken: "cached-token", expiry: NOW + 60_000 }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("cached-token");
@@ -65,11 +66,11 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({ access_token: "new-token", expires_in: 3599 }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("new-token");
-    expect(getTokenCredentials).toHaveBeenCalledWith(USER_ID);
+    expect(getTokenCredentials).toHaveBeenCalledWith(SUBSCRIBER_NAME, USER_ID);
     expect(mockFetch).toHaveBeenCalledTimes(1);
     const [url, init] = mockFetch.mock.calls[0];
     expect(url).toBe(CONFIG.tokenUrl);
@@ -93,7 +94,7 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({ access_token: "fresh-token", expires_in: 3600 }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("fresh-token");
@@ -107,7 +108,7 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({ access_token: "fresh-token", expires_in: 3600 }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("fresh-token");
@@ -123,7 +124,7 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({ access_token: "short-token", expires_in: expiresIn }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("short-token");
@@ -138,7 +139,7 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({ access_token: "next-token", expires_in: 30 }));
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBe("next-token");
@@ -154,7 +155,7 @@ describe("getAccessToken", () => {
     arrange();
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -170,7 +171,7 @@ describe("getAccessToken", () => {
     vi.mocked(getTokenCredentials).mockResolvedValue(null);
 
     // Act
-    const result = await getAccessToken(USER_ID);
+    const result = await getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     expect(result).toBeNull();
@@ -187,7 +188,7 @@ describe("getAccessToken", () => {
     vi.mocked(getTokenCredentials).mockResolvedValue(null);
 
     // Act
-    const act = getAccessToken(USER_ID, true);
+    const act = getAccessToken(SUBSCRIBER_NAME, USER_ID, true);
 
     // Assert
     await expect(act).rejects.toThrow(`Failed to obtain OAuth access token for third-party user ${USER_ID}`);
@@ -198,7 +199,7 @@ describe("getAccessToken", () => {
     mockFetch.mockResolvedValue(tokenResponse({}, 500));
 
     // Act
-    const act = getAccessToken(USER_ID, true);
+    const act = getAccessToken(SUBSCRIBER_NAME, USER_ID, true);
 
     // Assert
     await expect(act).rejects.toThrow(`Failed to obtain OAuth access token for third-party user ${USER_ID}`);
@@ -210,7 +211,7 @@ describe("getAccessToken", () => {
     mockRedisClient.getEx.mockRejectedValue(new Error("Redis down"));
 
     // Act
-    const act = getAccessToken(USER_ID);
+    const act = getAccessToken(SUBSCRIBER_NAME, USER_ID);
 
     // Assert
     await expect(act).rejects.toThrow("Redis down");

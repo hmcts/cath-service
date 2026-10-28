@@ -94,7 +94,7 @@ describe("third-party-subscribers delete page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(deleteSecrets).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
+      expect(deleteSecrets).toHaveBeenCalledWith("Test Corp", "00000000-0000-0000-0000-000000000001");
       expect(deleteThirdPartyUser).toHaveBeenCalledWith("00000000-0000-0000-0000-000000000001");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/delete/success");
     });

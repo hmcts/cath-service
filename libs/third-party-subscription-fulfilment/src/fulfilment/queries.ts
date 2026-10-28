@@ -23,7 +23,7 @@ export async function findListTypeName(listTypeId: number): Promise<string | nul
   return listType?.name ?? null;
 }
 
-export async function findMatchingSubscriptions(listTypeName: string, sensitivities: string[]): Promise<string[]> {
+export async function findMatchingSubscriptions(listTypeName: string, sensitivities: string[]): Promise<Subscriber[]> {
   if (sensitivities.length === 0) {
     return [];
   }
@@ -35,10 +35,15 @@ export async function findMatchingSubscriptions(listTypeName: string, sensitivit
 
   const subscriptions = await prisma.thirdPartySubscription.findMany({
     where: { listTypeId: listType.id, sensitivity: { in: sensitivities } },
-    select: { thirdPartyUserId: true }
+    select: { thirdPartyUser: { select: { id: true, name: true } } }
   });
 
-  return subscriptions.map((subscription) => subscription.thirdPartyUserId);
+  return subscriptions.map((subscription) => subscription.thirdPartyUser);
+}
+
+export interface Subscriber {
+  id: string;
+  name: string;
 }
 
 export interface FulfilmentArtefact {

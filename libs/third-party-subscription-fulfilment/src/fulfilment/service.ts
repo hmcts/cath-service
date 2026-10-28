@@ -5,7 +5,7 @@ import { buildMultipartBody, type MultipartPart } from "../delivery/multipart.js
 import { withRetry } from "../delivery/retry.js";
 import { getAccessToken } from "../oauth/access-token.js";
 import { getDestinationUrl } from "../oauth/oauth-config.js";
-import { type FulfilmentArtefact, findArtefactForFulfilment, findListTypeName, findMatchingSubscriptions } from "./queries.js";
+import { type FulfilmentArtefact, findArtefactForFulfilment, findListTypeName, findMatchingSubscriptions, type Subscriber } from "./queries.js";
 
 const DEFAULT_LOG_PREFIX = "[ThirdPartySubscriptionFulfilment]";
 const TIME_ZONE = "Europe/London";
@@ -36,8 +36,8 @@ export async function sendPublicationToThirdParties(params: PublicationFulfilmen
     return;
   }
 
-  const userIds = await findSubscribers(artefact.listType.name, artefact.sensitivity, artefactId, logPrefix);
-  if (userIds.length === 0) {
+  const subscribers = await findSubscribers(artefact.listType.name, artefact.sensitivity, artefactId, logPrefix);
+  if (subscribers.length === 0) {
     return;
   }
 
@@ -55,9 +55,9 @@ export async function sendPublicationToThirdParties(params: PublicationFulfilmen
   const method = isUpdate ? "PUT" : "POST";
 
   await Promise.all(
-    userIds.map((userId) =>
+    subscribers.map((subscriber) =>
       deliverToSubscriber(
-        userId,
+        subscriber,
         artefactId,
         (destinationUrl) => ({ method, url: isUpdate ? `${destinationUrl}/${artefactId}` : destinationUrl, body, contentType }),
         logPrefix
@@ -75,11 +75,11 @@ export async function sendPublicationDeletionToThirdParties(params: PublicationD
     return;
   }
 
-  const userIds = await findSubscribers(listTypeName, sensitivity, artefactId, logPrefix);
+  const subscribers = await findSubscribers(listTypeName, sensitivity, artefactId, logPrefix);
 
   await Promise.all(
-    userIds.map((userId) =>
-      deliverToSubscriber(userId, artefactId, (destinationUrl) => ({ method: "DELETE", url: `${destinationUrl}/${artefactId}` }), logPrefix)
+    subscribers.map((subscriber) =>
+      deliverToSubscriber(subscriber, artefactId, (destinationUrl) => ({ method: "DELETE", url: `${destinationUrl}/${artefactId}` }), logPrefix)
     )
   );
 }
@@ -97,15 +97,15 @@ function toStoredDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-async function findSubscribers(listTypeName: string, sensitivity: string, artefactId: string, logPrefix: string): Promise<string[]> {
+async function findSubscribers(listTypeName: string, sensitivity: string, artefactId: string, logPrefix: string): Promise<Subscriber[]> {
   const allowedSensitivities = ALLOWED_SUBSCRIPTION_SENSITIVITIES[sensitivity] ?? [];
-  const userIds = allowedSensitivities.length > 0 ? await findMatchingSubscriptions(listTypeName, allowedSensitivities) : [];
+  const subscribers = allowedSensitivities.length > 0 ? await findMatchingSubscriptions(listTypeName, allowedSensitivities) : [];
 
-  if (userIds.length === 0) {
+  if (subscribers.length === 0) {
     console.info(`${logPrefix} Third-party fulfilment skipped: no matching subscribers`, { artefactId, listTypeName, sensitivity });
   }
 
-  return userIds;
+  return subscribers;
 }
 
 async function buildContentPart(artefact: FulfilmentArtefact, jsonData: unknown, logPrefix: string): Promise<MultipartPart | null> {
@@ -160,20 +160,20 @@ function toLocalDateTimeArray(date: Date): number[] {
 }
 
 async function deliverToSubscriber(
-  userId: string,
+  { id: userId, name }: Subscriber,
   publicationId: string,
   buildRequest: (destinationUrl: string) => Omit<DeliveryRequest, "accessToken">,
   logPrefix: string
 ): Promise<void> {
   try {
-    const destinationUrl = await getDestinationUrl(userId);
+    const destinationUrl = await getDestinationUrl(name, userId);
     if (!destinationUrl) {
       console.error(`${logPrefix} Third-party subscriber skipped: no destination URL configured`, { userId });
       return;
     }
 
     // Legacy still sends the request when no token could be obtained
-    const accessToken = await getAccessToken(userId);
+    const accessToken = await getAccessToken(name, userId);
     const request: DeliveryRequest = { ...buildRequest(destinationUrl), accessToken };
 
     const isDelivered = await withRetry(
