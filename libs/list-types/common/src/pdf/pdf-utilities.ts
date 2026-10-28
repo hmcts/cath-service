@@ -3,13 +3,10 @@ import { generatePdfFromHtml } from "@hmcts/pdf-generation";
 import nunjucks from "nunjucks";
 import { PDF_BASE_STYLES } from "./pdf-styles.js";
 
-export const MAX_PDF_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
-
 export interface PdfGenerationResult {
   success: boolean;
   pdfPath?: string;
   sizeBytes?: number;
-  exceedsMaxSize?: boolean;
   error?: string;
 }
 
@@ -30,7 +27,6 @@ export function configureNunjucks(templateDir: string): nunjucks.Environment {
 }
 
 export async function savePdfToStorage(artefactId: string, pdfBuffer: Buffer, sizeBytes: number): Promise<PdfGenerationResult> {
-  const exceedsMaxSize = sizeBytes > MAX_PDF_SIZE_BYTES;
   const blobKey = `${artefactId}.pdf`;
 
   await uploadBlob(blobKey, pdfBuffer, "application/pdf", CONTAINER.PUBLICATIONS);
@@ -38,8 +34,7 @@ export async function savePdfToStorage(artefactId: string, pdfBuffer: Buffer, si
   return {
     success: true,
     pdfPath: blobKey,
-    sizeBytes,
-    exceedsMaxSize
+    sizeBytes
   };
 }
 

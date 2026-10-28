@@ -4,12 +4,12 @@ import ExcelJSPkg from "exceljs";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
+  assertEmailDownloadLinks,
   cleanupTestNotifications,
   cleanupTestSubscriptions,
   cleanupTestUsers,
   createTestSubscription,
   createTestUser,
-  getGovNotifyEmail,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
@@ -101,7 +101,6 @@ const CIC_CY_HEADINGS = [
 const BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME = "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
 const BIRMINGHAM_ADMIN_COURT_SHEET_NAME = "Birmingham hearings";
 const ADMIN_COURT_CY_HEADINGS = ["Lleoliad", "Barnwr", "Amser", "Rhif yr achos", "Manylion yr achos", "Math o wrandawiad", "Gwybodaeth ychwanegol"];
-const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
 
@@ -263,8 +262,7 @@ async function expectPdfAndExcelLinksInEmail(artefactId: string): Promise<void> 
     throw new Error(`No sent notification for ${artefactId}`);
   }
 
-  const govNotifyEmail = await getGovNotifyEmail(sentNotification.govNotifyId);
-  expect(govNotifyEmail.body.match(GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN)).toHaveLength(2);
+  await assertEmailDownloadLinks(sentNotification.govNotifyId, 2);
 }
 
 function rowValues(worksheet: ExcelJSPkg.Worksheet, rowNumber: number): unknown[] {

@@ -53,6 +53,28 @@ describe("template-config", () => {
     });
   });
 
+  describe("isWithinNotifyAttachmentLimit", () => {
+    it("should set the limit to 2 MB", async () => {
+      const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("./template-config.js");
+      expect(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES).toBe(2 * 1024 * 1024);
+    });
+
+    it("should accept a file one byte under the limit", async () => {
+      const { isWithinNotifyAttachmentLimit, MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("./template-config.js");
+      expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1))).toBe(true);
+    });
+
+    it("should reject a file exactly at the limit", async () => {
+      const { isWithinNotifyAttachmentLimit, MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("./template-config.js");
+      expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES))).toBe(false);
+    });
+
+    it("should reject a file one byte over the limit", async () => {
+      const { isWithinNotifyAttachmentLimit, MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("./template-config.js");
+      expect(isWithinNotifyAttachmentLimit(Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES + 1))).toBe(false);
+    });
+  });
+
   describe("getApiKey", () => {
     it("should return API key when environment variable is set", async () => {
       process.env.GOVUK_NOTIFY_API_KEY = "test-api-key";

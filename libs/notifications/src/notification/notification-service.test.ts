@@ -1,3 +1,9 @@
+import {
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY
+} from "@hmcts/govuk-notify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   sendListTypePublicationNotifications,
@@ -5,6 +11,13 @@ import {
   sendSubscriptionDeletedNotification,
   sendSystemAdminNotification
 } from "./notification-service.js";
+
+const TEMPLATE_IDS = {
+  noLinks: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
+  excelOnly: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  pdfExcel: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
+  pdfOnly: GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY
+};
 
 vi.mock("@hmcts/azure-blob", () => ({
   downloadBlob: vi.fn().mockResolvedValue(null),
@@ -28,7 +41,9 @@ vi.mock("../notify-templates/send-email.js", () => ({
   })
 }));
 
-vi.mock("../notify-templates/template-config.js", () => ({
+vi.mock("../notify-templates/template-config.js", async (importOriginal) => ({
+  MAX_NOTIFY_ATTACHMENT_SIZE_BYTES: (await importOriginal<typeof import("../notify-templates/template-config.js")>()).MAX_NOTIFY_ATTACHMENT_SIZE_BYTES,
+  isWithinNotifyAttachmentLimit: (await importOriginal<typeof import("../notify-templates/template-config.js")>()).isWithinNotifyAttachmentLimit,
   buildTemplateParameters: vi.fn().mockReturnValue({
     locations: "Test Court",
     ListType: "Daily Cause List",
@@ -404,6 +419,124 @@ describe("sendListTypePublicationNotifications", () => {
       expect(sent.pdfBuffer !== undefined).toBe(hasPdf);
       expect(sent.excelBuffer !== undefined).toBe(hasExcel);
     });
+  });
+});
+
+describe("Notify attachment size limit", () => {
+  const baseEvent = {
+    publicationId: "pub-size",
+    locationId: "1",
+    locationName: "Test Court",
+    hearingListName: "Daily Cause List",
+    publicationDate: new Date("2025-01-01"),
+    listTypeId: 999,
+    language: "ENGLISH",
+    pdfFilePath: "pub-size.pdf"
+  };
+  const subscriber = { userId: "user-1", user: { email: "user1@example.com", firstName: "John", surname: "Doe" } };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const actual = await vi.importActual<typeof import("../notify-templates/template-config.js")>("../notify-templates/template-config.js");
+    const { getSubscriptionTemplateId } = await import("../notify-templates/template-config.js");
+    vi.mocked(getSubscriptionTemplateId).mockImplementation(actual.getSubscriptionTemplateId);
+
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    vi.mocked(sendEmail).mockResolvedValue({ success: true, notificationId: "notif-size" });
+
+    const { findListTypeSubscribersByListTypeAndLanguage, findCaseSubscriptionsByUserIds } = await import("./subscription-queries.js");
+    vi.mocked(findListTypeSubscribersByListTypeAndLanguage).mockResolvedValue([subscriber] as never);
+    vi.mocked(findCaseSubscriptionsByUserIds).mockResolvedValue([]);
+  });
+
+  async function sendWithStoredFiles(listTypeName: string, files: { pdf: Buffer | null; excel: Buffer | null }) {
+    const { prisma } = await import("@hmcts/postgres-prisma");
+    const { downloadBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: listTypeName } as any);
+    vi.mocked(downloadBlob).mockImplementation(async (key: string) => (key.endsWith(".pdf") ? files.pdf : files.excel));
+
+    await sendListTypePublicationNotifications(baseEvent);
+
+    const { sendEmail } = await import("../notify-templates/send-email.js");
+    return vi.mocked(sendEmail).mock.calls[0][0];
+  }
+
+  it("should set the attachment limit to exactly 2 MB", async () => {
+    const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
+
+    expect(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES).toBe(2_097_152);
+  });
+
+  it("should link a PDF one byte under 2 MB using the PDF-only template", async () => {
+    // Arrange
+    const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
+    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1);
+
+    // Act
+    const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel: null });
+
+    // Assert
+    expect(sent.templateId).toBe(TEMPLATE_IDS.pdfOnly);
+    expect(sent.pdfBuffer).toBe(pdf);
+    expect(sent.excelBuffer).toBeUndefined();
+  });
+
+  it("should withhold a PDF of exactly 2 MB and use the no-links template", async () => {
+    // Arrange
+    const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
+    const pdf = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
+
+    // Act
+    const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel: null });
+
+    // Assert
+    expect(sent.templateId).toBe(TEMPLATE_IDS.noLinks);
+    expect(sent.pdfBuffer).toBeUndefined();
+    expect(sent.excelBuffer).toBeUndefined();
+  });
+
+  it("should link an Excel one byte under 2 MB alongside the PDF using the PDF and Excel template", async () => {
+    // Arrange
+    const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
+    const pdf = Buffer.from("pdf");
+    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES - 1);
+
+    // Act
+    const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel });
+
+    // Assert
+    expect(sent.templateId).toBe(TEMPLATE_IDS.pdfExcel);
+    expect(sent.pdfBuffer).toBe(pdf);
+    expect(sent.excelBuffer).toBe(excel);
+  });
+
+  it("should drop only the Excel link when the Excel is exactly 2 MB", async () => {
+    // Arrange
+    const { MAX_NOTIFY_ATTACHMENT_SIZE_BYTES } = await import("../notify-templates/template-config.js");
+    const pdf = Buffer.from("pdf");
+    const excel = Buffer.alloc(MAX_NOTIFY_ATTACHMENT_SIZE_BYTES);
+
+    // Act
+    const sent = await sendWithStoredFiles("CIVIL_DAILY_CAUSE_LIST", { pdf, excel });
+
+    // Assert
+    expect(sent.templateId).toBe(TEMPLATE_IDS.pdfOnly);
+    expect(sent.pdfBuffer).toBe(pdf);
+    expect(sent.excelBuffer).toBeUndefined();
+  });
+
+  it("should use the Excel-only template for an SJP list when the PDF blob is missing", async () => {
+    // Arrange
+    const excel = Buffer.from("excel");
+
+    // Act
+    const sent = await sendWithStoredFiles("SJP_PUBLIC_LIST", { pdf: null, excel });
+
+    // Assert
+    expect(sent.templateId).toBe(TEMPLATE_IDS.excelOnly);
+    expect(sent.pdfBuffer).toBeUndefined();
+    expect(sent.excelBuffer).toBe(excel);
   });
 });
 

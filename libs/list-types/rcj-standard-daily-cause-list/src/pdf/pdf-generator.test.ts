@@ -70,8 +70,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,
@@ -89,8 +88,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test-artefact-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     const result = await generateRcjStandardDailyCauseListPdf({
@@ -105,63 +103,7 @@ describe("generateRcjStandardDailyCauseListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
     expect(mockSavePdfToStorage).toHaveBeenCalledWith("test-artefact-123", pdfBuffer, 1024);
-  });
-
-  it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: largePdfBuffer,
-      sizeBytes: 3 * 1024 * 1024
-    });
-    mockSavePdfToStorage.mockResolvedValue({
-      success: true,
-      pdfPath: "/storage/temp/uploads/large-pdf-123.pdf",
-      sizeBytes: 3 * 1024 * 1024,
-      exceedsMaxSize: true
-    });
-
-    const result = await generateRcjStandardDailyCauseListPdf({
-      artefactId: "large-pdf-123",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: mockHearingList,
-      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
-    expect(result.sizeBytes).toBe(3 * 1024 * 1024);
-  });
-
-  it("should return exceedsMaxSize false when PDF is exactly 2MB", async () => {
-    const exactPdfBuffer = Buffer.alloc(2 * 1024 * 1024);
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: exactPdfBuffer,
-      sizeBytes: 2 * 1024 * 1024
-    });
-    mockSavePdfToStorage.mockResolvedValue({
-      success: true,
-      pdfPath: "/storage/temp/uploads/exact-size-pdf.pdf",
-      sizeBytes: 2 * 1024 * 1024,
-      exceedsMaxSize: false
-    });
-
-    const result = await generateRcjStandardDailyCauseListPdf({
-      artefactId: "exact-size-pdf",
-      contentDate: new Date("2025-01-01"),
-      locale: "en",
-      locationId: "240",
-      jsonData: mockHearingList,
-      listTypeName: "COUNTY_COURT_LONDON_CIVIL_DAILY_CAUSE_LIST"
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(false);
   });
 
   it("should return error when PDF generation fails", async () => {
