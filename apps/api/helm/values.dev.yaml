@@ -33,6 +33,6 @@ nodejs:
           alias: AWS_ACCESS_KEY_ID
         - name: xhibit-s3-access-key-secret
           alias: AWS_SECRET_ACCESS_KEY
-        # GOV.UK Notify - test key so local runs never send real emails
+        # GOV.UK Notify - test key by default; a live key in .env overrides it and sends real emails
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
