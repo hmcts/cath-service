@@ -82,14 +82,11 @@ describe("API Application", () => {
       expect(createSimpleRouter).toHaveBeenCalled();
     });
 
-    it("should have JSON body parser middleware", () => {
-      expect(app).toBeDefined();
-      // Express app should be configured with json parser
-    });
-
-    it("should have URL encoded body parser middleware", () => {
-      expect(app).toBeDefined();
-      // Express app should be configured with urlencoded parser
+    it("should not parse request bodies globally before route authentication", () => {
+      // Assert
+      const globalMiddlewareNames = app.router.stack.filter((layer) => layer.match("/v1/publication")).map((layer) => layer.name);
+      expect(globalMiddlewareNames).not.toContain("jsonParser");
+      expect(globalMiddlewareNames).not.toContain("urlencodedParser");
     });
 
     it("should have compression middleware", () => {

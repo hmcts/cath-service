@@ -1,61 +1,33 @@
 # @hmcts/postgres
 
-Database layer using Prisma ORM with PostgreSQL.
+Migration and seed runner for the CaTH database. It owns the Prisma migrations; the schema itself lives in `libs/postgres-prisma/prisma/schema/` (one `.prisma` file per domain — see the root `CLAUDE.md`).
 
-## Schema Collation System
+## Layout
 
-This package uses a schema collation system that combines Prisma schema fragments from multiple modules into a single schema file.
+| Path | Purpose |
+|------|---------|
+| `prisma.config.ts` | Points Prisma at the shared schema directory and at `prisma/migrations`. Builds `DATABASE_URL` from `POSTGRES_*` vars when they are set (deployed environments), otherwise falls back to the local docker-compose database. |
+| `prisma/migrations/` | Prisma migrations, applied to every environment. |
+| `prisma/generate-seed-sql.ts` | Emits idempotent `INSERT ... ON CONFLICT` SQL for reference data (locations, list types) from `location-data.ts` and `list-type-data.ts`. Used on deploy. |
+| `prisma/seed.ts` | Local seed via Prisma upserts (`yarn db:seed`). |
+| `start.sh` | Container entrypoint: loads Key Vault secrets, starts the health server, applies migrations, runs the generated seed SQL, then serves Prisma Studio. |
+| `health-server.mjs` | Answers `/health/liveness` and `/health/readiness` and proxies everything else to Prisma Studio. |
 
-### How it works
+## Local commands
 
-1. **Base schema**: `prisma/schema.prisma` contains only the generator and datasource configuration
-2. **Module fragments**: Each module can have Prisma schema fragments in `libs/*/prisma/*.prisma`
-3. **Collation**: The `yarn collate` command combines all fragments into `dist/schema.prisma`
-4. **Usage**: All Prisma commands use the collated schema at `dist/schema.prisma`
-
-### Adding schema to a module
-
-Create a Prisma fragment in your module:
-
-```prisma
-// libs/my-module/prisma/models.prisma
-model MyModel {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("my_model")
-}
-
-enum MyEnum {
-  OPTION_ONE
-  OPTION_TWO
-}
-```
-
-The collation script will automatically discover and include your models and enums.
-
-### Commands
-
-All commands automatically run collation before execution:
+Run from the repo root:
 
 ```bash
-# Generate Prisma Client
-yarn workspace @hmcts/postgres generate
-
-# Run migrations
-yarn workspace @hmcts/postgres migrate:dev
-
-# Open Prisma Studio
-yarn workspace @hmcts/postgres studio
-
-# Just collate (rarely needed directly)
-yarn workspace @hmcts/postgres collate
+yarn db:migrate:dev   # Apply migrations, creating a new one if the schema changed
+yarn db:migrate       # Apply existing migrations only
+yarn db:seed          # Seed reference data
+yarn db:generate      # Regenerate the Prisma client
+yarn db:studio        # Open Prisma Studio
+yarn db:drop          # Drop all tables and reset the database
 ```
 
-### Important Notes
+To point at a different database, export `DATABASE_URL` before running these. Prisma does not read a `.env` file when a `prisma.config.ts` is present.
 
-- The `dist/` directory is gitignored - it's generated on demand
-- Models can reference each other across modules (Prisma will validate relationships)
-- Enums are shared globally across all models
-- Each fragment should be valid Prisma syntax but doesn't need to be a complete schema
+## Deployment
+
+The postgres pod runs as a single replica (`autoscaling.enabled: false` in `helm/values.yaml`) so that migrations and seeding never run concurrently. The web app does not seed.
