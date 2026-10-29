@@ -35,6 +35,7 @@
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/subscriptions": "workspace:*",
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*",
     "@hmcts/third-party-user": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "@launchdarkly/node-server-sdk": "^9.7.0",

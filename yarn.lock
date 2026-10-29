@@ -2248,6 +2248,7 @@ __metadata:
     "@hmcts/sjp-press-list": "workspace:*"
     "@hmcts/sjp-public-list": "workspace:*"
     "@hmcts/sscs-daily-hearing-list": "workspace:*"
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*"
     "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"
@@ -2407,6 +2408,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*"
     "@hmcts/third-party-user": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@launchdarkly/node-server-sdk": "npm:^9.7.0"
@@ -2435,6 +2437,20 @@ __metadata:
   peerDependencies:
     "@prisma/client": "*"
     express: ^5.2.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/third-party-subscription-fulfilment@workspace:*, @hmcts/third-party-subscription-fulfilment@workspace:libs/third-party-subscription-fulfilment":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/third-party-subscription-fulfilment@workspace:libs/third-party-subscription-fulfilment"
+  dependencies:
+    "@hmcts/azure-blob": "workspace:*"
+    "@hmcts/location": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/redis": "workspace:*"
+    "@hmcts/third-party-user": "workspace:*"
+  peerDependencies:
+    "@prisma/client": "*"
   languageName: unknown
   linkType: soft
 
@@ -2639,6 +2655,7 @@ __metadata:
     "@hmcts/subscriptions": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/test-support": "workspace:*"
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*"
     "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*"
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*"

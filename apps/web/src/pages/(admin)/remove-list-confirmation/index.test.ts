@@ -1,6 +1,7 @@
 import * as locationModule from "@hmcts/location";
 import * as publicationModule from "@hmcts/publication";
 import * as listTypeConfigModule from "@hmcts/system-admin-pages";
+import { sendPublicationDeletionToThirdParties } from "@hmcts/third-party-subscription-fulfilment";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 
@@ -16,6 +17,9 @@ vi.mock("@hmcts/auth", () => ({
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
 vi.mock("@hmcts/system-admin-pages");
+vi.mock("@hmcts/third-party-subscription-fulfilment", () => ({
+  sendPublicationDeletionToThirdParties: vi.fn().mockResolvedValue(undefined)
+}));
 
 const mockGetLocationById = vi.fn();
 const mockGetArtefactsByIds = vi.fn();
@@ -212,6 +216,89 @@ describe("remove-list-confirmation page", () => {
       expect(mockReq.session.removalData).toBeUndefined();
       expect(mockReq.session.removalSuccess).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith("/remove-list-success");
+    });
+
+    it("should send a third-party OAuth deletion for each removed artefact", async () => {
+      // Arrange
+      const { POST } = await import("./index.js");
+      const handler = POST[1] as (req: Request, res: Response) => Promise<void>;
+      vi.mocked(sendPublicationDeletionToThirdParties).mockClear();
+      mockDeleteArtefacts.mockResolvedValue(undefined);
+      mockGetArtefactsByIds.mockResolvedValue([
+        {
+          artefactId: "art1",
+          locationId: "1",
+          listTypeId: 999,
+          contentDate: new Date("2025-01-15"),
+          displayFrom: null,
+          displayTo: null,
+          language: "ENGLISH",
+          sensitivity: "PUBLIC",
+          provenance: "MANUAL_UPLOAD"
+        },
+        {
+          artefactId: "art2",
+          locationId: "1",
+          listTypeId: 999,
+          contentDate: new Date("2025-01-15"),
+          displayFrom: null,
+          displayTo: null,
+          language: "ENGLISH",
+          sensitivity: "CLASSIFIED",
+          provenance: "MANUAL_UPLOAD"
+        }
+      ]);
+      const mockReq = {
+        query: {},
+        body: { confirmation: "yes" },
+        session: { removalData: { locationId: "1", selectedArtefacts: ["art1", "art2"] }, save: vi.fn((cb) => cb()) }
+      } as unknown as Request;
+      const mockRes = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await handler(mockReq, mockRes);
+
+      // Assert
+      expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledTimes(2);
+      expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledWith({ artefactId: "art1", listTypeId: 999, sensitivity: "PUBLIC" });
+      expect(sendPublicationDeletionToThirdParties).toHaveBeenCalledWith({ artefactId: "art2", listTypeId: 999, sensitivity: "CLASSIFIED" });
+    });
+
+    it("should still redirect to success when the third-party OAuth deletion rejects", async () => {
+      // Arrange
+      const { POST } = await import("./index.js");
+      const handler = POST[1] as (req: Request, res: Response) => Promise<void>;
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(sendPublicationDeletionToThirdParties).mockRejectedValueOnce(new Error("OAuth down"));
+      mockDeleteArtefacts.mockResolvedValue(undefined);
+      mockGetArtefactsByIds.mockResolvedValue([
+        {
+          artefactId: "art1",
+          locationId: "1",
+          listTypeId: 999,
+          contentDate: new Date("2025-01-15"),
+          displayFrom: null,
+          displayTo: null,
+          language: "ENGLISH",
+          sensitivity: "PUBLIC",
+          provenance: "MANUAL_UPLOAD"
+        }
+      ]);
+      const mockReq = {
+        query: {},
+        body: { confirmation: "yes" },
+        session: { removalData: { locationId: "1", selectedArtefacts: ["art1"] }, save: vi.fn((cb) => cb()) }
+      } as unknown as Request;
+      const mockRes = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await handler(mockReq, mockRes);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Assert
+      expect(mockRes.redirect).toHaveBeenCalledWith("/remove-list-success");
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Third-party OAuth deletion failed:", { artefactId: "art1", error: "OAuth down" });
+      consoleErrorSpy.mockRestore();
     });
 
     it("should show error when deletion fails", async () => {

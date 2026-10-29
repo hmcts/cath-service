@@ -58,6 +58,7 @@
     "@hmcts/subscriptions": "workspace:*",
     "@hmcts/system-admin-pages": "workspace:*",
     "@hmcts/test-support": "workspace:*",
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*",
     "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*",

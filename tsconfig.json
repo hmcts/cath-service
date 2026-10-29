@@ -103,6 +103,7 @@
       "@hmcts/pdf-generation": ["libs/pdf-generation/src"],
       "@hmcts/excel-generation": ["libs/excel-generation/src"],
       "@hmcts/legacy-third-party-fulfilment": ["libs/legacy-third-party-fulfilment/src"],
+      "@hmcts/third-party-subscription-fulfilment": ["libs/third-party-subscription-fulfilment/src"],
       "@hmcts/test-support": ["libs/test-support/src"],
       "@hmcts/test-support/config": ["libs/test-support/src/config"],
       "@hmcts/upper-tribunal-common": ["libs/list-types/upper-tribunal-common/src"],

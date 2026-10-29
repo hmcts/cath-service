@@ -4,7 +4,7 @@ import { getHandler, postHandler } from "./index.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
   findThirdPartyUserById: vi.fn(),
-  createKeyVaultSecretName: vi.fn((userId: string, type: string) => `third-party-${userId}-${type}`),
+  createKeyVaultSecretName: vi.fn((name: string, userId: string, type: string) => `${name}-${userId}-${type}`),
   setSecret: vi.fn()
 }));
 
@@ -114,11 +114,11 @@ describe("third-party-subscribers oauth-config summary page", () => {
       await postHandler(req as Request, res as Response);
 
       // Assert
-      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-destination-url", "https://dest.example.com");
-      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-token-url", "https://token.example.com");
-      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-scope", "openid");
-      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-client-id", "my-client-id");
-      expect(setSecret).toHaveBeenCalledWith("third-party-00000000-0000-0000-0000-000000000001-client-secret", "my-secret");
+      expect(setSecret).toHaveBeenCalledWith("Test Corp-00000000-0000-0000-0000-000000000001-destination-url", "https://dest.example.com");
+      expect(setSecret).toHaveBeenCalledWith("Test Corp-00000000-0000-0000-0000-000000000001-token-url", "https://token.example.com");
+      expect(setSecret).toHaveBeenCalledWith("Test Corp-00000000-0000-0000-0000-000000000001-scope", "openid");
+      expect(setSecret).toHaveBeenCalledWith("Test Corp-00000000-0000-0000-0000-000000000001-client-id", "my-client-id");
+      expect(setSecret).toHaveBeenCalledWith("Test Corp-00000000-0000-0000-0000-000000000001-client-secret", "my-secret");
       expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers/00000000-0000-0000-0000-000000000001/oauth-config/success");
     });
 

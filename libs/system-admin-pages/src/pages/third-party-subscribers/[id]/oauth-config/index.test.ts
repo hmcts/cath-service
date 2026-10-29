@@ -4,7 +4,7 @@ import { getHandler, postHandler } from "./index.js";
 
 vi.mock("@hmcts/third-party-user", () => ({
   findThirdPartyUserById: vi.fn(),
-  createKeyVaultSecretName: vi.fn((userId: string, type: string) => `third-party-${userId}-${type}`),
+  createKeyVaultSecretName: vi.fn((name: string, userId: string, type: string) => `${name}-${userId}-${type}`),
   getSecret: vi.fn()
 }));
 
@@ -90,6 +90,13 @@ describe("third-party-subscribers oauth-config form page", () => {
           }
         })
       );
+      expect(vi.mocked(getSecret).mock.calls.map(([name]) => name)).toEqual([
+        "Test Corp-00000000-0000-0000-0000-000000000001-destination-url",
+        "Test Corp-00000000-0000-0000-0000-000000000001-token-url",
+        "Test Corp-00000000-0000-0000-0000-000000000001-scope",
+        "Test Corp-00000000-0000-0000-0000-000000000001-client-id",
+        "Test Corp-00000000-0000-0000-0000-000000000001-client-secret"
+      ]);
     });
 
     it("should pre-populate form with session values when returning from summary via Change link", async () => {
