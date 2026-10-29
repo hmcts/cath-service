@@ -1387,7 +1387,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
@@ -2642,7 +2641,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     sass: "npm:1.102.0"
     supertest: "npm:7.2.2"
@@ -9062,13 +9060,6 @@ __metadata:
   version: 2.14.0
   resolution: "pg-connection-string@npm:2.14.0"
   checksum: 10c0/c26d85970f782de72b90aa45b4acfa34df90242fc08bc676e8827297164044dbfb40a2cf20b0646bd02662a6b14c5ed27f322db627e41e582f2b705bc41e8b47
-  languageName: node
-  linkType: hard
-
-"pg-format@npm:1.0.4":
-  version: 1.0.4
-  resolution: "pg-format@npm:1.0.4"
-  checksum: 10c0/e40718c181cbdf545c54bc9347e15e51bbf47b9e043029cb2dc0556112df41cc17ea699675b577c6c0e9889e28a56034b32633ded7c44b5dd30e8eca0bce97df
   languageName: node
   linkType: hard
 
