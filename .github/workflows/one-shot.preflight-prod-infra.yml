@@ -1,0 +1,282 @@
+name: One-Shot - Pre-flight PROD infrastructure
+
+# Checks, as the PROD principal (AZURE_CREDENTIALS_CFT_PROD), everything the
+# first PROD Terraform apply (#1096) depends on, before any Terraform merge.
+# Read-only: it creates, updates and deletes nothing in Azure.
+#
+# What it proves:
+#   - the global names (key vaults, storage, Postgres, Redis) are free, and no
+#     soft-deleted cath- vault is holding one (the #1067 lesson)
+#   - the cath resource groups and identities do not exist yet, and the shared
+#     ones they go into do
+#   - the subnets, Log Analytics workspace and private DNS zones are reachable
+#   - the grants requested on DTSPO-35946 are in place:
+#       (a) role-assignment write on DCD-CNP-PROD that allows Storage Blob
+#           Data Contributor (the storage module's assignment)
+#       (b) Private DNS Zone Contributor on the Redis and Postgres zones
+#       (c) Graph read for the groups and principals the modules look up
+#   - no PROD Terraform state exists yet
+#
+# Every check runs even if an earlier one fails, so one run lists everything
+# missing. Results are written to the job summary. The client ID and storage
+# key are masked.
+#
+# Run once from master, then delete this file (#1096 task 19).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    name: Pre-flight PROD infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PROD }}
+      CNP_SUBSCRIPTION: DCD-CNP-PROD
+      AKS_SUBSCRIPTION: DCD-CFTAPPS-PROD
+      DNS_SUBSCRIPTION: DTS-CFTPTL-INTSVC
+      DNS_RESOURCE_GROUP: core-infra-intsvc-rg
+      STATE_STORE_ACCOUNT: mgmtstatestoreprod
+      STATE_STORE_RESOURCE_GROUP: mgmt-state-store-prod
+      STATE_STORE_CONTAINER: mgmtstatestorecontainerprod
+      STATE_KEY: cath-service/prod/terraform.tfstate
+      # Built-in role definition IDs (the same in every tenant)
+      ROLE_OWNER: 8e3af657-a8ff-443c-a75c-2fe8c4bcb635
+      ROLE_USER_ACCESS_ADMIN: 18d7d88d-d35e-4fb5-a5c3-7773c20a72d9
+      ROLE_RBAC_ADMIN: f58310d9-a9f6-439a-9e8d-f62e7b41a168
+      ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: ba92f5b4-2d11-453d-a403-e96b0029c9fe
+      ROLE_PRIVATE_DNS_ZONE_CONTRIBUTOR: b12aa53e-6015-4669-85d0-8515ebb3ae7f
+    steps:
+      # An absent repository secret resolves to an empty string, and
+      # azure/login then fails with a generic JSON parse error rather than
+      # saying which secret is missing.
+      - name: Check secret is set
+        run: |
+          set -euo pipefail
+          if [ -z "${AZURE_CREDENTIALS}" ]; then
+            echo "::error::AZURE_CREDENTIALS_CFT_PROD is not set as a repository secret"
+            exit 1
+          fi
+          echo "PASS: AZURE_CREDENTIALS_CFT_PROD is set"
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PROD }}
+
+      # Shared helpers, sourced by every check step. pass/fail write to the log
+      # and the job summary; fail marks the step failed but lets it finish.
+      - name: Prepare helpers
+        run: |
+          set -euo pipefail
+          CLIENT_ID=$(az account show --query user.name -o tsv)
+          echo "::add-mask::${CLIENT_ID}"
+          OBJECT_ID=$(az ad sp show --id "${CLIENT_ID}" --query id -o tsv)
+          {
+            echo "CLIENT_ID=${CLIENT_ID}"
+            echo "OBJECT_ID=${OBJECT_ID}"
+            echo "CNP_SUB_ID=$(az account show -s "${CNP_SUBSCRIPTION}" --query id -o tsv)"
+            echo "DNS_SUB_ID=$(az account show -s "${DNS_SUBSCRIPTION}" --query id -o tsv)"
+          } >> "${GITHUB_ENV}"
+
+          cat > "${RUNNER_TEMP}/checks.sh" <<'EOF'
+          FAILED=0
+          pass() { echo "PASS: $*"; echo "- ✅ $*" >> "${GITHUB_STEP_SUMMARY}"; }
+          fail() { echo "::error::FAIL: $*"; echo "- ❌ $*" >> "${GITHUB_STEP_SUMMARY}"; FAILED=1; }
+          section() { echo "### $*" >> "${GITHUB_STEP_SUMMARY}"; }
+          finish() { exit "${FAILED}"; }
+
+          # Global name check. An API error is reported as such, not as "taken".
+          # Retried, because ARM intermittently answers 502 InvalidGatewayHost.
+          # Usage: name_free <label> <provider> <api-version> <name> <type>
+          name_free() {
+            local RESULT ATTEMPT OK=1
+            for ATTEMPT in 1 2 3 4 5; do
+              RESULT=$(az rest --method post \
+                --uri "https://management.azure.com/subscriptions/${CNP_SUB_ID}/providers/$2/checkNameAvailability?api-version=$3" \
+                --body "{\"name\":\"$4\",\"type\":\"$5\"}" \
+                --query "join(' ', [to_string(nameAvailable), reason || ''])" -o tsv) && { OK=0; break; }
+              sleep 5
+            done
+            if [ "${OK}" -ne 0 ]; then
+              fail "$1 name $4 could not be checked (see log)"
+            elif [[ "${RESULT}" == true* ]]; then
+              pass "$1 name $4 is free"
+            else
+              fail "$1 name $4 is taken (${RESULT})"
+            fi
+          }
+
+          # Role assignments that apply to the principal at or below a scope,
+          # including those it gets through group membership. assignedTo() is
+          # resolved by ARM, so no Graph permission is needed.
+          # Output, tab-separated: principalId roleDefinitionGuid scope condition roleName
+          assignments() {
+            az rest --method get \
+              --uri "https://management.azure.com/subscriptions/$1/providers/Microsoft.Authorization/roleAssignments?\$filter=assignedTo('${OBJECT_ID}')&api-version=2022-04-01" \
+              --query "value[].[properties.principalId, properties.roleDefinitionId, properties.scope, properties.condition || '-']" -o tsv \
+              | awk -F'\t' 'NR == FNR { names[tolower($1)] = $2; next }
+                  { n = split($2, r, "/"); g = tolower(r[n]); print $1 "\t" g "\t" $3 "\t" $4 "\t" (g in names ? names[g] : g) }' \
+                "${RUNNER_TEMP}/role-names.tsv" -
+          }
+          EOF
+
+          # Built-in role names, so results show "Contributor" rather than a GUID.
+          az role definition list --subscription "${CNP_SUBSCRIPTION}" --query "[].[name, roleName]" -o tsv \
+            > "${RUNNER_TEMP}/role-names.tsv"
+
+      - name: Global names are free
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "Global names"
+
+          for NAME in cath-prod cath-bootstrap-prod cath-tp-prod; do
+            name_free "Key vault" Microsoft.KeyVault 2023-07-01 "${NAME}" Microsoft.KeyVault/vaults
+          done
+
+          RESULT=$(az storage account check-name --name cathsaprod --query "join(' ', [to_string(nameAvailable), reason || ''])" -o tsv)
+          [[ "${RESULT}" == true* ]] && pass "Storage account name cathsaprod is free" || fail "Storage account name cathsaprod is taken (${RESULT})"
+
+          # The regional flexible-server endpoint; the subscription-level one
+          # mostly fails with 502 InvalidGatewayHost.
+          name_free Postgres Microsoft.DBforPostgreSQL/locations/uksouth 2024-08-01 cath-prod Microsoft.DBforPostgreSQL/flexibleServers
+
+          # Microsoft.Cache answers 200 with an empty body when the name is free,
+          # and an error when it is taken.
+          if az rest --method post \
+            --uri "https://management.azure.com/subscriptions/${CNP_SUB_ID}/providers/Microsoft.Cache/CheckNameAvailability?api-version=2023-08-01" \
+            --body '{"name":"cath-prod","type":"Microsoft.Cache/Redis"}' > /dev/null; then
+            pass "Redis name cath-prod is free"
+          else
+            fail "Redis name cath-prod is taken, or could not be checked (see log)"
+          fi
+
+          for SUBSCRIPTION in "${CNP_SUBSCRIPTION}" "${AKS_SUBSCRIPTION}"; do
+            DELETED=$(az keyvault list-deleted --subscription "${SUBSCRIPTION}" --resource-type vault \
+              --query "[?starts_with(name,'cath-')].name" -o tsv)
+            [ -z "${DELETED}" ] && pass "No soft-deleted cath- vaults in ${SUBSCRIPTION}" \
+              || fail "Soft-deleted cath- vaults in ${SUBSCRIPTION}: ${DELETED//$'\n'/, }"
+          done
+          finish
+
+      - name: Resource groups and identities
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "Resource groups and identities"
+
+          for GROUP in cath-prod cath-data-prod cath-cache-prod; do
+            [ "$(az group exists -n "${GROUP}" --subscription "${CNP_SUBSCRIPTION}")" = "false" ] \
+              && pass "Resource group ${GROUP} does not exist yet" || fail "Resource group ${GROUP} already exists"
+          done
+          [ "$(az group exists -n managed-identities-prod-rg --subscription "${CNP_SUBSCRIPTION}")" = "true" ] \
+            && pass "Resource group managed-identities-prod-rg exists" || fail "Resource group managed-identities-prod-rg not found"
+
+          for IDENTITY in cath-prod-mi cath-cp-prod-mi; do
+            if az identity show -g managed-identities-prod-rg -n "${IDENTITY}" --subscription "${CNP_SUBSCRIPTION}" > /dev/null 2>&1; then
+              fail "Managed identity ${IDENTITY} already exists"
+            else
+              pass "Managed identity ${IDENTITY} does not exist yet"
+            fi
+          done
+          finish
+
+      - name: Network, Log Analytics and DNS zones
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "Network, Log Analytics and DNS zones"
+
+          DELEGATION=$(az network vnet subnet show -g cft-prod-network-rg --vnet-name cft-prod-vnet -n postgres-expanded \
+            --subscription "${AKS_SUBSCRIPTION}" --query "delegations[0].serviceName" -o tsv)
+          [ "${DELEGATION}" = "Microsoft.DBforPostgreSQL/flexibleServers" ] \
+            && pass "Subnet postgres-expanded is delegated to Postgres flexible servers" \
+            || fail "Subnet postgres-expanded not readable or not delegated to Postgres (got '${DELEGATION}')"
+
+          az network vnet subnet show -g core-infra-prod --vnet-name core-infra-vnet-prod -n core-infra-subnet-2-prod \
+            --subscription "${CNP_SUBSCRIPTION}" --query id -o tsv > /dev/null \
+            && pass "Subnet core-infra-subnet-2-prod is readable in ${CNP_SUBSCRIPTION}" \
+            || fail "Subnet core-infra-subnet-2-prod not readable in ${CNP_SUBSCRIPTION}"
+
+          az monitor log-analytics workspace show -g oms-automation -n hmcts-prod \
+            --subscription "${CNP_SUBSCRIPTION}" --query id -o tsv > /dev/null \
+            && pass "Log Analytics workspace hmcts-prod is readable" \
+            || fail "Log Analytics workspace hmcts-prod not readable"
+
+          DNS_ROLES=$(assignments "${DNS_SUB_ID}")
+          for ZONE in privatelink.redis.cache.windows.net private.postgres.database.azure.com; do
+            az network private-dns zone show -g "${DNS_RESOURCE_GROUP}" -n "${ZONE}" \
+              --subscription "${DNS_SUBSCRIPTION}" --query id -o tsv > /dev/null \
+              && pass "Private DNS zone ${ZONE} is readable" || fail "Private DNS zone ${ZONE} not readable"
+            grep -i "${ROLE_PRIVATE_DNS_ZONE_CONTRIBUTOR}" <<< "${DNS_ROLES}" | grep -qi "/privateDnsZones/${ZONE}" \
+              && pass "(b) Private DNS Zone Contributor on ${ZONE}" \
+              || fail "(b) Private DNS Zone Contributor missing on ${ZONE}"
+          done
+          finish
+
+      - name: Role-assignment write
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "(a) Role-assignment write"
+
+          CNP_ROLES=$(assignments "${CNP_SUB_ID}")
+          echo "Assignments in ${CNP_SUBSCRIPTION} (principalId, role id, scope, condition, role):"; echo "${CNP_ROLES}"
+
+          # (a) The storage module assigns Storage Blob Data Contributor, so the
+          # principal needs role-assignment write at subscription scope, directly
+          # or through a group. Owner, User Access Administrator or Role Based
+          # Access Control Administrator all give it; a condition, if any, must
+          # allow Storage Blob Data Contributor.
+          GRANTED=$(awk -F'\t' -v scope="/subscriptions/${CNP_SUB_ID}" -v allowed="${ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR}" \
+            -v roles="${ROLE_OWNER},${ROLE_USER_ACCESS_ADMIN},${ROLE_RBAC_ADMIN}" \
+            'BEGIN { split(tolower(roles), r, ","); for (i in r) ok[r[i]] = 1 }
+             tolower($3) == tolower(scope) && ($2 in ok) && ($4 == "-" || tolower($4) ~ tolower(allowed)) { print $5; exit }' \
+            <<< "${CNP_ROLES}")
+          [ -n "${GRANTED}" ] && pass "(a) Can assign Storage Blob Data Contributor on ${CNP_SUBSCRIPTION} (${GRANTED})" \
+            || fail "(a) No role-assignment write on ${CNP_SUBSCRIPTION} that allows Storage Blob Data Contributor"
+          finish
+
+      - name: Graph lookups
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "(c) Graph lookups"
+
+          # Looked up by the Postgres and key vault modules during plan.
+          for GROUP in "DTS Platform Operations PostgreSQL Admin Access SC" "DTS Production DB Reporting" "DTS CFT Developers"; do
+            az ad group show --group "${GROUP}" --query id -o tsv > /dev/null \
+              && pass "Graph read on group '${GROUP}'" || fail "Graph read on group '${GROUP}' failed"
+          done
+
+          [ -n "$(az ad sp list --display-name jenkins-cftptl-intsvc-mi --query "[].id" -o tsv)" ] \
+            && pass "Graph read on service principal jenkins-cftptl-intsvc-mi" \
+            || fail "Graph read on service principal jenkins-cftptl-intsvc-mi failed"
+          finish
+
+      - name: PROD Terraform state is absent
+        if: ${{ !cancelled() }}
+        run: |
+          set -uo pipefail
+          source "${RUNNER_TEMP}/checks.sh"
+          section "Terraform state"
+
+          ACCOUNT_KEY=$(az storage account keys list --account-name "${STATE_STORE_ACCOUNT}" \
+            --resource-group "${STATE_STORE_RESOURCE_GROUP}" --subscription "${CNP_SUBSCRIPTION}" \
+            --query "[0].value" -o tsv)
+          echo "::add-mask::${ACCOUNT_KEY}"
+
+          EXISTS=$(az storage blob exists --account-name "${STATE_STORE_ACCOUNT}" --account-key "${ACCOUNT_KEY}" \
+            --container-name "${STATE_STORE_CONTAINER}" --name "${STATE_KEY}" --query exists -o tsv)
+          [ "${EXISTS}" = "false" ] && pass "No state at ${STATE_KEY}" \
+            || fail "State check for ${STATE_KEY} returned '${EXISTS}' (expected false)"
+          finish

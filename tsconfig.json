@@ -25,6 +25,7 @@
       "@hmcts/location/repository/service": ["libs/location/src/repository/service.ts"],
       "@hmcts/publication": ["libs/publication/src"],
       "@hmcts/redis": ["libs/redis/src"],
+      "@hmcts/email-rate-limit": ["libs/email-rate-limit/src"],
       "@hmcts/system-admin-pages": ["libs/system-admin-pages/src"],
       "@hmcts/list-types-common": ["libs/list-types/common/src"],
       "@hmcts/daily-cause-list-common": ["libs/list-types/daily-cause-list-common/src"],

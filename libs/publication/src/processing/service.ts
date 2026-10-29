@@ -32,9 +32,17 @@ import { type CauseListData as EtDailyCauseListData, generateEtDailyListPdf } fr
 import { type CauseListData as EtFortnightlyCauseListData, generateEtFortnightlyPressListPdf } from "@hmcts/et-fortnightly-list";
 import { generateSjpPressListExcel, generateSjpPublicListExcel, saveExcelFile } from "@hmcts/excel-generation";
 import { type CauseListData as FamilyCauseListData, generateFamilyDailyCauseListExcel, generateFamilyDailyCauseListPdf } from "@hmcts/family-daily-cause-list";
-import { type FttLrtHearingList, generateFttLrtWeeklyHearingListPdf } from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
-import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf } from "@hmcts/ftt-rpt-weekly-hearing-list";
-import { type FttTaxChamberHearingList, generateFttTaxChamberWeeklyHearingListPdf } from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
+import {
+  type FttLrtHearingList,
+  generateFttLrtWeeklyHearingListPdf,
+  reformatFttLrtWeeklyHearingListExcel
+} from "@hmcts/ftt-lands-registration-tribunal-weekly-hearing-list";
+import { type FttRptHearingList, generateFttRptWeeklyHearingListPdf, reformatFttRptWeeklyHearingListExcel } from "@hmcts/ftt-rpt-weekly-hearing-list";
+import {
+  type FttTaxChamberHearingList,
+  generateFttTaxChamberWeeklyHearingListPdf,
+  reformatFttTaxChamberWeeklyHearingListExcel
+} from "@hmcts/ftt-tax-chamber-weekly-hearing-list";
 import { type GrcWeeklyHearingList, generateGrcWeeklyHearingListPdf, reformatGrcWeeklyHearingListExcel } from "@hmcts/grc-weekly-hearing-list";
 import { generateIacDailyListPdf, type IacDailyList } from "@hmcts/iac-daily-list";
 import {
@@ -66,7 +74,7 @@ import { type FlatFileAttachment, sendListTypePublicationNotifications, sendLoca
 import { generatePhtWeeklyHearingListPdf, type PhtHearingList, reformatPhtWeeklyHearingListExcel } from "@hmcts/pht-weekly-hearing-list";
 import { prisma } from "@hmcts/postgres-prisma";
 import { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel, type StandardHearingList } from "@hmcts/rcj-standard-daily-cause-list";
-import { generateSendDailyHearingListPdf, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
+import { generateSendDailyHearingListPdf, reformatSendDailyHearingListExcel, type SendDailyHearingList } from "@hmcts/send-daily-hearing-list";
 import {
   generateSiacPoacPaacWeeklyHearingListPdf,
   reformatSiacPoacPaacWeeklyHearingListExcel,
@@ -112,7 +120,7 @@ import {
   generateUtiacStatutoryAppealDailyHearingListPdf,
   type UtiacStatutoryAppealHearingList
 } from "@hmcts/utiac-statutory-appeal-daily-hearing-list";
-import { generateWpafccWeeklyHearingListPdf, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
+import { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 import { getFileBuffer } from "../file-storage/file-retrieval.js";
 import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
@@ -443,6 +451,7 @@ function createUploadedExcelGenerator(reformat: (buffer: Buffer, locale: string)
 const rcjStandardUploadedExcelGenerator = createUploadedExcelGenerator(reformatRcjStandardDailyCauseListExcel);
 const adminCourtUploadedExcelGenerator = createUploadedExcelGenerator(reformatAdministrativeCourtDailyCauseListExcel);
 const siacPoacPaacUploadedExcelGenerator = createUploadedExcelGenerator(reformatSiacPoacPaacWeeklyHearingListExcel);
+const fttRptUploadedExcelGenerator = createUploadedExcelGenerator(reformatFttRptWeeklyHearingListExcel);
 const sscsExcelGenerator = createUploadedExcelGenerator(reformatSscsDailyHearingListExcel, (p) =>
   generateSscsDailyHearingListExcel({ ...p, jsonData: p.jsonData as SscsDailyHearingList })
 );
@@ -524,7 +533,17 @@ const EXCEL_GENERATOR_REGISTRY: Partial<Record<string, ExcelGenerator>> = {
   PAAC_WEEKLY_HEARING_LIST: siacPoacPaacUploadedExcelGenerator,
   GRC_WEEKLY_HEARING_LIST: createUploadedExcelGenerator(reformatGrcWeeklyHearingListExcel),
   CIC_WEEKLY_HEARING_LIST: createUploadedExcelGenerator(reformatCicWeeklyHearingListExcel),
-  AST_DAILY_HEARING_LIST: createUploadedExcelGenerator(reformatAstDailyHearingListExcel)
+  AST_DAILY_HEARING_LIST: createUploadedExcelGenerator(reformatAstDailyHearingListExcel),
+  WPAFCC_WEEKLY_HEARING_LIST: createUploadedExcelGenerator(reformatWpafccWeeklyHearingListExcel),
+  FTT_TAX_WEEKLY_HEARING_LIST: createUploadedExcelGenerator(reformatFttTaxChamberWeeklyHearingListExcel),
+  FTT_LR_WEEKLY_HEARING_LIST: createUploadedExcelGenerator(reformatFttLrtWeeklyHearingListExcel),
+  SEND_DAILY_HEARING_LIST: createUploadedExcelGenerator(reformatSendDailyHearingListExcel),
+  RPT_EASTERN_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator,
+  RPT_LONDON_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator,
+  RPT_MIDLANDS_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator,
+  RPT_NORTHERN_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator,
+  RPT_SOUTHERN_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator,
+  FTT_RPT_MARKET_RENTS_WEEKLY_HEARING_LIST: fttRptUploadedExcelGenerator
 };
 
 export function listTypeHasExcel(listTypeName: string | undefined): boolean {
