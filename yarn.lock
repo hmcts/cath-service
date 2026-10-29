@@ -2550,13 +2550,9 @@ __metadata:
     "@types/multer": "npm:2.1.0"
     "@types/nunjucks": "npm:3.2.6"
     "@types/passport": "npm:^1.0.17"
-    "@types/pg": "npm:8.20.0"
-    "@types/pg-format": "npm:1.0.5"
     "@types/sanitize-html": "npm:2.16.1"
     connect-redis: "npm:9.0.0"
     express-session: "npm:1.19.0"
-    pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     sanitize-html: "npm:2.17.7"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -2570,16 +2566,10 @@ __metadata:
     multer: ^2.0.2
     nunjucks: ^3.2.4
     passport: ^0.7.0
-    pg: ^8.13.1
-    pg-format: ^1.0.4
   peerDependenciesMeta:
     connect-redis:
       optional: true
     express-session:
-      optional: true
-    pg:
-      optional: true
-    pg-format:
       optional: true
   languageName: unknown
   linkType: soft
@@ -4771,13 +4761,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg-format@npm:1.0.5":
-  version: 1.0.5
-  resolution: "@types/pg-format@npm:1.0.5"
-  checksum: 10c0/6581c884c1ed746ecfc9ffaaef9faf5c3eb8d50ae0109ae94fe69e34ec3acbe2575aa79044679e9c669beb32a4970020e4f2163bff3d53a854c517fe06cd7a51
-  languageName: node
-  linkType: hard
-
 "@types/pg-pool@npm:2.0.7":
   version: 2.0.7
   resolution: "@types/pg-pool@npm:2.0.7"
@@ -4787,7 +4770,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:*, @types/pg@npm:8.20.0, @types/pg@npm:^8.16.0":
+"@types/pg@npm:*, @types/pg@npm:^8.16.0":
   version: 8.20.0
   resolution: "@types/pg@npm:8.20.0"
   dependencies:
