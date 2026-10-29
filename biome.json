@@ -21,6 +21,7 @@
       "!**/generated",
       "!e2e-tests/playwright-report",
       "!infrastructure/resources/swagger",
+      "!tools/ui-baseline/fixtures/payloads",
       "!**/.claude"
     ]
   },

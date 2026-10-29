@@ -1,0 +1,29 @@
+{
+  "name": "@hmcts/ui-baseline",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Capture and compare a source app against a target app, page by page and journey by journey",
+  "bin": "./src/cli.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "ui-baseline": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write --unsafe ."
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "playwright": "1.62.1",
+    "redis": "5.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.4",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}
