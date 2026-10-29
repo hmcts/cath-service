@@ -1,0 +1,36 @@
+{
+  "document": { "publicationDate": "2025-01-01T10:00:00.000Z" },
+  "venue": {
+    "venueName": "Test Court",
+    "venueAddress": { "line": ["Line 1"], "postCode": "AB1 2CD" },
+    "venueContact": { "venueTelephone": "01234567890", "venueEmail": "test@example.com" }
+  },
+  "courtLists": [
+    {
+      "courtHouse": {
+        "courtHouseName": "Test Court House",
+        "courtRoom": [
+          {
+            "courtRoomName": "Room 1",
+            "session": [
+              {
+                "sittings": [
+                  {
+                    "sittingStart": "2025-01-01T09:00:00.000Z",
+                    "sittingEnd": "2025-01-01T17:00:00.000Z",
+                    "hearing": [
+                      {
+                        "hearingType": "Civil",
+                        "case": [{ "caseName": "Test v Test", "caseNumber": "12345" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
