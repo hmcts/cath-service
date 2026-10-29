@@ -17,6 +17,7 @@ export interface SendNotifyEmailResult {
 }
 
 export interface NotifyFileUploadOptions {
+  filename?: string;
   confirmEmailBeforeDownload?: boolean;
   retentionPeriod?: string;
 }

@@ -12,7 +12,7 @@ nodejs:
   environment:
     THIRD_PARTY_KEY_VAULT: 'cath-tp-aat'
     SSO_ALLOW_HTTP_REDIRECT: 'false'
-    CFT_IDAM_URL: 'https://idam-web-public.aat.platform.hmcts.net'
+    CFT_IDAM_URL: 'https://hmcts-access.aat.platform.hmcts.net'
     MEDIA_PASSWORD_RESET_LINK: 'https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/authorize?p=B2C_1A_PASSWORD_RESET&client_id=cae650ba-431b-4fc8-be14-22d476ebd31b&nonce=defaultNonce&redirect_uri=https://pip-frontend.staging.platform.hmcts.net/password-change-confirmation&scope=openid&response_type=code&prompt=login&response_mode=query'
     MEDIA_SIGN_IN_LINK: 'https://pip-frontend.staging.platform.hmcts.net/login?p=B2C_1_SignInUserFlow'
     ENABLE_B2C: 'true'
@@ -37,7 +37,7 @@ nodejs:
         # CFT IDAM secret for local development
         - name: cft-idam-client-secret
           alias: CFT_IDAM_CLIENT_SECRET
-        # GOV.UK Notify
+        # GOV.UK Notify - test key by default; a live key in .env overrides it and sends real emails
         - name: gov-uk-notify-test-api-key
           alias: GOVUK_NOTIFY_API_KEY
         # Azure AD B2C secrets (media user account management)

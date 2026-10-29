@@ -95,6 +95,22 @@ describe("mi-report page", () => {
       expect(res.send).toHaveBeenCalledWith(expect.any(Buffer));
     });
 
+    it("should accept the deleted-accounts report type and stream the xlsx", async () => {
+      // Arrange
+      req.body = { period: "all", reportType: "deleted-accounts" };
+      vi.mocked(buildMiReport).mockResolvedValue({ buffer: Buffer.from("xlsx"), filename: "mi-report-deleted-accounts-from-beginning-2026-09-25.xlsx" });
+
+      // Act
+      const handler = POST[POST.length - 1];
+      await handler(req as Request, res as Response, vi.fn());
+
+      // Assert
+      expect(buildMiReport).toHaveBeenCalledWith("deleted-accounts", "all");
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      expect(res.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="mi-report-deleted-accounts-from-beginning-2026-09-25.xlsx"');
+      expect(res.send).toHaveBeenCalledWith(expect.any(Buffer));
+    });
+
     it("should set the DOWNLOAD_MI_REPORT audit metadata before sending", async () => {
       // Arrange
       req.body = { period: "all", reportType: "publications" };

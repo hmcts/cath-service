@@ -1,5 +1,7 @@
 import {
+  GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY,
+  GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL,
   GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY,
@@ -9,35 +11,38 @@ import {
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
-const SJP_LIST_TYPE_NAMES = ["SJP_PUBLIC_LIST", "SJP_DELTA_PUBLIC_LIST", "SJP_PRESS_LIST", "SJP_DELTA_PRESS_LIST"];
-
-export function isSjpListType(listTypeName: string): boolean {
-  return SJP_LIST_TYPE_NAMES.includes(listTypeName);
-}
-
-export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean; filesUnder2MB: boolean }): string {
-  const { hasPdf, hasExcel, filesUnder2MB } = params;
-
-  // No attachments (e.g. flat-file lists with no generated PDF/Excel) or files too
-  // large to link: use the no-links template. The PDF/Excel templates require
-  // pdf_link_*/excel_link_* personalisation that is only set when a buffer exists.
-  if (!filesUnder2MB || (!hasPdf && !hasExcel)) {
-    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS;
-  }
-
-  if (hasExcel && !hasPdf) {
-    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY;
-  }
+// hasPdf / hasExcel mean the file was generated AND is small enough to link (under 2MB), i.e. it will
+// be attached to the email. Each file is judged on its own: an oversized or missing file only drops
+// that file's link, never the other's. The PDF/Excel templates require pdf_link_*/excel_link_*
+// personalisation that is only set when a buffer is attached, so the template must match what is attached.
+export function getSubscriptionTemplateId(params: { hasPdf: boolean; hasExcel: boolean }): string {
+  const { hasPdf, hasExcel } = params;
 
   if (hasPdf && hasExcel) {
     return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_EXCEL;
   }
 
-  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
+  if (hasPdf) {
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_PDF_ONLY;
+  }
+
+  if (hasExcel) {
+    return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_EXCEL_ONLY;
+  }
+
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_NO_LINKS;
+}
+
+export function getFlatFileSubscriptionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_SUBSCRIPTION_FLAT_FILE;
 }
 
 export function getSystemAdminTemplateId(): string {
   return GOVUK_NOTIFY_TEMPLATE_ID_SYSTEM_ADMIN;
+}
+
+export function getLocationSubscriptionDeletionTemplateId(): string {
+  return GOVUK_NOTIFY_TEMPLATE_ID_LOCATION_SUBSCRIPTION_DELETION;
 }
 
 export function getEnvName(): string {

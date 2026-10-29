@@ -12,63 +12,30 @@ describe("template-config", () => {
     process.env = originalEnv;
   });
 
-  describe("isSjpListType", () => {
-    it("should return true for SJP_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PUBLIC_LIST")).toBe(true);
-    });
+  describe("getSubscriptionTemplateId", () => {
+    const PDF_EXCEL = "42f65ada-6de0-45da-822a-9632f6f682fd";
+    const PDF_ONLY = "ac63ed12-c179-416d-b9af-83b2b37752bf";
+    const EXCEL_ONLY = "2117d63a-eb4d-4e0b-996c-56367f719905";
+    const NO_LINKS = "5b5c31d0-27a3-466b-b750-bd1a858cd50f";
 
-    it("should return true for SJP_DELTA_PUBLIC_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PUBLIC_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return true for SJP_DELTA_PRESS_LIST", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("SJP_DELTA_PRESS_LIST")).toBe(true);
-    });
-
-    it("should return false for non-SJP list types", async () => {
-      const { isSjpListType } = await import("./template-config.js");
-      expect(isSjpListType("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")).toBe(false);
-      expect(isSjpListType("CROWN_DAILY_PDDA_LIST")).toBe(false);
+    it.each([
+      { scenario: "PDF and Excel both generated and under 2MB", hasPdf: true, hasExcel: true, expected: PDF_EXCEL },
+      { scenario: "PDF under 2MB and Excel over 2MB", hasPdf: true, hasExcel: false, expected: PDF_ONLY },
+      { scenario: "PDF under 2MB and no Excel generated", hasPdf: true, hasExcel: false, expected: PDF_ONLY },
+      { scenario: "PDF over 2MB and Excel under 2MB", hasPdf: false, hasExcel: true, expected: EXCEL_ONLY },
+      { scenario: "no PDF generated and Excel under 2MB", hasPdf: false, hasExcel: true, expected: EXCEL_ONLY },
+      { scenario: "PDF and Excel both over 2MB", hasPdf: false, hasExcel: false, expected: NO_LINKS },
+      { scenario: "neither PDF nor Excel generated", hasPdf: false, hasExcel: false, expected: NO_LINKS }
+    ])("should return the correct template when $scenario", async ({ hasPdf, hasExcel, expected }) => {
+      const { getSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getSubscriptionTemplateId({ hasPdf, hasExcel })).toBe(expected);
     });
   });
 
-  describe("getSubscriptionTemplateId", () => {
-    it("should return no-links template when files exceed 2MB", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: false })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
-    });
-
-    it("should return no-links template when a single file exceeds 2MB", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: false })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
-    });
-
-    it("should return the subscription PDF+Excel template when both formats are under 2MB", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: true, filesUnder2MB: true })).toBe("42f65ada-6de0-45da-822a-9632f6f682fd");
-    });
-
-    it("should return the subscription Excel-only template when only Excel is present under 2MB", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: true, filesUnder2MB: true })).toBe("2117d63a-eb4d-4e0b-996c-56367f719905");
-    });
-
-    it("should return the PDF-only template when only a PDF is present under 2MB", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: true, hasExcel: false, filesUnder2MB: true })).toBe("ac63ed12-c179-416d-b9af-83b2b37752bf");
-    });
-
-    it("should return no-links template when there are no files", async () => {
-      const { getSubscriptionTemplateId } = await import("./template-config.js");
-      expect(getSubscriptionTemplateId({ hasPdf: false, hasExcel: false, filesUnder2MB: true })).toBe("5b5c31d0-27a3-466b-b750-bd1a858cd50f");
+  describe("getFlatFileSubscriptionTemplateId", () => {
+    it("should return the flat-file subscription template id", async () => {
+      const { getFlatFileSubscriptionTemplateId } = await import("./template-config.js");
+      expect(getFlatFileSubscriptionTemplateId()).toBe("c10e561d-651e-45b1-a955-c8ec09ffa300");
     });
   });
 
@@ -76,6 +43,13 @@ describe("template-config", () => {
     it("should return the system admin template id", async () => {
       const { getSystemAdminTemplateId } = await import("./template-config.js");
       expect(getSystemAdminTemplateId()).toBe("ec6c863f-3c6f-4d75-82b9-c3e805be20b9");
+    });
+  });
+
+  describe("getLocationSubscriptionDeletionTemplateId", () => {
+    it("should return the location subscription deletion template id", async () => {
+      const { getLocationSubscriptionDeletionTemplateId } = await import("./template-config.js");
+      expect(getLocationSubscriptionDeletionTemplateId()).toBe("79f6b1a5-49a2-43a4-84db-b6e791b5d59a");
     });
   });
 
