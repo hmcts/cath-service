@@ -9,7 +9,7 @@ Two scripts in `apps/postgres/legacy-migration/` do it:
 | `pip-to-cath-migration.sql` | pip → cath. Migrates, saves a baseline of what it wrote, reports, and writes `pip-to-cath-files.sh` to copy the files and secrets |
 | `cath-to-pip-migration.sql` | cath → pip. Writes back what cath changed since the baseline, reports, and writes `cath-to-pip-files.sh` to copy the files |
 
-Each is a dry run unless given `-v apply=1`. Each connects to pip at the start and disconnects before it commits, so the pip passwords are never stored in the cath database. Blobs and Key Vault secrets can't be copied from SQL, so an applied run writes a shell script of `azcopy` and `az` commands next to where psql runs.
+Each is a dry run unless given `-v apply=1`; `-v apply=0` is a dry run too. Each connects to pip at the start and disconnects before it commits, so no pip connection is left in the cath database. The password itself is not kept out of it: see **Legacy logins** below. Blobs and Key Vault secrets can't be copied from SQL, so an applied run writes a shell script of `azcopy` and `az` commands next to where psql runs.
 
 ## 1. Running it
 
@@ -57,7 +57,7 @@ psql "$DATABASE_URL" -f cath-to-pip-migration.sql "${PIP[@]}" -v apply=1
 azcopy login && bash cath-to-pip-files.sh
 ```
 
-- **Rerunning is safe.** A row an earlier run wrote is found and left alone, and the report lists it as `already in legacy`.
+- **Rerunning is safe while pip isn't taking traffic.** A row an earlier run wrote is found and left alone, and the report lists it as `already in legacy`. Once pip is live again, don't rerun: changes cath made are written again and overwrite what pip has changed since.
 - **The two pip databases commit one after the other.** If the second commit fails, the first has still happened. Rerun to finish.
 - **New third parties** are written without an OAuth configuration, and the report lists them. Set their configuration up in pip by hand.
 - pip's materialised MI views (`sdp_mat_view_*`) only show the written rows after their next refresh.
@@ -66,8 +66,8 @@ azcopy login && bash cath-to-pip-files.sh
 
 - **Network:** the cath Postgres server must reach both legacy servers on 5432. Cath is on the CFT network and legacy on SDS, so this needs a hub firewall rule from the cath Postgres subnet to the SDS Postgres subnet.
 - **psql 15 or later**, for `\getenv`.
-- **`postgres_fdw`** on the cath server's extension allow-list. `infrastructure/postgres.tf` sets `azure.extensions = POSTGRES_FDW`. Creating the extension, which the first run does, needs a member of `azure_pg_admin`.
-- **Legacy logins:** a password-authenticated role on each legacy database, because `postgres_fdw` can't use Entra tokens. Read-only is enough for pip → cath. cath → pip needs `INSERT`, `UPDATE` and `DELETE`.
+- **`postgres_fdw`** on the cath server's extension allow-list. `infrastructure/postgres.tf` sets `azure.extensions = POSTGRES_FDW`. Creating the extension needs a member of `azure_pg_admin`. A dry run rolls the extension back, so every run needs one until the first apply.
+- **Legacy logins:** a password-authenticated role on each legacy database, because `postgres_fdw` can't use Entra tokens. Read-only is enough for pip → cath. cath → pip needs `INSERT`, `UPDATE` and `DELETE`. The password goes to the cath server in the text of `CREATE USER MAPPING`, which `pg_stat_statements` keeps even after a rollback, and the server log records it if that statement fails. Use logins made for the migration, and rotate or disable them once it's done.
 - **For the files scripts:** `azcopy` and `az` signed in as someone who can read the source containers (`artefact`, `publications`, `files`) and write the target ones. `pip-to-cath-files.sh` also needs the pip OAuth vault and `cath-tp-<env>`.
 
 ## 2. How the scripts work
@@ -92,7 +92,7 @@ It reads one repeatable-read snapshot of cath and writes to both legacy database
 1. **Diff.** For each table it compares cath with the baseline by id. A row only in cath was **added** since the migration, a row only in the baseline was **deleted**, and a row in both that differs was **changed**.
 2. **Write**, as legacy needs it: deletes children first, because legacy's foreign keys don't cascade, then updates, then inserts parents first.
    - **Changes are written column by column.** Only the columns cath changed are written; the rest keep their legacy value. So values the migration couldn't carry are kept unless cath changed them: super-admin roles, `CASE_ID`/`CASE_URN` search types, and legacy list types with no cath equivalent. For example, a super admin migrated as `INTERNAL_ADMIN_CTSC` stays `INTERNAL_SUPER_ADMIN_CTSC` in legacy after signing in to cath.
-   - **Deletes follow the migration's merges.** Deleting a cath subscription deletes every legacy row it stood for, such as both the `CASE_ID` and `CASE_URN` copies of one case. A deleted account takes all of its legacy subscriptions with it.
+   - **Deletes follow the migration's merges.** Deleting a cath subscription deletes every legacy row it stood for, such as both the `CASE_ID` and `CASE_URN` copies of one case. A deleted account takes all of its legacy subscriptions with it. It isn't added to `pi_user_archived`, so legacy's deleted-accounts report doesn't show it.
    - **Rows that can't be written are skipped and reported:**
      - a value legacy has no enum constant for, such as a cath-only list type or a cath audit action like `USER_LOGIN` (legacy fails to load a row with an unknown enum value);
      - a child of a user that isn't in legacy, such as a cath tester's subscription;
@@ -179,11 +179,11 @@ apps/postgres/legacy-migration/test/run.sh
 It creates three scratch databases in the `cath-postgres` container: `lm_cath` from the Prisma migrations, and `lm_account` and `lm_publication` with the production legacy schema, from the fixtures in `test/`. It never touches the dev database.
 
 It then checks:
-- the `env`, `aat` and second-apply guards, and a migrate dry run that changes nothing;
+- the `env`, `aat` and second-apply guards, and a migrate dry run that changes nothing, with and without `-v apply=0`;
 - the mapping rules after an apply, including the London-time conversion;
 - `pip-to-cath-files.sh`, run against stub `az` and `azcopy`;
 - the changes in `test/cath-changes.sql` written back by `cath-to-pip-migration.sql`, with the rules in §2 (super-admin role kept, merged subscriptions deleted, unknown enum values skipped);
-- a cath → pip dry run that changes nothing, a rerun that changes nothing, and no pip connection or password left behind after any run;
+- a cath → pip dry run that changes nothing, with and without `-v apply=0`, a rerun that changes nothing, and no pip connection or password left behind after any run;
 - `cath-to-pip-files.sh`.
 
 Extend the fixtures when a mapping rule changes.

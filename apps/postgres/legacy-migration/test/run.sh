@@ -79,6 +79,10 @@ grep -q "Dry run: nothing was written" "$WORK/dry-run" || fail "dry run did not 
 # shellcheck disable=SC2086
 snapshot lm_cath $cath_tables | diff -q "$WORK/cath-before" - > /dev/null || fail "migrate dry run changed cath"
 pass "migrate dry run changes nothing"
+migrate -v env=perftest -v apply=0 | grep -q "Dry run: nothing was written" || fail "-v apply=0 applied the migration"
+# shellcheck disable=SC2086
+snapshot lm_cath $cath_tables | diff -q "$WORK/cath-before" - > /dev/null || fail "-v apply=0 changed cath"
+pass "migrate with -v apply=0 is a dry run"
 no_connection_left "migrate dry run"
 
 # Migrate: apply
@@ -101,6 +105,8 @@ check lm_cath "SELECT proof_of_id_path FROM media_application" "44444444-0000-00
 check lm_cath "SELECT count(*) FROM legacy_migration_baseline.\"user\"" "4" "baseline saved"
 migrate -v env=perftest -v apply=1 | grep -q "a migration was already applied" || fail "second apply was not refused"
 pass "second apply refused without -v replace"
+migrate -v env=perftest -v apply=1 -v replace=0 | grep -q "a migration was already applied" || fail "-v replace=0 bypassed the second-apply guard"
+pass "second apply refused with -v replace=0"
 
 # Forward file copy script
 docker exec "$CONTAINER" cat /tmp/legacy-migration/pip-to-cath-files.sh > "$WORK/copy.sh"
@@ -123,6 +129,9 @@ rollback > "$WORK/rollback-dry-run"
 grep -q "Dry run: nothing was written" "$WORK/rollback-dry-run" || fail "rollback dry run did not finish: $(cat "$WORK/rollback-dry-run")"
 legacy_snapshot | diff -q "$WORK/legacy-before" - > /dev/null || fail "rollback dry run changed legacy"
 pass "rollback dry run changes nothing"
+rollback -v apply=0 | grep -q "Dry run: nothing was written" || fail "-v apply=0 applied the rollback"
+legacy_snapshot | diff -q "$WORK/legacy-before" - > /dev/null || fail "rollback with -v apply=0 changed legacy"
+pass "rollback with -v apply=0 is a dry run"
 no_connection_left "rollback dry run"
 
 rollback -v apply=1 > "$WORK/rollback"
@@ -146,7 +155,7 @@ check lm_account "SELECT count(*) FROM subscription WHERE id = 'eeeeeeee-0000-00
 check lm_account "SELECT status FROM media_application WHERE id = '44444444-0000-0000-0000-000000000001'" "APPROVED" "media approval copied back"
 check lm_account "SELECT image || ' ' || image_name FROM media_application WHERE id = 'eeeeeeee-0000-0000-0000-000000000003'" \
   "eeeeeeee-0000-0000-0000-000000000003 id.pdf" "new media application written"
-check lm_account "SELECT string_agg(action, ',') FROM audit_log WHERE \"timestamp\" > '2026-10-27'" "MANAGE_USER" "audit entries written, unknown action left out"
+check lm_account "SELECT string_agg(action, ',') FROM audit_log WHERE id IN (md5('ckaudit000000000000000001')::uuid, md5('ckaudit000000000000000002')::uuid)" "MANAGE_USER" "audit entries written, unknown action left out"
 check lm_account "SELECT status FROM api_user WHERE name = 'NewSub'" "ACTIVE" "new third party written"
 check lm_account "SELECT list_type FROM api_subscription WHERE id = 'eeeeeeee-0000-0000-0000-000000000008'" "FAMILY_DAILY_CAUSE_LIST" "new third-party subscription written"
 check lm_publication "SELECT display_to FROM artefact WHERE artefact_id = 'aaaaaaaa-0000-0000-0000-000000000001'" "2026-12-01 10:00:00" "display end copied back"

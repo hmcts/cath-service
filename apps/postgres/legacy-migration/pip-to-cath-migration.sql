@@ -38,15 +38,19 @@
 DO $$ BEGIN RAISE EXCEPTION 'settings missing, listed above'; END $$;
 \endif
 \if :{?files_script} \else \set files_script pip-to-cath-files.sh \endif
+-- Tested as booleans, so -v apply=0 is a dry run. A value psql can't read as one is reported and
+-- treated as false.
+\if :{?apply} \else \set apply false \endif
+\if :{?replace} \else \set replace false \endif
 
 -- An applied run replaces every user and subscription the E2E tests rely on.
-\if :{?apply}
+\if :apply
 SELECT :'env' = 'aat' AS is_aat \gset
 \if :is_aat
 DO $$ BEGIN RAISE EXCEPTION 'refusing to apply to aat: it would wipe the E2E users and subscriptions'; END $$;
 \endif
 -- A second apply replaces everything cath has written since the first.
-\if :{?replace}
+\if :replace
 \else
 DO $$
 BEGIN
@@ -60,8 +64,9 @@ END $$;
 BEGIN;
 
 -- ---------------------------------------------------------------------------------------------
--- Connect to pip. Created inside the transaction and dropped before it commits, so the pip
--- passwords are never stored in the cath database.
+-- Connect to pip. Created inside the transaction and dropped before it commits, so no pip
+-- connection is left behind. The password is still in this statement's text, which
+-- pg_stat_statements keeps; rotate the pip logins after the run.
 -- ---------------------------------------------------------------------------------------------
 
 CREATE EXTENSION IF NOT EXISTS postgres_fdw;
@@ -622,7 +627,7 @@ SELECT table_name, reason, count(*) AS rows, array_to_string((array_agg(legacy_i
  GROUP BY table_name, reason
  ORDER BY table_name, count(*) DESC, reason;
 
-\if :{?apply}
+\if :apply
 -- The file copy script, written next to where psql runs. QUIET and tuples-only keep it to the
 -- commands themselves.
 \set QUIET on
