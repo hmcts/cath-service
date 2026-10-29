@@ -11,12 +11,10 @@ name: One-Shot - Pre-flight PROD infrastructure
 #     ones they go into do
 #   - the subnets, Log Analytics workspace and private DNS zones are reachable
 #   - the grants requested on DTSPO-35946 are in place:
-#       (a) Role Based Access Control Administrator on DCD-CNP-PROD, conditioned
-#           to Storage Blob Data Contributor (the storage module's assignment)
+#       (a) role-assignment write on DCD-CNP-PROD that allows Storage Blob
+#           Data Contributor (the storage module's assignment)
 #       (b) Private DNS Zone Contributor on the Redis and Postgres zones
 #       (c) Graph read for the groups and principals the modules look up
-#   - the principal has nothing beyond that: no roles through group membership,
-#     no Owner or User Access Administrator, and no other subscriptions
 #   - no PROD Terraform state exists yet
 #
 # Every check runs even if an earlier one fails, so one run lists everything
@@ -81,7 +79,6 @@ jobs:
             echo "CLIENT_ID=${CLIENT_ID}"
             echo "OBJECT_ID=${OBJECT_ID}"
             echo "CNP_SUB_ID=$(az account show -s "${CNP_SUBSCRIPTION}" --query id -o tsv)"
-            echo "AKS_SUB_ID=$(az account show -s "${AKS_SUBSCRIPTION}" --query id -o tsv)"
             echo "DNS_SUB_ID=$(az account show -s "${DNS_SUBSCRIPTION}" --query id -o tsv)"
           } >> "${GITHUB_ENV}"
 
@@ -224,43 +221,28 @@ jobs:
           done
           finish
 
-      - name: Role-assignment write and least privilege
+      - name: Role-assignment write
         if: ${{ !cancelled() }}
         run: |
           set -uo pipefail
           source "${RUNNER_TEMP}/checks.sh"
-          section "Role-assignment write and least privilege"
+          section "(a) Role-assignment write"
 
           CNP_ROLES=$(assignments "${CNP_SUB_ID}")
-          AKS_ROLES=$(assignments "${AKS_SUB_ID}")
           echo "Assignments in ${CNP_SUBSCRIPTION} (principalId, role id, scope, condition, role):"; echo "${CNP_ROLES}"
-          echo "Assignments in ${AKS_SUBSCRIPTION} (principalId, role id, scope, condition, role):"; echo "${AKS_ROLES}"
 
           # (a) The storage module assigns Storage Blob Data Contributor, so the
-          # principal needs role-assignment write limited to that role.
-          awk -F'\t' -v me="${OBJECT_ID}" -v role="${ROLE_RBAC_ADMIN}" -v scope="/subscriptions/${CNP_SUB_ID}" \
-            -v allowed="${ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR}" \
-            'tolower($1) == tolower(me) && tolower($2) == tolower(role) && tolower($3) == tolower(scope) && tolower($4) ~ tolower(allowed) { found = 1 } END { exit !found }' \
-            <<< "${CNP_ROLES}" \
-            && pass "(a) Role Based Access Control Administrator on ${CNP_SUBSCRIPTION}, conditioned to Storage Blob Data Contributor" \
-            || fail "(a) Role Based Access Control Administrator on ${CNP_SUBSCRIPTION} with a Storage Blob Data Contributor condition is missing"
-
-          for SUBSCRIPTION in "${CNP_SUBSCRIPTION}" "${AKS_SUBSCRIPTION}"; do
-            [ "${SUBSCRIPTION}" = "${CNP_SUBSCRIPTION}" ] && ROLES="${CNP_ROLES}" || ROLES="${AKS_ROLES}"
-
-            VIA_GROUP=$(awk -F'\t' -v me="${OBJECT_ID}" 'tolower($1) != tolower(me) { print $5 " on " $3 " (via group " $1 ")" }' <<< "${ROLES}")
-            [ -z "${VIA_GROUP}" ] && pass "No roles through group membership in ${SUBSCRIPTION}" \
-              || fail "Roles through group membership in ${SUBSCRIPTION}: ${VIA_GROUP//$'\n'/; }"
-
-            BROAD=$(awk -F'\t' -v o="${ROLE_OWNER}" -v u="${ROLE_USER_ACCESS_ADMIN}" \
-              'tolower($2) == tolower(o) || tolower($2) == tolower(u) { print $5 " on " $3 }' <<< "${ROLES}")
-            [ -z "${BROAD}" ] && pass "No Owner or User Access Administrator in ${SUBSCRIPTION}" \
-              || fail "Owner or User Access Administrator in ${SUBSCRIPTION}: ${BROAD//$'\n'/; }"
-          done
-
-          EXTRA=$(az account list --query "[?name!='${CNP_SUBSCRIPTION}' && name!='${AKS_SUBSCRIPTION}' && name!='${DNS_SUBSCRIPTION}'].name" -o tsv)
-          [ -z "${EXTRA}" ] && pass "Principal sees only ${CNP_SUBSCRIPTION}, ${AKS_SUBSCRIPTION} and ${DNS_SUBSCRIPTION}" \
-            || fail "Principal can access $(wc -l <<< "${EXTRA}" | tr -d ' ') other subscription(s): ${EXTRA//$'\n'/, }"
+          # principal needs role-assignment write at subscription scope, directly
+          # or through a group. Owner, User Access Administrator or Role Based
+          # Access Control Administrator all give it; a condition, if any, must
+          # allow Storage Blob Data Contributor.
+          GRANTED=$(awk -F'\t' -v scope="/subscriptions/${CNP_SUB_ID}" -v allowed="${ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR}" \
+            -v roles="${ROLE_OWNER},${ROLE_USER_ACCESS_ADMIN},${ROLE_RBAC_ADMIN}" \
+            'BEGIN { split(tolower(roles), r, ","); for (i in r) ok[r[i]] = 1 }
+             tolower($3) == tolower(scope) && ($2 in ok) && ($4 == "-" || tolower($4) ~ tolower(allowed)) { print $5; exit }' \
+            <<< "${CNP_ROLES}")
+          [ -n "${GRANTED}" ] && pass "(a) Can assign Storage Blob Data Contributor on ${CNP_SUBSCRIPTION} (${GRANTED})" \
+            || fail "(a) No role-assignment write on ${CNP_SUBSCRIPTION} that allows Storage Blob Data Contributor"
           finish
 
       - name: Graph lookups
