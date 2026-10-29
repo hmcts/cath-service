@@ -101,6 +101,30 @@ const CIC_CY_HEADINGS = [
 const BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME = "BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST";
 const BIRMINGHAM_ADMIN_COURT_SHEET_NAME = "Birmingham hearings";
 const ADMIN_COURT_CY_HEADINGS = ["Lleoliad", "Barnwr", "Amser", "Rhif yr achos", "Manylion yr achos", "Math o wrandawiad", "Gwybodaeth ychwanegol"];
+const FTT_RPT_LONDON_LIST_TYPE_NAME = "RPT_LONDON_WEEKLY_HEARING_LIST";
+const FTT_RPT_SHEET_NAME = "RPT London";
+const FTT_RPT_UPLOADED_HEADER = [
+  "Date",
+  "Time",
+  "Venue",
+  "Case Type",
+  "Case Reference Number",
+  "Judge(s)",
+  "Member(s)",
+  "Hearing Method",
+  "Additional Information"
+];
+const FTT_RPT_CY_HEADINGS = [
+  "Dyddiad",
+  "Amser",
+  "Lleoliad",
+  "Math o achos",
+  "Cyfeirnod yr achos",
+  "Barnwr/Barnwyr",
+  "Aelod(au)",
+  "Math o wrandawiad",
+  "Gwybodaeth ychwanegol"
+];
 const GOVUK_NOTIFY_DOCUMENT_LINK_PATTERN = /https:\/\/documents\.service\.gov\.uk\/d\/[A-Za-z0-9_-]+/g;
 
 let testLocationId: number;
@@ -193,6 +217,16 @@ async function createAdminCourtExcelFile(): Promise<Buffer> {
   workbook.addWorksheet(BIRMINGHAM_ADMIN_COURT_SHEET_NAME).addRows([
     ["Venue", "Judge", "Time", "Case Number", "Case Details", "Hearing Type", "Additional Information", "Internal notes"],
     ["Court 1", "Mr Justice Smith", "10.30am", "AC-2026-000001", "R (Smith) v Secretary of State", "Judicial Review", "", "Claimant is vulnerable"]
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
+}
+
+async function createFttRptExcelFile(): Promise<Buffer> {
+  const workbook = new Workbook();
+  workbook.addWorksheet(FTT_RPT_SHEET_NAME).addRows([
+    [...FTT_RPT_UPLOADED_HEADER, "Internal notes"],
+    ["15/01/2026", "10.30am", "10 Alfred Place", "Rent repairs", "LON/00AA/2026/0001", "Judge Jones", "Mr Patel", "In person", "None", "Vulnerable party"]
   ]);
 
   return Buffer.from(await workbook.xlsx.writeBuffer());
@@ -506,7 +540,7 @@ test.describe
     });
 
     // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-    test("RCJ, SSCS, Rolls Building, Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
+    test("RCJ, SSCS, Rolls Building, Tribunal, First-tier Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
       page
     }) => {
       test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
@@ -520,7 +554,17 @@ test.describe
       const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
       const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
       const adminCourtListType = (await getListTypeByName(BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME)) as { id: number } | null;
-      if (!kbListType || !sscsListType || !businessAndPropertyListType || !interimApplicationsListType || !grcListType || !cicListType || !adminCourtListType) {
+      const fttRptLondonListType = (await getListTypeByName(FTT_RPT_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
+      if (
+        !kbListType ||
+        !sscsListType ||
+        !businessAndPropertyListType ||
+        !interimApplicationsListType ||
+        !grcListType ||
+        !cicListType ||
+        !adminCourtListType ||
+        !fttRptLondonListType
+      ) {
         throw new Error("Expected list types are not seeded");
       }
       const artefactIds: string[] = [];
@@ -671,6 +715,31 @@ test.describe
         expect(rowValues(adminCourtWorksheet, 1)).not.toContain("Internal notes");
         expect(rowValues(adminCourtWorksheet, 2)).not.toContain("Claimant is vulnerable");
         await expectPdfAndExcelLinksInEmail(adminCourtArtefactId);
+
+        // STEP 11: A Welsh RPT London upload gets the Welsh headings and the long Welsh date, drops the extra column, and links both files
+        const fttRptArtefactId = await uploadExcelAndConfirm(page, {
+          listTypeId: fttRptLondonListType.id,
+          language: "WELSH",
+          fileName: "ftt-rpt-london-cy.xlsx",
+          buffer: await createFttRptExcelFile()
+        });
+        artefactIds.push(fttRptArtefactId);
+
+        const fttRptWorksheet = await downloadReformattedWorksheet(page, fttRptArtefactId, FTT_RPT_SHEET_NAME);
+        expect(rowValues(fttRptWorksheet, 1)).toEqual(FTT_RPT_CY_HEADINGS);
+        expect(rowValues(fttRptWorksheet, 2)).toEqual([
+          "15 Ionawr 2026",
+          "10.30am",
+          "10 Alfred Place",
+          "Rent repairs",
+          "LON/00AA/2026/0001",
+          "Judge Jones",
+          "Mr Patel",
+          "In person",
+          "None"
+        ]);
+        expect(rowValues(fttRptWorksheet, 1)).not.toContain("Internal notes");
+        await expectPdfAndExcelLinksInEmail(fttRptArtefactId);
       } finally {
         if (artefactIds.length > 0) {
           await cleanupTestNotifications(artefactIds);
