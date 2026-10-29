@@ -11,12 +11,14 @@ export function expressSessionRedis(options: ExpressSessionRedisOptions): Reques
       prefix: "sess:",
       ...storeOptions
     }),
-    secret: process.env.SESSION_SECRET || "default-secret-change-in-production",
+    secret: sessionOptions.secret ?? resolveSessionSecret(),
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
+      // Lax keeps the cookie off cross-site POSTs; every OAuth callback here returns via GET
+      sameSite: "lax",
       maxAge: options.cookieMaxAge || 1000 * 60 * 60 * 4 // 4 hours
     }
   };
@@ -25,6 +27,18 @@ export function expressSessionRedis(options: ExpressSessionRedisOptions): Reques
     ...defaultSessionOptions,
     ...sessionOptions
   });
+}
+
+function resolveSessionSecret(): string {
+  if (process.env.SESSION_SECRET) {
+    return process.env.SESSION_SECRET;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
+
+  return "default-secret-change-in-production";
 }
 
 export type ExpressSessionRedisOptions = {

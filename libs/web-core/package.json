@@ -38,21 +38,13 @@
     "helmet": "^8.0.0",
     "multer": "^2.0.2",
     "nunjucks": "^3.2.4",
-    "passport": "^0.7.0",
-    "pg": "^8.13.1",
-    "pg-format": "^1.0.4"
+    "passport": "^0.7.0"
   },
   "peerDependenciesMeta": {
     "connect-redis": {
       "optional": true
     },
     "express-session": {
-      "optional": true
-    },
-    "pg": {
-      "optional": true
-    },
-    "pg-format": {
       "optional": true
     }
   },
@@ -62,13 +54,9 @@
     "@types/multer": "2.1.0",
     "@types/nunjucks": "3.2.6",
     "@types/passport": "^1.0.17",
-    "@types/pg": "8.20.0",
-    "@types/pg-format": "1.0.5",
     "@types/sanitize-html": "2.16.1",
     "connect-redis": "9.0.0",
     "express-session": "1.19.0",
-    "pg": "8.21.0",
-    "pg-format": "1.0.4",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

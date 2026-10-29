@@ -1387,7 +1387,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
@@ -2564,13 +2563,9 @@ __metadata:
     "@types/multer": "npm:2.1.0"
     "@types/nunjucks": "npm:3.2.6"
     "@types/passport": "npm:^1.0.17"
-    "@types/pg": "npm:8.20.0"
-    "@types/pg-format": "npm:1.0.5"
     "@types/sanitize-html": "npm:2.16.1"
     connect-redis: "npm:9.0.0"
     express-session: "npm:1.19.0"
-    pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     sanitize-html: "npm:2.17.7"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -2584,16 +2579,10 @@ __metadata:
     multer: ^2.0.2
     nunjucks: ^3.2.4
     passport: ^0.7.0
-    pg: ^8.13.1
-    pg-format: ^1.0.4
   peerDependenciesMeta:
     connect-redis:
       optional: true
     express-session:
-      optional: true
-    pg:
-      optional: true
-    pg-format:
       optional: true
   languageName: unknown
   linkType: soft
@@ -2666,7 +2655,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     sass: "npm:1.102.0"
     supertest: "npm:7.2.2"
@@ -4786,13 +4774,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg-format@npm:1.0.5":
-  version: 1.0.5
-  resolution: "@types/pg-format@npm:1.0.5"
-  checksum: 10c0/6581c884c1ed746ecfc9ffaaef9faf5c3eb8d50ae0109ae94fe69e34ec3acbe2575aa79044679e9c669beb32a4970020e4f2163bff3d53a854c517fe06cd7a51
-  languageName: node
-  linkType: hard
-
 "@types/pg-pool@npm:2.0.7":
   version: 2.0.7
   resolution: "@types/pg-pool@npm:2.0.7"
@@ -4802,7 +4783,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:*, @types/pg@npm:8.20.0, @types/pg@npm:^8.16.0":
+"@types/pg@npm:*, @types/pg@npm:^8.16.0":
   version: 8.20.0
   resolution: "@types/pg@npm:8.20.0"
   dependencies:
@@ -9094,13 +9075,6 @@ __metadata:
   version: 2.14.0
   resolution: "pg-connection-string@npm:2.14.0"
   checksum: 10c0/c26d85970f782de72b90aa45b4acfa34df90242fc08bc676e8827297164044dbfb40a2cf20b0646bd02662a6b14c5ed27f322db627e41e582f2b705bc41e8b47
-  languageName: node
-  linkType: hard
-
-"pg-format@npm:1.0.4":
-  version: 1.0.4
-  resolution: "pg-format@npm:1.0.4"
-  checksum: 10c0/e40718c181cbdf545c54bc9347e15e51bbf47b9e043029cb2dc0556112df41cc17ea699675b577c6c0e9889e28a56034b32633ded7c44b5dd30e8eca0bce97df
   languageName: node
   linkType: hard
 
