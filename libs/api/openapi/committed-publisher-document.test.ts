@@ -49,7 +49,7 @@ describe("committed publisher document", () => {
   });
 
   describe("x-provenance APIM check", () => {
-    it("should allow exactly the Provenance enum values", () => {
+    it("should allow exactly the external Provenance values", () => {
       // Arrange
       const policy = readFileSync(path.join(REPO_ROOT, OPERATION_POLICIES_PATH, "createPublication.xml"), "utf-8");
       const checkHeader = policy.match(/<check-header name="x-provenance"[^>]*>([\s\S]*?)<\/check-header>/)?.[1] ?? "";
@@ -58,7 +58,7 @@ describe("committed publisher document", () => {
       const allowedValues = [...checkHeader.matchAll(/<value>([^<]+)<\/value>/g)].map((match) => match[1]);
 
       // Assert
-      expect(allowedValues).toEqual(Object.values(Provenance));
+      expect(allowedValues).toEqual(Object.values(Provenance).filter((provenance) => provenance !== Provenance.MANUAL_UPLOAD));
     });
   });
 
