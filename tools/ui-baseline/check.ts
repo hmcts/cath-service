@@ -4,9 +4,20 @@ import { cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
-import { type CompareSummary, captureBatch, compareRuns, type ReviewResult, reviewFindings } from "@hmcts/ui-baseline";
+import {
+  type CompareSummary,
+  captureBatch,
+  collectFiles,
+  compareFileRuns,
+  compareRuns,
+  type FileCompareSummary,
+  openBlobContainer,
+  type ReviewResult,
+  reviewFindings
+} from "@hmcts/ui-baseline";
 import { chromium } from "playwright";
 import type { SignInResult } from "./cath/sign-in.js";
+import { filesStorage, loadEnvironment } from "./environments.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
 
@@ -21,6 +32,8 @@ const DEFAULT_BASELINE = process.env.PARITY_BASELINE ?? path.join(PARITY_DIR, "o
 const LOCALES = ["en", "cy"];
 const REPORT_PORT = 9500;
 const SIDE_BY_SIDE_WIDTH = 1600;
+const FILE_LABEL = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel" } as const;
+const FILE_VERDICT = { match: "matches", differs: "differs", missing: "CaTH did not make it", extra: "only CaTH made one" } as const;
 
 const { values: args } = parseArgs({
   options: {
@@ -29,12 +42,16 @@ const { values: args } = parseArgs({
     all: { type: "boolean", default: false },
     "list-type": { type: "string", multiple: true },
     route: { type: "string", multiple: true },
+    // The environment CaTH runs in (environments.json): local, or test (CaTH perftest)
+    env: { type: "string" },
     target: { type: "string" },
     baseline: { type: "string" },
     locale: { type: "string" },
     out: { type: "string" },
     "no-seed": { type: "boolean", default: false },
     "no-review": { type: "boolean", default: false },
+    // Skip comparing the PDF and Excel files each list generates
+    "no-files": { type: "boolean", default: false },
     reviewer: { type: "string" },
     serve: { type: "boolean", default: false },
     // Post (or update) the check's comment on this PR, using the dev's gh sign-in
@@ -44,7 +61,10 @@ const { values: args } = parseArgs({
 });
 
 const apps = JSON.parse(await readFile(path.join(PARITY_DIR, "apps.json"), "utf-8"));
-const targetBase = args.target ?? apps.cath.baseUrl;
+const environment = await loadEnvironment(args.env);
+const targetBase = args.target ?? environment.cath.baseUrl;
+// Passed to the seeding and sign-in scripts, which read the same environment
+const envArgs = [`--env=${environment.name}`];
 const baseline = path.resolve(args.baseline ?? DEFAULT_BASELINE);
 const locales = args.locale ? [args.locale] : LOCALES;
 const manifest = await loadManifest();
@@ -65,7 +85,7 @@ await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 if (requirements) await writeFile(path.join(out, "requirements.md"), requirements);
 
-step(`Checking ${targetBase} against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
+step(`Checking ${targetBase} (${environment.name}) against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
 console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
 // --all skips most of the route map (journey steps, sign-in pages), so count those by reason instead
@@ -94,12 +114,18 @@ const pageFixtures = scope.routes.flatMap((route) => [
   ...Object.values(route.cathParams ?? {}).flatMap((source) => (source.startsWith("publication:") ? [source.slice("publication:".length)] : []))
 ]);
 const seedIds = [...new Set([...scope.publications.map((p) => p.id), ...pageFixtures])];
-const seedFile = path.join(PARITY_DIR, "output/seed/cath-check.json");
+const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}.json`);
 if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
   const seeding = spawnSync(
     "npx",
-    ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "tools/ui-baseline/cath/seed.ts", `--only=${seedIds.join(",")}`],
+    [
+      "tsx",
+      ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []),
+      "tools/ui-baseline/cath/seed.ts",
+      ...envArgs,
+      `--only=${seedIds.join(",")}`
+    ],
     {
       cwd: REPO_DIR,
       env: { ...process.env, PARITY_SEED_OUTPUT: seedFile },
@@ -112,28 +138,38 @@ if (seedIds.length && !args["no-seed"]) {
 const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
-const signInFile = path.join(PARITY_DIR, "output/seed/cath-sign-in.json");
+const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);
 const needsSignIn = scope.routes.some((r) => r.viewAs) || scope.publications.some((p) => p.viewAs);
 if (needsSignIn) {
   step("Signing in to CaTH");
-  const signingIn = spawnSync("npx", ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "tools/ui-baseline/cath/sign-in.ts"], {
-    cwd: REPO_DIR,
-    env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
-    encoding: "utf-8"
-  });
-  for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|Error/.test(l))) console.log(`  ${line.trim()}`);
+  const signingIn = spawnSync(
+    "npx",
+    ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "tools/ui-baseline/cath/sign-in.ts", ...envArgs],
+    {
+      cwd: REPO_DIR,
+      env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
+      encoding: "utf-8"
+    }
+  );
+  for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|not signed in|Error/.test(l)))
+    console.log(`  ${line.trim()}`);
   if (signingIn.status !== 0) throw new Error("signing in to CaTH failed");
 }
 const signedIn = needsSignIn ? (JSON.parse(await readFile(signInFile, "utf-8")) as SignInResult) : null;
-// Signed-in targets are split per language, each with that language's own session
-const signedInTargets = <T extends { locales: string[] }>(target: T, viewAs: string | null | undefined) =>
-  viewAs
-    ? target.locales.map((locale) => {
-        const { locales: _, ...rest } = target;
-        const cookie = required(signedIn?.users[viewAs]?.cookies[locale], `CaTH sign-in for ${viewAs} (${locale})`);
-        return { ...rest, locale, cookies: [...apps.cath.cookies, cookie] };
-      })
-    : [{ ...target, cookies: apps.cath.cookies }];
+// Signed-in targets are split per language, each with that language's own session. A page whose
+// user has no test account in this environment is not compared, and says why.
+const signedInTargets = <T extends { id: string; locales: string[] }>(target: T, viewAs: string | null | undefined): CathTarget<T>[] => {
+  if (!viewAs) return [{ ...target, cookies: apps.cath.cookies }];
+  const unavailable = signedIn?.unavailable?.[viewAs];
+  if (unavailable) {
+    console.log(`    not compared: ${target.id}: ${unavailable}`);
+    return [];
+  }
+  return target.locales.map((locale) => {
+    const session = required(signedIn?.users[viewAs]?.cookies[locale], `CaTH sign-in for ${viewAs} (${locale})`);
+    return { ...target, locales: [locale], cookies: [...apps.cath.cookies, ...session] };
+  });
+};
 
 // ---------- 3. Capture CaTH ----------
 step("Capturing CaTH");
@@ -191,6 +227,12 @@ for (const area of Object.keys(captured)) {
   console.log(`  ${area}: ${t.pairs - t.notCaptured} page-language pairs compared, ${t.match} match, ${t.differs} differ`);
 }
 
+// ---------- 4b. Compare the PDF and Excel files ----------
+// Each list's files, from CaTH's publications container, against the ones pip made for the same
+// fixture. A list seeded through the publication API (JSON only) has no Excel from a spreadsheet,
+// so for those a missing Excel is not counted.
+const filesCompared = await compareGeneratedFiles();
+
 // ---------- 5. Review against the ticket ----------
 const reviews: Record<string, ReviewResult> = {};
 if (!args["no-review"] && requirements) {
@@ -244,6 +286,7 @@ const reportArgs = [
   ...(captured.pages ? ["--cath-pages", captured.pages] : []),
   ...(comparisons.lists ? ["--compare", path.join(out, "compare/lists/compare.json")] : []),
   ...(comparisons.pages ? ["--pages-compare", path.join(out, "compare/pages/compare.json")] : []),
+  ...(filesCompared ? ["--files-compare", path.join(out, "compare/files/files-compare.json")] : []),
   ...Object.keys(reviews).flatMap((area) => ["--review", path.join(out, "review", area, "review.json")])
 ];
 execFileSync("node", reportArgs, { stdio: "ignore" });
@@ -268,6 +311,11 @@ console.log(
     : `  ${pagesDiffer} (not reviewed against a ticket)`
 );
 for (const line of differing) console.log(`    ${line}`);
+const filesDiffer = (filesCompared?.results ?? [])
+  .filter((r) => r.verdict !== "match")
+  .map((r) => `${r.id} ${FILE_LABEL[r.kind]} (${FILE_VERDICT[r.verdict]})`);
+if (filesCompared) console.log(`  ${filesDiffer.length} of ${filesCompared.totals.files} PDF and Excel files differ from pip`);
+for (const line of filesDiffer) console.log(`    ${line}`);
 
 if (args.all) await finish();
 
@@ -303,7 +351,8 @@ const body = buildComment({
   skipped: scope.skipped,
   evidence: ["report.zip", ...screenshots],
   comparisons: Object.values(comparisons),
-  reviews: Object.values(reviews)
+  reviews: Object.values(reviews),
+  files: filesCompared ? { compared: filesCompared.totals.files, differ: filesDiffer } : undefined
 });
 await writeFile(path.join(evidence, "pr-comment.md"), body);
 if (args["post-pr"]) console.log(`  PR comment: ${postComment(args.repo, Number(args["post-pr"]), body)}`);
@@ -314,6 +363,53 @@ console.log(
 await finish();
 
 // ---------- helpers ----------
+async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
+  const listed = scope.publications.filter((publication) => publication.format !== "flat-file" && seed?.publications[publication.id]);
+  if (args["no-files"] || !listed.length) return null;
+  if (!existsSync(path.join(baseline, "files/index.jsonl"))) {
+    console.log("\n  PDF and Excel files not compared: the baseline has none (re-record it with `yarn ui-baseline:record-pip`)");
+    return null;
+  }
+  step("Comparing PDF and Excel files");
+  const cathFiles = path.join(out, "cath/files");
+  await collectFiles({
+    container: openBlobContainer(filesStorage("cath", environment.cath)),
+    out: cathFiles,
+    waitSeconds: environment.cath.filesWaitSeconds,
+    publications: listed.map((publication) => ({
+      id: publication.id,
+      artefactId: (seed as SeedResult).publications[publication.id].artefactId,
+      seededAt: seed?.seededAt
+    }))
+  });
+  const summary = await compareFileRuns({
+    source: path.join(baseline, "files"),
+    target: cathFiles,
+    out: path.join(out, "compare/files"),
+    only: listed.map((p) => p.id)
+  });
+  const uncomparable = (r: FileCompareSummary["results"][number]) =>
+    r.kind === "excel" && r.verdict === "missing" && seed?.publications[r.id]?.excelUploaded === false;
+  for (const r of summary.results.filter(uncomparable))
+    scope.skipped.push(`${r.id}: Excel file not compared: CaTH was seeded through its publication API, which takes the list as JSON, not the spreadsheet`);
+  const results = summary.results.filter((r) => !uncomparable(r));
+  const kept: FileCompareSummary = {
+    ...summary,
+    results,
+    totals: {
+      files: results.length,
+      match: results.filter((r) => r.verdict === "match").length,
+      differs: results.filter((r) => r.verdict === "differs").length,
+      missing: results.filter((r) => r.verdict === "missing").length,
+      extra: results.filter((r) => r.verdict === "extra").length
+    }
+  };
+  await writeFile(path.join(out, "compare/files/files-compare.json"), `${JSON.stringify(kept, null, 2)}\n`);
+  const t = kept.totals;
+  console.log(`  ${t.files} files compared: ${t.match} match, ${t.differs} differ, ${t.missing} CaTH did not make, ${t.extra} only CaTH made`);
+  return kept;
+}
+
 // pip id -> CaTH id for everything both apps were seeded with: publications, account records and
 // users, each paired through the fixture it came from. List type names map to CaTH's numeric ids,
 // which only CaTH routes that take one in the path use.
@@ -412,7 +508,8 @@ async function bundleReport(): Promise<string> {
     ...scope.routes.flatMap((r): [string, string][] => [
       [path.join(baseline, "pages", r.id), path.join(bundle, "data/pages", r.id)],
       ...(captured.pages ? [[path.join(captured.pages, r.id), path.join(bundle, "data/cath-pages", r.id)] as [string, string]] : [])
-    ])
+    ]),
+    ...(filesCompared ? [[path.join(out, "compare/files"), path.join(bundle, "data/files")] as [string, string]] : [])
   ];
   for (const [from, to] of copies.filter(([from]) => existsSync(from))) await cp(from, to, { recursive: true, dereference: true });
   return bundle;
@@ -498,6 +595,8 @@ function required<T>(value: T | undefined, what: string): T {
 function step(message: string): void {
   console.log(`\n== ${message}`);
 }
+
+type CathTarget<T> = T & { cookies: { name: string; value: string }[] };
 
 interface CathIds {
   ids: Map<string, string>;

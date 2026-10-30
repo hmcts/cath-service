@@ -18,6 +18,7 @@
   "dependencies": {
     "@axe-core/playwright": "4.13.0",
     "@azure/identity": "4.10.0",
+    "@azure/keyvault-secrets": "4.11.2",
     "@azure/storage-blob": "12.27.0",
     "exceljs": "4.4.0",
     "pdfjs-dist": "6.4.299",
