@@ -29,10 +29,12 @@ locals {
     # is not, and every taggable resource in it was rejected with
     # RequestDisallowedByPolicy until this mapped it to "testing".
     # apim_suffix uses CFT names (aat is stg, perftest is test); null means no APIM.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg" }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo" }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test" }
+    # ui_baseline adds the storage for tools/ui-baseline (recorded pip baselines and check
+    # results). Only the environment testers run parity checks against has it.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", ui_baseline = false }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", ui_baseline = false }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, ui_baseline = false }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", ui_baseline = true }
   }
 
   # Unknown environments fall back to the module defaults rather than failing on
@@ -79,4 +81,6 @@ locals {
   # resource, not per-environment configuration, and putting it in the map would
   # imply a new environment might want to opt in.
   storage_uses_legacy_rg = var.env == "aat"
+
+  ui_baseline = try(local.env_config[var.env].ui_baseline, false)
 }

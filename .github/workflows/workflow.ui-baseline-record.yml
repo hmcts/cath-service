@@ -1,0 +1,75 @@
+name: UI baseline - record pip
+
+# Records the pip baseline tools/ui-baseline compares CaTH against, and stores it in the test
+# environment's storage (cathsaperftest, container ui-baseline) for the hosted check and anyone
+# running a check to fetch with `yarn ui-baseline:baseline pull`. Run by hand: pip is pinned in
+# tools/ui-baseline/pip/setup.sh and the fixtures are committed, so the baseline only needs
+# recording again when either changes.
+#
+# It runs pip in Docker on a GitHub-hosted runner, as a developer's machine does; the private
+# runner groups have no Docker. About 35 minutes.
+on:
+  workflow_dispatch:
+    inputs:
+      store:
+        description: "Store the recorded baseline in the test environment (otherwise only keep it as a workflow artifact)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: ui-baseline-record
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record pip baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Record the baseline
+        run: yarn ui-baseline:record-pip
+
+      - name: Keep the run summary and logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ui-baseline-run
+          path: |
+            tools/ui-baseline/output/baseline/run.json
+            tools/ui-baseline/output/baseline/*.log
+          if-no-files-found: ignore
+
+      - name: Azure login (OIDC)
+        if: inputs.store
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Store the baseline in the test environment
+        if: inputs.store
+        run: |
+          CONNECTION_STRING="$(az keyvault secret show --vault-name cath-perftest --name storageaccount-connection-string --query value -o tsv)"
+          echo "::add-mask::$CONNECTION_STRING"
+          CATH_STORAGE_CONNECTION_STRING="$CONNECTION_STRING" yarn ui-baseline:baseline push --env test

@@ -35,6 +35,7 @@
     "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
+    "ui-baseline:baseline": "tsx tools/ui-baseline/baseline.ts",
     "ui-baseline:check": "tsx --env-file-if-exists=.env tools/ui-baseline/check.ts",
     "ui-baseline:compare-files": "tsx tools/ui-baseline/compare-files.ts",
     "ui-baseline:record-pip": "bash tools/ui-baseline/pip/baseline.sh",
