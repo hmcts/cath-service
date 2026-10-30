@@ -37,10 +37,10 @@
 - [x] Local smoke run: `SCRIPT_NAME=display-from-subscriptions yarn workspace @hmcts/crons dev` and `SCRIPT_NAME=scheduled-list-type-subscriptions ...` against seeded data; confirm summary log and that the process exits (both log `{ total: 0, succeeded: 0, failed: 0 }` and exit 0 against the local DB. No matching artefacts were created, to avoid real Notify sends. Run via `../../node_modules/.bin/tsx src/index.ts`: `tsx` is not a declared dep of `@hmcts/crons`, so `yarn workspace @hmcts/crons dev` fails with `command not found: tsx`, which was already the case on master)
 
 ### Release
-- [ ] PR description notes: no per-recipient dedupe, so manual reruns re-send
+- [x] PR description notes (#1306): no per-recipient dedupe, so manual reruns re-send
 
 ### Out-of-repo (cnp-flux-config `apps/cath`) — raise alongside this PR
 - [x] Check whether CaTH runs on both 00 and 01 clusters: it does (aat, demo, perftest). Rather than legacy's day-of-week split, the new releases set `disableActiveClusterCheck: false`. `ACTIVE_CRON_CLUSTER` is `"true"` only on 00 (`apps/flux-system/<env>/00/kustomize.yaml`), so the job chart suspends the CronJob on 01, and it follows the platform's active-cluster flag if that moves
 - [x] Draft CronJob `SCRIPT_NAME=display-from-subscriptions`, schedule `0 1 * * *` UTC (`apps/cath/cath-crons-display-from-subscriptions/`). It inherits `concurrencyPolicy: Forbid` and `activeDeadlineSeconds` from the chart; no `backoffLimit`, which matches legacy, and the job chart drops a numeric `0` anyway
 - [x] Draft CronJob `SCRIPT_NAME=scheduled-list-type-subscriptions`, schedule `30 10 * * *` UTC (`apps/cath/cath-crons-scheduled-list-type-subscriptions/`), same settings
-- [ ] Raise the cnp-flux-config PR (drafted on local branch `feature/cath-1272-subscription-crons` in `/tmp/flux-1272/cnp-flux-config`, uncommitted). Don't merge until #588 has shipped and an image containing these scripts is in hmctsprod
+- [x] Raise the cnp-flux-config PR as a draft: hmcts/cnp-flux-config#48744. Don't merge until #588 has shipped and an image containing these scripts is in hmctsprod
