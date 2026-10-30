@@ -15,8 +15,6 @@ nodejs:
   environment:
     NODE_ENV: 'production'
     UI_BASELINE_ENV: test
-    # Alpine's Chromium, as the PDF-generating images use
-    PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium-browser
   # Only secrets every environment it runs in has: a missing one stops the pod starting. Test
   # accounts for signed-in pages are read from the vault when a check needs them, so adding one
   # (environments.json names them) needs no change here.
