@@ -1,0 +1,9 @@
+{%- if run.kind == "files" -%}
+  Files: pip <code>{{ run.pipArtefactId }}</code> and CaTH <code>{{ run.cathArtefactId }}</code>
+{%- elif run.scope == "all" -%}
+  All of CaTH
+{%- elif run.scope == "list-types" -%}
+  List types: {{ run.listTypes | join(", ") }}
+{%- else -%}
+  Pages: {{ run.routes | join(", ") }}
+{%- endif -%}

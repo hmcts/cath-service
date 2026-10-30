@@ -1,4 +1,5 @@
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { launchChromium } from "@hmcts/ui-baseline";
+import type { BrowserContext, Page } from "playwright";
 import type { Environment, TestAccount } from "../environments.js";
 import type { ParityUser } from "../fixtures/manifest.js";
 import { CATH_ROLE, LOCALES, type SignIns } from "./sign-ins.js";
@@ -14,7 +15,7 @@ const SIGN_IN_TIMEOUT_MS = 30_000;
 export async function signInWithAccounts(environment: Environment, users: ParityUser[]): Promise<SignIns> {
   const { cath } = environment;
   const result: SignIns = { users: {}, cathUsers: {}, unavailable: {} };
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   try {
     const roles = [...new Set(users.map((user) => required(CATH_ROLE[user.role], `CaTH role for ${user.id} (${user.role})`)))];
     for (const role of roles) {

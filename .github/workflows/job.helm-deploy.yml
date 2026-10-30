@@ -131,6 +131,11 @@ jobs:
               ;;
           esac
 
+          # The hosted parity check (tools/ui-baseline) runs where testers check CaTH against pip,
+          # and nowhere else.
+          UI_BASELINE_ENABLED="false"
+          if [ "$ENVIRONMENT" = "perftest" ]; then UI_BASELINE_ENABLED="true"; fi
+
           # CNP cluster and resource group names are a pure function of the
           # environment, so no lookup table is needed.
           CLUSTER="cft-${ENVIRONMENT}-${{ inputs.cluster-suffix }}"
@@ -141,6 +146,7 @@ jobs:
             echo "GLOBAL_ENVIRONMENT=${GLOBAL_ENVIRONMENT}"
             echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
             echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
+            echo "UI_BASELINE_ENABLED=${UI_BASELINE_ENABLED}"
             echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
           } >> "$GITHUB_ENV"
 
@@ -149,6 +155,7 @@ jobs:
           echo "Global environment: ${GLOBAL_ENVIRONMENT}"
           echo "Values template:    ${VALUES_TEMPLATE}"
           echo "Test support:       ${ENABLE_TEST_SUPPORT}"
+          echo "UI baseline:        ${UI_BASELINE_ENABLED}"
 
       - name: Set environment variables
         run: |

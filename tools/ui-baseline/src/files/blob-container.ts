@@ -31,6 +31,11 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
     },
     async downloadToFile(blobName, file) {
       await container.getBlobClient(blobName).downloadToFile(file);
+    },
+    async list(prefix) {
+      const names: string[] = [];
+      for await (const blob of container.listBlobsFlat({ prefix })) names.push(blob.name);
+      return names;
     }
   };
 }
@@ -47,4 +52,5 @@ export interface BlobContainer {
   upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
   uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
   downloadToFile(blobName: string, file: string): Promise<void>;
+  list(prefix: string): Promise<string[]>;
 }

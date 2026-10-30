@@ -2,7 +2,8 @@ import { appendFile, mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { type Browser, chromium } from "playwright";
+import type { Browser } from "playwright";
+import { launchChromium } from "../capture/browser.js";
 import { capturePage } from "../capture/capture-page.js";
 import type { Journey, JourneySuite } from "./journey.js";
 
@@ -22,7 +23,7 @@ export async function runJourneys(moduleFile: string, options: RunJourneysOption
   else await rm(options.outDir, { recursive: true, force: true });
   await mkdir(options.outDir, { recursive: true });
 
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   const results: JourneyResult[] = [];
   try {
     // Sequential on purpose: journeys change shared app data, so their order is part of the baseline
