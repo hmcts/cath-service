@@ -48,6 +48,11 @@ export function buildComment(input: CommentInput): string {
       ? `<details><summary>${intended.length} intended difference${intended.length === 1 ? "" : "s"}</summary>\n\n${table(intended)}\n\n</details>\n`
       : "",
     !reviewed && input.comparisons.length ? `<details><summary>Findings by category</summary>\n\n${categorySummary(input.comparisons)}\n\n</details>\n` : "",
+    input.files
+      ? input.files.differ.length
+        ? `### PDF and Excel files\n${input.files.differ.length} of ${input.files.compared} files differ from pip (PDFs by text only):\n${input.files.differ.map((file) => `- ${cell(file)}`).join("\n")}\n`
+        : `### PDF and Excel files\nAll ${input.files.compared} files match pip (PDFs by text only).\n`
+      : "",
     `<details><summary>Pages checked</summary>\n\n| Page | English | Welsh |\n|---|---|---|\n${pages}\n\n</details>\n`,
     input.skipped.length
       ? `<details><summary>${input.skipped.length} not checked</summary>\n\n${input.skipped.map((s) => `- ${cell(s)}`).join("\n")}\n\n</details>\n`
@@ -57,7 +62,7 @@ export function buildComment(input: CommentInput): string {
     `_Expected: ${input.evidence.map((file) => `\`${file}\``).join(", ")}. Unzip \`report.zip\` and open \`index.html\` for the full side-by-side report._\n`,
     "",
     "---",
-    `Checked commit \`${input.commit}\` locally by ${input.ranBy} against \`${input.target}\` · baseline \`${input.baseline}\` · ${new Date(input.ranAt).toUTCString()}`,
+    `Checked commit \`${input.commit}\` by ${input.ranBy} against \`${input.target}\` · baseline \`${input.baseline}\` · ${new Date(input.ranAt).toUTCString()}`,
     "",
     "<sub>Run it yourself: `yarn ui-baseline:check" +
       (input.ticket ? ` --ticket ${input.ticket}` : "") +
@@ -129,4 +134,6 @@ export interface CommentInput {
   skipped: string[];
   comparisons: CompareSummary[];
   reviews: ReviewResult[];
+  // The PDF and Excel files compared, and a line for each that differs
+  files?: { compared: number; differ: string[] };
 }

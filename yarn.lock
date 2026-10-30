@@ -2456,6 +2456,7 @@ __metadata:
   dependencies:
     "@axe-core/playwright": "npm:4.13.0"
     "@azure/identity": "npm:4.10.0"
+    "@azure/keyvault-secrets": "npm:4.11.2"
     "@azure/storage-blob": "npm:12.27.0"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"

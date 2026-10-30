@@ -19,6 +19,7 @@ const { values: args } = parseArgs({
     run: { type: "string" }, // run.json of the baseline run
     compare: { type: "string" }, // compare.json from `parity compare` of the list pages
     review: { type: "string", multiple: true }, // review.json files from `parity review`
+    "files-compare": { type: "string" }, // files-compare.json from `parity compare-files`, with the PDF texts beside it
     govuk: { type: "string" }, // node_modules/govuk-frontend/dist/govuk
     only: { type: "string" }, // comma-separated publication and page ids to include (a focused check)
     title: { type: "string" }, // overview heading
@@ -43,6 +44,7 @@ const reviewItemsFor = (id, locale) =>
       .filter((item) => item.review && item.pages.some((page) => page === `${id} ${locale}`))
       .map((item) => ({ ...item, requirementsSource: review.requirementsSource }))
   );
+const filesComparison = args["files-compare"] && existsSync(args["files-compare"]) ? JSON.parse(readFileSync(args["files-compare"], "utf-8")) : null;
 const pagesComparison = args["pages-compare"] && existsSync(args["pages-compare"]) ? JSON.parse(readFileSync(args["pages-compare"], "utf-8")) : null;
 const routeMap =
   args["route-map"] && existsSync(args["route-map"]) ? new Map(JSON.parse(readFileSync(args["route-map"], "utf-8")).routes.map((e) => [e.pip, e])) : new Map();
@@ -62,7 +64,8 @@ for (const [name, target] of [
   ["lists", args.lists],
   ["pages", args.pages],
   ["cath-pages", args["cath-pages"]],
-  ["journeys", args.journeys]
+  ["journeys", args.journeys],
+  ["files", filesComparison && path.dirname(args["files-compare"])]
 ]) {
   if (target && existsSync(target)) symlinkSync(path.resolve(target), path.join(OUT, "data", name));
 }
@@ -74,6 +77,7 @@ const NAV = [
   ["lists.html", "List pages"],
   ["pages.html", "Other pages"],
   ["journeys.html", "Journeys"],
+  ...(filesComparison ? [["files.html", "PDF and Excel"]] : []),
   ["defects.html", "Known pip defects"]
 ];
 
@@ -495,6 +499,45 @@ layout({
     <th class="govuk-table__header">Journey</th><th class="govuk-table__header">What it does</th><th class="govuk-table__header">Signed in as</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th>
   </tr></thead><tbody class="govuk-table__body">${journeyRows.join("")}</tbody></table>`
 });
+
+// ---------- generated files ----------
+if (filesComparison) {
+  const t = filesComparison.totals;
+  const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel" };
+  const FILE_VERDICT = {
+    match: ["Matches", "green"],
+    differs: ["Differs", "red"],
+    missing: ["CaTH has none", "orange"],
+    extra: ["Only CaTH has one", "yellow"]
+  };
+  const rows = filesComparison.results
+    .map((r) => {
+      const [label, colour] = FILE_VERDICT[r.verdict];
+      const texts =
+        r.kind !== "excel" && r.verdict !== "missing" && r.verdict !== "extra"
+          ? ` <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-source.txt">pip text</a> · <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-target.txt">CaTH text</a>`
+          : "";
+      const pages =
+        r.source?.pages !== undefined
+          ? `<span class="govuk-hint parity-inline-hint">pip ${r.source.pages} ${plural(r.source.pages, "page", "pages")}, CaTH ${r.target.pages}</span>`
+          : "";
+      const findings = r.findings.length
+        ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></div></details>`
+        : "";
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>`;
+    })
+    .join("");
+  layout({
+    file: "files.html",
+    active: "files.html",
+    title: "PDF and Excel files",
+    body: `<h1 class="govuk-heading-l">PDF and Excel files</h1>
+  <p class="govuk-body">The files each app generated when the publication was accepted. PDFs are styled differently by design, so only their text is compared, in reading order; line breaks and page breaks are ignored. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths.</p>
+  <div class="parity-stats">${statCard(t.files, "files compared")}${statCard(t.match, "match")}${statCard(t.differs, "differ")}${statCard(t.missing, "CaTH did not make")}${statCard(t.extra, "only CaTH made")}</div>
+  <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Publication</th><th class="govuk-table__header">File</th><th class="govuk-table__header">Result</th></tr></thead>
+  <tbody class="govuk-table__body">${rows}</tbody></table>`
+  });
+}
 
 // ---------- known defects ----------
 const defectsMarkdown = args.defects && existsSync(args.defects) ? readFileSync(args.defects, "utf-8") : "";

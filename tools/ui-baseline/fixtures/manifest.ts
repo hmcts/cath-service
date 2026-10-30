@@ -105,7 +105,8 @@ export interface SeedResult {
   app: string;
   seededAt: string;
   ingestion: string;
-  publications: Record<string, { artefactId: string; locationId: number; metadata: PublicationMetadata }>;
+  // excelUploaded: false when the app was given the list as JSON, so made no Excel from the spreadsheet
+  publications: Record<string, { artefactId: string; locationId: number; metadata: PublicationMetadata; excelUploaded?: boolean }>;
   // Publications the app refused, with its reason; a finding in its own right
   rejected: Record<string, string>;
   // Account-side records from records.json, keyed by record id

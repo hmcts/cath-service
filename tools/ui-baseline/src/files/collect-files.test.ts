@@ -6,7 +6,7 @@ import type { BlobContainer } from "./blob-container.js";
 import { collectFiles } from "./collect-files.js";
 
 function memoryContainer(blobs: Record<string, string>): BlobContainer {
-  return { name: "memory", download: async (name) => (name in blobs ? Buffer.from(blobs[name]) : null) };
+  return { name: "memory", download: async (name) => (name in blobs ? Buffer.from(blobs[name]) : null), upload: async () => {} };
 }
 
 describe("collectFiles", () => {
