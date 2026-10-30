@@ -89,6 +89,8 @@ export interface ParityUser {
   email: string;
   forenames: string;
   surname: string;
+  // Only for journeys that change this user's data; pages are never captured as them
+  journeysOnly?: boolean;
 }
 
 export interface PublicationMetadata {

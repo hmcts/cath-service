@@ -2,9 +2,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadManifest, loadUsers, type ParityUser, type SeedResult } from "./fixtures/manifest.js";
+import { SIGNED_IN_VIEWER, variantId, withMobile } from "./variants.js";
 
 // Builds the capture targets file for one app from its seed result, so both apps are captured
-// from the same list of pages with the same provenance recorded against each capture.
+// from the same list of pages with the same provenance recorded against each capture. Each list
+// signed out is captured again signed in as a verified user, and at mobile width (variants.ts).
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES = ["en", "cy"];
 const SIGN_IN = {
@@ -24,7 +26,7 @@ const manifest = await loadManifest();
 const users = new Map((await loadUsers()).map((user) => [user.id, user]));
 const skipped: string[] = [];
 
-const targets = manifest.publications.flatMap((publication) => {
+const mainTargets = manifest.publications.flatMap((publication) => {
   const seeded = seed.publications[publication.id];
   const pagePath = publication.paths[app as "pip" | "cath"];
   if (!seeded || !pagePath) return [];
@@ -58,6 +60,15 @@ const targets = manifest.publications.flatMap((publication) => {
     }
   ];
 });
+
+const viewer = users.get(SIGNED_IN_VIEWER);
+const signedInTargets =
+  viewer && config.signIn
+    ? mainTargets
+        .filter((target) => !target.source.viewAs)
+        .map((target) => ({ ...target, id: variantId(target.id, viewer.id), setup: [signInUrl(viewer)], source: { ...target.source, viewAs: viewer.id } }))
+    : [];
+const targets = withMobile([...mainTargets, ...signedInTargets]);
 
 const output = path.join(ROOT, `output/targets/${app}.json`);
 await mkdir(path.dirname(output), { recursive: true });

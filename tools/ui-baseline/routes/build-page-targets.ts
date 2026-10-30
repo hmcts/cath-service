@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadUsers, type ParityUser, type SeedResult } from "../fixtures/manifest.js";
+import { NOT_FOUND_ID, NOT_FOUND_PATH, SIGNED_IN_VIEWER, variantId, variantUsers, withMobile } from "../variants.js";
 
 // Builds capture targets for pip's non-list pages from the route inventory. Query parameters are
 // filled from what the seeders created; a page whose data is not seeded yet is reported as pending
@@ -95,21 +96,34 @@ for (const route of inventory.routes.filter((r) => (r.category === "public" || r
 
   const user = route.captureAs ? required(users.get(route.captureAs), route.captureAs) : undefined;
   const query = params.toString();
-  targets.push({
-    id: `page${route.path.replace(/\//g, "--")}`,
+  const id = `page${route.path.replace(/\//g, "--")}`;
+  const target = (as: ParityUser | undefined, targetId: string) => ({
+    id: targetId,
     url: `${config.baseUrl}${route.path}${query ? `?${query}` : ""}`,
     locales: LOCALES,
     cookies: config.cookies,
-    ...(user ? { setup: [signInUrl(user)] } : {}),
-    source: { app: "pip", kind: "page", route: route.path, guard: route.guard, viewAs: user?.id ?? null, controller: route.controller, seededAt: seed.seededAt }
+    ...(as ? { setup: [signInUrl(as)] } : {}),
+    source: { app: "pip", kind: "page", route: route.path, guard: route.guard, viewAs: as?.id ?? null, controller: route.controller, seededAt: seed.seededAt }
   });
+  targets.push(target(user, id));
+  // The same page as every other role its guard lets in; a public page signed in as a verified user
+  const others =
+    route.category === "public" ? [required(users.get(SIGNED_IN_VIEWER), SIGNED_IN_VIEWER)] : variantUsers(route.guard, route.captureAs, [...users.values()]);
+  for (const other of others) targets.push(target(other, variantId(id, other.id)));
 }
+targets.push({
+  id: NOT_FOUND_ID,
+  url: `${config.baseUrl}${NOT_FOUND_PATH}`,
+  locales: LOCALES,
+  cookies: config.cookies,
+  source: { app: "pip", kind: "page", route: NOT_FOUND_PATH, expectedStatus: 404, viewAs: null, seededAt: seed.seededAt }
+});
 
 const output = path.join(PARITY_DIR, "output/targets/pip-pages.json");
 await mkdir(path.dirname(output), { recursive: true });
-await writeFile(output, `${JSON.stringify(targets, null, 2)}\n`);
+await writeFile(output, `${JSON.stringify(withMobile(targets), null, 2)}\n`);
 await writeFile(path.join(PARITY_DIR, "output/targets/pip-pages-pending.json"), `${JSON.stringify(pending, null, 2)}\n`);
-console.log(`wrote ${targets.length} page targets → ${output}; ${pending.length} pending`);
+console.log(`wrote ${withMobile(targets).length} page targets → ${output}; ${pending.length} pending`);
 for (const entry of pending) console.log(`  pending ${entry.path}: ${entry.reason}`);
 
 // The audit log viewer links to details with the row's London time as dd/MM/yyyy HH:mm:ss
