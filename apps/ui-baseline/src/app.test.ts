@@ -26,8 +26,17 @@ async function appWith(auth = signedIn) {
     commit: "x",
     store: null,
     baseline: async () => "/baseline",
-    execute: async (_script, args) => {
+    execute: async (script, args) => {
       const out = (args.find((arg) => arg.startsWith("--out=")) as string).slice("--out=".length);
+      if (script.endsWith("compare-files.ts")) {
+        await mkdir(path.join(out, "compare"), { recursive: true });
+        await writeFile(path.join(out, "compare/files-compare.json"), JSON.stringify({ totals: { files: 1, match: 1, differs: 0 }, results: [] }));
+        await writeFile(
+          path.join(out, "compare/links.json"),
+          JSON.stringify({ listType: "CIVIL_DAILY_CAUSE_LIST", cath: "https://cath.example/civil?artefactId=c", pip: "https://pip.example/civil?artefactId=p" })
+        );
+        return 0;
+      }
       await mkdir(path.join(out, "report"), { recursive: true });
       await writeFile(path.join(out, "report/index.html"), "<p>the report</p>");
       return 0;
@@ -100,6 +109,24 @@ describe("createApp", () => {
     expect(page.text).toContain("List types: CIVIL_DAILY_CAUSE_LIST, SJP_PRESS_LIST");
     expect(page.text).toContain("Open the full report");
     expect(report.text).toBe("<p>the report</p>");
+  });
+
+  it("should link to the publication in both apps after comparing its files", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await request(app)
+      .post("/runs")
+      .type("form")
+      .send({ kind: "files", pipArtefactId: "2a7b1d4e-0000-4000-8000-000000000001", cathArtefactId: "2a7b1d4e-0000-4000-8000-000000000002" });
+    await runner.idle();
+
+    // Act
+    const page = await request(app).get(started.headers.location);
+
+    // Assert
+    expect(page.text).toContain("CIVIL_DAILY_CAUSE_LIST:");
+    expect(page.text).toContain('href="https://cath.example/civil?artefactId=c"');
+    expect(page.text).toContain('href="https://pip.example/civil?artefactId=p"');
   });
 
   it("should show the problem when a file comparison is asked for with a bad id", async () => {
