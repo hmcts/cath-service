@@ -81,13 +81,17 @@ await writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`);
 console.log(`wrote ${OUTPUT}`);
 
 function uploadJson(payload: Buffer, headers: Record<string, string>): Promise<Response> {
-  return fetch(`${DATA_MANAGEMENT_URL}/publication`, { method: "POST", headers: { ...headers, "content-type": "application/json" }, body: payload });
+  return fetch(`${DATA_MANAGEMENT_URL}/publication`, {
+    method: "POST",
+    headers: { ...headers, "content-type": "application/json" },
+    body: new Uint8Array(payload)
+  });
 }
 
 // Non-strategic lists go through pip's spreadsheet upload, which converts them to JSON itself
 function uploadExcel(payload: Buffer, headers: Record<string, string>): Promise<Response> {
   const form = new FormData();
-  form.append("file", new Blob([payload], { type: EXCEL_TYPE }), "publication.xlsx");
+  form.append("file", new Blob([new Uint8Array(payload)], { type: EXCEL_TYPE }), "publication.xlsx");
   return fetch(`${DATA_MANAGEMENT_URL}/publication/non-strategic`, { method: "POST", headers, body: form });
 }
 
@@ -170,7 +174,7 @@ async function createListSearchConfigs(): Promise<void> {
 function uploadFlatFile(payload: Buffer, headers: Record<string, string>, payloadPath: string): Promise<Response> {
   const fileName = path.basename(payloadPath);
   const form = new FormData();
-  form.append("file", new Blob([payload], { type: "application/pdf" }), fileName);
+  form.append("file", new Blob([new Uint8Array(payload)], { type: "application/pdf" }), fileName);
   return fetch(`${DATA_MANAGEMENT_URL}/publication`, { method: "POST", headers: { ...headers, "x-source-artefact-id": fileName }, body: form });
 }
 

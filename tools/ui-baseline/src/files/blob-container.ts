@@ -15,8 +15,15 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
         return await container.getBlobClient(blobName).downloadToBuffer();
       } catch (error) {
         if (error instanceof RestError && error.statusCode === 404) return null;
+        if (error instanceof RestError && error.statusCode === 403)
+          throw new Error(
+            `cannot read ${storage.accountName ?? "the storage account"}/${storage.container}: the signed-in identity needs the Storage Blob Data Reader role on it, or use a connection string instead`
+          );
         throw error;
       }
+    },
+    async upload(blobName, data, contentType) {
+      await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType } });
     }
   };
 }
@@ -30,4 +37,5 @@ export interface StorageSpec {
 export interface BlobContainer {
   name: string;
   download(blobName: string): Promise<Buffer | null>;
+  upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
 }

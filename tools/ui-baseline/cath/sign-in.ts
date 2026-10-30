@@ -1,118 +1,66 @@
-import { createHmac, randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { prisma } from "@hmcts/postgres-prisma";
-import { createClient } from "redis";
-import { loadUsers, type ParityUser } from "../fixtures/manifest.js";
-import { type SeedRecords, seedRecords } from "./records.js";
+import { parseArgs } from "node:util";
+import { openBlobContainer } from "@hmcts/ui-baseline";
+import { filesStorage, loadEnvironment } from "../environments.js";
+import { loadUsers } from "../fixtures/manifest.js";
+import { prismaRecordStore, type SeedRecords, seedRecords, testSupportRecordStore } from "./records.js";
+import type { SignedInUser } from "./sign-ins.js";
 
-// Local parity sign-in for CaTH, the counterpart of pip's /parity-login. Local CaTH has no
-// identity providers, so instead of a route in CaTH this writes the session a real sign-in would
-// leave behind (passport stores the whole user profile) straight into CaTH's Redis, and hands back
-// the signed session cookie. Nothing in CaTH changes, and it can only work where the session
-// secret and Redis are to hand: a local CaTH. It then creates the records signed-in pages show
-// (records.json), which need the users to exist first.
-// Run with the root .env, as the web app is: tsx --env-file=.env tools/ui-baseline/cath/sign-in.ts
-const OUTPUT = process.env.PARITY_SIGN_IN_OUTPUT ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "../output/seed/cath-sign-in.json");
-// Express-session's defaults, which CaTH's session middleware does not override
-const COOKIE_NAME = "connect.sid";
-const SESSION_PREFIX = "sess:";
-const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 4;
-// CaTH keeps the language in the session, so each language gets its own session; sharing one
-// would let a Welsh capture turn the next English capture of the same user Welsh
-const LOCALES = ["en", "cy"];
-// CaTH has no super admins; pip's map to the admin role with the same reach
-const CATH_ROLE: Record<string, string> = {
-  VERIFIED: "VERIFIED",
-  SYSTEM_ADMIN: "SYSTEM_ADMIN",
-  INTERNAL_SUPER_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
-  INTERNAL_SUPER_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL",
-  INTERNAL_ADMIN_CTSC: "INTERNAL_ADMIN_CTSC",
-  INTERNAL_ADMIN_LOCAL: "INTERNAL_ADMIN_LOCAL"
+// Signs CaTH's fixture users in, so pages behind sign-in are captured as the user pip's baseline
+// used, then creates the records signed-in pages show (records.json), which need the users first.
+// How depends on the environment (environments.json): a local CaTH gets sessions written into its
+// Redis (session-sign-in.ts); a deployed one is signed in to as real test accounts
+// (account-sign-in.ts). Run locally with the root .env, as the web app is:
+//   tsx --env-file=.env tools/ui-baseline/cath/sign-in.ts [--env test]
+const PARITY_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+const { values: args } = parseArgs({ options: { env: { type: "string" } } });
+const environment = await loadEnvironment(args.env);
+const output = process.env.PARITY_SIGN_IN_OUTPUT ?? path.join(PARITY_DIR, "output/seed", `cath-sign-in-${environment.name}.json`);
+const users = await loadUsers();
+
+const signIns =
+  environment.cath.signIn === "session"
+    ? await (await import("./session-sign-in.js")).signInWithSessions(users)
+    : await (await import("./account-sign-in.js")).signInWithAccounts(environment, users);
+for (const [user, reason] of Object.entries(signIns.unavailable)) console.log(`not signed in: ${user}: ${reason}`);
+
+// Records owned by a user who could not be signed in are left out with that user
+const store =
+  environment.cath.signIn === "session"
+    ? await prismaRecordStore()
+    : testSupportRecordStore(environment.cath.apiUrl, openBlobContainer(filesStorage("cath", environment.cath, "files")));
+const records = await seedRecords(store, signIns.cathUsers);
+if (environment.cath.signIn === "session") await (await import("@hmcts/postgres-prisma")).prisma.$disconnect();
+
+// Looked up by name, never assumed: list type ids differ between environments
+const listTypes = Object.fromEntries(
+  ((await (await fetch(`${environment.cath.apiUrl}/test-support/list-types`)).json()) as { id: number; name: string }[]).map((listType) => [
+    listType.name,
+    String(listType.id)
+  ])
+);
+
+const result: SignInResult = {
+  signedInAt: new Date().toISOString(),
+  environment: environment.name,
+  users: signIns.users,
+  unavailable: signIns.unavailable,
+  records,
+  listTypes
 };
-
-const secret = process.env.SESSION_SECRET;
-const redisUrl = process.env.REDIS_URL;
-if (!secret || !redisUrl) throw new Error("SESSION_SECRET and REDIS_URL must be set: run with --env-file=.env, as CaTH's web app is");
-
-const redis = createClient({ url: redisUrl });
-await redis.connect();
-const sessions: SignInResult = { signedInAt: new Date().toISOString(), users: {}, records: {}, listTypes: {} };
-try {
-  const users = await loadUsers();
-  for (const user of users) sessions.users[user.id] = await signIn(user);
-  sessions.records = await seedRecords(users, Object.fromEntries(Object.entries(sessions.users).map(([id, user]) => [id, user.userId])));
-  // Looked up by name, never assumed: list type ids differ between environments
-  for (const listType of await prisma.listType.findMany({ select: { id: true, name: true } })) sessions.listTypes[listType.name] = String(listType.id);
-} finally {
-  await redis.quit();
-  await prisma.$disconnect();
-}
-await mkdir(path.dirname(OUTPUT), { recursive: true });
-await writeFile(OUTPUT, `${JSON.stringify(sessions, null, 2)}\n`);
-console.log(`signed in ${Object.keys(sessions.users).length} users and ensured ${Object.keys(sessions.records).length} records → ${OUTPUT}`);
-
-async function signIn(user: ParityUser): Promise<SignedInUser> {
-  const role = CATH_ROLE[user.role];
-  if (!role) throw new Error(`no CaTH role for ${user.id} (${user.role})`);
-  // Keyed on the provenance id, as CaTH's own sign-in callbacks are, so re-running reuses the user
-  const dbUser = await prisma.user.upsert({
-    where: { userProvenanceId: user.provenanceUserId },
-    update: { role, lastSignedInDate: new Date() },
-    create: {
-      email: user.email,
-      firstName: user.forenames,
-      surname: user.surname,
-      userProvenance: user.provenance,
-      userProvenanceId: user.provenanceUserId,
-      role,
-      lastSignedInDate: new Date()
-    }
-  });
-
-  const profile = { id: dbUser.userId, email: user.email, displayName: `${user.forenames} ${user.surname}`, role, provenance: user.provenance };
-  const cookies: SignedInUser["cookies"] = {};
-  for (const locale of LOCALES) cookies[locale] = await createSession(profile, locale);
-  return { userId: dbUser.userId, role, cookies };
-}
-
-async function createSession(profile: Record<string, string>, locale: string): Promise<{ name: string; value: string }> {
-  const sessionId = randomUUID();
-  const session = {
-    cookie: {
-      originalMaxAge: SESSION_MAX_AGE_MS,
-      expires: new Date(Date.now() + SESSION_MAX_AGE_MS).toISOString(),
-      secure: false,
-      httpOnly: true,
-      path: "/"
-    },
-    passport: { user: profile },
-    locale,
-    lastActivity: Date.now()
-  };
-  await redis.set(`${SESSION_PREFIX}${sessionId}`, JSON.stringify(session), { EX: SESSION_MAX_AGE_MS / 1000 });
-  return { name: COOKIE_NAME, value: encodeURIComponent(`s:${signCookie(sessionId)}`) };
-}
-
-// cookie-signature's format, which express-session verifies
-function signCookie(value: string): string {
-  return `${value}.${createHmac("sha256", secret as string)
-    .update(value)
-    .digest("base64")
-    .replace(/=+$/, "")}`;
-}
+await mkdir(path.dirname(output), { recursive: true });
+await writeFile(output, `${JSON.stringify(result, null, 2)}\n`);
+console.log(`signed in ${Object.keys(signIns.users).length} users and ensured ${Object.keys(records).length} records → ${output}`);
 
 export interface SignInResult {
   signedInAt: string;
+  environment: string;
   users: Record<string, SignedInUser>;
+  unavailable: Record<string, string>;
   records: SeedRecords;
   // CaTH's list type id by name, for routes that take one in the path
   listTypes: Record<string, string>;
-}
-
-interface SignedInUser {
-  userId: string;
-  role: string;
-  cookies: Record<string, { name: string; value: string }>;
 }
