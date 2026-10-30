@@ -80,6 +80,14 @@ export const DELETE = async (req: Request, res: Response) => {
     });
     results.locations = locationResult.count;
 
+    // Artefacts can sit at an unprefixed location while pointing at a prefixed list type, so the
+    // location-scoped delete above does not always clear artefact_list_type_id_fkey. That FK is
+    // ON DELETE RESTRICT, and the violation aborts the whole handler before the deletes below run.
+    const artefactByListTypeResult = await prisma.artefact.deleteMany({
+      where: { listType: { name: { startsWith: prefix } } }
+    });
+    results.artefacts += artefactByListTypeResult.count;
+
     // Delete list types with prefix name
     const listTypeResult = await prisma.listType.deleteMany({
       where: { name: { startsWith: prefix } }
