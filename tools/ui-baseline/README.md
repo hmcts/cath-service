@@ -13,14 +13,24 @@ results. Screenshots are evidence for people, not something the comparison diffs
 > [Not done yet](#not-done-yet)) that will be closed as it is developed. If it gets something
 > wrong or gets in your way, say so: that feedback decides what gets fixed first.
 
-## Recording the pip baseline (once)
+## Getting the pip baseline
 
-The baseline is not committed: screenshots and videos are too big for git. Instead everyone
-records the same baseline locally from pinned pip commits and the committed fixtures, so two
-people's baselines match.
+The baseline is not committed: screenshots and videos are too big for git. It is recorded from
+pinned pip commits and the committed fixtures, so any two recordings match, and the latest
+recording is stored in the test environment (`cathsaperftest`, container `ui-baseline`). Fetch it
+rather than recording your own:
+
+```bash
+yarn ui-baseline:baseline pull     # the stored baseline, into output/baseline (needs az login)
+```
+
+The "UI baseline - record pip" workflow (`workflow.ui-baseline-record.yml`, run by hand) records it
+on a GitHub runner and stores it. Re-run it when the pinned pip commits or the fixtures change. To
+record one yourself:
 
 ```bash
 yarn ui-baseline:record-pip
+yarn ui-baseline:baseline push     # optional: store it as the latest
 ```
 
 This needs Docker, Node and corepack, and nothing else from pip. pip is memory-hungry (its two
@@ -29,8 +39,13 @@ rather than leaving an incomplete baseline, if pip runs out of memory. It clones
 pip-data-management and pip-account-management at the pinned commits (into
 `~/.cache/ui-baseline/pip`, or `$UI_BASELINE_PIP_DIR`), adds a local-only sign-in to pip-frontend
 (`pip/pip-frontend.patch`), builds the backends in Docker, starts pip on <https://localhost:8180>,
-seeds it, and records every page and journey into `output/baseline`. The first run takes about
-35 minutes (10 to set up pip, 25 to record); re-recording skips the setup.
+seeds it, and records every page and journey, and the PDF and Excel files pip generated for each
+publication, into `output/baseline`. The first run takes about 35 minutes (10 to set up pip, 25 to
+record); re-recording skips the setup.
+
+In the workspace devcontainer, Docker is Docker Desktop on the host, so `$UI_BASELINE_PIP_DIR`
+must be a path the host shares (inside the workspace folder), and outside cath-service: pip-frontend
+builds against CaTH's `node_modules` if it is anywhere under the monorepo.
 
 It uses ports 8180, 15432, 16379, 16969, 18090 and 20000, so it can run alongside CaTH. pip stays
 running afterwards so you can look at it; `yarn ui-baseline:stop-pip` stops it. The check itself
@@ -91,20 +106,71 @@ writes the full report, with journeys and the Comparison page, to `output/checks
 evidence.
 
 Other options: `--list-type NAME` and `--route /path` to check without a ticket, `--locale en|cy`,
-`--no-seed`, `--no-review`, `--reviewer "<command>"` (default: `claude -p` with no tools),
-`--serve` to browse the report on <http://localhost:9500>. It exits 1 when there are defects.
+`--env local|test`, `--no-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
+`claude -p` with no tools), `--serve` to browse the report on <http://localhost:9500>. It exits 1
+when there are defects.
+
+### Checking the test environment
+
+`--env test` checks the deployed CaTH in perftest instead of a local one (`environments.json`;
+perftest is paired with pip's test environment, as CaTH's own chart pairs them). It runs master,
+gets little other traffic, and has test-support on. Nothing needs to run locally, but you need `az
+login` with access to the `cath-perftest` vault, and to be on the HMCTS network:
+
+```bash
+yarn ui-baseline:check --env test --all
+```
+
+Testers can run the same check without any of this from the [hosted check](../../apps/ui-baseline/README.md).
+
+Against a deployed CaTH the check seeds through the real publication API, with the client
+credentials in the environment's vault, and signs in as real test accounts (see below). The
+publication API takes a list as JSON, so a non-strategic list's Excel file, which CaTH makes from
+the uploaded spreadsheet, is not made, and is reported as not compared rather than missing.
 
 ### Signing in to CaTH
 
 Pages behind sign-in are captured as the same fixture user pip's baseline used (`captureAs` in
-`routes/pip-routes.json`, `viewAs` for classified lists). Local CaTH has no identity providers, and
-CaTH gets no sign-in route for this: `cath/sign-in.ts` creates the users in `fixtures/users.json`
-in CaTH's database, writes the session a real sign-in leaves behind into CaTH's Redis, and the
-check sends that session's cookie. It needs the `SESSION_SECRET` and `REDIS_URL` from the root
-`.env` that CaTH's web app runs with, so it only works against a local CaTH.
+`routes/pip-routes.json`, `viewAs` for classified lists).
+
+- **Locally**, CaTH has no identity providers, and CaTH gets no sign-in route for this:
+  `cath/session-sign-in.ts` creates the users in `fixtures/users.json` in CaTH's database, writes
+  the session a real sign-in leaves behind into CaTH's Redis, and the check sends that session's
+  cookie. It needs the `SESSION_SECRET` and `REDIS_URL` from the root `.env` that CaTH's web app
+  runs with, so it only works against a local CaTH.
+- **In the test environment**, `cath/account-sign-in.ts` signs in through CaTH's real sign-in
+  flows (SSO, Crime IDAM, CFT IDAM) as the test account `environments.json` names for each role,
+  read from the environment's vault. Fixture users with the same role share its account, so the
+  page shows the account's name. A role with no account in the vault is reported, and its pages
+  are not compared. The records signed-in pages show are created through test-support.
 
 CaTH has no super admins, so pip's super admins are signed in to CaTH as the admin role with the
 same reach (CTSC or local).
+
+## Comparing PDF and Excel files
+
+When a publication is accepted, pip and CaTH each write a PDF and, for some lists, an Excel file
+to their `publications` container (`<artefactId>.pdf`, `<artefactId>.xlsx`, and for pip's
+bilingual lists `<artefactId>_cy.pdf`). The check compares them for every list it checks: the
+baseline holds pip's (`files/`), and the check collects CaTH's after seeding. The report's "PDF
+and Excel" page, the summary and the PR comment show the result.
+
+- **PDFs** are styled differently by design, so only their text is compared, word by word in
+  reading order. Line breaks, page breaks and pip's page footer are ignored; any other change of
+  wording is reported with the words before it.
+- **Excel files** should be the same, so every sheet (name and order), cell (type and value) and
+  merged range is compared. They can never be byte-identical (pip writes them with Apache POI and
+  CaTH with exceljs), and fonts and column widths are not compared.
+- Dates and times that come from when each app was seeded are masked, as on pages.
+
+For a list a tester uploaded to both apps by hand, compare the two without seeding anything:
+
+```bash
+yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env test] [--name civil-list]
+```
+
+This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
+Data Reader role on it, or a connection string in `PIP_STORAGE_CONNECTION_STRING`.
 
 ## What the baseline covers
 
@@ -144,6 +210,10 @@ depends on one of these, check that part by hand and say so in the PR.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
 - **Not captured at all:** file downloads, emails, pip's 404 page and deprecated list types.
+- **Signed-in pages in the test environment need test accounts.** CaTH perftest's vault has a
+  Crime IDAM account (verified users) but no SSO admin accounts, so admin pages are reported as
+  not compared there until accounts in perftest's admin groups are added to `cath-perftest` under
+  the names in `environments.json`.
 
 ### pip's own defects
 
@@ -183,11 +253,14 @@ Planned next, roughly in this order:
 
 | Path | What it is |
 |---|---|
-| `src/` | The generic tool: capture, journeys, compare, review (`npx tsx src/cli.ts` for usage) |
+| `src/` | The generic tool: capture, journeys, compare (pages, PDFs, Excel), review (`npx tsx src/cli.ts` for usage) |
 | `check.ts`, `pr-comment.ts` | `yarn ui-baseline:check` and its PR comment |
+| `compare-files.ts`, `artefact-files.ts` | `yarn ui-baseline:compare-files`: one publication's files in pip and CaTH |
+| `baseline.ts`, `baseline-store.ts` | `yarn ui-baseline:baseline push\|pull`: the stored baseline |
+| `environments.json`, `environments.ts` | Where CaTH and pip run in each environment a check targets, and how to sign in |
 | `fixtures/` | The publications, users and records both apps are seeded with |
-| `pip/` | Setting up and running pip locally (`setup.sh`), recording the baseline (`baseline.sh`); pip's journeys; known pip defects |
-| `cath/` | Seeding CaTH with the same fixtures |
+| `pip/` | Setting up and running pip locally (`setup.sh`), recording the baseline (`baseline.sh`, `record-files.ts`); pip's journeys; known pip defects |
+| `cath/` | Seeding CaTH with the same fixtures, and signing in to it |
 | `routes/` | pip's route inventory, page targets, and the pip → CaTH route map |
 | `report/` | The HTML report |
 | `apps.json`, `list-type-map.json`, `build-targets.ts` | Where each app runs, list-type renames, capture targets |

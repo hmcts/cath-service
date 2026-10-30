@@ -125,6 +125,7 @@ COPY --chown=hmcts:hmcts tsconfig.json ./tsconfig.json
 COPY --chown=hmcts:hmcts libs ./libs
 COPY --chown=hmcts:hmcts tools ./tools
 COPY --chown=hmcts:hmcts apps/ui-baseline ./apps/ui-baseline
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Not --conditions=production: the tool and the libs it uses resolve to their TypeScript sources
 ENV NODE_ENV=production
 
