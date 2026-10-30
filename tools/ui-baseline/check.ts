@@ -70,7 +70,9 @@ const locales = args.locale ? [args.locale] : LOCALES;
 const manifest = await loadManifest();
 const routeMap = JSON.parse(await readFile(path.join(PARITY_DIR, "routes/route-map.json"), "utf-8")).routes as RouteEntry[];
 if (!existsSync(path.join(baseline, "lists/index.jsonl")))
-  throw new Error(`no pip baseline at ${baseline}: record one with \`yarn ui-baseline:record-pip\` (or point --baseline at one)`);
+  throw new Error(
+    `no pip baseline at ${baseline}: fetch the stored one with \`yarn ui-baseline:baseline pull\`, record one with \`yarn ui-baseline:record-pip\`, or point --baseline at one`
+  );
 
 // ---------- 1. What to check ----------
 const requirements = args.ticket ? await ticketText(args.ticket) : null;

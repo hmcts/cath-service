@@ -24,6 +24,13 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
     },
     async upload(blobName, data, contentType) {
       await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType } });
+    },
+    // Large files (a recorded baseline) are streamed rather than held in memory
+    async uploadFile(blobName, file, contentType) {
+      await container.getBlockBlobClient(blobName).uploadFile(file, { blobHTTPHeaders: { blobContentType: contentType } });
+    },
+    async downloadToFile(blobName, file) {
+      await container.getBlobClient(blobName).downloadToFile(file);
     }
   };
 }
@@ -38,4 +45,6 @@ export interface BlobContainer {
   name: string;
   download(blobName: string): Promise<Buffer | null>;
   upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
+  uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
+  downloadToFile(blobName: string, file: string): Promise<void>;
 }
