@@ -1611,6 +1611,7 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@hmcts/media-reporting": "workspace:*"
     "@types/config": "npm:4.4.0"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.2"
@@ -2044,6 +2045,20 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     exceljs: "npm:4.4.0"
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/media-reporting@workspace:*, @hmcts/media-reporting@workspace:libs/media-reporting":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/media-reporting@workspace:libs/media-reporting"
+  dependencies:
+    "@hmcts/notification": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@types/node": "npm:24.10.4"
+    "@types/papaparse": "npm:5.5.2"
+    papaparse: "npm:5.5.4"
+    typescript: "npm:6.0.3"
+    vitest: "npm:4.1.10"
   languageName: unknown
   linkType: soft
 
