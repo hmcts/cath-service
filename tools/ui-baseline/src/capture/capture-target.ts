@@ -6,12 +6,16 @@ import { capturePage, expandAll } from "./capture-page.js";
 
 const PLAYWRIGHT_VERSION = createRequire(import.meta.url)("playwright/package.json").version as string;
 const DEFAULT_TIMEZONE = "Europe/London";
+// Desktop as the baseline was first recorded; mobile at the narrowest width GOV.UK pages are tested at
+const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 375, height: 812 } } as const;
 
 // Captures one target into <outDir>/<id>/<locale>/<state>/ for each state the page has:
-// "default" as users first see it, and "expanded" when there is collapsed content to open.
+// "default" as users first see it, and "expanded" when there is collapsed content to open. A mobile
+// target is captured as one state, "mobile", as the page first appears on a phone.
 export async function captureTarget(browser: Browser, target: CaptureTarget, settings: CaptureSettings): Promise<CaptureResult[]> {
   const locale = target.locale ?? "en";
-  const context = await browser.newContext(contextOptions(settings));
+  const mobile = target.viewport === "mobile";
+  const context = await browser.newContext(contextOptions(settings, mobile ? VIEWPORTS.mobile : VIEWPORTS.desktop));
   const page = await context.newPage();
   try {
     if (target.cookies?.length) await context.addCookies(target.cookies.map((cookie) => ({ ...cookie, url: target.url })));
@@ -21,8 +25,8 @@ export async function captureTarget(browser: Browser, target: CaptureTarget, set
     await page.evaluate(() => document.fonts.ready);
     const status = response?.status() ?? null;
 
-    const results = [await captureState(page, target, settings, locale, "default", status)];
-    if (await expandAll(page)) {
+    const results = [await captureState(page, target, settings, locale, mobile ? "mobile" : "default", status)];
+    if (!mobile && (await expandAll(page))) {
       await page.waitForLoadState("networkidle");
       results.push(await captureState(page, target, settings, locale, "expanded", status));
     }
@@ -66,9 +70,9 @@ async function captureState(
   }
 }
 
-function contextOptions(settings: CaptureSettings): BrowserContextOptions {
+function contextOptions(settings: CaptureSettings, viewport: { width: number; height: number }): BrowserContextOptions {
   return {
-    viewport: { width: 1280, height: 800 },
+    viewport,
     deviceScaleFactor: 1,
     locale: "en-GB",
     timezoneId: settings.timezone ?? DEFAULT_TIMEZONE,
@@ -91,6 +95,8 @@ export interface CaptureTarget {
   // Visited first in the same browser context, e.g. a sign-in URL
   setup?: string[];
   cookies?: { name: string; value: string }[];
+  // desktop (the default) or mobile
+  viewport?: "desktop" | "mobile";
   // Free-form record of how this page's data was produced (fixture, artefact, app commit, role)
   source?: Record<string, unknown>;
 }
