@@ -19,6 +19,15 @@ describe("pdfText", () => {
     expect(styled.pages).toBeGreaterThan(plain.pages);
   });
 
+  it("should leave out a running footer that numbers the pages", async () => {
+    // Act
+    const wrapped = await pdfText(await read("wrapped.pdf"));
+
+    // Assert
+    expect(wrapped.pages).toBeGreaterThan(1);
+    expect(wrapped.lines.filter((line) => /page \d+ of \d+/.test(line))).toEqual([]);
+  });
+
   it("should read a changed row as a changed line", async () => {
     // Act
     const plain = await pdfText(await read("plain.pdf"));
