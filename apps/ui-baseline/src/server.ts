@@ -14,8 +14,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8090);
 const REPO_DIR = path.resolve(__dirname, "../../..");
 
-// Secrets mounted from the environment's vault become environment variables, as in CaTH's apps
-await getPropertiesVolumeSecrets({ chartPath: path.join(__dirname, "../helm/values.yaml") });
+// In the pod, secrets mounted from the environment's vault become environment variables, as in
+// CaTH's apps. Not elsewhere: outside production the library reads them straight from cath-aat,
+// and a local run must not pick up a deployed environment's storage.
+if (process.env.NODE_ENV === "production") await getPropertiesVolumeSecrets({ chartPath: path.join(__dirname, "../helm/values.yaml") });
 
 const environmentName = process.env.UI_BASELINE_ENV ?? "test";
 const environment = await loadEnvironment(environmentName);
