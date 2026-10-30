@@ -56,7 +56,12 @@ export function createApp(options: AppOptions): Express {
       run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/files-compare.json"))
         ? JSON.parse(await readFile(path.join(dir, "files/compare/files-compare.json"), "utf-8"))
         : null;
-    res.render("run", { run, log, files, hasReport: run.kind === "check" && !!dir && existsSync(path.join(dir, "check/report/index.html")) });
+    // Where the publication is in each app; testers signed in here are signed in to both
+    const links =
+      run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/links.json"))
+        ? JSON.parse(await readFile(path.join(dir, "files/compare/links.json"), "utf-8"))
+        : null;
+    res.render("run", { run, log, files, links, hasReport: run.kind === "check" && !!dir && existsSync(path.join(dir, "check/report/index.html")) });
   });
 
   // A check's report and a file comparison's extracted texts, served from the run's directory

@@ -16,7 +16,7 @@ const { values: args } = parseArgs({
 });
 if (!args.pip || !args.cath) throw new Error("--pip and --cath (the publication's artefact id in each app) are required");
 
-const { out, summary, pipHasFiles, cathHasFiles } = await compareArtefactFiles({
+const { out, summary, pipHasFiles, cathHasFiles, links } = await compareArtefactFiles({
   env: args.env,
   pipArtefactId: args.pip,
   cathArtefactId: args.cath,
@@ -31,5 +31,6 @@ for (const result of summary.results.filter((r) => r.verdict !== "match")) {
   console.log(`\n${result.kind}: ${result.verdict}`);
   for (const finding of result.findings) console.log(`  ${finding.change.replace(/-/g, " ")}: ${finding.detail}`);
 }
+if (links) console.log(`\n${links.listType}:\n  CaTH: ${links.cath ?? "no page"}\n  pip:  ${links.pip ?? "no page"}`);
 console.log(`\n→ ${out}/compare/files-compare.json`);
 process.exit(t.differs || t.missing || t.extra ? 1 : 0);

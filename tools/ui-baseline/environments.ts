@@ -67,6 +67,8 @@ interface EnvironmentConfig {
 }
 
 export interface AppConfig {
+  // Where people use the app; pip's is only for linking to its pages
+  baseUrl?: string;
   keyVault?: string;
   storage: { connectionString?: string; connectionStringEnv?: string; accountName?: string };
   dataManagementUrl?: string;

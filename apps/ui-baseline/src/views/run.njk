@@ -38,6 +38,14 @@
     <p class="govuk-body"><a class="govuk-link" href="/runs/{{ run.id }}/report/index.html">Open the full report</a></p>
   {% endif %}
 
+  {% if links %}
+    <p class="govuk-body">{{ links.listType }}:
+      {% if links.cath %}<a class="govuk-link" href="{{ links.cath }}" rel="noreferrer" target="_blank">open in CaTH (opens in new tab)</a>{% endif %}
+      {% if links.cath and links.pip %} · {% endif %}
+      {% if links.pip %}<a class="govuk-link" href="{{ links.pip }}" rel="noreferrer" target="_blank">open in pip (opens in new tab)</a>{% endif %}
+    </p>
+  {% endif %}
+
   {% if files %}
     <h2 class="govuk-heading-m">Files</h2>
     <table class="govuk-table">
