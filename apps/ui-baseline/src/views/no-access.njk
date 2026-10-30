@@ -1,0 +1,10 @@
+{% extends "layout.njk" %}
+{% set title = "You cannot use this service" %}
+{% block page_content %}
+  <h1 class="govuk-heading-l">{{ title }}</h1>
+  {% if failed %}
+    <p class="govuk-body">Signing in did not work. <a class="govuk-link" href="/sign-in">Try again</a>.</p>
+  {% else %}
+    <p class="govuk-body">The parity check is for people in CaTH's admin groups. Ask the CaTH team to add you.</p>
+  {% endif %}
+{% endblock %}

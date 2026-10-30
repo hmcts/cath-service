@@ -11,7 +11,8 @@ function memoryContainer(blobs: Record<string, string>): BlobContainer {
     download: async (name) => (name in blobs ? Buffer.from(blobs[name]) : null),
     upload: async () => {},
     uploadFile: async () => {},
-    downloadToFile: async () => {}
+    downloadToFile: async () => {},
+    list: async () => []
   };
 }
 

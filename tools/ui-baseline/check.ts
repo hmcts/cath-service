@@ -11,11 +11,11 @@ import {
   compareFileRuns,
   compareRuns,
   type FileCompareSummary,
+  launchChromium,
   openBlobContainer,
   type ReviewResult,
   reviewFindings
 } from "@hmcts/ui-baseline";
-import { chromium } from "playwright";
 import type { SignInResult } from "./cath/sign-in.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
@@ -530,7 +530,7 @@ async function sideBySide(dir: string): Promise<string[]> {
       }))
   );
   if (!pairs.length) return [];
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   const page = await browser.newPage({ viewport: { width: SIDE_BY_SIDE_WIDTH, height: 800 } });
   for (const pair of pairs) {
     const side = (app: string, file: string) =>
@@ -550,6 +550,8 @@ async function sideBySide(dir: string): Promise<string[]> {
 
 // The commit the check ran against, so reviewers can tell when the evidence is out of date
 function checkedCommit(): string {
+  // The hosted check runs from an image with no git history; it is given the commit it was built from
+  if (!existsSync(path.join(REPO_DIR, ".git"))) return process.env.UI_BASELINE_COMMIT ?? "unknown";
   const sha = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
   const dirty = execFileSync("git", ["status", "--porcelain", "--", "apps", "libs"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
   return dirty ? `${sha} + uncommitted changes` : sha;

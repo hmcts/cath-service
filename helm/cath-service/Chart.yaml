@@ -23,6 +23,10 @@ dependencies:
     version: 0.1.0
     repository: "file://../../apps/crons/helm"
     condition: crons.enabled
+  - name: cath-ui-baseline
+    version: 0.1.0
+    repository: "file://../../apps/ui-baseline/helm"
+    condition: uiBaseline.enabled
   - name: redis
     version: 24.1.8
     repository: https://charts.bitnami.com/bitnami

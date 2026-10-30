@@ -1,13 +1,14 @@
 import { mkdir } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { type Browser, chromium } from "playwright";
+import type { Browser } from "playwright";
+import { launchChromium } from "./browser.js";
 import { type CaptureSettings, type CaptureTarget, captureTarget } from "./capture-target.js";
 
 // Lets any harness, in any language, ask for captures over HTTP. Every capture goes through this
 // one browser, so source and target output always comes from the same Playwright version.
 // Bound to loopback only: it is unauthenticated and drives a browser.
 export async function startCaptureServer(options: CaptureServerOptions): Promise<CaptureServer> {
-  const browser = await chromium.launch();
+  const browser = await launchChromium();
   await mkdir(options.outDir, { recursive: true });
 
   const server = createServer((req, res) => {

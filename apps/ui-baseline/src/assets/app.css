@@ -1,0 +1,5 @@
+/* A run's log keeps its lines but wraps long ones */
+.app-log {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

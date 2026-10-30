@@ -1,3 +1,4 @@
+export { launchChromium } from "./capture/browser.js";
 export { type BatchEntry, captureBatch } from "./capture/capture-batch.js";
 export { type AxeSummary, type CaptureMeta, type CaptureOptions, capturePage, expandAll } from "./capture/capture-page.js";
 export { type CaptureServer, type CaptureServerOptions, startCaptureServer } from "./capture/capture-server.js";
