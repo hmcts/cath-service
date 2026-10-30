@@ -75,9 +75,8 @@ export async function comparePdf(
   const [a, b] = await Promise.all([pdfText(source), pdfText(target)]);
   const sourceLines = a.lines.map((line) => normalise(line, sourceContext));
   const targetLines = b.lines.map((line) => normalise(line, targetContext));
-  const words = (lines: string[]) => lines.flatMap((line) => line.split(" ").filter(Boolean));
   return {
-    findings: capped(textFindings(words(sourceLines), words(targetLines))),
+    findings: capped(textFindings(pdfWords(sourceLines), pdfWords(targetLines))),
     pages: { source: a.pages, target: b.pages },
     texts: { source: sourceLines, target: targetLines }
   };
@@ -103,6 +102,20 @@ export async function compareExcel(
     }
   }
   return { findings: capped(findings) };
+}
+
+// The words of a PDF's lines in reading order. A word broken across lines at a hyphen ("non-" then
+// "devolved", or a long URL) is one word: where a line wraps follows from styling.
+function pdfWords(lines: string[]): string[] {
+  const words: string[] = [];
+  let joinNext = false;
+  for (const line of lines) {
+    const lineWords = line.split(" ").filter(Boolean);
+    if (joinNext && lineWords.length) words.push(`${words.pop()}${lineWords.shift()}`);
+    words.push(...lineWords);
+    joinNext = /[\p{L}\d]-$/u.test(words.at(-1) ?? "");
+  }
+  return words;
 }
 
 // Each run of words that differs, with the words before it so a reader can find it

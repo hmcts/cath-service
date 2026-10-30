@@ -3,11 +3,12 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 // The text of a PDF as lines in reading order, for comparing content between two apps that style
 // their PDFs differently. pdf.js hands text back as positioned fragments; fragments on the same
 // baseline make a line, and fragments that touch are one word, however the generator split them.
-// Page numbering is dropped: it depends on where page breaks fall, which is styling.
+// Page numbering is dropped, with any running footer that carries it (pip ends each page with the
+// service name and "page 1 of 5"): it depends on where page breaks fall, which is styling.
 const SAME_LINE_TOLERANCE = 2;
 // A gap narrower than this fraction of the font size is inside a word, not between words
 const WORD_GAP_RATIO = 0.15;
-const PAGE_NUMBERING = /^(page|tudalen)\s+\d+(\s+(of|o)\s+\d+)?$/i;
+const PAGE_NUMBERING = /(^|\s)(page|tudalen)\s+\d+(\s+(of|o)\s+\d+)?\.?$/i;
 
 export async function pdfText(data: Uint8Array): Promise<PdfText> {
   // pdf.js takes ownership of the buffer it is given, so it gets a copy

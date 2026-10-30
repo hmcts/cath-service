@@ -37,6 +37,15 @@ describe("comparePdf", () => {
     expect(result.pages?.target).toBeGreaterThan(result.pages?.source ?? 0);
   });
 
+  it("should find no differences where only line wrapping and a page footer differ", async () => {
+    // Act
+    const result = await comparePdf(await read("plain.pdf"), await read("wrapped.pdf"));
+
+    // Assert
+    expect(result.findings).toEqual([]);
+    expect(result.texts?.target).toContain("England and Wales, and some non-");
+  });
+
   it("should report a changed word with the words before it", async () => {
     // Act
     const result = await comparePdf(await read("plain.pdf"), await read("changed.pdf"));
