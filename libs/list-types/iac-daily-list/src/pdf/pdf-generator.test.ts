@@ -105,6 +105,29 @@ describe("generateIacDailyListPdf", () => {
     );
   });
 
+  it("should pass translations as both t and common, so the template's caution box can resolve t.common.cautionNote and every other bare common.* field keeps working", async () => {
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100, exceedsMaxSize: false });
+    mockLoadTranslations.mockResolvedValue({ common: { heading: "Daily List", cautionNote: "Note text", cautionReporting: "Reporting text" } });
+
+    await generateIacDailyListPdf({
+      artefactId: "x",
+      contentDate: new Date("2026-01-15"),
+      locale: "en",
+      locationId: "240",
+      jsonData: mockJsonData,
+      listTypeName: "IAC_DAILY_LIST"
+    });
+
+    expect(mockNunjucksEnv.render).toHaveBeenCalledWith(
+      "pdf-template.njk",
+      expect.objectContaining({
+        t: expect.objectContaining({ common: expect.objectContaining({ cautionNote: "Note text", cautionReporting: "Reporting text" }) }),
+        common: expect.objectContaining({ cautionNote: "Note text", cautionReporting: "Reporting text" })
+      })
+    );
+  });
+
   it("should resolve the provenance label for the data source", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
     mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100, exceedsMaxSize: false });
