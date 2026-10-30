@@ -11,6 +11,8 @@ job:
     NODE_ENV: 'production'
     SCRIPT_NAME: 'example'
     POSTGRES_DATABASE: cath
+    CATH_SERVICE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
+    MAX_SUMMARY_PAYLOAD_KB: 256
   keyVaults:
     cath:
       secrets:
@@ -18,5 +20,15 @@ job:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: postgres-url
           alias: DATABASE_URL
+        - name: redis-url
+          alias: REDIS_URL
+        - name: govuk-notify-api-key
+          alias: GOVUK_NOTIFY_API_KEY
+        - name: storageaccount-connection-string
+          alias: AZURE_STORAGE_CONNECTION_STRING
+        - name: storageaccount-name
+          alias: AZURE_STORAGE_ACCOUNT_NAME
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
+  # A run hung on an unreachable Redis would otherwise block every later run under Forbid.
+  activeDeadlineSeconds: 3600

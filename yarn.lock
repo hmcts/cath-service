@@ -1611,9 +1611,13 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
+    "@hmcts/redis": "workspace:*"
     "@types/config": "npm:4.4.0"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.2"
+    redis: "npm:5.12.1"
   languageName: unknown
   linkType: soft
 
@@ -2255,7 +2259,9 @@ __metadata:
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@hmcts/wpafcc-weekly-hearing-list": "workspace:*"
+    "@types/luxon": "npm:3.7.5"
     ajv: "npm:8.20.0"
+    luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
   languageName: unknown

@@ -20,8 +20,10 @@ describe("Redis Client", () => {
   let mockRedisClient: {
     connect: ReturnType<typeof vi.fn>;
     quit: ReturnType<typeof vi.fn>;
+    destroy: ReturnType<typeof vi.fn>;
     on: ReturnType<typeof vi.fn>;
     isOpen: boolean;
+    isReady: boolean;
   };
 
   beforeEach(() => {
@@ -29,8 +31,10 @@ describe("Redis Client", () => {
     mockRedisClient = {
       connect: vi.fn().mockResolvedValue(undefined),
       quit: vi.fn().mockResolvedValue(undefined),
+      destroy: vi.fn(),
       on: vi.fn(),
-      isOpen: true
+      isOpen: true,
+      isReady: true
     };
 
     // Mock createClient to return our mock client
@@ -96,6 +100,18 @@ describe("Redis Client", () => {
       await closeRedisClient();
 
       expect(mockRedisClient.quit).toHaveBeenCalledOnce();
+      expect(mockRedisClient.destroy).not.toHaveBeenCalled();
+    });
+
+    it("should destroy rather than quit the client when the connection has dropped", async () => {
+      await getRedisClient();
+      mockRedisClient.isReady = false;
+      mockRedisClient.quit.mockReturnValue(new Promise(() => {}));
+
+      await closeRedisClient();
+
+      expect(mockRedisClient.destroy).toHaveBeenCalledOnce();
+      expect(mockRedisClient.quit).not.toHaveBeenCalled();
     });
 
     it("should allow calling getRedisClient after close", async () => {
