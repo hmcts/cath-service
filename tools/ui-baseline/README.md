@@ -169,7 +169,8 @@ For a list a tester uploaded to both apps by hand, compare the two without seedi
 yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env test] [--name civil-list]
 ```
 
-This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
+It also prints the list's page in each app; staff sign-in is shared between CaTH perftest and pip
+test, so whoever is signed in to one is signed in to the other. This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
 Data Reader role on it, or a connection string in `PIP_STORAGE_CONNECTION_STRING`.
 
 ## What the baseline covers

@@ -10,6 +10,7 @@
       "filesWaitSeconds": 0
     },
     "pip": {
+      "baseUrl": "https://localhost:8180",
       "storage": {
         "connectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:20000/devstoreaccount1;"
       }
@@ -34,6 +35,7 @@
       "filesWaitSeconds": 90
     },
     "pip": {
+      "baseUrl": "https://pip-frontend.test.platform.hmcts.net",
       "keyVault": "pip-ss-kv-test",
       "dataManagementUrl": "https://pip-data-management.test.platform.hmcts.net",
       "storage": { "accountName": "pipsssatest" }
