@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { type Browser, chromium } from "playwright";
+import type { Browser } from "playwright";
+import { launchChromium } from "./browser.js";
 import { type CaptureResult, type CaptureSettings, type CaptureTarget, captureTarget } from "./capture-target.js";
 
 // Captures every target in a targets file. Each entry may list several locales.
@@ -14,11 +15,11 @@ export async function captureBatch(targetsFile: string, settings: CaptureSetting
 
   // One shared browser; if it dies (a crashed page can take it down, e.g. when memory runs out)
   // it is relaunched so the rest of the batch carries on
-  let browser = await chromium.launch();
+  let browser = await launchChromium();
   let relaunching: Promise<Browser> | null = null;
   const liveBrowser = async () => {
     if (browser.isConnected()) return browser;
-    relaunching ??= chromium.launch().then((launched) => {
+    relaunching ??= launchChromium().then((launched) => {
       browser = launched;
       relaunching = null;
       return launched;
