@@ -187,6 +187,17 @@ Every capture is in English and Welsh.
 | Journey steps (56) | all, in 13 journeys with a video each | |
 | Sign-in hand-offs (14) | | Not pip's screens: they redirect to Azure B2C, SSO or IDAM |
 
+Each page is also captured in its variants (`variants.ts`), and a check captures CaTH in the same
+ones:
+
+- **As every role its guard lets in.** A page is captured as the role in `captureAs`, then as each
+  other fixture user whose role pip's guard admits, as `<page>@<user>`: the admin dashboard as a
+  system admin, CTSC and local admins and super admins; verified pages as CFT and Crime IDAM users
+  too. Public pages and lists are captured signed in as `verified-media` as well as signed out.
+- **At mobile width** (375 px), as the state `mobile`, for each page's main capture.
+- **The page for an address that does not exist**, `page--not-found-address`, compared with what
+  CaTH shows for the same address.
+
 Journeys are in `pip/journeys/`, ported from pip's CodeceptJS scenarios: subscriptions, the
 subscription basket, configuring list types, manual upload and removal, media applications, court
 reference data, legacy third-party users, third-party subscribers, location metadata, list-type
@@ -197,20 +208,15 @@ search config, bulk-creating media accounts, blob resubmission and deleting a us
 Accepted for the prototype, to be resolved later. Until then, if a screen you are building
 depends on one of these, check that part by hand and say so in the PR.
 
-- **One role per signed-in page.** Each page is captured as the role its route guard requires
-  (`routes/pip-routes.json`, `captureAs`). Pages that look different for another role, such as the
-  admin dashboard for a CTSC or local admin, or a list for a verified user rather than a signed-out
-  one, are captured for that one role only.
 - **One data state per page.** Each list type has one publication; pages that change with data
   (no subscriptions vs some, a list with no hearings) are captured in the state the seed produces.
   Journeys cover some validation errors, not every branch.
-- **Desktop only**, at 1280 px wide. No mobile width.
 - **Two journey steps are reached by URL, not by clicking through**, because the step before them
   needs Azure services that are not available locally: approving a media application, and the
   confirmation after bulk-creating media accounts. Each is noted in its journey record.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
-- **Not captured at all:** file downloads, emails, pip's 404 page and deprecated list types.
+- **Not captured at all:** file downloads, emails and deprecated list types.
 - **Signed-in pages in the test environment need test accounts.** CaTH perftest's vault has a
   Crime IDAM account (verified users) but no SSO admin accounts, so admin pages are reported as
   not compared there until accounts in perftest's admin groups are added to `cath-perftest` under

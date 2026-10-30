@@ -233,6 +233,35 @@ function findingsBlock(result) {
     ${inherited.length ? `<p class="govuk-body-s">${categoryTag("axe-inherited")} ${inherited.map((f) => esc(f.detail.split(":")[0])).join(", ")}</p>` : ""}`;
 }
 
+// A page also captured on mobile, and as other roles (ids "<page>@<user>"): one row each, with its
+// verdict, its findings and both captures. area is "lists" or "pages"; captures sit under data/.
+function variantsBlock({ area, id, locale, ids, pipBase, cathBase, compare }) {
+  const result = (captureId, state) => compare?.results.find((r) => r.id === captureId && r.locale === locale && r.state === state) ?? null;
+  const rows = [
+    { label: "On mobile", captureId: id, state: "mobile" },
+    ...ids.filter((other) => other.startsWith(`${id}@`)).map((other) => ({ label: `As ${other.slice(id.length + 1)}`, captureId: other, state: "default" }))
+  ].filter(({ captureId, state }) => existsSync(path.join(area === "lists" ? path.join(args.lists, "pip") : args.pages, captureId, locale, state)));
+  if (!rows.length) return "";
+  const body = rows
+    .map(({ label, captureId, state }) => {
+      const r = result(captureId, state);
+      const verdict =
+        !r || r.verdict === "not-captured"
+          ? tag("not compared", "grey")
+          : differenceCount(r)
+            ? tag(`${differenceCount(r)} finding${differenceCount(r) === 1 ? "" : "s"}`, "orange")
+            : tag("match", "green");
+      const links = `<a class="govuk-link" href="../${pipBase}/${captureId}/${locale}/${state}/page.png">pip</a> · <a class="govuk-link" href="../${cathBase}/${captureId}/${locale}/${state}/page.png">CaTH</a>`;
+      const findings =
+        r && r.verdict !== "not-captured" && differenceCount(r)
+          ? `<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Findings</span></summary><div class="govuk-details__text">${findingsBlock(r)}</div></details>`
+          : "";
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell">${esc(label)}</td><td class="govuk-table__cell">${verdict}</td><td class="govuk-table__cell govuk-body-s">${links}${findings}</td></tr>`;
+    })
+    .join("");
+  return `<h3 class="govuk-heading-s">Also captured</h3><table class="govuk-table"><tbody class="govuk-table__body">${body}</tbody></table>`;
+}
+
 const VERDICT = { intended: ["Intended", "green"], defect: ["Defect", "red"], "needs-human": ["Needs a human", "yellow"] };
 
 function reviewBlock(id, locale) {
@@ -264,6 +293,9 @@ function filterBox(tableId, placeholder) {
 }
 
 // ---------- list pages ----------
+// Every capture id in the baseline's lists and pages, variants included
+const listIds = [...new Set(readLines(path.join(args.lists, "pip", "index.jsonl")).map((e) => e.id))];
+const pageIds = args.pages ? [...new Set(readLines(path.join(args.pages, "index.jsonl")).map((e) => e.id))] : [];
 const listRows = [];
 let pipListAxe = 0;
 let cathListAxe = 0;
@@ -295,6 +327,7 @@ for (const publication of manifest.publications) {
              <details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Raw accessibility tree differences ${ariaDiff ? tag(`${status[locale]} lines`, "red") : tag("identical", "green")}</span></summary><div class="govuk-details__text">${ariaDiff ? diffBlock(ariaDiff) : "Identical."}</div></details>
              <details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Raw visible text differences ${textDiff ? tag(`${changedLineCount(textDiff)} lines`, "red") : tag("identical", "green")}</span></summary><div class="govuk-details__text">${textDiff ? diffBlock(textDiff) : "Identical."}</div></details>`
       }
+      ${variantsBlock({ area: "lists", id: publication.id, locale, ids: listIds, pipBase: "data/lists/pip", cathBase: "data/lists/cath", compare: comparison })}
     </div>`);
   }
 
@@ -355,7 +388,7 @@ layout({
 
 // ---------- other pages ----------
 const pageEntries = (args.pages ? readLines(path.join(args.pages, "index.jsonl")) : []).filter(
-  (e) => e.state === "default" && e.locale === "en" && (!ONLY || ONLY.has(e.id))
+  (e) => e.state === "default" && e.locale === "en" && !e.id.includes("@") && (!ONLY || ONLY.has(e.id))
 );
 const pageRows = [];
 let pipPageAxe = 0;
@@ -378,6 +411,7 @@ for (const entry of pageEntries.sort((a, b) => a.source.route.localeCompare(b.so
         ${hasCath ? captureCard({ label: "CaTH", colour: "purple", dirOnDisk: cathDirs[locale], href: `data/cath-pages/${entry.id}/${locale}/default`, depth: 1 }) : `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag("CaTH", "purple")}</h3><p class="govuk-body-s">${mapping?.cath ? "Not captured yet: CaTH sign-in, or a dynamic route, is still needed." : "No CaTH equivalent mapped."}</p></div>`}
       </div>
       ${hasCath ? findingsBlock(pageResultFor(entry.id, locale)) : ""}
+      ${variantsBlock({ area: "pages", id: entry.id, locale, ids: pageIds, pipBase: "data/pages", cathBase: "data/cath-pages", compare: pagesComparison })}
     </div>`
   ).join("");
   layout({

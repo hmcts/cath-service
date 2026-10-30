@@ -1,5 +1,5 @@
 {
-  "$comment": "Users the parity seeders create, one per pip role and verified provenance plus dedicated users for journeys that change their own data, so pages behind sign-in can be captured as each role. They only exist in the local app databases; sign-in goes through each app's local parity sign-in (pip: /parity-login), never a real identity provider.",
+  "$comment": "Users the parity seeders create, one per pip role and verified provenance plus dedicated users for journeys that change their own data, so pages behind sign-in can be captured as each role. They only exist in the local app databases; sign-in goes through each app's local parity sign-in (pip: /parity-login), never a real identity provider. journeysOnly users exist for journeys that change their own data, and pages are never captured as them.",
   "users": [
     {
       "id": "verified-media",
@@ -35,7 +35,8 @@
       "provenanceUserId": "00000000-0000-4000-8000-0000000000d1",
       "email": "parity.subscriber@example.com",
       "forenames": "Parity",
-      "surname": "Subscriber"
+      "surname": "Subscriber",
+      "journeysOnly": true
     },
     {
       "id": "system-admin",
