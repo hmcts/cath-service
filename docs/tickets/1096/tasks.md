@@ -45,7 +45,7 @@ Legend: **[IN-REPO]**, **[OUT-OF-BAND: PlatOps]**, **[OUT-OF-BAND: Dev]** (az ru
 ### Agreements and grants
 
 - [ ] 5. (PR A uses Postgres GP_Standard_D2s_v3 / 64 GiB for aat and prod per the user, other environments unchanged; Redis Standard C1 and geo-redundant backup on still need sign-off before PR B) **[COORDINATION]** Get sizing signed off (plan 2.1 table, Clarification 2): Redis Standard C1, Postgres D2ds_v4, automatic ZoneRedundant HA, 35-day retention, **geo-redundant backup on (irreversible)**, no immutable-vault enrolment.
-- [ ] 6. (PR A has the placeholder `TODO-1096-PROD-KEY-VAULT-GROUP` in `env-config.tf`) **[COORDINATION]** Agree the PROD key vault product group with Platform Operations (Clarification 1). Record its exact display name.
+- [ ] 6. (Group `DTS CaTH Prod`, set in PR A's `env-config.tf`. Its creation PR is raised; tick this once the group exists) **[COORDINATION]** Agree the PROD key vault product group with Platform Operations (Clarification 1). Record its exact display name.
 - [ ] 7. **[COORDINATION]** Settle Clarifications 4, 5, 6, 7, 8, 9, 10 and 11. AC6 wording (5) is updated on the issue by the author.
 - [ ] 8. **[OUT-OF-BAND: PlatOps]** From the pre-flight results, request the missing grants on DTSPO-35946 (plan 3.5):
   - (a) Role Based Access Control Administrator on DCD-CNP-PROD, with a condition limited to Storage Blob Data Contributor

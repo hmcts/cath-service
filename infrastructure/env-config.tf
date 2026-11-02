@@ -47,9 +47,9 @@ locals {
   is_prod = var.env == "prod"
 
   # Write access on all three vaults. cnp-module-key-vault cannot create a vault
-  # without a product-team policy, so prod needs a named PROD group.
-  # TODO(#1096 task 6): replace with the group PlatOps name for PROD.
-  key_vault_product_group_name = local.is_prod ? "TODO-1096-PROD-KEY-VAULT-GROUP" : "DTS PIP Non-Prod"
+  # without a product-team policy, so prod needs a named PROD group. The module
+  # looks it up with security_enabled = true, so it must be a security group.
+  key_vault_product_group_name = local.is_prod ? "DTS CaTH Prod" : "DTS PIP Non-Prod"
 
   # The E2E/CI GitHub OIDC app registration is a non-prod identity, so it gets
   # nothing in prod.
