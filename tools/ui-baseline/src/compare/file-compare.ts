@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -32,7 +33,7 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
       continue;
     }
     const [sourceData, targetData] = await Promise.all([readFile(path.join(options.source, source.file)), readFile(path.join(options.target, target.file))]);
-    const pair = kind === "excel" ? await compareExcel(sourceData, targetData, source, target) : await comparePdf(sourceData, targetData, source, target);
+    const pair = await COMPARERS[kind](sourceData, targetData, source, target);
     if (pair.texts) {
       await mkdir(path.join(options.out, id), { recursive: true });
       await writeFile(path.join(options.out, id, `${kind}-source.txt`), `${pair.texts.source.join("\n")}\n`);
@@ -65,6 +66,18 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
   await writeFile(path.join(options.out, "files-compare.json"), `${JSON.stringify(summary, null, 2)}\n`);
   return summary;
 }
+
+// How each kind of file is compared; PDFs by text, spreadsheets by cell, CSV by line, the rest whole
+const COMPARERS: Record<
+  FileKind,
+  (source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext, targetContext: NormaliseContext) => Promise<PairComparison>
+> = {
+  pdf: (...args) => comparePdf(...args),
+  "pdf-welsh": (...args) => comparePdf(...args),
+  excel: (...args) => compareExcel(...args),
+  csv: async (...args) => compareCsv(...args),
+  binary: async (source, target) => compareBinary(source, target)
+};
 
 export async function comparePdf(
   source: Uint8Array,
@@ -102,6 +115,60 @@ export async function compareExcel(
     }
   }
   return { findings: capped(findings) };
+}
+
+// A CSV file line by line, in order, with seed-time dates masked
+export function compareCsv(source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext = {}, targetContext: NormaliseContext = {}): PairComparison {
+  const lines = (data: Uint8Array, context: NormaliseContext) =>
+    normalise(
+      Buffer.from(data)
+        .toString("utf-8")
+        .replace(/^\uFEFF/, ""),
+      context
+    )
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== "");
+  const a = lines(source, sourceContext);
+  const b = lines(target, targetContext);
+  const runs = diffSequences(a, b);
+  if (!runs)
+    return {
+      findings: [{ category: "csv", change: "rewritten", detail: `the files differ throughout: ${a.length} lines against ${b.length}` }],
+      texts: { source: a, target: b }
+    };
+  const findings: Finding[] = [];
+  let line = 0;
+  for (let index = 0; index < runs.length; index++) {
+    const run = runs[index];
+    if (run.kind === "equal") {
+      line += run.items.length;
+      continue;
+    }
+    const next = runs[index + 1];
+    if (run.kind === "delete" && next?.kind === "insert") {
+      run.items.forEach((item, i) => {
+        findings.push(
+          i < next.items.length
+            ? { category: "csv", change: "line-changed", detail: `line ${line + i + 1}: "${item}" → "${next.items[i]}"` }
+            : { category: "csv", change: "line-missing", detail: `line ${line + i + 1}: "${item}"` }
+        );
+      });
+      for (const extra of next.items.slice(run.items.length)) findings.push({ category: "csv", change: "line-extra", detail: `"${extra}"` });
+      line += run.items.length;
+      index++;
+    } else if (run.kind === "delete") {
+      for (const item of run.items) findings.push({ category: "csv", change: "line-missing", detail: `line ${++line}: "${item}"` });
+    } else for (const item of run.items) findings.push({ category: "csv", change: "line-extra", detail: `"${item}"` });
+  }
+  return { findings: capped(findings), texts: { source: a, target: b } };
+}
+
+// Anything else (an image) is the same only if it is byte for byte
+export function compareBinary(source: Uint8Array, target: Uint8Array): PairComparison {
+  const digest = (data: Uint8Array) => createHash("sha256").update(data).digest("hex");
+  return digest(source) === digest(target)
+    ? { findings: [] }
+    : { findings: [{ category: "file", change: "content", detail: `the files differ: pip ${source.length} bytes, CaTH ${target.length} bytes` }] };
 }
 
 // The words of a PDF's lines in reading order. A word broken across lines at a hyphen ("non-" then
@@ -208,8 +275,9 @@ export interface FileCompareOptions {
 }
 
 // pdf: the list's PDF. pdf-welsh: the additional Welsh PDF pip makes for bilingual lists
-// (<artefactId>_cy.pdf). excel: the list's spreadsheet.
-export type FileKind = "pdf" | "pdf-welsh" | "excel";
+// (<artefactId>_cy.pdf). excel: the list's spreadsheet. csv and binary: other downloads
+// (reference data, a proof of ID image).
+export type FileKind = "pdf" | "pdf-welsh" | "excel" | "csv" | "binary";
 
 export interface FileEntry extends NormaliseContext {
   id: string;

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadManifest, loadUsers, type ParityUser, type SeedResult } from "./fixtures/manifest.js";
+import { pipSignInUrl } from "./pip/sign-in-url.js";
 import { SIGNED_IN_VIEWER, variantId, withMobile } from "./variants.js";
 
 // Builds the capture targets file for one app from its seed result, so both apps are captured
@@ -9,12 +10,6 @@ import { SIGNED_IN_VIEWER, variantId, withMobile } from "./variants.js";
 // signed out is captured again signed in as a verified user, and at mobile width (variants.ts).
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const LOCALES = ["en", "cy"];
-const SIGN_IN = {
-  PI_AAD: { key: "oid", flow: "AAD" },
-  SSO: { key: "oid", flow: "SSO" },
-  CFT_IDAM: { key: "uid", flow: "CFT" },
-  CRIME_IDAM: { key: "uid", flow: "Crime" }
-} as const;
 
 const [app, commit] = process.argv.slice(2);
 if (!app) throw new Error("usage: build-targets.ts <pip|cath> [app commit]");
@@ -77,7 +72,5 @@ console.log(`wrote ${targets.length} targets → ${output}`);
 if (skipped.length) console.log(`skipped ${skipped.length}: ${skipped.join(", ")}`);
 
 function signInUrl(user: ParityUser): string {
-  const { key, flow } = SIGN_IN[user.provenance];
-  const template = config.signIn as string;
-  return `${config.baseUrl}${template.replace("{key}", key).replace("{provenanceUserId}", user.provenanceUserId).replace("{flow}", flow)}`;
+  return pipSignInUrl(config, user);
 }
