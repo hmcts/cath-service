@@ -1,5 +1,5 @@
 # Welsh translation settings for CaTH. Read by the agent hub's welsh plugin (hmcts/dtsse-agent-hub).
-# Reference: docs/reference/welsh-catalogue-format.md in hmcts/cft-workspace
+# Reference: the welsh plugin's README in hmcts/dtsse-agent-hub (packages/agent-hub/plugins/welsh/README.md)
 
 # Repos to scan, and the adapter for each: "." is this repo.
 repos:
