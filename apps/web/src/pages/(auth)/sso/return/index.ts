@@ -1,6 +1,6 @@
 import { USER_ROLES, type UserRole } from "@hmcts/account";
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
-import { isSsoConfigured } from "@hmcts/auth";
+import { isSsoConfigured, safeReturnTo } from "@hmcts/auth";
 import type { Request, Response } from "express";
 import passport from "passport";
 
@@ -59,7 +59,7 @@ export const GET = [
     }
 
     // Get the return URL from session, or use role-based default
-    const returnTo = req.session.returnTo || defaultRedirect;
+    const returnTo = safeReturnTo(req.session.returnTo, defaultRedirect);
 
     // Clear the returnTo from session
     delete req.session.returnTo;

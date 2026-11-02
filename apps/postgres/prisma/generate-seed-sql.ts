@@ -167,10 +167,11 @@ function generateListTypeSubJurisdictionsSql(listTypes: ListTypeData[]): string 
 
 function generateSoftDeleteReconciliationSql(listTypes: ListTypeData[]): string {
   // Soft-delete any active list type no longer present in listTypeData (e.g. CRIME_DAILY_LIST).
-  // TEST_/E2E_ list types live outside listTypeData and must be preserved. The underscore is
-  // escaped because LIKE treats a bare _ as a single-character wildcard (TESTX... would match).
+  // TEST_/E2E_ list types live outside listTypeData and must be preserved. starts_with is used
+  // rather than LIKE because LIKE treats _ as a wildcard, and escaping it depends on the
+  // standard_conforming_strings setting.
   const activeNames = listTypes.map((lt) => sqlStr(lt.name)).join(", ");
-  return `UPDATE list_types SET deleted_at = NOW()\nWHERE deleted_at IS NULL\n  AND name NOT IN (${activeNames})\n  AND name NOT LIKE 'TEST\\_%' ESCAPE '\\'\n  AND name NOT LIKE 'E2E\\_%' ESCAPE '\\';`;
+  return `UPDATE list_types SET deleted_at = NOW()\nWHERE deleted_at IS NULL\n  AND name NOT IN (${activeNames})\n  AND NOT starts_with(name, 'TEST_')\n  AND NOT starts_with(name, 'E2E_');`;
 }
 
 function sqlStr(value: string): string {

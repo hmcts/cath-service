@@ -1,8 +1,10 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { UserProfile } from "@hmcts/auth";
-import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
+import { getB2cBaseUrl, getB2cConfig, isB2cConfigured, safeReturnTo } from "@hmcts/auth";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
+
+const DEFAULT_RETURN_TO = "/account-home";
 
 /**
  * Handles OAuth callback from Azure B2C (GET - response_mode=query)
@@ -101,7 +103,7 @@ async function handleCallback(req: Request, res: Response, params: any) {
     userProfile.id = dbUser.userId;
 
     // Get return URL and locale from session
-    const returnTo = req.session.returnTo || "/account-home";
+    const returnTo = safeReturnTo(req.session.returnTo, DEFAULT_RETURN_TO);
     const locale = req.session.b2cLocale;
 
     const redirectUrl = locale === "cy" ? withWelshLocale(returnTo) : returnTo;
@@ -206,10 +208,18 @@ function extractUserProfile(idToken: string, _provider: string): UserProfile {
   };
 }
 
-// returnTo can already carry a query string (e.g. ?artefactId=...), so lng must be merged
-// into it rather than appended. Rebuilding from pathname also keeps the redirect same-origin.
+// returnTo can already carry a query string (e.g. ?artefactId=...), so lng is merged into it
+// rather than appended. String splitting (not URL re-serialisation) keeps the path and the
+// existing parameters byte-for-byte, so dot segments are not collapsed into "//host" and
+// encodings such as %20 are not rewritten.
 function withWelshLocale(returnTo: string): string {
-  const url = new URL(returnTo, "http://localhost");
-  url.searchParams.set("lng", "cy");
-  return `${url.pathname}${url.search}${url.hash}`;
+  const hashIndex = returnTo.indexOf("#");
+  const beforeHash = hashIndex === -1 ? returnTo : returnTo.slice(0, hashIndex);
+  const hash = hashIndex === -1 ? "" : returnTo.slice(hashIndex);
+  const queryIndex = beforeHash.indexOf("?");
+  const path = queryIndex === -1 ? beforeHash : beforeHash.slice(0, queryIndex);
+  const query = queryIndex === -1 ? "" : beforeHash.slice(queryIndex + 1);
+  const params = query.split("&").filter((param) => param !== "" && param !== "lng" && !param.startsWith("lng="));
+
+  return `${path}?${[...params, "lng=cy"].join("&")}${hash}`;
 }

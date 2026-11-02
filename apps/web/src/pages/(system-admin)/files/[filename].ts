@@ -8,19 +8,16 @@ function isValidFilename(filename: string): boolean {
   return validPattern.test(filename);
 }
 
-const CONTENT_TYPES: Record<string, string> = {
+// Only types a browser cannot execute are previewed inline. Everything else (HTML, XML that
+// may carry an XHTML namespace, unknown types) is downloaded as an opaque octet-stream so
+// publisher-supplied content cannot run script in the admin origin, even if a proxy strips
+// Content-Disposition.
+const INLINE_CONTENT_TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
   ".csv": "text/csv",
   ".txt": "text/plain",
-  ".json": "application/json",
-  ".xml": "application/xml",
-  ".html": "text/html"
+  ".json": "application/json"
 };
-
-// Only types a browser cannot execute are previewed inline. Anything else (HTML, XML
-// with an XHTML namespace, unknown types) is downloaded so publisher-supplied content
-// can never run script in the admin origin.
-const INLINE_SAFE_EXTENSIONS = new Set([".pdf", ".csv", ".txt", ".json"]);
 
 const getHandler = async (req: Request, res: Response) => {
   const filename = getParam(req.params, "filename");
@@ -38,8 +35,9 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).send("File not found");
     }
 
-    const contentType = CONTENT_TYPES[ext] || "application/octet-stream";
-    const disposition = INLINE_SAFE_EXTENSIONS.has(ext) ? "inline" : "attachment";
+    const inlineContentType = INLINE_CONTENT_TYPES[ext];
+    const contentType = inlineContentType ?? "application/octet-stream";
+    const disposition = inlineContentType ? "inline" : "attachment";
 
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");

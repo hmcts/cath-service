@@ -5,7 +5,15 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("@hmcts/auth");
+vi.mock("@hmcts/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/auth")>();
+  return {
+    getB2cBaseUrl: vi.fn(),
+    getB2cConfig: vi.fn(),
+    isB2cConfigured: vi.fn(),
+    safeReturnTo: actual.safeReturnTo
+  };
+});
 vi.mock("@hmcts/account/repository/query");
 vi.mock("@hmcts-cft/cloud-native-platform");
 
@@ -131,6 +139,38 @@ describe("B2C Callback Handler", () => {
       await GET(mockReq as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1&lng=cy");
+    });
+
+    it("should preserve the encoding of existing query parameters when adding the Welsh locale", async () => {
+      mockSession.b2cLocale = "cy";
+      mockSession.returnTo = "/a?x=a+b%20c&sig=ab%2Fc%3D#results";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/a?x=a+b%20c&sig=ab%2Fc%3D&lng=cy#results");
+    });
+
+    it.each(["en", "cy"])("should keep a dot-segment returnTo as a same-origin path for the %s locale", async (locale) => {
+      mockSession.b2cLocale = locale;
+      mockSession.returnTo = "/.//evil.com";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      const redirectUrl = vi.mocked(mockRes.redirect).mock.calls[0][0] as unknown as string;
+      expect(redirectUrl.startsWith("/.//evil.com")).toBe(true);
+      expect(new URL(redirectUrl, "https://cath.example").origin).toBe("https://cath.example");
+    });
+
+    it.each([
+      ["en", "/account-home"],
+      ["cy", "/account-home?lng=cy"]
+    ])("should ignore an off-site returnTo and use the default for the %s locale", async (locale, expected) => {
+      mockSession.b2cLocale = locale;
+      mockSession.returnTo = "//evil.com/x";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(expected);
     });
 
     it("should use custom returnTo from session", async () => {

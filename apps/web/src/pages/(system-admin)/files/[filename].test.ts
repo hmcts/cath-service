@@ -148,7 +148,7 @@ describe("files route", () => {
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/xml");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="document.xml"');
   });
 
@@ -159,7 +159,7 @@ describe("files route", () => {
     const handler = GET[1];
     await handler(mockRequest as Request, mockResponse as Response, vi.fn());
 
-    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "text/html");
+    expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Type", "application/octet-stream");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="document.html"');
     expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "no-store, no-cache, must-revalidate, private");
     expect(mockResponse.setHeader).toHaveBeenCalledWith("X-Content-Type-Options", "nosniff");
