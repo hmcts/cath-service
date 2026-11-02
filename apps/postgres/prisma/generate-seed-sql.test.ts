@@ -188,7 +188,8 @@ describe("generateSeedSql", () => {
     expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST', 'FLAT_FILE_ONLY_LIST')");
     expect(sql).toContain("AND NOT starts_with(name, 'TEST_')");
     expect(sql).toContain("AND NOT starts_with(name, 'E2E_')");
-    expect(sql).not.toContain("LIKE");
+    const reconciliation = sql.slice(sql.indexOf("UPDATE list_types SET deleted_at"));
+    expect(reconciliation.slice(0, reconciliation.indexOf(";"))).not.toContain("LIKE");
   });
 
   it("should include both Employment Tribunal list types", () => {

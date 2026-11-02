@@ -11,7 +11,7 @@ vi.mock("@hmcts/auth", async (importOriginal) => {
     getB2cBaseUrl: vi.fn(),
     getB2cConfig: vi.fn(),
     isB2cConfigured: vi.fn(),
-    safeReturnTo: actual.safeReturnTo
+    consumeReturnTo: actual.consumeReturnTo
   };
 });
 vi.mock("@hmcts/account/repository/query");
@@ -150,23 +150,32 @@ describe("B2C Callback Handler", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/a?x=a+b%20c&sig=ab%2Fc%3D&lng=cy#results");
     });
 
-    it.each(["en", "cy"])("should keep a dot-segment returnTo as a same-origin path for the %s locale", async (locale) => {
-      mockSession.b2cLocale = locale;
-      mockSession.returnTo = "/.//evil.com";
+    it("should remove a Welsh lng parameter from returnTo when signing in in English", async () => {
+      mockSession.b2cLocale = "en";
+      mockSession.returnTo = "/summary-of-publications?locationId=1&lng=cy";
 
       await GET(mockReq as Request, mockRes as Response);
 
-      const redirectUrl = vi.mocked(mockRes.redirect).mock.calls[0][0] as unknown as string;
-      expect(redirectUrl.startsWith("/.//evil.com")).toBe(true);
-      expect(new URL(redirectUrl, "https://cath.example").origin).toBe("https://cath.example");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1");
+    });
+
+    it("should replace a percent-encoded lng key rather than adding a second locale", async () => {
+      mockSession.b2cLocale = "cy";
+      mockSession.returnTo = "/summary-of-publications?l%6Eg=en&locationId=1";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1&lng=cy");
     });
 
     it.each([
-      ["en", "/account-home"],
-      ["cy", "/account-home?lng=cy"]
-    ])("should ignore an off-site returnTo and use the default for the %s locale", async (locale, expected) => {
+      ["en", "//evil.com/x", "/account-home"],
+      ["cy", "//evil.com/x", "/account-home?lng=cy"],
+      ["en", "/.//evil.com", "/account-home"],
+      ["cy", "/%2e//evil.com", "/account-home?lng=cy"]
+    ])("should ignore an unsafe returnTo and use the default for the %s locale (%s)", async (locale, returnTo, expected) => {
       mockSession.b2cLocale = locale;
-      mockSession.returnTo = "//evil.com/x";
+      mockSession.returnTo = returnTo;
 
       await GET(mockReq as Request, mockRes as Response);
 

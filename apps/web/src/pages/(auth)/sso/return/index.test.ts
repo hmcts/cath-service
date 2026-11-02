@@ -22,7 +22,7 @@ vi.mock("@hmcts/auth", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/auth")>();
   return {
     isSsoConfigured: vi.fn().mockReturnValue(true),
-    safeReturnTo: actual.safeReturnTo
+    consumeReturnTo: actual.consumeReturnTo
   };
 });
 

@@ -23,7 +23,7 @@ export { blockUserAccess, requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
 export { sessionTimeoutMiddleware } from "./middleware/session-timeout.js";
+export { consumeReturnTo } from "./return-to.js";
 export { isRejectedCFTRole, isRejectedCrimeRole } from "./role-service/index.js";
-export { safeReturnTo } from "./safe-return-to.js";
 export { getTimeoutConfig, isSessionExpired, updateLastActivity } from "./session/timeout-tracker.js";
 export type { UserProfile } from "./user-profile.js";

@@ -33,5 +33,6 @@ export { getParam, getParamAsNumber } from "./params-helper.js";
 export { ALLOWED_HTML_TAGS, findDisallowedHtmlTags, sanitiseHtml } from "./sanitisation/html-sanitisation.js";
 export type { DateInput } from "./utils/date-utils.js";
 export { formatDate, formatDateAndLocale, formatDateRange, parseDate } from "./utils/date-utils.js";
+export { withLocaleParam } from "./utils/locale-url.js";
 export { saveSession } from "./utils/session-utils.js";
 export { cy as errorViewsCy, en as errorViewsEn } from "./views/errors/index.js";
