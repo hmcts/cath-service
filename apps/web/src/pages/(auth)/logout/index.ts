@@ -1,4 +1,4 @@
-import { buildCftIdamLogoutUrl, getB2cBaseUrl, getB2cConfig, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
+import { buildB2cLogoutUrl, buildCftIdamLogoutUrl, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
 import type { Request, Response } from "express";
 
 function extractTenantId(issuerUrl: string): string | null {
@@ -43,15 +43,7 @@ export const GET = async (req: Request, res: Response) => {
 
       // B2C logout flow
       if (userProvenance === "PI_AAD") {
-        const b2cConfig = getB2cConfig();
-        const b2cBaseUrl = getB2cBaseUrl();
-        const postLogoutRedirectUri = getPostLogoutRedirectUri(req);
-
-        const logoutUrl = new URL(`${b2cBaseUrl}/oauth2/v2.0/logout`);
-        logoutUrl.searchParams.set("p", b2cConfig.policyCath);
-        logoutUrl.searchParams.set("post_logout_redirect_uri", postLogoutRedirectUri);
-
-        return res.redirect(logoutUrl.toString());
+        return res.redirect(buildB2cLogoutUrl(getPostLogoutRedirectUri(req)));
       }
 
       // SSO logout flow: Construct Azure AD logout URL

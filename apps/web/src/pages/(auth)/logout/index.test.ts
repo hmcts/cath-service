@@ -1,4 +1,4 @@
-import { buildCftIdamLogoutUrl, getB2cBaseUrl, getB2cConfig, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
+import { buildB2cLogoutUrl, buildCftIdamLogoutUrl, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -32,13 +32,10 @@ describe("Logout handler", () => {
       issuerUrl: "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/v2.0"
     } as any);
 
-    vi.mocked(getB2cConfig).mockReturnValue({
-      clientId: "test-client-id",
-      clientSecret: "test-client-secret",
-      policyCath: "B2C_1A_CaTH_SignIn"
-    } as any);
-
-    vi.mocked(getB2cBaseUrl).mockReturnValue("https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net");
+    vi.mocked(buildB2cLogoutUrl).mockImplementation(
+      (postLogoutRedirectUri: string) =>
+        `https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/logout?p=B2C_1A_CaTH_SignIn&post_logout_redirect_uri=${encodeURIComponent(postLogoutRedirectUri)}`
+    );
   });
 
   it("should logout CFT IDAM user and redirect to CFT IDAM endSession", async () => {
@@ -161,6 +158,7 @@ describe("Logout handler", () => {
     expect(req.logout).toHaveBeenCalled();
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+    expect(buildB2cLogoutUrl).toHaveBeenCalledWith("https://localhost:8080/session-logged-out");
     expect(res.redirect).toHaveBeenCalledWith(
       "https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net/oauth2/v2.0/logout?p=B2C_1A_CaTH_SignIn&post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out"
     );
