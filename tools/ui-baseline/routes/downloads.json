@@ -1,0 +1,39 @@
+{
+  "$comment": "pip's routes that answer with a file rather than a page, each paired with CaTH's route for the same file. A value 'publication:<fixture>' is that fixture's artefact id in the app, and 'record:<record>.<field>' a seeded record's field (records.json). 'as' is the fixture user (users.json) the file is fetched as. The file is compared by kind: pdf by text, excel by cell, csv by line, binary byte for byte.",
+  "downloads": [
+    {
+      "id": "reference-data",
+      "kind": "csv",
+      "pip": { "path": "/manual-reference-data-download", "as": "system-admin" },
+      "cath": { "path": "/reference-data-download", "as": "system-admin" }
+    },
+    {
+      "id": "media-application-proof-of-id",
+      "kind": "binary",
+      "pip": {
+        "path": "/media-account-review/image",
+        "query": { "applicantId": "record:pending-application.applicantId", "imageId": "record:pending-application.imageId" },
+        "as": "super-admin-ctsc"
+      },
+      "cath": { "path": "/media-applications/[id]/proof-of-id", "params": { "id": "record:pending-application.applicantId" }, "as": "super-admin-ctsc" }
+    },
+    {
+      "id": "sjp-press-list-pdf",
+      "kind": "pdf",
+      "pip": { "path": "/list-download-files", "query": { "artefactId": "publication:sjp-press-list", "type": "pdf" }, "as": "verified-media" },
+      "cath": { "path": "/sjp-press-list/download", "query": { "artefactId": "publication:sjp-press-list", "type": "pdf" }, "as": "verified-media" }
+    },
+    {
+      "id": "sjp-press-list-excel",
+      "kind": "excel",
+      "pip": { "path": "/list-download-files", "query": { "artefactId": "publication:sjp-press-list", "type": "excel" }, "as": "verified-media" },
+      "cath": { "path": "/sjp-press-list/download", "query": { "artefactId": "publication:sjp-press-list", "type": "xlsx" }, "as": "verified-media" }
+    },
+    {
+      "id": "flat-file",
+      "kind": "pdf",
+      "pip": { "path": "/file-publication", "query": { "artefactId": "publication:mental-health-tribunal-hearing-list" } },
+      "cath": { "path": "/api/flat-file/[artefactId]/download", "params": { "artefactId": "publication:mental-health-tribunal-hearing-list" } }
+    }
+  ]
+}

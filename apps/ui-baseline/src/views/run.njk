@@ -4,7 +4,7 @@
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 {% set title = "Run " + run.id %}
 {% set statusColours = { queued: "grey", running: "blue", finished: "green", failed: "red" } %}
-{% set kindNames = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel" } %}
+{% set kindNames = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" } %}
 {% set verdictNames = { match: ["Matches", "green"], differs: ["Differs", "red"], missing: ["CaTH did not make it", "orange"], extra: ["Only CaTH made one", "yellow"] } %}
 
 {% block head %}

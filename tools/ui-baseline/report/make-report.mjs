@@ -77,7 +77,7 @@ const NAV = [
   ["lists.html", "List pages"],
   ["pages.html", "Other pages"],
   ["journeys.html", "Journeys"],
-  ...(filesComparison ? [["files.html", "PDF and Excel"]] : []),
+  ...(filesComparison ? [["files.html", "Files"]] : []),
   ["defects.html", "Known pip defects"]
 ];
 
@@ -537,7 +537,7 @@ layout({
 // ---------- generated files ----------
 if (filesComparison) {
   const t = filesComparison.totals;
-  const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel" };
+  const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" };
   const FILE_VERDICT = {
     match: ["Matches", "green"],
     differs: ["Differs", "red"],
@@ -548,7 +548,7 @@ if (filesComparison) {
     .map((r) => {
       const [label, colour] = FILE_VERDICT[r.verdict];
       const texts =
-        r.kind !== "excel" && r.verdict !== "missing" && r.verdict !== "extra"
+        (r.kind === "pdf" || r.kind === "pdf-welsh" || r.kind === "csv") && r.verdict !== "missing" && r.verdict !== "extra"
           ? ` <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-source.txt">pip text</a> · <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-target.txt">CaTH text</a>`
           : "";
       const pages =
@@ -564,9 +564,9 @@ if (filesComparison) {
   layout({
     file: "files.html",
     active: "files.html",
-    title: "PDF and Excel files",
-    body: `<h1 class="govuk-heading-l">PDF and Excel files</h1>
-  <p class="govuk-body">The files each app generated when the publication was accepted. PDFs are styled differently by design, so only their text is compared, in reading order; line breaks and page breaks are ignored. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths.</p>
+    title: "Files",
+    body: `<h1 class="govuk-heading-l">Files</h1>
+  <p class="govuk-body">The PDF and Excel files each app generated when the publication was accepted, and the files it answers with rather than a page (reference data, a proof of ID, list and flat-file downloads), fetched as the user each is for. CSV files are compared line by line, and other files byte for byte. PDFs are styled differently by design, so only their text is compared, in reading order; line breaks and page breaks are ignored. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths.</p>
   <div class="parity-stats">${statCard(t.files, "files compared")}${statCard(t.match, "match")}${statCard(t.differs, "differ")}${statCard(t.missing, "CaTH did not make")}${statCard(t.extra, "only CaTH made")}</div>
   <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Publication</th><th class="govuk-table__header">File</th><th class="govuk-table__header">Result</th></tr></thead>
   <tbody class="govuk-table__body">${rows}</tbody></table>`

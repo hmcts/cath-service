@@ -43,12 +43,20 @@ const result: SeedResult = {
   rejected: {}
 };
 for (const publication of manifest.publications) {
-  if (!publication.paths.cath) continue;
+  // A flat file has no page of its own: CaTH lists it on the court's summary of publications
+  if (!publication.paths.cath && !(publication.format === "flat-file" && publication.cathListType)) continue;
   try {
     const listType = listTypes.find((row) => row.name === publication.cathListType);
     if (!listType) throw new Error(`CaTH has no list type ${publication.cathListType}`);
 
     const raw = await readPayload(publication);
+    if (publication.format === "flat-file") {
+      const metadata = publicationMetadata(publication, manifest, seededAt);
+      const artefactId = await seedFlatFile(listType, publication.locationId, metadata, raw, path.basename(publication.payload));
+      result.publications[publication.id] = { artefactId, locationId: publication.locationId, metadata };
+      console.log(`published ${publication.id} → ${artefactId}`);
+      continue;
+    }
     // Non-strategic lists go through CaTH's own Excel converter, as the upload page does
     const json = publication.format === "excel" ? await convertExcelForListTypeName(listType.name, raw) : JSON.parse(raw.toString("utf-8"));
     const payload = Buffer.from(JSON.stringify(json));
@@ -170,6 +178,32 @@ async function publish(
   });
   if (!response.ok) throw new Error(`publication API ${response.status}: ${(await response.text()).slice(0, 300)}`);
   return (await response.json()) as { artefactId: string };
+}
+
+// A flat file through test-support, in every environment: the publication API takes JSON only.
+// The artefact row is marked as a flat file and the document stored as CaTH's upload stores it.
+async function seedFlatFile(
+  listType: ListTypeRow,
+  locationId: number,
+  metadata: ReturnType<typeof publicationMetadata>,
+  file: Buffer,
+  fileName: string
+): Promise<string> {
+  const { artefactId } = (await api("POST", "/test-support/artefacts", {
+    locationId: String(locationId),
+    listTypeId: listType.id,
+    isFlatFile: true,
+    ...metadata
+  })) as {
+    artefactId: string;
+  };
+  await api("POST", "/test-support/flat-files", {
+    artefactId,
+    content: file.toString("base64"),
+    extension: path.extname(fileName),
+    sourceArtefactId: fileName
+  });
+  return artefactId;
 }
 
 // Each list-type package registers its Excel converter when its index loads, as in the web app

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadUsers, type ParityUser, type SeedResult } from "../fixtures/manifest.js";
+import { pipSignInUrl } from "../pip/sign-in-url.js";
 import { NOT_FOUND_ID, NOT_FOUND_PATH, SIGNED_IN_VIEWER, variantId, variantUsers, withMobile } from "../variants.js";
 
 // Builds capture targets for pip's non-list pages from the route inventory. Query parameters are
@@ -32,12 +33,6 @@ const NOT_PAGES = new Set([
   "/file-publication",
   "/media-account-review/image"
 ]);
-const SIGN_IN = {
-  PI_AAD: { key: "oid", flow: "AAD" },
-  SSO: { key: "oid", flow: "SSO" },
-  CFT_IDAM: { key: "uid", flow: "CFT" },
-  CRIME_IDAM: { key: "uid", flow: "Crime" }
-} as const;
 
 const inventory = JSON.parse(await readFile(path.join(PARITY_DIR, "routes/pip-routes.json"), "utf-8")) as { routes: InventoryRoute[] };
 const apps = JSON.parse(await readFile(path.join(PARITY_DIR, "apps.json"), "utf-8"));
@@ -133,8 +128,7 @@ function auditTimestamp(iso: string | undefined): string | { pending: string } {
 }
 
 function signInUrl(user: ParityUser): string {
-  const { key, flow } = SIGN_IN[user.provenance];
-  return `${config.baseUrl}${(config.signIn as string).replace("{key}", key).replace("{provenanceUserId}", user.provenanceUserId).replace("{flow}", flow)}`;
+  return pipSignInUrl(config, user);
 }
 
 async function lookUpPipUserId(user: ParityUser): Promise<string> {

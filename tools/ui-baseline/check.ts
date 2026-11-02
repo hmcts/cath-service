@@ -17,6 +17,7 @@ import {
   reviewFindings
 } from "@hmcts/ui-baseline";
 import type { SignInResult } from "./cath/sign-in.js";
+import { captureDownloads, loadDownloads, seedResolver } from "./downloads.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
@@ -33,7 +34,7 @@ const DEFAULT_BASELINE = process.env.PARITY_BASELINE ?? path.join(PARITY_DIR, "o
 const LOCALES = ["en", "cy"];
 const REPORT_PORT = 9500;
 const SIDE_BY_SIDE_WIDTH = 1600;
-const FILE_LABEL = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel" } as const;
+const FILE_LABEL = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "file" } as const;
 const FILE_VERDICT = { match: "matches", differs: "differs", missing: "CaTH did not make it", extra: "only CaTH made one" } as const;
 
 const { values: args } = parseArgs({
@@ -116,7 +117,16 @@ const pageFixtures = scope.routes.flatMap((route) => [
   ...[...(pageUrls.get(route.id)?.searchParams.values() ?? [])].flatMap((value) => pipArtefacts.get(value) ?? []),
   ...Object.values(route.cathParams ?? {}).flatMap((source) => (source.startsWith("publication:") ? [source.slice("publication:".length)] : []))
 ]);
-const seedIds = [...new Set([...scope.publications.map((p) => p.id), ...pageFixtures])];
+// Files the baseline recorded that are fetched rather than shown (routes/downloads.json), with the
+// publications they come from: all of them for --all, otherwise those of the routes named
+const downloadSpecs =
+  existsSync(path.join(baseline, "downloads/index.jsonl")) && !args["no-files"]
+    ? (await loadDownloads()).filter((spec) => args.all || (args.route ?? []).includes(spec.pip.path) || (args.route ?? []).includes(spec.cath.path))
+    : [];
+const downloadFixtures = downloadSpecs.flatMap((spec) =>
+  Object.values({ ...spec.cath.params, ...spec.cath.query }).flatMap((value) => (value.startsWith("publication:") ? [value.slice("publication:".length)] : []))
+);
+const seedIds = [...new Set([...scope.publications.map((p) => p.id), ...pageFixtures, ...downloadFixtures])];
 const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}.json`);
 if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
@@ -148,7 +158,9 @@ const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineI
 const includeNotFound =
   baselineIds.pages.has(NOT_FOUND_ID) && (args.all || (args.route ?? []).some((route) => route === "/not-found" || route === NOT_FOUND_PATH));
 const needsSignIn =
-  scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) || scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
+  downloadSpecs.some((spec) => spec.cath.as) ||
+  scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
+  scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
 if (needsSignIn) {
   step("Signing in to CaTH");
   const signingIn = spawnSync(
@@ -194,11 +206,14 @@ const withVariants = <T extends { id: string; locales: string[]; source: Record<
   ]).flatMap(({ viewAs: as, ...target }) => signedInTargets(target, as));
 const listTargets = scope.publications.flatMap((publication) => {
   const seeded = seed?.publications[publication.id];
-  if (!seeded || !publication.paths.cath) return [];
+  if (!seeded || !inCath(publication)) return [];
   return withVariants(
     {
       id: publication.id,
-      url: `${targetBase}${publication.paths.cath}?artefactId=${seeded.artefactId}`,
+      url:
+        publication.format === "flat-file"
+          ? `${targetBase}/summary-of-publications?locationId=${seeded.locationId}`
+          : `${targetBase}${publication.paths.cath}?artefactId=${seeded.artefactId}`,
       locales,
       source: { app: "cath", fixture: publication.id, ingestion: seed?.ingestion, viewAs: publication.viewAs ?? null, ...seeded }
     },
@@ -397,7 +412,36 @@ console.log(
 await finish();
 
 // ---------- helpers ----------
+// The files each list generated, and the files fetched rather than shown, against pip's
 async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
+  const listFiles = await compareListFiles();
+  const downloads = await compareDownloads();
+  if (!listFiles && !downloads) return null;
+  const results = [...(listFiles?.results ?? []), ...(downloads?.results ?? [])];
+  const summary: FileCompareSummary = {
+    source: path.join(baseline, "files"),
+    target: path.join(out, "cath/files"),
+    comparedAt: new Date().toISOString(),
+    results,
+    totals: {
+      files: results.length,
+      match: results.filter((r) => r.verdict === "match").length,
+      differs: results.filter((r) => r.verdict === "differs").length,
+      missing: results.filter((r) => r.verdict === "missing").length,
+      extra: results.filter((r) => r.verdict === "extra").length
+    }
+  };
+  await mkdir(path.join(out, "compare/files"), { recursive: true });
+  await writeFile(path.join(out, "compare/files/files-compare.json"), `${JSON.stringify(summary, null, 2)}\n`);
+  const t = summary.totals;
+  console.log(`  ${t.files} files compared: ${t.match} match, ${t.differs} differ, ${t.missing} CaTH did not make, ${t.extra} only CaTH made`);
+  return summary;
+}
+
+// Each list's files, from CaTH's publications container, against the ones pip made for the same
+// fixture. A list seeded through the publication API (JSON only) has no Excel from a spreadsheet,
+// so for those a missing Excel is not counted.
+async function compareListFiles(): Promise<FileCompareSummary | null> {
   const listed = scope.publications.filter((publication) => publication.format !== "flat-file" && seed?.publications[publication.id]);
   if (args["no-files"] || !listed.length) return null;
   if (!existsSync(path.join(baseline, "files/index.jsonl"))) {
@@ -426,22 +470,34 @@ async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
     r.kind === "excel" && r.verdict === "missing" && seed?.publications[r.id]?.excelUploaded === false;
   for (const r of summary.results.filter(uncomparable))
     scope.skipped.push(`${r.id}: Excel file not compared: CaTH was seeded through its publication API, which takes the list as JSON, not the spreadsheet`);
-  const results = summary.results.filter((r) => !uncomparable(r));
-  const kept: FileCompareSummary = {
-    ...summary,
-    results,
-    totals: {
-      files: results.length,
-      match: results.filter((r) => r.verdict === "match").length,
-      differs: results.filter((r) => r.verdict === "differs").length,
-      missing: results.filter((r) => r.verdict === "missing").length,
-      extra: results.filter((r) => r.verdict === "extra").length
-    }
-  };
-  await writeFile(path.join(out, "compare/files/files-compare.json"), `${JSON.stringify(kept, null, 2)}\n`);
-  const t = kept.totals;
-  console.log(`  ${t.files} files compared: ${t.match} match, ${t.differs} differ, ${t.missing} CaTH did not make, ${t.extra} only CaTH made`);
-  return kept;
+  return { ...summary, results: summary.results.filter((r) => !uncomparable(r)) };
+}
+
+// The files CaTH answers with rather than a page, fetched as the user each is for, against the ones
+// pip answered with (routes/downloads.json)
+async function compareDownloads(): Promise<FileCompareSummary | null> {
+  if (!downloadSpecs.length) return null;
+  step("Comparing downloads");
+  const cathDownloads = path.join(out, "cath/downloads");
+  const { notServed } = await captureDownloads({
+    app: "cath",
+    baseUrl: targetBase,
+    specs: downloadSpecs,
+    resolve: seedResolver(seed?.publications ?? {}, signedIn?.records),
+    session: async (userId) => {
+      const cookies = signedIn?.users[userId]?.cookies.en;
+      return cookies ? { cookies: [...apps.cath.cookies, ...cookies] } : null;
+    },
+    out: cathDownloads,
+    seededAt: seed?.seededAt
+  });
+  for (const line of notServed) scope.skipped.push(`download ${line}`);
+  return compareFileRuns({
+    source: path.join(baseline, "downloads"),
+    target: cathDownloads,
+    out: path.join(out, "compare/files"),
+    only: downloadSpecs.map((spec) => spec.id)
+  });
 }
 
 // pip id -> CaTH id for everything both apps were seeded with: publications, account records and
@@ -633,7 +689,7 @@ function selectScope(text: string | null, listTypes: string[], routes: string[],
   const publications = manifest.publications.filter(
     (p: PublicationFixture) => everything || named.has(p.listType) || (p.cathListType !== null && named.has(p.cathListType))
   );
-  for (const p of publications.filter((p) => !p.paths.cath)) skipped.push(`${p.listType}: CaTH has no page for it`);
+  for (const p of publications.filter((p) => !inCath(p))) skipped.push(`${p.listType}: CaTH has no page for it`);
 
   const mentioned = new Set([...(text?.match(/(?<=[\s`(])\/[a-z0-9][a-z0-9/-]*[a-z0-9]/g) ?? []), ...routes]);
   const selected: Scope["routes"] = [];
@@ -646,7 +702,12 @@ function selectScope(text: string | null, listTypes: string[], routes: string[],
     else if (!existsSync(path.join(baseline, "pages", id, "en/default/provenance.json"))) skipped.push(`${entry.pip}: not in the pip baseline`);
     else selected.push({ id, pip: entry.pip, cath: entry.cath, viewAs: entry.pipRole, cathParams: entry.cathParams });
   }
-  return { publications: publications.filter((p) => p.paths.cath), routes: selected, skipped };
+  return { publications: publications.filter(inCath), routes: selected, skipped };
+}
+
+// A list CaTH has: its own page, or for a flat file, its entry on the court's summary of publications
+function inCath(publication: PublicationFixture): boolean {
+  return !!publication.paths.cath || (publication.format === "flat-file" && !!publication.cathListType);
 }
 
 function required<T>(value: T | undefined, what: string): T {
