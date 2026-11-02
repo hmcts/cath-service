@@ -6,8 +6,8 @@
 # environments.
 #
 # Sizing is a default plus per-environment overrides rather than a key in
-# env_config: every non-prod environment runs the same Postgres and Redis, and
-# only prod differs.
+# env_config: most environments run the same Postgres and Redis, and only aat
+# and prod differ.
 locals {
   env_config = {
     # The expanded postgresql subnet exists because the original subnet in the
@@ -68,9 +68,13 @@ locals {
     pgsql_storage_mb            = 65536
     pgsql_geo_redundant_backups = false
   }
-  # Needs sign-off (#1096 task 5). Geo-redundant backup cannot be changed after
-  # the server is created.
+  # aat runs the same Postgres SKU as prod. The prod Redis and geo-redundant
+  # backup values need sign-off (#1096 task 5); geo-redundant backup cannot be
+  # changed after the server is created.
   sizing_overrides = {
+    aat = {
+      pgsql_sku = "GP_Standard_D2s_v3"
+    }
     prod = {
       redis_sku_name              = "Standard"
       redis_capacity              = 1
