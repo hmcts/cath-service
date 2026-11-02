@@ -29,8 +29,8 @@ export interface JourneySuite {
   app: string;
   baseUrl: string;
   cookies?: { name: string; value: string }[];
-  // Signs the given user in on this page's browser context
-  signIn?: (page: Page, userId: string) => Promise<void>;
+  // Signs the given user in on this page's browser context, in the journey's language
+  signIn?: (page: Page, userId: string, locale: string) => Promise<void>;
   data?: Record<string, unknown>;
   journeys: Journey[];
 }
