@@ -1,0 +1,127 @@
+name: One-Shot - Terraform Graph lookups as PROD principal
+
+# Reproduces, with Terraform itself, the Graph failure the pre-flight
+# (one-shot.preflight-prod-infra.yml) reports as check (c), for DTSPO-35946.
+#
+# It runs `terraform plan` on the same azuread data sources the modules used by
+# infrastructure/ resolve in PROD, signed in the same way terraform-deploy does
+# (azure/login with AZURE_CREDENTIALS_CFT_PROD, then Azure CLI auth):
+#   - terraform-module-postgresql-flexible: db_admin and db_report_admin groups
+#   - cnp-module-key-vault: developers group and jenkins_ptl service principal
+#
+# Read-only: data sources only, local state, no apply. It also prints the
+# roles claim of the principal's Graph token. Application permissions appear
+# there; delegated ones never do in a client-credentials sign-in.
+#
+# Runs on pull requests that change this file, so the result shows on the PR.
+# Delete this file once Graph read passes (#1096 task 19).
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/one-shot.terraform-graph-prod.yml
+
+jobs:
+  terraform-graph:
+    name: Terraform Graph lookups as PROD principal
+    # Fork pull requests get no secrets.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PROD }}
+    steps:
+      - name: Check secret is set
+        run: |
+          set -euo pipefail
+          if [ -z "${AZURE_CREDENTIALS}" ]; then
+            echo "::error::AZURE_CREDENTIALS_CFT_PROD is not set as a repository secret"
+            exit 1
+          fi
+
+      # The version infrastructure/.terraform-version pins.
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.15.8
+          terraform_wrapper: false
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PROD }}
+
+      - name: Graph token claims
+        run: |
+          set -euo pipefail
+          CLIENT_ID=$(az account show --query user.name -o tsv)
+          echo "::add-mask::${CLIENT_ID}"
+          PAYLOAD=$(az account get-access-token --resource-type ms-graph --query accessToken -o tsv | cut -d. -f2 | tr '_-' '/+')
+          while [ $(( ${#PAYLOAD} % 4 )) -ne 0 ]; do PAYLOAD="${PAYLOAD}="; done
+          CLAIMS=$(echo "${PAYLOAD}" | base64 -d | jq -c '{roles: (.roles // []), scp: (.scp // null)}')
+          echo "Graph token claims: ${CLAIMS}"
+          {
+            echo "### Graph token for the PROD principal"
+            echo '```'
+            echo "${CLAIMS}"
+            echo '```'
+            echo "Terraform needs \`Group.Read.All\` and \`Application.Read.All\` in \`roles\`."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Write Terraform config
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/tf"
+          cat > "${RUNNER_TEMP}/tf/main.tf" <<'EOF'
+          terraform {
+            required_providers {
+              azuread = {
+                source  = "hashicorp/azuread"
+                version = "3.10.0"
+              }
+            }
+          }
+
+          provider "azuread" {}
+
+          # terraform-module-postgresql-flexible, prod values of local.admin_group
+          # and local.db_report_group
+          data "azuread_group" "db_admin" {
+            display_name     = "DTS Platform Operations PostgreSQL Admin Access SC"
+            security_enabled = true
+          }
+
+          data "azuread_group" "db_report_admin" {
+            display_name     = "DTS Production DB Reporting"
+            security_enabled = true
+          }
+
+          # cnp-module-key-vault, developers_group default and the cft jenkins_ptl name
+          data "azuread_group" "developers" {
+            display_name = "DTS CFT Developers"
+          }
+
+          data "azuread_service_principal" "jenkins_ptl" {
+            display_name = "jenkins-cftptl-intsvc-mi"
+          }
+          EOF
+
+      - name: Terraform plan
+        working-directory: ${{ runner.temp }}/tf
+        run: |
+          set -euo pipefail
+          terraform init -input=false -no-color
+          set +e
+          terraform plan -input=false -no-color 2>&1 | tee plan.log
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          {
+            echo "### terraform plan (exit ${STATUS})"
+            echo '```'
+            tail -n 60 plan.log
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+          exit "${STATUS}"
