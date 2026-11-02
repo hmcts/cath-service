@@ -31,9 +31,8 @@ export async function createApp(): Promise<Express> {
     })
   );
 
-  app.use(express.json({ limit: "100mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "100mb" }));
-
+  // No global body parser: routes that accept bodies parse them after authentication,
+  // so unauthenticated callers cannot make the pod buffer large payloads.
   const routeMounts = [{ path: `${__dirname}/routes` }];
 
   // Register public-pages API routes (flat-file download)
@@ -45,6 +44,7 @@ export async function createApp(): Promise<Express> {
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
     const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
     routeMounts.push(testSupportRoutes);
+    app.use("/test-support", express.json({ limit: "100mb" }), express.urlencoded({ extended: true, limit: "100mb" }));
   }
 
   app.use(await createSimpleRouter(...routeMounts));

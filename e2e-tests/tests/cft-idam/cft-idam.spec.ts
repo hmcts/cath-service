@@ -102,15 +102,11 @@ test.describe("CFT IDAM Login Flow", () => {
 
     // Test 2: Authorization flow handles missing code parameter
     await page.goto("/cft-login/return");
-    await expect(page).toHaveURL(/sign-in.*error/);
-    let url = new URL(page.url());
-    expect(url.searchParams.get("error")).toBeTruthy();
+    await expect(page).toHaveURL(/\/sign-in\?error=no_code/);
 
-    // Test 3: Authorization flow handles invalid code parameter
-    await page.goto("/cft-login/return?code=invalid-code-12345");
-    await expect(page).toHaveURL(/sign-in.*error/);
-    url = new URL(page.url());
-    expect(url.searchParams.get("error")).toBeTruthy();
+    // Test 3: Callback is rejected when the OAuth state does not match the session
+    await page.goto("/cft-login/return?code=some-code&state=wrong-state");
+    await expect(page).toHaveURL(/\/sign-in\?error=invalid_state/);
   });
 
   test("CFT IDAM login preserves original destination URL", async ({ page }) => {
