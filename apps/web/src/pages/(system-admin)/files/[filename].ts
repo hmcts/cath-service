@@ -17,6 +17,11 @@ const CONTENT_TYPES: Record<string, string> = {
   ".html": "text/html"
 };
 
+// Only types a browser cannot execute are previewed inline. Anything else (HTML, XML
+// with an XHTML namespace, unknown types) is downloaded so publisher-supplied content
+// can never run script in the admin origin.
+const INLINE_SAFE_EXTENSIONS = new Set([".pdf", ".csv", ".txt", ".json"]);
+
 const getHandler = async (req: Request, res: Response) => {
   const filename = getParam(req.params, "filename");
 
@@ -34,7 +39,7 @@ const getHandler = async (req: Request, res: Response) => {
     }
 
     const contentType = CONTENT_TYPES[ext] || "application/octet-stream";
-    const disposition = ext === ".html" ? "attachment" : "inline";
+    const disposition = INLINE_SAFE_EXTENSIONS.has(ext) ? "inline" : "attachment";
 
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");

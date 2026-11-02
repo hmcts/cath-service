@@ -29,15 +29,13 @@
     "@hmcts/location": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
     "@hmcts/publication": "workspace:*",
-    "@hmcts/system-admin-pages": "workspace:*",
-    "multer": "1.4.5-lts.2"
+    "@hmcts/system-admin-pages": "workspace:*"
   },
   "peerDependencies": {
     "express": "^5.2.0"
   },
   "devDependencies": {
     "@types/express": "5.0.6",
-    "@types/multer": "1.4.13",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

@@ -115,6 +115,24 @@ describe("B2C Callback Handler", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?lng=cy");
     });
 
+    it("should merge the Welsh locale into a returnTo that already has a query string", async () => {
+      mockSession.b2cLocale = "cy";
+      mockSession.returnTo = "/sjp-press-list?artefactId=abc-123";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=abc-123&lng=cy");
+    });
+
+    it("should replace an existing lng parameter in returnTo with the Welsh locale", async () => {
+      mockSession.b2cLocale = "cy";
+      mockSession.returnTo = "/summary-of-publications?locationId=1&lng=en";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1&lng=cy");
+    });
+
     it("should use custom returnTo from session", async () => {
       mockSession.returnTo = "/admin/dashboard";
 

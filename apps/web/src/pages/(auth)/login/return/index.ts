@@ -104,8 +104,7 @@ async function handleCallback(req: Request, res: Response, params: any) {
     const returnTo = req.session.returnTo || "/account-home";
     const locale = req.session.b2cLocale;
 
-    // Build redirect URL with locale if Welsh
-    const redirectUrl = locale === "cy" ? `${returnTo}?lng=cy` : returnTo;
+    const redirectUrl = locale === "cy" ? withWelshLocale(returnTo) : returnTo;
 
     // Clear B2C session data
     delete req.session.b2cProvider;
@@ -205,4 +204,12 @@ function extractUserProfile(idToken: string, _provider: string): UserProfile {
     role: "VERIFIED",
     provenance: "PI_AAD"
   };
+}
+
+// returnTo can already carry a query string (e.g. ?artefactId=...), so lng must be merged
+// into it rather than appended. Rebuilding from pathname also keeps the redirect same-origin.
+function withWelshLocale(returnTo: string): string {
+  const url = new URL(returnTo, "http://localhost");
+  url.searchParams.set("lng", "cy");
+  return `${url.pathname}${url.search}${url.hash}`;
 }

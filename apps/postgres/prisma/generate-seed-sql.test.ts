@@ -186,8 +186,15 @@ describe("generateSeedSql", () => {
 
     expect(sql).toContain("UPDATE list_types SET deleted_at = NOW()");
     expect(sql).toContain("name NOT IN ('ET_DAILY_LIST', 'ET_FORTNIGHTLY_PRESS_LIST', 'FLAT_FILE_ONLY_LIST')");
-    expect(sql).toContain("name NOT LIKE 'TEST_%'");
-    expect(sql).toContain("name NOT LIKE 'E2E_%'");
+    expect(sql).toContain("name NOT LIKE 'TEST\\_%' ESCAPE '\\'");
+    expect(sql).toContain("name NOT LIKE 'E2E\\_%' ESCAPE '\\'");
+  });
+
+  it("should match the TEST_/E2E_ prefixes literally rather than treating _ as a wildcard", () => {
+    const sql = generate();
+
+    expect(sql).not.toContain("NOT LIKE 'TEST_%'");
+    expect(sql).not.toContain("NOT LIKE 'E2E_%'");
   });
 
   it("should include both Employment Tribunal list types", () => {
