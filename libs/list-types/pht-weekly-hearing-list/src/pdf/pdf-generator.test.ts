@@ -12,6 +12,8 @@ vi.mock("@hmcts/publication", () => ({
   PROVENANCE_LABELS: { MANUAL_UPLOAD: "Manual Upload" }
 }));
 
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import { generatePhtWeeklyHearingListPdf } from "./pdf-generator.js";
 
 const BASE_OPTIONS = {
@@ -43,12 +45,15 @@ describe("generatePhtWeeklyHearingListPdf", () => {
     expect(result).toEqual({ success: true, pdfPath: "/stored/path.pdf", sizeBytes: 1024, exceedsMaxSize: false });
   });
 
-  it("should call generateListPdf with PHT_LIST_TITLE", async () => {
+  it.each([
+    ["en", en.pageTitle],
+    ["cy", cy.pageTitle]
+  ])("should call generateListPdf with the %s locale list title", async (locale, expectedTitle) => {
     const { generateListPdf } = await import("@hmcts/list-types-common");
 
-    await generatePhtWeeklyHearingListPdf(BASE_OPTIONS);
+    await generatePhtWeeklyHearingListPdf({ ...BASE_OPTIONS, locale });
 
-    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTitle: "Primary Health Tribunal Weekly Hearing List" }));
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ listTitle: expectedTitle }));
   });
 
   it("should resolve provenance to its display label", async () => {
@@ -98,5 +103,18 @@ describe("generatePhtWeeklyHearingListPdf", () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("PDF generation failed");
+  });
+
+  it.each([
+    ["en", "MANUAL_UPLOAD", "Manual Upload"],
+    ["cy", "MANUAL_UPLOAD", "Lanlwytho â Llaw"],
+    ["en", "SNL", "ListAssist"],
+    ["cy", "SNL", "ListAssist"]
+  ])("should use the %s locale data source label for %s, as legacy does", async (locale, provenance, expectedLabel) => {
+    const { generateListPdf } = await import("@hmcts/list-types-common");
+
+    await generatePhtWeeklyHearingListPdf({ ...BASE_OPTIONS, locale, provenance });
+
+    expect(generateListPdf).toHaveBeenCalledWith(expect.objectContaining({ provenanceLabel: expectedLabel }));
   });
 });

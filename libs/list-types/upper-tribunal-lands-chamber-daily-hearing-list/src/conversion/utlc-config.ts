@@ -61,4 +61,4 @@ export const UTLC_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const utlcConverter = createConverter(UTLC_EXCEL_CONFIG);
-registerConverterByName("UT_LANDS_CHAMBER_DAILY_HEARING_LIST", utlcConverter);
+registerConverterByName("UT_LC_DAILY_HEARING_LIST", utlcConverter);

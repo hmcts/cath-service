@@ -29,7 +29,7 @@ const LIST_TITLE_MAP: Record<string, string> = {
   FAMILY_DIVISION_HIGH_COURT_DAILY_CAUSE_LIST: "Family Division of the High Court Daily Cause List",
   KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST: "King's Bench Division Daily Cause List",
   KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST: "King's Bench Masters Daily Cause List",
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: "Civil Daily Cause List",
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: "Civil Daily Cause List",
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: "Senior Courts Costs Office Daily Cause List"
 };
 

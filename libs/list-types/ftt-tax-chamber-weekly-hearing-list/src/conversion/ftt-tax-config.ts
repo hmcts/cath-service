@@ -56,4 +56,4 @@ export const FTT_TAX_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const fttTaxConverter = createConverter(FTT_TAX_EXCEL_CONFIG);
-registerConverterByName("FTT_TAX_CHAMBER_WEEKLY_HEARING_LIST", fttTaxConverter);
+registerConverterByName("FTT_TAX_WEEKLY_HEARING_LIST", fttTaxConverter);

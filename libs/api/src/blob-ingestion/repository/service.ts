@@ -49,7 +49,7 @@ export async function processBlobIngestion(metadata: PublicationMetadata, payloa
     await logIngestionResult({ sourceSystem: metadata.provenance, courtId: metadata.courtId, status: "SUCCESS", artefactId });
 
     if (!noMatch) {
-      fireAndForgetPublication(metadata, artefactId, locationId, validation.listTypeId, isUpdate, payload as CauseListData, "[blob-ingestion]");
+      fireAndForgetPublication(metadata, artefactId, locationId, validation.listTypeId, isUpdate, payload as CauseListData, "[blob-ingestion]", rawBodySize);
     } else {
       console.log("[blob-ingestion] Skipping PDF/notifications (no_match=true):", { artefactId, courtId: metadata.courtId });
     }
@@ -160,7 +160,8 @@ function fireAndForgetPublication(
   listTypeId: number,
   isUpdate: boolean,
   jsonData: CauseListData | undefined,
-  logPrefix: string
+  logPrefix: string,
+  payloadSizeBytes?: number
 ) {
   processPublication({
     artefactId,
@@ -169,6 +170,7 @@ function fireAndForgetPublication(
     contentDate: new Date(metadata.contentDate),
     locale: metadata.language === "WELSH" ? "cy" : "en",
     jsonData,
+    payloadSizeBytes,
     provenance: PROVENANCE_MAP[metadata.provenance] || metadata.provenance,
     sensitivity: metadata.sensitivity,
     language: metadata.language,

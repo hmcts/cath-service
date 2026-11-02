@@ -1,112 +1,40 @@
-# HMCTS Express Monorepo Template
+# Court and Tribunal Hearings (CaTH)
 
-Production-ready Node.js starter with cloud-native capabilities for building HMCTS digital services using Express.js, TypeScript and GOV.UK Design System.
+CaTH is the HMCTS service that publishes court and tribunal hearing lists and makes them available to the public, the media and other users.
 
-## 🚀 Overview
+## Tech Stack
 
-This template provides everything you need to create accessible, secure, and scalable applications that meet GDS and HMCTS standards.
-
-## 📋 Using This Template
-
-This monorepo will contain all your apps, libraries, and infrastructure for your HMCTS service.
-
-### Naming Convention
-
-- **Team name**: Your HMCTS service (e.g., CaTH, Divorce, Civil)
-- **Product name**: The specific product/service (e.g., Possessions, Money-Claims)
-- If the product encompasses the whole service, use "Service"
-
-**Examples:**
-- Team: CaTH, Product: Service → `cath-service`
-- Team: Civil, Product: Money-Claims → `civil-money-claims`
-
-### Setup Steps
-
-1. **Run the initialization script**:
-```bash
-./.github/scripts/init.sh
-```
-
-The script will:
-- Prompt for your team name (e.g., `CaTH`)
-- Prompt for your product name (e.g., `Service`)
-- Replace all template values throughout the codebase
-- Rebuild the yarn lockfile
-- Run tests to verify everything works
-- Remove itself after completion
-
-3. **Review and commit**:
-```bash
-git add .
-git commit -m "Initialize from template"
-git push
-```
-
-## ✨ Key Features
-
-### Cloud Native Platform
-- **Health Checks**: Configurable health endpoints with readiness and liveness probes for Kubernetes deployments
-- **Properties Volume**: Secure configuration management through mounted volumes with automatic environment variable injection
-- **Azure Integration**: Built-in support for Azure Key Vault secrets management and properties volume mounting
-- **Application Insights**: Comprehensive monitoring with Azure Application Insights including custom metrics and distributed tracing
-
-### Express GOV.UK Starter for frontends
-- **GOV.UK Design System**: Fully integrated GOV.UK Frontend with Nunjucks templates and automatic asset compilation
-- **Internationalization**: Welsh language support with locale middleware and translation management system
-- **Security Headers**: Pre-configured Helmet.js with CSP, HSTS, and nonce-based script protection
-- **Asset Pipeline**: Vite-powered asset compilation with SCSS support and production optimization
-- **Cookie Management**: Built-in support for cookie consent
-- **Session Handling**: Session management using Redis or Postgres
-
-### Simple Router  
-A lightweight file-system router for Express applications, inspired by Next.js routing.
-
-- **File-based Routing**: Maps files in directories to Express routes automatically
-- **Dynamic Parameters**: Support for dynamic route segments using `[param]` syntax (e.g., `/users/[id]`)
-- **HTTP Method Exports**: Export handlers for any HTTP method (GET, POST, PUT, DELETE, etc.)
-- **Middleware Support**: Single handlers or arrays of middleware for complex request pipelines
-- **Multiple Mount Points**: Mount different directories with different URL prefixes
-- **Zero Dependencies**: Lightweight implementation with no external dependencies
-
-### Monorepo Architecture
-- Single repository for multiple applications (e.g. multiple frontends sharing common code, APIs or libraries)
-- Workspace-based structure with Yarn workspaces
-- Shared libraries for common functionality
-- Testing with Vitest and Playwright
-- Docker multi-stage builds for production
-- Helm charts for Kubernetes deployment
-- GitHub Actions CI/CD pipeline
-- Biome for fast linting and formatting
+- **Express 5 and TypeScript**, as ES modules, in a Yarn workspaces monorepo built with Turborepo
+- **GOV.UK Frontend and Nunjucks** for pages, with Welsh on every page. `libs/web-core` also sets up Helmet security headers (CSP with script nonces, HSTS), cookie consent, sessions (Redis or Postgres store) and the Vite asset pipeline with SCSS
+- **PostgreSQL with Prisma** for data, and **Redis** for sessions
+- **`@hmcts-cft/simple-router`** for file-based routing: a file in `apps/web/src/pages/` becomes a route. It supports dynamic segments (`[id].ts`), one export per HTTP method (`GET`, `POST`, …), and arrays of middleware as a handler
+- **`@hmcts-cft/cloud-native-platform`** for Kubernetes readiness and liveness checks, properties-volume and Key Vault secrets, and Application Insights
+- **Vitest and Playwright** for tests, and **Biome** for linting and formatting
+- **Docker, Helm and GitHub Actions** for building and deploying to Kubernetes
 
 ## Project Structure
 
 ```
 cath-service/
 ├── apps/                       # Deployable applications
-│   ├── api/                    # REST API server (Express 5.x)
-│   ├── web/                    # Web frontend (Express 5.x + Nunjucks)
-│   │   └── src/pages/          # Page controllers, templates, tests (auto-discovered)
-│   └── postgres/               # Database configuration (Prisma)
-├── libs/                       # Modular packages (explicitly registered)
-│   ├── cloud-native-platform/  # Cloud Native Platform features
-│   ├── express-gov-uk-starter/ # GOV.UK Frontend integration
-│   ├── footer-pages/           # Module with example footer pages
-│   └── [your-module]/          # Your feature modules
-│       └── src/
-│           ├── index.ts        # Business logic + content exports
-│           ├── config.ts       # Module configuration (moduleRoot, assets)
-│           ├── [page-name]/    # Page content (cy.ts, en.ts)
-│           ├── routes/         # API routes (auto-discovered)
-│           ├── prisma/         # Prisma schema
-│           ├── locales/        # Shared translations
-│           ├── views/          # Shared templates
-│           └── assets/         # Module assets (compiled by vite)
+│   ├── web/                    # Web frontend (Express 5 + Nunjucks)
+│   │   └── src/pages/          # Page controllers, templates, content and tests (auto-discovered)
+│   ├── api/                    # REST API, including publication ingestion
+│   ├── crons/                  # Scheduled jobs, chosen by the SCRIPT_NAME env var
+│   └── postgres/               # Migrations and seed data deployment
+├── libs/                       # Feature modules (explicitly registered in the apps)
+│   ├── list-types/             # One package per list type, plus shared *-common packages
+│   ├── postgres-prisma/        # All Prisma schemas (prisma/schema/) and the Prisma client
+│   ├── web-core/               # GOV.UK Frontend setup, layouts and shared content
+│   ├── publication/            # Publications (artefacts) and their processing
+│   ├── auth/                   # Sign-in (SSO, CFT IDAM, Crime IDAM)
+│   └── ...                     # Accounts, subscriptions, notifications, admin pages and more
 ├── e2e-tests/                  # End-to-end tests (Playwright)
-├── docs/                       # Documentation and ADRs
+├── docs/                       # Architecture, API spec and ticket history
 └── package.json                # Root configuration
 ```
 
-## 🏁 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -292,7 +220,18 @@ redis-cli -p 6380
 | API Server | http://localhost:3001 | REST API backend |
 | Prisma Studio | Run `yarn workspace @hmcts/postgres run studio` | Database management UI |
 
-## 🔐 Configuration & Secrets Management
+### Using Claude Code in the devcontainer
+
+This repo is set up for agentic development: Claude Code plans, writes and reviews code, and you make the decisions. Run it inside the devcontainer, because `.claude/run.sh` starts it without permission prompts. The container keeps it away from the rest of your filesystem, but not your cloud credentials: `~/.azure` and `~/.kube` are mounted in.
+
+1. **Open the devcontainer.** You need Docker and either VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension (**Reopen in Container**) or IntelliJ IDEA Ultimate (open `.devcontainer/devcontainer.json` and use the gutter icon).
+2. **Log in to Azure** in a container terminal with `az login`. `run.sh` reads the AI Gateway key from the `sps-ai-kv-sbox` Key Vault, and Claude Code refreshes its gateway token from your login every 5 minutes.
+3. **Start Claude Code** from the repo root with `.claude/run.sh`, never with `claude` on your machine. Arguments are passed through, for example `.claude/run.sh --continue`.
+4. **Run `/onboarding` first.** It explains what CaTH is, how Claude is used in this repo and where the docs are, then offers an interactive deep dive.
+
+Work tickets through the `/qk-*` commands in "Ways of Working" in [`CLAUDE.md`](CLAUDE.md). You own every line of any PR you open.
+
+## Configuration & Secrets Management
 
 ### Environment Configuration Strategy
 
@@ -409,7 +348,7 @@ keyVaults:
 ```
 4. Add to `.env` and `.env.example` for local development
 
-## 📦 Development
+## Development
 
 ### Available Commands
 
@@ -436,87 +375,7 @@ yarn db:drop                    # Drop all tables and reset the database
 
 ### Creating a New Feature Module
 
-1. **Create module structure**:
-```bash
-mkdir -p libs/my-feature/src/pages      # Page controllers and templates
-mkdir -p libs/my-feature/src/locales    # Translation files (optional)
-mkdir -p libs/my-feature/src/assets/css # Module styles (optional)
-mkdir -p libs/my-feature/src/assets/js  # Module scripts (optional)
-cd libs/my-feature
-```
-
-2. **Initialize package.json**:
-```json
-{
-  "name": "@hmcts/my-feature",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "build": "tsc && yarn build:nunjucks",
-    "build:nunjucks": "mkdir -p dist/pages && cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p ../../dist/pages/$(dirname {}) && cp {} ../../dist/pages/{}' \\;",
-    "dev": "tsc --watch",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "format": "biome format --write .",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write ."
-  },
-  "peerDependencies": {
-    "express": "^5.1.0"
-  }
-}
-```
-**Note**: The `build:nunjucks` script is required if your module contains Nunjucks templates.
-
-3. **Create tsconfig.json**:
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "**/*.spec.ts", "dist", "node_modules", "src/assets/"]
-}
-```
-
-4. **Register module in root tsconfig.json**:
-```json
-{
-  "compilerOptions": {
-    "paths": {
-      // ... existing paths ...
-      "@hmcts/my-feature": ["libs/my-feature/src"]
-    }
-  }
-}
-```
-
-5. **Create src/index.ts with module exports**:
-```typescript
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Business logic exports
-export * from "./my-feature/service.js";
-
-// Module configuration for app registration
-export const pageRoutes = { path: path.join(__dirname, "pages") };
-export const apiRoutes = { path: path.join(__dirname, "routes") };
-export const assets = path.join(__dirname, "assets/");
-```
-
-6. **Register module in applications**:
-   - **For web app** (if module has pages): Add import and route to `apps/web/src/app.ts`
-   - **For API app** (if module has routes): Add import and route to `apps/api/src/app.ts`
-   - **For database schemas**: Add to `libs/postgres-prisma/prisma/schema/{feature-name}.prisma` (see Database Schema Management section)
-   - **Add dependency** to relevant app package.json files: `"@hmcts/my-feature": "workspace:*"`
+Feature modules live in `libs/`, and their pages live in `apps/web/src/pages/`. Follow "Module Development Guidelines" in [`CLAUDE.md`](CLAUDE.md) for the module structure, `package.json`, `tsconfig.json` and how to register the module in the apps. Also add the module as a dependency of each app that uses it (`"@hmcts/my-feature": "workspace:*"` in that app's `package.json`). For a new list type, also follow "List Type Implementation" in the same file.
 
 ### Database Schema Management
 
@@ -575,13 +434,14 @@ const feature = await prisma.myFeature.findUnique({ where: { id } });
 - **One schema per domain** keeps models organized and maintainable
 - **Migrations apply to all schemas** - run `yarn db:migrate:dev` from the root
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 | Type | Tool | Location | Purpose |
 |------|------|----------|---------|
 | **Unit Tests** | Vitest | Co-located `*.test.ts` | Business logic validation |
 | **E2E Tests** | Playwright | `e2e-tests/` | User journey validation |
-| **Accessibility Tests** | Axe-core + Playwright | `e2e-tests/` | WCAG 2.1 AA compliance |
+| **Template Tests** | Vitest + `@hmcts/test-support` | Co-located `*.njk.test.ts` | Rendered Nunjucks structure |
+| **Accessibility Tests** | Axe-core + Playwright | `e2e-tests/` | WCAG 2.2 AA compliance |
 
 ```bash
 # Run specific test suites
@@ -594,9 +454,8 @@ yarn test:coverage          # Coverage report
 
 The GitHub Action pipelines contain a number of security checks, including:
 
-- **Dependency Scanning**: Automatically scans for vulnerabilities in dependencies
-- **SonarQube**: SAST analysis for code quality and security
-- **Claude Security Scans**: Claude AI-powered security scans for code vulnerabilities
+- **Dependency scanning**: OSV-Scanner checks dependencies for known vulnerabilities (`job.osv-scanner.yml`)
+- **SonarQube**: SAST analysis for code quality and security (`job.test.yml`)
 
 ## License
 

@@ -1,33 +1,33 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const cy = {
-  pageTitle: "First-tier Tribunal (Land Registration Tribunal) Weekly Hearing List",
-  listForWeekCommencing: "List for week commencing",
-  lastUpdated: "Last updated",
-  at: "at",
-  factLinkText: "Find contact details and other information about courts and tribunals",
+  pageTitle: "Rhestr o Wrandawiadau Wythnosol Tribiwnlys Haen Gyntaf (Tribiwnlys Cofrestru Tir)",
+  listForWeekCommencing: "Rhestr ar gyfer yr wythnos yn dechrau ar",
+  lastUpdated: "Diweddarwyd ddiwethaf",
+  at: "am",
+  factLinkText: "Dod o hyd i fanylion cyswllt a gwybodaeth arall am lysoedd a thribiwnlysoedd yng Nghymru a Lloegr",
   factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
-  factAdditionalText: "in England and Wales, and some non-devolved tribunals in Scotland.",
-  importantInformationTitle: "Important information",
+  factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
+  importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    'Members of the public wishing to observe a hearing or representatives of the media may, on their request, join any telephone or video hearing remotely while they are taking place by sending an email in advance to the tribunal at [insert office email] with the following details in the subject line "[OBSERVER/MEDIA] REQUEST – [case reference] – [hearing date] (need to include any other information required by the tribunal)" and appropriate arrangements will be made to allow access where reasonably practicable.',
-  importantInformationLinkText: "Observe a court or tribunal hearing as a journalist, researcher or member of the public",
+    "Gall aelodau o'r cyhoedd sy'n dymuno arsylwi gwrandawiad neu gynrychiolwyr y cyfryngau ymuno ag unrhyw wrandawiad dros y ffôn neu drwy fideo o bell ar gais tra'u bod yn cael eu cynnal drwy anfon e-bost ymlaen llaw at y tribiwnlys yn [insert office email] gyda'r manylion canlynol yn y llinell bwnc \"CAIS [ARSYLLWR/CYFRYNGAU] – [cyfeirnod yr achos] – [dyddiad y gwrandawiad] (angen cynnwys unrhyw wybodaeth arall sy'n ofynnol gan y tribiwnlys)\" a gwneir trefniadau priodol i ganiatáu mynediad lle bo hynny'n rhesymol ymarferol.",
+  importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  searchCasesTitle: "Search Cases",
-  searchCasesLabel: "Search by case name, date, judge, or other details",
+  searchCasesTitle: "Chwilio Achosion",
+  searchCasesLabel: "[WELSH TRANSLATION REQUIRED: 'Search by case name, date, judge, or other details']",
   tableHeaders: {
-    date: "Date",
-    hearingTime: "Hearing time",
-    caseName: "Case name",
-    caseReferenceNumber: "Case reference number",
-    judge: "Judge",
-    venuePlatform: "Venue/Platform"
+    date: "Dyddiad",
+    hearingTime: "Amser y gwrandawiad",
+    caseName: "Enw'r achos",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    judge: "Barnwr",
+    venuePlatform: "Lleoliad/Platfform"
   },
-  dataSource: "Data source",
-  backToTop: "Back to top",
+  dataSource: "Ffynhonnell data",
+  backToTop: "Yn ôl i frig y dudalen",
   cautionNote:
-    "Note this document contains Special Category Data as defined by Data Protection Act 2018, formally known as Sensitive Personal Data, and should be handled appropriately.",
+    "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
   cautionReporting:
-    "This document contains information intended to assist the accurate reporting of court proceedings. It is vital you ensure that you safeguard the Special Category Data included and abide by reporting restrictions (for example on victims and children). HMCTS will stop sending the data if there is concern about how it will be used.",
+    "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os cyfyd pryder ynghylch sut y'i defnyddir.",
   provenanceLabels
 };

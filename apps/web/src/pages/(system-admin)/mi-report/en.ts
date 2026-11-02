@@ -23,6 +23,7 @@ export const en = {
     { value: "publications", text: "Publications", description: "Publications with court and list type data" },
     { value: "location-subscriptions", text: "Location Subscriptions", description: "Subscriptions by location with court names" },
     { value: "all-subscriptions", text: "All Subscriptions", description: "All subscriptions including search type" },
+    { value: "deleted-accounts", text: "Deleted accounts", description: "Accounts deleted following the annual verification process" },
     { value: "all-data", text: "All Data", description: "All of the above in a single file with multiple tabs" }
   ]
 };

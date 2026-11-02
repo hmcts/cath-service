@@ -1,11 +1,11 @@
 export const cy = {
   SJP_PUBLIC_LIST: {
     title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Rhestr Lawn)",
-    pdfTitle: "Rhestr Gyhoeddus Gweithdrefn Un Ynad (Rhestr Lawn)"
+    pdfTitle: "Gweithdrefn Un Ynad Rhestr Gyhoeddus (Rhestr Lawn)"
   },
   SJP_DELTA_PUBLIC_LIST: {
     title: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad (Achosion Newydd)",
-    pdfTitle: "Rhestr Gyhoeddus Gweithdrefn Un Ynad (Achosion Newydd)"
+    pdfTitle: "Gweithdrefn Un Ynad Rhestr Gyhoeddus (Achosion Newydd)"
   },
   common: {
     listContaining: "Rhestr sy'n cynnwys",

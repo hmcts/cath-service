@@ -71,3 +71,17 @@ describe("Front Door hostname ownership", () => {
     expect(template["cath-web"].nodejs.additionalIngressHosts).toEqual([]);
   });
 });
+
+describe("pipeline values templates", () => {
+  // hmcts/cnp-githubactions-library helm-deploy renders these with envsubst, which only
+  // substitutes $VAR and ${VAR}. A ${VAR:-default} is left verbatim, so the pod receives the
+  // literal text: ENABLE_TEST_SUPPORT was never "true" and the test-support routes 404ed.
+  it.each(["helm/cath-service/values.template.yaml", "helm/cath-service/values.preview.template.yaml"])(
+    "should not use shell-style variable defaults in %s",
+    (relativePath) => {
+      const template = readFileSync(path.join(REPO_ROOT, relativePath), "utf8");
+
+      expect(template.match(/\$\{\w+:[-=?+][^}]*\}/g) ?? []).toEqual([]);
+    }
+  );
+});

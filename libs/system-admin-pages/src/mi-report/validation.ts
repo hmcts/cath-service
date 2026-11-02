@@ -1,6 +1,6 @@
 export const MI_REPORT_PERIODS = ["7", "14", "21", "30", "all"] as const;
 
-export const MI_REPORT_TYPES = ["user-accounts", "publications", "location-subscriptions", "all-subscriptions", "all-data"] as const;
+export const MI_REPORT_TYPES = ["user-accounts", "publications", "location-subscriptions", "all-subscriptions", "deleted-accounts", "all-data"] as const;
 
 export function validateMiReportSelection(body: unknown, messages: MiReportValidationMessages): MiReportValidationResult {
   const source = (body ?? {}) as Record<string, unknown>;

@@ -1,0 +1,23 @@
+<policies>
+  <!--
+    Runs before the API policy validates the token, so the claim is only a counter
+    key. v2 tokens carry azp, v1 tokens carry appid.
+  -->
+  <inbound>
+    <base />
+    <rate-limit-by-key calls="600" renewal-period="60" counter-key="@{
+      var jwt = context.Request.Headers.GetValueOrDefault(&quot;Authorization&quot;, &quot;&quot;).Split(' ').Last().AsJwt();
+      if (jwt == null) { return &quot;anonymous&quot;; }
+      return jwt.Claims.GetValueOrDefault(&quot;azp&quot;, jwt.Claims.GetValueOrDefault(&quot;appid&quot;, &quot;anonymous&quot;));
+    }" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

@@ -215,7 +215,7 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       jsonData: mockHearingList,
       courtName: "First-tier Tribunal (Residential Property Tribunal): Eastern region",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Eastern region Weekly Hearing List",
-      listTypeName: "FTT_RPT_EASTERN_WEEKLY_HEARING_LIST"
+      listTypeName: "RPT_EASTERN_WEEKLY_HEARING_LIST"
     });
 
     // Assert
@@ -292,7 +292,7 @@ describe("generateFttRptWeeklyHearingListPdf", () => {
       jsonData: mockHearingList,
       courtName: "First-tier Tribunal (Residential Property Tribunal): Southern region",
       listTitle: "First-tier Tribunal (Residential Property Tribunal): Southern region Weekly Hearing List",
-      listTypeName: "FTT_RPT_SOUTHERN_WEEKLY_HEARING_LIST"
+      listTypeName: "RPT_SOUTHERN_WEEKLY_HEARING_LIST"
     });
 
     // Assert

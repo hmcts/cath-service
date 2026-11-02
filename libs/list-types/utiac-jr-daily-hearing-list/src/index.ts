@@ -3,6 +3,8 @@ import "./conversion/utiac-jr-config.js"; // Register all UTIAC JR converters on
 // Business logic exports
 export type { ValidationResult } from "@hmcts/list-types-common";
 export * from "./email-summary/summary-builder.js";
+export { generateUtiacJrDailyHearingListExcel } from "./excel/excel-generator.js";
+export { generateUtiacJrLondonDailyHearingListExcel } from "./excel/excel-generator-london.js";
 export { cy as utiacJrDailyHearingListCy, londonTableHeadersCy, pageTitleByListTypeCy } from "./locales/cy.js";
 export { en as utiacJrDailyHearingListEn, londonTableHeaders, pageTitleByListType } from "./locales/en.js";
 export * from "./models/types.js";

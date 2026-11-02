@@ -88,7 +88,7 @@ export const cy = {
     trialWindowsLinkText: "Cyfnodau treial cyfredol",
     trialWindowsLinkUrl: "https://www.gov.uk/guidance/kings-bench-hearing-and-trial-dates"
   },
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: {
     pageTitle: "Rhestr Achosion Dyddiol y Llys Sifil",
     locationLine1: "Mayor & City",
     locationLine2: "Guildhall Buildings",

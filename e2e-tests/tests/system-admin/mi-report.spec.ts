@@ -56,5 +56,16 @@ test.describe
       const download = await downloadPromise;
 
       expect(download.suggestedFilename()).toMatch(/^mi-report-all-data-30days-\d{4}-\d{2}-\d{2}\.xlsx$/);
+
+      // Download the 'Deleted accounts' report (empty until #351 populates the table, but still a valid xlsx)
+      await page.goto("/mi-report");
+      await page.getByLabel("Reporting period").selectOption("all");
+      await page.getByLabel("Report type").selectOption("deleted-accounts");
+
+      const deletedAccountsDownloadPromise = page.waitForEvent("download");
+      await page.getByRole("button", { name: "Download report" }).click();
+      const deletedAccountsDownload = await deletedAccountsDownloadPromise;
+
+      expect(deletedAccountsDownload.suggestedFilename()).toMatch(/^mi-report-deleted-accounts-from-beginning-\d{4}-\d{2}-\d{2}\.xlsx$/);
     });
   });

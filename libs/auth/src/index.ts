@@ -1,5 +1,7 @@
 // Business logic exports
 export { USER_ROLES } from "@hmcts/account";
+export { cftIdamHealthCheck } from "./cft-idam/health-check.js";
+export { buildCftIdamLogoutUrl } from "./cft-idam/logout-url.js";
 export {
   type CftIdamUserInfo,
   exchangeCodeForToken,

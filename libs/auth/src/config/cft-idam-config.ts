@@ -2,12 +2,14 @@ import config from "config";
 
 export interface CftIdamConfig {
   cftIdamUrl: string;
+  baseUrl: string;
   clientId: string;
   clientSecret: string;
   redirectUri: string;
   scope: string;
   authorizationEndpoint: string;
   tokenEndpoint: string;
+  endSessionEndpoint: string;
 }
 
 function getConfigValue(key: string): string {
@@ -17,7 +19,7 @@ function getConfigValue(key: string): string {
   }
 
   try {
-    return config.get<string>(key);
+    return config.get<string>(key) ?? "";
   } catch {
     return "";
   }
@@ -31,12 +33,14 @@ export function getCftIdamConfig(): CftIdamConfig {
 
   return {
     cftIdamUrl,
-    clientId: "app-pip-frontend",
+    baseUrl,
+    clientId: "app-cath-frontend",
     clientSecret: getConfigValue("CFT_IDAM_CLIENT_SECRET"),
     redirectUri,
     scope,
-    authorizationEndpoint: cftIdamUrl,
-    tokenEndpoint: `${cftIdamUrl}/o/token`
+    authorizationEndpoint: `${cftIdamUrl}/o/authorize`,
+    tokenEndpoint: `${cftIdamUrl}/o/token`,
+    endSessionEndpoint: `${cftIdamUrl}/o/endSession`
   };
 }
 

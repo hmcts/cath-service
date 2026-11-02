@@ -25,7 +25,7 @@ jobs:
     name: Detect Infrastructure Changes
     uses: ./.github/workflows/job.detect-changes.yml
     with:
-      paths: "^infrastructure/"
+      paths: "^(infrastructure/|docs/api/openapi\\.yaml$)"
       cache-key: infra-pr-${{ github.event.pull_request.number }}
 
   build-stage:

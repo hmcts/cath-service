@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CourtOfAppealCivilData } from "../models/types.js";
-import { renderCourtOfAppealCivil } from "./renderer.js";
+import { formatFutureJudgment, renderCourtOfAppealCivil } from "./renderer.js";
 
 describe("renderCourtOfAppealCivil", () => {
   const baseOptions = {
@@ -328,5 +328,34 @@ describe("renderCourtOfAppealCivil", () => {
     expect(result.dailyHearings).toHaveLength(0);
     expect(result.futureJudgments).toHaveLength(0);
     expect(result.header.listTitle).toBe("Court of Appeal (Civil Division) Daily Cause List");
+  });
+});
+
+describe("formatFutureJudgment", () => {
+  const judgment = {
+    date: "20/01/2025",
+    venue: "Court 71",
+    judge: "Lord Justice Smith",
+    time: "10.30am",
+    caseNumber: "CA-2025-000789",
+    caseDetails: "Test judgment case",
+    hearingType: "Judgment",
+    additionalInformation: ""
+  };
+
+  it("should format the date and time and keep the other fields", () => {
+    // Act
+    const result = formatFutureJudgment(judgment, "en");
+
+    // Assert
+    expect(result).toEqual({ ...judgment, date: "20 January 2025", time: "10:30am" });
+  });
+
+  it("should return an empty date when the date is missing", () => {
+    // Act
+    const result = formatFutureJudgment({ ...judgment, date: "" }, "en");
+
+    // Assert
+    expect(result.date).toBe("");
   });
 });

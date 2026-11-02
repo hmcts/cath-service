@@ -40,6 +40,7 @@
     "db:studio": "yarn workspace @hmcts/postgres run studio",
     "db:drop": "yarn workspace @hmcts/postgres run migrate:reset",
     "openapi:json": "node scripts/openapi-to-json.mjs docs/api/openapi.yaml",
+    "openapi:publisher": "tsx libs/api/openapi/generate-publisher-document.ts",
     "requirements:build": "requirements/scripts/init_db.sh"
   },
   "keywords": [],

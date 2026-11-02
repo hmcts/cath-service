@@ -1,3 +1,7 @@
+import { resolveListTypePackageName } from "./list-type-package.js";
+
+export { convertListTypeNameToKebabCase } from "./list-type-package.js";
+
 export interface ValidationResult {
   isValid: boolean;
   errors: unknown[];
@@ -9,37 +13,6 @@ export interface ListTypeInfo {
   name: string;
   friendlyName: string | null;
 }
-
-/**
- * Converts list type name to kebab-case for dynamic imports
- * Example: CIVIL_AND_FAMILY_DAILY_CAUSE_LIST -> civil-and-family-daily-cause-list
- */
-export function convertListTypeNameToKebabCase(name: string): string {
-  return name.toLowerCase().replace(/_/g, "-");
-}
-
-/**
- * Maps delta/variant list type package names to their parent package.
- * Used when a list type shares the same JSON schema as another list type.
- */
-const PACKAGE_ALIASES: Record<string, string> = {
-  "crown-daily-pdda-list": "crown-daily-list",
-  "crown-firm-pdda-list": "crown-firm-list",
-  "crown-warned-pdda-list": "crown-warned-list",
-  "iac-daily-list-additional-cases": "iac-daily-list",
-  "et-fortnightly-press-list": "et-fortnightly-list",
-  "magistrates-adult-court-list-daily": "magistrates-adult-court-list",
-  "magistrates-adult-court-list-future": "magistrates-adult-court-list",
-  "sjp-delta-press-list": "sjp-press-list",
-  "sjp-delta-public-list": "sjp-public-list",
-  "utiac-jr-london-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "utiac-jr-leeds-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "utiac-jr-manchester-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "utiac-jr-birmingham-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "utiac-jr-cardiff-daily-hearing-list": "utiac-jr-daily-hearing-list",
-  "magistrates-public-adult-court-list-daily": "magistrates-public-adult-court-list",
-  "magistrates-public-adult-court-list-future": "magistrates-public-adult-court-list"
-};
 
 /**
  * Dynamically validates JSON data against the appropriate list type schema
@@ -63,10 +36,7 @@ export async function validateListTypeJson(listTypeId: string, jsonData: unknown
     };
   }
 
-  // Convert list type name to kebab-case for package name, applying alias if one exists
-  const kebabName = convertListTypeNameToKebabCase(listType.name);
-  const resolvedName = PACKAGE_ALIASES[kebabName] ?? kebabName;
-  const packageName = `@hmcts/${resolvedName}`;
+  const packageName = `@hmcts/${resolveListTypePackageName(listType.name)}`;
 
   try {
     // Dynamically import the list type package

@@ -21,7 +21,8 @@ vi.mock("@hmcts/account/repository/query", () => ({
 }));
 
 vi.mock("@hmcts/notifications", () => ({
-  sendSystemAdminNotification: vi.fn()
+  sendSystemAdminNotification: vi.fn(),
+  sendSubscriptionDeletedNotification: vi.fn()
 }));
 
 vi.mock("@hmcts/publication", () => ({
@@ -29,15 +30,16 @@ vi.mock("@hmcts/publication", () => ({
 }));
 
 vi.mock("@hmcts/subscriptions", () => ({
-  deleteSubscriptionsByLocationId: vi.fn()
+  deleteSubscriptionsByLocationId: vi.fn(),
+  findSubscribersByLocationId: vi.fn()
 }));
 
 const { getLocationWithDetails, hasActiveSubscriptions, hasActiveArtefacts, deleteLocation, deleteLocationMetadataRecord, findLocationMetadataByLocationId } =
   await import("@hmcts/location");
 const { findSystemAdminEmails } = await import("@hmcts/account/repository/query");
-const { sendSystemAdminNotification } = await import("@hmcts/notifications");
+const { sendSystemAdminNotification, sendSubscriptionDeletedNotification } = await import("@hmcts/notifications");
 const { deleteArtefactsByLocationId } = await import("@hmcts/publication");
-const { deleteSubscriptionsByLocationId } = await import("@hmcts/subscriptions");
+const { deleteSubscriptionsByLocationId, findSubscribersByLocationId } = await import("@hmcts/subscriptions");
 
 const mockLocation = {
   locationId: 1,
@@ -165,16 +167,50 @@ describe("performLocationPublicationsDeletion", () => {
 });
 
 describe("performLocationSubscriptionsDeletion", () => {
-  it("should delete subscriptions for the location and notify admins", async () => {
+  it("should delete subscriptions for the location, notify subscribers and admins", async () => {
+    const mockSubscribers = [
+      { userId: "user-1", user: { email: "subscriber1@example.com", firstName: "Jane", surname: "Doe" } },
+      { userId: "user-2", user: { email: "subscriber2@example.com", firstName: null, surname: null } }
+    ];
+    vi.mocked(findSubscribersByLocationId).mockResolvedValue(mockSubscribers as never);
     vi.mocked(findSystemAdminEmails).mockResolvedValue(["admin@example.com"]);
 
     await performLocationSubscriptionsDeletion(5, "Test Court", "requester@example.com");
 
+    expect(findSubscribersByLocationId).toHaveBeenCalledWith(5);
     expect(deleteSubscriptionsByLocationId).toHaveBeenCalledWith(5);
+    expect(sendSubscriptionDeletedNotification).toHaveBeenCalledWith([mockSubscribers[0].user, mockSubscribers[1].user], "Test Court");
     expect(sendSystemAdminNotification).toHaveBeenCalledWith(["admin@example.com"], {
       requesterEmail: "requester@example.com",
       changeType: "Delete Location Subscription(s)",
       additionalChangeDetail: "Subscriptions for location Test Court with Id 5 have been deleted."
     });
+  });
+
+  it("should fetch subscribers before deleting the subscriptions", async () => {
+    vi.mocked(findSystemAdminEmails).mockResolvedValue([]);
+
+    const callOrder: string[] = [];
+    vi.mocked(findSubscribersByLocationId).mockImplementation(async () => {
+      callOrder.push("findSubscribersByLocationId");
+      return [];
+    });
+    vi.mocked(deleteSubscriptionsByLocationId).mockImplementation(async () => {
+      callOrder.push("deleteSubscriptionsByLocationId");
+      return 0;
+    });
+
+    await performLocationSubscriptionsDeletion(5, "Test Court", "requester@example.com");
+
+    expect(callOrder).toEqual(["findSubscribersByLocationId", "deleteSubscriptionsByLocationId"]);
+  });
+
+  it("should not send a subscriber notification when there are no subscribers", async () => {
+    vi.mocked(findSubscribersByLocationId).mockResolvedValue([] as never);
+    vi.mocked(findSystemAdminEmails).mockResolvedValue([]);
+
+    await performLocationSubscriptionsDeletion(5, "Test Court", "requester@example.com");
+
+    expect(sendSubscriptionDeletedNotification).toHaveBeenCalledWith([], "Test Court");
   });
 });

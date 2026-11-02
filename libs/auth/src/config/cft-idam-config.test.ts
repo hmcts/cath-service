@@ -19,25 +19,27 @@ describe("CFT IDAM Configuration", () => {
 
   describe("getCftIdamConfig", () => {
     it("should return configuration from environment variables", () => {
-      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+      process.env.CFT_IDAM_URL = "https://hmcts-access.aat.platform.hmcts.net";
       process.env.CFT_IDAM_CLIENT_SECRET = "test-secret";
       process.env.BASE_URL = "https://example.com";
 
       const config = getCftIdamConfig();
 
       expect(config).toEqual({
-        cftIdamUrl: "https://idam-web-public.aat.platform.hmcts.net",
-        clientId: "app-pip-frontend",
+        cftIdamUrl: "https://hmcts-access.aat.platform.hmcts.net",
+        baseUrl: "https://example.com",
+        clientId: "app-cath-frontend",
         clientSecret: "test-secret",
         redirectUri: "https://example.com/cft-login/return",
         scope: "openid profile roles",
-        authorizationEndpoint: "https://idam-web-public.aat.platform.hmcts.net",
-        tokenEndpoint: "https://idam-web-public.aat.platform.hmcts.net/o/token"
+        authorizationEndpoint: "https://hmcts-access.aat.platform.hmcts.net/o/authorize",
+        tokenEndpoint: "https://hmcts-access.aat.platform.hmcts.net/o/token",
+        endSessionEndpoint: "https://hmcts-access.aat.platform.hmcts.net/o/endSession"
       });
     });
 
     it("should use custom scope from CFT_IDAM_SCOPE env var", () => {
-      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+      process.env.CFT_IDAM_URL = "https://hmcts-access.aat.platform.hmcts.net";
       process.env.CFT_IDAM_SCOPE = "openid profile";
 
       const config = getCftIdamConfig();
@@ -46,7 +48,7 @@ describe("CFT IDAM Configuration", () => {
     });
 
     it("should default scope to openid profile roles when CFT_IDAM_SCOPE not set", () => {
-      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+      process.env.CFT_IDAM_URL = "https://hmcts-access.aat.platform.hmcts.net";
 
       const config = getCftIdamConfig();
 
@@ -54,7 +56,7 @@ describe("CFT IDAM Configuration", () => {
     });
 
     it("should use default BASE_URL when not provided", () => {
-      process.env.CFT_IDAM_URL = "https://idam-web-public.aat.platform.hmcts.net";
+      process.env.CFT_IDAM_URL = "https://hmcts-access.aat.platform.hmcts.net";
 
       const config = getCftIdamConfig();
 
@@ -66,8 +68,9 @@ describe("CFT IDAM Configuration", () => {
 
       const config = getCftIdamConfig();
 
-      expect(config.authorizationEndpoint).toBe("https://idam.example.com");
+      expect(config.authorizationEndpoint).toBe("https://idam.example.com/o/authorize");
       expect(config.tokenEndpoint).toBe("https://idam.example.com/o/token");
+      expect(config.endSessionEndpoint).toBe("https://idam.example.com/o/endSession");
     });
   });
 

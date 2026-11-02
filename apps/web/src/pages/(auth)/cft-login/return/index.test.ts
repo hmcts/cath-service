@@ -32,7 +32,7 @@ describe("CFT Login Return Handler", () => {
 
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       authorizationEndpoint: "https://idam.example.com/o/authorize",

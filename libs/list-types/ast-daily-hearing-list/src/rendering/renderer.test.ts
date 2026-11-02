@@ -79,4 +79,27 @@ describe("renderAstDailyHearingListData", () => {
 
     expect(result.header.lastUpdatedTime).toBe("2:30pm");
   });
+
+  it("should replace a dot in the hearing time with a colon, as legacy does", () => {
+    const hearingList: AstDailyHearingList = [
+      {
+        appellant: "A Smith",
+        appealReferenceNumber: "AST/2025/001",
+        caseType: "Section 4",
+        hearingType: "Substantive",
+        hearingTime: "10.30am",
+        additionalInformation: ""
+      }
+    ];
+
+    const result = renderAstDailyHearingListData(hearingList, {
+      locale: "en",
+      contentDate: new Date("2025-06-20"),
+      lastReceivedDate: "2025-01-01T09:55:00Z",
+      listTitle: "Asylum Support Tribunal Daily Hearing List"
+    });
+
+    expect(result.hearings[0].hearingTime).toBe("10:30am");
+    expect(result.hearings[0].appellant).toBe("A Smith");
+  });
 });

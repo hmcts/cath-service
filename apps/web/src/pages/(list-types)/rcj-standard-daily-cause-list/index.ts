@@ -52,9 +52,9 @@ const LIST_TYPE_CONFIG: Record<string, { en: string; cy: string; template: strin
     cy: cy.KINGS_BENCH_MASTERS_DAILY_CAUSE_LIST.pageTitle,
     template: "kings-bench-masters-daily-cause-list"
   },
-  MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST: {
-    en: en.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
-    cy: cy.MAYOR_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+  MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST: {
+    en: en.MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
+    cy: cy.MAYOR_AND_CITY_CIVIL_DAILY_CAUSE_LIST.pageTitle,
     template: "mayor-city-civil-daily-cause-list"
   },
   SENIOR_COURTS_COSTS_OFFICE_DAILY_CAUSE_LIST: {

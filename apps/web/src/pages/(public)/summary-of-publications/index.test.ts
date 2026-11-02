@@ -202,13 +202,16 @@ describe("Summary of Publications - GET handler", () => {
     });
 
     it("should render empty state when no publications found for location", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);
       mockRequest.query = { locationId: "1" };
       mockResponse.locals = { locale: "en" };
 
       await GET(mockRequest as Request, mockResponse as Response);
 
       const renderCall = renderSpy.mock.calls[0][1];
-      expect(renderCall.noPublicationsMessage).toBe("Sorry, no lists found for this court");
+      expect(renderCall.publications).toEqual([]);
+      expect(renderCall.noPublicationsMessage).toBe("There are no lists available for this court or tribunal today.");
     });
   });
 
@@ -253,6 +256,19 @@ describe("Summary of Publications - GET handler", () => {
       expect(publications[0].formattedDate).toMatch(/\d{1,2} \w+ \d{4}/);
       // Should contain Welsh month name (Ebrill = April)
       expect(publications[0].formattedDate).toContain("Ebrill");
+    });
+
+    it("should render Welsh empty state when no publications found for location", async () => {
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);
+      mockRequest.query = { locationId: "1" };
+      mockResponse.locals = { locale: "cy" };
+
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      const renderCall = renderSpy.mock.calls[0][1];
+      expect(renderCall.publications).toEqual([]);
+      expect(renderCall.noPublicationsMessage).toBe("Nid oes unrhyw restrau ar gael ar gyfer y llys na’r tribiwnlys hwn heddiw.");
     });
 
     it("should redirect to 400 page when locationId is missing (Welsh locale)", async () => {

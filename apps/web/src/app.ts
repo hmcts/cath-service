@@ -11,9 +11,9 @@ import { moduleRoot as civilFamilyCauseListModuleRoot } from "@hmcts/civil-and-f
 import { moduleRoot as civilDailyCauseListModuleRoot } from "@hmcts/civil-daily-cause-list/config";
 import { moduleRoot as copDailyCauseListModuleRoot } from "@hmcts/cop-daily-cause-list/config";
 import { moduleRoot as civilAppealModuleRoot } from "@hmcts/court-of-appeal-civil-daily-cause-list/config";
+import { moduleRoot as crownAdvanceListModuleRoot } from "@hmcts/crown-advanced-pdda-list/config";
 import { moduleRoot as crownDailyListModuleRoot } from "@hmcts/crown-daily-list/config";
 import { moduleRoot as crownFirmListModuleRoot } from "@hmcts/crown-firm-list/config";
-import { moduleRoot as crownWarnedListModuleRoot } from "@hmcts/crown-warned-list/config";
 import { moduleRoot as etDailyListModuleRoot } from "@hmcts/et-daily-list/config";
 import { moduleRoot as etFortnightlyListModuleRoot } from "@hmcts/et-fortnightly-list/config";
 import { moduleRoot as familyDailyCauseListModuleRoot } from "@hmcts/family-daily-cause-list/config";
@@ -72,23 +72,25 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const isLocalDev = process.env.LOCAL_DEV === "true";
+const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
+  await getPropertiesVolumeSecrets({ chartPath, omit: localEnvOverrides(), vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
   const { default: config } = await import("config");
 
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
   // before getPropertiesVolumeSecrets() has set env vars from Key Vault. If imported statically,
   // config caches stale default values for APPLICATION_INSIGHTS_CONNECTION_STRING and other KV secrets.
-  const { authNavigationMiddleware, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
+  const { authNavigationMiddleware, cftIdamHealthCheck, configurePassport, sessionTimeoutMiddleware } = await import("@hmcts/auth");
 
   const app = express();
   app.set("trust proxy", 1);
 
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
+  app.get("/health", cftIdamHealthCheck());
   app.use(healthcheck());
   app.use(monitoringMiddleware(config.get("applicationInsights")));
   app.use(configureNonce());
@@ -150,7 +152,7 @@ export async function createApp(): Promise<Express> {
     magistratesAdultCourtListModuleRoot,
     crownDailyListModuleRoot,
     crownFirmListModuleRoot,
-    crownWarnedListModuleRoot,
+    crownAdvanceListModuleRoot,
     systemAdminModuleRoot,
     publicPagesModuleRoot,
     grcWeeklyHearingListModuleRoot,
@@ -229,6 +231,14 @@ export async function createApp(): Promise<Express> {
   app.use(errorHandler());
 
   return app;
+}
+
+// Locally, a non-empty value from .env or the shell takes precedence over Key Vault.
+function localEnvOverrides(): string[] {
+  if (!isLocalDev) return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
 }
 
 const getRedisClient = async (config: { get: (key: string) => any }) => {

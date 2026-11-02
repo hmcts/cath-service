@@ -21,7 +21,9 @@ const LOCATION_DATA: typeof locationData = {
       name: "Birmingham Magistrates' Court",
       welshName: "Llys Ynadon Birmingham",
       regions: [2],
-      subJurisdictions: [3, 4]
+      subJurisdictions: [3, 4],
+      cautionMessage: "<strong>Please note:</strong> Lists aren't published before 10am.",
+      welshCautionMessage: "<strong>Sylwer:</strong> Rhybudd prawf"
     },
     {
       locationId: 11,
@@ -178,6 +180,31 @@ describe("generateSeedSql", () => {
     expect(sql).toContain("'ET_FORTNIGHTLY_PRESS_LIST'");
   });
 
+  it("should insert caution message metadata only for locations that define one", () => {
+    const sql = generate();
+
+    expect(sql).toContain(
+      "INSERT INTO location_metadata (location_metadata_id, location_id, caution_message, welsh_caution_message, created_at, updated_at) VALUES\n" +
+        "  ('seedmeta_10', 10, '<strong>Please note:</strong> Lists aren''t published before 10am.', '<strong>Sylwer:</strong> Rhybudd prawf', NOW(), NOW())\n"
+    );
+    expect(sql).not.toContain("'seedmeta_11'");
+  });
+
+  it("should never overwrite an existing location_metadata row so admin edits survive a redeploy", () => {
+    const sql = generate();
+
+    expect(sql).toContain("ON CONFLICT (location_id) DO NOTHING;");
+  });
+
+  it("should emit no location_metadata insert when no location defines a caution message", () => {
+    const locations = LOCATION_DATA.locations.map(({ cautionMessage, welshCautionMessage, ...location }) => location);
+
+    const sql = generateSeedSql({ ...LOCATION_DATA, locations }, LIST_TYPES);
+
+    expect(sql).not.toContain("INSERT INTO location_metadata");
+    expect(sql).toContain("-- no location_metadata rows");
+  });
+
   it("should order inserts so foreign keys resolve (parents before children)", () => {
     const sql = generate();
     const order = [
@@ -188,6 +215,7 @@ describe("generateSeedSql", () => {
       "INSERT INTO location_reference",
       "INSERT INTO location_region",
       "INSERT INTO location_sub_jurisdiction",
+      "INSERT INTO location_metadata",
       "INSERT INTO list_types",
       "INSERT INTO list_types_sub_jurisdictions"
     ];

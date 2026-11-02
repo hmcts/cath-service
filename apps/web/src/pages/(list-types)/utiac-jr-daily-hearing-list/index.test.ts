@@ -50,7 +50,7 @@ const makeArtefact = (overrides: Record<string, unknown> = {}) => ({
   artefactId: "test-artefact-123",
   locationId: "9001",
   listTypeId: 194,
-  listTypeName: "UTIAC_JR_LEEDS_DAILY_HEARING_LIST",
+  listTypeName: "UT_IAC_JR_LEEDS_DAILY_HEARING_LIST",
   contentDate: new Date("2026-01-15"),
   displayFrom: new Date("2026-01-10"),
   displayTo: new Date("2026-01-20"),
@@ -137,7 +137,7 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
       const mockArtefact = makeArtefact({
         artefactId: "test-artefact-456",
         listTypeId: 193,
-        listTypeName: "UTIAC_JR_LONDON_DAILY_HEARING_LIST"
+        listTypeName: "UT_IAC_JR_LONDON_DAILY_HEARING_LIST"
       });
 
       const mockJsonData = [
@@ -316,7 +316,7 @@ describe("UTIAC JR Daily Hearing List unified page controller", () => {
         [],
         expect.objectContaining({
           locale: "cy",
-          listTitle: "[WELSH TRANSLATION REQUIRED: 'Upper Tribunal (Immigration and Asylum) Chamber - Judicial Review: Leeds Daily Hearing List']"
+          listTitle: "Uwch Dribiwnlys (Mewnfudo a Lloches) - Rhestr o Wrandawiadau Dyddiol Siambr Adolygiadau Barnwrol Leeds"
         })
       );
     });

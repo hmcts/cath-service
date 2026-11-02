@@ -9,11 +9,12 @@ import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const isLocalDev = process.env.LOCAL_DEV === "true";
+const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL"] });
+  await getPropertiesVolumeSecrets({ chartPath, omit: ["DATABASE_URL", ...localEnvOverrides()] });
 
   const { default: config } = await import("config");
 
@@ -58,4 +59,12 @@ export async function createApp(): Promise<Express> {
   });
 
   return app;
+}
+
+// Locally, a non-empty value from .env or the shell takes precedence over Key Vault.
+function localEnvOverrides(): string[] {
+  if (!isLocalDev) return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
 }
