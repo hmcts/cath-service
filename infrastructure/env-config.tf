@@ -60,6 +60,10 @@ locals {
   apim_name   = "cft-api-mgmt-${coalesce(local.apim_suffix, var.env)}"
   apim_rg     = "cft-${var.env}-network-rg"
 
+  # Explicit allowlist, so adding prod (or any other environment) to env_config
+  # never deploys the mock third party by accident.
+  deploy_apim_testing_support = local.deploy_apim && contains(["aat", "demo", "perftest"], var.env)
+
   # Use local.common_tags everywhere instead of var.common_tags. Identical to
   # var.common_tags unless the environment needs a tag override, so aat, demo and
   # ithc see no diff.
