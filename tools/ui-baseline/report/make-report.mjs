@@ -15,6 +15,8 @@ const { values: args } = parseArgs({
     "pages-compare": { type: "string" }, // compare.json of pip pages against CaTH pages
     "route-map": { type: "string" },
     journeys: { type: "string" },
+    "cath-journeys": { type: "string" }, // CaTH's runs of the same journeys, same ids as pip's
+    "journeys-compare": { type: "string" }, // journeys-compare.json from `parity compare-journeys`
     defects: { type: "string" },
     run: { type: "string" }, // run.json of the baseline run
     compare: { type: "string" }, // compare.json from `parity compare` of the list pages
@@ -46,6 +48,9 @@ const reviewItemsFor = (id, locale) =>
   );
 const filesComparison = args["files-compare"] && existsSync(args["files-compare"]) ? JSON.parse(readFileSync(args["files-compare"], "utf-8")) : null;
 const pagesComparison = args["pages-compare"] && existsSync(args["pages-compare"]) ? JSON.parse(readFileSync(args["pages-compare"], "utf-8")) : null;
+const journeysComparison =
+  args["journeys-compare"] && existsSync(args["journeys-compare"]) ? JSON.parse(readFileSync(args["journeys-compare"], "utf-8")) : null;
+const journeyResultFor = (id, locale) => journeysComparison?.results.find((r) => r.journey === id && r.locale === locale) ?? null;
 const routeMap =
   args["route-map"] && existsSync(args["route-map"]) ? new Map(JSON.parse(readFileSync(args["route-map"], "utf-8")).routes.map((e) => [e.pip, e])) : new Map();
 const pageResultFor = (id, locale) => pagesComparison?.results.find((r) => r.id === id && r.locale === locale && r.state === "default") ?? null;
@@ -65,6 +70,7 @@ for (const [name, target] of [
   ["pages", args.pages],
   ["cath-pages", args["cath-pages"]],
   ["journeys", args.journeys],
+  ["cath-journeys", args["cath-journeys"]],
   ["files", filesComparison && path.dirname(args["files-compare"])]
 ]) {
   if (target && existsSync(target)) symlinkSync(path.resolve(target), path.join(OUT, "data", name));
@@ -455,10 +461,47 @@ layout({
 });
 
 // ---------- journeys ----------
+const JOURNEY_VERDICT = { match: ["matches", "green"], differs: ["differs", "red"], "not-run": ["not run", "grey"] };
+
+// How CaTH's run of the journey compares, with the differences in its steps (missing, moved, at another page)
+function journeyVerdict(compared) {
+  if (!compared) return "";
+  if (compared.verdict === "not-run") return `<div class="govuk-inset-text">CaTH has not run this journey: it is not ported to CaTH yet.</div>`;
+  const differing = compared.steps.filter((s) => s.source && s.target && s.verdict === "differs").length;
+  if (compared.verdict === "match")
+    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">CaTH matches pip · every step reached in order, each page matching after normalisation</p></div>`;
+  const findings = compared.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`);
+  if (differing) findings.push(`<li>${differing} step ${plural(differing, "page differs", "pages differ")} from pip: see each step below</li>`);
+  return `<div class="govuk-inset-text"><h3 class="govuk-heading-s">${tag("CaTH differs", "red")}</h3><ul class="govuk-list govuk-list--bullet">${findings.join("")}</ul></div>`;
+}
+
+// CaTH's capture of the checkpoint a pip step reached, with how its page compares
+function cathStep(id, locale, pair) {
+  if (!journeysComparison || !pair) return "";
+  if (!pair.target) return `<p class="govuk-body-s">${tag("CaTH", "purple")} did not reach this step</p>`;
+  const result = journeysComparison.pages.results.find((r) => r.id === id && r.locale === locale && r.state === pair.name) ?? null;
+  const label = pair.verdict === "match" ? tag("matches", "green") : tag(`${differenceCount(result ?? { findings: [] })} findings`, "red");
+  return `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">CaTH: ${esc(pair.target.path)}</span></summary><div class="govuk-details__text">${label}
+    ${captureCard({ label: "CaTH", colour: "purple", dirOnDisk: path.join(args["cath-journeys"], id, locale, pair.target.step), href: `data/cath-journeys/${id}/${locale}/${pair.target.step}`, depth: 1 })}
+    ${findingsBlock(result)}</div></details>`;
+}
+
+// Checkpoints CaTH reached that pip did not
+function cathOnlySteps(id, locale, compared) {
+  const extra = compared?.steps.filter((pair) => pair.target && !pair.source) ?? [];
+  if (!extra.length) return "";
+  return `<h2 class="govuk-heading-m">Only in CaTH</h2><ul class="govuk-list">${extra
+    .map(
+      (pair) =>
+        `<li>${captureCard({ label: `CaTH: ${pair.name}`, colour: "purple", dirOnDisk: path.join(args["cath-journeys"], id, locale, pair.target.step), href: `data/cath-journeys/${id}/${locale}/${pair.target.step}`, depth: 1 })}</li>`
+    )
+    .join("")}</ul>`;
+}
+
 const journeyIds =
   args.journeys && existsSync(args.journeys)
     ? readdirSync(args.journeys)
-        .filter((n) => statSync(path.join(args.journeys, n)).isDirectory())
+        .filter((n) => statSync(path.join(args.journeys, n)).isDirectory() && (!ONLY || ONLY.has(n)))
         .sort()
     : [];
 const journeyRows = [];
@@ -489,6 +532,11 @@ for (const id of journeyIds) {
               <p class="govuk-body-s parity-files"><a class="govuk-link" href="${base}/${step.step}/aria.yml">aria.yml</a> · <a class="govuk-link" href="${base}/${step.step}/text.txt">text.txt</a> · <a class="govuk-link" href="${base}/${step.step}/axe.json">axe.json</a> · <a class="govuk-link" href="${base}/${step.step}/meta.json">meta.json</a></p>
             </div>
           </div>
+          ${cathStep(
+            id,
+            locale,
+            journeyResultFor(id, locale)?.steps.find((pair) => pair.source?.step === step.step)
+          )}
         </div></li>`
       )
       .join("");
@@ -498,7 +546,8 @@ for (const id of journeyIds) {
     const outcome = record.ok
       ? `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Completed · ${record.steps.length} steps</p></div>`
       : `<div class="govuk-error-summary" data-module="govuk-error-summary"><div role="alert"><h2 class="govuk-error-summary__title">Journey stopped after ${record.steps.length} steps</h2><div class="govuk-error-summary__body"><pre class="parity-error">${esc(record.error)}</pre></div></div></div>`;
-    return `<div class="govuk-tabs__panel${locale === "cy" ? " govuk-tabs__panel--hidden" : ""}" id="tab-${locale}">${outcome}${video}<ol class="parity-steps">${steps}</ol></div>`;
+    const compared = journeyResultFor(id, locale);
+    return `<div class="govuk-tabs__panel${locale === "cy" ? " govuk-tabs__panel--hidden" : ""}" id="tab-${locale}">${outcome}${journeyVerdict(compared)}${video}<ol class="parity-steps">${steps}</ol>${cathOnlySteps(id, locale, compared)}</div>`;
   });
   layout({
     file: `journeys/${id}.html`,
@@ -514,7 +563,9 @@ for (const id of journeyIds) {
   });
   const cell = (locale) => {
     const r = records.find((x) => x.locale === locale)?.record;
-    return `<td class="govuk-table__cell">${r ? (r.ok ? tag(`${r.steps.length} steps`, "green") : tag("stopped", "red")) : tag("not run", "grey")}</td>`;
+    const compared = journeyResultFor(id, locale);
+    const cath = compared ? `<br>${tag(`CaTH ${JOURNEY_VERDICT[compared.verdict][0]}`, JOURNEY_VERDICT[compared.verdict][1])}` : "";
+    return `<td class="govuk-table__cell">${r ? (r.ok ? tag(`${r.steps.length} steps`, "green") : tag("stopped", "red")) : tag("not run", "grey")}${cath}</td>`;
   };
   const notes = records.some(({ record }) => record.steps.some((s) => s.note));
   journeyRows.push(`<tr class="govuk-table__row">
@@ -527,7 +578,7 @@ layout({
   active: "journeys.html",
   title: "Journeys",
   body: `<h1 class="govuk-heading-l">Journeys</h1>
-  <p class="govuk-body">pip's user flows, ported from its own end-to-end tests and run against a freshly seeded pip stack. Every step is captured like a page, with a video of the whole journey in each language.</p>
+  <p class="govuk-body">pip's user flows, ported from its own end-to-end tests and run against a freshly seeded pip stack. Every step is captured like a page, with a video of the whole journey in each language.${journeysComparison ? " Journeys ported to CaTH are run there too, and compared step by step: the steps reached, their order, the page each lands on, and each step's page." : ""}</p>
   ${filterBox("journeys-table", "journey, role or description")}
   <table class="govuk-table" id="journeys-table"><thead class="govuk-table__head"><tr class="govuk-table__row">
     <th class="govuk-table__header">Journey</th><th class="govuk-table__header">What it does</th><th class="govuk-table__header">Signed in as</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th>
@@ -741,7 +792,7 @@ if (!ONLY)
   <ul class="govuk-list govuk-list--bullet">
     ${comparison ? `<li><a class="govuk-link" href="comparison.html">Comparison</a> summarises pip against CaTH on the list pages: findings after normalisation, and the patterns that repeat across pages.</li>` : ""}
     <li><a class="govuk-link" href="lists.html">List pages</a> put pip and CaTH side by side for the same publication, with the accessibility-tree and text differences.</li>
-    <li><a class="govuk-link" href="pages.html">Other pages</a> and <a class="govuk-link" href="journeys.html">journeys</a> are the pip baseline only until CaTH routes and journeys are mapped.</li>
+    <li><a class="govuk-link" href="pages.html">Other pages</a> and <a class="govuk-link" href="journeys.html">journeys</a> are compared with CaTH only where a CaTH route is mapped or a journey is ported to CaTH (${esc("cath/journeys/")}); the rest are the pip baseline only.</li>
     <li>Differences here are raw. The comparison step will remove known noise (IDs, dates from seeding, formatting-only markup) and classify what is left against the ticket.</li>
   </ul>`
   });

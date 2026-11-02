@@ -6,6 +6,9 @@ import { link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 // confirmation preview, adding another court and changing the list language.
 const FIRST_COURT = "1";
 const SECOND_COURT = "2";
+// Chosen by name, not position, so pip and CaTH (cath/journeys/) subscribe to the same list in both
+// languages: list types are ordered by their name in the page's language
+const LIST_TYPE = "CIVIL_DAILY_CAUSE_LIST";
 
 export const subscriptionBasket: Journey = {
   id: "subscription-basket",
@@ -30,8 +33,8 @@ export const subscriptionBasket: Journey = {
     await act(`choose court ${SECOND_COURT} again`, () => chooseCourts(SECOND_COURT));
     await checkpoint("pending-subscriptions-re-added");
     await act("continue", () => continueButton().click());
-    await act("select first list type and continue", async () => {
-      await page.locator("#list-types-table input[type=checkbox]").first().check();
+    await act(`select ${LIST_TYPE} and continue`, async () => {
+      await page.locator(`input[type=checkbox][id="${LIST_TYPE}"]`).check();
       await continueButton().click();
     });
     await act("choose English and continue", async () => {

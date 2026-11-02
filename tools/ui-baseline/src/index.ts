@@ -16,6 +16,12 @@ export {
 export { normalise } from "./compare/normalise.js";
 export { type BlobContainer, openBlobContainer, type StorageSpec } from "./files/blob-container.js";
 export { type CollectedPublication, collectFiles } from "./files/collect-files.js";
+export {
+  type CompareJourneysOptions,
+  compareJourneys,
+  type JourneyCompareResult,
+  type JourneyCompareSummary
+} from "./journey/compare-journeys.js";
 export type { Journey, JourneyContext, JourneySuite } from "./journey/journey.js";
 export { type JourneyResult, type RunJourneysOptions, runJourneys } from "./journey/run-journeys.js";
 export { type ReviewOptions, type ReviewResult, reviewFindings } from "./review/review.js";
