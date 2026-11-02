@@ -14,7 +14,8 @@ module "postgresql" {
   common_tags   = local.common_tags
 
   # Per-environment - see infrastructure/env-config.tf. aat uses the expanded
-  # subnet because the original postgresql subnet in the stg vnet is full.
+  # subnet because the original postgresql subnet in the stg vnet is full; prod
+  # because it is the only subnet the PROD principal can join.
   subnet_suffix = local.postgres_subnet_suffix
 
   pgsql_databases = [
@@ -23,9 +24,12 @@ module "postgresql" {
     }
   ]
 
-  pgsql_sku                     = "GP_Standard_D2ds_v4"
+  # Sizing - see local.sizing in infrastructure/env-config.tf. The module turns on
+  # ZoneRedundant HA for prod by itself.
+  pgsql_sku                     = local.sizing.pgsql_sku
   pgsql_version                 = "16"
-  pgsql_storage_mb              = 65536
+  pgsql_storage_mb              = local.sizing.pgsql_storage_mb
+  geo_redundant_backups         = local.sizing.pgsql_geo_redundant_backups
   auto_grow_enabled             = true
   admin_user_object_id          = var.ci_service_principal_object_id
   preserve_legacy_jenkins_admin = false

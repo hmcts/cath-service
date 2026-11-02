@@ -28,10 +28,11 @@ module "redis" {
   # behaviour is unchanged.
   private_endpoint_subnet = local.redis_subnet_override ? data.azurerm_subnet.redis_private_endpoint[0].id : ""
 
+  # Sizing - see local.sizing in infrastructure/env-config.tf.
   redis_version = "6"
-  sku_name      = "Basic"
-  family        = "C"
-  capacity      = 0
+  sku_name      = local.sizing.redis_sku_name
+  family        = local.sizing.redis_family
+  capacity      = local.sizing.redis_capacity
 }
 
 resource "azurerm_key_vault_secret" "redis_host" {
