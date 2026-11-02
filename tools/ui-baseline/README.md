@@ -216,7 +216,7 @@ depends on one of these, check that part by hand and say so in the PR.
   confirmation after bulk-creating media accounts. Each is noted in its journey record.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
-- **Not captured at all:** file downloads, emails and deprecated list types.
+- **Not captured at all:** emails and deprecated list types. File downloads are limited to the ones listed in `routes/downloads.json`.
 - **Signed-in pages in the test environment need test accounts.** CaTH perftest's vault has a
   Crime IDAM account (verified users) but no SSO admin accounts, so admin pages are reported as
   not compared there until accounts in perftest's admin groups are added to `cath-perftest` under

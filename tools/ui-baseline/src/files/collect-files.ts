@@ -8,12 +8,12 @@ import type { BlobContainer } from "./blob-container.js";
 // reads. Deployed apps generate the files after the publication is accepted, so with waitSeconds
 // each publication is polled until its files stop changing, or the time runs out (a list type that
 // has no files waits the whole time).
-const BLOB_NAMES: Record<FileKind, (artefactId: string) => string> = {
+const BLOB_NAMES: Record<PublicationFileKind, (artefactId: string) => string> = {
   pdf: (artefactId) => `${artefactId}.pdf`,
   "pdf-welsh": (artefactId) => `${artefactId}_cy.pdf`,
   excel: (artefactId) => `${artefactId}.xlsx`
 };
-const EXTENSIONS: Record<FileKind, string> = { pdf: "pdf", "pdf-welsh": "pdf", excel: "xlsx" };
+const EXTENSIONS: Record<PublicationFileKind, string> = { pdf: "pdf", "pdf-welsh": "pdf", excel: "xlsx" };
 const POLL_MS = 5000;
 
 export async function collectFiles(options: CollectFilesOptions): Promise<FileEntry[]> {
@@ -40,7 +40,7 @@ async function collectSettled(options: CollectFilesOptions, publication: Collect
 
 async function collectOnce(options: CollectFilesOptions, publication: CollectedPublication): Promise<FileEntry[]> {
   const entries: FileEntry[] = [];
-  for (const kind of Object.keys(BLOB_NAMES) as FileKind[]) {
+  for (const kind of Object.keys(BLOB_NAMES) as PublicationFileKind[]) {
     const blob = BLOB_NAMES[kind](publication.artefactId);
     const data = await options.container.download(blob);
     if (!data) continue;
@@ -70,3 +70,6 @@ export interface CollectFilesOptions {
   out: string;
   waitSeconds?: number;
 }
+
+// The files an app keeps per publication in its publications container
+type PublicationFileKind = Extract<FileKind, "pdf" | "pdf-welsh" | "excel">;

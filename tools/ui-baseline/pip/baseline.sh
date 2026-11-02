@@ -79,6 +79,9 @@ npx tsx tools/ui-baseline/routes/build-page-targets.ts
 npx tsx "$TOOL" capture --targets tools/ui-baseline/output/targets/pip-pages.json --out "$OUT/pages" --concurrency 4 > "$OUT/pages.log" 2>&1 || true
 tail -1 "$OUT/pages.log"
 
+step "Recording downloads"
+npx tsx tools/ui-baseline/pip/record-downloads.ts "$OUT/downloads" | command grep -v "npm warn" || true
+
 step "Running journeys"
 npx tsx "$TOOL" journeys --module tools/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
 tail -1 "$OUT/journeys.log"
@@ -88,7 +91,7 @@ node -e '
 const fs = require("node:fs"), path = require("node:path");
 const out = process.argv[1];
 const lines = (file) => fs.existsSync(file) ? fs.readFileSync(file, "utf-8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line)) : [];
-const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.join(out, "pages/index.jsonl")), journeys = lines(path.join(out, "journeys/index.jsonl")), files = lines(path.join(out, "files/index.jsonl"));
+const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.join(out, "pages/index.jsonl")), journeys = lines(path.join(out, "journeys/index.jsonl")), files = lines(path.join(out, "files/index.jsonl")), downloads = lines(path.join(out, "downloads/index.jsonl"));
 const summary = {
   finishedAt: new Date().toISOString(),
   pip: process.argv[2],
@@ -97,7 +100,7 @@ const summary = {
     const match = fs.existsSync(path.join(out, log)) && fs.readFileSync(path.join(out, log), "utf-8").match(/(\d+) failed/g);
     return sum + (match ? Number(match.at(-1).split(" ")[0]) : 0);
   }, 0),
-  captures: { listPages: lists.length, otherPages: pages.length, journeyRuns: journeys.length, journeyCheckpoints: journeys.reduce((sum, j) => sum + j.steps, 0), generatedFiles: files.length },
+  captures: { listPages: lists.length, otherPages: pages.length, journeyRuns: journeys.length, journeyCheckpoints: journeys.reduce((sum, j) => sum + j.steps, 0), generatedFiles: files.length, downloads: downloads.length },
   failedJourneys: journeys.filter((j) => !j.ok).map((j) => `${j.journey} ${j.locale}: ${j.error?.split("\n")[0]}`)
 };
 fs.writeFileSync(path.join(out, "run.json"), JSON.stringify(summary, null, 2) + "\n");
