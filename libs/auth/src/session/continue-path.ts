@@ -1,7 +1,7 @@
 import { USER_ROLES } from "@hmcts/account";
 
 const MAX_PATH_LENGTH = 2048;
-const PLACEHOLDER_ORIGIN = "http://cath.invalid";
+const PLACEHOLDER_ORIGIN = "https://cath.invalid";
 const BLOCKED_PATH_PATTERN = /^\/(session-expir|logout(\/|$))/i;
 
 export function resolveContinuePath(raw: unknown, role: string | undefined): string {
