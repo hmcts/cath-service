@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import jwksClient from "jwks-rsa";
+import jwksClient, { type JwksClient } from "jwks-rsa";
 
 const REQUIRED_ROLE = "api.publisher.user";
 
@@ -9,6 +9,10 @@ const REQUIRED_ROLE = "api.publisher.user";
 // token problem reads the same whether it was caught at the gateway or here. Deliberately says
 // nothing about *which* check failed: that detail is logged, not returned.
 const OAUTH_FAILURE_MESSAGE = "Access denied due to invalid OAuth information";
+
+// The JWKS client caches signing keys and rate-limits key fetches internally, so it must
+// outlive a single request. Keyed by tenant because the tenant is read from env per request.
+const JWKS_CLIENTS = new Map<string, JwksClient>();
 
 /**
  * Middleware to authenticate API requests using OAuth 2.0
@@ -66,13 +70,7 @@ async function validateToken(token: string): Promise<any> {
     throw new Error("Azure AD configuration not found. Ensure AZURE_TENANT_ID and CATH_SERVICE_API_CLIENT_ID are set in Key Vault or environment variables.");
   }
 
-  // Create JWKS client to fetch Azure AD public keys
-  const client = jwksClient({
-    jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
-    cache: true,
-    cacheMaxAge: 86400000, // Cache keys for 24 hours
-    rateLimit: true
-  });
+  const client = getJwksClient(tenantId);
 
   return new Promise((resolve, reject) => {
     // Decode token to get kid (key ID) without verification
@@ -114,6 +112,22 @@ async function validateToken(token: string): Promise<any> {
       );
     });
   });
+}
+
+function getJwksClient(tenantId: string): JwksClient {
+  const existing = JWKS_CLIENTS.get(tenantId);
+  if (existing) {
+    return existing;
+  }
+
+  const client = jwksClient({
+    jwksUri: `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
+    cache: true,
+    cacheMaxAge: 86400000, // Cache keys for 24 hours
+    rateLimit: true
+  });
+  JWKS_CLIENTS.set(tenantId, client);
+  return client;
 }
 
 function hasRequiredRole(claims: any, requiredRole: string): boolean {

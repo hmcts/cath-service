@@ -11,16 +11,6 @@ export const GET = async (req: Request, res: Response) => {
   return handleCallback(req, res, req.query);
 };
 
-/**
- * Handles OAuth callback from Azure B2C (POST - response_mode=form_post)
- */
-export const POST = async (req: Request, res: Response) => {
-  return handleCallback(req, res, req.body);
-};
-
-/**
- * Common callback handler for both GET and POST
- */
 async function handleCallback(req: Request, res: Response, params: any) {
   // Check if B2C is configured
   if (!isB2cConfigured()) {
