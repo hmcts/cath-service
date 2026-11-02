@@ -61,7 +61,7 @@ async function runOne(browser: Browser, suite: JourneySuite, journey: Journey, l
   try {
     if (journey.viewAs) {
       if (!suite.signIn) throw new Error(`${journey.id} needs sign-in as ${journey.viewAs} but ${suite.app} has no signIn`);
-      await suite.signIn(page, journey.viewAs);
+      await suite.signIn(page, journey.viewAs, locale);
     }
     await journey.run({
       page,

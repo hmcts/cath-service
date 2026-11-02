@@ -101,11 +101,25 @@ yarn ui-baseline:check --all --serve
 ```
 
 That checks every list type in the fixtures and every page `routes/route-map.json` maps
-confidently, skipping the same pages a ticket check would (unreviewed suggestions, journey steps). It
-writes the full report, with journeys and the Comparison page, to `output/checks/all/`, and no PR
-evidence.
+confidently, skipping the same pages a ticket check would (unreviewed suggestions, journey steps),
+and runs every journey ported to CaTH. It writes the full report, with journeys and the Comparison
+page, to `output/checks/all/`, and no PR evidence.
 
-Other options: `--list-type NAME` and `--route /path` to check without a ticket, `--locale en|cy`,
+To check one of pip's journeys in CaTH:
+
+```bash
+yarn ui-baseline:check --journey subscription-basket
+```
+
+That runs CaTH's port of the journey (`cath/journeys/`) in English and Welsh, signed in as the
+same fixture user, and compares it with pip's step by step. Steps are paired by checkpoint name, so
+the check reports a step CaTH never reaches, one it reaches in a different order, or one only CaTH
+has. It also reports a step that lands on a page other than the one `routes/route-map.json` maps
+pip's page to (confident entries only), and how each step's page compares, as for a single page. A
+journey not ported to CaTH yet is listed as not compared. The PR comment gets a Journeys section,
+and the report shows CaTH's capture beneath each of pip's steps.
+
+Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
 `--env local|test`, `--no-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
 `claude -p` with no tools), `--serve` to browse the report on <http://localhost:9500>. It exits 1
 when there are defects.
@@ -203,6 +217,12 @@ subscription basket, configuring list types, manual upload and removal, media ap
 reference data, legacy third-party users, third-party subscribers, location metadata, list-type
 search config, bulk-creating media accounts, blob resubmission and deleting a user.
 
+CaTH's ports of them are in `cath/journeys/`, one per pip journey with the same id and checkpoint
+names, through CaTH's own pages. A port reaches the same goal by CaTH's controls. For example, CaTH
+removes a court with a button rather than a link. Only `subscription-basket` is ported so far.
+Choose things by identity, not position: CaTH orders some lists by their name in the page's
+language, so "the first list type" is a different one in Welsh.
+
 ### Limits
 
 Accepted for the prototype, to be resolved later. Until then, if a screen you are building
@@ -251,7 +271,8 @@ redirect elsewhere, is reported as not compared rather than as a difference: for
 
 Planned next, roughly in this order:
 
-- CaTH journeys are not compared yet; only single screens are.
+- Porting the other 12 of pip's journeys to CaTH (`cath/journeys/`). Only `subscription-basket` is
+  ported; the comparison runs any journey added there.
 - Recording only the pages a ticket needs, rather than the whole of pip, so a first run is quicker.
 - Once CaTH moves past being a copy of pip, the baseline will be updated per feature with CaTH's
   approved screens.
@@ -267,7 +288,7 @@ Planned next, roughly in this order:
 | `environments.json`, `environments.ts` | Where CaTH and pip run in each environment a check targets, and how to sign in |
 | `fixtures/` | The publications, users and records both apps are seeded with |
 | `pip/` | Setting up and running pip locally (`setup.sh`), recording the baseline (`baseline.sh`, `record-files.ts`); pip's journeys; known pip defects |
-| `cath/` | Seeding CaTH with the same fixtures, and signing in to it |
+| `cath/` | Seeding CaTH with the same fixtures, signing in to it, and CaTH's ports of pip's journeys (`cath/journeys/`) |
 | `routes/` | pip's route inventory, page targets, and the pip → CaTH route map |
 | `report/` | The HTML report |
 | `apps.json`, `list-type-map.json`, `build-targets.ts` | Where each app runs, list-type renames, capture targets |

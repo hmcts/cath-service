@@ -17,9 +17,17 @@ export function buildComment(input: CommentInput): string {
   const needsHuman = by("needs-human");
   const intended = by("intended");
 
+  const differ = [
+    ...(input.pagesChecked ? [`${input.pagesDiffer.length} of ${input.pagesChecked} page${input.pagesChecked === 1 ? "" : "s"}`] : []),
+    ...(input.journeys ? [`${input.journeys.differ.length} of ${input.journeys.compared} journey run${input.journeys.compared === 1 ? "" : "s"}`] : [])
+  ];
   const headline = reviewed
     ? `${defects.length ? `❌ ${defects.length} defect${defects.length === 1 ? "" : "s"}` : "✅ no defects"} · ⚠️ ${needsHuman.length} need${needsHuman.length === 1 ? "s" : ""} a human · ✅ ${intended.length} intended`
-    : `${input.pagesDiffer.length} of ${input.pagesChecked} page${input.pagesChecked === 1 ? "" : "s"} differ from pip · not reviewed against a ticket`;
+    : `${differ.join(" and ") || "0 pages"} differ from pip · not reviewed against a ticket`;
+  const checked = [
+    ...(input.pagesChecked ? [`${input.pagesChecked} page${input.pagesChecked === 1 ? "" : "s"}`] : []),
+    ...(input.journeys ? [`${input.journeys.compared} journey run${input.journeys.compared === 1 ? "" : "s"}`] : [])
+  ];
 
   const table = (rows: typeof items) =>
     [
@@ -40,7 +48,7 @@ export function buildComment(input: CommentInput): string {
     `## Parity with pip${input.ticket ? `: ticket #${input.ticket}` : ""}`,
     `**${headline}**`,
     "",
-    `Checked ${input.pagesChecked} page${input.pagesChecked === 1 ? "" : "s"} in English and Welsh against the pip baseline, with CaTH seeded from the same fixtures.`,
+    `Checked ${checked.join(" and ") || "0 pages"} in English and Welsh against the pip baseline, with CaTH seeded from the same fixtures.`,
     "",
     reviewed && defects.length ? `### Defects\n${table(defects)}\n` : "",
     reviewed && needsHuman.length ? `### Needs a human\n${table(needsHuman)}\n` : "",
@@ -53,7 +61,12 @@ export function buildComment(input: CommentInput): string {
         ? `### PDF and Excel files\n${input.files.differ.length} of ${input.files.compared} files differ from pip (PDFs by text only):\n${input.files.differ.map((file) => `- ${cell(file)}`).join("\n")}\n`
         : `### PDF and Excel files\nAll ${input.files.compared} files match pip (PDFs by text only).\n`
       : "",
-    `<details><summary>Pages checked</summary>\n\n| Page | English | Welsh |\n|---|---|---|\n${pages}\n\n</details>\n`,
+    input.journeys
+      ? input.journeys.differ.length
+        ? `### Journeys\n${input.journeys.differ.length} of ${input.journeys.compared} journey runs differ from pip:\n${input.journeys.differ.map((journey) => `- ${cell(journey)}`).join("\n")}\n`
+        : `### Journeys\nAll ${input.journeys.compared} journey runs match pip, step by step.\n`
+      : "",
+    input.pages.length ? `<details><summary>Pages checked</summary>\n\n| Page | English | Welsh |\n|---|---|---|\n${pages}\n\n</details>\n` : "",
     input.skipped.length
       ? `<details><summary>${input.skipped.length} not checked</summary>\n\n${input.skipped.map((s) => `- ${cell(s)}`).join("\n")}\n\n</details>\n`
       : "",
@@ -136,4 +149,6 @@ export interface CommentInput {
   reviews: ReviewResult[];
   // The PDF and Excel files compared, and a line for each that differs
   files?: { compared: number; differ: string[] };
+  // pip's journeys run in CaTH (one run per journey and language), and a line for each that differs
+  journeys?: { compared: number; differ: string[] };
 }

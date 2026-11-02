@@ -1,6 +1,6 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -9,12 +9,16 @@ import {
   captureBatch,
   collectFiles,
   compareFileRuns,
+  compareJourneys,
   compareRuns,
   type FileCompareSummary,
+  type JourneyCompareSummary,
+  type JourneySuite,
   launchChromium,
   openBlobContainer,
   type ReviewResult,
-  reviewFindings
+  reviewFindings,
+  runJourneys
 } from "@hmcts/ui-baseline";
 import type { SignInResult } from "./cath/sign-in.js";
 import { captureDownloads, loadDownloads, seedResolver } from "./downloads.js";
@@ -44,6 +48,8 @@ const { values: args } = parseArgs({
     all: { type: "boolean", default: false },
     "list-type": { type: "string", multiple: true },
     route: { type: "string", multiple: true },
+    // pip journeys to run in CaTH and compare step by step (cath/journeys/ has the ported ones)
+    journey: { type: "string", multiple: true },
     // The environment CaTH runs in (environments.json): local, or test (CaTH perftest)
     env: { type: "string" },
     target: { type: "string" },
@@ -79,11 +85,18 @@ if (!existsSync(path.join(baseline, "lists/index.jsonl")))
 // ---------- 1. What to check ----------
 const requirements = args.ticket ? await ticketText(args.ticket) : null;
 const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? [], args.all);
+// pip's journeys to run in CaTH and compare: all of them for --all, otherwise those named
+const baselineJourneys = new Set(
+  (await readdir(path.join(baseline, "journeys"), { withFileTypes: true }).catch(() => [])).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+);
+const journeyIds = args.all ? [...baselineJourneys].sort() : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
+for (const id of (args.journey ?? []).filter((id) => !baselineJourneys.has(id))) scope.skipped.push(`journey ${id}: not in the pip baseline`);
 const name = args.ticket
   ? `ticket-${args.ticket}`
   : args.all
     ? "all"
-    : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-"))].slice(0, 3).join("+") || "check";
+    : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-")), ...journeyIds].slice(0, 3).join("+") ||
+      "check";
 const out = path.resolve(args.out ?? path.join(PARITY_DIR, "output/checks", name));
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
@@ -92,11 +105,12 @@ if (requirements) await writeFile(path.join(out, "requirements.md"), requirement
 step(`Checking ${targetBase} (${environment.name}) against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
 console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
+console.log(`  journeys:   ${journeyIds.join(", ") || "none"}`);
 // --all skips most of the route map (journey steps, sign-in pages), so count those by reason instead
 const skippedReasons = Object.entries(Object.groupBy(scope.skipped, (s) => s.slice(s.indexOf(": ") + 2).replace(/ \(.*\)/, "")));
 for (const line of args.all ? skippedReasons.map(([reason, items]) => `${items?.length} ${reason}`) : scope.skipped) console.log(`  skipped:    ${line}`);
-if (!scope.publications.length && !scope.routes.length) {
-  console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --all.");
+if (!scope.publications.length && !scope.routes.length && !journeyIds.length) {
+  console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --journey / --all.");
   process.exit(2);
 }
 
@@ -158,6 +172,7 @@ const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineI
 const includeNotFound =
   baselineIds.pages.has(NOT_FOUND_ID) && (args.all || (args.route ?? []).some((route) => route === "/not-found" || route === NOT_FOUND_PATH));
 const needsSignIn =
+  journeyIds.length > 0 ||
   downloadSpecs.some((spec) => spec.cath.as) ||
   scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
   scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
@@ -262,6 +277,11 @@ for (const [area, targets] of [
   for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
 }
 
+// ---------- 3b. Run pip's journeys in CaTH and compare them ----------
+// Only journeys ported to CaTH (cath/journeys/) can run; the rest are reported as not compared.
+// CaTH's journey data is shared, so they run one after another, as pip's were recorded.
+const journeysCompared = journeyIds.length ? await runAndCompareJourneys() : null;
+
 // ---------- 4. Compare with the baseline ----------
 step("Comparing with pip");
 const comparisons: Record<string, CompareSummary> = {};
@@ -324,7 +344,14 @@ const reportArgs = [
   path.join(REPO_DIR, "node_modules/govuk-frontend/dist/govuk"),
   ...(args.all
     ? ["--journeys", path.join(baseline, "journeys"), "--run", path.join(baseline, "run.json")]
-    : ["--only", [...capturedTargetIds.lists, ...capturedTargetIds.pages].join(",")]),
+    : [
+        ...(journeyIds.length ? ["--journeys", path.join(baseline, "journeys")] : []),
+        "--only",
+        [...capturedTargetIds.lists, ...capturedTargetIds.pages, ...journeyIds].join(",")
+      ]),
+  ...(journeysCompared
+    ? ["--cath-journeys", path.join(out, "cath/journeys"), "--journeys-compare", path.join(out, "compare/journeys/journeys-compare.json")]
+    : []),
   "--title",
   args.ticket ? `Parity check: ticket ${args.ticket}` : args.all ? "pip baseline against CaTH" : "Parity check",
   "--out",
@@ -353,17 +380,29 @@ const differing = [...pageVerdicts.entries()].map(([id, where]) => `${id} (${whe
 const checkedCount = capturedTargetIds.lists.size + capturedTargetIds.pages.size;
 const pagesDiffer = `${differing.length} of ${checkedCount} page${checkedCount === 1 ? "" : "s"} ${differing.length === 1 ? "differs" : "differ"} from pip`;
 step("Result");
-console.log(
-  Object.keys(reviews).length
-    ? `  ${defects} defect${defects === 1 ? "" : "s"}, ${needsHuman} need a human · ${pagesDiffer}`
-    : `  ${pagesDiffer} (not reviewed against a ticket)`
-);
+// A check of journeys alone has no pages of its own to report
+if (checkedCount || !journeyIds.length)
+  console.log(
+    Object.keys(reviews).length
+      ? `  ${defects} defect${defects === 1 ? "" : "s"}, ${needsHuman} need a human · ${pagesDiffer}`
+      : `  ${pagesDiffer} (not reviewed against a ticket)`
+  );
 for (const line of differing) console.log(`    ${line}`);
 const filesDiffer = (filesCompared?.results ?? [])
   .filter((r) => r.verdict !== "match")
   .map((r) => `${r.id} ${FILE_LABEL[r.kind]} (${FILE_VERDICT[r.verdict]})`);
 if (filesCompared) console.log(`  ${filesDiffer.length} of ${filesCompared.totals.files} PDF and Excel files differ from pip`);
 for (const line of filesDiffer) console.log(`    ${line}`);
+// A journey differs where CaTH's steps, the pages they reach, or a step's page differ from pip's
+const journeysDiffer = (journeysCompared?.results ?? [])
+  .filter((r) => r.verdict !== "match")
+  .map((r) => {
+    const differing = r.steps.filter((s) => s.source && s.target && s.verdict === "differs").length;
+    const what = [...r.findings.map((f) => f.detail), ...(differing ? [`${differing} step page${differing === 1 ? "" : "s"} differ`] : [])];
+    return `${r.journey} (${r.locale === "cy" ? "Welsh" : "English"}): ${what.join("; ") || r.verdict}`;
+  });
+if (journeysCompared) console.log(`  ${journeysDiffer.length} of ${journeysCompared.totals.runs} journey runs differ from pip`);
+for (const line of journeysDiffer) console.log(`    ${line}`);
 
 if (args.all) await finish();
 
@@ -401,7 +440,8 @@ const body = buildComment({
   evidence: ["report.zip", ...screenshots],
   comparisons: Object.values(comparisons),
   reviews: Object.values(reviews),
-  files: filesCompared ? { compared: filesCompared.totals.files, differ: filesDiffer } : undefined
+  files: filesCompared ? { compared: filesCompared.totals.files, differ: filesDiffer } : undefined,
+  journeys: journeysCompared ? { compared: journeysCompared.totals.runs, differ: journeysDiffer } : undefined
 });
 await writeFile(path.join(evidence, "pr-comment.md"), body);
 if (args["post-pr"]) console.log(`  PR comment: ${postComment(args.repo, Number(args["post-pr"]), body)}`);
@@ -412,6 +452,40 @@ console.log(
 await finish();
 
 // ---------- helpers ----------
+async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
+  step("Running pip's journeys in CaTH");
+  const moduleFile = path.join(PARITY_DIR, "cath/journeys/index.ts");
+  // Read by the journeys module when it loads: which CaTH, and the sessions signed in above
+  Object.assign(process.env, { UI_BASELINE_ENV: environment.name, PARITY_TARGET: targetBase, PARITY_SIGN_IN_OUTPUT: signInFile });
+  const suite = (await import(pathToFileURL(moduleFile).href)).default as JourneySuite;
+  const ported = journeyIds.filter((id) => suite.journeys.some((journey) => journey.id === id));
+  for (const id of journeyIds.filter((id) => !ported.includes(id))) scope.skipped.push(`journey ${id}: not ported to CaTH yet (cath/journeys/)`);
+  console.log(`  ${ported.length} of ${journeyIds.length} journeys ported to CaTH${ported.length < journeyIds.length ? "; the rest are not compared" : ""}`);
+  if (!ported.length) return null;
+
+  const results = await runJourneys(moduleFile, { outDir: path.join(out, "cath/journeys"), locales, only: ported });
+  for (const result of results.filter((r) => !r.ok)) console.log(`    stopped: ${result.journey} (${result.locale}): ${result.error?.split("\n")[0]}`);
+  const summary = await compareJourneys({
+    source: path.join(baseline, "journeys"),
+    target: path.join(out, "cath/journeys"),
+    out: path.join(out, "compare/journeys"),
+    only: ported,
+    expectedPath: (pipPath) => {
+      const entry = routeMap.find((route) => route.pip === pipPath);
+      // A dynamic CaTH route ([id]) cannot be checked against the path a step reached
+      return entry?.cath && isConfident(entry) && !entry.cath.includes("[") ? entry.cath : undefined;
+    }
+  });
+  const t = summary.totals;
+  console.log(`  journeys: ${t.runs} journey-language runs compared, ${t.match} match, ${t.differs} differ`);
+  return summary;
+}
+
+// A route-map entry the check relies on: same path, a close match, or checked by someone
+function isConfident(entry: RouteEntry): boolean {
+  return entry.reviewed || entry.match === "same-path" || entry.confidence === "high";
+}
+
 // The files each list generated, and the files fetched rather than shown, against pip's
 async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
   const listFiles = await compareListFiles();
@@ -696,7 +770,7 @@ function selectScope(text: string | null, listTypes: string[], routes: string[],
   for (const entry of routeMap) {
     if (!everything && !mentioned.has(entry.pip) && !(entry.cath && mentioned.has(entry.cath))) continue;
     const id = `page${entry.pip.replace(/\//g, "--")}`;
-    const confident = entry.reviewed || entry.match === "same-path" || entry.confidence === "high";
+    const confident = isConfident(entry);
     if (!entry.cath) skipped.push(`${entry.pip}: no CaTH page mapped`);
     else if (!confident) skipped.push(`${entry.pip}: route-map suggestion (${entry.cath}) not reviewed yet`);
     else if (!existsSync(path.join(baseline, "pages", id, "en/default/provenance.json"))) skipped.push(`${entry.pip}: not in the pip baseline`);

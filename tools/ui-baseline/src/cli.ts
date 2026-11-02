@@ -4,6 +4,7 @@ import { captureBatch } from "./capture/capture-batch.js";
 import { startCaptureServer } from "./capture/capture-server.js";
 import { compareRuns } from "./compare/compare.js";
 import { compareFileRuns } from "./compare/file-compare.js";
+import { compareJourneys } from "./journey/compare-journeys.js";
 import { runJourneys } from "./journey/run-journeys.js";
 import { reviewFindings } from "./review/review.js";
 
@@ -14,6 +15,8 @@ const USAGE = `Usage:
       Run a project's journeys, capturing every checkpoint with a video per journey (replaces <dir>)
   parity compare --source <dir> --target <dir> --out <dir> [--only id,id] [--unordered id,id]
       Compare each capture in a source run with the same capture in a target run
+  parity compare-journeys --source <dir> --target <dir> --out <dir> [--only id,id]
+      Compare each journey in a source run with the same journey in a target run: its steps, and each step's page
   parity compare-files --source <dir> --target <dir> --out <dir> [--only id,id]
       Compare the PDF and Excel files collected for each publication in two runs (PDFs by text only)
   parity review --compare <compare.json> --out <dir> [--requirements <file|gh:owner/repo#N>] [--known-defects <md>]
@@ -33,6 +36,9 @@ switch (command) {
     break;
   case "compare":
     await compare(rest);
+    break;
+  case "compare-journeys":
+    await compareJourneysCommand(rest);
     break;
   case "compare-files":
     await compareFiles(rest);
@@ -98,6 +104,17 @@ async function compare(args: string[]): Promise<void> {
   });
   const { totals } = summary;
   console.log(`${totals.pairs} pairs: ${totals.match} match, ${totals.differs} differ, ${totals.notCaptured} not captured → ${values.out}/compare.json`);
+}
+
+async function compareJourneysCommand(args: string[]): Promise<void> {
+  const { values } = parseArgs({
+    args,
+    options: { source: { type: "string" }, target: { type: "string" }, out: { type: "string" }, only: { type: "string" } }
+  });
+  if (!values.source || !values.target || !values.out) throw new Error("--source, --target and --out are required");
+
+  const { totals } = await compareJourneys({ source: values.source, target: values.target, out: values.out, only: values.only?.split(",") });
+  console.log(`${totals.runs} journey runs: ${totals.match} match, ${totals.differs} differ, ${totals.notRun} not run → ${values.out}/journeys-compare.json`);
 }
 
 async function compareFiles(args: string[]): Promise<void> {
