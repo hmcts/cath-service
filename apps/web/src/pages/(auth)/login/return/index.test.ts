@@ -115,71 +115,22 @@ describe("B2C Callback Handler", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
 
-    it("should redirect with Welsh locale when b2cLocale is cy", async () => {
-      mockSession.b2cLocale = "cy";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?lng=cy");
-    });
-
-    it("should merge the Welsh locale into a returnTo that already has a query string", async () => {
+    it("should redirect to returnTo unchanged and clear b2cLocale when b2cLocale is cy", async () => {
       mockSession.b2cLocale = "cy";
       mockSession.returnTo = "/sjp-press-list?artefactId=abc-123";
 
       await GET(mockReq as Request, mockRes as Response);
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=abc-123&lng=cy");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=abc-123");
+      expect(mockSession.b2cLocale).toBeUndefined();
     });
 
-    it("should replace an existing lng parameter in returnTo with the Welsh locale", async () => {
-      mockSession.b2cLocale = "cy";
-      mockSession.returnTo = "/summary-of-publications?locationId=1&lng=en";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1&lng=cy");
-    });
-
-    it("should preserve the encoding of existing query parameters when adding the Welsh locale", async () => {
-      mockSession.b2cLocale = "cy";
-      mockSession.returnTo = "/a?x=a+b%20c&sig=ab%2Fc%3D#results";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/a?x=a+b%20c&sig=ab%2Fc%3D&lng=cy#results");
-    });
-
-    it("should remove a Welsh lng parameter from returnTo when signing in in English", async () => {
-      mockSession.b2cLocale = "en";
-      mockSession.returnTo = "/summary-of-publications?locationId=1&lng=cy";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1");
-    });
-
-    it("should replace a percent-encoded lng key rather than adding a second locale", async () => {
-      mockSession.b2cLocale = "cy";
-      mockSession.returnTo = "/summary-of-publications?l%6Eg=en&locationId=1";
-
-      await GET(mockReq as Request, mockRes as Response);
-
-      expect(mockRes.redirect).toHaveBeenCalledWith("/summary-of-publications?locationId=1&lng=cy");
-    });
-
-    it.each([
-      ["en", "//evil.com/x", "/account-home"],
-      ["cy", "//evil.com/x", "/account-home?lng=cy"],
-      ["en", "/.//evil.com", "/account-home"],
-      ["cy", "/%2e//evil.com", "/account-home?lng=cy"]
-    ])("should ignore an unsafe returnTo and use the default for the %s locale (%s)", async (locale, returnTo, expected) => {
-      mockSession.b2cLocale = locale;
+    it.each(["//evil.com/x", "/\\evil.com", "/.//evil.com", "/%2e//evil.com"])("should ignore the unsafe returnTo %s and use the default", async (returnTo) => {
       mockSession.returnTo = returnTo;
 
       await GET(mockReq as Request, mockRes as Response);
 
-      expect(mockRes.redirect).toHaveBeenCalledWith(expected);
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
 
     it("should use custom returnTo from session", async () => {

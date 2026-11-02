@@ -1,7 +1,6 @@
 import { createOrUpdateUser } from "@hmcts/account/repository/query";
 import type { UserProfile } from "@hmcts/auth";
 import { consumeReturnTo, getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
-import { withLocaleParam } from "@hmcts/web-core";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
 
@@ -103,7 +102,7 @@ async function handleCallback(req: Request, res: Response, params: any) {
     // Use database userId for session (required for foreign key relationships)
     userProfile.id = dbUser.userId;
 
-    const redirectUrl = withLocaleParam(consumeReturnTo(req, DEFAULT_RETURN_TO), req.session.b2cLocale || "en");
+    const redirectUrl = consumeReturnTo(req, DEFAULT_RETURN_TO);
 
     // Clear B2C session data
     delete req.session.b2cProvider;

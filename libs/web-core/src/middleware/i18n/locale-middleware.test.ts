@@ -24,6 +24,23 @@ describe("localeMiddleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
+  it("should set a lax locale cookie so the locale survives cross-site login returns", () => {
+    const middleware = localeMiddleware();
+    const req = {
+      query: { lng: "cy" },
+      session: {},
+      cookies: {}
+    } as unknown as Request;
+    const res = {
+      locals: {},
+      cookie: vi.fn()
+    } as unknown as Response;
+
+    middleware(req, res, vi.fn());
+
+    expect(res.cookie).toHaveBeenCalledWith("locale", "cy", expect.objectContaining({ sameSite: "lax", httpOnly: true }));
+  });
+
   it("should use session locale when no query param", () => {
     const middleware = localeMiddleware();
     const req = {
