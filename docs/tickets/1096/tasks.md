@@ -71,6 +71,7 @@ Legend: **[IN-REPO]**, **[OUT-OF-BAND: PlatOps]**, **[OUT-OF-BAND: Dev]** (az ru
   - `redis.tf`: `local.sizing.*`. `postgres.tf`: no sizing inputs (module defaults)
   - `tf-crime-connection-mi.tf`: gated data source and `crime_oidc_connections` local
   - `apim.tf`: `service_url` via `platform_domain`
+  - `storage.tf`: prod-only `pim_roles` (Storage Blob Data Reader and Storage Blob Delegator, eligible for `DTS CaTH Prod`); `state.tf`: declare `azuread`. Record a reminder to renew the PIM eligibility before 365 days after the first PROD apply
 - [x] 11. (PR A) **[IN-REPO]** `.github/workflows/stage.infrastructure.yml` (plan 2.7):
   - add `prod` to the five `fromJson` lookups
   - per-leg `matrix.environment == 'prod' && secrets.AZURE_CREDENTIALS_CFT_PROD || secrets.AZURE_CREDENTIALS_CFT_PREVIEW` in `state-store-init` `creds` and in the `terraform` job's `secrets`
