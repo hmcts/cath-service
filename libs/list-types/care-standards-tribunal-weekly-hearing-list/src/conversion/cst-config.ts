@@ -50,4 +50,4 @@ export const CST_EXCEL_CONFIG: ExcelConverterConfig = {
 };
 
 const cstConverter = createConverter(CST_EXCEL_CONFIG);
-registerConverterByName("CARE_STANDARDS_TRIBUNAL_WEEKLY_HEARING_LIST", cstConverter);
+registerConverterByName("CST_WEEKLY_HEARING_LIST", cstConverter);

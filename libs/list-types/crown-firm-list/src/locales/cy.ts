@@ -12,13 +12,13 @@ export const cy = {
   court: "LLYS",
   courtroom: "Ystafell Llys",
   beforeJudge: "Gerbron",
-  sittingAt: "Yn eistedd am",
-  hearingTime: "Amser Gwrandawiad",
-  caseNumber: "Rhif yr Achos",
-  defendant: "Enw'r Diffynnydd/Diffynyddion",
+  sittingAt: "Yn eistedd yn",
+  hearingTime: "Amser y Gwrandawiad",
+  caseNumber: "Cyfeirnod yr Achos",
+  defendant: "Enw'r Diffynnydd(Diffynyddion)",
   hearingType: "Math o Wrandawiad",
-  representative: "Cynrychiolydd",
-  prosecutingAuthority: "Awdurdod Erlyn",
+  representative: "Cynrychiolir gan",
+  prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
   listingNotes: "Nodiadau Rhestru",
   reportingRestrictions: "Cyfyngiad Adrodd",
   reportingRestrictionsTitle: "Cyfyngiadau ar gyhoeddi neu ysgrifennu am yr achosion hyn",
@@ -40,5 +40,20 @@ export const cy = {
   errorMessage:
     "Ni ellir gweld y cyhoeddiad hwn ar hyn o bryd. Gwiriwch eto yn nes ymlaen. Os yw'r broblem yn parhau, cysylltwch â'r llys yn uniongyrchol am gymorth.",
   error403Title: "Mynediad wedi'i Wrthod",
-  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn."
+  error403Message: "Nid oes gennych ganiatâd i weld y cyhoeddiad hwn.",
+  excelColumns: {
+    date: "Dyddiad yr Eisteddiad",
+    courtHouse: "Llys",
+    courtAddress: "Cyfeiriad y Llys",
+    courtPhone: "Rhif ffôn y Llys",
+    courtRoom: "Ystafell Llys",
+    sittingAt: "Yn eistedd yn",
+    hearingTime: "Amser y Gwrandawiad",
+    caseNumber: "Cyfeirnod yr Achos",
+    defendant: "Enw'r Diffynnydd(Diffynyddion)",
+    hearingType: "Math o Wrandawiad",
+    representative: "Cynrychiolir gan",
+    prosecutingAuthority: "Yr Awdurdod sy'n Erlyn",
+    listingNotes: "Nodiadau Rhestru"
+  }
 };

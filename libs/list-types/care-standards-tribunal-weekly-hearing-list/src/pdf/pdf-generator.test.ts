@@ -17,6 +17,8 @@ vi.mock("../rendering/renderer.js", () => ({
 }));
 
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import { renderCareStandardsTribunalData } from "../rendering/renderer.js";
 import { generateCareStandardsTribunalWeeklyHearingListPdf } from "./pdf-generator.js";
 
@@ -131,7 +133,46 @@ describe("generateCareStandardsTribunalWeeklyHearingListPdf", () => {
       courtName: "Care Standards Tribunal",
       contentDate,
       lastReceivedDate: expect.any(String),
-      listTitle: "Care Standards Tribunal Weekly Hearing List"
+      listTitle: cy.pageTitle
     });
+  });
+
+  it("should pass the en locale list title to the renderer", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    // Act
+    await generateCareStandardsTribunalWeeklyHearingListPdf({
+      artefactId: "en-title",
+      contentDate: new Date("2025-01-01"),
+      locale: "en",
+      locationId: "999",
+      jsonData: mockHearingList
+    });
+
+    // Assert
+    expect(renderCareStandardsTribunalData).toHaveBeenCalledWith(mockHearingList, expect.objectContaining({ listTitle: en.pageTitle }));
+  });
+
+  it.each([
+    ["en", "MANUAL_UPLOAD", "Manual Upload"],
+    ["cy", "MANUAL_UPLOAD", "Lanlwytho â Llaw"],
+    ["cy", "SNL", "ListAssist"]
+  ])("should show the %s locale data source label for %s, as legacy does", async (locale, provenance, expectedLabel) => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
+
+    // Act
+    await generateCareStandardsTribunalWeeklyHearingListPdf({
+      artefactId: "provenance-label",
+      contentDate: new Date("2025-01-01"),
+      locale,
+      locationId: "999",
+      jsonData: mockHearingList,
+      provenance
+    });
+
+    // Assert
+    expect(vi.mocked(generatePdfFromHtml).mock.calls[0][0]).toContain(expectedLabel);
   });
 });

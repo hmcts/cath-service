@@ -23,6 +23,26 @@ sudo chmod +x /usr/local/bin/kubelogin
 rm -rf /tmp/kubelogin.zip /tmp/bin
 echo "✅ kubelogin ${KUBELOGIN_VERSION} installed"
 
+# Install hai (HMCTS AI CLI) and Claude Code
+# hai runs Claude Code with the HMCTS model route and credentials, and execs `claude` from
+# PATH, so claude-code goes in alongside it. Both go under the default Node version, in a
+# subshell: an interactive shell gets the default, not the .nvmrc version selected above,
+# so globals installed under that one would be off PATH. Unpinned because hai updates
+# itself when it runs. The hmcts-lib feed allows anonymous reads so no npm auth is needed,
+# and the registry is scoped to @hmcts-cft so claude-code still comes from npmjs.
+# Not fatal under `set -e` — the dev container is usable without it.
+echo "Installing hai and Claude Code..."
+if (
+  nvm use default
+  npm install -g \
+    --@hmcts-cft:registry=https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/npm/registry/ \
+    @anthropic-ai/claude-code @hmcts-cft/hai-cli
+); then
+  echo "✅ hai and Claude Code installed — start a session with 'hai'"
+else
+  echo "⚠️  Could not install hai; re-run the npm install from .devcontainer/setup.sh by hand"
+fi
+
 # Configure bash history for unlimited size
 echo "Configuring bash history..."
 cat >> /home/vscode/.bashrc << 'EOF'

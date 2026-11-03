@@ -11,7 +11,7 @@ export async function findSystemAdminEmails(): Promise<string[]> {
   return admins.map((admin) => admin.email);
 }
 
-export async function createUser(input: User) {
+export async function createUser(input: User, signedInAt?: Date) {
   return await prisma.user.create({
     data: {
       email: input.email,
@@ -19,7 +19,8 @@ export async function createUser(input: User) {
       surname: input.surname,
       userProvenance: input.userProvenance,
       userProvenanceId: input.userProvenanceId,
-      role: input.role
+      role: input.role,
+      ...(signedInAt && { createdDate: signedInAt, lastSignedInDate: signedInAt })
     }
   });
 }
@@ -55,16 +56,15 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
 }
 
 export async function createOrUpdateUser(input: User) {
+  const now = new Date();
   const existingUser = await findUserByProvenanceId(input.userProvenanceId);
 
   if (existingUser) {
-    // Update existing user
     return await updateUser(input.userProvenanceId, {
       role: input.role,
-      lastSignedInDate: new Date()
+      lastSignedInDate: now
     });
   }
 
-  // Create new user
-  return await createUser(input);
+  return await createUser(input, now);
 }

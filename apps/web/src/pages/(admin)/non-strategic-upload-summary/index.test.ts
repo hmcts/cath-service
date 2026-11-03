@@ -622,7 +622,66 @@ describe("non-strategic-upload-summary page", () => {
       expect(saveUploadedFile).not.toHaveBeenCalledWith("artefact-id-123", "test.xlsx", expect.anything());
       // source_artefact_id stores the original Excel file name, not the synthetic JSON blob name
       expect(updateSourceArtefactId).toHaveBeenCalledWith("artefact-id-123", "test.xlsx");
+      expect(processPublication).toHaveBeenCalledWith(expect.objectContaining({ jsonData: { cases: [] }, uploadedExcel: mockUploadData.file }));
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-success");
+    });
+
+    it("should not pass an uploaded Excel to processPublication for a JSON upload", async () => {
+      // Arrange
+      const mockUploadData = {
+        file: Buffer.from(JSON.stringify({ cases: [] })),
+        fileName: "test.json",
+        fileType: "application/json",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(processPublication).toHaveBeenCalledWith(expect.objectContaining({ jsonData: { cases: [] } }));
+      expect(vi.mocked(processPublication).mock.calls[0][0].uploadedExcel).toBeUndefined();
+    });
+
+    it("should not pass an uploaded Excel to processPublication when no converter is registered", async () => {
+      // Arrange
+      const { hasConverterForListTypeName } = await import("@hmcts/list-types-common");
+      const mockUploadData = {
+        file: Buffer.from("excel content"),
+        fileName: "test.xlsx",
+        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        locationId: "123",
+        listType: "7",
+        hearingStartDate: { day: "23", month: "10", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "20", month: "10", year: "2025" },
+        displayTo: { day: "30", month: "10", year: "2025" }
+      };
+      vi.mocked(getNonStrategicUpload).mockResolvedValue(mockUploadData);
+      vi.mocked(createArtefact).mockResolvedValue({ artefactId: "artefact-id-123", isUpdate: false });
+      vi.mocked(hasConverterForListTypeName).mockReturnValueOnce(false);
+      const session = { save: (callback: (err?: any) => void) => callback() };
+      const req = { query: { uploadId: "test-upload-id" }, session } as unknown as Request;
+      const res = { redirect: vi.fn(), render: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(processPublication).toHaveBeenCalled();
+      expect(vi.mocked(processPublication).mock.calls[0][0].uploadedExcel).toBeUndefined();
     });
 
     it("should continue upload when extractAndStoreArtefactSearch throws after Excel conversion", async () => {

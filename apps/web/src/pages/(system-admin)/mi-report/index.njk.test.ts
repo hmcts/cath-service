@@ -36,6 +36,26 @@ describe("mi-report template", () => {
     expect($('select[name="reportType"] option[value="all-data"]')).toHaveLength(1);
   });
 
+  it("should render the deleted-accounts option with its English label", () => {
+    const { $ } = render(env, TEMPLATE, baseData(en));
+
+    const option = $('select[name="reportType"] option[value="deleted-accounts"]');
+    expect(option).toHaveLength(1);
+    expect(option.text()).toContain("Deleted accounts");
+  });
+
+  it("should render the deleted-accounts option when the cy locale is used", () => {
+    const { $ } = render(env, TEMPLATE, baseData(cy));
+
+    const option = $('select[name="reportType"] option[value="deleted-accounts"]');
+    expect(option).toHaveLength(1);
+    expect(option.text()).toContain(cy.reportTypeOptions.find((o) => o.value === "deleted-accounts")?.text);
+  });
+
+  it("should have identical reportTypeOptions keys in English and Welsh", () => {
+    expect(en.reportTypeOptions.map((o) => o.value).sort()).toEqual(cy.reportTypeOptions.map((o) => o.value).sort());
+  });
+
   it("should not render an error summary in the default state", () => {
     const { $ } = render(env, TEMPLATE, baseData(en));
 

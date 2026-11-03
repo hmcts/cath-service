@@ -1,7 +1,7 @@
 export const en = {
   titlePrefix: "What do you want to view from",
   titleSuffix: "?",
-  noPublicationsMessage: "Sorry, no lists found for this court",
+  noPublicationsMessage: "There are no lists available for this court or tribunal today.",
   selectListMessage: "Select the list you want to view from the link(s) below:",
   forWeekCommencing: "for week commencing",
   languageEnglish: "English (Saesneg)",

@@ -1,7 +1,7 @@
 import { provenanceLabelsCy as provenanceLabels } from "@hmcts/list-types-common";
 
 export const cy = {
-  pageTitle: "[WELSH TRANSLATION REQUIRED: 'General Regulatory Chamber Weekly Hearing List']",
+  pageTitle: "Rhestr o Wrandawiadau Wythnosol y Siambr Rheoleiddio Cyffredinol",
   listForWeekCommencing: "Rhestr ar gyfer yr wythnos yn dechrau ar",
   lastUpdated: "Diweddarwyd ddiwethaf",
   at: "am",
@@ -10,24 +10,24 @@ export const cy = {
   factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
   importantInformationTitle: "Gwybodaeth bwysig",
   importantInformationText:
-    "[WELSH TRANSLATION REQUIRED: 'Parties and representatives will be informed about arrangements for hearing cases remotely. Any other person interested in joining the hearing remotely should email GRC@justice.gov.uk so that arrangements can be made. If the case is to be heard in private or is subject to a reporting restriction, this will be notified.']",
+    "Bydd partïon a chynrychiolwyr yn cael gwybod ynghylch y trefniadau ar gyfer gwrando achosion o bell. Dylai unrhyw berson arall sydd â diddordeb mewn ymuno â'r gwrandawiad o bell anfon e-bost at GRC@justice.gov.uk fel y gellir gwneud trefniadau. Os yw'r achos yn cael ei wrando yn breifat neu os yw'n destun cyfyngiad adrodd, bydd hyn yn cael ei hysbysu.",
   importantInformationRecordingText:
-    "[WELSH TRANSLATION REQUIRED: 'If you join a hearing you must not make any personal or private recording or publish any part of this hearing, including court communications. It is a criminal offence to do so.']",
+    "Os byddwch yn ymuno â gwrandawiad ni chewch wneud unrhyw recordiad personol neu breifat na chyhoeddi unrhyw ran o'r gwrandawiad hwn, gan gynnwys cyfathrebiadau'r llys. Mae gwneud hynny yn drosedd.",
   importantInformationLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys fel newyddiadurwr, ymchwilydd neu aelod o'r cyhoedd",
   importantInformationLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing",
-  importantInformationLink2Text: "[WELSH TRANSLATION REQUIRED: 'What to expect when joining a telephone or video hearing']",
+  importantInformationLink2Text: "Beth i'w ddisgwyl pan fyddwch yn ymuno â gwrandawiad dros y ffôn neu drwy fideo",
   importantInformationLink2Url: "https://www.gov.uk/guidance/what-to-expect-when-joining-a-telephone-or-video-hearing",
   searchCasesTitle: "Chwilio Achosion",
   searchCasesLabel: "[WELSH TRANSLATION REQUIRED: 'Search by case reference number, case name, date, venue, or other details']",
   tableHeaders: {
-    date: "[WELSH TRANSLATION REQUIRED: 'Date']",
-    hearingTime: "[WELSH TRANSLATION REQUIRED: 'Hearing time']",
-    caseReferenceNumber: "[WELSH TRANSLATION REQUIRED: 'Case reference number']",
-    caseName: "[WELSH TRANSLATION REQUIRED: 'Case name']",
-    judges: "[WELSH TRANSLATION REQUIRED: 'Judge(s)']",
-    members: "[WELSH TRANSLATION REQUIRED: 'Member(s)']",
-    modeOfHearing: "[WELSH TRANSLATION REQUIRED: 'Mode of hearing']",
-    venue: "[WELSH TRANSLATION REQUIRED: 'Venue']",
+    date: "Dyddiad",
+    hearingTime: "Amser y gwrandawiad",
+    caseReferenceNumber: "Cyfeirnod yr achos",
+    caseName: "Enw'r achos",
+    judges: "Barnwr/Barnwyr",
+    members: "Aelod(au)",
+    modeOfHearing: "Math o wrandawiad",
+    venue: "Lleoliad",
     additionalInformation: "Gwybodaeth ychwanegol"
   },
   dataSource: "Ffynhonnell data",

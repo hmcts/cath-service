@@ -8,6 +8,8 @@ vi.mock("@hmcts/auth", () => ({
   getCftIdamConfig: vi.fn()
 }));
 
+vi.mock("node:crypto", () => ({ randomUUID: vi.fn(() => "test-state-uuid") }));
+
 describe("CFT Login Handler", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
@@ -32,11 +34,11 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
@@ -45,7 +47,7 @@ describe("CFT Login Handler", () => {
     GET(mockReq as Request, mockRes as Response);
 
     expect(mockRes.redirect).toHaveBeenCalledWith(
-      "https://idam.example.com?client_id=app-pip-frontend&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fcft-login%2Freturn&scope=openid+profile+roles&ui_locales=en"
+      "https://idam.example.com/o/authorize?client_id=app-cath-frontend&response_type=code&redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fcft-login%2Freturn&scope=openid+profile+roles&state=test-state-uuid&ui_locales=en"
     );
   });
 
@@ -53,11 +55,11 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
@@ -72,11 +74,11 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
@@ -89,11 +91,11 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
@@ -118,11 +120,11 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
@@ -137,16 +139,34 @@ describe("CFT Login Handler", () => {
     vi.mocked(isCftIdamConfigured).mockReturnValue(true);
     vi.mocked(getCftIdamConfig).mockReturnValue({
       cftIdamUrl: "https://idam.example.com",
-      clientId: "app-pip-frontend",
+      clientId: "app-cath-frontend",
       clientSecret: "secret",
       redirectUri: "https://localhost:8080/cft-login/return",
       scope: "openid profile roles",
-      authorizationEndpoint: "https://idam.example.com",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
       tokenEndpoint: "https://idam.example.com/o/token"
     });
 
     GET(mockReq as Request, mockRes as Response);
 
     expect(mockReq.session.lng).toBe("en");
+  });
+
+  it("should store OAuth state in session and include it in the authorization URL", () => {
+    vi.mocked(isCftIdamConfigured).mockReturnValue(true);
+    vi.mocked(getCftIdamConfig).mockReturnValue({
+      cftIdamUrl: "https://idam.example.com",
+      clientId: "app-cath-frontend",
+      clientSecret: "secret",
+      redirectUri: "https://localhost:8080/cft-login/return",
+      scope: "openid profile roles",
+      authorizationEndpoint: "https://idam.example.com/o/authorize",
+      tokenEndpoint: "https://idam.example.com/o/token"
+    });
+
+    GET(mockReq as Request, mockRes as Response);
+
+    expect(mockReq.session.cftOauthState).toBe("test-state-uuid");
+    expect(mockRes.redirect).toHaveBeenCalledWith(expect.stringContaining("state=test-state-uuid"));
   });
 });

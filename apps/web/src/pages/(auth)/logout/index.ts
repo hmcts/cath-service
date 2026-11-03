@@ -1,4 +1,4 @@
-import { getB2cBaseUrl, getB2cConfig, getSsoConfig } from "@hmcts/auth";
+import { buildCftIdamLogoutUrl, getB2cBaseUrl, getB2cConfig, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
 import type { Request, Response } from "express";
 
 function extractTenantId(issuerUrl: string): string | null {
@@ -18,20 +18,26 @@ function getPostLogoutRedirectUri(req: Request): string {
 /**
  * Handles user logout
  * Destroys session and redirects to session-logged-out page
- * - CFT IDAM users: Direct redirect to session-logged-out page
+ * - CFT IDAM users: Redirects to CFT IDAM endSession, then to session-logged-out page
+ * - Crime IDAM users: Direct redirect to session-logged-out page
  * - B2C users: Redirects to B2C logout, then to session-logged-out page
  * - SSO users: Redirects to Azure AD logout, then to session-logged-out page
  */
 export const GET = async (req: Request, res: Response) => {
   const userProvenance = req.user?.provenance;
+  const locale = res.locals.locale === "cy" ? "cy" : "en";
 
   req.logout(() => {
     req.session.destroy(() => {
       // Clear session cookie
       res.clearCookie("connect.sid");
 
-      // CFT IDAM and Crime IDAM logout - clear local session only
-      if (userProvenance === "CFT_IDAM" || userProvenance === "CRIME_IDAM") {
+      if (userProvenance === "CFT_IDAM") {
+        return res.redirect(buildCftIdamLogoutUrl(`/session-logged-out?lng=${locale}`, getCftIdamConfig()));
+      }
+
+      // Crime IDAM logout - clear local session only
+      if (userProvenance === "CRIME_IDAM") {
         return res.redirect("/session-logged-out");
       }
 

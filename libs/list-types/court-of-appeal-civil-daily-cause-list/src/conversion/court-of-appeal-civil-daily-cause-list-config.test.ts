@@ -1,7 +1,7 @@
-import { convertExcelToJson } from "@hmcts/list-types-common";
+import { convertExcelToJson, hasConverterForListTypeName } from "@hmcts/list-types-common";
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { DAILY_HEARINGS_CONFIG, FUTURE_JUDGMENTS_CONFIG } from "./court-of-appeal-civil-daily-cause-list-config.js";
+import { COURT_OF_APPEAL_CIVIL_SHEETS, DAILY_HEARINGS_CONFIG, FUTURE_JUDGMENTS_CONFIG } from "./court-of-appeal-civil-daily-cause-list-config.js";
 
 async function createExcelBuffer(data: unknown[][]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
@@ -258,5 +258,33 @@ describe("FUTURE_JUDGMENTS_CONFIG", () => {
       hearingType: "Judgment",
       additionalInformation: "Reserved"
     });
+  });
+});
+
+describe("converter registration", () => {
+  it("should register the converter under the canonical list type name", () => {
+    // Act
+    const isRegistered = hasConverterForListTypeName("COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST");
+
+    // Assert
+    expect(isRegistered).toBe(true);
+  });
+
+  it("should not register the converter under the legacy division name", () => {
+    // Act
+    const isRegistered = hasConverterForListTypeName("COURT_OF_APPEAL_CIVIL_DIVISION_DAILY_CAUSE_LIST");
+
+    // Assert
+    expect(isRegistered).toBe(false);
+  });
+});
+
+describe("COURT_OF_APPEAL_CIVIL_SHEETS", () => {
+  it("should resolve daily hearings and future judgments sheets by name with index fallback", () => {
+    // Assert
+    expect(COURT_OF_APPEAL_CIVIL_SHEETS).toEqual([
+      { worksheetName: "Daily hearings", worksheetIndex: 0, dataKey: "dailyHearings", config: DAILY_HEARINGS_CONFIG },
+      { worksheetName: "Notice for future judgments", worksheetIndex: 1, dataKey: "futureJudgments", config: FUTURE_JUDGMENTS_CONFIG }
+    ]);
   });
 });

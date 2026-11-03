@@ -7,10 +7,11 @@ import {
   loadTranslations,
   PDF_BASE_STYLES,
   type PdfGenerationResult,
-  provenanceLabelsEn as PROVENANCE_LABELS,
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import type { GrcWeeklyHearingList } from "../models/types.js";
 import { renderGrcWeeklyHearingListData } from "../rendering/renderer.js";
 
@@ -22,13 +23,15 @@ interface PdfGenerationOptions extends BasePdfGenerationOptions<GrcWeeklyHearing
 }
 
 export async function generateGrcWeeklyHearingListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
+  const t = options.locale === "cy" ? cy : en;
+
   try {
     const renderedData = renderGrcWeeklyHearingListData(options.jsonData, {
       locale: options.locale,
       courtName: "General Regulatory Chamber",
       contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString(),
-      listTitle: "General Regulatory Chamber Weekly Hearing List"
+      listTitle: t.pageTitle
     });
 
     const translations = await loadTranslations(
@@ -37,7 +40,7 @@ export async function generateGrcWeeklyHearingListPdf(options: PdfGenerationOpti
       () => import("../locales/cy.js")
     );
 
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
+    const provenanceLabel = options.provenance ? t.provenanceLabels[options.provenance as keyof typeof t.provenanceLabels] || options.provenance : "";
 
     const env = configureNunjucks(__dirname);
     const html = env.render("pdf-template.njk", {

@@ -20,6 +20,7 @@
       "!**/storage",
       "!**/generated",
       "!e2e-tests/playwright-report",
+      "!infrastructure/resources/swagger",
       "!**/.claude"
     ]
   },

@@ -26,9 +26,4 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL='eu.anthropic.claude-haiku-5-5'
 export ANTHROPIC_DEFAULT_OPUS_MODEL='eu.anthropic.claude-opus-5-5[1m]'
 export ANTHROPIC_DEFAULT_SONNET_MODEL='eu.anthropic.claude-sonnet-5-5[1m]'
 
-# Export a GitHub token for the GitHub MCP server (see .mcp.json) by reusing the
-# already-authenticated gh CLI. Kept ephemeral — re-read each session, never stored.
-# If gh is not logged in, the var is left empty and the MCP server simply won't connect.
-export GITHUB_MCP_TOKEN="$(gh auth token 2>/dev/null || true)"
-
 exec claude --settings .claude/cnp.settings.json --dangerously-skip-permissions "$@"

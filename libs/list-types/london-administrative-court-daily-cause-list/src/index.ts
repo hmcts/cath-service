@@ -3,6 +3,7 @@ import "./conversion/london-administrative-court-daily-cause-list-config.js"; //
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatLondonAdministrativeCourtDailyCauseListExcel } from "./excel/excel-reformatter.js";
 export { cy as londonAdministrativeCourtDailyCauseListCy } from "./locales/cy.js";
 // Locale exports
 export { en as londonAdministrativeCourtDailyCauseListEn } from "./locales/en.js";

@@ -161,6 +161,7 @@ describe("summary-of-publications template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       assertErrorSummary($, ["Something went wrong"]);
+      expect($("body").text()).not.toContain(en.noPublicationsMessage);
     });
 
     it("should render Welsh content", () => {
@@ -172,6 +173,7 @@ describe("summary-of-publications template", () => {
       expect($("h1").text()).toContain(cy.titleSuffix);
       expect($(`a[href="${cy.factLinkUrl}"]`).text().trim()).toBe(cy.factLinkText);
       expect($("body").text()).toContain(cy.noPublicationsMessage);
+      expect($("body").text()).not.toContain(en.noPublicationsMessage);
     });
 
     it("should render Welsh language labels for publications", () => {

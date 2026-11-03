@@ -1,4 +1,4 @@
-import { getB2cBaseUrl, getB2cConfig, getSsoConfig } from "@hmcts/auth";
+import { buildCftIdamLogoutUrl, getB2cBaseUrl, getB2cConfig, getCftIdamConfig, getSsoConfig } from "@hmcts/auth";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
@@ -41,7 +41,11 @@ describe("Logout handler", () => {
     vi.mocked(getB2cBaseUrl).mockReturnValue("https://sign-in.pip-frontend.staging.platform.hmcts.net/pip-frontend.staging.platform.hmcts.net");
   });
 
-  it("should logout CFT IDAM user and redirect to session-logged-out page", async () => {
+  it("should logout CFT IDAM user and redirect to CFT IDAM endSession", async () => {
+    // Arrange
+    const cftIdamConfig = { baseUrl: "https://localhost:8080" } as ReturnType<typeof getCftIdamConfig>;
+    vi.mocked(getCftIdamConfig).mockReturnValue(cftIdamConfig);
+    vi.mocked(buildCftIdamLogoutUrl).mockReturnValue("https://idam.example.com/o/endSession?post_logout_redirect_uri=x");
     const req = {
       user: {
         id: "user-123",
@@ -60,15 +64,42 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: { locale: "en" }
     } as unknown as Response;
 
+    // Act
     await GET(req, res);
 
+    // Assert
     expect(req.logout).toHaveBeenCalled();
     expect(req.session.destroy).toHaveBeenCalled();
     expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
-    expect(res.redirect).toHaveBeenCalledWith("/session-logged-out");
+    expect(buildCftIdamLogoutUrl).toHaveBeenCalledWith("/session-logged-out?lng=en", cftIdamConfig);
+    expect(res.redirect).toHaveBeenCalledWith("https://idam.example.com/o/endSession?post_logout_redirect_uri=x");
+  });
+
+  it("should preserve Welsh language when logging out a CFT IDAM user", async () => {
+    // Arrange
+    const req = {
+      user: { id: "user-123", provenance: "CFT_IDAM" },
+      logout: vi.fn((cb) => cb(null)),
+      session: {
+        destroy: vi.fn((cb: any) => cb(null))
+      }
+    } as unknown as Request;
+
+    const res = {
+      clearCookie: vi.fn(),
+      redirect: vi.fn(),
+      locals: { locale: "cy" }
+    } as unknown as Response;
+
+    // Act
+    await GET(req, res);
+
+    // Assert
+    expect(buildCftIdamLogoutUrl).toHaveBeenCalledWith("/session-logged-out?lng=cy", expect.anything());
   });
 
   it("should logout Crime IDAM user and redirect to session-logged-out page", async () => {
@@ -90,7 +121,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -120,7 +152,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -151,7 +184,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -176,7 +210,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -205,7 +240,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -229,7 +265,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -254,7 +291,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
@@ -279,7 +317,8 @@ describe("Logout handler", () => {
 
     const res = {
       clearCookie: vi.fn(),
-      redirect: vi.fn()
+      redirect: vi.fn(),
+      locals: {}
     } as unknown as Response;
 
     await GET(req, res);
