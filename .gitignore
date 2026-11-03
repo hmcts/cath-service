@@ -109,3 +109,6 @@ infrastructure/.terraform/
 # Lefthook local overrides
 .lefthook-local.yml
 /apps/web/.claude/analytics
+
+# Docker-free dev dependencies (scripts/dev-nodocker.sh)
+.nodocker/

@@ -14,7 +14,8 @@ module "postgresql" {
   common_tags   = local.common_tags
 
   # Per-environment - see infrastructure/env-config.tf. aat uses the expanded
-  # subnet because the original postgresql subnet in the stg vnet is full.
+  # subnet because the original postgresql subnet in the stg vnet is full; prod
+  # because it is the only subnet the PROD principal can join.
   subnet_suffix = local.postgres_subnet_suffix
 
   pgsql_databases = [
@@ -23,9 +24,11 @@ module "postgresql" {
     }
   ]
 
-  pgsql_sku                     = "GP_Standard_D2ds_v4"
-  pgsql_version                 = "16"
-  pgsql_storage_mb              = 65536
+  # SKU, storage, backup retention, geo-redundant backup and HA all come from the
+  # module defaults in every environment (#1096 task 5).
+  # Matches docker-compose.yml. Raising this is an in-place major version upgrade
+  # with downtime; lowering it makes azurerm destroy and recreate the server.
+  pgsql_version                 = "18"
   auto_grow_enabled             = true
   admin_user_object_id          = var.ci_service_principal_object_id
   preserve_legacy_jenkins_admin = false
