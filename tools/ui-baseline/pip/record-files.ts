@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { collectFiles, openBlobContainer } from "@hmcts/ui-baseline";
 import { filesStorage, loadEnvironment } from "../environments.js";
 import { loadManifest, type SeedResult } from "../fixtures/manifest.js";
+import { inRecordingScope, loadRecordingScope } from "../scope.js";
 
 // Records the PDF and Excel files the local pip generated for each seeded publication into the
 // baseline, so a check can compare CaTH's files with them. pip generates them in the background
@@ -18,13 +19,14 @@ if (!out) throw new Error("usage: record-files.ts <out dir>");
 
 const seed = JSON.parse(await readFile(path.join(PARITY_DIR, "output/seed/pip.json"), "utf-8")) as SeedResult;
 const formats = new Map((await loadManifest()).publications.map((publication) => [publication.id, publication.format]));
+const scope = await loadRecordingScope();
 const environment = await loadEnvironment("local");
 const entries = await collectFiles({
   container: openBlobContainer(filesStorage("pip", environment.pip)),
   out,
   waitSeconds: WAIT_SECONDS,
   publications: Object.entries(seed.publications)
-    .filter(([id]) => formats.get(id) !== "flat-file")
+    .filter(([id]) => formats.get(id) !== "flat-file" && inRecordingScope(scope, "lists", id))
     .map(([id, publication]) => ({ id, artefactId: publication.artefactId, seededAt: seed.seededAt }))
 });
 console.log(`recorded ${entries.length} files for ${new Set(entries.map((entry) => entry.id)).size} publications → ${out}`);

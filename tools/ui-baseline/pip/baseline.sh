@@ -4,18 +4,56 @@
 # into <out>. Journeys change data, so the stack is always recreated empty first; that is what
 # makes two runs, on any machine, comparable.
 #
-# usage: baseline.sh [pip checkouts dir] [output dir]
+# usage: baseline.sh [--ticket N] [--list-type NAME]... [--route /path]... [--journey ID]... [pip checkouts dir] [output dir]
 #   defaults: $UI_BASELINE_PIP_DIR or ~/.cache/ui-baseline/pip, and tools/ui-baseline/output/baseline
 # Needs Docker, Node and corepack. The first run clones and builds pip (about 10 minutes); a
 # baseline run then takes about 25 minutes.
+# A ticket recording (--ticket, --list-type, --route or --journey) records only what the ticket
+# names, picked as the check picks what to compare (pip/scope.ts), into output/baselines/<name>.
+# It is a baseline of its own, with its own seed.json: pip gives its data new ids on every fresh
+# stack, so its captures cannot be merged into another recording. `check --ticket N` uses it.
 # pip-frontend is (re)started here, after the stack, because it does not survive its Redis being
 # recreated. Set PARITY_CERT_DIR to serve it with the local CA's certificate (make-cert.sh).
 set -euo pipefail
 
 PARITY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="$(cd "$PARITY_DIR/../.." && pwd)"
+# A field of a JSON file (a mktemp file has no .json extension, so it is read rather than required)
+json_field() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]])' "$1" "$2"; }
+SCOPE_ARGS=()
+POSITIONAL=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --ticket | --list-type | --route | --journey)
+      SCOPE_ARGS+=("$1" "$2")
+      shift 2
+      ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+      ;;
+  esac
+done
+set -- "${POSITIONAL[@]+"${POSITIONAL[@]}"}"
 PIP_SRC="${1:-${UI_BASELINE_PIP_DIR:-$HOME/.cache/ui-baseline/pip}}"
-OUT="$(mkdir -p "${2:-$PARITY_DIR/output/baseline}" && cd "${2:-$PARITY_DIR/output/baseline}" && pwd)"
+DEFAULT_OUT="$PARITY_DIR/output/baseline"
+SCOPE_FILE=""
+if [ ${#SCOPE_ARGS[@]} -gt 0 ]; then
+  SCOPE_FILE="$(mktemp)"
+  (cd "$REPO_DIR" && npx tsx tools/ui-baseline/pip/scope.ts --out "$SCOPE_FILE" "${SCOPE_ARGS[@]}")
+  DEFAULT_OUT="$PARITY_DIR/output/baselines/$(json_field "$SCOPE_FILE" name)"
+fi
+OUT="$(mkdir -p "${2:-$DEFAULT_OUT}" && cd "${2:-$DEFAULT_OUT}" && pwd)"
+if [ -n "$SCOPE_FILE" ]; then
+  # Nothing from an earlier recording into this folder may survive into this one
+  rm -rf "$OUT/lists" "$OUT/pages" "$OUT/journeys" "$OUT/files" "$OUT/flat-files" "$OUT/downloads"
+  mv "$SCOPE_FILE" "$OUT/scope.json"
+  export UI_BASELINE_SCOPE="$OUT/scope.json"
+fi
+# How many targets a targets file has, so a step with nothing in scope is skipped
+count_targets() { json_field "$1" length; }
+# A step skipped in a ticket recording still leaves an empty index, which a check reads
+empty_index() { mkdir -p "$1" && : > "$1/index.jsonl"; }
 TOOL="$PARITY_DIR/src/cli.ts"
 PIP_FRONTEND_URL="${PIP_FRONTEND_URL:-https://localhost:8180}"
 FRONTEND_PID_FILE="${FRONTEND_PID_FILE:-/tmp/parity-pip-frontend.pid}"
@@ -65,8 +103,13 @@ PIP_COMMITS="pip-frontend@$(commit pip-frontend)+pip-data-management@$(commit pi
 
 step "Capturing list pages"
 npx tsx tools/ui-baseline/build-targets.ts pip "$PIP_COMMITS"
-npx tsx "$TOOL" capture --targets tools/ui-baseline/output/targets/pip.json --out "$OUT/lists" --concurrency 4 > "$OUT/lists.log" 2>&1 || true
-tail -1 "$OUT/lists.log"
+npx tsx tools/ui-baseline/pip/scope-targets.ts lists tools/ui-baseline/output/targets/pip.json
+if [ "$(count_targets tools/ui-baseline/output/targets/pip.json)" -gt 0 ]; then
+  npx tsx "$TOOL" capture --targets tools/ui-baseline/output/targets/pip.json --out "$OUT/lists" --concurrency 4 > "$OUT/lists.log" 2>&1 || true
+  tail -1 "$OUT/lists.log"
+else
+  empty_index "$OUT/lists"
+fi
 
 step "Recording generated PDF and Excel files"
 npx tsx tools/ui-baseline/pip/record-files.ts "$OUT/files" | command grep -v "npm warn" || true
@@ -76,15 +119,29 @@ npx tsx tools/ui-baseline/pip/record-flat-files.ts "$OUT/flat-files" | command g
 
 step "Capturing other pages"
 npx tsx tools/ui-baseline/routes/build-page-targets.ts
-npx tsx "$TOOL" capture --targets tools/ui-baseline/output/targets/pip-pages.json --out "$OUT/pages" --concurrency 4 > "$OUT/pages.log" 2>&1 || true
-tail -1 "$OUT/pages.log"
+npx tsx tools/ui-baseline/pip/scope-targets.ts pages tools/ui-baseline/output/targets/pip-pages.json
+if [ "$(count_targets tools/ui-baseline/output/targets/pip-pages.json)" -gt 0 ]; then
+  npx tsx "$TOOL" capture --targets tools/ui-baseline/output/targets/pip-pages.json --out "$OUT/pages" --concurrency 4 > "$OUT/pages.log" 2>&1 || true
+  tail -1 "$OUT/pages.log"
+else
+  empty_index "$OUT/pages"
+fi
 
 step "Recording downloads"
 npx tsx tools/ui-baseline/pip/record-downloads.ts "$OUT/downloads" | command grep -v "npm warn" || true
 
 step "Running journeys"
-npx tsx "$TOOL" journeys --module tools/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
-tail -1 "$OUT/journeys.log"
+JOURNEYS=""
+[ -n "${UI_BASELINE_SCOPE:-}" ] && JOURNEYS="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8")).journeys.join(","))' "$UI_BASELINE_SCOPE")"
+if [ -z "${UI_BASELINE_SCOPE:-}" ]; then
+  npx tsx "$TOOL" journeys --module tools/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
+  tail -1 "$OUT/journeys.log"
+elif [ -n "$JOURNEYS" ]; then
+  npx tsx "$TOOL" journeys --module tools/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" --only "$JOURNEYS" > "$OUT/journeys.log" 2>&1 || true
+  tail -1 "$OUT/journeys.log"
+else
+  echo "none in scope"
+fi
 
 step "Writing run summary"
 node -e '
@@ -95,6 +152,8 @@ const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.joi
 const summary = {
   finishedAt: new Date().toISOString(),
   pip: process.argv[2],
+  // A ticket recording: what it was limited to (pip/scope.ts); absent for a full recording
+  scope: fs.existsSync(path.join(out, "scope.json")) ? JSON.parse(fs.readFileSync(path.join(out, "scope.json"), "utf-8")) : undefined,
   // Captures that failed outright (e.g. pip down) never reach the index; the capture logs count them
   failedCaptures: [...lists, ...pages].filter((c) => c.status !== 200).length + ["lists.log", "pages.log"].reduce((sum, log) => {
     const match = fs.existsSync(path.join(out, log)) && fs.readFileSync(path.join(out, log), "utf-8").match(/(\d+) failed/g);

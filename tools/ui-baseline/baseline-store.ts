@@ -18,8 +18,16 @@ const LATEST = "baselines/latest.json";
 export async function pushBaseline(environment: Environment, dir: string): Promise<StoredBaseline> {
   const runFile = path.join(dir, "run.json");
   if (!existsSync(runFile)) throw new Error(`no run.json in ${dir}: record a baseline first (yarn ui-baseline:record-pip)`);
-  const run = JSON.parse(await readFile(runFile, "utf-8")) as { pip: string; finishedAt: string; failedCaptures: number; failedJourneys: string[] };
+  const run = JSON.parse(await readFile(runFile, "utf-8")) as {
+    pip: string;
+    finishedAt: string;
+    failedCaptures: number;
+    failedJourneys: string[];
+    scope?: { name: string };
+  };
   if (run.failedCaptures || run.failedJourneys.length) throw new Error(`the baseline in ${dir} is incomplete (see its run.json), so it is not stored`);
+  // The stored baseline is the one every check falls back to, so it must be a full recording
+  if (run.scope) throw new Error(`the baseline in ${dir} is a ticket recording (${run.scope.name}), not all of pip, so it is not stored`);
 
   const id = `${run.finishedAt.replace(/[:.]/g, "-")}`;
   const stored: StoredBaseline = { id, blob: `baselines/${id}.tar.gz`, pip: run.pip, finishedAt: run.finishedAt, pushedAt: new Date().toISOString() };

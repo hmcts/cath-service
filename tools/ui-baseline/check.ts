@@ -26,6 +26,7 @@ import { captureDownloads, loadDownloads, seedResolver } from "./downloads.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
+import { isConfident, mentionsIn, mentionsPublication, mentionsRoute, pageId, type RecordingScope, type RouteEntry, ticketText } from "./scope.js";
 import { NOT_FOUND_ID, NOT_FOUND_PATH, parseVariant, withMobile } from "./variants.js";
 
 // One command for a developer or QA: does CaTH match the pip baseline for this ticket (or these
@@ -74,7 +75,11 @@ const environment = await loadEnvironment(args.env);
 const targetBase = args.target ?? environment.cath.baseUrl;
 // Passed to the seeding and sign-in scripts, which read the same environment
 const envArgs = [`--env=${environment.name}`];
-const baseline = path.resolve(args.baseline ?? DEFAULT_BASELINE);
+// A ticket's own recording of pip (record-pip --ticket N), where there is one, else the full baseline
+const ticketBaseline = args.ticket ? path.join(PARITY_DIR, "output/baselines", `ticket-${args.ticket}`) : null;
+const baseline = path.resolve(
+  args.baseline ?? (ticketBaseline && existsSync(path.join(ticketBaseline, "lists/index.jsonl")) ? ticketBaseline : DEFAULT_BASELINE)
+);
 const locales = args.locale ? [args.locale] : LOCALES;
 const manifest = await loadManifest();
 const routeMap = JSON.parse(await readFile(path.join(PARITY_DIR, "routes/route-map.json"), "utf-8")).routes as RouteEntry[];
@@ -84,7 +89,7 @@ if (!existsSync(path.join(baseline, "lists/index.jsonl")))
   );
 
 // ---------- 1. What to check ----------
-const requirements = args.ticket ? await ticketText(args.ticket) : null;
+const requirements = args.ticket ? await ticketText(args.ticket, args.repo) : null;
 const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? [], args.all);
 // pip's journeys to run in CaTH and compare: all of them for --all, otherwise those named
 const baselineJourneys = new Set(
@@ -104,6 +109,13 @@ await mkdir(out, { recursive: true });
 if (requirements) await writeFile(path.join(out, "requirements.md"), requirements);
 
 step(`Checking ${targetBase} (${environment.name}) against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
+const recordedScope = existsSync(path.join(baseline, "scope.json"))
+  ? (JSON.parse(await readFile(path.join(baseline, "scope.json"), "utf-8")) as RecordingScope)
+  : null;
+if (recordedScope)
+  console.log(
+    `  a ticket recording (${recordedScope.name}): ${recordedScope.publications.length} list types, ${recordedScope.pages.length} pages, ${recordedScope.journeys.length} journeys; anything else is not in it`
+  );
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
 console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
 console.log(`  journeys:   ${journeyIds.join(", ") || "none"}`);
@@ -489,11 +501,6 @@ async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
   return summary;
 }
 
-// A route-map entry the check relies on: same path, a close match, or checked by someone
-function isConfident(entry: RouteEntry): boolean {
-  return entry.reviewed || entry.match === "same-path" || entry.confidence === "high";
-}
-
 // The files each list generated, and the files fetched rather than shown, against pip's
 async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
   const listFiles = await compareListFiles();
@@ -753,31 +760,17 @@ function checkedCommit(): string {
   return dirty ? `${sha} + uncommitted changes` : sha;
 }
 
-async function ticketText(ticket: string): Promise<string> {
-  const local = path.join(REPO_DIR, "docs/tickets", ticket, "ticket.md");
-  const text = existsSync(local)
-    ? await readFile(local, "utf-8")
-    : (() => {
-        const { title, body } = JSON.parse(execFileSync("gh", ["issue", "view", ticket, "--repo", args.repo, "--json", "title,body"], { encoding: "utf-8" }));
-        return `# ${title}\n\n${body}`;
-      })();
-  return text;
-}
-
 // List types the ticket names (pip or CaTH name), and pages it names by route, plus explicit choices
 function selectScope(text: string | null, listTypes: string[], routes: string[], everything: boolean): Scope {
   const skipped: string[] = [];
-  const named = new Set([...(text?.match(/\b[A-Z][A-Z0-9_]{6,}\b/g) ?? []), ...listTypes]);
-  const publications = manifest.publications.filter(
-    (p: PublicationFixture) => everything || named.has(p.listType) || (p.cathListType !== null && named.has(p.cathListType))
-  );
+  const mentions = mentionsIn(text, listTypes, routes);
+  const publications = manifest.publications.filter((p: PublicationFixture) => everything || mentionsPublication(mentions, p));
   for (const p of publications.filter((p) => !inCath(p))) skipped.push(`${p.listType}: CaTH has no page for it`);
 
-  const mentioned = new Set([...(text?.match(/(?<=[\s`(])\/[a-z0-9][a-z0-9/-]*[a-z0-9]/g) ?? []), ...routes]);
   const selected: Scope["routes"] = [];
   for (const entry of routeMap) {
-    if (!everything && !mentioned.has(entry.pip) && !(entry.cath && mentioned.has(entry.cath))) continue;
-    const id = `page${entry.pip.replace(/\//g, "--")}`;
+    if (!everything && !mentionsRoute(mentions, entry)) continue;
+    const id = pageId(entry.pip);
     const confident = isConfident(entry);
     if (!entry.cath) skipped.push(`${entry.pip}: no CaTH page mapped`);
     else if (!confident) skipped.push(`${entry.pip}: route-map suggestion (${entry.cath}) not reviewed yet`);
@@ -807,18 +800,6 @@ interface CathIds {
   ids: Map<string, string>;
   publications: Map<string, string>;
   listTypes: Map<string, string>;
-}
-
-interface RouteEntry {
-  // CaTH parameter (path segment or query) -> the pip query parameter it takes its value from, or
-  // publication:<fixture> for a page CaTH only offers for one list
-  cathParams?: Record<string, string>;
-  pip: string;
-  cath: string | null;
-  match: string;
-  confidence?: string;
-  reviewed: boolean;
-  pipRole: string | null;
 }
 
 interface CaptureEntry {
