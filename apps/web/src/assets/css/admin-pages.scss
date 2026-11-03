@@ -165,3 +165,24 @@
     }
   }
 }
+
+.connection-result {
+  padding: 20px;
+  border: 5px solid;
+
+  .govuk-body:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.connection-result--success {
+  border-color: #00703c;
+}
+
+.connection-result--fail {
+  border-color: #d4351c;
+}
+
+.connection-result__title {
+  font-weight: 700;
+}
