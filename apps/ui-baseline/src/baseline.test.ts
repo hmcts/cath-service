@@ -1,8 +1,8 @@
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { BlobContainer } from "@hmcts/ui-baseline";
 import { describe, expect, it, vi } from "vitest";
+import type { BlobContainer } from "../core/index.js";
 import { createBaselineCache } from "./baseline.js";
 
 const stored = (id: string) => ({

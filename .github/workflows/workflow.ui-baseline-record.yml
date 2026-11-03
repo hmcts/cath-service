@@ -1,9 +1,9 @@
 name: UI baseline - record pip
 
-# Records the pip baseline tools/ui-baseline compares CaTH against, and stores it in the test
+# Records the pip baseline apps/ui-baseline compares CaTH against, and stores it in the test
 # environment's storage (cathsaperftest, container ui-baseline) for the hosted check and anyone
 # running a check to fetch with `yarn ui-baseline:baseline pull`. Run by hand: pip is pinned in
-# tools/ui-baseline/pip/setup.sh and the fixtures are committed, so the baseline only needs
+# apps/ui-baseline/pip/setup.sh and the fixtures are committed, so the baseline only needs
 # recording again when either changes.
 #
 # It runs pip in Docker on a GitHub-hosted runner, as a developer's machine does; the private
@@ -56,8 +56,8 @@ jobs:
         with:
           name: ui-baseline-run
           path: |
-            tools/ui-baseline/output/baseline/run.json
-            tools/ui-baseline/output/baseline/*.log
+            apps/ui-baseline/output/baseline/run.json
+            apps/ui-baseline/output/baseline/*.log
           if-no-files-found: ignore
 
       - name: Azure login (OIDC)

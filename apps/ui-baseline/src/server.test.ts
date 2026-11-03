@@ -10,8 +10,8 @@ const ensure = vi.fn(async () => "/data/baseline");
 const restore = vi.fn(async () => {});
 
 vi.mock("@hmcts-cft/cloud-native-platform", () => ({ getPropertiesVolumeSecrets: vi.fn(async () => {}) }));
-vi.mock("@hmcts/ui-baseline/environments", () => ({ loadEnvironment: vi.fn(async (name: string) => ({ name })) }));
-vi.mock("@hmcts/ui-baseline/baseline-store", () => ({
+vi.mock("../environments.js", () => ({ loadEnvironment: vi.fn(async (name: string) => ({ name })) }));
+vi.mock("../baseline-store.js", () => ({
   baselineContainer: vi.fn(() => ({ name: "store" })),
   latestBaseline: vi.fn(),
   pullBaseline: vi.fn()

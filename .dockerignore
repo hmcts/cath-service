@@ -42,4 +42,4 @@ e2e-tests/
 docs/
 
 # ui-baseline captures, baselines and pip checkouts, recorded locally
-tools/ui-baseline/output
+apps/ui-baseline/output

@@ -131,7 +131,7 @@ jobs:
               ;;
           esac
 
-          # The hosted parity check (tools/ui-baseline) runs where testers check CaTH against pip,
+          # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip,
           # and nowhere else.
           UI_BASELINE_ENABLED="false"
           if [ "$ENVIRONMENT" = "perftest" ]; then UI_BASELINE_ENABLED="true"; fi

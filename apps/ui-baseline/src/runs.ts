@@ -3,11 +3,11 @@ import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { BlobContainer } from "@hmcts/ui-baseline";
-import { systemCommand } from "@hmcts/ui-baseline/system-command";
+import type { BlobContainer } from "../core/index.js";
+import { systemCommand } from "../system-command.js";
 
 // Runs parity checks and file comparisons one at a time, each as a child process of the tool's own
-// scripts (tools/ui-baseline/check.ts, compare-files.ts), so a check run here is the same check a
+// scripts (apps/ui-baseline/check.ts, compare-files.ts), so a check run here is the same check a
 // developer runs. Each run's directory is archived to storage when it finishes, and restored from
 // there when it is asked for after the pod has restarted.
 const RUNS_PREFIX = "runs/";
@@ -101,7 +101,7 @@ export function createRunner(options: RunnerOptions): Runner {
 function commandFor(record: RunRecord, dir: string, environment: string, baseline: string | null): { script: string; args: string[] } {
   if (record.kind === "files")
     return {
-      script: "tools/ui-baseline/compare-files.ts",
+      script: "apps/ui-baseline/compare-files.ts",
       args: [
         `--env=${environment}`,
         `--pip=${record.pipArtefactId}`,
@@ -117,7 +117,7 @@ function commandFor(record: RunRecord, dir: string, environment: string, baselin
         ? record.listTypes.flatMap((name) => ["--list-type", name])
         : record.routes.flatMap((route) => ["--route", route]);
   return {
-    script: "tools/ui-baseline/check.ts",
+    script: "apps/ui-baseline/check.ts",
     args: [`--env=${environment}`, `--baseline=${baseline}`, `--out=${path.join(dir, "check")}`, "--no-review", ...scope]
   };
 }
