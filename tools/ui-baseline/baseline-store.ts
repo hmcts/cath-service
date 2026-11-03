@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BlobContainer, openBlobContainer } from "@hmcts/ui-baseline";
 import { type Environment, filesStorage } from "./environments.js";
+import { systemCommand } from "./system-command.js";
 
 // Keeps recorded pip baselines in the environment's storage, so a check run anywhere (the hosted
 // app, CI, a laptop) uses one recorded once rather than recording its own. Each is stored whole as
@@ -36,7 +37,7 @@ export async function pushBaseline(environment: Environment, dir: string): Promi
   try {
     const archive = path.join(scratch, "baseline.tar.gz");
     // -h stores what symlinks point at, so the archive stands alone
-    execFileSync("tar", ["-czhf", archive, "-C", dir, "."]);
+    execFileSync(systemCommand("tar"), ["-czhf", archive, "-C", dir, "."]);
     await container.uploadFile(stored.blob, archive, "application/gzip");
     await container.upload(LATEST, Buffer.from(`${JSON.stringify(stored, null, 2)}\n`), "application/json");
   } finally {
@@ -55,7 +56,7 @@ export async function pullBaseline(environment: Environment, dir: string, id?: s
     await container.downloadToFile(stored.blob, archive);
     await rm(dir, { recursive: true, force: true });
     await mkdir(dir, { recursive: true });
-    execFileSync("tar", ["-xzf", archive, "-C", dir]);
+    execFileSync(systemCommand("tar"), ["-xzf", archive, "-C", dir]);
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }

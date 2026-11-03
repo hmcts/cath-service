@@ -34,7 +34,7 @@ export async function createAuth(config: AuthConfig): Promise<Auth> {
   router.get("/sign-in", async (req, res) => {
     const verifier = oidc.randomPKCECodeVerifier();
     const state = oidc.randomState();
-    const returnTo = typeof req.query.returnTo === "string" && req.query.returnTo.startsWith("/") ? req.query.returnTo : "/";
+    const returnTo = typeof req.query.returnTo === "string" && isLocalPath(req.query.returnTo) ? req.query.returnTo : "/";
     cookies.set(res, STATE_COOKIE, { verifier, state, returnTo }, 10 * 60);
     const url = oidc.buildAuthorizationUrl(issuer, {
       redirect_uri: redirectUri,
@@ -84,6 +84,11 @@ export async function createAuth(config: AuthConfig): Promise<Auth> {
       next();
     }
   };
+}
+
+// A path on this app: "//host" and "/\host" are read by browsers as another site
+function isLocalPath(value: string): boolean {
+  return value.startsWith("/") && !value.startsWith("//") && !value.startsWith("/\\");
 }
 
 async function memberOf(accessToken: string): Promise<string[]> {

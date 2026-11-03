@@ -27,6 +27,7 @@ import { filesStorage, loadEnvironment } from "./environments.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
 import { isConfident, mentionsIn, mentionsPublication, mentionsRoute, pageId, type RecordingScope, type RouteEntry, ticketText } from "./scope.js";
+import { systemCommand } from "./system-command.js";
 import { NOT_FOUND_ID, NOT_FOUND_PATH, parseVariant, withMobile } from "./variants.js";
 
 // One command for a developer or QA: does CaTH match the pip baseline for this ticket (or these
@@ -377,7 +378,7 @@ const reportArgs = [
   ...(filesCompared ? ["--files-compare", path.join(out, "compare/files/files-compare.json")] : []),
   ...Object.keys(reviews).flatMap((area) => ["--review", path.join(out, "review", area, "review.json")])
 ];
-execFileSync("node", reportArgs, { stdio: "ignore" });
+execFileSync(process.execPath, reportArgs, { stdio: "ignore" });
 
 // ---------- Summary ----------
 const defects = Object.values(reviews).reduce((sum, r) => sum + r.totals.defect, 0);
@@ -427,7 +428,7 @@ step("Writing the evidence");
 const evidence = path.join(out, "evidence");
 await mkdir(evidence, { recursive: true });
 const bundle = await bundleReport();
-execFileSync("zip", ["-qr", path.join(evidence, "report.zip"), "."], { cwd: bundle });
+execFileSync(systemCommand("zip"), ["-qr", path.join(evidence, "report.zip"), "."], { cwd: bundle });
 const screenshots = await sideBySide(evidence);
 const verdictLabel = (id: string, locale: string) => {
   const result = Object.values(comparisons)
@@ -694,7 +695,7 @@ async function capturedIds(dir: string): Promise<Set<string>> {
 async function finish(): Promise<void> {
   console.log(`  report: ${path.join(out, "report/index.html")}`);
   if (!args.serve) process.exit(defects > 0 ? 1 : 0);
-  spawn("node", [path.join(PARITY_DIR, "report/serve.mjs"), path.join(out, "report"), String(REPORT_PORT)], { stdio: "inherit", detached: false });
+  spawn(process.execPath, [path.join(PARITY_DIR, "report/serve.mjs"), path.join(out, "report"), String(REPORT_PORT)], { stdio: "inherit", detached: false });
   console.log(`  serving on http://localhost:${REPORT_PORT}/ (Ctrl+C to stop)`);
   // Keeps the evidence step from running for --all while the server holds the process open
   await new Promise(() => {});
