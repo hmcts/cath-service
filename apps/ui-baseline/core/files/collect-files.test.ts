@@ -1,7 +1,7 @@
 import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BlobContainer } from "./blob-container.js";
 import { collectFiles } from "./collect-files.js";
 
@@ -14,6 +14,20 @@ function memoryContainer(blobs: Record<string, string>): BlobContainer {
     downloadToFile: async () => {},
     list: async () => []
   };
+}
+
+// Moves a faked clock on to each poll, letting real file I/O finish in between, so the clock only
+// advances while the code is waiting for its next poll
+async function withClockRunning<T>(promise: Promise<T>): Promise<T> {
+  let done = false;
+  promise.finally(() => {
+    done = true;
+  });
+  while (!done) {
+    await new Promise((resolve) => setImmediate(resolve));
+    if (vi.getTimerCount() > 0) await vi.advanceTimersToNextTimerAsync();
+  }
+  return promise;
 }
 
 describe("collectFiles", () => {
@@ -53,5 +67,58 @@ describe("collectFiles", () => {
     // Assert
     expect(entries).toEqual([]);
     expect(await readFile(path.join(out, "index.jsonl"), "utf-8")).toBe("");
+  });
+
+  describe("when waiting for the files", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should poll until the files stop changing when waitSeconds is given", async () => {
+      // Arrange
+      const out = await mkdtemp(path.join(tmpdir(), "collect-"));
+      vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+      // The PDF appears on the second look and grows once before it settles
+      const versions = [null, "pd", "pdf", "pdf", "pdf"];
+      let looks = 0;
+      const container: BlobContainer = {
+        ...memoryContainer({}),
+        download: async (name) => {
+          if (name !== "a1.pdf") return null;
+          const version = versions[Math.min(looks++, versions.length - 1)];
+          return version === null ? null : Buffer.from(version);
+        }
+      };
+
+      // Act
+      const entries = await withClockRunning(collectFiles({ container, out, waitSeconds: 60, publications: [{ id: "civil", artefactId: "a1" }] }));
+
+      // Assert
+      expect(looks).toBe(4);
+      expect(entries).toEqual([expect.objectContaining({ kind: "pdf", bytes: 3 })]);
+      expect(await readFile(path.join(out, "civil/pdf.pdf"), "utf-8")).toBe("pdf");
+    });
+
+    it("should wait the whole time and record nothing when a publication never gets files", async () => {
+      // Arrange
+      const out = await mkdtemp(path.join(tmpdir(), "collect-"));
+      vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+      let looks = 0;
+      const container: BlobContainer = {
+        ...memoryContainer({}),
+        download: async () => {
+          looks++;
+          return null;
+        }
+      };
+
+      // Act
+      const entries = await withClockRunning(collectFiles({ container, out, waitSeconds: 12, publications: [{ id: "sjp", artefactId: "a2" }] }));
+
+      // Assert
+      expect(entries).toEqual([]);
+      // One look at each of the three kinds, initially and after each of three polls
+      expect(looks).toBe(12);
+    });
   });
 });
