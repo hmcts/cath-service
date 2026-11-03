@@ -62,7 +62,7 @@ const LIST_TYPES: ListTypeData[] = [
     name: "FLAT_FILE_ONLY_LIST",
     englishFriendlyName: "Flat File Only List",
     welshFriendlyName: "Rhestr Ffeil Wastad",
-    provenance: "MANUAL_UPLOAD",
+    provenance: ["CFT_IDAM"],
     isNonStrategic: false,
     defaultSensitivity: "Public",
     subJurisdictionIds: [4]
