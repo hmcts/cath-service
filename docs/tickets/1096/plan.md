@@ -12,7 +12,7 @@ The ITHC precedent (#1058, #1065, #1068, #1067) shows the first apply of a new e
    - `prod` added to the `stage.infrastructure.yml` lookups, with the per-leg credential.
    - `prod` added to `workflow.preview.yml` only.
 
-   PR A's checks plan PROD, and must also plan aat, demo and perftest with **no changes**. That proves the refactor is a no-op for them. Merging PR A applies nothing to PROD.
+   PR A's checks plan PROD, and must also plan aat, demo and perftest with **no changes** apart from the Postgres SKU moving to the module default and the version moving from 16 to 18 (both in place). That proves the refactor is a no-op for them. Merging PR A applies nothing to PROD.
 3. **PR B: enable the apply.** A one-word change that adds `prod` to `workflow.main.yml`. Merging it runs the first PROD apply from master. If the apply fails in a way that can't be fixed forward quickly, reverting PR B unblocks AAT straight away.
 4. **Verify, then prove a no-op second run.**
 
@@ -114,39 +114,38 @@ infrastructure/
   crime_federation_enabled = try(local.env_config[var.env].crime_federation_enabled, false)
   ```
 
-- Sizing. Replace the "Sizing is NOT here on purpose" paragraph. Its premise no longer holds, because PROD now differs. Use one default plus PROD overrides, not five copies:
+- Sizing. Replace the "Sizing is NOT here on purpose" paragraph. Its premise no longer holds, because PROD Redis now differs. Postgres passes no sizing inputs at all, so every environment takes the module defaults. Redis uses one default plus a PROD override:
 
   ```hcl
   default_sizing = {
-    redis_sku_name              = "Basic"
-    redis_family                = "C"
-    redis_capacity              = 0
-    pgsql_sku                   = "GP_Standard_D2ds_v4"
-    pgsql_storage_mb            = 65536
-    pgsql_geo_redundant_backups = false
+    redis_sku_name = "Basic"
+    redis_family   = "C"
+    redis_capacity = 0
   }
-  # Needs sign-off (Clarification 2). Geo-redundant backup is create-time only.
   sizing_overrides = {
     prod = {
-      redis_sku_name              = "Standard"
-      redis_capacity              = 1
-      pgsql_geo_redundant_backups = true
+      redis_sku_name = "Premium"
+      redis_family   = "P"
+      redis_capacity = 1
     }
   }
   sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))
   ```
 
-  Proposed PROD sizing (for sign-off):
+  PROD sizing (signed off, task 5):
 
-  | Setting | Proposed PROD value | Why |
+  | Setting | PROD value | Why |
   |---|---|---|
-  | Redis | **Standard C1** (1 GB, primary/replica, 99.9% SLA) | Sessions only. Fixes the Basic tier's lack of SLA and replication. Premium P1 (the module default) is about 6x the cost. Take it only if zone redundancy or persistence is required. Basic to Standard and Standard to Premium are in-place upgrades; downgrades are not possible |
-  | Postgres SKU | **GP_Standard_D2ds_v4** (unchanged) | Same as aat and perftest. Changing the SKU later is in place with a short restart |
+  | Redis | **Premium P1**, single zone (`availability_zones` left at the module default, `null`) | Replication and SLA. Non-prod stays on Basic C0 for cost. Zones are create-time only: adding them later recreates the cache |
+  | Postgres version | **18** (every environment, matches `docker-compose.yml`) | Set in `postgres.tf`; the module has no default. aat, demo and perftest upgrade in place from 16 on the master apply after PR A merges: Azure stops the server, takes an implicit backup, runs pg_upgrade, and disables then re-enables HA. Downtime on each, and it can't be reverted (only point-in-time restore to a new server). **Never lower it**: azurerm forces replacement on a version decrease |
+  | Postgres SKU | **GP_Standard_D2s_v3** (module default, every environment) | No input. demo, perftest and ithc move from D2ds_v4, in place with a short restart |
   | Postgres HA | **ZoneRedundant** (module automatic for `prod`) | No input. Don't set `high_availability`; the module says not to |
   | Backup retention | **35 days** (module default, the maximum) | No input |
-  | Geo-redundant backup | **true** | Cannot be changed after the server is created. Decide before the first apply |
-  | Storage | 65536 MB with `auto_grow_enabled = true` (unchanged) | `storage_mb` is in the module's `ignore_changes`, so it grows without drift |
-  | Immutable backup vault enrolment (`service_criticality >= 4`) | **Not enabled** (default 1) | Enabling it creates role assignments and needs access to `cnp-backup-vault`: more grants (Clarification 2) |
+  | Geo-redundant backup | **false** (module default) | No input. Cannot be changed after the server is created |
+  | Storage | 65536 MB (module default) with `auto_grow_enabled = true` | `storage_mb` is in the module's `ignore_changes`, so it grows without drift |
+  | Immutable backup vault enrolment (`service_criticality >= 4`) | **Not enabled** (default 1) | Enabling it creates role assignments and needs access to `cnp-backup-vault`: more grants |
+
+  Relying on the Postgres module defaults means a change upstream reaches every environment, PROD included, on the next master run. The module is on a branch ref (`DTSPO-30107-additional-postgres-admins`), not a commit, so review its changes before they land.
 
 - Log Analytics. Remove `log_analytics_subscription_id = "1c4f0704-…"` and drive it from the module in 2.2:
 
@@ -199,7 +198,7 @@ Other changes in `appinsights.tf`:
 ### 2.4 `infrastructure/redis.tf` and `infrastructure/postgres.tf`
 
 - Redis: `sku_name = local.sizing.redis_sku_name`, `family = local.sizing.redis_family`, `capacity = local.sizing.redis_capacity`.
-- Postgres: `pgsql_sku = local.sizing.pgsql_sku`, `pgsql_storage_mb = local.sizing.pgsql_storage_mb`, and the new input `geo_redundant_backups = local.sizing.pgsql_geo_redundant_backups`. Fix the comment that says aat is the only expanded-subnet environment.
+- Postgres: remove `pgsql_sku` and `pgsql_storage_mb`, and pass no `geo_redundant_backups`, so every environment takes the module defaults. Fix the comment that says aat is the only expanded-subnet environment.
 
 ### 2.5 `infrastructure/tf-crime-connection-mi.tf`
 
@@ -264,7 +263,7 @@ The epic rules out manual approvals for deploys. A GitHub-environment approval o
 | `apim.tf` `service_url` | `cath-api.${var.env}.platform.hmcts.net` | `local.platform_domain`. Gated off for prod anyway |
 | `apim-logger.tf` | `body_bytes = 8192` (personal data) | Unreachable for prod (`apim_suffix = null`). #1161 |
 | `redis.tf` | `sku_name = "Basic"`, `capacity = 0` | `local.sizing` |
-| `postgres.tf` | SKU and storage literals, no geo-redundant backup | `local.sizing` |
+| `postgres.tf` | SKU and storage literals, no geo-redundant backup | Removed; module defaults |
 | `postgres.tf` and `env-config.tf` comments | "aat is the only expanded subnet" | Comment updated; prod uses `expanded` |
 | `tf-crime-connection-mi.tf` | Unconditional read of `crime-oidc-config` | `crime_federation_enabled` |
 | Redis and Postgres modules (not editable) | Private DNS zones in `1baf5470-…` (DTS-CFTPTL-INTSVC) | Shared CFT zones used by PROD too. Correct, but needs the DNS-zone join grant (missing grant 2) |
@@ -341,7 +340,7 @@ If the second run shows changes:
 
 ### 3.8 Non-prod regressions from the refactor
 
-The `moved` blocks (2.2, 2.3), the bootstrap switch from object id to name, the crime data-source `count`, and the module-driven Log Analytics lookup must all plan **"No changes"** for aat, demo and perftest in PR A. Any create or destroy for those environments blocks the merge.
+The `moved` blocks (2.2, 2.3), the bootstrap switch from object id to name, the crime data-source `count`, and the module-driven Log Analytics lookup must all plan **"No changes"** for aat, demo and perftest in PR A. The only expected updates are the Postgres `sku_name` moving to the module default, `GP_Standard_D2s_v3`, and `version` 16 → 18, both in place. Run Azure's upgrade validation checks on each server before merging. Any create or destroy for those environments blocks the merge.
 
 ### 3.9 Detect-changes gating
 
@@ -354,7 +353,7 @@ The `moved` blocks (2.2, 2.3), the bootstrap switch from object id to name, the 
 | 1. PROD Terraform credential available as a repo secret | **Done in #1095.** One principal `cath-service-prod`, `AZURE_CREDENTIALS_CFT_PROD` | Repo admin / PlatOps (done) | Run 40354863343 of `one-shot.verify-prod-credentials.yml`; `docs/GITHUB_SECRETS_SETUP.md` register |
 | 2. `stage.infrastructure.yml` supports prod (subscription, AKS subscription, state store, credential) | 2.7 | Dev (PR A) | PR A checks show `State Store prod` green, then `Terraform prod` plan green. The step summary shows `Subscription: DCD-CNP-PROD`. The init log shows `mgmtstatestoreprod/mgmtstatestorecontainerprod` |
 | 3. PROD Log Analytics workspace and PROD access group used; nothing PROD points at non-prod | 2.1–2.6 and the hardcode table | Dev; PlatOps names the group (Clarification 1) | The PR A prod plan contains no `1c4f0704`, `hmcts-nonprod`, `9c37fa4a`, `9a5a8d6f` or `DTS PIP Non-Prod`. After apply: `az monitor app-insights component show -g cath-prod -a cath-appinsights-prod --query workspaceResourceId -o tsv` ends with `/hmcts-prod`. `az keyvault show -n cath-prod --query "properties.accessPolicies[].objectId" -o tsv` (same for `cath-bootstrap-prod` and `cath-tp-prod`) lists only the CI SP, the PROD group, `cath-prod-mi` (app vault) and `jenkins-cftptl-intsvc-mi` |
-| 4. PROD sizing agreed and applied | 2.1 sizing table, signed off | Dev proposes; service owner / PlatOps sign off (Clarification 2) | `az redis show -g cath-cache-prod -n cath-prod --query sku` returns Standard/C/1. `az postgres flexible-server show -g cath-data-prod -n cath-prod --query "{sku:sku.name, ha:highAvailability.mode, retention:backup.backupRetentionDays, geo:backup.geoRedundantBackup}"` returns D2ds_v4 / ZoneRedundant / 35 / Enabled |
+| 4. PROD sizing agreed and applied | 2.1 sizing table, signed off | Dev proposes; service owner / PlatOps sign off (Clarification 2) | `az redis show -g cath-cache-prod -n cath-prod --query sku` returns Premium/P/1. `az postgres flexible-server show -g cath-data-prod -n cath-prod --query "{sku:sku.name, ha:highAvailability.mode, retention:backup.backupRetentionDays, geo:backup.geoRedundantBackup}"` returns GP_Standard_D2s_v3 / ZoneRedundant / 35 / Disabled, and `--query version` returns 18 |
 | 5. Plan reviewed, apply succeeds from master | PR A posts the PROD plan to the PR. PR B merge applies | Dev and a reviewer (PR A); merge of PR B | PR A comment "Terraform Plan for `prod`" with an approving review. Master run after PR B: the `Terraform prod` log shows `Apply complete!`, and the run URL is linked on #1096 |
 | 6. `az resource list` shows Postgres, Redis, `cathsaprod`, App Insights, three vaults, `cath` MI | Created by the existing modules, across four resource groups (Section 1) | Dev | `for g in cath-prod cath-data-prod cath-cache-prod; do az resource list -g $g --subscription DCD-CNP-PROD -o table; done` and `az identity show -g managed-identities-prod-rg -n cath-prod-mi --subscription DCD-CNP-PROD -o table`. **AC wording needs amending (Clarification 5)** |
 | 7. A second master run plans no changes for prod | 3.7 | Dev | The next master run that touches `infrastructure/` or `.github/workflows/` (the PR deleting the pre-flight one-shot does this). The `Terraform prod` leg has `plan-exitcode` 0, `No changes.`, and no apply step |
@@ -370,7 +369,7 @@ There is no application code, so these are operational journeys. Each has a task
    - All Graph lookups succeed.
    - The role and DNS-zone checks show which grants are missing.
 2. **PR plan journey (task 13).** PR A's checks:
-   - aat, demo and perftest plan **No changes**.
+   - aat, demo and perftest plan **No changes**, apart from the in-place Postgres `sku_name` update to `GP_Standard_D2s_v3` and `version` 16 → 18.
    - prod plans only creates (no updates or destroys), with no non-prod identifiers (AC3 grep), the expected SKUs (AC4) and no APIM or crime-federation resources.
    - The PR gets a "Terraform Plan for `prod`" comment.
 3. **Master no-op journey (task 15).** Merging PR A runs aat, demo and perftest with no apply (exit code 0) and does not run prod.
@@ -382,12 +381,7 @@ There is no application code, so these are operational journeys. Each has a task
 ## CLARIFICATIONS NEEDED
 
 1. **PROD key vault product group.** Which Entra group gets write access (List/Set/Delete/Recover) on `cath-prod`, `cath-tp-prod` and `cath-bootstrap-prod`? It replaces `DTS PIP Non-Prod`. "No human access" is not possible with `cnp-module-key-vault`: it fails on an empty object id, and the CI principal can't be reused because of the one-policy-per-object rule. Agree the group with Platform Operations (likely an SC/JIT group). It must be a security-enabled group that the PROD principal can read in Graph.
-2. **Sizing sign-off.**
-   - Redis Standard C1, or Premium (P1, zone-redundant)?
-   - Postgres GP_Standard_D2ds_v4: is there perftest evidence for PROD load?
-   - Accept automatic ZoneRedundant HA (about double the Postgres cost)?
-   - **Geo-redundant backup on (irreversible after creation)?**
-   - CaTH's service criticality: should Postgres enrol in the immutable `cnp-backup-vault` (criticality 4 or more)? That needs extra grants.
+2. **Sizing sign-off.** *Answered 2026-11-03:* Postgres runs version 18 and takes the module defaults in every environment (GP_Standard_D2s_v3, 64 GiB, automatic ZoneRedundant HA in prod, 35-day retention, **no geo-redundant backup**, no immutable backup vault enrolment). Redis is Basic C0 everywhere except prod, which is **Premium P1** in a single zone.
 3. **Missing grants.** Confirm with PlatOps: (a) role assignment write in DCD-CNP-PROD for `Storage Blob Data Contributor`; (b) DNS-zone join on the Redis and Postgres private-link zones in DTS-CFTPTL-INTSVC; (c) Graph group read, if the pre-flight shows it is missing. Alternative to (a): PlatOps assign the storage role by hand and PROD sets `role_assignments = []`. Not recommended, because it diverges from non-prod.
 4. **PR plans with the PROD credential.** Accept the recommendation (PR runs plan PROD, no new exposure)? Raise the GitHub Environment / read-only plan principal hardening as a follow-up story?
 5. **AC6 wording.** Amend it to list `cath-prod`, `cath-data-prod`, `cath-cache-prod` and `managed-identities-prod-rg`, because the CNP Redis and Postgres modules create their own resource groups and the `cath` identity (`cath-prod-mi`) lives in the shared MI group. Or should Postgres and Redis be forced into `cath-prod` via `resource_group_name`? That diverges from every non-prod environment and is not recommended.

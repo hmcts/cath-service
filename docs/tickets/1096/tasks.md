@@ -44,7 +44,7 @@ Legend: **[IN-REPO]**, **[OUT-OF-BAND: PlatOps]**, **[OUT-OF-BAND: Dev]** (az ru
 
 ### Agreements and grants
 
-- [ ] 5. (PR A uses Postgres GP_Standard_D2s_v3 / 64 GiB for aat and prod per the user, other environments unchanged; Redis Standard C1 and geo-redundant backup on still need sign-off before PR B) **[COORDINATION]** Get sizing signed off (plan 2.1 table, Clarification 2): Redis Standard C1, Postgres D2ds_v4, automatic ZoneRedundant HA, 35-day retention, **geo-redundant backup on (irreversible)**, no immutable-vault enrolment.
+- [x] 5. (Signed off 2026-11-03: Postgres version 18 in every environment, upgrading aat, demo and perftest in place from 16; Postgres otherwise takes the module defaults, so GP_Standard_D2s_v3 / 64 GiB / no geo-redundant backup; Redis Basic C0 everywhere except prod, which is Premium P1 in a single zone) **[COORDINATION]** Get sizing signed off (plan 2.1 table, Clarification 2): Redis Standard C1, Postgres D2ds_v4, automatic ZoneRedundant HA, 35-day retention, **geo-redundant backup on (irreversible)**, no immutable-vault enrolment.
 - [ ] 6. (Group `DTS CaTH Prod`, set in PR A's `env-config.tf`. Its creation PR is raised; tick this once the group exists) **[COORDINATION]** Agree the PROD key vault product group with Platform Operations (Clarification 1). Record its exact display name.
 - [ ] 7. **[COORDINATION]** Settle Clarifications 4, 5, 6, 7, 8, 9, 10 and 11. AC6 wording (5) is updated on the issue by the author.
 - [ ] 8. **[OUT-OF-BAND: PlatOps]** From the pre-flight results, request the missing grants on DTSPO-35946 (plan 3.5):
@@ -68,7 +68,7 @@ Legend: **[IN-REPO]**, **[OUT-OF-BAND: PlatOps]**, **[OUT-OF-BAND: Dev]** (az ru
   - `keyvault-third-party.tf`: product group local
   - `keyvault-bootstrap.tf`: `product_group_name` local in place of the object id, e2e policy `count` plus `moved`, comment rewritten
   - `variables.tf`: delete `pip_nonprod_group_object_id`
-  - `redis.tf` and `postgres.tf`: `local.sizing.*`, plus `geo_redundant_backups`
+  - `redis.tf`: `local.sizing.*`. `postgres.tf`: no sizing inputs (module defaults)
   - `tf-crime-connection-mi.tf`: gated data source and `crime_oidc_connections` local
   - `apim.tf`: `service_url` via `platform_domain`
 - [x] 11. (PR A) **[IN-REPO]** `.github/workflows/stage.infrastructure.yml` (plan 2.7):
@@ -78,7 +78,7 @@ Legend: **[IN-REPO]**, **[OUT-OF-BAND: PlatOps]**, **[OUT-OF-BAND: Dev]** (az ru
   - update the comments
 - [x] 12. (PR A) **[IN-REPO]** `.github/workflows/workflow.preview.yml`: `environments: '["aat","demo","perftest","prod"]'`, comment updated. **Do not touch `workflow.main.yml` in PR A.** Run `terraform fmt -recursive infrastructure` and `actionlint`. Open PR A.
 - [ ] 13. **[COORDINATION]** Test Scenario 2. Review PR A's checks:
-  - aat, demo and perftest show **No changes**. Any create or destroy there blocks the merge.
+  - aat, demo and perftest show **No changes**, apart from the in-place Postgres `sku_name` update to `GP_Standard_D2s_v3` and `version` 16 → 18. Before merging, run Azure's upgrade validation checks on the aat, demo and perftest servers and agree the downtime. Any create or destroy there blocks the merge.
   - prod plan: creates only.
   - Grep the prod plan log for `1c4f0704|hmcts-nonprod|9c37fa4a|9a5a8d6f|DTS PIP Non-Prod`; expect no hits.
   - SKUs match task 5.

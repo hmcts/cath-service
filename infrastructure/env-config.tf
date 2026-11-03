@@ -5,9 +5,8 @@
 # map deliberately carries only the settings that genuinely differ between
 # environments.
 #
-# Sizing is a default plus per-environment overrides rather than a key in
-# env_config: most environments run the same Postgres and Redis, and only aat
-# and prod differ.
+# Redis sizing is a default plus per-environment overrides rather than a key in
+# env_config: every environment runs the same Redis except prod.
 locals {
   env_config = {
     # The expanded postgresql subnet exists because the original subnet in the
@@ -60,26 +59,19 @@ locals {
 
   crime_federation_enabled = try(local.env_config[var.env].crime_federation_enabled, false)
 
+  # Redis only: Postgres sizing is left to terraform-module-postgresql-flexible's
+  # defaults in every environment (#1096 task 5). Non-prod stays on Basic for
+  # cost; prod needs Premium's replication and SLA.
   default_sizing = {
-    redis_sku_name              = "Basic"
-    redis_family                = "C"
-    redis_capacity              = 0
-    pgsql_sku                   = "GP_Standard_D2ds_v4"
-    pgsql_storage_mb            = 65536
-    pgsql_geo_redundant_backups = false
+    redis_sku_name = "Basic"
+    redis_family   = "C"
+    redis_capacity = 0
   }
-  # aat runs the same Postgres SKU as prod. The prod Redis and geo-redundant
-  # backup values need sign-off (#1096 task 5); geo-redundant backup cannot be
-  # changed after the server is created.
   sizing_overrides = {
-    aat = {
-      pgsql_sku = "GP_Standard_D2s_v3"
-    }
     prod = {
-      redis_sku_name              = "Standard"
-      redis_capacity              = 1
-      pgsql_sku                   = "GP_Standard_D2s_v3"
-      pgsql_geo_redundant_backups = true
+      redis_sku_name = "Premium"
+      redis_family   = "P"
+      redis_capacity = 1
     }
   }
   sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))

@@ -24,12 +24,11 @@ module "postgresql" {
     }
   ]
 
-  # Sizing - see local.sizing in infrastructure/env-config.tf. The module turns on
-  # ZoneRedundant HA for prod by itself.
-  pgsql_sku                     = local.sizing.pgsql_sku
-  pgsql_version                 = "16"
-  pgsql_storage_mb              = local.sizing.pgsql_storage_mb
-  geo_redundant_backups         = local.sizing.pgsql_geo_redundant_backups
+  # SKU, storage, backup retention, geo-redundant backup and HA all come from the
+  # module defaults in every environment (#1096 task 5).
+  # Matches docker-compose.yml. Raising this is an in-place major version upgrade
+  # with downtime; lowering it makes azurerm destroy and recreate the server.
+  pgsql_version                 = "18"
   auto_grow_enabled             = true
   admin_user_object_id          = var.ci_service_principal_object_id
   preserve_legacy_jenkins_admin = false
