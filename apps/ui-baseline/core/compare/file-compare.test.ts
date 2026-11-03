@@ -130,6 +130,35 @@ describe("compareExcel", () => {
     expect(result.findings).toEqual([{ category: "excel", change: "sheet-extra", detail: 'sheet 2 "Welsh"' }]);
   });
 
+  it("should report a sheet, cells and merges only one workbook has, in sheet order", async () => {
+    // Arrange
+    const a = await workbook((book) => {
+      listSheet(book, ROWS);
+      listSheet(book, ROWS, "Welsh");
+    });
+    const b = await workbook((book) => {
+      const sheet = listSheet(book, ROWS);
+      sheet.getCell("AA2").value = "far right";
+      sheet.getCell("B2").value = "1";
+      sheet.getCell("D2").value = "note";
+      sheet.mergeCells("D3:E3");
+      sheet.getCell("D3").value = "merged";
+    });
+
+    // Act
+    const result = await compareExcel(a, b);
+
+    // Assert
+    expect(result.findings).toEqual([
+      { category: "excel", change: "cell-type", detail: 'Hearings!B2 "1": number → text' },
+      { category: "excel", change: "cell-extra", detail: 'Hearings!D2 "note"' },
+      { category: "excel", change: "cell-extra", detail: 'Hearings!AA2 "far right"' },
+      { category: "excel", change: "cell-extra", detail: 'Hearings!D3 "merged"' },
+      { category: "excel", change: "merge-extra", detail: "Hearings!D3:E3" },
+      { category: "excel", change: "sheet-missing", detail: 'sheet 2 "Welsh"' }
+    ]);
+  });
+
   it("should cap the findings for a workbook", async () => {
     // Arrange
     const many = Array.from({ length: 30 }, (_, i) => [`${i}`, i, `case ${i}`]);
@@ -181,6 +210,56 @@ describe("compareFileRuns", () => {
   });
 });
 
+describe("compareFileRuns with other kinds of file", () => {
+  it("should compare CSV and binary files, report extra files, and keep only the listed publications", async () => {
+    // Arrange
+    const root = await mkdtemp(path.join(tmpdir(), "file-compare-"));
+    const run = async (name: string, files: { id: string; kind: FileEntry["kind"]; data: string }[]) => {
+      const dir = path.join(root, name);
+      await mkdir(dir, { recursive: true });
+      for (const file of files) {
+        await mkdir(path.join(dir, file.id), { recursive: true });
+        await writeFile(path.join(dir, file.id, file.kind), file.data);
+      }
+      const entries = files.map((file) => ({ id: file.id, kind: file.kind, file: `${file.id}/${file.kind}`, blob: "x", bytes: file.data.length }));
+      await writeFile(path.join(dir, "index.jsonl"), entries.map((entry) => `${JSON.stringify(entry)}\n`).join(""));
+      return dir;
+    };
+    const source = await run("pip", [
+      { id: "ref", kind: "csv", data: "a,b\n1,2\n" },
+      { id: "ref", kind: "binary", data: "png" },
+      { id: "other", kind: "binary", data: "x" }
+    ]);
+    const target = await run("cath", [
+      { id: "ref", kind: "csv", data: "a,b\n1,3\n" },
+      { id: "ref", kind: "binary", data: "png" },
+      { id: "ref", kind: "excel", data: "x" },
+      { id: "other", kind: "binary", data: "y" }
+    ]);
+    const out = path.join(root, "compare");
+
+    // Act
+    const summary = await compareFileRuns({ source, target, out, only: ["ref"] });
+
+    // Assert
+    expect(summary.results.map((r) => `${r.id} ${r.kind} ${r.verdict}`)).toEqual(["ref binary match", "ref csv differs", "ref excel extra"]);
+    expect(summary.results[2]).toMatchObject({ source: undefined, target: { bytes: 1 } });
+    expect(await readFile(path.join(out, "ref/csv-source.txt"), "utf-8")).toBe("a,b\n1,2\n");
+    expect(JSON.parse(await readFile(path.join(out, "files-compare.json"), "utf-8")).totals).toEqual({ files: 3, match: 1, differs: 1, missing: 0, extra: 1 });
+  });
+
+  it("should compare nothing when neither run has an index", async () => {
+    // Arrange
+    const root = await mkdtemp(path.join(tmpdir(), "file-compare-"));
+
+    // Act
+    const summary = await compareFileRuns({ source: path.join(root, "a"), target: path.join(root, "b"), out: path.join(root, "out") });
+
+    // Assert
+    expect(summary.totals.files).toBe(0);
+  });
+});
+
 describe("compareCsv", () => {
   it("should report changed, missing and extra lines, and mask dates from seeding", () => {
     // Arrange
@@ -203,6 +282,52 @@ describe("compareCsv", () => {
 
     // Assert
     expect(result.findings).toEqual([]);
+  });
+});
+
+describe("compareCsv when lines are only added or removed", () => {
+  it("should report removed lines by number and added lines by content", () => {
+    // Arrange
+    const pip = Buffer.from("h\n1\n2\n3\n4\n");
+    const cath = Buffer.from("h\n1\n3\n4\n5\n6\n");
+
+    // Act
+    const result = compareCsv(pip, cath);
+
+    // Assert
+    expect(result.findings).toEqual([
+      { category: "csv", change: "line-missing", detail: 'line 3: "2"' },
+      { category: "csv", change: "line-extra", detail: '"5"' },
+      { category: "csv", change: "line-extra", detail: '"6"' }
+    ]);
+  });
+
+  it("should report the leftover lines of an uneven replacement as missing or extra", () => {
+    // Act
+    const fewer = compareCsv(Buffer.from("h\na\nb\nc\nz\n"), Buffer.from("h\nx\nz\n"));
+    const more = compareCsv(Buffer.from("h\na\nz\n"), Buffer.from("h\nx\ny\nz\n"));
+
+    // Assert
+    expect(fewer.findings).toEqual([
+      { category: "csv", change: "line-changed", detail: 'line 2: "a" → "x"' },
+      { category: "csv", change: "line-missing", detail: 'line 3: "b"' },
+      { category: "csv", change: "line-missing", detail: 'line 4: "c"' }
+    ]);
+    expect(more.findings).toEqual([
+      { category: "csv", change: "line-changed", detail: 'line 2: "a" → "x"' },
+      { category: "csv", change: "line-extra", detail: '"y"' }
+    ]);
+  });
+
+  it("should report the files as rewritten when they differ too much to diff", () => {
+    // Arrange
+    const lines = (prefix: string) => Buffer.from(Array.from({ length: 1001 }, (_, i) => `${prefix}${i}`).join("\n"));
+
+    // Act
+    const result = compareCsv(lines("a"), lines("b"));
+
+    // Assert
+    expect(result.findings).toEqual([{ category: "csv", change: "rewritten", detail: "the files differ throughout: 1001 lines against 1001" }]);
   });
 });
 

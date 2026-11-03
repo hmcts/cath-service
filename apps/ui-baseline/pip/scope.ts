@@ -27,7 +27,8 @@ const text = args.ticket ? await ticketText(args.ticket, args.repo) : null;
 const mentions = mentionsIn(text, args["list-type"] ?? [], args.route ?? []);
 const routeMap = JSON.parse(await readFile(path.join(PARITY_DIR, "routes/route-map.json"), "utf-8")).routes as RouteEntry[];
 const knownJourneys = (await readdir(path.join(PARITY_DIR, "pip/journeys")))
-  .filter((file) => file.endsWith(".ts") && !["index.ts", "steps.ts"].includes(file))
+  // A journey is a module of its own: not the suite's index or steps, nor a test or test helper beside them
+  .filter((file) => /^[^.]+\.ts$/.test(file) && !["index.ts", "steps.ts"].includes(file))
   .map((file) => file.replace(/\.ts$/, ""));
 const unknown = (args.journey ?? []).filter((id) => !knownJourneys.includes(id));
 if (unknown.length) throw new Error(`no pip journey ${unknown.join(", ")} (one of: ${knownJourneys.join(", ")})`);
