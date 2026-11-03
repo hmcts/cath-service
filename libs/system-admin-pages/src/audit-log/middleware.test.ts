@@ -553,6 +553,25 @@ describe("auditLogMiddleware", () => {
       );
     });
 
+    it("should not log a completion entry when the handler opts out with shouldLog false", async () => {
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      mockRequest.auditMetadata = { shouldLog: false };
+      (mockResponse.send as any)("<html></html>");
+
+      expect(logAction).not.toHaveBeenCalled();
+    });
+
+    it("should log a completion entry on send when the handler has not opted out", async () => {
+      const middleware = auditLogMiddleware();
+      await middleware(mockRequest as Request, mockResponse as Response, mockNext);
+
+      (mockResponse.send as any)("<html></html>");
+
+      expect(logAction).toHaveBeenCalledTimes(1);
+    });
+
     it("should handle render with callback", async () => {
       const _originalRender = mockResponse.render;
 

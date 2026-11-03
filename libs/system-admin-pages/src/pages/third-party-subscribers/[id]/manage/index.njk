@@ -1,6 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 
 {% block backLink %}
@@ -11,6 +12,29 @@
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: testConnectionButton,
+        preventDoubleClick: true
+      }) }}
+    </form>
+
+    {% if connectionResult %}
+      {% set connectionResultHtml %}
+        <p class="govuk-notification-banner__heading">{{ connectionResult.message }}</p>
+        {% if connectionResult.reason %}
+          <p class="govuk-body">{{ connectionTest.reasonLabel }}: {{ connectionResult.reason }}</p>
+        {% endif %}
+      {% endset %}
+
+      {{ govukNotificationBanner({
+        type: "success" if connectionResult.isSuccess else "",
+        role: "alert",
+        titleText: connectionResult.title,
+        html: connectionResultHtml
+      }) }}
+    {% endif %}
 
     {{ govukSummaryList({
       rows: [

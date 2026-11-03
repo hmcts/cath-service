@@ -20,6 +20,7 @@ export enum AuditLogAction {
   NON_STRATEGIC_UPLOAD = "Non strategic upload",
   REFERENCE_DATA_UPLOAD = "Reference data upload",
   REMOVE_LIST = "Remove list",
+  TEST_THIRD_PARTY_CONNECTION = "Test third party connection",
   UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
   UPDATE_THIRD_PARTY_OAUTH_CONFIG = "Update third party OAuth config",
   UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
