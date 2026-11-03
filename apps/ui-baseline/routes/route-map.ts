@@ -126,7 +126,7 @@ async function cathRouteList(): Promise<CathRoute[]> {
         await walk(full, root);
         continue;
       }
-      if (!item.name.endsWith(".ts") || /\.(test|spec)\.|\.d\.ts$/.test(item.name)) continue;
+      if (!item.name.endsWith(".ts") || /(?:\.(test|spec)\.)|(?:\.d\.ts$)/.test(item.name)) continue;
       if (!HANDLER_EXPORT.test(await readFile(full, "utf-8"))) continue;
       if (item.name === "index.ts") {
         found.push({ path: path.relative(root, dir) ? toPath(path.relative(root, dir)) : "/", ...(await describe(full, dir)) });

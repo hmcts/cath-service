@@ -34,6 +34,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("node:child_process", () => ({ execFileSync: mocks.execFileSync, spawn: mocks.spawn, spawnSync: mocks.spawnSync }));
+vi.mock("./system-command.js", () => ({ systemCommand: (name: string) => name }));
 vi.mock("node:fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs/promises")>();
   const readFile = (async (file: string, ...rest: unknown[]) =>
@@ -393,7 +394,7 @@ describe("check", () => {
       expect(signInCall[1]).toEqual(expect.arrayContaining(["apps/ui-baseline/cath/sign-in.ts", `--env=${envName}`]));
       expect(readFileSync(path.join(out, "requirements.md"), "utf-8")).toBe(TICKET);
       const output = logs.join("\n");
-      expect(output).toContain("a ticket recording (ticket-42): 1 list types, 0 pages, 0 journeys");
+      expect(output).toContain("a ticket recording: 1 list types, 0 pages, 0 journeys");
       expect(output).toContain("  civil-daily published");
       expect(output).toContain("  verified-media signed in");
       expect(output).not.toContain("noise");

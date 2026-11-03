@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
 import type { SignInResult } from "./cath/sign-in.js";
+import { confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
 import {
   type CompareSummary,
   captureBatch,
@@ -37,6 +38,8 @@ import { NOT_FOUND_ID, NOT_FOUND_PATH, parseVariant, withMobile } from "./varian
 // (comment, zipped report, side-by-side screenshots), and posts the comment with --post-pr.
 const PARITY_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_DIR = path.join(PARITY_DIR, "../..");
+// The repo's own tsx, run by its path rather than through npx, which can install packages on demand
+const TSX = path.join(REPO_DIR, "node_modules/.bin/tsx");
 const DEFAULT_BASELINE = process.env.PARITY_BASELINE ?? path.join(PARITY_DIR, "output/baseline");
 const LOCALES = ["en", "cy"];
 const REPORT_PORT = 9500;
@@ -44,7 +47,7 @@ const SIDE_BY_SIDE_WIDTH = 1600;
 const FILE_LABEL = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "file" } as const;
 const FILE_VERDICT = { match: "matches", differs: "differs", missing: "CaTH did not make it", extra: "only CaTH made one" } as const;
 
-const { values: args } = parseArgs({
+const { values: given } = parseArgs({
   options: {
     ticket: { type: "string" },
     // Every list type in the fixtures and every mapped page, with the full report and no PR evidence
@@ -70,6 +73,21 @@ const { values: args } = parseArgs({
     repo: { type: "string", default: "hmcts/cath-service" }
   }
 });
+// Checked before any of it reaches a file path or a command (cli-input.ts)
+const optional = <T>(value: T | undefined, check: (value: T) => T) => (value === undefined ? undefined : check(value));
+const args = {
+  ...given,
+  ticket: optional(given.ticket, (value) => matching(value, TICKET, "--ticket")),
+  "list-type": given["list-type"]?.map((value) => matching(value, LIST_TYPE, "--list-type")),
+  route: given.route?.map((value) => matching(value, ROUTE, "--route")),
+  journey: given.journey?.map((value) => matching(value, JOURNEY, "--journey")),
+  locale: optional(given.locale, (value) => matching(value, LOCALE, "--locale")),
+  target: optional(given.target, (value) => httpUrl(value, "--target")),
+  baseline: optional(given.baseline, (value) => confinedPath(value, "--baseline")),
+  out: optional(given.out, (value) => confinedPath(value, "--out")),
+  "post-pr": optional(given["post-pr"], (value) => matching(value, TICKET, "--post-pr")),
+  repo: matching(given.repo, REPO, "--repo")
+};
 
 const apps = JSON.parse(await readFile(path.join(PARITY_DIR, "apps.json"), "utf-8"));
 const environment = await loadEnvironment(args.env);
@@ -78,8 +96,9 @@ const targetBase = args.target ?? environment.cath.baseUrl;
 const envArgs = [`--env=${environment.name}`];
 // A ticket's own recording of pip (record-pip --ticket N), where there is one, else the full baseline
 const ticketBaseline = args.ticket ? path.join(PARITY_DIR, "output/baselines", `ticket-${args.ticket}`) : null;
-const baseline = path.resolve(
-  args.baseline ?? (ticketBaseline && existsSync(path.join(ticketBaseline, "lists/index.jsonl")) ? ticketBaseline : DEFAULT_BASELINE)
+const baseline = confinedPath(
+  args.baseline ?? (ticketBaseline && existsSync(path.join(ticketBaseline, "lists/index.jsonl")) ? ticketBaseline : DEFAULT_BASELINE),
+  "--baseline"
 );
 const locales = args.locale ? [args.locale] : LOCALES;
 const manifest = await loadManifest();
@@ -102,7 +121,7 @@ const allJourneys = args.all && environment.cath.signIn === "session";
 if (args.all && !allJourneys)
   for (const id of baselineJourneys)
     scope.skipped.push(`journey ${id}: not run by --all outside a local CaTH, as journeys change its data (name it with --journey)`);
-const journeyIds = allJourneys ? [...baselineJourneys].sort() : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
+const journeyIds = allJourneys ? [...baselineJourneys].sort((a, b) => a.localeCompare(b)) : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
 for (const id of (args.journey ?? []).filter((id) => !baselineJourneys.has(id))) scope.skipped.push(`journey ${id}: not in the pip baseline`);
 const name = args.ticket
   ? `ticket-${args.ticket}`
@@ -110,7 +129,7 @@ const name = args.ticket
     ? "all"
     : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-")), ...journeyIds].slice(0, 3).join("+") ||
       "check";
-const out = path.resolve(args.out ?? path.join(PARITY_DIR, "output/checks", name));
+const out = confinedPath(args.out ?? path.join(PARITY_DIR, "output/checks", name), "--out");
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 if (requirements) await writeFile(path.join(out, "requirements.md"), requirements);
@@ -121,7 +140,7 @@ const recordedScope = existsSync(path.join(baseline, "scope.json"))
   : null;
 if (recordedScope)
   console.log(
-    `  a ticket recording (${recordedScope.name}): ${recordedScope.publications.length} list types, ${recordedScope.pages.length} pages, ${recordedScope.journeys.length} journeys; anything else is not in it`
+    `  a ticket recording: ${recordedScope.publications.length} list types, ${recordedScope.pages.length} pages, ${recordedScope.journeys.length} journeys; anything else is not in it`
   );
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
 console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
@@ -167,14 +186,8 @@ const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.nam
 if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
   const seeding = spawnSync(
-    "npx",
-    [
-      "tsx",
-      ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []),
-      "apps/ui-baseline/cath/seed.ts",
-      ...envArgs,
-      `--only=${seedIds.join(",")}`
-    ],
+    TSX,
+    [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/seed.ts", ...envArgs, `--only=${seedIds.join(",")}`],
     {
       cwd: REPO_DIR,
       env: { ...process.env, PARITY_SEED_OUTPUT: seedFile },
@@ -200,15 +213,11 @@ const needsSignIn =
   scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
 if (needsSignIn) {
   step("Signing in to CaTH");
-  const signingIn = spawnSync(
-    "npx",
-    ["tsx", ...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/sign-in.ts", ...envArgs],
-    {
-      cwd: REPO_DIR,
-      env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
-      encoding: "utf-8"
-    }
-  );
+  const signingIn = spawnSync(TSX, [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/sign-in.ts", ...envArgs], {
+    cwd: REPO_DIR,
+    env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
+    encoding: "utf-8"
+  });
   for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|not signed in|Error/.test(l)))
     console.log(`  ${line.trim()}`);
   if (signingIn.status !== 0) throw new Error("signing in to CaTH failed");
@@ -762,8 +771,8 @@ async function sideBySide(dir: string): Promise<string[]> {
 function checkedCommit(): string {
   // The hosted check runs from an image with no git history; it is given the commit it was built from
   if (!existsSync(path.join(REPO_DIR, ".git"))) return process.env.UI_BASELINE_COMMIT ?? "unknown";
-  const sha = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
-  const dirty = execFileSync("git", ["status", "--porcelain", "--", "apps", "libs"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
+  const sha = execFileSync(systemCommand("git"), ["rev-parse", "--short", "HEAD"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
+  const dirty = execFileSync(systemCommand("git"), ["status", "--porcelain", "--", "apps", "libs"], { cwd: REPO_DIR, encoding: "utf-8" }).trim();
   return dirty ? `${sha} + uncommitted changes` : sha;
 }
 
