@@ -7,7 +7,19 @@ import { filesStorage, loadEnvironment } from "../../environments.js";
 import type { SeedResult } from "../../fixtures/manifest.js";
 import { prismaRecordStore, type RecordStore, testSupportRecordStore } from "../records.js";
 import type { SignInResult } from "../sign-in.js";
+import { blobResubmit } from "./blob-resubmit.js";
+import { bulkCreateMediaAccounts } from "./bulk-create-media-accounts.js";
+import { configureListTypes } from "./configure-list-types.js";
+import { courtReferenceData } from "./court-reference-data.js";
+import { deleteUser } from "./delete-user.js";
+import { listTypeSearchConfig } from "./list-type-search-config.js";
+import { locationMetadata } from "./location-metadata.js";
+import { manualUploadAndRemove } from "./manual-upload-and-remove.js";
+import { mediaApplications } from "./media-applications.js";
 import { subscriptionBasket } from "./subscription-basket.js";
+import { subscriptions } from "./subscriptions.js";
+import { thirdPartySubscriber } from "./third-party-subscriber.js";
+import { thirdPartyUser } from "./third-party-user.js";
 
 // CaTH's journeys for `parity journeys --module`, compared with pip's journey of the same id.
 // Only journeys ported so far are here; check.ts reports the rest of pip's as not run. Needs the
@@ -53,7 +65,21 @@ const suite: JourneySuite = {
     if (!cookies) throw new Error(`no CaTH session for ${userId} (${locale}) in ${signInFile}`);
     await page.context().addCookies(cookies.map((cookie) => ({ ...cookie, url: baseUrl })));
   },
-  journeys: [subscriptionBasket]
+  journeys: [
+    subscriptionBasket,
+    subscriptions,
+    configureListTypes,
+    blobResubmit,
+    thirdPartyUser,
+    thirdPartySubscriber,
+    deleteUser,
+    listTypeSearchConfig,
+    bulkCreateMediaAccounts,
+    courtReferenceData,
+    locationMetadata,
+    manualUploadAndRemove,
+    mediaApplications
+  ]
 };
 
 export default suite;
