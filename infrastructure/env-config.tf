@@ -34,7 +34,7 @@ locals {
     # Prod APIM waits for #1161.
     # crime_federation_enabled reads crime-oidc-config from the app vault - see
     # tf-crime-connection-mi.tf. The secret must exist in the vault before this is true.
-    # ui_baseline adds the storage for tools/ui-baseline (recorded pip baselines and check
+    # ui_baseline adds the storage for apps/ui-baseline (recorded pip baselines and check
     # results). Only the environment testers run parity checks against has it.
     aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true, ui_baseline = false }
     demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true, ui_baseline = false }

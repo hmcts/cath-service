@@ -18,7 +18,7 @@ api:
   enabled: true
 crons:
   enabled: true
-# The hosted parity check (tools/ui-baseline): true only where testers run checks, perftest.
+# The hosted parity check (apps/ui-baseline): true only where testers run checks, perftest.
 # Resolved by job.helm-deploy.yml.
 uiBaseline:
   enabled: ${UI_BASELINE_ENABLED}
