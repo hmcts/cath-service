@@ -4,6 +4,7 @@ import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { BlobContainer } from "@hmcts/ui-baseline";
+import { systemCommand } from "@hmcts/ui-baseline/system-command";
 
 // Runs parity checks and file comparisons one at a time, each as a child process of the tool's own
 // scripts (tools/ui-baseline/check.ts, compare-files.ts), so a check run here is the same check a
@@ -46,7 +47,7 @@ export function createRunner(options: RunnerOptions): Runner {
     if (!options.store) return;
     const file = path.join(options.dataDir, `${record.id}.tar.gz`);
     // Symlinks into the baseline are kept as links, not copied: the baseline is stored separately
-    execFileSync("tar", ["-czf", file, "-C", runDir(record.id), "."]);
+    execFileSync(systemCommand("tar"), ["-czf", file, "-C", runDir(record.id), "."]);
     try {
       await options.store.uploadFile(`${RUNS_PREFIX}${record.id}.tar.gz`, file, "application/gzip");
       await options.store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json");
@@ -79,7 +80,7 @@ export function createRunner(options: RunnerOptions): Runner {
       const file = path.join(options.dataDir, `${id}.tar.gz`);
       await mkdir(dir, { recursive: true });
       await options.store.downloadToFile(`${RUNS_PREFIX}${id}.tar.gz`, file);
-      execFileSync("tar", ["-xzf", file, "-C", dir]);
+      execFileSync(systemCommand("tar"), ["-xzf", file, "-C", dir]);
       await rm(file, { force: true });
       return dir;
     },

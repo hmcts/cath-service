@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -143,4 +143,106 @@ describe("createRunner", () => {
     // Assert
     expect(runner.list().map((run) => `${run.id} ${run.status} ${run.error ?? ""}`.trim())).toEqual(["b failed interrupted", "a finished"]);
   });
+  it("should store each finished run, and restore it on another pod when it is asked for", async () => {
+    // Arrange
+    const store = memoryStore();
+    const writeReport = async (args: string[]) => {
+      await mkdir(path.join(outDir(args), "report"), { recursive: true });
+      await writeFile(path.join(outDir(args), "report/index.html"), "<p>the report</p>");
+    };
+    const first = createRunner({ ...(await optionsWith(writeReport)), store });
+    const run = first.start({ kind: "check", scope: "all" }, "tester@example.com");
+    await first.idle();
+    const second = createRunner({ ...(await optionsWith(writeReport)), store });
+
+    // Act
+    await second.restore();
+    const dir = await second.directory(run.id);
+
+    // Assert
+    expect([...store.blobs.keys()].sort()).toEqual([`runs/${run.id}.json`, `runs/${run.id}.tar.gz`]);
+    expect(second.get(run.id)?.status).toBe("finished");
+    expect(await readFile(path.join(dir as string, "check/report/index.html"), "utf-8")).toBe("<p>the report</p>");
+  });
+
+  it("should still finish a run when storing it fails", async () => {
+    // Arrange
+    const store = { ...memoryStore(), uploadFile: async () => Promise.reject(new Error("storage is down")) };
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const runner = createRunner({ ...(await optionsWith()), store });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" }, "tester@example.com");
+    await runner.idle();
+
+    // Assert
+    expect(runner.get(run.id)?.status).toBe("failed");
+    expect(errors).toHaveBeenCalledWith(expect.stringContaining(`could not store run ${run.id}: storage is down`));
+    errors.mockRestore();
+  });
+
+  it("should have no directory for a run it does not know", async () => {
+    // Arrange
+    const runner = createRunner({ ...(await optionsWith()), store: memoryStore() });
+
+    // Act
+    const dir = await runner.directory("unknown");
+
+    // Assert
+    expect(dir).toBeNull();
+  });
+
+  it("should run the tool's script with the repository's tsx and keep its output in the run's log", async () => {
+    // Arrange
+    const repoDir = await mkdtemp(path.join(tmpdir(), "repo-"));
+    await mkdir(path.join(repoDir, "node_modules/.bin"), { recursive: true });
+    await writeFile(path.join(repoDir, "node_modules/.bin/tsx"), '#!/bin/sh\necho "ran $1 for $UI_BASELINE_COMMIT"\n');
+    await chmod(path.join(repoDir, "node_modules/.bin/tsx"), 0o755);
+    const { execute: _execute, ...options } = await optionsWith();
+    const runner = createRunner({ ...options, repoDir });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" }, "tester@example.com");
+    await runner.idle();
+
+    // Assert
+    const log = await readFile(path.join(options.dataDir, "runs", run.id, "log.txt"), "utf-8");
+    expect(log).toBe("ran tools/ui-baseline/check.ts for abc1234\n");
+  });
 });
+
+async function optionsWith(write: (args: string[]) => Promise<void> = async () => {}) {
+  const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+  return {
+    dataDir,
+    repoDir: "/repo",
+    environment: "test",
+    commit: "abc1234",
+    store: null,
+    baseline: async () => "/data/baseline",
+    execute: async (_script: string, args: string[]) => {
+      await write(args);
+      return 0;
+    }
+  };
+}
+
+// Blob storage in memory, holding uploaded files' contents
+function memoryStore() {
+  const blobs = new Map<string, Buffer>();
+  return {
+    blobs,
+    name: "memory",
+    list: async (prefix: string) => [...blobs.keys()].filter((name) => name.startsWith(prefix)),
+    download: async (name: string) => blobs.get(name) ?? null,
+    upload: async (name: string, data: Buffer) => {
+      blobs.set(name, data);
+    },
+    uploadFile: async (name: string, file: string) => {
+      blobs.set(name, await readFile(file));
+    },
+    downloadToFile: async (name: string, file: string) => {
+      await writeFile(file, blobs.get(name) as Buffer);
+    }
+  };
+}
