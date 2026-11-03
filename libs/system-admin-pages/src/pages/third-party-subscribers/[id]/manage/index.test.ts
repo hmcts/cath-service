@@ -17,13 +17,7 @@ vi.mock("@hmcts/third-party-user", () => ({
   deleteSecrets: vi.fn()
 }));
 
-vi.mock("../../../../audit-log/logger.js", () => ({
-  AuditLogAction: { TEST_THIRD_PARTY_CONNECTION: "Test third party connection" },
-  logAction: vi.fn()
-}));
-
 import { deleteSecrets, findThirdPartyUserById, setSecret, testThirdPartyConnection } from "@hmcts/third-party-user";
-import { logAction } from "../../../../audit-log/logger.js";
 
 const requireRoleCalls = [...vi.mocked(requireRole).mock.calls];
 
@@ -53,7 +47,6 @@ describe("third-party-subscribers manage user page", () => {
       user: { id: "admin-1", email: "admin@justice.gov.uk", role: "SYSTEM_ADMIN", provenance: "azure-ad" } as never
     };
     res = { render: vi.fn(), redirect: vi.fn(), locals: { locale: "en" } };
-    vi.mocked(logAction).mockResolvedValue(undefined);
   });
 
   describe("getHandler", () => {
@@ -99,14 +92,13 @@ describe("third-party-subscribers manage user page", () => {
 
   describe("postHandler", () => {
     describe("unknown subscriber", () => {
-      it("should redirect to the list and not test or audit", async () => {
+      it("should redirect to the list and not test", async () => {
         vi.mocked(findThirdPartyUserById).mockResolvedValue(null);
 
         await postHandler(req as Request, res as Response);
 
         expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers");
         expect(testThirdPartyConnection).not.toHaveBeenCalled();
-        expect(logAction).not.toHaveBeenCalled();
         expect(res.render).not.toHaveBeenCalled();
       });
 
@@ -214,56 +206,6 @@ describe("third-party-subscribers manage user page", () => {
       });
     });
 
-    describe("audit logging", () => {
-      beforeEach(() => {
-        mockSubscriber();
-      });
-
-      it.each([
-        [{ status: "success" }, "Outcome: Success"],
-        [{ status: "missing-configuration" }, "Outcome: Failure (missing configuration)"],
-        [{ status: "token-failure", reason: { kind: "http-status", status: 401 } }, "Outcome: Failure (token request)"],
-        [{ status: "destination-failure", reason: { kind: "http-status", status: 500 } }, "Outcome: Failure (destination request)"],
-        [{ status: "error" }, "Outcome: Failure (error)"]
-      ])("should write one audit entry for %j", async (result, outcome) => {
-        vi.mocked(testThirdPartyConnection).mockResolvedValue(result as never);
-
-        await postHandler(req as Request, res as Response);
-
-        expect(logAction).toHaveBeenCalledTimes(1);
-        expect(logAction).toHaveBeenCalledWith({
-          userId: "admin-1",
-          userEmail: "admin@justice.gov.uk",
-          userRole: "SYSTEM_ADMIN",
-          userProvenance: "azure-ad",
-          action: "Test third party connection",
-          details: `Name: Test Corp, ID: ${SUBSCRIBER_ID}; ${outcome}`
-        });
-      });
-
-      it("should not put reason text or URLs in the audit details", async () => {
-        vi.mocked(testThirdPartyConnection).mockResolvedValue({ status: "token-failure", reason: { kind: "http-status", status: 401 } });
-
-        await postHandler(req as Request, res as Response);
-
-        const details = vi.mocked(logAction).mock.calls[0][0].details as string;
-        expect(details).not.toContain("401");
-        expect(details).not.toMatch(/https?:/);
-      });
-
-      it("should still render the result when the audit write fails", async () => {
-        const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-        vi.mocked(testThirdPartyConnection).mockResolvedValue({ status: "success" });
-        vi.mocked(logAction).mockRejectedValue(new Error("db down"));
-
-        await expect(postHandler(req as Request, res as Response)).resolves.toBeUndefined();
-
-        expect(res.render).toHaveBeenCalledWith(VIEW, expect.objectContaining({ connectionResult: expect.objectContaining({ isSuccess: true }) }));
-        expect(consoleSpy).toHaveBeenCalled();
-        consoleSpy.mockRestore();
-      });
-    });
-
     describe("read-only and middleware safety", () => {
       beforeEach(() => {
         mockSubscriber();
@@ -276,7 +218,7 @@ describe("third-party-subscribers manage user page", () => {
         expect(vi.mocked(res.render as never).mock.calls[0][1]).not.toHaveProperty("errors");
       });
 
-      it("should opt out of the generic audit middleware entry", async () => {
+      it("should opt out of the generic audit middleware entry so the test is not audited", async () => {
         await postHandler(req as Request, res as Response);
 
         expect(req.auditMetadata).toEqual({ shouldLog: false });

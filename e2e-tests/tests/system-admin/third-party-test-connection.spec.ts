@@ -34,9 +34,10 @@ test.describe("Third party test connection", () => {
       expect(buttonBox!.y).toBeLessThan(summaryBox!.y);
       expect((await axeCheck(page).analyze()).violations).toEqual([]);
 
-      // No OAuth configuration saved: failure banner, no outbound call
+      // No OAuth configuration saved: red failure box, no outbound call
       await testButton.click();
-      const banner = page.locator(".govuk-notification-banner");
+      const banner = page.locator(".connection-result");
+      await expect(banner).toHaveClass(/connection-result--fail/);
       await expect(banner).toContainText("Failed");
       await expect(banner).toContainText("No OAuth configuration found. Please supply valid OAuth configuration to enable connection.");
       await expect(page.getByRole("button", { name: "Test connection" })).toBeVisible();
@@ -63,9 +64,10 @@ test.describe("Third party test connection", () => {
       await page.getByRole("button", { name: "Confirm" }).click();
       await page.waitForURL(`**/third-party-subscribers/${subscriber.id}/oauth-config/success`);
 
-      // Configured against the testing-support endpoint: success banner
+      // Configured against the testing-support endpoint: green success box
       await page.goto(manageUrl);
       await page.getByRole("button", { name: "Test connection" }).click();
+      await expect(banner).toHaveClass(/connection-result--success/);
       await expect(banner).toContainText("Succeeded");
       await expect(banner).toContainText("Connection to third party succeeded.");
       expect((await axeCheck(page).analyze()).violations).toEqual([]);

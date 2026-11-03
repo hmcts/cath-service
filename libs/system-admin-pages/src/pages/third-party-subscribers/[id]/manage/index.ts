@@ -1,7 +1,6 @@
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { type ConnectionTestResult, type FailureReason, findThirdPartyUserById, testThirdPartyConnection } from "@hmcts/third-party-user";
 import type { Request, RequestHandler, Response } from "express";
-import { AuditLogAction, logAction } from "../../../../audit-log/logger.js";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
@@ -33,8 +32,8 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   const result = await testThirdPartyConnection(user.id);
-  await recordConnectionTestAudit(req, user, result);
 
+  // Testing a connection is read-only and not audited; without this the audit middleware would log the render as a generic success
   req.auditMetadata = { shouldLog: false };
   renderManagePage(res, user, t, lngParam, toConnectionBanner(result, t));
 };
@@ -54,36 +53,6 @@ function renderManagePage(res: Response, user: Subscriber, t: Locale, lngParam: 
     subscriptionCount: user.subscriptions.length,
     connectionResult
   });
-}
-
-async function recordConnectionTestAudit(req: Request, user: Subscriber, result: ConnectionTestResult) {
-  try {
-    await logAction({
-      userId: req.user?.id || "unknown",
-      userEmail: req.user?.email || "unknown",
-      userRole: req.user?.role || "SYSTEM_ADMIN",
-      userProvenance: req.user?.provenance || "azure-ad",
-      action: AuditLogAction.TEST_THIRD_PARTY_CONNECTION,
-      details: `Name: ${user.name}, ID: ${user.id}; Outcome: ${describeOutcome(result)}`
-    });
-  } catch (error) {
-    console.error("Failed to create connection test audit log entry:", error);
-  }
-}
-
-function describeOutcome(result: ConnectionTestResult): string {
-  switch (result.status) {
-    case "success":
-      return "Success";
-    case "missing-configuration":
-      return "Failure (missing configuration)";
-    case "token-failure":
-      return "Failure (token request)";
-    case "destination-failure":
-      return "Failure (destination request)";
-    case "error":
-      return "Failure (error)";
-  }
 }
 
 function toConnectionBanner(result: ConnectionTestResult, t: Locale): ConnectionBanner {

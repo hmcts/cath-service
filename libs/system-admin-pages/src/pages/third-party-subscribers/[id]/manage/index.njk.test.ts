@@ -80,32 +80,35 @@ describe("manage subscriber template", () => {
     });
   });
 
-  describe("result banner", () => {
-    it("should not render a banner when there is no result", () => {
+  describe("result box", () => {
+    it("should not render a result box or a GOV.UK notification banner when there is no result", () => {
       const { $ } = renderPage();
 
+      expect($(".connection-result")).toHaveLength(0);
       expect($(".govuk-notification-banner")).toHaveLength(0);
     });
 
-    it("should render a success banner between the form and the summary list", () => {
+    it("should render a success box between the form and the summary list", () => {
       const { $ } = renderPage(en, {
         connectionResult: { isSuccess: true, title: en.connectionTest.succeededTitle, message: en.connectionTest.succeeded }
       });
 
-      const banner = $(".govuk-notification-banner");
-      expect(banner).toHaveLength(1);
-      expect(banner.hasClass("govuk-notification-banner--success")).toBe(true);
-      expect(banner.attr("role")).toBe("alert");
-      expect(banner.find(".govuk-notification-banner__title").text().trim()).toBe("Succeeded");
-      expect(banner.find(".govuk-notification-banner__heading").text().trim()).toBe("Connection to third party succeeded.");
-      expect(banner.find(".govuk-body")).toHaveLength(0);
-      const order = $("main h1, main form, main .govuk-notification-banner, main .govuk-summary-list")
-        .map((_, el) => (el.tagName === "div" ? "banner" : el.tagName))
+      const box = $(".connection-result");
+      expect(box).toHaveLength(1);
+      expect(box.hasClass("connection-result--success")).toBe(true);
+      expect(box.hasClass("connection-result--fail")).toBe(false);
+      expect(box.attr("role")).toBe("alert");
+      expect(box.find(".connection-result__title").text().trim()).toBe("Succeeded");
+      expect(box.find(".govuk-body")).toHaveLength(2);
+      expect(box.find(".govuk-body").eq(1).text().trim()).toBe("Connection to third party succeeded.");
+      expect($(".govuk-notification-banner")).toHaveLength(0);
+      const order = $("main h1, main form, main .connection-result, main .govuk-summary-list")
+        .map((_, el) => (el.tagName === "div" ? "result" : el.tagName))
         .get();
-      expect(order).toEqual(["h1", "form", "banner", "dl"]);
+      expect(order).toEqual(["h1", "form", "result", "dl"]);
     });
 
-    it("should render a failure banner with the default type and the reason line", () => {
+    it("should render a failure box with the reason line", () => {
       const { $ } = renderPage(en, {
         connectionResult: {
           isSuccess: false,
@@ -115,22 +118,24 @@ describe("manage subscriber template", () => {
         }
       });
 
-      const banner = $(".govuk-notification-banner");
-      expect(banner).toHaveLength(1);
-      expect(banner.hasClass("govuk-notification-banner--success")).toBe(false);
-      expect(banner.attr("role")).toBe("alert");
-      expect(banner.find(".govuk-notification-banner__title").text().trim()).toBe("Failed");
-      expect(banner.find(".govuk-notification-banner__heading").text().trim()).toBe("Failed to generate access token.");
-      expect(banner.find(".govuk-body").text().trim()).toBe("Reason: HTTP status 401");
+      const box = $(".connection-result");
+      expect(box).toHaveLength(1);
+      expect(box.hasClass("connection-result--fail")).toBe(true);
+      expect(box.hasClass("connection-result--success")).toBe(false);
+      expect(box.attr("role")).toBe("alert");
+      expect(box.find(".connection-result__title").text().trim()).toBe("Failed");
+      expect(box.find(".govuk-body").eq(1).text().trim()).toBe("Failed to generate access token.");
+      expect(box.find(".govuk-body").eq(2).text().trim()).toBe("Reason: HTTP status 401");
     });
 
-    it("should render a failure banner without a reason line when there is no reason", () => {
+    it("should render a failure box without a reason line when there is no reason", () => {
       const { $ } = renderPage(en, {
         connectionResult: { isSuccess: false, title: en.connectionTest.failedTitle, message: en.connectionTest.error }
       });
 
-      expect($(".govuk-notification-banner__heading").text().trim()).toBe("Error connecting to third party. Please try again later.");
-      expect($(".govuk-notification-banner .govuk-body")).toHaveLength(0);
+      const box = $(".connection-result");
+      expect(box.find(".govuk-body")).toHaveLength(2);
+      expect(box.find(".govuk-body").eq(1).text().trim()).toBe("Error connecting to third party. Please try again later.");
     });
 
     it("should render the Welsh title, message and reason label", () => {
@@ -143,9 +148,10 @@ describe("manage subscriber template", () => {
         }
       });
 
-      expect($(".govuk-notification-banner__title").text().trim()).toBe("Methodd");
-      expect($(".govuk-notification-banner__heading").text().trim()).toBe("Methwyd ag anfon cais i'r URL cyrchfan.");
-      expect($(".govuk-notification-banner .govuk-body").text().trim()).toBe("Rheswm: Statws HTTP 500");
+      const box = $(".connection-result");
+      expect(box.find(".connection-result__title").text().trim()).toBe("Methodd");
+      expect(box.find(".govuk-body").eq(1).text().trim()).toBe("Methwyd ag anfon cais i'r URL cyrchfan.");
+      expect(box.find(".govuk-body").eq(2).text().trim()).toBe("Rheswm: Statws HTTP 500");
     });
 
     it("should escape markup in the message and reason", () => {
@@ -153,9 +159,10 @@ describe("manage subscriber template", () => {
         connectionResult: { isSuccess: false, title: "Failed", message: "<script>alert(1)</script>", reason: "<img src=x onerror=alert(1)>" }
       });
 
-      expect($(".govuk-notification-banner script")).toHaveLength(0);
-      expect($(".govuk-notification-banner img")).toHaveLength(0);
-      expect($(".govuk-notification-banner__heading").text()).toBe("<script>alert(1)</script>");
+      const box = $(".connection-result");
+      expect(box.find("script")).toHaveLength(0);
+      expect(box.find("img")).toHaveLength(0);
+      expect(box.find(".govuk-body").eq(1).text()).toBe("<script>alert(1)</script>");
       expect(html).not.toContain("<script>alert(1)</script>");
     });
   });
