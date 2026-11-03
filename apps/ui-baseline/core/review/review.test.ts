@@ -7,6 +7,7 @@ import type { CompareSummary } from "../compare/compare.js";
 import { buildPrompt, parseVerdicts, type ReviewItem, reviewFindings } from "./review.js";
 
 vi.mock("node:child_process", () => ({ execFileSync: vi.fn(), spawnSync: vi.fn() }));
+vi.mock("../../system-command.js", () => ({ systemCommand: (name: string) => name }));
 
 const COMPARISON: CompareSummary = {
   source: "pip",

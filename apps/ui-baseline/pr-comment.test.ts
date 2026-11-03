@@ -4,6 +4,7 @@ import type { CompareSummary, ReviewResult } from "./core/index.js";
 import { buildComment, COMMENT_MARKER, type CommentInput, postComment } from "./pr-comment.js";
 
 vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
+vi.mock("./system-command.js", () => ({ systemCommand: (name: string) => name }));
 
 type Item = ReviewResult["items"][number];
 type VerdictName = NonNullable<Item["review"]>["verdict"];

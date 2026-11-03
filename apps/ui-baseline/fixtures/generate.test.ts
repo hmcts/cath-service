@@ -30,6 +30,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
+vi.mock("../system-command.js", () => ({ systemCommand: (name: string) => name }));
 vi.mock("@hmcts/list-types-common", () => ({
   listTypeData: [
     { name: "CIVIL_DAILY_CAUSE_LIST", urlPath: "civil-daily-cause-list", subJurisdictionIds: [1] },

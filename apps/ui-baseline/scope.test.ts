@@ -17,6 +17,7 @@ import {
 } from "./scope.js";
 
 vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
+vi.mock("./system-command.js", () => ({ systemCommand: (name: string) => name }));
 vi.mock("node:fs", () => ({ existsSync: vi.fn() }));
 vi.mock("node:fs/promises", () => ({ readFile: vi.fn() }));
 

@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { listTypeData } from "@hmcts/list-types-common";
 import { locationData } from "@hmcts/location/location-data";
+import { systemCommand } from "../system-command.js";
 import type { Manifest, PublicationFixture } from "./manifest.js";
 
 // Regenerates publications.json and payloads/ from pinned pip checkouts: one publication per
@@ -195,7 +196,7 @@ async function deprecatedListTypes(): Promise<Set<string>> {
   const version = gradle.match(/pip-data-models:([\d.]+)/)?.[1];
   if (!version) throw new Error("could not find the pip-data-models version in pip-data-management/build.gradle");
   const source = execFileSync(
-    "gh",
+    systemCommand("gh"),
     [
       "api",
       "-H",
@@ -208,7 +209,7 @@ async function deprecatedListTypes(): Promise<Set<string>> {
   const entries = body.slice(0, body.indexOf(";"));
   const result = new Set<string>();
   // Each constant is NAME(args), separated by commas; comments between them are skipped
-  for (const match of entries.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "").matchAll(/([A-Z][A-Z0-9_]+)\s*\(((?:[^()]|\((?:[^()]|\([^()]*\))*\))*)\)/g)) {
+  for (const match of entries.replace(/(?:\/\*[\s\S]*?\*\/)|(?:\/\/.*$)/gm, "").matchAll(/([A-Z][A-Z0-9_]+)\s*\(((?:[^()]|\((?:[^()]|\([^()]*\))*\))*)\)/g)) {
     const args = splitTopLevel(match[2]);
     if ((args.length === 9 || args.length === 4) && args[args.length - 1].trim() === "true") result.add(match[1]);
   }
@@ -247,11 +248,13 @@ async function nonStrategicExcelFixtures(): Promise<Map<string, string>> {
   const dir = path.join(pipDataManagement, EXCEL_PAIRINGS_DIR);
   for (const name of (await readdir(dir)).filter((file) => file.startsWith("NonStrategic"))) {
     const source = await readFile(path.join(dir, name), "utf-8");
+    // A Java string expression: literals joined by +. Each + is required, so the pattern cannot match
+    // the same text more than one way, which made the old one backtrack exponentially
     const joinLiterals = (expression: string) => [...expression.matchAll(/"([^"]*)"/g)].map((match) => match[1]).join("");
     const constants = new Map(
-      [...source.matchAll(/static final String (\w+)\s*=\s*((?:"[^"]*"\s*\+?\s*)+);/g)].map((match) => [match[1], joinLiterals(match[2])])
+      [...source.matchAll(/static final String (\w+)\s*=\s*("[^"]*"(?:\s*\+\s*"[^"]*")*)\s*;/g)].map((match) => [match[1], joinLiterals(match[2])])
     );
-    for (const match of source.matchAll(/ListType\.([A-Z_]+),\s*((?:"[^"]*"\s*\+?\s*)+|[A-Z_]+)/g)) {
+    for (const match of source.matchAll(/ListType\.([A-Z_]+),\s*("[^"]*"(?:\s*\+\s*"[^"]*")*|[A-Z_]+)/g)) {
       const file = match[2].trim().startsWith('"') ? joinLiterals(match[2]) : constants.get(match[2].trim());
       if (file) pairs.set(match[1], file.replace(/^.*non-strategic\//, ""));
     }
@@ -292,7 +295,7 @@ function camelCase(listType: string): string {
 }
 
 function gitHead(repo: string): string {
-  return execFileSync("git", ["-C", repo, "rev-parse", "--short=8", "HEAD"], { encoding: "utf-8" }).trim();
+  return execFileSync(systemCommand("git"), ["-C", repo, "rev-parse", "--short=8", "HEAD"], { encoding: "utf-8" }).trim();
 }
 
 interface PipListType {

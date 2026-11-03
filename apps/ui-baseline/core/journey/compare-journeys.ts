@@ -77,7 +77,7 @@ async function journeysIn(dir: string): Promise<string[]> {
   return entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
 }
 
 async function localesOf(journeyDir: string): Promise<string[]> {
