@@ -156,8 +156,9 @@ const summary = {
   pip: process.argv[2],
   // A ticket recording: what it was limited to (pip/scope.ts); absent for a full recording
   scope: fs.existsSync(path.join(out, "scope.json")) ? JSON.parse(fs.readFileSync(path.join(out, "scope.json"), "utf-8")) : undefined,
+  // A capture fails when pip answers other than the target expects (the not-found page expects 404).
   // Captures that failed outright (e.g. pip down) never reach the index; the capture logs count them
-  failedCaptures: [...lists, ...pages].filter((c) => c.status !== 200).length + ["lists.log", "pages.log"].reduce((sum, log) => {
+  failedCaptures: [...lists, ...pages].filter((c) => c.status !== (c.source?.expectedStatus ?? 200)).length +["lists.log", "pages.log"].reduce((sum, log) => {
     const match = fs.existsSync(path.join(out, log)) && fs.readFileSync(path.join(out, log), "utf-8").match(/(\d+) failed/g);
     return sum + (match ? Number(match.at(-1).split(" ")[0]) : 0);
   }, 0),

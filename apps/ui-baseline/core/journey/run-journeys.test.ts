@@ -150,6 +150,24 @@ describe("runJourneys", () => {
     expect(browser.close).toHaveBeenCalledTimes(1);
   });
 
+  it("should tell how many journey-language runs are done after each", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "run-journeys-"));
+    const { browser } = fakeBrowser();
+    vi.mocked(launchChromium).mockResolvedValue(browser as unknown as Browser);
+    const moduleFile = await writeSuiteModule(dir, suiteOf());
+    const onRun = vi.fn();
+
+    // Act
+    await runJourneys(moduleFile, { outDir: path.join(dir, "out"), locales: ["en", "cy"], onRun });
+
+    // Assert
+    expect(onRun.mock.calls).toEqual([
+      [1, 2],
+      [2, 2]
+    ]);
+  });
+
   it("should sign in as the journey's user in its locale when the journey has viewAs", async () => {
     // Arrange
     const dir = await mkdtemp(path.join(tmpdir(), "run-journeys-"));

@@ -1,0 +1,84 @@
+/* The service navigation's items to the right of the service name, for the app's pages and the
+   report's (the report copies this file into its assets) */
+@media (min-width: 40.0625em) {
+  /* GOV.UK grows the navigation to fill the row beside the service name, so its list is pushed to
+     the end of it */
+  .app-navigation .govuk-service-navigation__list {
+    justify-content: flex-end;
+  }
+}
+
+/* A menu in the navigation: a disclosure whose links drop down below it */
+.app-navigation-menu {
+  position: relative;
+}
+
+.app-navigation-menu__toggle {
+  /* The navigation's links take their colour from :link and :visited, which a <summary> is neither,
+     so it is given the same one; GOV.UK's own :hover and :focus colours still win */
+  color: var(--govuk-link-colour, #1a65a6);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.app-navigation-menu__toggle::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron, pointing down when closed and up when open */
+.app-navigation-menu__toggle::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: -4px;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.app-navigation-menu__details[open] .app-navigation-menu__toggle::after {
+  margin-top: 4px;
+  transform: rotate(225deg);
+}
+
+.app-navigation-menu__list {
+  margin: 0;
+  padding: 10px 0;
+  list-style: none;
+}
+
+.app-navigation-menu__link {
+  display: block;
+  padding: 8px 20px;
+  font-family: "GDS Transport", arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/* On a tablet or wider the menu drops down over the page; on a phone it sits inside the opened menu */
+@media (min-width: 40.0625em) {
+  .app-navigation-menu__list {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    min-width: 12rem;
+    background-color: #ffffff;
+    border: 1px solid #b1b4b6;
+    border-top: 4px solid #1d70b8;
+  }
+}
+
+@media (max-width: 40.0525em) {
+  .app-navigation-menu__list {
+    padding: 0 0 0 15px;
+  }
+
+  .app-navigation-menu__link {
+    padding: 8px 0;
+  }
+}

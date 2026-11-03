@@ -13,7 +13,7 @@ async function runnerWith(write: (args: string[]) => Promise<void> = async () =>
     await write(args);
     return 0;
   });
-  const baseline = vi.fn(async () => "/data/baseline");
+  const baseline = vi.fn(async (_id?: string) => ({ id: "2026-11-03", dir: "/data/baseline", release: vi.fn() }));
   const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "abc1234", store: null, baseline, execute });
   return { runner, execute, baseline, dataDir };
 }
@@ -41,7 +41,12 @@ describe("createRunner", () => {
     expect(script).toBe("apps/ui-baseline/check.ts");
     expect(args).toEqual(["--env=test", "--baseline=/data/baseline", expect.stringMatching(/--out=.*\/runs\/.*\/check$/), "--no-review", "--all"]);
     expect(options).toMatchObject({ cwd: "/repo", env: { UI_BASELINE_COMMIT: "abc1234" } });
-    expect(runner.get(run.id)).toMatchObject({ status: "finished", requestedBy: "tester@example.com", summary: { lists: { match: 1, differs: 3 } } });
+    expect(runner.get(run.id)).toMatchObject({
+      status: "finished",
+      requestedBy: "tester@example.com",
+      baselineId: "2026-11-03",
+      summary: { lists: { match: 1, differs: 3 } }
+    });
   });
 
   it("should pass each list type to the check", async () => {
@@ -135,7 +140,15 @@ describe("createRunner", () => {
       uploadFile: async () => {},
       downloadToFile: async () => {}
     };
-    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline: async () => "", execute: async () => 0 });
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline: async () => ({ id: "", dir: "", release: () => {} }),
+      execute: async () => 0
+    });
 
     // Act
     await runner.restore();
@@ -192,6 +205,76 @@ describe("createRunner", () => {
     expect(dir).toBeNull();
   });
 
+  it("should hold a check's baseline until the check has ended", async () => {
+    // Arrange
+    const release = vi.fn();
+    let releasedWhileRunning = true;
+    const runner = createRunner({
+      ...(await optionsWith()),
+      baseline: async () => ({ id: "2026-11-03", dir: "/data/baseline", release }),
+      execute: async () => {
+        releasedWhileRunning = release.mock.calls.length > 0;
+        return 0;
+      }
+    });
+
+    // Act
+    runner.start({ kind: "check", scope: "all" }, "tester");
+    await runner.idle();
+
+    // Assert
+    expect(releasedWhileRunning).toBe(false);
+    expect(release).toHaveBeenCalledTimes(1);
+  });
+
+  it("should give an old run's directory without waiting for its baseline, unless asked to", async () => {
+    // Arrange
+    let arrive: () => void = () => {};
+    const arrived = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    const runner = createRunner({
+      ...(await optionsWith()),
+      // The check gets the latest at once; the run's own baseline, asked for by id, arrives when the test says
+      baseline: async (id?: string) => {
+        if (id) await arrived;
+        return { id: "2026-11-03", dir: "/data/baseline", release: () => {} };
+      }
+    });
+    const run = runner.start({ kind: "check", scope: "all" }, "tester");
+    await runner.idle();
+    const pending = (promise: Promise<unknown>) =>
+      Promise.race([promise.then(() => "settled"), new Promise((resolve) => setTimeout(() => resolve("waiting"), 50))]);
+
+    // Act
+    const page = await pending(runner.directory(run.id));
+    const report = runner.directory(run.id, { waitForBaseline: true });
+    const reportBefore = await pending(report);
+    arrive();
+    const reportAfter = await pending(report);
+
+    // Assert
+    expect(page).toBe("settled");
+    expect(reportBefore).toBe("waiting");
+    expect(reportAfter).toBe("settled");
+    expect(await report).toMatch(/runs\/.*$/);
+  });
+
+  it("should say there was nothing to check when the tool found nothing in the baseline", async () => {
+    // Arrange
+    const runner = createRunner({ ...(await optionsWith()), execute: async () => 2 });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "routes", routes: ["/not-in-the-baseline"] }, "tester");
+    await runner.idle();
+
+    // Assert
+    expect(runner.get(run.id)).toMatchObject({
+      status: "failed",
+      error: "There was nothing to check: none of the list types or pages asked for are in the baseline. The log says what was left out, and why."
+    });
+  });
+
   it("should run the tool's script with the repository's tsx and keep its output in the run's log", async () => {
     // Arrange
     const repoDir = await mkdtemp(path.join(tmpdir(), "repo-"));
@@ -219,7 +302,7 @@ async function optionsWith(write: (args: string[]) => Promise<void> = async () =
     environment: "test",
     commit: "abc1234",
     store: null,
-    baseline: async () => "/data/baseline",
+    baseline: async (_id?: string) => ({ id: "2026-11-03", dir: "/data/baseline", release: () => {} }),
     execute: async (_script: string, args: string[]) => {
       await write(args);
       return 0;

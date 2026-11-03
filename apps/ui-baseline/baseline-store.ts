@@ -1,9 +1,10 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { type BlobContainer, openBlobContainer } from "./core/index.js";
 import { type Environment, filesStorage } from "./environments.js";
 import { systemCommand } from "./system-command.js";
@@ -15,6 +16,8 @@ import { systemCommand } from "./system-command.js";
 const PARITY_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const BASELINE_CONTAINER = "ui-baseline";
 const LATEST = "baselines/latest.json";
+// The hosted check pulls baselines while serving pages, so tar runs off the event loop
+const execFileAsync = promisify(execFile);
 
 export async function pushBaseline(environment: Environment, dir: string): Promise<StoredBaseline> {
   const runFile = path.join(dir, "run.json");
@@ -37,7 +40,7 @@ export async function pushBaseline(environment: Environment, dir: string): Promi
   try {
     const archive = path.join(scratch, "baseline.tar.gz");
     // -h stores what symlinks point at, so the archive stands alone
-    execFileSync(systemCommand("tar"), ["-czhf", archive, "-C", dir, "."]);
+    await execFileAsync(systemCommand("tar"), ["-czhf", archive, "-C", dir, "."]);
     await container.uploadFile(stored.blob, archive, "application/gzip");
     await container.upload(LATEST, Buffer.from(`${JSON.stringify(stored, null, 2)}\n`), "application/json");
   } finally {
@@ -56,7 +59,7 @@ export async function pullBaseline(environment: Environment, dir: string, id?: s
     await container.downloadToFile(stored.blob, archive);
     await rm(dir, { recursive: true, force: true });
     await mkdir(dir, { recursive: true });
-    execFileSync(systemCommand("tar"), ["-xzf", archive, "-C", dir]);
+    await execFileAsync(systemCommand("tar"), ["-xzf", archive, "-C", dir]);
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }

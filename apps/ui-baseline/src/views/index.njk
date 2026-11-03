@@ -7,6 +7,7 @@
 {% from "govuk/components/textarea/macro.njk" import govukTextarea %}
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
 {% set title = "Check CaTH against pip" %}
+{% set currentPage = "home" %}
 {% set statusColours = { queued: "grey", running: "blue", finished: "green", failed: "red" } %}
 
 {% block page_content %}
@@ -33,7 +34,7 @@
           name: "scope",
           fieldset: { legend: { text: "What do you want to check?", classes: "govuk-fieldset__legend--s" } },
           items: [
-            { value: "all", text: "All of CaTH", hint: { text: "Every list type and page in the baseline. Takes about half an hour." }, checked: not data or data.scope == "all" },
+            { value: "all", text: "All of CaTH", hint: { text: "Every list type and page in the baseline. Takes about half an hour." }, checked: not data.scope or data.scope == "all" },
             { value: "list-types", text: "Some list types", checked: data.scope == "list-types", conditional: { html: govukTextarea({ name: "listTypes", id: "listTypes", label: { text: "List type names, one per line" }, hint: { text: "For example, CIVIL_DAILY_CAUSE_LIST" }, value: data.listTypes, rows: 3 }) } },
             { value: "routes", text: "Some pages", checked: data.scope == "routes", conditional: { html: govukTextarea({ name: "routes", id: "routes", label: { text: "Page routes, one per line" }, hint: { text: "For example, /summary-of-publications" }, value: data.routes, rows: 3 }) } }
           ]

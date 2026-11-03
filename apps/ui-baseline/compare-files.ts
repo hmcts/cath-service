@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { compareArtefactFiles } from "./artefact-files.js";
+import { EXIT_DIFFERENCES } from "./exit-codes.js";
 
 // Compares the PDF and Excel files pip and CaTH made for a publication uploaded to both, by its
 // artefact id in each (artefact-files.ts). PDFs by text only, Excel files cell by cell. Exits 1
@@ -33,4 +34,4 @@ for (const result of summary.results.filter((r) => r.verdict !== "match")) {
 }
 if (links) console.log(`\n${links.listType}:\n  CaTH: ${links.cath ?? "no page"}\n  pip:  ${links.pip ?? "no page"}`);
 console.log(`\n→ ${out}/compare/files-compare.json`);
-process.exit(t.differs || t.missing || t.extra ? 1 : 0);
+process.exit(t.differs || t.missing || t.extra ? EXIT_DIFFERENCES : 0);
