@@ -1,8 +1,7 @@
-# People only get blob data access in prod by activating it through PIM. The key
-# vault product group is the SC-cleared prod team, so it doubles as the PIM group.
-data "azuread_group" "storage_pim" {
-  count            = local.is_prod ? 1 : 0
-  display_name     = local.key_vault_product_group_name
+# SC-cleared group for PIM access to production data, per the
+# cnp-module-storage-account README.
+data "azuread_group" "sc_group" {
+  display_name     = "DTS CaTH Prod"
   security_enabled = true
 }
 
@@ -30,13 +29,18 @@ module "sa" {
   managed_identity_object_id = module.key_vault.managed_identity_objectid[0]
   role_assignments           = ["Storage Blob Data Contributor"]
 
-  # Eligibility runs for duration_days (module default 365) from the first apply
-  # and is not renewed automatically: replace module.sa.time_static.pim_start to
-  # renew it before it lapses.
-  pim_roles = local.is_prod ? {
-    "Storage Blob Data Reader" = { principal_id = data.azuread_group.storage_pim[0].object_id }
-    "Storage Blob Delegator"   = { principal_id = data.azuread_group.storage_pim[0].object_id }
-  } : {}
+  # Only enabled on prod. Eligibility runs for duration_days (module default 365)
+  # from the first apply and is not renewed automatically: replace
+  # module.sa.time_static.pim_start to renew it before it lapses.
+  pim_roles = var.env != "prod" ? {} : {
+    "Storage Blob Delegator" = {
+      principal_id = data.azuread_group.sc_group.object_id
+    }
+
+    "Storage Blob Data Reader" = {
+      principal_id = data.azuread_group.sc_group.object_id
+    }
+  }
 }
 
 resource "azurerm_key_vault_secret" "storageaccount_connection_string" {
