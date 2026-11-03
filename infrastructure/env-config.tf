@@ -5,16 +5,16 @@
 # map deliberately carries only the settings that genuinely differ between
 # environments.
 #
-# Sizing is NOT here on purpose: aat, demo, ithc and perftest all run the same
-# Postgres SKU/storage and the same Redis SKU/capacity, so lifting those into a
-# map would be four copies of one value pretending to be configuration. Add a
-# key here only when an environment actually needs to differ.
+# Redis sizing is a default plus per-environment overrides rather than a key in
+# env_config: every environment runs the same Redis except prod.
 locals {
   env_config = {
     # The expanded postgresql subnet exists because the original subnet in the
-    # stg vnet is full - a stg-specific fact. The demo, ithc and perftest vnets
-    # have their own subnets, so they take the module default. null (rather than
-    # "") means "argument not set", so the module's own default applies.
+    # stg vnet is full - a stg-specific fact. In prod, postgres-expanded is the
+    # only subnet the PROD principal can join (#1095). The demo, ithc and
+    # perftest vnets have their own subnets, so they take the module default.
+    # null (rather than "") means "argument not set", so the module's own
+    # default applies.
     # core_infra_subscription_id is non-null only where the core-infra vnet is NOT
     # in var.subscription. aat and demo leave it null so cnp-module-redis keeps
     # doing its own lookup, exactly as today - their vnets are in DCD-CNP-DEV.
@@ -28,12 +28,53 @@ locals {
     # "ITHC" are on that list so those environments need no override; "perftest"
     # is not, and every taggable resource in it was rejected with
     # RequestDisallowedByPolicy until this mapped it to "testing".
+    # The terraform-deploy library already tags prod "production", so prod needs
+    # no override either.
     # apim_suffix uses CFT names (aat is stg, perftest is test); null means no APIM.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg" }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo" }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test" }
+    # Prod APIM waits for #1161.
+    # crime_federation_enabled reads crime-oidc-config from the app vault - see
+    # tf-crime-connection-mi.tf. Off for prod until #1097 seeds it in cath-prod.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true }
+    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = null, crime_federation_enabled = false }
   }
+
+  # Prod-or-not facts, the same split the CNP modules make internally. Not keys
+  # in env_config, because they are not per-environment variance.
+  is_prod = var.env == "prod"
+
+  # Write access on all three vaults. cnp-module-key-vault cannot create a vault
+  # without a product-team policy, so prod needs a named PROD group. The module
+  # looks it up with security_enabled = true, so it must be a security group.
+  key_vault_product_group_name = local.is_prod ? "DTS CaTH Prod" : "DTS PIP Non-Prod"
+
+  # The E2E/CI GitHub OIDC app registration is a non-prod identity, so it gets
+  # nothing in prod.
+  grant_e2e_access = !local.is_prod
+
+  # CNP prod hostnames carry no environment label.
+  platform_domain = local.is_prod ? "platform.hmcts.net" : "${var.env}.platform.hmcts.net"
+
+  crime_federation_enabled = try(local.env_config[var.env].crime_federation_enabled, false)
+
+  # Redis only: Postgres sizing is left to terraform-module-postgresql-flexible's
+  # defaults in every environment (#1096 task 5). Non-prod stays on Basic for
+  # cost; prod needs Premium's replication and SLA.
+  default_sizing = {
+    redis_sku_name = "Basic"
+    redis_family   = "C"
+    redis_capacity = 0
+  }
+  sizing_overrides = {
+    prod = {
+      redis_sku_name = "Premium"
+      redis_family   = "P"
+      redis_capacity = 1
+    }
+  }
+  sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))
 
   # Unknown environments fall back to the module defaults rather than failing on
   # a missing map key.
@@ -48,11 +89,11 @@ locals {
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
   redis_subnet_override      = local.core_infra_subscription_id != null
 
-  # The subscription holding the shared hmcts-nonprod Log Analytics workspace, per
-  # the nonprod entry in terraform-module-log-analytics-workspace-id. Every
-  # environment this module runs for maps to that workspace, and it does not move
-  # when the application resources do - see appinsights.tf.
-  log_analytics_subscription_id = "1c4f0704-a29e-403d-b719-b90c34ef14c9"
+  # The subscription holding the platform Log Analytics workspace for this
+  # environment: hmcts-nonprod for every non-prod environment, hmcts-prod for
+  # prod. It does not move when the application resources do - see
+  # appinsights.tf.
+  log_analytics_subscription_id = module.log_analytics_workspace.subscription_id
 
   # The resource group uses our env name (cft-aat-network-rg), not the APIM suffix.
   apim_suffix = try(local.env_config[var.env].apim_suffix, null)

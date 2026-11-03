@@ -11,7 +11,7 @@ module "key_vault" {
   # Must not be "DTS CFT Developers": the module also grants that group read-only
   # access via its developers_group default, and Azure allows one access policy per
   # object id, so passing the same group here is silently overridden.
-  product_group_name = "DTS PIP Non-Prod"
+  product_group_name = local.key_vault_product_group_name
 
   common_tags             = local.common_tags
   create_managed_identity = true
@@ -24,9 +24,16 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurerm_key_vault_access_policy" "e2e_oidc_sp" {
+  count = local.grant_e2e_access ? 1 : 0
+
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = var.tenant_id
   object_id    = var.e2e_oidc_object_id
 
   secret_permissions = ["Get", "List"]
+}
+
+moved {
+  from = azurerm_key_vault_access_policy.e2e_oidc_sp
+  to   = azurerm_key_vault_access_policy.e2e_oidc_sp[0]
 }
