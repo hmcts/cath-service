@@ -55,7 +55,7 @@ module "apim_api" {
   path          = "cath"
   revision      = "1"
   protocols     = ["https"]
-  service_url   = "https://cath-api.${var.env}.platform.hmcts.net"
+  service_url   = "https://cath-api.${local.platform_domain}"
   product_id    = module.apim_product[0].product_id
 
   # swagger_url accepts inline content as well as a URL.

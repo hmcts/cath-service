@@ -72,11 +72,12 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const isLocalDev = process.env.LOCAL_DEV === "true";
+const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
+  await getPropertiesVolumeSecrets({ chartPath, omit: localEnvOverrides(), vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
   const { default: config } = await import("config");
 
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
@@ -230,6 +231,14 @@ export async function createApp(): Promise<Express> {
   app.use(errorHandler());
 
   return app;
+}
+
+// Locally, a non-empty value from .env or the shell takes precedence over Key Vault.
+function localEnvOverrides(): string[] {
+  if (!isLocalDev) return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
 }
 
 const getRedisClient = async (config: { get: (key: string) => any }) => {

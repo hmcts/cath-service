@@ -3,6 +3,7 @@ import "./conversion/ftt-tax-config.js"; // Register converter on module load
 // Business logic exports
 export type { ValidationResult } from "@hmcts/publication";
 export * from "./email-summary/summary-builder.js";
+export { reformatFttTaxChamberWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as fttTaxChamberWeeklyHearingListCy } from "./locales/cy.js";
 // Locale exports
 export { en as fttTaxChamberWeeklyHearingListEn } from "./locales/en.js";

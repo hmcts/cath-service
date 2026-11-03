@@ -18,6 +18,7 @@
     "lint:fix": "biome check --write --unsafe ."
   },
   "dependencies": {
+    "@hmcts/email-rate-limit": "workspace:*",
     "notifications-node-client": "8.4.0"
   },
   "devDependencies": {

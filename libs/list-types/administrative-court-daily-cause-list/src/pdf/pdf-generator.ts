@@ -4,60 +4,45 @@ import {
   type BasePdfGenerationOptions,
   configureNunjucks,
   createPdfErrorResult,
-  loadTranslations,
   PDF_BASE_STYLES,
   type PdfGenerationResult,
   savePdfToStorage
 } from "@hmcts/list-types-common";
 import { generatePdfFromHtml } from "@hmcts/pdf-generation";
-import { PROVENANCE_LABELS } from "@hmcts/publication";
+import { cy } from "../locales/cy.js";
+import { en } from "../locales/en.js";
 import type { AdministrativeCourtHearingList } from "../models/types.js";
 import { renderAdminCourt } from "../rendering/renderer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface PdfGenerationOptions extends BasePdfGenerationOptions<AdministrativeCourtHearingList> {
-  contentDate: Date;
-  listTypeName: string;
-}
-
-const LIST_TITLE_MAP: Record<string, string> = {
-  BIRMINGHAM_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Birmingham Administrative Court Daily Cause List",
-  LEEDS_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Leeds Administrative Court Daily Cause List",
-  BRISTOL_AND_CARDIFF_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Bristol and Cardiff Administrative Court Daily Cause List",
-  MANCHESTER_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST: "Manchester Administrative Court Daily Cause List"
-};
+const DEFAULT_LIST_TITLE = "Administrative Court Daily Cause List";
 
 export async function generateAdministrativeCourtDailyCauseListPdf(options: PdfGenerationOptions): Promise<PdfGenerationResult> {
   try {
-    const listTitle = LIST_TITLE_MAP[options.listTypeName] || "Administrative Court Daily Cause List";
+    const t = options.locale === "cy" ? cy : en;
+    const court = isCourtListTypeName(options.listTypeName) ? t[options.listTypeName] : undefined;
 
     const renderedData = renderAdminCourt(options.jsonData, {
       locale: options.locale,
       listTypeName: options.listTypeName,
-      listTitle,
+      listTitle: court?.pageTitle ?? DEFAULT_LIST_TITLE,
       contentDate: options.contentDate,
       lastReceivedDate: new Date().toISOString()
     });
 
-    const translations = await loadTranslations(
-      options.locale,
-      () => import("../locales/en.js"),
-      () => import("../locales/cy.js")
-    );
-
-    const provenanceLabel = options.provenance ? PROVENANCE_LABELS[options.provenance as keyof typeof PROVENANCE_LABELS] || options.provenance : "";
-
-    const courtTranslations = translations[options.listTypeName as keyof typeof translations] as Record<string, string>;
+    const provenanceLabel = options.provenance
+      ? t.common.provenanceLabels[options.provenance as keyof typeof t.common.provenanceLabels] || options.provenance
+      : "";
 
     const env = configureNunjucks(__dirname);
     const html = env.render("pdf-template.njk", {
       header: renderedData.header,
       hearings: renderedData.hearings,
       dataSource: provenanceLabel,
-      t: translations,
-      court: courtTranslations,
+      t,
+      court,
       pdfStyles: PDF_BASE_STYLES
     });
 
@@ -75,3 +60,14 @@ export async function generateAdministrativeCourtDailyCauseListPdf(options: PdfG
     return createPdfErrorResult(error);
   }
 }
+
+function isCourtListTypeName(listTypeName: string): listTypeName is CourtListTypeName {
+  return listTypeName !== "common" && Object.hasOwn(en, listTypeName);
+}
+
+interface PdfGenerationOptions extends BasePdfGenerationOptions<AdministrativeCourtHearingList> {
+  contentDate: Date;
+  listTypeName: string;
+}
+
+type CourtListTypeName = Exclude<keyof typeof en, "common">;
