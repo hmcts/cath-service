@@ -43,6 +43,23 @@ seeds it, and records every page and journey, and the PDF and Excel files pip ge
 publication, into `output/baseline`. The first run takes about 35 minutes (10 to set up pip, 25 to
 record); re-recording skips the setup.
 
+To record only what one ticket needs, which is much quicker than all of pip:
+
+```bash
+yarn ui-baseline:record-pip --ticket 312
+yarn ui-baseline:check --ticket 312
+```
+
+That records the list types and pages the ticket names, picked by the same rules the check uses to
+choose what to compare (`scope.ts`), with their role variants and mobile captures, into
+`output/baselines/ticket-312`. `check --ticket 312` then uses it instead of `output/baseline`.
+`--list-type NAME`, `--route /path` and `--journey ID` choose without a ticket (or add journeys,
+which a ticket's text does not name); pass `--baseline` to the check to use one of those. pip is still
+recreated and seeded in full, so setting up pip takes as long as before; only the recording is shorter.
+A ticket recording is a baseline of its own: pip gives its data new ids on every fresh stack, and
+each baseline's `seed.json` maps the ids in its own captures, so it cannot be merged into another
+recording. `baseline push` refuses one, so the stored baseline is always all of pip.
+
 In the workspace devcontainer, Docker is Docker Desktop on the host, so `$UI_BASELINE_PIP_DIR`
 must be a path the host shares (inside the workspace folder), and outside cath-service: pip-frontend
 builds against CaTH's `node_modules` if it is anywhere under the monorepo.
@@ -273,7 +290,6 @@ Planned next, roughly in this order:
 
 - Porting the other 12 of pip's journeys to CaTH (`cath/journeys/`). Only `subscription-basket` is
   ported; the comparison runs any journey added there.
-- Recording only the pages a ticket needs, rather than the whole of pip, so a first run is quicker.
 - Once CaTH moves past being a copy of pip, the baseline will be updated per feature with CaTH's
   approved screens.
 
