@@ -1,5 +1,6 @@
 import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
+import { isUuid } from "../../uuid.js";
 
 export const GET = async (req: Request, res: Response) => {
   try {
@@ -40,6 +41,10 @@ export const DELETE = async (req: Request, res: Response) => {
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: "ids array is required" });
+    }
+
+    if (!ids.every(isUuid)) {
+      return res.status(400).json({ error: "ids must be UUIDs" });
     }
 
     const result = await prisma.legacyThirdPartyUser.deleteMany({ where: { id: { in: ids } } });

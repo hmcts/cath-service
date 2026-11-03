@@ -3,6 +3,7 @@
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 {% set title = "Run " + run.id %}
+{% set currentPage = "result" %}
 {% set statusColours = { queued: "grey", running: "blue", finished: "green", failed: "red" } %}
 {% set kindNames = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" } %}
 {% set verdictNames = { match: ["Matches", "green"], differs: ["Differs", "red"], missing: ["CaTH did not make it", "orange"], extra: ["Only CaTH made one", "yellow"] } %}
@@ -24,6 +25,27 @@
   ] }) }}
 
   {% if run.error %}<p class="govuk-body govuk-error-message">{{ run.error }}</p>{% endif %}
+
+  {% if progress %}
+    <h2 class="govuk-heading-m">Progress</h2>
+    <p class="govuk-body">{{ progress.done }} of {{ progress.needed }} stages done</p>
+    <table class="govuk-table">
+      <thead class="govuk-table__head"><tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header">Stage</th>
+        <th scope="col" class="govuk-table__header">Status</th>
+        <th scope="col" class="govuk-table__header">Detail</th>
+      </tr></thead>
+      <tbody class="govuk-table__body">
+        {% for stage in progress.stages %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ stage.label }}</td>
+            <td class="govuk-table__cell">{{ govukTag({ text: stage.status.text, classes: "govuk-tag--" + stage.status.colour }) }}</td>
+            <td class="govuk-table__cell">{{ stage.detail }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
   {% if run.summary and run.kind == "check" %}
     <h2 class="govuk-heading-m">Result</h2>

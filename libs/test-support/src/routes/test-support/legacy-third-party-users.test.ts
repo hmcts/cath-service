@@ -96,14 +96,16 @@ describe("legacy-third-party-users routes", () => {
   describe("DELETE", () => {
     it("should delete the users with the given ids", async () => {
       // Arrange
-      mockRequest.body = { ids: ["a", "b"] };
+      mockRequest.body = { ids: ["6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b", "7a2b3c4d-5e6f-4a70-8b8c-9d0e1f2a3b4c"] };
       vi.mocked(prisma.legacyThirdPartyUser.deleteMany).mockResolvedValue({ count: 2 });
 
       // Act
       await DELETE(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.legacyThirdPartyUser.deleteMany).toHaveBeenCalledWith({ where: { id: { in: ["a", "b"] } } });
+      expect(prisma.legacyThirdPartyUser.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ["6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b", "7a2b3c4d-5e6f-4a70-8b8c-9d0e1f2a3b4c"] } }
+      });
       expect(mockResponse.json).toHaveBeenCalledWith({ deleted: 2 });
     });
 
@@ -116,6 +118,19 @@ describe("legacy-third-party-users routes", () => {
 
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(400);
+    });
+
+    it("should return 400 when any id is not a UUID", async () => {
+      // Arrange
+      mockRequest.body = { ids: ["6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b", "b"] };
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "ids must be UUIDs" });
+      expect(prisma.legacyThirdPartyUser.deleteMany).not.toHaveBeenCalled();
     });
   });
 });

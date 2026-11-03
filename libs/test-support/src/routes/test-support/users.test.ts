@@ -47,7 +47,10 @@ describe("users routes", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.user.findFirst).toHaveBeenCalledWith({ where: { email: { equals: "Parity.Admin@example.com", mode: "insensitive" } } });
+      expect(prisma.user.findFirst).toHaveBeenCalledWith({
+        where: { email: { equals: "Parity.Admin@example.com", mode: "insensitive" } },
+        orderBy: [{ lastSignedInDate: { sort: "desc", nulls: "last" } }, { createdDate: "desc" }]
+      });
       expect(mockResponse.json).toHaveBeenCalledWith({ userId: "user-1", email: "parity.admin@example.com", role: "SYSTEM_ADMIN", userProvenance: "SSO" });
     });
 

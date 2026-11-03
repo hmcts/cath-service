@@ -25,7 +25,7 @@ async function appWith(auth = signedIn) {
     environment: "test",
     commit: "x",
     store: null,
-    baseline: async () => "/baseline",
+    baseline: async () => ({ id: "2026-11-03", dir: "/baseline", release: () => {} }),
     execute: async (script, args) => {
       const out = (args.find((arg) => arg.startsWith("--out=")) as string).slice("--out=".length);
       if (script.endsWith("compare-files.ts")) {
@@ -39,6 +39,30 @@ async function appWith(auth = signedIn) {
       }
       await mkdir(path.join(out, "report"), { recursive: true });
       await writeFile(path.join(out, "report/index.html"), "<p>the report</p>");
+      // A report page as make-report.mjs writes it now, and one written before it had room for the app's links
+      await writeFile(
+        path.join(out, "report/lists.html"),
+        '<nav class="govuk-service-navigation__wrapper app-navigation"><ul class="govuk-service-navigation__list"><!-- ui-baseline: app navigation --><li>Overview</li></ul></nav><main>the list pages</main>'
+      );
+      await writeFile(
+        path.join(out, "report/pages.html"),
+        '<nav class="govuk-service-navigation__wrapper" aria-label="Menu"><ul class="govuk-service-navigation__list"><li>Overview</li></ul></nav><main>the other pages</main>'
+      );
+      await mkdir(path.join(out, "report/lists/cath"), { recursive: true });
+      await writeFile(
+        path.join(out, "report/lists/cath/page.html"),
+        '<div class="govuk-width-container"><main class="govuk-main-wrapper" id="main-content">a page CaTH showed</main></div>'
+      );
+      await writeFile(
+        path.join(out, "progress.json"),
+        JSON.stringify({
+          updatedAt: "2026-11-03T12:00:00Z",
+          stages: [
+            { id: "capture-lists", label: "Capturing list pages", status: "done", done: 4, total: 4 },
+            { id: "journeys", label: "Running journeys", status: "skipped", reason: "no journeys in scope" }
+          ]
+        })
+      );
       return 0;
     }
   });
@@ -107,6 +131,10 @@ describe("createApp", () => {
       requestedBy: "tester@example.com"
     });
     expect(page.text).toContain("List types: CIVIL_DAILY_CAUSE_LIST, SJP_PRESS_LIST");
+    expect(page.text).toContain("1 of 1 stages done");
+    expect(page.text).toContain("Capturing list pages");
+    expect(page.text).toContain("4 of 4");
+    expect(page.text).toContain("no journeys in scope");
     expect(page.text).toContain("Open the full report");
     expect(report.text).toBe("<p>the report</p>");
   });
@@ -127,6 +155,7 @@ describe("createApp", () => {
     expect(page.text).toContain("CIVIL_DAILY_CAUSE_LIST:");
     expect(page.text).toContain('href="https://cath.example/civil?artefactId=c"');
     expect(page.text).toContain('href="https://pip.example/civil?artefactId=p"');
+    expect(page.text).not.toContain("stages done");
   });
 
   it("should show the problem when a file comparison is asked for with a bad id", async () => {
@@ -141,6 +170,67 @@ describe("createApp", () => {
     expect(response.text).toContain("There is a problem");
     expect(response.text).toContain("Enter both artefact ids");
     expect(runner.list()).toEqual([]);
+  });
+
+  it("should put Home and Result first in a report page's navigation, new or old, leaving the captured pages as they are", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    await runner.idle();
+    const navigation = (html: string) => (html.match(/<ul class="govuk-service-navigation__list">([\s\S]*)<\/ul>/)?.[1] ?? "").replace(/\s+/g, " ");
+
+    // Act
+    const reportPage = await request(app).get(`${started.headers.location}/report/lists.html`);
+    const olderReportPage = await request(app).get(`${started.headers.location}/report/pages.html`);
+    const capturedPage = await request(app).get(`${started.headers.location}/report/lists/cath/page.html`);
+
+    // Assert
+    expect(reportPage.status).toBe(200);
+    expect(reportPage.headers["content-type"]).toMatch(/^text\/html/);
+    for (const page of [reportPage, olderReportPage]) {
+      const items = navigation(page.text);
+      expect(items).toMatch(/^ ?<li class="govuk-service-navigation__item"> ?<a class="govuk-service-navigation__link" href="\/">Home<\/a>/);
+      expect(items).toContain(`href="${started.headers.location}">Result</a>`);
+      expect(items.indexOf("Result")).toBeLessThan(items.indexOf("Overview"));
+      expect(page.text).not.toContain("govuk-breadcrumbs");
+    }
+    expect(reportPage.text).not.toContain("<!-- ui-baseline: app navigation -->");
+    expect(capturedPage.text).toBe('<div class="govuk-width-container"><main class="govuk-main-wrapper" id="main-content">a page CaTH showed</main></div>');
+  });
+
+  it("should show its pages in the GOV.UK header, navigation and footer, marking where you are", async () => {
+    // Arrange
+    const { app } = await appWith();
+
+    // Act
+    const page = await request(app).get("/");
+
+    // Assert
+    expect(page.text).toContain('class="govuk-header"');
+    expect(page.text).toContain("Court and tribunal hearings: UI baseline (test)");
+    expect(page.text).toMatch(
+      /<a class="govuk-service-navigation__link" href="\/" aria-current="page">\s*<strong class="govuk-service-navigation__active-fallback">Home<\/strong>/
+    );
+    expect(page.text).toContain('class="govuk-footer"');
+    expect(page.text).toContain('<script src="/navigation.js"></script>');
+  });
+
+  it("should serve a report the navigation's and its own stylesheet as they are now, whenever it was written", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Act
+    const [css, script, reportCss] = await Promise.all(
+      ["navigation.css", "navigation.js", "report.css"].map((file) => request(app).get(`${started.headers.location}/report/assets/${file}`))
+    );
+
+    // Assert
+    expect([css.status, script.status, reportCss.status]).toEqual([200, 200, 200]);
+    expect(css.text).toContain(".app-navigation-menu");
+    expect(script.text).toContain("app-navigation-menu__details");
+    expect(reportCss.text).toContain(".parity-report .govuk-width-container");
   });
 
   it("should not serve files outside a run's report", async () => {

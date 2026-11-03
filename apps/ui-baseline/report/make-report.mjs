@@ -5,6 +5,8 @@ import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import nunjucks from "nunjucks";
+import { footerMeta, reportPageContext } from "./report-page.mjs";
 
 const { values: args } = parseArgs({
   options: {
@@ -64,6 +66,7 @@ for (const source of ["govuk-frontend.min.css", "govuk-frontend.min.js", "assets
   if (existsSync(path.join(args.govuk, source))) execFileSync("cp", ["-r", "--no-preserve=mode", path.join(args.govuk, source), path.join(OUT, "assets/")]);
 }
 cpSync(path.join(import.meta.dirname, "report.css"), path.join(OUT, "assets/report.css"));
+for (const shared of ["navigation.css", "navigation.js"]) cpSync(path.join(import.meta.dirname, "../src/assets", shared), path.join(OUT, "assets", shared));
 mkdirSync(path.join(OUT, "data"), { recursive: true });
 for (const [name, target] of [
   ["lists", args.lists],
@@ -76,48 +79,28 @@ for (const [name, target] of [
   if (target && existsSync(target)) symlinkSync(path.resolve(target), path.join(OUT, "data", name));
 }
 
-const NAV = [
-  ["index.html", "Overview"],
-  // Only written when there is a comparison: the baseline report on its own has none
-  ...(comparison ? [["comparison.html", "Comparison"]] : []),
-  ["lists.html", "List pages"],
-  ["pages.html", "Other pages"],
-  ["journeys.html", "Journeys"],
-  ...(filesComparison ? [["files.html", "Files"]] : []),
-  ["defects.html", "Known pip defects"]
-];
+// The report's pages are built on the app's own page (src/views/page.njk) and GOV.UK Frontend's
+// templates, so the two look the same; report-page.mjs says what each page is drawn with
+const views = new nunjucks.Environment(
+  new nunjucks.FileSystemLoader([import.meta.dirname, path.join(import.meta.dirname, "../src/views"), path.dirname(args.govuk)]),
+  { autoescape: true }
+);
+const FOOTER_META = footerMeta(
+  run ? { finished: esc(new Date(run.finishedAt).toLocaleString("en-GB", { timeZone: "Europe/London" })), pip: esc(run.pip) } : null
+);
 
 function layout({ file, title, active, body, depth = 0 }) {
-  const up = "../".repeat(depth);
-  const nav = NAV.map(
-    ([href, label]) =>
-      `<li class="govuk-service-navigation__item${active === href ? " govuk-service-navigation__item--active" : ""}"><a class="govuk-service-navigation__link" href="${up}${href}"${active === href ? ' aria-current="true"' : ""}>${label}</a></li>`
-  ).join("");
-  const html = `<!doctype html>
-<html lang="en" class="govuk-template govuk-template--rebranded">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${esc(title)} – CaTH parity</title>
-  <link rel="icon" href="${up}assets/images/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="${up}assets/govuk-frontend.min.css">
-  <link rel="stylesheet" href="${up}assets/report.css">
-</head>
-<body class="govuk-template__body">
-  <script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
-  <header class="govuk-header" data-module="govuk-header"><div class="govuk-header__container govuk-width-container parity-wide">
-    <div class="govuk-header__logo"><a href="${up}index.html" class="govuk-header__link govuk-header__link--homepage"><span class="parity-logo">CaTH parity</span></a></div>
-  </div></header>
-  <section class="govuk-service-navigation" data-module="govuk-service-navigation"><div class="govuk-width-container parity-wide"><div class="govuk-service-navigation__container">
-    <span class="govuk-service-navigation__service-name"><span class="govuk-service-navigation__text">pip-frontend baseline</span></span>
-    <nav class="govuk-service-navigation__wrapper" aria-label="Menu"><ul class="govuk-service-navigation__list">${nav}</ul></nav>
-  </div></div></section>
-  <div class="govuk-width-container parity-wide"><main class="govuk-main-wrapper" id="main-content">${body}</main></div>
-  <footer class="govuk-footer"><div class="govuk-width-container parity-wide"><p class="govuk-body-s">Local verification report built from parity capture output. Not a deployed service.${run ? ` Baseline run finished ${esc(new Date(run.finishedAt).toLocaleString("en-GB", { timeZone: "Europe/London" }))} · ${esc(run.pip)}` : ""}</p></div></footer>
-  <script type="module">import { initAll } from "${up}assets/govuk-frontend.min.js"; initAll();</script>
-  <script>${FILTER_SCRIPT}</script>
-</body></html>`;
+  const context = reportPageContext({
+    title,
+    body,
+    depth,
+    active,
+    has: { comparison: Boolean(comparison), files: Boolean(filesComparison) },
+    footerMeta: FOOTER_META,
+    filterScript: FILTER_SCRIPT
+  });
   mkdirSync(path.dirname(path.join(OUT, file)), { recursive: true });
-  writeFileSync(path.join(OUT, file), html);
+  writeFileSync(path.join(OUT, file), views.render("report-page.njk", context));
 }
 
 // Filters any table marked data-filterable using the input that points at it

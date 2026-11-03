@@ -32,17 +32,25 @@ describe("[artefactId] routes", () => {
   });
 
   describe("GET", () => {
-    it("should return artefact when found", async () => {
+    it("should return the artefact with its list type's name in place of the list type", async () => {
       // Arrange
-      const mockArtefact = { artefactId: "art123", locationId: "loc1" };
+      const mockArtefact = { artefactId: "art123", locationId: "loc1", listTypeId: 999, listType: { name: "CIVIL_DAILY_CAUSE_LIST" } };
       vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as any);
 
       // Act
       await GET(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({ where: { artefactId: "art123" } });
-      expect(mockResponse.json).toHaveBeenCalledWith(mockArtefact);
+      expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+        where: { artefactId: "art123" },
+        include: { listType: { select: { name: true } } }
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        artefactId: "art123",
+        locationId: "loc1",
+        listTypeId: 999,
+        listTypeName: "CIVIL_DAILY_CAUSE_LIST"
+      });
     });
 
     it("should return 404 when artefact not found", async () => {

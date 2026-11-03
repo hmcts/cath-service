@@ -75,7 +75,7 @@ describe("compare-files script", () => {
     expect(output).toContain("  cell changed: A1: x → y");
     expect(output).not.toContain("pdf: match");
     expect(output).toContain("\nCIVIL_DAILY_CAUSE_LIST:\n  CaTH: https://cath/list\n  pip:  no page");
-    expect(exit).toHaveBeenCalledWith(1);
+    expect(exit).toHaveBeenCalledWith(3);
   });
 
   it("should say when CaTH has no page for the list", async () => {
@@ -92,7 +92,7 @@ describe("compare-files script", () => {
 
     // Assert
     expect(printed()).toContain("  CaTH: no page\n  pip:  https://pip/list");
-    expect(exit).toHaveBeenCalledWith(1);
+    expect(exit).toHaveBeenCalledWith(3);
   });
 });
 

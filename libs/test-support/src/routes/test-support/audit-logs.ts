@@ -1,5 +1,6 @@
 import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
+import { isUuid } from "../../uuid.js";
 
 export const GET = async (req: Request, res: Response) => {
   try {
@@ -27,6 +28,10 @@ export const POST = async (req: Request, res: Response) => {
 
     if (!userId || !action) {
       return res.status(400).json({ error: "userId and action are required" });
+    }
+
+    if (!isUuid(userId)) {
+      return res.status(400).json({ error: "userId must be a UUID" });
     }
 
     const user = await prisma.user.findUnique({ where: { userId }, select: { email: true, role: true, userProvenance: true } });

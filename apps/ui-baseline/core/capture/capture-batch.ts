@@ -4,8 +4,14 @@ import type { Browser } from "playwright";
 import { launchChromium } from "./browser.js";
 import { type CaptureResult, type CaptureSettings, type CaptureTarget, captureTarget } from "./capture-target.js";
 
-// Captures every target in a targets file. Each entry may list several locales.
-export async function captureBatch(targetsFile: string, settings: CaptureSettings, concurrency: number): Promise<CaptureResult[]> {
+// Captures every target in a targets file. Each entry may list several locales. onCaptured is told
+// after each target-language capture how many of them are done; a retry is not counted again.
+export async function captureBatch(
+  targetsFile: string,
+  settings: CaptureSettings,
+  concurrency: number,
+  onCaptured?: (done: number, total: number) => void
+): Promise<CaptureResult[]> {
   const entries = JSON.parse(await readFile(targetsFile, "utf-8")) as BatchEntry[];
   const targets = entries.flatMap(({ locales, ...target }) => (locales ?? [target.locale ?? "en"]).map((locale) => ({ ...target, locale })));
 
@@ -37,6 +43,7 @@ export async function captureBatch(targetsFile: string, settings: CaptureSetting
 
   const results: CaptureResult[] = [];
   const queue = [...targets];
+  let done = 0;
   try {
     await Promise.all(
       Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
@@ -44,6 +51,8 @@ export async function captureBatch(targetsFile: string, settings: CaptureSetting
           const captured = await capture(target);
           log(captured);
           results.push(...captured);
+          done += 1;
+          onCaptured?.(done, targets.length);
         }
       })
     );

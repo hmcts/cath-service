@@ -78,6 +78,33 @@ describe("captureBatch", () => {
     expect(peak).toBe(2);
   });
 
+  it("should tell how many target-language captures are done after each, not counting a retry again", async () => {
+    // Arrange
+    const { targetsFile, outDir } = await setUp([
+      { id: "home", url: "http://localhost/", locales: ["en", "cy"] },
+      { id: "faq", url: "http://localhost/faq" }
+    ]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    let faqAttempts = 0;
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) => {
+      if (target.id !== "faq") return [ok(target)];
+      faqAttempts++;
+      return faqAttempts === 1 ? [{ ...ok(target), ok: false, error: "timeout" }] : [ok(target)];
+    });
+    const onCaptured = vi.fn();
+
+    // Act
+    await captureBatch(targetsFile, { outDir }, 1, onCaptured);
+
+    // Assert
+    expect(faqAttempts).toBe(2);
+    expect(onCaptured.mock.calls).toEqual([
+      [1, 3],
+      [2, 3],
+      [3, 3]
+    ]);
+  });
+
   it("should retry each failed target once and keep only the retry's results and index lines", async () => {
     // Arrange
     const { targetsFile, outDir } = await setUp([

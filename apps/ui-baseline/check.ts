@@ -25,8 +25,10 @@ import {
 } from "./core/index.js";
 import { captureDownloads, loadDownloads, seedResolver } from "./downloads.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
+import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK } from "./exit-codes.js";
 import { loadManifest, type PublicationFixture, type SeedResult } from "./fixtures/manifest.js";
 import { buildComment, postComment } from "./pr-comment.js";
+import { createProgress } from "./progress.js";
 import { isConfident, mentionsIn, mentionsPublication, mentionsRoute, pageId, type RecordingScope, type RouteEntry, ticketText } from "./scope.js";
 import { systemCommand } from "./system-command.js";
 import { NOT_FOUND_ID, NOT_FOUND_PATH, parseVariant, withMobile } from "./variants.js";
@@ -46,6 +48,22 @@ const REPORT_PORT = 9500;
 const SIDE_BY_SIDE_WIDTH = 1600;
 const FILE_LABEL = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "file" } as const;
 const FILE_VERDICT = { match: "matches", differs: "differs", missing: "CaTH did not make it", extra: "only CaTH made one" } as const;
+// Every stage a check can have, in the order it runs them, for the progress the hosted check shows
+// (progress.json in --out)
+const STAGES = [
+  { id: "seed", label: "Seeding CaTH" },
+  { id: "sign-in", label: "Signing in to CaTH" },
+  { id: "capture-lists", label: "Capturing list pages" },
+  { id: "capture-pages", label: "Capturing other pages" },
+  { id: "journeys", label: "Running journeys" },
+  { id: "compare", label: "Comparing with pip" },
+  { id: "files", label: "Comparing PDF and Excel files" },
+  { id: "downloads", label: "Comparing downloads" },
+  { id: "review", label: "Reviewing differences against the ticket" },
+  { id: "report", label: "Writing the report" },
+  { id: "evidence", label: "Writing the evidence" }
+] as const;
+const CAPTURE_STAGE = { lists: "capture-lists", pages: "capture-pages" } as const;
 
 const { values: given } = parseArgs({
   options: {
@@ -133,6 +151,10 @@ const out = confinedPath(args.out ?? path.join(PARITY_DIR, "output/checks", name
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 if (requirements) await writeFile(path.join(out, "requirements.md"), requirements);
+const progress = createProgress(path.join(out, "progress.json"), STAGES);
+if (!scope.publications.length) progress.skip("capture-lists", "no list pages in scope");
+if (!journeyIds.length) progress.skip("journeys", "no journeys in scope");
+if (args["no-review"] || !requirements) progress.skip("review", args["no-review"] ? "not asked for" : "no ticket to review against");
 
 step(`Checking ${targetBase} (${environment.name}) against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
 const recordedScope = existsSync(path.join(baseline, "scope.json"))
@@ -150,7 +172,7 @@ const skippedReasons = Object.entries(Object.groupBy(scope.skipped, (s) => s.sli
 for (const line of args.all ? skippedReasons.map(([reason, items]) => `${items?.length} ${reason}`) : scope.skipped) console.log(`  skipped:    ${line}`);
 if (!scope.publications.length && !scope.routes.length && !journeyIds.length) {
   console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --journey / --all.");
-  process.exit(2);
+  process.exit(EXIT_NOTHING_TO_CHECK);
 }
 
 // ---------- 2. Seed CaTH with the baseline's fixtures ----------
@@ -176,15 +198,30 @@ const downloadSpecs =
   existsSync(path.join(baseline, "downloads/index.jsonl")) && !args["no-files"]
     ? (await loadDownloads()).filter((spec) => args.all || (args.route ?? []).includes(spec.pip.path) || (args.route ?? []).includes(spec.cath.path))
     : [];
+if (!downloadSpecs.length) progress.skip("downloads", "no downloads in scope");
 const downloadFixtures = downloadSpecs.flatMap((spec) =>
   Object.values({ ...spec.cath.params, ...spec.cath.query }).flatMap((value) => (value.startsWith("publication:") ? [value.slice("publication:".length)] : []))
 );
 const seedIds = [
   ...new Set([...scope.publications.map((p) => p.id), ...pageFixtures, ...downloadFixtures, ...(journeyIds.length ? JOURNEY_PUBLICATIONS : [])])
 ];
+// The baseline's variants of each page in scope (variants.ts): the page as other roles, and signed in
+const baselineIds = { lists: await capturedIds(path.join(baseline, "lists")), pages: await capturedIds(path.join(baseline, "pages")) };
+const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineIds[area]].filter((other) => other !== id && parseVariant(other).base === id);
+const includeNotFound =
+  baselineIds.pages.has(NOT_FOUND_ID) && (args.all || (args.route ?? []).some((route) => route === "/not-found" || route === NOT_FOUND_PATH));
+if (!scope.routes.length && !includeNotFound) progress.skip("capture-pages", "no other pages in scope");
+// Pages behind sign-in need CaTH users signed in, as do journeys and downloads made for a user
+const needsSignIn =
+  journeyIds.length > 0 ||
+  downloadSpecs.some((spec) => spec.cath.as) ||
+  scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
+  scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
+if (!needsSignIn) progress.skip("sign-in", "no page in scope needs it");
 const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}.json`);
 if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
+  progress.start("seed");
   const seeding = spawnSync(
     TSX,
     [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/seed.ts", ...envArgs, `--only=${seedIds.join(",")}`],
@@ -196,23 +233,15 @@ if (seedIds.length && !args["no-seed"]) {
   );
   for (const line of `${seeding.stdout}${seeding.stderr}`.split("\n").filter((l) => /published|REJECTED|Error/.test(l))) console.log(`  ${line.trim()}`);
   if (seeding.status !== 0) throw new Error("seeding CaTH failed");
-}
+  progress.complete("seed");
+} else progress.skip("seed", args["no-seed"] ? "not asked for" : "nothing to seed");
 const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);
-// The baseline's variants of each page in scope (variants.ts): the page as other roles, and signed in
-const baselineIds = { lists: await capturedIds(path.join(baseline, "lists")), pages: await capturedIds(path.join(baseline, "pages")) };
-const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineIds[area]].filter((other) => other !== id && parseVariant(other).base === id);
-const includeNotFound =
-  baselineIds.pages.has(NOT_FOUND_ID) && (args.all || (args.route ?? []).some((route) => route === "/not-found" || route === NOT_FOUND_PATH));
-const needsSignIn =
-  journeyIds.length > 0 ||
-  downloadSpecs.some((spec) => spec.cath.as) ||
-  scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
-  scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
 if (needsSignIn) {
   step("Signing in to CaTH");
+  progress.start("sign-in");
   const signingIn = spawnSync(TSX, [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/sign-in.ts", ...envArgs], {
     cwd: REPO_DIR,
     env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
@@ -221,6 +250,7 @@ if (needsSignIn) {
   for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|not signed in|Error/.test(l)))
     console.log(`  ${line.trim()}`);
   if (signingIn.status !== 0) throw new Error("signing in to CaTH failed");
+  progress.complete("sign-in");
 }
 const signedIn = needsSignIn ? (JSON.parse(await readFile(signInFile, "utf-8")) as SignInResult) : null;
 // Signed-in targets are split per language, each with that language's own session. A page whose
@@ -299,13 +329,22 @@ for (const [area, targets] of [
   ["lists", listTargets],
   ["pages", pageTargets]
 ] as const) {
-  if (!targets.length) continue;
+  if (!targets.length) {
+    progress.skip(CAPTURE_STAGE[area], `no ${area === "lists" ? "list pages" : "other pages"} in scope`);
+    continue;
+  }
   const targetsFile = path.join(out, `targets-${area}.json`);
   await writeFile(targetsFile, JSON.stringify(targets, null, 2));
-  const results = await captureBatch(targetsFile, { outDir: path.join(out, "cath", area) }, 4);
+  // Counted per page and language, as captureBatch captures them
+  progress.start(
+    CAPTURE_STAGE[area],
+    targets.reduce((sum, target) => sum + target.locales.length, 0)
+  );
+  const results = await captureBatch(targetsFile, { outDir: path.join(out, "cath", area) }, 4, (done) => progress.advance(CAPTURE_STAGE[area], done));
   console.log(`  ${area}: ${results.filter((r) => r.ok).length} captured, ${results.filter((r) => !r.ok).length} failed`);
   captured[area] = path.join(out, "cath", area);
   for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
+  progress.complete(CAPTURE_STAGE[area]);
 }
 
 // ---------- 3b. Run pip's journeys in CaTH and compare them ----------
@@ -315,6 +354,7 @@ const journeysCompared = journeyIds.length ? await runAndCompareJourneys() : nul
 
 // ---------- 4. Compare with the baseline ----------
 step("Comparing with pip");
+progress.start("compare");
 const comparisons: Record<string, CompareSummary> = {};
 const capturedTargetIds = { lists: new Set(listTargets.map((t) => t.id)), pages: new Set(pageTargets.map((t) => t.id)) };
 for (const area of Object.keys(captured)) {
@@ -323,6 +363,7 @@ for (const area of Object.keys(captured)) {
   const t = comparisons[area].totals;
   console.log(`  ${area}: ${t.pairs - t.notCaptured} page-language pairs compared, ${t.match} match, ${t.differs} differ`);
 }
+progress.complete("compare");
 
 // ---------- 4b. Compare the PDF and Excel files ----------
 // Each list's files, from CaTH's publications container, against the ones pip made for the same
@@ -334,6 +375,7 @@ const filesCompared = await compareGeneratedFiles();
 const reviews: Record<string, ReviewResult> = {};
 if (!args["no-review"] && requirements) {
   step("Reviewing differences against the ticket");
+  progress.start("review");
   for (const area of Object.keys(comparisons)) {
     try {
       reviews[area] = await reviewFindings({
@@ -351,10 +393,12 @@ if (!args["no-review"] && requirements) {
       console.log(`  ${area}: review skipped (${(error as Error).message.split("\n")[0]}). Run with --reviewer, or --no-review.`);
     }
   }
+  progress.complete("review");
 }
 
 // ---------- 6. Report ----------
 step("Writing the report");
+progress.start("report");
 const listsDir = path.join(out, "lists");
 await mkdir(listsDir, { recursive: true });
 await symlink(path.join(baseline, "lists"), path.join(listsDir, "pip"));
@@ -410,6 +454,7 @@ const differing = [...pageVerdicts.entries()].map(([id, where]) => `${id} (${whe
 // Counted as captures: a page as another role is checked as a page of its own
 const checkedCount = capturedTargetIds.lists.size + capturedTargetIds.pages.size;
 const pagesDiffer = `${differing.length} of ${checkedCount} page${checkedCount === 1 ? "" : "s"} ${differing.length === 1 ? "differs" : "differ"} from pip`;
+progress.complete("report");
 step("Result");
 // A check of journeys alone has no pages of its own to report
 if (checkedCount || !journeyIds.length)
@@ -435,11 +480,15 @@ const journeysDiffer = (journeysCompared?.results ?? [])
 if (journeysCompared) console.log(`  ${journeysDiffer.length} of ${journeysCompared.totals.runs} journey runs differ from pip`);
 for (const line of journeysDiffer) console.log(`    ${line}`);
 
-if (args.all) await finish();
+if (args.all) {
+  progress.skip("evidence", "not written for a check of everything");
+  await finish();
+}
 
 // ---------- Evidence for the PR ----------
 // GitHub only takes attachments through its web editor, so the dev drags these into the comment
 step("Writing the evidence");
+progress.start("evidence");
 const evidence = path.join(out, "evidence");
 await mkdir(evidence, { recursive: true });
 const bundle = await bundleReport();
@@ -480,6 +529,7 @@ console.log(`  evidence: ${evidence}`);
 console.log(
   `    ${args["post-pr"] ? "edit the comment and drag" : "paste pr-comment.md into a PR comment, then drag"} report.zip${screenshots.length ? ` and the ${screenshots.length} screenshot${screenshots.length === 1 ? "" : "s"}` : ""} into it`
 );
+progress.complete("evidence");
 await finish();
 
 // ---------- helpers ----------
@@ -497,9 +547,18 @@ async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
   const ported = journeyIds.filter((id) => suite.journeys.some((journey) => journey.id === id));
   for (const id of journeyIds.filter((id) => !ported.includes(id))) scope.skipped.push(`journey ${id}: not ported to CaTH yet (cath/journeys/)`);
   console.log(`  ${ported.length} of ${journeyIds.length} journeys ported to CaTH${ported.length < journeyIds.length ? "; the rest are not compared" : ""}`);
-  if (!ported.length) return null;
+  if (!ported.length) {
+    progress.skip("journeys", "none of the journeys in scope is ported to CaTH yet");
+    return null;
+  }
 
-  const results = await runJourneys(moduleFile, { outDir: path.join(out, "cath/journeys"), locales, only: ported });
+  progress.start("journeys", ported.length * locales.length);
+  const results = await runJourneys(moduleFile, {
+    outDir: path.join(out, "cath/journeys"),
+    locales,
+    only: ported,
+    onRun: (done) => progress.advance("journeys", done)
+  });
   for (const result of results.filter((r) => !r.ok)) console.log(`    stopped: ${result.journey} (${result.locale}): ${result.error?.split("\n")[0]}`);
   const summary = await compareJourneys({
     source: path.join(baseline, "journeys"),
@@ -514,6 +573,7 @@ async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
   });
   const t = summary.totals;
   console.log(`  journeys: ${t.runs} journey-language runs compared, ${t.match} match, ${t.differs} differ`);
+  progress.complete("journeys");
   return summary;
 }
 
@@ -548,12 +608,17 @@ async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
 // so for those a missing Excel is not counted.
 async function compareListFiles(): Promise<FileCompareSummary | null> {
   const listed = scope.publications.filter((publication) => publication.format !== "flat-file" && seed?.publications[publication.id]);
-  if (args["no-files"] || !listed.length) return null;
+  if (args["no-files"] || !listed.length) {
+    progress.skip("files", args["no-files"] ? "not asked for" : "no list in scope makes files");
+    return null;
+  }
   if (!existsSync(path.join(baseline, "files/index.jsonl"))) {
+    progress.skip("files", "the baseline has none");
     console.log("\n  PDF and Excel files not compared: the baseline has none (re-record it with `yarn ui-baseline:record-pip`)");
     return null;
   }
   step("Comparing PDF and Excel files");
+  progress.start("files");
   const cathFiles = path.join(out, "cath/files");
   await collectFiles({
     container: openBlobContainer(filesStorage("cath", environment.cath)),
@@ -575,6 +640,7 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
     r.kind === "excel" && r.verdict === "missing" && seed?.publications[r.id]?.excelUploaded === false;
   for (const r of summary.results.filter(uncomparable))
     scope.skipped.push(`${r.id}: Excel file not compared: CaTH was seeded through its publication API, which takes the list as JSON, not the spreadsheet`);
+  progress.complete("files");
   return { ...summary, results: summary.results.filter((r) => !uncomparable(r)) };
 }
 
@@ -583,6 +649,7 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
 async function compareDownloads(): Promise<FileCompareSummary | null> {
   if (!downloadSpecs.length) return null;
   step("Comparing downloads");
+  progress.start("downloads");
   const cathDownloads = path.join(out, "cath/downloads");
   const { notServed } = await captureDownloads({
     app: "cath",
@@ -597,12 +664,14 @@ async function compareDownloads(): Promise<FileCompareSummary | null> {
     seededAt: seed?.seededAt
   });
   for (const line of notServed) scope.skipped.push(`download ${line}`);
-  return compareFileRuns({
+  const summary = await compareFileRuns({
     source: path.join(baseline, "downloads"),
     target: cathDownloads,
     out: path.join(out, "compare/files"),
     only: downloadSpecs.map((spec) => spec.id)
   });
+  progress.complete("downloads");
+  return summary;
 }
 
 // pip id -> CaTH id for everything both apps were seeded with: publications, account records and
@@ -708,8 +777,9 @@ async function capturedIds(dir: string): Promise<Set<string>> {
 }
 
 async function finish(): Promise<void> {
+  progress.end();
   console.log(`  report: ${path.join(out, "report/index.html")}`);
-  if (!args.serve) process.exit(defects > 0 ? 1 : 0);
+  if (!args.serve) process.exit(defects > 0 ? EXIT_DIFFERENCES : 0);
   spawn(process.execPath, [path.join(PARITY_DIR, "report/serve.mjs"), path.join(out, "report"), String(REPORT_PORT)], { stdio: "inherit", detached: false });
   console.log(`  serving on http://localhost:${REPORT_PORT}/ (Ctrl+C to stop)`);
   // Keeps the evidence step from running for --all while the server holds the process open

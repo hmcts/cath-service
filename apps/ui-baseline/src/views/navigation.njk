@@ -1,0 +1,36 @@
+{#
+  The service navigation's items, for the app's pages and the report's alike. An item is a link
+  ({ text, href, active, ariaCurrent }), or a menu of links ({ text, items }) shown as a disclosure
+  (navigation.js closes it again on Escape or a click elsewhere). active marks the page you are on,
+  or the section it is in; ariaCurrent is "page" for the page itself and "true" for its section.
+#}
+{% macro navigationItems(items) -%}
+  {%- for item in items | select("truthy") %}
+    {%- if item.items %}
+      {%- set open = item.items | selectattr("active") | length > 0 %}
+      <li class="govuk-service-navigation__item app-navigation-menu {%- if open %} govuk-service-navigation__item--active{% endif %}">
+        <details class="app-navigation-menu__details">
+          <summary class="govuk-service-navigation__link app-navigation-menu__toggle">
+            {%- if open %}<strong class="govuk-service-navigation__active-fallback">{{ item.text }}</strong>{% else %}{{ item.text }}{% endif -%}
+          </summary>
+          <ul class="app-navigation-menu__list">
+            {%- for child in item.items %}
+              <li class="app-navigation-menu__item">
+                <a class="govuk-link govuk-link--no-visited-state govuk-link--no-underline app-navigation-menu__link" href="{{ child.href }}"
+                  {%- if child.active %} aria-current="{{ child.ariaCurrent or 'true' }}"{% endif %}>
+                  {%- if child.active %}<strong>{{ child.text }}</strong>{% else %}{{ child.text }}{% endif -%}
+                </a>
+              </li>
+            {%- endfor %}
+          </ul>
+        </details>
+      </li>
+    {%- else %}
+      <li class="govuk-service-navigation__item {%- if item.active %} govuk-service-navigation__item--active{% endif %}">
+        <a class="govuk-service-navigation__link" href="{{ item.href }}" {%- if item.active %} aria-current="{{ item.ariaCurrent or 'true' }}"{% endif %}>
+          {%- if item.active %}<strong class="govuk-service-navigation__active-fallback">{{ item.text }}</strong>{% else %}{{ item.text }}{% endif -%}
+        </a>
+      </li>
+    {%- endif %}
+  {%- endfor %}
+{%- endmacro %}

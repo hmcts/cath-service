@@ -40,12 +40,8 @@ describe("compareArtefactFiles", () => {
       ]
     } as never);
     fetchMock = vi.fn(async (url: string) => {
-      if (url === "https://cath-api/test-support/artefacts/c1") return Response.json({ listTypeId: 7 });
-      if (url === "https://cath-api/test-support/list-types")
-        return Response.json([
-          { id: 3, name: "OTHER" },
-          { id: 7, name: "CIVIL_DAILY_CAUSE_LIST" }
-        ]);
+      // listTypeId is arbitrary: the page is found by listTypeName
+      if (url === "https://cath-api/test-support/artefacts/c1") return Response.json({ listTypeId: 999, listTypeName: "CIVIL_DAILY_CAUSE_LIST" });
       return new Response("not found", { status: 404 });
     });
     vi.stubGlobal("fetch", fetchMock);

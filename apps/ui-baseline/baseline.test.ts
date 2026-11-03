@@ -6,7 +6,7 @@ import { loadEnvironment } from "./environments.js";
 vi.mock("./baseline-store.js", () => ({ DEFAULT_BASELINE_DIR: "/default/baseline", pullBaseline: vi.fn(), pushBaseline: vi.fn() }));
 vi.mock("./environments.js", () => ({ loadEnvironment: vi.fn() }));
 
-const ENVIRONMENT = { name: "test" };
+const ENVIRONMENT = { name: "local" };
 const STORED = { id: "2026-10-01", blob: "baselines/2026-10-01.tar.gz", pip: "pip@abc", finishedAt: "2026-10-01T00:00:00Z", pushedAt: "2026-10-02T00:00:00Z" };
 
 describe("baseline script", () => {
@@ -38,22 +38,22 @@ describe("baseline script", () => {
     await import("./baseline.js");
   };
 
-  it("should push the default baseline directory to the test environment", async () => {
+  it("should push the default baseline directory to the local environment", async () => {
     // Act
     await run("push");
 
     // Assert
-    expect(loadEnvironment).toHaveBeenCalledWith("test");
+    expect(loadEnvironment).toHaveBeenCalledWith("local");
     expect(pushBaseline).toHaveBeenCalledWith(ENVIRONMENT, DEFAULT_BASELINE_DIR);
-    expect(log).toHaveBeenCalledWith("stored the baseline recorded 2026-10-01T00:00:00Z from pip@abc as baselines/2026-10-01.tar.gz (test)");
+    expect(log).toHaveBeenCalledWith("stored the baseline recorded 2026-10-01T00:00:00Z from pip@abc as baselines/2026-10-01.tar.gz (local)");
   });
 
   it("should pull a stored baseline by id into the given directory and environment", async () => {
     // Act
-    await run("pull", "--env", "local", "--dir", "some/dir", "--id", "2026-10-01");
+    await run("pull", "--env", "test", "--dir", "some/dir", "--id", "2026-10-01");
 
     // Assert
-    expect(loadEnvironment).toHaveBeenCalledWith("local");
+    expect(loadEnvironment).toHaveBeenCalledWith("test");
     expect(pullBaseline).toHaveBeenCalledWith(ENVIRONMENT, path.resolve("some/dir"), "2026-10-01");
     expect(log).toHaveBeenCalledWith(`fetched baselines/2026-10-01.tar.gz into ${path.resolve("some/dir")}`);
   });

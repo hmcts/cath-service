@@ -21,17 +21,21 @@ recording is stored in the test environment (`cathsaperftest`, container `ui-bas
 rather than recording your own:
 
 ```bash
-yarn ui-baseline:baseline pull     # the stored baseline, into output/baseline (needs az login)
+yarn ui-baseline:baseline pull --env test   # the stored baseline, into output/baseline (needs az login)
 ```
 
 The "UI baseline - record pip" workflow (`workflow.ui-baseline-record.yml`, run by hand) records it
-on a GitHub runner and stores it. Re-run it when the pinned pip commits or the fixtures change. To
-record one yourself:
+on a GitHub runner and stores it in the test environment. Re-run it when the pinned pip commits or
+the fixtures change. To record one yourself:
 
 ```bash
 yarn ui-baseline:record-pip
-yarn ui-baseline:baseline push     # optional: store it as the latest
+yarn ui-baseline:baseline push     # optional: store it as the latest, in local Azurite
 ```
+
+`push` and `pull` default to `--env local`: local Azurite's `ui-baseline` container, through
+`AZURE_STORAGE_CONNECTION_STRING` in the root `.env`, which is where the locally run hosted check
+reads it. Only the record workflow stores to the test environment (`--env test`).
 
 This needs Docker, Node and corepack, and nothing else from pip. pip is memory-hungry (its two
 backends alone use about 2 GB), so stop CaTH while recording; the recording fails with an error,
@@ -358,12 +362,15 @@ the groups are shared, one account per admin role works in both apps.
 ### Running it locally
 
 ```bash
-UI_BASELINE_AUTH_DISABLED=true UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev
+PORT=8090 UI_BASELINE_AUTH_DISABLED=true UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev
 ```
 
-Then open <http://localhost:8090>. `UI_BASELINE_AUTH_DISABLED` is refused when `NODE_ENV` is
-production. With `UI_BASELINE_ENV=local` it checks a local CaTH, and needs a stored baseline in
-local Azurite's `ui-baseline` container (`yarn ui-baseline:baseline push --env local`).
+Then open <http://localhost:8090>. `PORT` is needed because the root `.env` sets CaTH web's
+`PORT=8080`, which `dev` would otherwise pick up. `UI_BASELINE_AUTH_DISABLED` is refused when
+`NODE_ENV` is production. With `UI_BASELINE_ENV=local` it checks a local CaTH, and needs a stored
+baseline in local Azurite's `ui-baseline` container (`yarn ui-baseline:baseline push`). Each check
+uses the latest stored baseline when it starts, so a newer push is picked up by the next check; the
+page names the baseline last fetched.
 
 ## Not done yet
 
