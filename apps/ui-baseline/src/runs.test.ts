@@ -194,6 +194,24 @@ describe("createRunner", () => {
     errors.mockRestore();
   });
 
+  it("should fail a run whose record cannot be saved, and still start the runs after it", async () => {
+    // Arrange
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const blocked = path.join(await mkdtemp(path.join(tmpdir(), "runs-")), "a-file");
+    await writeFile(blocked, "where the runs' folder should be, so nothing can be saved");
+    const runner = createRunner({ ...(await optionsWith()), dataDir: blocked });
+
+    // Act
+    const first = runner.start({ kind: "check", scope: "all" }, "tester");
+    const second = runner.start({ kind: "check", scope: "all" }, "tester");
+    await runner.idle();
+
+    // Assert
+    expect([runner.get(first.id)?.status, runner.get(second.id)?.status]).toEqual(["failed", "failed"]);
+    expect(runner.get(second.id)?.error).toMatch(/ENOTDIR|EEXIST/);
+    errors.mockRestore();
+  });
+
   it("should have no directory for a run it does not know", async () => {
     // Arrange
     const runner = createRunner({ ...(await optionsWith()), store: memoryStore() });

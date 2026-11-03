@@ -215,9 +215,11 @@ function captureAnswers(answers: Record<string, { status?: number; path?: string
 
 function compareResults(differing: Record<string, { locale: string; state: string }[]> = {}): void {
   mocks.compareRuns.mockImplementation(async (options: { only: string[] }) => {
+    // Each page as first seen and on mobile, and in any other state a test makes differ (expanded)
+    const states = [...new Set(["default", "mobile", ...Object.values(differing).flatMap((d) => d.map(({ state }) => state))])];
     const results = options.only.flatMap((id) =>
       ["en", "cy"].flatMap((locale) =>
-        ["default", "mobile"].map((state) => {
+        states.map((state) => {
           const differs = (differing[id] ?? []).some((d) => d.locale === locale && d.state === state);
           return {
             id,
@@ -452,7 +454,8 @@ describe("check", () => {
         source: path.join(baseline, "pages"),
         target: path.join(out, "cath/pages"),
         out: path.join(out, "compare/pages"),
-        only: ["page--summary-of-publications", "page--list-view"]
+        only: ["page--summary-of-publications", "page--list-view"],
+        expectedTarget: expect.any(Function)
       });
     });
 
@@ -530,6 +533,43 @@ describe("check", () => {
       expect(output).toContain("PR comment: https://github.com/hmcts/cath-service/pull/7#comment");
       expect(output).toContain("edit the comment and drag report.zip and the 3 screenshots into it");
       expect(existsSync(path.join(out, "bundle/data/lists/pip/civil-daily"))).toBe(true);
+    });
+
+    it("should count a difference seen only with everything expanded or only on mobile, and say where", async () => {
+      // Arrange
+      compareResults({
+        "page--summary-of-publications": [{ locale: "en", state: "expanded" }],
+        "civil-daily": [{ locale: "cy", state: "mobile" }]
+      });
+
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      const body = readFileSync(path.join(out, "evidence", "pr-comment.md"), "utf-8");
+      expect(body).toContain("| /summary-of-publications → /summary-of-publications | 1 finding (with everything expanded) | matches |");
+      expect(body).toContain("| CIVIL_DAILY_CAUSE_LIST | matches | 1 finding (on mobile) |");
+      expect(body).toContain("page--summary-of-publications-en-expanded.png");
+      const output = logs.join("\n");
+      expect(output).toContain("page--summary-of-publications (English with everything expanded)");
+      expect(output).toContain("civil-daily (Welsh on mobile)");
+    });
+
+    it("should compare the downloads the ticket names, without being given them as routes", async () => {
+      // Arrange
+      makeBaseline({ files: true, scope: true, downloads: true });
+      mocks.ticketText.mockResolvedValue(`${TICKET}, and the \`/pip-download\` file`);
+      mocks.loadDownloads.mockResolvedValue([
+        { id: "dl-1", kind: "csv", pip: { path: "/pip-download" }, cath: { path: "/cath-download" } },
+        { id: "dl-2", kind: "binary", pip: { path: "/pip-public" }, cath: { path: "/cath-public" } }
+      ]);
+      mocks.captureDownloads.mockResolvedValue({ entries: [], notServed: [] });
+
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      expect(mocks.compareFileRuns).toHaveBeenCalledWith(expect.objectContaining({ source: path.join(baseline, "downloads"), only: ["dl-1"] }));
     });
 
     it("should throw when seeding CaTH fails", async () => {
