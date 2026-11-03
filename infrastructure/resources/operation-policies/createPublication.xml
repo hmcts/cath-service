@@ -1,6 +1,12 @@
 <policies>
   <inbound>
     <base />
+    <check-header name="x-provenance" failed-check-httpcode="400" failed-check-error-message="Missing/Invalid Header x-provenance" ignore-case="false">
+      <value>SNL</value>
+      <value>COMMON_PLATFORM</value>
+      <value>CP_CATH</value>
+      <value>PDDA</value>
+    </check-header>
   </inbound>
   <backend>
     <base />
