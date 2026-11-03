@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { systemCommand } from "../../system-command.js";
 import type { CompareSummary, Finding } from "../compare/compare.js";
 
 // Classifies each difference `parity compare` found as intended, a defect, or needing a human,
@@ -118,7 +119,7 @@ async function loadRequirements(source: string | undefined): Promise<string> {
   if (!source) return "";
   const issue = source.match(/^gh:(.+)#(\d+)$/);
   if (issue) {
-    const json = execFileSync("gh", ["issue", "view", issue[2], "--repo", issue[1], "--json", "title,body,author"], { encoding: "utf-8" });
+    const json = execFileSync(systemCommand("gh"), ["issue", "view", issue[2], "--repo", issue[1], "--json", "title,body,author"], { encoding: "utf-8" });
     const { title, body } = JSON.parse(json) as { title: string; body: string };
     return `# ${title}\n\n${body}`;
   }

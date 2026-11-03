@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import type { CompareSummary, ReviewResult } from "./core/index.js";
+import { systemCommand } from "./system-command.js";
 
 // The PR comment for a parity check: verdict first, then what needs fixing, then what needs a human,
 // with intended differences and per-page detail folded away. One comment per PR, found again by the
@@ -87,15 +88,17 @@ export function buildComment(input: CommentInput): string {
 
 // Creates the parity comment on the PR, or updates it if one exists
 export function postComment(repo: string, pr: number, body: string): string {
-  const comments = JSON.parse(execFileSync("gh", ["api", `repos/${repo}/issues/${pr}/comments`, "--paginate"], { encoding: "utf-8" })) as {
+  const comments = JSON.parse(execFileSync(systemCommand("gh"), ["api", `repos/${repo}/issues/${pr}/comments`, "--paginate"], { encoding: "utf-8" })) as {
     id: number;
     body: string;
     html_url: string;
   }[];
   const existing = comments.find((comment) => comment.body.includes(COMMENT_MARKER));
   const response = existing
-    ? execFileSync("gh", ["api", "--method", "PATCH", `repos/${repo}/issues/comments/${existing.id}`, "-f", `body=${body}`], { encoding: "utf-8" })
-    : execFileSync("gh", ["api", "--method", "POST", `repos/${repo}/issues/${pr}/comments`, "-f", `body=${body}`], { encoding: "utf-8" });
+    ? execFileSync(systemCommand("gh"), ["api", "--method", "PATCH", `repos/${repo}/issues/comments/${existing.id}`, "-f", `body=${body}`], {
+        encoding: "utf-8"
+      })
+    : execFileSync(systemCommand("gh"), ["api", "--method", "POST", `repos/${repo}/issues/${pr}/comments`, "-f", `body=${body}`], { encoding: "utf-8" });
   return (JSON.parse(response) as { html_url: string }).html_url;
 }
 

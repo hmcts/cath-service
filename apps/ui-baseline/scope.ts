@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { PublicationFixture } from "./fixtures/manifest.js";
+import { systemCommand } from "./system-command.js";
 import { parseVariant } from "./variants.js";
 
 // What a ticket (or explicit --list-type / --route / --journey choices) is about, shared by the
@@ -15,7 +16,9 @@ const REPO_DIR = path.join(PARITY_DIR, "../..");
 export async function ticketText(ticket: string, repo: string): Promise<string> {
   const local = path.join(REPO_DIR, "docs/tickets", ticket, "ticket.md");
   if (existsSync(local)) return readFile(local, "utf-8");
-  const { title, body } = JSON.parse(execFileSync("gh", ["issue", "view", ticket, "--repo", repo, "--json", "title,body"], { encoding: "utf-8" }));
+  const { title, body } = JSON.parse(
+    execFileSync(systemCommand("gh"), ["issue", "view", ticket, "--repo", repo, "--json", "title,body"], { encoding: "utf-8" })
+  );
   return `# ${title}\n\n${body}`;
 }
 

@@ -24,7 +24,7 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
   );
 
   const results: FileCompareResult[] = [];
-  for (const key of keys.sort()) {
+  for (const key of keys.sort((a, b) => a.localeCompare(b))) {
     const source = sourceIndex.get(key);
     const target = targetIndex.get(key);
     const { id, kind } = (source ?? target) as FileEntry;

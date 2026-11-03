@@ -18,7 +18,7 @@ export async function excelCells(data: Uint8Array): Promise<WorkbookContent> {
           if (content.text !== "") cells[cell.address] = content;
         })
       );
-      return { name: worksheet.name, cells, merges: [...(worksheet.model.merges ?? [])].sort() };
+      return { name: worksheet.name, cells, merges: [...(worksheet.model.merges ?? [])].sort((a, b) => a.localeCompare(b)) };
     })
   };
 }

@@ -183,7 +183,8 @@ async function uploadLocations(): Promise<void> {
   form.append("locationList", new Blob([locationsCsv()], { type: "text/csv" }), "locations.csv");
   const response = await fetch(`${DATA_MANAGEMENT_URL}/locations/upload`, { method: "POST", headers: { "x-requester-id": REQUESTER_ID }, body: form });
   if (!response.ok) throw new Error(`pip rejected locations: ${response.status} ${await response.text()}`);
-  console.log(`uploaded ${((await response.json()) as unknown[]).length} locations`);
+  // What was sent, not what pip echoes back, which is not logged unchecked
+  console.log(`uploaded ${locationData.locations.length} locations`);
 }
 
 // CaTH's jurisdiction maps to pip's Jurisdiction and CaTH's sub-jurisdiction to pip's Jurisdiction Type

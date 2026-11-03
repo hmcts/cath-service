@@ -18,6 +18,8 @@ set -euo pipefail
 
 PARITY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="$(cd "$PARITY_DIR/../.." && pwd)"
+# The repo's own tsx, by its path: npx could install a package on demand and run its scripts
+TSX="$REPO_DIR/node_modules/.bin/tsx"
 # A field of a JSON file (a mktemp file has no .json extension, so it is read rather than required)
 json_field() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]])' "$1" "$2"; }
 SCOPE_ARGS=()
@@ -40,7 +42,7 @@ DEFAULT_OUT="$PARITY_DIR/output/baseline"
 SCOPE_FILE=""
 if [ ${#SCOPE_ARGS[@]} -gt 0 ]; then
   SCOPE_FILE="$(mktemp)"
-  (cd "$REPO_DIR" && npx tsx apps/ui-baseline/pip/scope.ts --out "$SCOPE_FILE" "${SCOPE_ARGS[@]}")
+  (cd "$REPO_DIR" && "$TSX" apps/ui-baseline/pip/scope.ts --out "$SCOPE_FILE" "${SCOPE_ARGS[@]}")
   DEFAULT_OUT="$PARITY_DIR/output/baselines/$(json_field "$SCOPE_FILE" name)"
 fi
 OUT="$(mkdir -p "${2:-$DEFAULT_OUT}" && cd "${2:-$DEFAULT_OUT}" && pwd)"
@@ -94,7 +96,7 @@ wait_for "$PIP_FRONTEND_URL/"
 
 cd "$REPO_DIR"
 step "Seeding pip"
-npx tsx apps/ui-baseline/pip/seed.ts
+"$TSX" apps/ui-baseline/pip/seed.ts
 # The ids pip gave each publication, record and user; a check maps those in page URLs to CaTH's
 cp apps/ui-baseline/output/seed/pip.json "$OUT/seed.json"
 
@@ -102,42 +104,42 @@ commit() { git -C "$PIP_SRC/$1" rev-parse --short=8 HEAD; }
 PIP_COMMITS="pip-frontend@$(commit pip-frontend)+pip-data-management@$(commit pip-data-management)+pip-account-management@$(commit pip-account-management)"
 
 step "Capturing list pages"
-npx tsx apps/ui-baseline/build-targets.ts pip "$PIP_COMMITS"
-npx tsx apps/ui-baseline/pip/scope-targets.ts lists apps/ui-baseline/output/targets/pip.json
+"$TSX" apps/ui-baseline/build-targets.ts pip "$PIP_COMMITS"
+"$TSX" apps/ui-baseline/pip/scope-targets.ts lists apps/ui-baseline/output/targets/pip.json
 if [ "$(count_targets apps/ui-baseline/output/targets/pip.json)" -gt 0 ]; then
-  npx tsx "$TOOL" capture --targets apps/ui-baseline/output/targets/pip.json --out "$OUT/lists" --concurrency 4 > "$OUT/lists.log" 2>&1 || true
+  "$TSX" "$TOOL" capture --targets apps/ui-baseline/output/targets/pip.json --out "$OUT/lists" --concurrency 4 > "$OUT/lists.log" 2>&1 || true
   tail -1 "$OUT/lists.log"
 else
   empty_index "$OUT/lists"
 fi
 
 step "Recording generated PDF and Excel files"
-npx tsx apps/ui-baseline/pip/record-files.ts "$OUT/files" | command grep -v "npm warn" || true
+"$TSX" apps/ui-baseline/pip/record-files.ts "$OUT/files" | command grep -v "npm warn" || true
 
 step "Recording flat files"
-npx tsx apps/ui-baseline/pip/record-flat-files.ts "$OUT/flat-files" | command grep -v "npm warn" || true
+"$TSX" apps/ui-baseline/pip/record-flat-files.ts "$OUT/flat-files" | command grep -v "npm warn" || true
 
 step "Capturing other pages"
-npx tsx apps/ui-baseline/routes/build-page-targets.ts
-npx tsx apps/ui-baseline/pip/scope-targets.ts pages apps/ui-baseline/output/targets/pip-pages.json
+"$TSX" apps/ui-baseline/routes/build-page-targets.ts
+"$TSX" apps/ui-baseline/pip/scope-targets.ts pages apps/ui-baseline/output/targets/pip-pages.json
 if [ "$(count_targets apps/ui-baseline/output/targets/pip-pages.json)" -gt 0 ]; then
-  npx tsx "$TOOL" capture --targets apps/ui-baseline/output/targets/pip-pages.json --out "$OUT/pages" --concurrency 4 > "$OUT/pages.log" 2>&1 || true
+  "$TSX" "$TOOL" capture --targets apps/ui-baseline/output/targets/pip-pages.json --out "$OUT/pages" --concurrency 4 > "$OUT/pages.log" 2>&1 || true
   tail -1 "$OUT/pages.log"
 else
   empty_index "$OUT/pages"
 fi
 
 step "Recording downloads"
-npx tsx apps/ui-baseline/pip/record-downloads.ts "$OUT/downloads" | command grep -v "npm warn" || true
+"$TSX" apps/ui-baseline/pip/record-downloads.ts "$OUT/downloads" | command grep -v "npm warn" || true
 
 step "Running journeys"
 JOURNEYS=""
 [ -n "${UI_BASELINE_SCOPE:-}" ] && JOURNEYS="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8")).journeys.join(","))' "$UI_BASELINE_SCOPE")"
 if [ -z "${UI_BASELINE_SCOPE:-}" ]; then
-  npx tsx "$TOOL" journeys --module apps/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
+  "$TSX" "$TOOL" journeys --module apps/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
   tail -1 "$OUT/journeys.log"
 elif [ -n "$JOURNEYS" ]; then
-  npx tsx "$TOOL" journeys --module apps/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" --only "$JOURNEYS" > "$OUT/journeys.log" 2>&1 || true
+  "$TSX" "$TOOL" journeys --module apps/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" --only "$JOURNEYS" > "$OUT/journeys.log" 2>&1 || true
   tail -1 "$OUT/journeys.log"
 else
   echo "none in scope"

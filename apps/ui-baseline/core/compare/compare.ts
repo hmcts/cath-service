@@ -217,8 +217,8 @@ function compareTables(source: PageStructure, target: PageStructure, unorderedRo
         detail: `${label}: ${missing.length ? `missing ${missing.map((c) => `"${c}"`).join(", ")}` : ""}${missing.length && extra.length ? "; " : ""}${extra.length ? `extra ${extra.map((c) => `"${c}"`).join(", ")}` : ""}${!missing.length && !extra.length ? "same columns in a different order" : ""}`
       });
     }
-    const rowsA = unorderedRows ? [...a.rows].map((r) => r.join(" | ")).sort() : a.rows.map((r) => r.join(" | "));
-    const rowsB = unorderedRows ? [...b.rows].map((r) => r.join(" | ")).sort() : b.rows.map((r) => r.join(" | "));
+    const rowsA = unorderedRows ? [...a.rows].map((r) => r.join(" | ")).sort((a, b) => a.localeCompare(b)) : a.rows.map((r) => r.join(" | "));
+    const rowsB = unorderedRows ? [...b.rows].map((r) => r.join(" | ")).sort((a, b) => a.localeCompare(b)) : b.rows.map((r) => r.join(" | "));
     if (rowsA.length !== rowsB.length) findings.push({ category: "table", change: "rows", detail: `${label}: ${rowsA.length} → ${rowsB.length} rows` });
     for (let r = 0; r < Math.min(rowsA.length, rowsB.length); r++) {
       if (rowsA[r] !== rowsB[r]) findings.push({ category: "table", change: "cells", detail: `${label} row ${r + 1}: "${rowsA[r]}" → "${rowsB[r]}"` });
@@ -293,7 +293,8 @@ async function compareMeta(sourceDir: string, targetDir: string): Promise<Findin
   const findings: Finding[] = [];
   if (a.title !== b.title) findings.push({ category: "page", change: "title", detail: `"${a.title}" → "${b.title}"` });
   if (a.lang !== b.lang) findings.push({ category: "page", change: "lang", detail: `${a.lang} → ${b.lang}` });
-  const fields = (meta: { forms: { fields: { name: string }[] }[] }) => meta.forms.flatMap((f) => f.fields.map((x) => x.name)).sort();
+  const fields = (meta: { forms: { fields: { name: string }[] }[] }) =>
+    meta.forms.flatMap((f) => f.fields.map((x) => x.name)).sort((a, b) => a.localeCompare(b));
   const fa = fields(a);
   const fb = fields(b);
   for (const name of fa.filter((x) => !fb.includes(x))) findings.push({ category: "page", change: "form-field-missing", detail: `field "${name}"` });
