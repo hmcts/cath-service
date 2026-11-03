@@ -19,7 +19,7 @@ Infrastructure only, one PR. Token validation is inline in each operation policy
 - [x] Create `infrastructure/apim-testing-support.tf` with `module.apim_api_testing_support` (`cath-testing-support-api`, path `cath/testing-support`, `ref=master`, `azurerm.cftapps`, `service_url` as in `apim.tf`, `swagger_url = file(...)`)
 - [x] Add `module.apim_api_testing_support_policy` using `file()` on the passthrough API policy
 - [x] Add the operation-policy local (`fileset` on `resources/testing-support/operation-policies/*.xml`, gated to `{}`, rendered with `templatefile()` using `data.azurerm_key_vault_secret.apim_tenant_id[0]` / `apim_client_id[0]`) and `azurerm_api_management_api_operation_policy.apim_testing_support_operation_policy`
-- [x] Add `azurerm_api_management_api_diagnostic.testing_support` using `azurerm_api_management_logger.apim[0].id`, 25% sampling, no body or header logging
+- [x] Add `azurerm_api_management_api_diagnostic.testing_support` using `azurerm_api_management_logger.apim[0].id`, 100% sampling (as cath-api), no body or header logging
 - [x] Confirm the only existing file modified is `env-config.tf`; `apim.tf`, `apim-operation.tf` and `resources/api-policy/api-policy.xml` stay as they are
 - [x] Remove the `cath-jwt-validation` fragment (`apim-policy-fragment.tf`, `resources/policy-fragments/`) and the operation-policy `depends_on` on it
 

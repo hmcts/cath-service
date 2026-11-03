@@ -70,7 +70,7 @@ resource "azurerm_api_management_api_diagnostic" "testing_support" {
   resource_group_name      = local.apim_rg
   api_management_logger_id = azurerm_api_management_logger.apim[0].id
 
-  sampling_percentage       = 25.0
+  sampling_percentage       = 100.0
   always_log_errors         = true
   log_client_ip             = true
   verbosity                 = "verbose"
