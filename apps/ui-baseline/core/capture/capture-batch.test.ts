@@ -105,6 +105,35 @@ describe("captureBatch", () => {
     ]);
   });
 
+  it("should leave no index line for a capture whose retry also failed", async () => {
+    // Arrange
+    const { targetsFile, outDir } = await setUp([
+      { id: "home", url: "http://localhost/", locales: ["en", "cy"] },
+      { id: "faq", url: "http://localhost/faq" }
+    ]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    let homeCyAttempts = 0;
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target, settings) => {
+      const locale = target.locale ?? "en";
+      if (target.id === "home" && locale === "cy" && ++homeCyAttempts > 1) throw new Error("the page crashed");
+      await mkdir(path.join(settings.outDir, target.id, locale, "default"), { recursive: true });
+      await writeFile(path.join(settings.outDir, "index.jsonl"), `${JSON.stringify({ id: target.id, locale, state: "default" })}\n`, { flag: "a" });
+      // The Welsh home page's default state is captured before its expanded state fails
+      return target.id === "home" && locale === "cy" ? [ok(target), { ...ok(target, "expanded"), ok: false, error: "timeout" }] : [ok(target)];
+    });
+
+    // Act
+    await captureBatch(targetsFile, { outDir }, 1);
+
+    // Assert
+    const index = (await readFile(path.join(outDir, "index.jsonl"), "utf-8"))
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(index.map((entry) => `${entry.id} ${entry.locale}`)).toEqual(["home en", "faq en"]);
+    await expect(stat(path.join(outDir, "home", "cy"))).rejects.toThrow();
+  });
+
   it("should retry each failed target once and keep only the retry's results and index lines", async () => {
     // Arrange
     const { targetsFile, outDir } = await setUp([

@@ -2,14 +2,14 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { compareRuns, type Finding } from "./compare.js";
+import { type CompareOptions, compareRuns, type Finding } from "./compare.js";
 
 interface Capture {
   id: string;
   locale?: string;
   state?: string;
   aria: string;
-  meta?: Partial<{ title: string; lang: string; forms: { fields: { name: string }[] }[] }>;
+  meta?: Partial<{ title: string; lang: string; forms: { action?: string | null; fields: { name: string }[] }[] }>;
   axe?: { id: string; impact: string | null; help: string }[];
   provenance?: Record<string, unknown>;
 }
@@ -30,7 +30,12 @@ async function writeRun(dir: string, captures: Capture[], extraIndexLines: objec
   }
 }
 
-async function compareOne(source: Omit<Capture, "id">, target: Omit<Capture, "id">, unordered = false): Promise<Finding[]> {
+async function compareOne(
+  source: Omit<Capture, "id">,
+  target: Omit<Capture, "id">,
+  unordered = false,
+  expectedTarget?: CompareOptions["expectedTarget"]
+): Promise<Finding[]> {
   const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
   await writeRun(path.join(dir, "source"), [{ id: "page", ...source }]);
   await writeRun(path.join(dir, "target"), [{ id: "page", ...target }]);
@@ -38,7 +43,8 @@ async function compareOne(source: Omit<Capture, "id">, target: Omit<Capture, "id
     source: path.join(dir, "source"),
     target: path.join(dir, "target"),
     out: path.join(dir, "out"),
-    unorderedRows: unordered ? ["page"] : undefined
+    unorderedRows: unordered ? ["page"] : undefined,
+    expectedTarget
   });
   return summary.results[0].findings;
 }
@@ -442,5 +448,123 @@ describe("compareRuns", () => {
       // Assert
       expect(summary.patterns).toEqual([{ category: "heading", change: "level", detail: "h2 → h3", pages: ["a en", "b en"] }]);
     });
+  });
+});
+
+describe("compareRuns, reading and pairing captures", () => {
+  it("should read curly quotes in the tree and the page's details, and count them the same as straight ones", async () => {
+    // Act
+    const findings = await compareOne(
+      { aria: '- button "Select “Continue”"\n- link "pip’s guide":\n  - /url: /guide', meta: { title: "Select “Continue”" } },
+      { aria: '- button "Select \\"Continue\\""\n- link "pip\'s guide":\n  - /url: /guide', meta: { title: 'Select "Continue"' } }
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual([]);
+  });
+
+  it("should report a name with curly quotes in full when it differs", async () => {
+    // Act
+    const findings = await compareOne({ aria: '- button "Select “Continue”"' }, { aria: '- button "Select “Next”"' });
+
+    // Assert
+    expect(describeFindings(findings)).toEqual(['button reworded: "Select "Continue"" → "Select "Next""']);
+  });
+
+  it("should count a capture whose folder is gone as not captured, rather than fail the run", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+    const aria = '- heading "Find a court" [level=1]';
+    await writeRun(path.join(dir, "source"), [
+      { id: "home", aria },
+      { id: "home", locale: "cy", aria }
+    ]);
+    // The index still has a line for the Welsh capture, whose folder a failed retry removed
+    await writeRun(path.join(dir, "target"), [{ id: "home", aria }], [{ id: "home", locale: "cy", state: "default" }]);
+
+    // Act
+    const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+    // Assert
+    expect(summary.results.map((r) => `${r.locale} ${r.verdict}`)).toEqual(["en match", "cy not-captured"]);
+  });
+
+  it("should report a button or link the target has a different number of", async () => {
+    // Act
+    const findings = await compareOne(
+      { aria: '- button "Remove"\n- button "Remove"\n- button "Remove"\n- link "Back":\n  - /url: /' },
+      { aria: '- button "Remove"\n- link "Back":\n  - /url: /\n- link "Back":\n  - /url: /' }
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual(['button count: "Remove": 3 → 1', 'link count: "Back": 1 → 2']);
+  });
+});
+
+describe("compareRuns, where links and forms lead", () => {
+  // A capture at the given address, with the given tree and form actions
+  const page = (url: string, aria: string, actions: (string | null)[] = []) => ({
+    aria,
+    provenance: { url } as Record<string, unknown>,
+    meta: { forms: actions.map((action) => ({ action, fields: [] })) }
+  });
+  // pip's /a is CaTH's /alpha; the page itself is the page compared with it; other sites as they are
+  const expectedTarget: CompareOptions["expectedTarget"] = (url, { source, target }) => {
+    if (url.origin !== source.origin) return `${url.origin}${url.pathname}`;
+    if (url.pathname === source.pathname) return target.pathname;
+    return url.pathname === "/a" ? "/alpha" : undefined;
+  };
+
+  it("should report a link that leads somewhere other than the target page for it", async () => {
+    // Act
+    const findings = await compareOne(
+      page("https://pip.test/list?lng=cy", '- link "Alpha":\n  - /url: a?artefactId=1\n- link "Courts":\n  - /url: https://courts.example/find'),
+      page("http://cath.test/list", '- link "Alpha":\n  - /url: /beta?artefactId=9\n- link "Courts":\n  - /url: https://elsewhere.example/find'),
+      false,
+      expectedTarget
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual([
+      'link target: "Alpha": /alpha → /beta',
+      'link target: "Courts": https://courts.example/find → https://elsewhere.example/find'
+    ]);
+  });
+
+  it("should not count a link that leads to the right page with other ids, or one it cannot tell", async () => {
+    // Act
+    const findings = await compareOne(
+      page("https://pip.test/list", '- link "Alpha":\n  - /url: /a?artefactId=1\n- link "Unknown":\n  - /url: /somewhere'),
+      page("http://cath.test/list", '- link "Alpha":\n  - /url: /alpha?artefactId=9\n- link "Unknown":\n  - /url: /anywhere'),
+      false,
+      expectedTarget
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual([]);
+  });
+
+  it("should report a form that posts somewhere other than the target page for it", async () => {
+    // Act
+    const findings = await compareOne(
+      page("https://pip.test/search", '- heading "Search" [level=1]', [null, "/a"]),
+      page("http://cath.test/find", '- heading "Search" [level=1]', ["/find", "/beta"]),
+      false,
+      expectedTarget
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual(["form action: form 2: /alpha → /beta"]);
+  });
+
+  it("should not compare where links lead when it is not told how", async () => {
+    // Act
+    const findings = await compareOne(
+      page("https://pip.test/list", '- link "Alpha":\n  - /url: /a'),
+      page("http://cath.test/list", '- link "Alpha":\n  - /url: /beta')
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual([]);
   });
 });

@@ -64,6 +64,9 @@ const STAGES = [
   { id: "evidence", label: "Writing the evidence" }
 ] as const;
 const CAPTURE_STAGE = { lists: "capture-lists", pages: "capture-pages" } as const;
+// How each capture state is described after a page's language: as first seen, with its collapsed
+// content opened, and on a phone
+const STATE_LABEL: Record<string, string> = { default: "", expanded: " with everything expanded", mobile: " on mobile" };
 
 const { values: given } = parseArgs({
   options: {
@@ -192,11 +195,13 @@ const pageFixtures = scope.routes.flatMap((route) => [
   ...[...(pageUrls.get(route.id)?.searchParams.values() ?? [])].flatMap((value) => pipArtefacts.get(value) ?? []),
   ...Object.values(route.cathParams ?? {}).flatMap((source) => (source.startsWith("publication:") ? [source.slice("publication:".length)] : []))
 ]);
+// The routes in scope: every one the ticket or --route names, and the CaTH routes of the pages chosen
+const routesInScope = new Set([...scope.mentionedRoutes, ...scope.routes.flatMap((route) => [route.pip, route.cath])]);
 // Files the baseline recorded that are fetched rather than shown (routes/downloads.json), with the
-// publications they come from: all of them for --all, otherwise those of the routes named
+// publications they come from: all of them for --all, otherwise those of the routes in scope
 const downloadSpecs =
   existsSync(path.join(baseline, "downloads/index.jsonl")) && !args["no-files"]
-    ? (await loadDownloads()).filter((spec) => args.all || (args.route ?? []).includes(spec.pip.path) || (args.route ?? []).includes(spec.cath.path))
+    ? (await loadDownloads()).filter((spec) => args.all || routesInScope.has(spec.pip.path) || routesInScope.has(spec.cath.path))
     : [];
 if (!downloadSpecs.length) progress.skip("downloads", "no downloads in scope");
 const downloadFixtures = downloadSpecs.flatMap((spec) =>
@@ -208,8 +213,7 @@ const seedIds = [
 // The baseline's variants of each page in scope (variants.ts): the page as other roles, and signed in
 const baselineIds = { lists: await capturedIds(path.join(baseline, "lists")), pages: await capturedIds(path.join(baseline, "pages")) };
 const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineIds[area]].filter((other) => other !== id && parseVariant(other).base === id);
-const includeNotFound =
-  baselineIds.pages.has(NOT_FOUND_ID) && (args.all || (args.route ?? []).some((route) => route === "/not-found" || route === NOT_FOUND_PATH));
+const includeNotFound = baselineIds.pages.has(NOT_FOUND_ID) && (args.all || routesInScope.has("/not-found") || routesInScope.has(NOT_FOUND_PATH));
 if (!scope.routes.length && !includeNotFound) progress.skip("capture-pages", "no other pages in scope");
 // Pages behind sign-in need CaTH users signed in, as do journeys and downloads made for a user
 const needsSignIn =
@@ -359,7 +363,13 @@ const comparisons: Record<string, CompareSummary> = {};
 const capturedTargetIds = { lists: new Set(listTargets.map((t) => t.id)), pages: new Set(pageTargets.map((t) => t.id)) };
 for (const area of Object.keys(captured)) {
   const ids = [...capturedTargetIds[area as keyof typeof capturedTargetIds]];
-  comparisons[area] = await compareRuns({ source: path.join(baseline, area), target: captured[area], out: path.join(out, "compare", area), only: ids });
+  comparisons[area] = await compareRuns({
+    source: path.join(baseline, area),
+    target: captured[area],
+    out: path.join(out, "compare", area),
+    only: ids,
+    expectedTarget: expectedCathTarget
+  });
   const t = comparisons[area].totals;
   console.log(`  ${area}: ${t.pairs - t.notCaptured} page-language pairs compared, ${t.match} match, ${t.differs} differ`);
 }
@@ -442,11 +452,12 @@ execFileSync(process.execPath, reportArgs, { stdio: "ignore" });
 // ---------- Summary ----------
 const defects = Object.values(reviews).reduce((sum, r) => sum + r.totals.defect, 0);
 const needsHuman = Object.values(reviews).reduce((sum, r) => sum + r.totals.needsHuman, 0);
-// Each page is compared once per language, on desktop and mobile; report pages, with where they differ
+// Each page is compared once per language and state (as first seen, with its collapsed content
+// opened, and on mobile); report pages, with where they differ
 const pageVerdicts = new Map<string, string[]>();
 for (const summary of Object.values(comparisons)) {
-  for (const result of summary.results.filter((r) => (r.state === "default" || r.state === "mobile") && r.verdict === "differs")) {
-    const where = `${result.locale === "cy" ? "Welsh" : "English"}${result.state === "mobile" ? " on mobile" : ""}`;
+  for (const result of summary.results.filter((r) => r.verdict === "differs")) {
+    const where = `${result.locale === "cy" ? "Welsh" : "English"}${STATE_LABEL[result.state] ?? ` (${result.state})`}`;
     pageVerdicts.set(result.id, [...(pageVerdicts.get(result.id) ?? []), where]);
   }
 }
@@ -494,13 +505,20 @@ await mkdir(evidence, { recursive: true });
 const bundle = await bundleReport();
 execFileSync(systemCommand("zip"), ["-qr", path.join(evidence, "report.zip"), "."], { cwd: bundle });
 const screenshots = await sideBySide(evidence);
+// Every state of the page in that language counts: a difference only on mobile, or only once its
+// collapsed content is opened, is a difference all the same, and says where it is
 const verdictLabel = (id: string, locale: string) => {
-  const result = Object.values(comparisons)
+  const results = Object.values(comparisons)
     .flatMap((c) => c.results)
-    .find((r) => r.id === id && r.locale === locale && r.state === "default");
-  if (!result || result.verdict === "not-captured") return "not compared";
-  const count = result.findings.filter((f) => f.category !== "axe-inherited").length;
-  return count ? `${count} finding${count === 1 ? "" : "s"}` : "matches";
+    .filter((r) => r.id === id && r.locale === locale && r.verdict !== "not-captured");
+  if (!results.length) return "not compared";
+  const findings = new Set(
+    results.flatMap((r) => r.findings.filter((f) => f.category !== "axe-inherited").map((f) => `${f.category} ${f.change} ${f.detail}`))
+  );
+  if (!findings.size) return "matches";
+  const only = results.filter((r) => r.verdict === "differs").map((r) => r.state);
+  const where = only.includes("default") ? "" : ` (${only.map((state) => STATE_LABEL[state]?.trim() ?? state).join(", ")})`;
+  return `${findings.size} finding${findings.size === 1 ? "" : "s"}${where}`;
 };
 const body = buildComment({
   ticket: args.ticket,
@@ -697,6 +715,21 @@ function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: S
   return { ids, publications, listTypes: new Map(Object.entries(signedIn?.listTypes ?? {})) };
 }
 
+// Where a link or form on a pip page should lead in CaTH: another site as it is; the page itself (a
+// form posting back, a language switch) as the CaTH page compared with it; a list's page as CaTH's
+// page for the list; another pip page as its reviewed CaTH route. Undefined where it cannot be told.
+function expectedCathTarget(url: URL, pages: { source: URL; target: URL }): string | undefined {
+  if (url.origin !== pages.source.origin) return `${url.origin}${url.pathname}`;
+  if (url.pathname === pages.source.pathname) return pages.target.pathname;
+  const publication = manifest.publications.find((p: PublicationFixture) => p.paths.pip === url.pathname);
+  if (publication) return publication.paths.cath ?? undefined;
+  const entry = routeMap.find((route) => route.pip === url.pathname);
+  if (!entry?.cath || !isConfident(entry)) return undefined;
+  if (!entry.cath.includes("[")) return entry.cath;
+  const mapped = cathUrlFor({ id: pageId(entry.pip), pip: entry.pip, cath: entry.cath, viewAs: null, cathParams: entry.cathParams }, url, cathIds);
+  return "path" in mapped ? new URL(mapped.path, pages.target).pathname : undefined;
+}
+
 // The CaTH URL for a pip page: pip's query with each id swapped for CaTH's, and the route's
 // cathParams (CaTH name -> pip query parameter, or publication:<fixture>) filling path segments
 // and renamed parameters
@@ -810,10 +843,10 @@ async function bundleReport(): Promise<string> {
 async function sideBySide(dir: string): Promise<string[]> {
   const pairs = Object.entries(comparisons).flatMap(([area, summary]) =>
     summary.results
-      .filter((r) => (r.state === "default" || r.state === "mobile") && r.verdict === "differs")
+      .filter((r) => r.verdict === "differs")
       .map((r) => ({
-        name: `${r.id}-${r.locale}${r.state === "mobile" ? "-mobile" : ""}.png`,
-        label: `${r.id} (${r.locale === "cy" ? "Welsh" : "English"}${r.state === "mobile" ? ", mobile" : ""})`,
+        name: `${r.id}-${r.locale}${r.state === "default" ? "" : `-${r.state}`}.png`,
+        label: `${r.id} (${r.locale === "cy" ? "Welsh" : "English"}${STATE_LABEL[r.state] ?? ` (${r.state})`})`,
         pip: path.join(baseline, area, r.id, r.locale, r.state, "page.png"),
         cath: path.join(captured[area], r.id, r.locale, r.state, "page.png")
       }))
@@ -863,7 +896,7 @@ function selectScope(text: string | null, listTypes: string[], routes: string[],
     else if (!existsSync(path.join(baseline, "pages", id, "en/default/provenance.json"))) skipped.push(`${entry.pip}: not in the pip baseline`);
     else selected.push({ id, pip: entry.pip, cath: entry.cath, viewAs: entry.pipRole, cathParams: entry.cathParams });
   }
-  return { publications: publications.filter(inCath), routes: selected, skipped };
+  return { publications: publications.filter(inCath), routes: selected, mentionedRoutes: mentions.routes, skipped };
 }
 
 // A list CaTH has: its own page, or for a flat file, its entry on the court's summary of publications
@@ -900,5 +933,7 @@ interface Scope {
   publications: PublicationFixture[];
   // The fixture user the page is captured as, the same one pip's baseline used
   routes: { id: string; pip: string; cath: string; viewAs: string | null; cathParams?: Record<string, string> }[];
+  // Every route the ticket or --route names, page or not (a download, the not-found address)
+  mentionedRoutes: Set<string>;
   skipped: string[];
 }

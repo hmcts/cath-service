@@ -61,31 +61,30 @@ export async function captureBatch(
     const failed = targets.filter((target) => results.some((r) => !r.ok && r.id === target.id && r.locale === (target.locale ?? "en")));
     if (failed.length) console.log(`retrying ${failed.length} failed capture${failed.length === 1 ? "" : "s"} one at a time`);
     for (const target of failed) {
+      // Its folder and its index lines go together, so a retry that fails leaves no line behind
+      // pointing at a capture that is no longer there
       await rm(path.join(settings.outDir, target.id, target.locale ?? "en"), { recursive: true, force: true });
+      await dropIndexLines(path.join(settings.outDir, "index.jsonl"), target.id, target.locale ?? "en");
       const captured = await capture(target);
       log(captured);
       const locale = target.locale ?? "en";
       for (let i = results.length - 1; i >= 0; i--) if (results[i].id === target.id && results[i].locale === locale) results.splice(i, 1);
       results.push(...captured);
     }
-    if (failed.length) await dedupeIndex(path.join(settings.outDir, "index.jsonl"));
   } finally {
     await browser.close();
   }
   return results;
 }
 
-// A target whose first state succeeded before a later one failed is in the index twice once
-// retried; the retry's line is the one that matches what is on disk
-async function dedupeIndex(file: string): Promise<void> {
-  const lines = (await readFile(file, "utf-8").catch(() => "")).trim().split("\n").filter(Boolean);
-  const latest = new Map(
-    lines.map((line) => {
-      const { id, locale, state } = JSON.parse(line) as { id: string; locale: string; state: string };
-      return [`${id}\u0000${locale}\u0000${state}`, line];
-    })
-  );
-  await writeFile(file, [...latest.values()].map((line) => `${line}\n`).join(""));
+// Removes a target-language capture's lines from the index, as its folder is removed for a retry
+async function dropIndexLines(file: string, id: string, locale: string): Promise<void> {
+  const lines = (await readFile(file, "utf-8").catch(() => "")).split("\n").filter(Boolean);
+  const kept = lines.filter((line) => {
+    const entry = JSON.parse(line) as { id: string; locale: string };
+    return entry.id !== id || entry.locale !== locale;
+  });
+  await writeFile(file, kept.map((line) => `${line}\n`).join(""));
 }
 
 export interface BatchEntry extends CaptureTarget {
