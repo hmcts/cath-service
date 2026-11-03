@@ -96,7 +96,13 @@ const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? [
 const baselineJourneys = new Set(
   (await readdir(path.join(baseline, "journeys"), { withFileTypes: true }).catch(() => [])).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 );
-const journeyIds = args.all ? [...baselineJourneys].sort() : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
+// Journeys create and delete courts, users and publications, so --all runs them only against a local
+// CaTH; in a shared environment they run only when named, by someone who means to change its data
+const allJourneys = args.all && environment.cath.signIn === "session";
+if (args.all && !allJourneys)
+  for (const id of baselineJourneys)
+    scope.skipped.push(`journey ${id}: not run by --all outside a local CaTH, as journeys change its data (name it with --journey)`);
+const journeyIds = allJourneys ? [...baselineJourneys].sort() : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
 for (const id of (args.journey ?? []).filter((id) => !baselineJourneys.has(id))) scope.skipped.push(`journey ${id}: not in the pip baseline`);
 const name = args.ticket
   ? `ticket-${args.ticket}`

@@ -1,3 +1,4 @@
+import { locationData } from "@hmcts/location/location-data";
 import type { Page } from "playwright";
 
 // Locale-neutral helpers for CaTH's journeys, the counterparts of pip/journeys/steps.ts. They
@@ -28,4 +29,27 @@ export async function unsubscribeFromEverything(page: Page, baseUrl: string): Pr
   await page.locator('input[name="confirm"][value="yes"]').check();
   await primaryButton(page).click();
   await page.waitForLoadState("networkidle");
+}
+
+// A court's English and Welsh names, from location-data.ts, which CaTH's reference data is built from
+export function courtNames(locationId: number): CourtNames {
+  const location = locationData.locations.find((candidate) => candidate.locationId === locationId);
+  if (!location) throw new Error(`location ${locationId} is not in location-data.ts`);
+  return { name: location.name, welshName: location.welshName };
+}
+
+// Types a court name into CaTH's autocomplete and picks the matching suggestion. The name is in the
+// language the input's data-locale asks for, which is not always the page's: manual upload is
+// English only. The enhanced input reuses the original's id, so the two are told apart by its wrapper.
+export async function chooseCourt(page: Page, inputId: string, court: CourtNames): Promise<void> {
+  const locale = await page.locator(`input#${inputId}[data-autocomplete]`).getAttribute("data-locale");
+  const name = locale === "cy" ? court.welshName : court.name;
+  const input = page.locator(`#${inputId}-autocomplete-wrapper input#${inputId}`);
+  await input.fill(name);
+  await page.locator(`#${inputId}__listbox li[role=option]`).filter({ hasText: name }).first().click();
+}
+
+export interface CourtNames {
+  name: string;
+  welshName: string;
 }

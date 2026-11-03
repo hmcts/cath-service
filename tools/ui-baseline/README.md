@@ -236,7 +236,16 @@ search config, bulk-creating media accounts, blob resubmission and deleting a us
 
 CaTH's ports of them are in `cath/journeys/`, one per pip journey with the same id and checkpoint
 names, through CaTH's own pages. A port reaches the same goal by CaTH's controls. For example, CaTH
-removes a court with a button rather than a link. Only `subscription-basket` is ported so far.
+removes a court with a button rather than a link. All 13 are ported. Where CaTH has no equivalent of
+one of pip's steps the port leaves that checkpoint out, so the comparison reports it as missing:
+CaTH has no bulk-create media accounts pages, no third-party subscriber status page, and no summary
+step before saving list-type search config or a subscriber's subscriptions. Journeys that change
+data make their own throwaway records (`cath/records.ts`) and remove them again.
+
+`--all` runs journeys only against a local CaTH, because they create and delete courts, users,
+subscribers and publications. In a shared environment, name one with `--journey`. Two cannot run
+against a deployed CaTH yet, because test-support has no way to set list-type search config:
+`email-subscriptions` and `list-type-search-config`.
 Choose things by identity, not position: CaTH orders some lists by their name in the page's
 language, so "the first list type" is a different one in Welsh.
 
@@ -288,8 +297,6 @@ redirect elsewhere, is reported as not compared rather than as a difference: for
 
 Planned next, roughly in this order:
 
-- Porting the other 12 of pip's journeys to CaTH (`cath/journeys/`). Only `subscription-basket` is
-  ported; the comparison runs any journey added there.
 - Once CaTH moves past being a copy of pip, the baseline will be updated per feature with CaTH's
   approved screens.
 

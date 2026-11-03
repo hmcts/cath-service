@@ -92,6 +92,58 @@ export async function prismaRecordStore(): Promise<RecordStore> {
           data: { action, details, userId: user.userId, userEmail: user.email, userRole: user.role, userProvenance: user.provenance }
         }));
       return { id: found.id, timestamp: found.timestamp.toISOString() };
+    },
+    async createPublication(publication) {
+      const created = await prisma.artefact.create({
+        data: {
+          ...publication,
+          contentDate: new Date(publication.contentDate),
+          displayFrom: new Date(publication.displayFrom),
+          displayTo: new Date(publication.displayTo),
+          type: "LIST",
+          sensitivity: "PUBLIC",
+          language: "ENGLISH",
+          isFlatFile: false,
+          provenance: "MANUAL_UPLOAD"
+        }
+      });
+      return created.artefactId;
+    },
+    async removeMediaApplication(id) {
+      await prisma.mediaApplication.deleteMany({ where: { id } });
+    },
+    async ensureUser(user) {
+      const found = await prisma.user.upsert({ where: { userProvenanceId: user.userProvenanceId }, update: {}, create: user });
+      return found.userId;
+    },
+    async removeLegacyThirdPartyUsers(name) {
+      await prisma.legacyThirdPartyUser.deleteMany({ where: { name } });
+    },
+    async removeThirdPartySubscribers(name) {
+      const subscribers = await prisma.thirdPartyUser.findMany({ where: { name }, select: { id: true } });
+      for (const { id } of subscribers) {
+        // Without Key Vault, CaTH keeps a subscriber's OAuth secrets in this table under its id
+        await prisma.thirdPartySecret.deleteMany({ where: { name: { startsWith: `third-party-${id}-` } } });
+        await prisma.thirdPartyUser.delete({ where: { id } });
+      }
+    },
+    async replaceListSearchConfig(listTypeId, config) {
+      const previous = await prisma.listSearchConfig.findUnique({ where: { listTypeId } });
+      if (config) await prisma.listSearchConfig.upsert({ where: { listTypeId }, update: config, create: { listTypeId, ...config } });
+      else if (previous) await prisma.listSearchConfig.delete({ where: { listTypeId } });
+      return previous ? { caseNumberFieldName: previous.caseNumberFieldName, caseNameFieldName: previous.caseNameFieldName } : null;
+    },
+    async indexPublicationCases(artefactId, payload) {
+      // CaTH's own ingestion step, so the index holds what an upload would have put there
+      const { extractAndStoreArtefactSearch } = await import("@hmcts/publication");
+      const { listTypeId } = await prisma.artefact.findUniqueOrThrow({ where: { artefactId }, select: { listTypeId: true } });
+      const previous = await prisma.artefactSearch.findMany({ where: { artefactId }, select: { caseNumber: true, caseName: true } });
+      await extractAndStoreArtefactSearch(artefactId, listTypeId, payload);
+      return previous;
+    },
+    async restorePublicationCases(artefactId, cases) {
+      await prisma.artefactSearch.deleteMany({ where: { artefactId } });
+      await prisma.artefactSearch.createMany({ data: cases.map((entry) => ({ artefactId, ...entry })) });
     }
   };
 }
@@ -140,6 +192,42 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
       const [found] = await api<{ id: string; timestamp: string }[]>("GET", `/audit-logs${query({ action, details })}`);
       const entry = found ?? (await api<{ id: string; timestamp: string }>("POST", "/audit-logs", { userId: user.userId, action, details }));
       return { id: entry.id, timestamp: new Date(entry.timestamp).toISOString() };
+    },
+    async createPublication(publication) {
+      return (await api<{ artefactId: string }>("POST", "/artefacts", { ...publication, type: "LIST", provenance: "MANUAL_UPLOAD" })).artefactId;
+    },
+    async removeMediaApplication(id) {
+      const response = await fetch(`${apiUrl}/test-support/media-applications/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error(`DELETE /test-support/media-applications/${id} failed: ${response.status}`);
+    },
+    async ensureUser(user) {
+      // test-support answers 404 for an email with no user
+      const existing = await api<{ userId: string }>("GET", `/users${query({ email: user.email })}`).catch((error: Error) => {
+        if (error.message.includes("failed: 404")) return null;
+        throw error;
+      });
+      return (existing ?? (await api<{ userId: string }>("POST", "/users", user))).userId;
+    },
+    async removeLegacyThirdPartyUsers(name) {
+      const found = await api<{ id: string }[]>("GET", `/legacy-third-party-users${query({ name })}`);
+      if (found.length > 0) await api("DELETE", "/legacy-third-party-users", { ids: found.map((user) => user.id) });
+    },
+    async removeThirdPartySubscribers(name) {
+      // A deployed CaTH keeps OAuth secrets in Key Vault, which test-support cannot remove
+      const found = (await api<{ id: string; name: string }[]>("GET", "/third-party-users")).filter((user) => user.name === name);
+      for (const { id } of found) {
+        const response = await fetch(`${apiUrl}/test-support/third-party-users/${id}`, { method: "DELETE" });
+        if (!response.ok && response.status !== 404) throw new Error(`DELETE /test-support/third-party-users/${id} failed: ${response.status}`);
+      }
+    },
+    async replaceListSearchConfig() {
+      throw new Error("list search config: not available through test-support yet");
+    },
+    async indexPublicationCases() {
+      throw new Error("indexing an existing publication's cases: not available through test-support yet");
+    },
+    async restorePublicationCases() {
+      throw new Error("restoring a publication's case index: not available through test-support yet");
     }
   };
 }
@@ -164,6 +252,47 @@ export interface RecordStore {
   ensureLegacyThirdPartyUser(name: string): Promise<string>;
   ensureThirdPartySubscriber(name: string): Promise<string>;
   ensureAuditEntry(user: CathUser, action: string, details: string): Promise<{ id: string; timestamp: string }>;
+  // A publication's database row with no file, for pages that only count a court's publications
+  createPublication(publication: ThrowawayPublication): Promise<string>;
+  removeMediaApplication(id: string): Promise<void>;
+  // A user account matched on its provenance id, e.g. one a journey deletes; returns its CaTH id
+  ensureUser(user: NewUser): Promise<string>;
+  // Removes any left behind by a journey that stopped before deleting them through the UI
+  removeLegacyThirdPartyUsers(name: string): Promise<void>;
+  removeThirdPartySubscribers(name: string): Promise<void>;
+  // Sets (or with null, removes) a list type's case search fields, returning what was there before
+  replaceListSearchConfig(listTypeId: number, config: ListSearchConfig | null): Promise<ListSearchConfig | null>;
+  // Indexes a publication's cases for case search from its payload, as CaTH does on upload, using
+  // its list type's search config; returns the entries it had before, for restorePublicationCases
+  indexPublicationCases(artefactId: string, payload: unknown): Promise<PublicationCase[]>;
+  restorePublicationCases(artefactId: string, cases: PublicationCase[]): Promise<void>;
+}
+
+export interface PublicationCase {
+  caseNumber: string | null;
+  caseName: string | null;
+}
+
+export interface NewUser {
+  email: string;
+  firstName: string;
+  surname: string;
+  userProvenance: string;
+  userProvenanceId: string;
+  role: string;
+}
+
+export interface ListSearchConfig {
+  caseNumberFieldName: string;
+  caseNameFieldName: string;
+}
+
+export interface ThrowawayPublication {
+  locationId: string;
+  listTypeId: number;
+  contentDate: string;
+  displayFrom: string;
+  displayTo: string;
 }
 
 interface RecordsFile {
