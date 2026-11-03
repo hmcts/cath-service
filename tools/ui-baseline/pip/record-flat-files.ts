@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadManifest, loadUsers, type SeedResult } from "../fixtures/manifest.js";
+import { inRecordingScope, loadRecordingScope } from "../scope.js";
 
 // Records what pip serves for each flat-file publication: pip sends the document itself, not a
 // page, so the baseline for it is the response (status, type, filename, size, checksum).
@@ -17,9 +18,10 @@ const config = JSON.parse(await readFile(path.join(PARITY_DIR, "apps.json"), "ut
 const seed = JSON.parse(await readFile(path.join(PARITY_DIR, "output/seed/pip.json"), "utf-8")) as SeedResult;
 const users = new Map((await loadUsers()).map((user) => [user.id, user]));
 const manifest = await loadManifest();
+const scope = await loadRecordingScope();
 
 await mkdir(outDir, { recursive: true });
-const flatFiles = manifest.publications.filter((publication) => publication.format === "flat-file");
+const flatFiles = manifest.publications.filter((publication) => publication.format === "flat-file" && inRecordingScope(scope, "lists", publication.id));
 for (const publication of flatFiles) {
   const seeded = seed.publications[publication.id];
   if (!seeded) {
