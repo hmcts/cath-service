@@ -1,0 +1,81 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% set title = "Run " + run.id %}
+{% set statusColours = { queued: "grey", running: "blue", finished: "green", failed: "red" } %}
+{% set kindNames = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" } %}
+{% set verdictNames = { match: ["Matches", "green"], differs: ["Differs", "red"], missing: ["CaTH did not make it", "orange"], extra: ["Only CaTH made one", "yellow"] } %}
+
+{% block head %}
+  {{ super() }}
+  {% if run.status == "queued" or run.status == "running" %}<meta http-equiv="refresh" content="10">{% endif %}
+{% endblock %}
+
+{% block beforeContent %}{{ govukBackLink({ text: "All runs", href: "/" }) }}{% endblock %}
+
+{% block page_content %}
+  <h1 class="govuk-heading-l">{% include "run-what.njk" %}</h1>
+  {{ govukSummaryList({ rows: [
+    { key: { text: "Status" }, value: { html: govukTag({ text: run.status, classes: "govuk-tag--" + statusColours[run.status] }) } },
+    { key: { text: "Requested by" }, value: { text: run.requestedBy } },
+    { key: { text: "Started" }, value: { text: (run.startedAt or run.createdAt) | date } },
+    { key: { text: "Finished" }, value: { text: run.finishedAt | date or "Not yet" } }
+  ] }) }}
+
+  {% if run.error %}<p class="govuk-body govuk-error-message">{{ run.error }}</p>{% endif %}
+
+  {% if run.summary and run.kind == "check" %}
+    <h2 class="govuk-heading-m">Result</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% if run.summary.lists %}<li>List pages: {{ run.summary.lists.match }} match pip, {{ run.summary.lists.differs }} differ</li>{% endif %}
+      {% if run.summary.pages %}<li>Other pages: {{ run.summary.pages.match }} match pip, {{ run.summary.pages.differs }} differ</li>{% endif %}
+      {% if run.summary.files %}<li>PDF and Excel files: {{ run.summary.files.match }} match pip, {{ run.summary.files.differs }} differ, {{ run.summary.files.missing }} not made by CaTH</li>{% endif %}
+    </ul>
+    <p class="govuk-body">Counted per page and language.</p>
+  {% endif %}
+  {% if hasReport %}
+    <p class="govuk-body"><a class="govuk-link" href="/runs/{{ run.id }}/report/index.html">Open the full report</a></p>
+  {% endif %}
+
+  {% if links %}
+    <p class="govuk-body">{{ links.listType }}:
+      {% if links.cath %}<a class="govuk-link" href="{{ links.cath }}" rel="noreferrer" target="_blank">open in CaTH (opens in new tab)</a>{% endif %}
+      {% if links.cath and links.pip %} · {% endif %}
+      {% if links.pip %}<a class="govuk-link" href="{{ links.pip }}" rel="noreferrer" target="_blank">open in pip (opens in new tab)</a>{% endif %}
+    </p>
+  {% endif %}
+
+  {% if files %}
+    <h2 class="govuk-heading-m">Files</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head"><tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header">File</th>
+        <th scope="col" class="govuk-table__header">Result</th>
+        <th scope="col" class="govuk-table__header">Differences</th>
+      </tr></thead>
+      <tbody class="govuk-table__body">
+        {% for result in files.results %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell">{{ kindNames[result.kind] }}</td>
+            <td class="govuk-table__cell">{{ govukTag({ text: verdictNames[result.verdict][0], classes: "govuk-tag--" + verdictNames[result.verdict][1] }) }}</td>
+            <td class="govuk-table__cell">
+              {% if result.findings.length %}
+                <ul class="govuk-list govuk-list--bullet">{% for finding in result.findings %}<li>{{ finding.change | replace("-", " ") }}: {{ finding.detail }}</li>{% endfor %}</ul>
+              {% elif result.verdict == "match" %}None{% endif %}
+              {% if result.kind != "excel" and (result.verdict == "match" or result.verdict == "differs") %}
+                <p class="govuk-body-s"><a class="govuk-link" href="/runs/{{ run.id }}/files/{{ result.id }}/{{ result.kind }}-source.txt">pip's text</a> · <a class="govuk-link" href="/runs/{{ run.id }}/files/{{ result.id }}/{{ result.kind }}-target.txt">CaTH's text</a></p>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not files.results.length %}<p class="govuk-body">Neither app has files for these artefacts. Check the ids, and that both apps have finished processing them.</p>{% endif %}
+  {% endif %}
+
+  {% if log %}
+    <h2 class="govuk-heading-m">Log</h2>
+    <pre class="govuk-body-s app-log">{{ log }}</pre>
+  {% endif %}
+{% endblock %}

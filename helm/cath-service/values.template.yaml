@@ -18,6 +18,10 @@ api:
   enabled: true
 crons:
   enabled: true
+# The hosted parity check (apps/ui-baseline): true only where testers run checks, perftest.
+# Resolved by job.helm-deploy.yml.
+uiBaseline:
+  enabled: ${UI_BASELINE_ENABLED}
 
 # Web application configuration
 #
@@ -69,6 +73,18 @@ cath-crons:
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
+
+# Hosted parity check configuration. Reached only on the HMCTS network: its host is in the
+# private DNS zone, with no Front Door route. BASE_URL/sso/return must be a redirect URI of the
+# environment's SSO app registration, which signs testers in.
+cath-ui-baseline:
+  nodejs:
+    image: "hmctsprod.azurecr.io/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net"
+    environment:
+      BASE_URL: "https://${TEAM_NAME}-{{ .Release.Name }}-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net"
+      GIT_COMMIT: "${SHORT_SHA}"
+      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Postgres Prisma Studio service configuration
 cath-postgres:

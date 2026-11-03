@@ -1,0 +1,4 @@
+{
+  "$comment": "Which payload fields each app indexes for case search, per list type. In pip and CaTH these are entered by system admins, so there is no upstream source: every JSON (strategic) list type uses the standard schema's caseNumber/caseName fields, and non-strategic lists are left unsearchable rather than guessed. Must be loaded before publications, because pip builds its search index at upload time.",
+  "jsonListTypes": { "caseNumberFieldName": "caseNumber", "caseNameFieldName": "caseName" }
+}

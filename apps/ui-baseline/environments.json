@@ -1,0 +1,44 @@
+{
+  "$comment": "Where CaTH (and the pip it is compared with) runs in each environment a check can target. local is a developer's machine; test is CaTH perftest paired with pip test, which is how CaTH's own chart pairs them (apps/web/helm/values.yaml). Secret names are looked up in the app's keyVault, or taken from an environment variable of the same name in upper snake case (CATH_SERVICE_API_CLIENT_ID for cath-service-api-client-id), which wins.",
+  "local": {
+    "cath": {
+      "baseUrl": "http://localhost:8080",
+      "apiUrl": "http://localhost:3001",
+      "$signIn": "session: writes each fixture user's session into local Redis (cath/sign-in.ts). Needs SESSION_SECRET and REDIS_URL from the root .env.",
+      "signIn": "session",
+      "storage": { "connectionStringEnv": "AZURE_STORAGE_CONNECTION_STRING" },
+      "filesWaitSeconds": 0
+    },
+    "pip": {
+      "baseUrl": "https://localhost:8180",
+      "storage": {
+        "connectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:20000/devstoreaccount1;"
+      }
+    }
+  },
+  "test": {
+    "cath": {
+      "baseUrl": "https://cath.perftest.platform.hmcts.net",
+      "apiUrl": "https://cath-api.perftest.platform.hmcts.net",
+      "keyVault": "cath-perftest",
+      "$signIn": "accounts: signs in through the real sign-in flows as the test account for each role. A role with no account in the vault is reported as not compared.",
+      "signIn": "accounts",
+      "accounts": {
+        "VERIFIED": { "flow": "crime", "user": "crime-valid-test-account", "password": "crime-valid-test-account-password" },
+        "SYSTEM_ADMIN": { "flow": "sso", "user": "sso-test-system-admin-account-user", "password": "sso-test-system-admin-account-pwd" },
+        "INTERNAL_ADMIN_CTSC": { "flow": "sso", "user": "sso-test-admin-account-ctsc-user", "password": "sso-test-admin-account-ctsc-pwd" },
+        "INTERNAL_ADMIN_LOCAL": { "flow": "sso", "user": "sso-test-admin-local-account-user", "password": "sso-test-admin-local-account-pwd" }
+      },
+      "publicationApi": { "tenantId": "app-tenant", "clientId": "cath-service-api-client-id", "clientSecret": "cath-service-api-client-secret" },
+      "storage": { "accountName": "cathsaperftest" },
+      "$filesWaitSeconds": "The publication API makes a list's files after accepting it, so they are waited for",
+      "filesWaitSeconds": 90
+    },
+    "pip": {
+      "baseUrl": "https://pip-frontend.test.platform.hmcts.net",
+      "keyVault": "pip-ss-kv-test",
+      "dataManagementUrl": "https://pip-data-management.test.platform.hmcts.net",
+      "storage": { "accountName": "pipsssatest" }
+    }
+  }
+}

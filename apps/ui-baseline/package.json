@@ -1,0 +1,42 @@
+{
+  "name": "@hmcts/ui-baseline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Compares CaTH with pip, page by page and journey by journey, and hosts the check for testers in the test environment",
+  "scripts": {
+    "dev": "tsx --env-file-if-exists=../../.env src/server.ts",
+    "start": "tsx src/server.ts",
+    "ui-baseline": "tsx core/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write --unsafe ."
+  },
+  "dependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@azure/identity": "4.10.0",
+    "@azure/keyvault-secrets": "4.11.2",
+    "@azure/storage-blob": "12.27.0",
+    "@hmcts-cft/cloud-native-platform": "2.3.0",
+    "exceljs": "4.4.0",
+    "express": "5.2.1",
+    "govuk-frontend": "6.2.0",
+    "nunjucks": "3.2.4",
+    "openid-client": "6.8.5",
+    "pdfjs-dist": "6.4.299",
+    "playwright": "1.62.1",
+    "redis": "5.12.1",
+    "tsx": "4.22.4"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "24.10.4",
+    "@types/nunjucks": "3.2.6",
+    "@types/supertest": "7.2.1",
+    "supertest": "7.2.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

@@ -4,6 +4,7 @@
 #   docker build --target api      -t cath-api .
 #   docker build --target crons    -t cath-crons .
 #   docker build --target postgres -t cath-postgres .
+#   docker build --target ui-baseline -t cath-ui-baseline .
 
 ARG NODE_IMAGE=hmctspublic.azurecr.io/base/node:22-alpine
 ARG COREPACK_VERSION=0.36.0
@@ -110,3 +111,23 @@ ENV NODE_ENV=production
 
 WORKDIR /opt/app/apps/postgres
 CMD ["sh", "./start.sh"]
+
+# ---- UI baseline (the hosted parity check, test environment only) ----
+# Runs apps/ui-baseline from source through tsx, as the postgres runner does, so it ships
+# source and does not depend on `build`. It takes the whole dev install: the tool seeds CaTH
+# with the list-type packages' own converters and validators, from source. Chromium is Alpine's,
+# as Playwright's builds do not run on Alpine; tar and zip pack runs and evidence.
+FROM toolchain-chromium AS ui-baseline
+RUN apk add --no-cache tar zip
+COPY --from=deps --chown=hmcts:hmcts /opt/app /opt/app
+USER hmcts
+COPY --chown=hmcts:hmcts tsconfig.json ./tsconfig.json
+COPY --chown=hmcts:hmcts libs ./libs
+COPY --chown=hmcts:hmcts apps/ui-baseline ./apps/ui-baseline
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Not --conditions=production: the tool and the libs it uses resolve to their TypeScript sources
+ENV NODE_ENV=production
+
+WORKDIR /opt/app/apps/ui-baseline
+EXPOSE 8090
+CMD ["../../node_modules/.bin/tsx", "src/server.ts"]

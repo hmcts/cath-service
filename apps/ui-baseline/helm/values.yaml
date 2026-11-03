@@ -1,0 +1,43 @@
+nodejs:
+  releaseNameOverride: "{{ .Release.Name }}-ui-baseline"
+  applicationPort: 8090
+  aadIdentityName: cath
+  ingressHost: cath-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctsprod.azurecr.io/cath/cath-ui-baseline:latest'
+  # Checks run one at a time in this pod's queue, so one replica; Chromium needs the memory
+  replicas: 1
+  autoscaling:
+    enabled: false
+  memoryRequests: 1Gi
+  memoryLimits: 3Gi
+  cpuRequests: 500m
+  cpuLimits: 2000m
+  environment:
+    NODE_ENV: 'production'
+    UI_BASELINE_ENV: test
+  # Only secrets every environment it runs in has: a missing one stops the pod starting. Test
+  # accounts for signed-in pages are read from the vault when a check needs them, so adding one
+  # (environments.json names them) needs no change here.
+  keyVaults:
+    cath:
+      secrets:
+        - name: storageaccount-connection-string
+          alias: CATH_STORAGE_CONNECTION_STRING
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-secret
+          alias: CATH_SERVICE_API_CLIENT_SECRET
+        - name: app-tenant
+          alias: APP_TENANT
+        - name: sso-client-id
+          alias: SSO_CLIENT_ID
+        - name: sso-client-secret
+          alias: SSO_CLIENT_SECRET
+        - name: sso-issuer-url
+          alias: SSO_ISSUER_URL
+        - name: sso-sg-system-admin
+          alias: SSO_SYSTEM_ADMIN_GROUP_ID
+        - name: sso-sg-admin-ctsc
+          alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
+        - name: sso-sg-admin-local
+          alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID

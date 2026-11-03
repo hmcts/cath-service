@@ -1,0 +1,329 @@
+{
+    "document": {
+        "version": "",
+        "publicationDate": "2020-09-13T23:30:52.123Z"
+    },
+    "venue": {
+        "venueName": "PRESTON",
+        "venueContact": {
+            "venueTelephone": "01772 844700",
+            "venueEmail": "court1@moj.gov.uk"
+        },
+        "venueAddress": {
+            "line": ["THE LAW COURTS"],
+            "postCode": "PR1 2LL"
+        }
+    },
+    "courtLists": [
+        {
+            "courtHouse": {
+                "courtHouseName": "Court A",
+                "courtHouseAddress": {
+                    "line": ["Address Line 1", "Address Line 2"],
+                    "town": "Town A",
+                    "county": "County A",
+                    "postCode": "AA1 AA1"
+                },
+                "courtRoom": [
+                    {
+                        "courtRoomName": "1",
+                        "session": [
+                            {
+                                "sessionChannel": ["VIDEO HEARING"],
+                                "judiciary": [
+                                    {
+                                        "johKnownAs": "Judge KnownAs"
+                                    },
+                                    {
+                                        "johKnownAs": "Judge KnownAs Presiding",
+                                        "isPresiding": true
+                                    }
+                                ],
+                                "sittings": [
+                                    {
+                                        "sittingStart": "2022-07-27T09:40:17.496Z",
+                                        "sittingEnd": "2022-07-27T10:45:17.496Z",
+                                        "hearing": [
+                                            {
+                                                "hearingType": "FMPO",
+                                                "case": [
+                                                    {
+                                                        "caseName": "A1 Vs B1",
+                                                        "caseNumber": "12345678",
+                                                        "caseType": "type",
+                                                        "caseSequenceIndicator": "2 of 3",
+                                                        "reportingRestrictionDetail": [
+                                                            "Reporting restriction 1",
+                                                            "Reporting restriction 2"
+                                                        ],
+                                                        "party": [
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Applicant Surname 1"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Respondent Surname 1"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 1",
+                                                                    "individualMiddleName": "Rep Middlename 1",
+                                                                    "individualSurname": "Rep Surname 1",
+                                                                    "title": "Mr"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 2",
+                                                                    "individualMiddleName": "Rep Middlename 2",
+                                                                    "individualSurname": "Rep Surname 2",
+                                                                    "title": "Mr"
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "caseName": "A2 Vs B2",
+                                                        "caseNumber": "112233445",
+                                                        "party": [
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Applicant Surname 2"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Respondent Surname 2"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 3",
+                                                                    "individualMiddleName": "Rep Middlename 3",
+                                                                    "individualSurname": "Rep Surname 3",
+                                                                    "title": "Mr"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 4",
+                                                                    "individualMiddleName": "Rep Middlename 4",
+                                                                    "individualSurname": "Rep Surname 4",
+                                                                    "title": "Mr"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "hearingType": "FMPO",
+                                                "case": [
+                                                    {
+                                                        "caseName": "ABCD",
+                                                        "caseNumber": "1234",
+                                                        "party": [
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "organisationDetails": {
+                                                                    "organisationName": "Applicant org name"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "organisationDetails": {
+                                                                    "organisationName": "Respondent org name"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "organisationDetails": {
+                                                                    "organisationName": "Applicant rep org name"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "organisationDetails": {
+                                                                    "organisationName": "Respondent rep org name"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "channel": ["testSittingChannel"]
+                                    },
+                                    {
+                                        "sittingStart": "2022-07-27T09:40:17.496Z",
+                                        "sittingEnd": "2022-07-27T10:45:17.496Z",
+                                        "hearing": [
+                                            {
+                                                "hearingType": "FMPO",
+                                                "case": [
+                                                    {
+                                                        "caseName": "A1 Vs B1",
+                                                        "caseNumber": "12345678",
+                                                        "caseType": "type",
+                                                        "caseSequenceIndicator": "2 of 3",
+                                                        "party": [
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Applicant Surname 3"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Applicant Surname 3a"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Respondent Surname 3"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Respondent Surname 3a"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 5",
+                                                                    "individualMiddleName": "Rep Middlename 5",
+                                                                    "individualSurname": "Rep Surname 5",
+                                                                    "title": "Mr"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 6",
+                                                                    "individualMiddleName": "Rep Middlename 6",
+                                                                    "individualSurname": "Rep Surname 6",
+                                                                    "title": "Mr"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "channel": ["testSittingChannel"]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "courtHouse": {
+                "courtHouseName": "Court B",
+                "courtHouseAddress": {
+                    "line": ["Address Line 1", "Address Line 2"],
+                    "town": "Town B",
+                    "county": "County B",
+                    "postCode": "BB1 BB1"
+                },
+                "courtRoom": [
+                    {
+                        "courtRoomName": "1",
+                        "session": [
+                            {
+                                "sessionChannel": ["VIDEO HEARING"],
+                                "judiciary": [
+                                    {
+                                        "johKnownAs": "Judge KnownAs"
+                                    },
+                                    {
+                                        "johKnownAs": "Judge KnownAs Presiding",
+                                        "isPresiding": true
+                                    }
+                                ],
+                                "sittings": [
+                                    {
+                                        "sittingStart": "2022-01-27T09:40:17.496Z",
+                                        "sittingEnd": "2022-01-27T10:45:17.496Z",
+                                        "hearing": [
+                                            {
+                                                "hearingType": "FMPO",
+                                                "case": [
+                                                    {
+                                                        "caseName": "A1 Vs B1",
+                                                        "caseNumber": "12345678",
+                                                        "caseType": "type",
+                                                        "party": [
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Applicant Surname 4"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT",
+                                                                "individualDetails": {
+                                                                    "individualSurname": "Respondent Surname 4"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "APPLICANT_PETITIONER_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 7",
+                                                                    "individualMiddleName": "Rep Middlename 7",
+                                                                    "individualSurname": "Rep Surname 7",
+                                                                    "title": "Mr"
+                                                                }
+                                                            },
+                                                            {
+                                                                "partyRole": "RESPONDENT_REPRESENTATIVE",
+                                                                "friendlyRoleName": "Legal Advisor",
+                                                                "individualDetails": {
+                                                                    "individualForenames": "Rep Forenames 8",
+                                                                    "individualMiddleName": "Rep Middlename 8",
+                                                                    "individualSurname": "Rep Surname 8",
+                                                                    "title": "Mr"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "channel": ["testSittingChannel"]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
