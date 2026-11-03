@@ -20,6 +20,7 @@ import {
   reviewFindings,
   runJourneys
 } from "@hmcts/ui-baseline";
+import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
 import type { SignInResult } from "./cath/sign-in.js";
 import { captureDownloads, loadDownloads, seedResolver } from "./downloads.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
@@ -140,7 +141,9 @@ const downloadSpecs =
 const downloadFixtures = downloadSpecs.flatMap((spec) =>
   Object.values({ ...spec.cath.params, ...spec.cath.query }).flatMap((value) => (value.startsWith("publication:") ? [value.slice("publication:".length)] : []))
 );
-const seedIds = [...new Set([...scope.publications.map((p) => p.id), ...pageFixtures, ...downloadFixtures])];
+const seedIds = [
+  ...new Set([...scope.publications.map((p) => p.id), ...pageFixtures, ...downloadFixtures, ...(journeyIds.length ? JOURNEY_PUBLICATIONS : [])])
+];
 const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}.json`);
 if (seedIds.length && !args["no-seed"]) {
   step("Seeding CaTH");
@@ -455,8 +458,13 @@ await finish();
 async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
   step("Running pip's journeys in CaTH");
   const moduleFile = path.join(PARITY_DIR, "cath/journeys/index.ts");
-  // Read by the journeys module when it loads: which CaTH, and the sessions signed in above
-  Object.assign(process.env, { UI_BASELINE_ENV: environment.name, PARITY_TARGET: targetBase, PARITY_SIGN_IN_OUTPUT: signInFile });
+  // Read by the journeys module when it loads: which CaTH, and what was seeded and signed in above
+  Object.assign(process.env, {
+    UI_BASELINE_ENV: environment.name,
+    PARITY_TARGET: targetBase,
+    PARITY_SIGN_IN_OUTPUT: signInFile,
+    PARITY_SEED_OUTPUT: seedFile
+  });
   const suite = (await import(pathToFileURL(moduleFile).href)).default as JourneySuite;
   const ported = journeyIds.filter((id) => suite.journeys.some((journey) => journey.id === id));
   for (const id of journeyIds.filter((id) => !ported.includes(id))) scope.skipped.push(`journey ${id}: not ported to CaTH yet (cath/journeys/)`);
