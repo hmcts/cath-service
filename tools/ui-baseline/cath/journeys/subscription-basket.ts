@@ -1,4 +1,5 @@
 import type { Journey } from "@hmcts/ui-baseline";
+import type { CathJourneyData } from "./index.js";
 import { inlineAction, link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 
 // CaTH's side of pip/journeys/subscription-basket.ts: the same user goal, with the same checkpoint
@@ -15,7 +16,7 @@ export const subscriptionBasket: Journey = {
   description: "Verified user adds, removes and re-adds courts before confirming, and changes the list language",
   viewAs: "journey-subscriber",
   run: async ({ page, goto, act, checkpoint, data }) => {
-    const listTypeId = (data.listTypes as Record<string, string>)[LIST_TYPE];
+    const listTypeId = (data as unknown as CathJourneyData).listTypes[LIST_TYPE];
     if (!listTypeId) throw new Error(`CaTH has no ${LIST_TYPE} list type`);
     const continueButton = () => primaryButton(page);
     const chooseCourts = async (...courts: string[]) => {
