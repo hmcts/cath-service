@@ -27,10 +27,10 @@ Plan: `docs/tickets/764/plan.md`. The decision is to follow legacy pip-frontend:
 
 ### Middleware (D6, D8)
 - [x] In `libs/auth/src/middleware/session-timeout.ts`:
-  - move `PUBLIC_ROUTES` to the module top
+  - remove the `PUBLIC_ROUTES` skip list, so every signed-in request renews or enforces, as legacy
   - check expiry with `req.user.role`
-  - on expiry, read the provenance and `res.locals.locale`, destroy the session, and redirect to `buildSessionExpiredRedirectUrl` (not the legacy logged-out flow)
-  - set `res.locals.sessionIdleMs = max(0, remaining - SESSION_WARNING_LEAD_MS)`
+  - on expiry, follow legacy `logOut(isSessionExpired=false)`: `req.logout` → destroy → clear cookie → redirect to `buildSignOutRedirectUrl`, landing on `/session-logged-out`
+  - set `res.locals.sessionIdleMs = timeout - SESSION_WARNING_LEAD_MS`
   - drop `sessionTimeoutMs`
 - [x] Extend `session-timeout.test.ts`:
   - 59/60 min for a verified user and 239/240 min for an admin
@@ -39,6 +39,8 @@ Plan: `docs/tickets/764/plan.md`. The decision is to follow legacy pip-frontend:
   - `sessionIdleMs`
   - `/session-expiring` is tracked
   - a redirect still happens on a `destroy` error
+  - `/`, `/sign-in`, `/session-expired` and `/logout` renew; an expired session on `/` is signed out
+- [x] Add `libs/auth/src/session/sign-out-redirect.ts` (+ test) with `buildSignOutRedirectUrl`, moved from `/logout`; switch `apps/web/src/pages/(auth)/logout/index.ts` (+ test) to use it
 - [x] Delete `req.session.lastActivity = Date.now();` from `apps/web/src/pages/(auth)/login/return/index.ts:123`, and its test (lines 251-255)
 
 ### Session cookie (D5)

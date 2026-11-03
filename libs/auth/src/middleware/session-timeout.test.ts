@@ -15,6 +15,10 @@ vi.mock("../config/b2c-config.js", () => ({
   getB2cBaseUrl: vi.fn(() => "https://b2c.example.net/tenant")
 }));
 
+vi.mock("../config/sso-config.js", () => ({
+  getSsoConfig: vi.fn(() => ({ issuerUrl: "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/v2.0" }))
+}));
+
 const MINUTE = 60 * 1000;
 const NOW = new Date("2026-11-02T12:00:00Z").getTime();
 
@@ -40,6 +44,7 @@ describe("Session Timeout Middleware", () => {
       protocol: "https",
       get: vi.fn(() => "localhost:8080") as unknown as Request["get"],
       isAuthenticated: (() => true) as Request["isAuthenticated"],
+      logout: vi.fn((cb) => cb()) as unknown as Request["logout"],
       session: {
         lastActivity: NOW,
         destroy: vi.fn((cb) => cb(null))
@@ -49,6 +54,7 @@ describe("Session Timeout Middleware", () => {
 
     res = {
       redirect: vi.fn(),
+      clearCookie: vi.fn(),
       locals: { locale: "en" }
     };
 
@@ -60,19 +66,34 @@ describe("Session Timeout Middleware", () => {
     vi.restoreAllMocks();
   });
 
-  describe("skipped requests", () => {
-    it.each(["/", "/sign-in", "/session-expired", "/logout", "/health"])("should skip the public route %s", (path) => {
+  describe("every signed-in request, as legacy", () => {
+    it.each(["/", "/sign-in", "/session-expired", "/logout"])("should renew the session on %s", (path) => {
       // Arrange
       req.path = path;
-      idleFor(500);
+      idleFor(30);
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
       expect(next).toHaveBeenCalled();
-      expect(req.session?.destroy).not.toHaveBeenCalled();
-      expect(res.locals?.sessionIdleMs).toBeUndefined();
+      expect(req.session?.lastActivity).toBe(NOW);
+      expect(res.locals?.sessionIdleMs).toBe(40 * MINUTE);
+    });
+
+    it("should sign an expired session out on the home page", () => {
+      // Arrange
+      req.path = "/";
+      signInAs("VERIFIED", "CRIME_IDAM");
+      idleFor(60);
+
+      // Act
+      sessionTimeoutMiddleware(req as Request, res as Response, next);
+
+      // Assert
+      expect(req.session?.destroy).toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
+      expect(next).not.toHaveBeenCalled();
     });
 
     it("should skip anonymous requests", () => {
@@ -109,7 +130,9 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
+      expect(req.logout).toHaveBeenCalled();
       expect(req.session?.destroy).toHaveBeenCalled();
+      expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
       expect(res.redirect).toHaveBeenCalled();
       expect(next).not.toHaveBeenCalled();
     });
@@ -136,7 +159,7 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=SSO");
+      expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining("https://login.microsoftonline.com/"));
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -156,8 +179,8 @@ describe("Session Timeout Middleware", () => {
     });
   });
 
-  describe("expiry redirect", () => {
-    it("should end the CFT IDAM session and land on /session-expired with reSignInUrl=CFT", () => {
+  describe("expiry redirect, as legacy logOut", () => {
+    it("should end the CFT IDAM session and land on /session-logged-out in Welsh", () => {
       // Arrange
       idleFor(60);
       res.locals = { locale: "cy" };
@@ -167,11 +190,11 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(res.redirect).toHaveBeenCalledWith(
-        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-expired%3Flng%3Dcy%26reSignInUrl%3DCFT"
+        "https://hmcts-access.aat.platform.hmcts.net/o/endSession?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Dcy"
       );
     });
 
-    it("should sign a Crime IDAM user out locally with reSignInUrl=CRIME", () => {
+    it("should sign a Crime IDAM user out locally", () => {
       // Arrange
       signInAs("VERIFIED", "CRIME_IDAM");
       idleFor(60);
@@ -180,14 +203,13 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
+      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
     });
 
-    it("should end the B2C session for a PI_AAD user with an absolute post logout redirect", () => {
+    it("should end the B2C session for a PI_AAD user", () => {
       // Arrange
       signInAs("VERIFIED", "PI_AAD");
       idleFor(60);
-      res.locals = { locale: "cy" };
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
@@ -195,26 +217,26 @@ describe("Session Timeout Middleware", () => {
       // Assert
       const redirectUrl = new URL(vi.mocked(res.redirect as (url: string) => void).mock.calls[0][0]);
       expect(`${redirectUrl.origin}${redirectUrl.pathname}`).toBe("https://b2c.example.net/tenant/oauth2/v2.0/logout");
-      expect(redirectUrl.searchParams.get("post_logout_redirect_uri")).toBe("https://localhost:8080/session-expired?lng=cy&reSignInUrl=AAD");
+      expect(redirectUrl.searchParams.get("post_logout_redirect_uri")).toBe("https://localhost:8080/session-logged-out?lng=en");
     });
 
-    it("should sign an SSO admin out locally in Welsh with reSignInUrl=SSO", () => {
+    it("should end the Microsoft session for an SSO admin", () => {
       // Arrange
       signInAs("SYSTEM_ADMIN", "SSO");
       idleFor(240);
-      res.locals = { locale: "cy" };
 
       // Act
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=cy&reSignInUrl=SSO");
+      expect(res.redirect).toHaveBeenCalledWith(
+        "https://login.microsoftonline.com/12345678-1234-1234-1234-123456789abc/oauth2/v2.0/logout?post_logout_redirect_uri=https%3A%2F%2Flocalhost%3A8080%2Fsession-logged-out%3Flng%3Den"
+      );
     });
 
     it("should still redirect when destroying the session fails", () => {
       // Arrange
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      idleFor(60);
       req.session = {
         lastActivity: NOW - 60 * MINUTE,
         destroy: vi.fn((cb) => cb(new Error("redis down")))
@@ -226,7 +248,8 @@ describe("Session Timeout Middleware", () => {
 
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith("Session destruction error:", expect.any(Error));
-      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
+      expect(res.clearCookie).toHaveBeenCalledWith("connect.sid");
+      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
     });
   });
 
@@ -291,7 +314,7 @@ describe("Session Timeout Middleware", () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it("should track /session-expired-logout so a late request is still expired by provenance", () => {
+    it("should sign a late /session-expired-logout request out to /session-logged-out, as legacy globalAuthGiver", () => {
       // Arrange
       req.path = "/session-expired-logout";
       signInAs("VERIFIED", "CRIME_IDAM");
@@ -301,7 +324,7 @@ describe("Session Timeout Middleware", () => {
       sessionTimeoutMiddleware(req as Request, res as Response, next);
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/session-expired?lng=en&reSignInUrl=CRIME");
+      expect(res.redirect).toHaveBeenCalledWith("/session-logged-out?lng=en");
     });
   });
 });

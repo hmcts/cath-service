@@ -99,7 +99,9 @@ pip's `session-logged-out.njk` is not migrated; CaTH's `/session-logged-out` is 
 | --- | --- |
 | `libs/auth/src/session/timeout-tracker.ts` | Constants `SESSION_TIMEOUT_MS = 3600000`, `ADMIN_SESSION_TIMEOUT_MS = 14400000`, `SESSION_WARNING_LEAD_MS = 1200000`, and `ADMIN_ROLES` from `USER_ROLES`. Add `getSessionTimeoutMs(role)`. `isSessionExpired` and `getTimeUntilExpiry` take the role. **Delete** `getTimeoutConfig` (and the `SESSION_TIMEOUT_WARNING_MS`/`SESSION_TIMEOUT_LOGOUT_MS` reads) and `isSessionApproachingExpiry` |
 | `libs/auth/src/session/timeout-tracker.test.ts` | Rewrite for the role-based model |
-| `libs/auth/src/middleware/session-timeout.ts` | Move `PUBLIC_ROUTES` to module top. Pass the role into the check. On expiry, destroy the session and redirect to `buildSessionExpiredRedirectUrl` using `res.locals.locale`. Set `res.locals.sessionIdleMs = remaining - SESSION_WARNING_LEAD_MS` (floored at 0). Drop `sessionTimeoutMs` |
+| `libs/auth/src/middleware/session-timeout.ts` | No public-route skip list: runs on every signed-in request, as legacy `globalAuthGiver`. Pass the role into the check. On expiry, `req.logout` → destroy → clear cookie → redirect to `buildSignOutRedirectUrl` (legacy `logOut(isSessionExpired=false)`, landing on `/session-logged-out`). Set `res.locals.sessionIdleMs = timeout - SESSION_WARNING_LEAD_MS`. Drop `sessionTimeoutMs` |
+| `libs/auth/src/session/sign-out-redirect.ts` (+ test) | **New.** `buildSignOutRedirectUrl({ provenance, locale, origin })`: CFT IDAM `endSession`, B2C logout, Microsoft SSO logout, or local for Crime, all landing on `/session-logged-out?lng=en|cy`, as legacy. The `lng` is needed because the strict `locale` cookie is not sent on the cross-site return from B2C or Microsoft. All four providers were checked on 2026-11-03 and keep the query. Moved from `/logout`, which gains the `lng` |
+| `apps/web/src/pages/(auth)/logout/index.ts` (+ test) | Use `buildSignOutRedirectUrl` |
 | `libs/auth/src/middleware/session-timeout.test.ts` | Extend (§5.2) |
 | `libs/auth/src/index.ts` | Remove the `getTimeoutConfig` export (no external users, checked by grep). Add exports for `SESSION_WARNING_LEAD_MS`, `buildSessionExpiredRedirectUrl`, `getRedirectType`, `RE_SIGN_IN_URLS`, `resolveContinuePath` and `buildB2cLogoutUrl` |
 | `apps/web/src/pages/(auth)/logout/index.ts` | Use `buildB2cLogoutUrl` (no behaviour change) |
@@ -140,17 +142,14 @@ If ops want the values tunable, see C1. `@hmcts/auth` already depends on `@hmcts
 
 ### 2.3 `sessionTimeoutMiddleware`
 
-- Keep `PUBLIC_ROUTES = ["/", "/sign-in", "/session-expired", "/logout", "/health"]`, moved to the module top.
-  Legacy renews on every route. Keeping CaTH's skip list is a minor deviation with no user impact, because the next tracked request still enforces the timeout.
+- **No public-route skip list.** As legacy `globalAuthGiver`, every signed-in request renews or enforces the timeout, including `/`, `/sign-in`, `/session-expired` and `/logout`. `/health` and static assets are served before the middleware (`app.ts:94`, `app.ts:105-107`), so they are untouched.
 - `/session-expiring` and `/session-expired-logout` are **tracked**:
   - Loading `/session-expiring` renews the server session, as in legacy, so the 20-minute client wait can never outlast the server.
-  - If `/session-expired-logout` arrives after the server has already expired the session, the middleware does the same provenance redirect itself.
-- On expiry, for a server-detected expiry (no JS, or a stale tab):
-  1. Read `provenance` and `locale` before calling destroy.
-  2. Call `req.session.destroy`. On error, log `Session destruction error:` and still redirect.
-  3. Redirect to `buildSessionExpiredRedirectUrl`.
-
-  Legacy's quirk of sending a server-detected expiry to the *logged-out* flow is **not copied** (§4).
+  - If `/session-expired-logout` arrives after the server has already expired the session, the middleware signs the user out to `/session-logged-out`, as legacy.
+- On a server-detected expiry (no JS, or a stale tab), follow legacy `logOut(isSessionExpired=false)`:
+  1. Build the URL with `buildSignOutRedirectUrl` from `provenance`, `res.locals.locale` and the origin.
+  2. `req.logout`, then `req.session.destroy` (on error, log `Session destruction error:` and continue), then `res.clearCookie("connect.sid")`.
+  3. Redirect: CFT IDAM `endSession`, B2C logout, Microsoft SSO logout, or local for Crime, all landing on `/session-logged-out`.
 - Otherwise call `updateLastActivity` and set `res.locals.sessionIdleMs`.
 
 ### 2.4 `/session-expiring` page
@@ -297,9 +296,7 @@ The existing keys (`heading`, `bodyText` and `signInAgainLink`) are removed.
 | --- | --- | --- |
 | `currentPath` is put into the Continue `href` unvalidated | Same-origin relative path allow-list with a role landing fallback | Open redirect and `javascript:` XSS sink |
 | Inline `<script>` blocks in `template.njk` and `session-expiring.njk` | Bundled `session-timeout.ts` | CSP is nonce-based (`helmet-middleware.ts:34-38`). Keeps the behaviour testable and in one file |
-| A server-detected expiry calls `logOut(isSessionExpired=false)` and lands on `/session-logged-out` | Provenance expiry flow, landing on `/session-expired` | The user timed out and did not sign out. The page must say so (spec AC4) |
 | Admin detection uses the substring `'ADMIN' in user.roles` on the client and five roles on the server | One exact `ADMIN_ROLES` list on the server. The client receives the computed duration | One source of truth. CaTH has three admin roles |
-| The middleware renews on every route, including `/` | CaTH's existing `PUBLIC_ROUTES` skip list is kept | No user-visible effect. Avoids widening the change |
 | Session-cookie `sameSite` comes from an env var | `lax` (unchanged since `0a81877eb`) | Already hardened |
 
 ## 5. Acceptance Criteria Mapping

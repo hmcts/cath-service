@@ -34,5 +34,6 @@ export {
   RE_SIGN_IN_URLS,
   type RedirectType
 } from "./session/expiry-redirect.js";
+export { buildSignOutRedirectUrl } from "./session/sign-out-redirect.js";
 export { isSessionExpired, SESSION_WARNING_LEAD_MS, updateLastActivity } from "./session/timeout-tracker.js";
 export type { UserProfile } from "./user-profile.js";

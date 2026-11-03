@@ -1,15 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
-import { buildSessionExpiredRedirectUrl } from "../session/expiry-redirect.js";
+import { buildSignOutRedirectUrl } from "../session/sign-out-redirect.js";
 import { getSessionTimeoutMs, isSessionExpired, SESSION_WARNING_LEAD_MS, updateLastActivity } from "../session/timeout-tracker.js";
 
-const PUBLIC_ROUTES = ["/", "/sign-in", "/session-expired", "/logout", "/health"];
-
 /**
- * Enforces the role-based inactivity timeout on the server. The browser only shows the warning page;
- * this check is what signs the user out, so it also covers users without JavaScript.
+ * Enforces the role-based inactivity timeout on every signed-in request, as legacy pip-frontend's
+ * globalAuthGiver does. An expired session is signed out the same way as /logout and lands on
+ * /session-logged-out. The browser warning page only covers the client-side path.
  */
 export function sessionTimeoutMiddleware(req: Request, res: Response, next: NextFunction) {
-  if (PUBLIC_ROUTES.includes(req.path) || !req.isAuthenticated()) {
+  if (!req.isAuthenticated()) {
     next();
     return;
   }
@@ -17,17 +16,20 @@ export function sessionTimeoutMiddleware(req: Request, res: Response, next: Next
   const role = req.user?.role;
 
   if (isSessionExpired(req.session, role)) {
-    const redirectUrl = buildSessionExpiredRedirectUrl({
+    const redirectUrl = buildSignOutRedirectUrl({
       provenance: req.user?.provenance,
       locale: res.locals.locale,
       origin: `${req.protocol}://${req.get("host")}`
     });
 
-    req.session.destroy((err: Error | null) => {
-      if (err) {
-        console.error("Session destruction error:", err);
-      }
-      res.redirect(redirectUrl);
+    req.logout(() => {
+      req.session.destroy((err: Error | null) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+        res.clearCookie("connect.sid");
+        res.redirect(redirectUrl);
+      });
     });
     return;
   }
