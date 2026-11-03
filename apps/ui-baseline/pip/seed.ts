@@ -149,7 +149,7 @@ async function createListSearchConfigs(): Promise<void> {
   const { jsonListTypes } = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), "../fixtures/list-search-config.json"), "utf-8"));
   const systemAdmin = required(
     (await loadUsers()).find((user) => user.role === "SYSTEM_ADMIN"),
-    "a SYSTEM_ADMIN user in users.json"
+    "users.json has no SYSTEM_ADMIN user"
   );
   const lookup = await fetch(`${ACCOUNT_MANAGEMENT_URL}/account/provenance/${systemAdmin.provenance}/${systemAdmin.provenanceUserId}`, {
     headers: { "x-requester-id": REQUESTER_ID }
@@ -193,10 +193,12 @@ function locationsCsv(): string {
   const subJurisdictions = new Map(locationData.subJurisdictions.map((sub) => [sub.subJurisdictionId, sub]));
 
   const rows = locationData.locations.map((location) => {
-    const locationRegions = location.regions.map((id) => required(regions.get(id), `region ${id}`));
-    const locationSubs = location.subJurisdictions.map((id) => required(subJurisdictions.get(id), `sub-jurisdiction ${id}`));
+    const locationRegions = location.regions.map((id) => required(regions.get(id), `location-data.ts references a missing region ${id}`));
+    const locationSubs = location.subJurisdictions.map((id) =>
+      required(subJurisdictions.get(id), `location-data.ts references a missing sub-jurisdiction ${id}`)
+    );
     const locationJurisdictions = [...new Set(locationSubs.map((sub) => sub.jurisdictionId))].map((id) =>
-      required(jurisdictions.get(id), `jurisdiction ${id}`)
+      required(jurisdictions.get(id), `location-data.ts references a missing jurisdiction ${id}`)
     );
     return [
       String(location.locationId),
@@ -227,7 +229,7 @@ function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-function required<T>(value: T | undefined, what: string): T {
-  if (value === undefined) throw new Error(`location-data.ts references a missing ${what}`);
+function required<T>(value: T | undefined, message: string): T {
+  if (value === undefined) throw new Error(message);
   return value;
 }

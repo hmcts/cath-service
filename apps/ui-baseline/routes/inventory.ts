@@ -104,6 +104,7 @@ async function controllerQueryParams(controller: string): Promise<string[]> {
   const text = await readFile(file, "utf-8");
   const direct = [...text.matchAll(/req\.query\??\.(\w+)/g)].map((match) => match[1]);
   const bracketed = [...text.matchAll(/req\.query\??\.?\[['"](\w+)['"]\]/g)].map((match) => match[1]);
-  const destructured = [...text.matchAll(/\{([^}]+)\}\s*=\s*req\.query/g)].flatMap((match) => match[1].split(",").map((name) => name.split(":")[0].trim()));
+  // [^{}]: the braces of the destructuring itself, not an enclosing block's
+  const destructured = [...text.matchAll(/\{([^{}]+)\}\s*=\s*req\.query/g)].flatMap((match) => match[1].split(",").map((name) => name.split(":")[0].trim()));
   return [...new Set([...direct, ...bracketed, ...destructured])].filter(Boolean);
 }
