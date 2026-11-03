@@ -11,7 +11,12 @@ export const GET = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "email is required" });
     }
 
-    const user = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" } } });
+    // Email is not unique (an account can have rows from more than one sign-in provider), so the
+    // user that signed in most recently is the one a sign-in has just created or updated
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
+      orderBy: [{ lastSignedInDate: { sort: "desc", nulls: "last" } }, { createdDate: "desc" }]
+    });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });

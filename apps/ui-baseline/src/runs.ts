@@ -1,9 +1,11 @@
-import { execFileSync, spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createWriteStream, existsSync } from "node:fs";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import type { BlobContainer } from "../core/index.js";
+import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
 
 // Runs parity checks and file comparisons one at a time, each as a child process of the tool's own
@@ -15,11 +17,20 @@ const ARTEFACT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const LIST_TYPE = /^[A-Z][A-Z0-9_]{2,}$/;
 const ROUTE = /^\/[a-z0-9][a-z0-9/-]*$/;
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
+// The tool ran to the end: it found nothing, or found differences
+const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
+// Stored runs fetched at once when the pod starts
+const RESTORE_CONCURRENCY = 8;
+// tar runs off the event loop, so a big run's archive does not stall the pages or the health check
+const execFileAsync = promisify(execFile);
 
 export function createRunner(options: RunnerOptions): Runner {
   const runs = new Map<string, RunRecord>();
+  const restoring = new Map<string, Promise<string>>();
   const execute = options.execute ?? executeScript;
   let queue: Promise<void> = Promise.resolve();
+  // Run records go to storage in the order they change, so a later one is never overwritten by an earlier
+  let publishing: Promise<void> = Promise.resolve();
 
   const runDir = (id: string) => path.join(options.dataDir, "runs", id);
   const save = async (record: RunRecord) => {
@@ -28,31 +39,110 @@ export function createRunner(options: RunnerOptions): Runner {
     await writeFile(path.join(runDir(record.id), "run.json"), `${JSON.stringify(record, null, 2)}\n`);
   };
 
+  // Stored as it changes, so a pod that stops mid-run leaves it queued or running, and the next pod
+  // can say it was interrupted
+  const publish = (record: RunRecord) => {
+    const store = options.store;
+    if (!store) return Promise.resolve();
+    publishing = publishing
+      .then(() => store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json"))
+      .catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
+    return publishing;
+  };
+
   const perform = async (record: RunRecord) => {
     const dir = runDir(record.id);
+    let baseline: PinnedBaseline | null = null;
     try {
       await save({ ...record, status: "running", startedAt: new Date().toISOString() });
-      const baseline = record.kind === "check" ? await options.baseline() : null;
-      const { script, args } = commandFor(record, dir, options.environment, baseline);
-      await execute(script, args, { cwd: options.repoDir, log: path.join(dir, "log.txt"), env: { UI_BASELINE_COMMIT: options.commit } });
-      const summary = await summarise(record, dir);
-      await save({ ...(runs.get(record.id) as RunRecord), status: summary ? "finished" : "failed", finishedAt: new Date().toISOString(), summary });
+      // A check keeps to the baseline it started with: its report links into that baseline's directory,
+      // which is held until the check ends so it is not deleted from under it
+      baseline = record.kind === "check" ? await options.baseline() : null;
+      if (baseline) await save({ ...(runs.get(record.id) as RunRecord), baselineId: baseline.id });
+      await publish(runs.get(record.id) as RunRecord);
+      const { script, args } = commandFor(record, dir, options.environment, baseline?.dir ?? null);
+      const code = await execute(script, args, { cwd: options.repoDir, log: path.join(dir, "log.txt"), env: { UI_BASELINE_COMMIT: options.commit } });
+      // A report written before a crash is not a finished run
+      const summary = COMPLETED.has(code) ? await summarise(record, dir) : null;
+      await save({
+        ...(runs.get(record.id) as RunRecord),
+        status: summary ? "finished" : "failed",
+        finishedAt: new Date().toISOString(),
+        summary,
+        ...(COMPLETED.has(code) ? {} : { error: stoppedBecause(code) })
+      });
     } catch (error) {
       await save({ ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: (error as Error).message });
+    } finally {
+      baseline?.release();
     }
     await archive(runs.get(record.id) as RunRecord).catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
+    // After the archive, so another pod that sees the run has ended can fetch its files
+    await publish(runs.get(record.id) as RunRecord);
   };
 
   const archive = async (record: RunRecord) => {
     if (!options.store) return;
     const file = path.join(options.dataDir, `${record.id}.tar.gz`);
-    // Symlinks into the baseline are kept as links, not copied: the baseline is stored separately
-    execFileSync(systemCommand("tar"), ["-czf", file, "-C", runDir(record.id), "."]);
+    // Symlinks into the baseline are kept as links, not copied: the baseline is stored separately, and
+    // each baseline has a directory of its own that is never replaced (record.baselineId)
+    await execFileAsync(systemCommand("tar"), ["-czf", file, "-C", runDir(record.id), "."]);
     try {
       await options.store.uploadFile(`${RUNS_PREFIX}${record.id}.tar.gz`, file, "application/gzip");
-      await options.store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json");
     } finally {
       await rm(file, { force: true });
+    }
+  };
+
+  // Downloads and unpacks a stored run beside its directory, then moves it into place whole, so the
+  // directory never holds a run half unpacked
+  const restoreRun = async (store: BlobContainer, id: string): Promise<string> => {
+    const dir = runDir(id);
+    await mkdir(path.dirname(dir), { recursive: true });
+    const scratch = await mkdtemp(path.join(options.dataDir, ".restore-"));
+    try {
+      const file = path.join(scratch, "run.tar.gz");
+      const unpacked = path.join(scratch, "run");
+      await store.downloadToFile(`${RUNS_PREFIX}${id}.tar.gz`, file);
+      await mkdir(unpacked);
+      await execFileAsync(systemCommand("tar"), ["-xzf", file, "-C", unpacked]);
+      await rm(dir, { recursive: true, force: true });
+      await rename(unpacked, dir);
+      return dir;
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  };
+
+  // The baseline a check's report links into, fetched again if this pod does not have it. Not held:
+  // a report whose baseline is later removed fetches it again when it is next opened.
+  const ensureBaseline = async (record: RunRecord) => {
+    if (record.kind !== "check" || !record.baselineId) return;
+    try {
+      (await options.baseline(record.baselineId)).release();
+    } catch (error) {
+      console.error(`[ui-baseline] could not fetch baseline ${record.baselineId}: ${(error as Error).message}`);
+    }
+  };
+
+  // The run's directory on this pod, restored from storage if need be; null if it cannot be
+  const available = async (record: RunRecord): Promise<string | null> => {
+    const dir = runDir(record.id);
+    const store = options.store;
+    // A run waiting or going on this pod has nothing stored yet: its directory fills as it runs
+    if (!store || record.status === "queued" || record.status === "running" || existsSync(path.join(dir, "run.json"))) return dir;
+    // Not on this pod's disk: restore it from storage, once however many requests ask at the same time
+    let restored = restoring.get(record.id);
+    if (!restored) {
+      restored = restoreRun(store, record.id).finally(() => restoring.delete(record.id));
+      restoring.set(record.id, restored);
+    }
+    try {
+      await restored;
+      return dir;
+    } catch (error) {
+      console.error(`[ui-baseline] could not restore run ${record.id}: ${(error as Error).message}`);
+      return null;
     }
   };
 
@@ -66,32 +156,40 @@ export function createRunner(options: RunnerOptions): Runner {
         createdAt: new Date().toISOString()
       };
       runs.set(record.id, record);
+      void publish(record);
       queue = queue.then(() => perform(record));
       return record;
     },
     list: () => [...runs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     get: (id) => runs.get(id),
-    async directory(id) {
+    async directory(id, { waitForBaseline = false } = {}) {
       const record = runs.get(id);
       if (!record) return null;
-      const dir = runDir(id);
-      if (existsSync(path.join(dir, "run.json")) || !options.store) return dir;
-      // Not on this pod's disk: restore it from storage
-      const file = path.join(options.dataDir, `${id}.tar.gz`);
-      await mkdir(dir, { recursive: true });
-      await options.store.downloadToFile(`${RUNS_PREFIX}${id}.tar.gz`, file);
-      execFileSync(systemCommand("tar"), ["-xzf", file, "-C", dir]);
-      await rm(file, { force: true });
+      const dir = await available(record);
+      if (!dir) return null;
+      // A baseline is several hundred megabytes, so only the report, which links into it, waits for
+      // it; the run page starts the fetch and carries on, so the report is likely ready when opened
+      const fetching = ensureBaseline(record);
+      if (waitForBaseline) await fetching;
       return dir;
     },
     async restore() {
-      if (!options.store) return;
-      for (const name of (await options.store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"))) {
-        const data = await options.store.download(name);
-        if (!data) continue;
+      const store = options.store;
+      if (!store) return;
+      const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"));
+      const load = async (name: string) => {
+        const data = await store.download(name);
+        if (!data) return;
         const record = JSON.parse(data.toString("utf-8")) as RunRecord;
+        // A run started on this pod while the others were loading is newer than anything stored
+        if (runs.has(record.id)) return;
         runs.set(record.id, record.status === "queued" || record.status === "running" ? { ...record, status: "failed", error: "interrupted" } : record);
-      }
+      };
+      const next = [...names];
+      const worker = async () => {
+        for (let name = next.shift(); name; name = next.shift()) await load(name);
+      };
+      await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
     },
     idle: () => queue
   };
@@ -120,6 +218,13 @@ function commandFor(record: RunRecord, dir: string, environment: string, baselin
     script: "apps/ui-baseline/check.ts",
     args: [`--env=${environment}`, `--baseline=${baseline}`, `--out=${path.join(dir, "check")}`, "--no-review", ...scope]
   };
+}
+
+// Why a run that did not complete ended, for its page
+function stoppedBecause(code: number): string {
+  if (code === EXIT_NOTHING_TO_CHECK)
+    return "There was nothing to check: none of the list types or pages asked for are in the baseline. The log says what was left out, and why.";
+  return `the tool stopped with exit code ${code}`;
 }
 
 // What a finished run found, read from the files the tool wrote; null when it wrote none
@@ -180,6 +285,8 @@ export type RunRecord = RunRequest & {
   createdAt: string;
   startedAt?: string;
   finishedAt?: string;
+  // The baseline a check compared against
+  baselineId?: string;
   summary?: RunSummary | null;
   error?: string;
 };
@@ -194,8 +301,10 @@ export interface Runner {
   start(request: RunRequest, requestedBy: string): RunRecord;
   list(): RunRecord[];
   get(id: string): RunRecord | undefined;
-  // The run's directory on this pod, restored from storage if need be; null for an unknown run
-  directory(id: string): Promise<string | null>;
+  // The run's directory on this pod, restored from storage if need be; null for an unknown run or
+  // one that could not be restored. A queued run's directory may not exist yet. A check's baseline is
+  // fetched too if the pod does not have it; waitForBaseline waits for that, for its report.
+  directory(id: string, options?: { waitForBaseline?: boolean }): Promise<string | null>;
   // Loads the runs stored before this pod started
   restore(): Promise<void>;
   // Settles when every queued run has finished
@@ -209,7 +318,14 @@ export interface RunnerOptions {
   environment: string;
   commit: string;
   store: BlobContainer | null;
-  // The directory of the baseline checks compare against, fetched if need be
-  baseline: () => Promise<string>;
+  // A baseline on this pod's disk, fetched if need be: the latest, or the one with the given id
+  baseline: (id?: string) => Promise<PinnedBaseline>;
   execute?: typeof executeScript;
+}
+
+export interface PinnedBaseline {
+  id: string;
+  dir: string;
+  // Lets the baseline be removed from the pod's disk once nothing else holds it
+  release(): void;
 }

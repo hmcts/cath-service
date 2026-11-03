@@ -1,5 +1,7 @@
 /* Comparing two screenshots side by side needs more room than GOV.UK's 960px column */
-.parity-wide {
+.parity-wide,
+/* The header, navigation and footer line up with the wider content */
+.parity-report .govuk-width-container {
   max-width: 1440px;
   padding-left: 30px;
   padding-right: 30px;
@@ -8,7 +10,8 @@
   margin-right: auto;
 }
 @media (max-width: 640px) {
-  .parity-wide {
+  .parity-wide,
+  .parity-report .govuk-width-container {
     padding-left: 15px;
     padding-right: 15px;
   }
@@ -19,30 +22,6 @@ body {
   font-family: "GDS Transport", arial, sans-serif;
 }
 
-.govuk-header__link--homepage,
-.govuk-header__link--homepage:link,
-.govuk-header__link--homepage:visited {
-  color: #fff;
-  text-decoration: none;
-}
-.parity-logo {
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.02em;
-  color: inherit;
-}
-.govuk-header__link--homepage:hover .parity-logo {
-  text-decoration: underline;
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.1em;
-}
-.govuk-header__link--homepage:focus .parity-logo {
-  color: #0b0c0c;
-}
-.govuk-header__container {
-  padding-top: 12px;
-  padding-bottom: 8px;
-}
 .parity-break {
   overflow-wrap: anywhere;
 }

@@ -36,7 +36,7 @@
     "dev:up:nodocker": "scripts/dev-nodocker.sh up && yarn db:migrate && yarn db:seed",
     "dev:down:nodocker": "scripts/dev-nodocker.sh down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
-    "ui-baseline:baseline": "tsx apps/ui-baseline/baseline.ts",
+    "ui-baseline:baseline": "tsx --env-file-if-exists=.env apps/ui-baseline/baseline.ts",
     "ui-baseline:check": "tsx --env-file-if-exists=.env apps/ui-baseline/check.ts",
     "ui-baseline:compare-files": "tsx apps/ui-baseline/compare-files.ts",
     "ui-baseline:record-pip": "bash apps/ui-baseline/pip/baseline.sh",

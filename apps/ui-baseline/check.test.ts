@@ -434,7 +434,7 @@ describe("check", () => {
         `${TARGET}/summary-of-publications?locationId=PIPLOC&artefactId=CATH-ART-1`
       );
       expect(pages.find((t) => t.id === "page--list-view")?.url).toBe(`${TARGET}/list/7/CATH-ART-1?keep=1&user=CATH-USER`);
-      expect(mocks.captureBatch).toHaveBeenCalledWith(path.join(out, "targets-pages.json"), { outDir: path.join(out, "cath/pages") }, 4);
+      expect(mocks.captureBatch).toHaveBeenCalledWith(path.join(out, "targets-pages.json"), { outDir: path.join(out, "cath/pages") }, 4, expect.any(Function));
     });
 
     it("should leave captures CaTH redirected or failed out of the comparison", async () => {
@@ -507,12 +507,12 @@ describe("check", () => {
       expect(args).not.toContain("--journeys");
     });
 
-    it("should write and post the PR comment with side-by-side screenshots, and exit 1 for a defect", async () => {
+    it("should write and post the PR comment with side-by-side screenshots, and exit 3 for a defect", async () => {
       // Act
       const { code } = await runCheck(["--ticket", "42", "--post-pr", "7"]);
 
       // Assert
-      expect(code).toBe(1);
+      expect(code).toBe(3);
       const evidence = path.join(out, "evidence");
       expect(mocks.execFileSync).toHaveBeenCalledWith(expect.stringMatching(/zip$/), ["-qr", path.join(evidence, "report.zip"), "."], {
         cwd: path.join(out, "bundle")
@@ -618,7 +618,8 @@ describe("check", () => {
       expect(mocks.runJourneys).toHaveBeenCalledWith(path.join(PARITY_DIR, "cath/journeys/index.ts"), {
         outDir: path.join(out, "cath/journeys"),
         locales: ["en", "cy"],
-        only: ["subscribe"]
+        only: ["subscribe"],
+        onRun: expect.any(Function)
       });
       expect(process.env.PARITY_TARGET).toBe(TARGET);
       const output = logs.join("\n");
@@ -628,6 +629,35 @@ describe("check", () => {
       expect(output).toContain("    subscribe (Welsh): not-run");
       expect(output).toContain("    subscribe (English): undefined undefined");
       expect(output).toContain("3 of 2 journey runs differ from pip");
+    });
+
+    it("should leave its progress with every stage finished or said to be not needed", async () => {
+      // Act
+      await runCheck(["--all"]);
+
+      // Assert
+      const { stages } = JSON.parse(readFileSync(path.join(out, "progress.json"), "utf-8")) as {
+        stages: { id: string; status: string; done?: number; total?: number; reason?: string }[];
+      };
+      const byId = Object.fromEntries(stages.map(({ id, status, done, total, reason }) => [id, { status, done, total, reason }]));
+      expect(stages.map((stage) => stage.id)).toEqual([
+        "seed",
+        "sign-in",
+        "capture-lists",
+        "capture-pages",
+        "journeys",
+        "compare",
+        "files",
+        "downloads",
+        "review",
+        "report",
+        "evidence"
+      ]);
+      expect(stages.filter((stage) => stage.status === "pending" || stage.status === "running")).toEqual([]);
+      expect(byId.journeys).toEqual({ status: "done", done: 2, total: 2, reason: undefined });
+      expect(byId["capture-pages"]).toMatchObject({ status: "done", done: byId["capture-pages"].total });
+      expect(byId.review).toEqual({ status: "skipped", done: undefined, total: undefined, reason: "no ticket to review against" });
+      expect(byId.evidence).toMatchObject({ status: "skipped", reason: "not written for a check of everything" });
     });
 
     it("should count skipped pages by reason, capture the not-found page, and report the whole baseline", async () => {

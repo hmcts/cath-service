@@ -36,8 +36,7 @@ async function listPages(environment: Environment, cathArtefactId: string, pipAr
     if (!response.ok) throw new Error(`${endpoint}: ${response.status}`);
     return (await response.json()) as T;
   };
-  const artefact = await get<{ listTypeId: number }>(`/artefacts/${cathArtefactId}`);
-  const listType = (await get<{ id: number; name: string }[]>("/list-types")).find((row) => row.id === artefact.listTypeId)?.name;
+  const listType = (await get<{ listTypeName: string }>(`/artefacts/${cathArtefactId}`)).listTypeName;
   const publication = (await loadManifest()).publications.find((p) => p.cathListType === listType);
   if (!listType || !publication) return null;
   return {

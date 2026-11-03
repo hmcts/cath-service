@@ -28,7 +28,10 @@ export async function runJourneys(moduleFile: string, options: RunJourneysOption
   try {
     // Sequential on purpose: journeys change shared app data, so their order is part of the baseline
     for (const journey of selected) {
-      for (const locale of options.locales) results.push(await runOne(browser, suite, journey, locale, options.outDir));
+      for (const locale of options.locales) {
+        results.push(await runOne(browser, suite, journey, locale, options.outDir));
+        options.onRun?.(results.length, selected.length * options.locales.length);
+      }
     }
   } finally {
     await browser.close();
@@ -123,6 +126,8 @@ export interface RunJourneysOptions {
   outDir: string;
   locales: string[];
   only?: string[];
+  // Told after each journey-language run how many of them are done
+  onRun?: (done: number, total: number) => void;
 }
 
 export interface JourneyResult {

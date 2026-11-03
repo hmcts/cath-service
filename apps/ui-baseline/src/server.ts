@@ -26,7 +26,7 @@ await mkdir(dataDir, { recursive: true });
 const store = baselineContainer(environment);
 
 const baseline = createBaselineCache({
-  dir: path.join(dataDir, "baseline"),
+  root: path.join(dataDir, "baselines"),
   store,
   latest: latestBaseline,
   pull: (dir, id) => pullBaseline(environment, dir, id)
@@ -37,9 +37,8 @@ const runner = createRunner({
   environment: environmentName,
   commit: process.env.GIT_COMMIT ?? "unknown",
   store,
-  baseline: () => baseline.ensure()
+  baseline: (id) => baseline.ensure(id)
 });
-await runner.restore().catch((error: Error) => console.error(`[ui-baseline] could not load earlier runs: ${error.message}`));
 
 const authDisabled = process.env.UI_BASELINE_AUTH_DISABLED === "true";
 if (authDisabled && process.env.NODE_ENV === "production") throw new Error("UI_BASELINE_AUTH_DISABLED is for a developer's machine only");
@@ -62,6 +61,10 @@ const auth = await createAuth({
 
 const app = createApp({ environment: environmentName, auth, runner, baselineStatus: () => baseline.status() });
 app.listen(PORT, () => console.log(`[ui-baseline] checking CaTH in ${environmentName} on port ${PORT}`));
+
+// Loaded once the pod is listening, so a long history does not hold up its start: the list of runs
+// fills in as they load
+runner.restore().catch((error: Error) => console.error(`[ui-baseline] could not load earlier runs: ${error.message}`));
 
 // Fetched now so the first check does not wait for it
 baseline.ensure().catch((error: Error) => console.error(`[ui-baseline] could not fetch the baseline: ${error.message}`));

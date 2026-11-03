@@ -3,12 +3,13 @@ import { parseArgs } from "node:util";
 import { DEFAULT_BASELINE_DIR, pullBaseline, pushBaseline } from "./baseline-store.js";
 import { loadEnvironment } from "./environments.js";
 
-// Stores a recorded pip baseline in the environment's storage, or fetches the stored one
-//   yarn ui-baseline:baseline push [--dir output/baseline] [--env test]
-//   yarn ui-baseline:baseline pull [--dir output/baseline] [--env test] [--id <id>]
+// Stores a recorded pip baseline in the environment's storage, or fetches the stored one. local (the
+// default) is local Azurite; test is cathsaperftest in Azure, which the record workflow pushes to
+//   yarn ui-baseline:baseline push [--dir output/baseline] [--env local|test]
+//   yarn ui-baseline:baseline pull [--dir output/baseline] [--env local|test] [--id <id>]
 const { positionals, values: args } = parseArgs({
   allowPositionals: true,
-  options: { env: { type: "string", default: "test" }, dir: { type: "string" }, id: { type: "string" } }
+  options: { env: { type: "string", default: "local" }, dir: { type: "string" }, id: { type: "string" } }
 });
 const [command] = positionals;
 const environment = await loadEnvironment(args.env);
@@ -21,6 +22,6 @@ if (command === "push") {
   const stored = await pullBaseline(environment, dir, args.id);
   console.log(`fetched ${stored.blob} into ${dir}`);
 } else {
-  console.error("usage: baseline.ts push|pull [--dir <baseline dir>] [--env test] [--id <stored id>]");
+  console.error("usage: baseline.ts push|pull [--dir <baseline dir>] [--env local|test] [--id <stored id>]");
   process.exit(1);
 }
