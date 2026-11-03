@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { BlobContainer } from "@hmcts/ui-baseline";
-import type { StoredBaseline } from "@hmcts/ui-baseline/baseline-store";
+import type { StoredBaseline } from "../baseline-store.js";
+import type { BlobContainer } from "../core/index.js";
 
 // Keeps the newest stored pip baseline on this pod's disk for checks to compare against, fetching it
 // again only when a newer one has been stored. One fetch at a time, however many checks ask.

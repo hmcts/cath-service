@@ -2437,44 +2437,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hmcts/ui-baseline-app@workspace:apps/ui-baseline":
+"@hmcts/ui-baseline@workspace:apps/ui-baseline":
   version: 0.0.0-use.local
-  resolution: "@hmcts/ui-baseline-app@workspace:apps/ui-baseline"
-  dependencies:
-    "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
-    "@hmcts/ui-baseline": "workspace:*"
-    "@types/express": "npm:5.0.6"
-    "@types/node": "npm:24.10.4"
-    "@types/nunjucks": "npm:3.2.6"
-    "@types/supertest": "npm:7.2.1"
-    express: "npm:5.2.1"
-    govuk-frontend: "npm:6.2.0"
-    nunjucks: "npm:3.2.4"
-    openid-client: "npm:6.8.5"
-    supertest: "npm:7.2.2"
-    tsx: "npm:4.22.4"
-    vitest: "npm:4.1.10"
-  languageName: unknown
-  linkType: soft
-
-"@hmcts/ui-baseline@workspace:*, @hmcts/ui-baseline@workspace:tools/ui-baseline":
-  version: 0.0.0-use.local
-  resolution: "@hmcts/ui-baseline@workspace:tools/ui-baseline"
+  resolution: "@hmcts/ui-baseline@workspace:apps/ui-baseline"
   dependencies:
     "@axe-core/playwright": "npm:4.13.0"
     "@azure/identity": "npm:4.10.0"
     "@azure/keyvault-secrets": "npm:4.11.2"
     "@azure/storage-blob": "npm:12.27.0"
+    "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@types/express": "npm:5.0.6"
     "@types/node": "npm:24.10.4"
+    "@types/nunjucks": "npm:3.2.6"
+    "@types/supertest": "npm:7.2.1"
     exceljs: "npm:4.4.0"
+    express: "npm:5.2.1"
+    govuk-frontend: "npm:6.2.0"
+    nunjucks: "npm:3.2.4"
+    openid-client: "npm:6.8.5"
     pdfjs-dist: "npm:6.4.299"
     playwright: "npm:1.62.1"
     redis: "npm:5.12.1"
+    supertest: "npm:7.2.2"
     tsx: "npm:4.22.4"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
-  bin:
-    ui-baseline: ./src/cli.ts
   languageName: unknown
   linkType: soft
 

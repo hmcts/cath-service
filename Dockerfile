@@ -113,7 +113,7 @@ WORKDIR /opt/app/apps/postgres
 CMD ["sh", "./start.sh"]
 
 # ---- UI baseline (the hosted parity check, test environment only) ----
-# Runs tools/ui-baseline from source through tsx, as the postgres runner does, so it ships
+# Runs apps/ui-baseline from source through tsx, as the postgres runner does, so it ships
 # source and does not depend on `build`. It takes the whole dev install: the tool seeds CaTH
 # with the list-type packages' own converters and validators, from source. Chromium is Alpine's,
 # as Playwright's builds do not run on Alpine; tar and zip pack runs and evidence.
@@ -123,7 +123,6 @@ COPY --from=deps --chown=hmcts:hmcts /opt/app /opt/app
 USER hmcts
 COPY --chown=hmcts:hmcts tsconfig.json ./tsconfig.json
 COPY --chown=hmcts:hmcts libs ./libs
-COPY --chown=hmcts:hmcts tools ./tools
 COPY --chown=hmcts:hmcts apps/ui-baseline ./apps/ui-baseline
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Not --conditions=production: the tool and the libs it uses resolve to their TypeScript sources

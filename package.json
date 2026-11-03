@@ -5,8 +5,7 @@
     "apps/*",
     "e2e-tests",
     "libs/*",
-    "libs/list-types/*",
-    "tools/*"
+    "libs/list-types/*"
   ],
   "scripts": {
     "postinstall": "yarn db:generate && node scripts/install-hooks.js",
@@ -35,12 +34,12 @@
     "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
-    "ui-baseline:baseline": "tsx tools/ui-baseline/baseline.ts",
-    "ui-baseline:check": "tsx --env-file-if-exists=.env tools/ui-baseline/check.ts",
-    "ui-baseline:compare-files": "tsx tools/ui-baseline/compare-files.ts",
-    "ui-baseline:record-pip": "bash tools/ui-baseline/pip/baseline.sh",
-    "ui-baseline:report": "bash tools/ui-baseline/report/baseline-report.sh",
-    "ui-baseline:stop-pip": "bash tools/ui-baseline/pip/stop.sh",
+    "ui-baseline:baseline": "tsx apps/ui-baseline/baseline.ts",
+    "ui-baseline:check": "tsx --env-file-if-exists=.env apps/ui-baseline/check.ts",
+    "ui-baseline:compare-files": "tsx apps/ui-baseline/compare-files.ts",
+    "ui-baseline:record-pip": "bash apps/ui-baseline/pip/baseline.sh",
+    "ui-baseline:report": "bash apps/ui-baseline/report/baseline-report.sh",
+    "ui-baseline:stop-pip": "bash apps/ui-baseline/pip/stop.sh",
     "db:seed": "tsx --env-file-if-exists=.env apps/postgres/prisma/seed.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",
     "db:generate": "yarn workspace @hmcts/postgres-prisma run generate",

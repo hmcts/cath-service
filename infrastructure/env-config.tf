@@ -29,7 +29,7 @@ locals {
     # is not, and every taggable resource in it was rejected with
     # RequestDisallowedByPolicy until this mapped it to "testing".
     # apim_suffix uses CFT names (aat is stg, perftest is test); null means no APIM.
-    # ui_baseline adds the storage for tools/ui-baseline (recorded pip baselines and check
+    # ui_baseline adds the storage for apps/ui-baseline (recorded pip baselines and check
     # results). Only the environment testers run parity checks against has it.
     aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", ui_baseline = false }
     demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", ui_baseline = false }

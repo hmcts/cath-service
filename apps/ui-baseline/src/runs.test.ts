@@ -38,7 +38,7 @@ describe("createRunner", () => {
     // Assert
     expect(baseline).toHaveBeenCalled();
     const [script, args, options] = execute.mock.calls[0];
-    expect(script).toBe("tools/ui-baseline/check.ts");
+    expect(script).toBe("apps/ui-baseline/check.ts");
     expect(args).toEqual(["--env=test", "--baseline=/data/baseline", expect.stringMatching(/--out=.*\/runs\/.*\/check$/), "--no-review", "--all"]);
     expect(options).toMatchObject({ cwd: "/repo", env: { UI_BASELINE_COMMIT: "abc1234" } });
     expect(runner.get(run.id)).toMatchObject({ status: "finished", requestedBy: "tester@example.com", summary: { lists: { match: 1, differs: 3 } } });
@@ -84,7 +84,7 @@ describe("createRunner", () => {
 
     // Assert
     expect(baseline).not.toHaveBeenCalled();
-    expect(execute.mock.calls[0][0]).toBe("tools/ui-baseline/compare-files.ts");
+    expect(execute.mock.calls[0][0]).toBe("apps/ui-baseline/compare-files.ts");
     expect(execute.mock.calls[0][1].slice(0, 4)).toEqual(["--env=test", `--pip=${PIP_ARTEFACT}`, `--cath=${CATH_ARTEFACT}`, "--name=civil-list"]);
     expect(runner.get(run.id)).toMatchObject({ status: "finished", summary: { files: { match: 1, differs: 1 } } });
     expect(JSON.parse(await readFile(path.join(dataDir, "runs", run.id, "run.json"), "utf-8")).status).toBe("finished");
@@ -207,7 +207,7 @@ describe("createRunner", () => {
 
     // Assert
     const log = await readFile(path.join(options.dataDir, "runs", run.id, "log.txt"), "utf-8");
-    expect(log).toBe("ran tools/ui-baseline/check.ts for abc1234\n");
+    expect(log).toBe("ran apps/ui-baseline/check.ts for abc1234\n");
   });
 });
 
