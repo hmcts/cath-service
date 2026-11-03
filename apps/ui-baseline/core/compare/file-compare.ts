@@ -14,6 +14,17 @@ import { diffSequences } from "./sequence-diff.js";
 // exactly, so every sheet, cell (type and value) and merged range is compared.
 const MAX_FINDINGS = 50;
 const CONTEXT_WORDS = 4;
+// How each kind of file is compared; PDFs by text, spreadsheets by cell, CSV by line, the rest whole
+const COMPARERS: Record<
+  FileKind,
+  (source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext, targetContext: NormaliseContext) => Promise<PairComparison>
+> = {
+  pdf: (...args) => comparePdf(...args),
+  "pdf-welsh": (...args) => comparePdf(...args),
+  excel: (...args) => compareExcel(...args),
+  csv: async (...args) => compareCsv(...args),
+  binary: async (source, target) => compareBinary(source, target)
+};
 
 export async function compareFileRuns(options: FileCompareOptions): Promise<FileCompareSummary> {
   const sourceIndex = await readFileIndex(options.source);
@@ -66,18 +77,6 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
   await writeFile(path.join(options.out, "files-compare.json"), `${JSON.stringify(summary, null, 2)}\n`);
   return summary;
 }
-
-// How each kind of file is compared; PDFs by text, spreadsheets by cell, CSV by line, the rest whole
-const COMPARERS: Record<
-  FileKind,
-  (source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext, targetContext: NormaliseContext) => Promise<PairComparison>
-> = {
-  pdf: (...args) => comparePdf(...args),
-  "pdf-welsh": (...args) => comparePdf(...args),
-  excel: (...args) => compareExcel(...args),
-  csv: async (...args) => compareCsv(...args),
-  binary: async (source, target) => compareBinary(source, target)
-};
 
 export async function comparePdf(
   source: Uint8Array,

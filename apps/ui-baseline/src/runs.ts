@@ -157,7 +157,19 @@ export function createRunner(options: RunnerOptions): Runner {
       };
       runs.set(record.id, record);
       void publish(record);
-      queue = queue.then(() => perform(record));
+      // A run that fails outside its own error handling (its record cannot be saved, say, as the
+      // disk is full) is failed here, so the queue carries on with the runs after it
+      queue = queue
+        .then(() => perform(record))
+        .catch((error: Error) => {
+          console.error(`[ui-baseline] run ${record.id} failed: ${error.message}`);
+          runs.set(record.id, {
+            ...(runs.get(record.id) as RunRecord),
+            status: "failed",
+            finishedAt: new Date().toISOString(),
+            error: error.message
+          });
+        });
       return record;
     },
     list: () => [...runs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),

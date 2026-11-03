@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { type PageStructure, parseAria, structureOf } from "./aria.js";
+import { type AriaNode, type PageStructure, parseAria, structureOf } from "./aria.js";
 import { type NormaliseContext, normalise } from "./normalise.js";
 
 // Compares every capture in a source run (e.g. pip) with the capture of the same id, locale and
 // state in a target run (e.g. CaTH). Deterministic: each pair gets a verdict and a list of
 // categorised findings; judging whether a finding is intended comes later, against the ticket.
+const REWORD_SIMILARITY = 0.5;
+
 export async function compareRuns(options: CompareOptions): Promise<CompareSummary> {
   const sourceIndex = await readIndex(options.source);
   const targetIndex = new Map((await readIndex(options.target)).map((entry) => [key(entry), entry]));
@@ -76,8 +78,6 @@ function pairReworded(findings: Finding[]): Finding[] {
   return [...result, ...extras.filter((extra) => !used.has(extra))];
 }
 
-const REWORD_SIMILARITY = 0.5;
-
 function quoted(detail: string): string {
   return detail.match(/"(.*)"/)?.[1] ?? detail;
 }
@@ -131,9 +131,9 @@ function patternDetail(finding: Finding): string {
 async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, targetEntry: IndexEntry): Promise<PairResult> {
   const sourceDir = path.join(options.source, sourceEntry.id, sourceEntry.locale, sourceEntry.state);
   const targetDir = path.join(options.target, targetEntry.id, targetEntry.locale, targetEntry.state);
-  const [sourceAria, targetAria] = await Promise.all([readNormalised(sourceDir, "aria.yml"), readNormalised(targetDir, "aria.yml")]);
-  const source = structureOf(parseAria(sourceAria));
-  const target = structureOf(parseAria(targetAria));
+  const [sourceCapture, targetCapture] = await Promise.all([readCapture(sourceDir), readCapture(targetDir)]);
+  const source = sourceCapture.structure;
+  const target = targetCapture.structure;
   const unorderedRows = options.unorderedRows?.includes(sourceEntry.id) ?? false;
 
   const findings: Finding[] = [
@@ -147,8 +147,9 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
       source.links.map((l) => l.text),
       target.links.map((l) => l.text)
     ),
+    ...compareTargets(sourceCapture, targetCapture, options.expectedTarget),
     ...compareText(source.text, target.text, source, target),
-    ...(await compareMeta(sourceDir, targetDir)),
+    ...compareMeta(sourceCapture.meta, targetCapture.meta),
     ...(await compareAxe(sourceDir, targetDir))
   ];
   // The same finding can occur several times on one page (e.g. a heading repeated per court)
@@ -164,13 +165,38 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
   };
 }
 
-async function readNormalised(dir: string, file: string): Promise<string> {
+// A capture as compared: parsed first and normalised after, a string at a time, so a normalisation
+// (curly quotes made straight, say) can never break the YAML or JSON it is read from. Link targets
+// and form actions are kept as captured, for compareTargets to resolve against the page's URL.
+async function readCapture(dir: string): Promise<Capture> {
   const provenance = JSON.parse(await readFile(path.join(dir, "provenance.json"), "utf-8").catch(() => "{}"));
   const context: NormaliseContext = {
     seededAt: provenance.source?.seededAt ?? provenance.capturedAt ?? null,
     knownIds: provenance.source?.artefactId ? { [`<artefact:${provenance.source.fixture ?? provenance.id}>`]: provenance.source.artefactId } : {}
   };
-  return normalise(await readFile(path.join(dir, file), "utf-8"), context);
+  const nodes = parseAria(await readFile(path.join(dir, "aria.yml"), "utf-8"));
+  const meta = JSON.parse(await readFile(path.join(dir, "meta.json"), "utf-8")) as RawMeta;
+  return {
+    structure: structureOf(nodes.map((node) => normaliseNode(node, context))),
+    linkTargets: structureOf(nodes).links.map((link) => link.url),
+    pageUrl: typeof provenance.url === "string" ? provenance.url : null,
+    meta: {
+      title: normalise(meta.title ?? "", context),
+      lang: meta.lang,
+      fields: (meta.forms ?? []).flatMap((form) => form.fields.map((field) => normalise(field.name, context))).sort((a, b) => a.localeCompare(b)),
+      actions: (meta.forms ?? []).map((form) => form.action)
+    }
+  };
+}
+
+// A screen-reader status region is captured mid-update, so what it says is not compared
+function normaliseNode(node: AriaNode, context: NormaliseContext): AriaNode {
+  return {
+    ...node,
+    name: normalise(node.name, context),
+    text: node.role === "status" ? "" : normalise(node.text, context),
+    children: node.children.map((child) => normaliseNode(child, context))
+  };
 }
 
 function compareHeadings(source: PageStructure, target: PageStructure): Finding[] {
@@ -232,18 +258,25 @@ function compareControls(source: PageStructure, target: PageStructure): Finding[
   for (const control of target.controls)
     if (!control.label) findings.push({ category: "form", change: "unlabelled", detail: `${control.role} has no accessible label` });
   const describe = (c: { role: string; label: string }) => `${c.role} "${c.label}"`;
-  const a = source.controls.map(describe);
-  const b = target.controls.map(describe);
-  for (const item of a.filter((x) => !b.includes(x))) findings.push({ category: "form", change: "missing", detail: item });
-  for (const item of b.filter((x) => !a.includes(x))) findings.push({ category: "form", change: "extra", detail: item });
-  return findings;
+  return [...findings, ...countedDifferences("form", source.controls.map(describe), target.controls.map(describe), (item) => item)];
 }
 
 function compareNamed(category: string, a: string[], b: string[]): Finding[] {
-  const findings: Finding[] = [];
-  for (const item of a.filter((x) => !b.includes(x))) findings.push({ category, change: "missing", detail: `"${item}"` });
-  for (const item of b.filter((x) => !a.includes(x))) findings.push({ category, change: "extra", detail: `"${item}"` });
-  return findings;
+  return countedDifferences(category, a, b, (item) => `"${item}"`);
+}
+
+// Each item missing from or added to the target, and each the two have a different number of (three
+// "Remove" buttons in one and one in the other), in the order they first appear
+function countedDifferences(category: string, a: string[], b: string[], describe: (item: string) => string): Finding[] {
+  const count = (items: string[]) => items.reduce((counts, item) => counts.set(item, (counts.get(item) ?? 0) + 1), new Map<string, number>());
+  const inA = count(a);
+  const inB = count(b);
+  return [...new Set([...a, ...b])].flatMap((item): Finding[] => {
+    const [ca, cb] = [inA.get(item) ?? 0, inB.get(item) ?? 0];
+    if (!cb) return [{ category, change: "missing", detail: describe(item) }];
+    if (!ca) return [{ category, change: "extra", detail: describe(item) }];
+    return ca === cb ? [] : [{ category, change: "count", detail: `${describe(item)}: ${ca} → ${cb}` }];
+  });
 }
 
 // Text that became a heading (or a heading that became text) is one change, reported once
@@ -269,10 +302,15 @@ function compareText(a: string[], b: string[], source?: PageStructure, target?: 
         : []
     );
   const labels = (structure?: PageStructure) => new Set(structure?.controls.map((c) => c.label) ?? []);
+  // Each set built once, so a long list page is compared in linear time
   const inTarget = elsewhere(target);
   const inSource = elsewhere(source);
-  const missing = a.filter((x) => !b.includes(x) && !inTarget.has(x) && !labels(source).has(x));
-  const extra = b.filter((x) => !a.includes(x) && !inSource.has(x) && !labels(target).has(x));
+  const sourceLabels = labels(source);
+  const targetLabels = labels(target);
+  const textA = new Set(a);
+  const textB = new Set(b);
+  const missing = a.filter((x) => !textB.has(x) && !inTarget.has(x) && !sourceLabels.has(x));
+  const extra = b.filter((x) => !textA.has(x) && !inSource.has(x) && !targetLabels.has(x));
   // A change of case only ("Data Source" → "Data source") is one finding, not a missing and an extra
   const extraByLowerCase = new Map(extra.map((x) => [x.toLowerCase(), x]));
   for (const item of missing) {
@@ -286,20 +324,61 @@ function compareText(a: string[], b: string[], source?: PageStructure, target?: 
   return findings;
 }
 
-async function compareMeta(sourceDir: string, targetDir: string): Promise<Finding[]> {
-  const [a, b] = await Promise.all([readNormalised(sourceDir, "meta.json"), readNormalised(targetDir, "meta.json")]).then((texts) =>
-    texts.map((text) => JSON.parse(text))
-  );
+function compareMeta(a: Capture["meta"], b: Capture["meta"]): Finding[] {
   const findings: Finding[] = [];
   if (a.title !== b.title) findings.push({ category: "page", change: "title", detail: `"${a.title}" → "${b.title}"` });
   if (a.lang !== b.lang) findings.push({ category: "page", change: "lang", detail: `${a.lang} → ${b.lang}` });
-  const fields = (meta: { forms: { fields: { name: string }[] }[] }) =>
-    meta.forms.flatMap((f) => f.fields.map((x) => x.name)).sort((a, b) => a.localeCompare(b));
-  const fa = fields(a);
-  const fb = fields(b);
-  for (const name of fa.filter((x) => !fb.includes(x))) findings.push({ category: "page", change: "form-field-missing", detail: `field "${name}"` });
-  for (const name of fb.filter((x) => !fa.includes(x))) findings.push({ category: "page", change: "form-field-extra", detail: `field "${name}"` });
+  const fieldsB = new Set(b.fields);
+  const fieldsA = new Set(a.fields);
+  for (const name of a.fields.filter((x) => !fieldsB.has(x))) findings.push({ category: "page", change: "form-field-missing", detail: `field "${name}"` });
+  for (const name of b.fields.filter((x) => !fieldsA.has(x))) findings.push({ category: "page", change: "form-field-extra", detail: `field "${name}"` });
   return findings;
+}
+
+// Where each link and form leads, against where it should lead in the target: options.expectedTarget
+// says, for a source URL, the target's path (or, for another site, its origin and path). Links are
+// paired by text, in order, and forms by position; a target it cannot tell is not compared. Only
+// paths are compared, as query values are ids each app was seeded with differently.
+function compareTargets(source: Capture, target: Capture, expectedTarget: CompareOptions["expectedTarget"]): Finding[] {
+  if (!expectedTarget || !source.pageUrl || !target.pageUrl) return [];
+  const pages = { source: new URL(source.pageUrl), target: new URL(target.pageUrl) };
+  const leadsWrong = (sourceHref: string | null, targetHref: string | null): string | null => {
+    const from = resolved(sourceHref, pages.source);
+    const to = resolved(targetHref, pages.target);
+    if (!from || !to) return null;
+    const expected = expectedTarget(from, pages);
+    if (expected === undefined) return null;
+    const actual = /^https?:\/\//.test(expected) ? `${to.origin}${to.pathname}` : to.pathname;
+    return actual === expected ? null : `${expected} → ${actual}`;
+  };
+  const findings: Finding[] = [];
+  const targetLinks = Map.groupBy(
+    target.structure.links.map((link, index) => ({ text: link.text, href: target.linkTargets[index] })),
+    (link) => link.text
+  );
+  const seen = new Map<string, number>();
+  source.structure.links.forEach((link, index) => {
+    const occurrence = seen.get(link.text) ?? 0;
+    seen.set(link.text, occurrence + 1);
+    const wrong = leadsWrong(source.linkTargets[index], targetLinks.get(link.text)?.[occurrence]?.href ?? null);
+    if (wrong) findings.push({ category: "link", change: "target", detail: `"${link.text}": ${wrong}` });
+  });
+  source.meta.actions.forEach((action, index) => {
+    if (index >= target.meta.actions.length) return;
+    // A form with no action posts back to its own page
+    const wrong = leadsWrong(action ?? "", target.meta.actions[index] ?? "");
+    if (wrong) findings.push({ category: "form", change: "action", detail: `form ${index + 1}: ${wrong}` });
+  });
+  return findings;
+}
+
+function resolved(href: string | null, page: URL): URL | null {
+  if (href === null) return null;
+  try {
+    return new URL(href, page);
+  } catch {
+    return null;
+  }
 }
 
 async function compareAxe(sourceDir: string, targetDir: string): Promise<Finding[]> {
@@ -324,10 +403,10 @@ async function readIndex(dir: string): Promise<IndexEntry[]> {
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line) as IndexEntry);
-  // Directories are the truth: index lines from overwritten captures are dropped
-  const present = new Set<string>();
-  for (const id of await readdir(dir).catch(() => [])) present.add(id);
-  return entries.filter((entry) => present.has(entry.id));
+  // Directories are the truth: a line whose capture was overwritten or removed (a retry clears the
+  // folder it captures into first, and may fail) is dropped, so it is reported as not captured
+  const captured = (entry: IndexEntry) => ["aria.yml", "meta.json"].every((file) => existsSync(path.join(dir, entry.id, entry.locale, entry.state, file)));
+  return entries.filter(captured);
 }
 
 function key(entry: IndexEntry): string {
@@ -341,6 +420,10 @@ export interface CompareOptions {
   only?: string[];
   // Captures whose tables list rows in no stable order (e.g. pip's blob explorer)
   unorderedRows?: string[];
+  // Where a link or form on a source page should lead on the target: the target path (or, for
+  // another site, its origin and path), or undefined when it cannot be told. Without it, where links
+  // and forms lead is not compared.
+  expectedTarget?: (sourceUrl: URL, pages: { source: URL; target: URL }) => string | undefined;
 }
 
 interface IndexEntry {
@@ -377,4 +460,18 @@ export interface CompareSummary {
   patterns: Pattern[];
   totals: { pairs: number; match: number; differs: number; notCaptured: number };
   results: PairResult[];
+}
+
+interface Capture {
+  structure: PageStructure;
+  // Each link's target as captured, in the order of structure.links
+  linkTargets: (string | null)[];
+  pageUrl: string | null;
+  meta: { title: string; lang: string; fields: string[]; actions: (string | null)[] };
+}
+
+interface RawMeta {
+  title?: string;
+  lang: string;
+  forms?: { action: string | null; fields: { name: string }[] }[];
 }

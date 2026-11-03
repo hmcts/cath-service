@@ -22,7 +22,7 @@ describe("normalise", () => {
     const result = normalise(text);
 
     // Assert
-    expect(result).toBe(["'single' \"double\"", "  - status", "  - status", "/search&q=1", "/a?x=1"].join("\n"));
+    expect(result).toBe(["'single' \"double\"", "  - status", "  - status", "/search?q=1", "/a?x=1"].join("\n"));
   });
 
   it("should leave dates alone when there is no seed date", () => {

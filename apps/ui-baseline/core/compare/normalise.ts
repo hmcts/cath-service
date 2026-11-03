@@ -31,7 +31,8 @@ export function normalise(text: string, context: NormaliseContext = {}): string 
     .replace(/^(\s*- status)(:.*)?$/gm, "$1")
     // Hosts differ between apps and environments; paths and queries are what matter
     .replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/g, "")
-    .replace(/[?&]lng=(en|cy)\b/g, "");
+    // The language is a parameter wherever it comes in the query: ?lng=cy&x=1 is ?x=1, and ?lng=cy is nothing
+    .replace(/([?&])lng=(?:en|cy)\b(&?)/g, (_match, separator: string, next: string) => (next ? separator : ""));
   return result;
 }
 
