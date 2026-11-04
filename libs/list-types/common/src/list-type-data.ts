@@ -8,6 +8,7 @@ export interface ListTypeData {
   defaultSensitivity: string | null;
   shortenedFriendlyName?: string;
   subJurisdictionIds: number[];
+  isScheduledSubscription?: boolean;
 }
 
 export const listTypeData: ListTypeData[] = [
@@ -718,7 +719,8 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "magistrates-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Classified",
-    subJurisdictionIds: [7]
+    subJurisdictionIds: [7],
+    isScheduledSubscription: true
   },
   {
     name: "MAGISTRATES_ADULT_COURT_LIST_FUTURE",
@@ -738,7 +740,8 @@ export const listTypeData: ListTypeData[] = [
     urlPath: "magistrates-public-adult-court-list",
     isNonStrategic: false,
     defaultSensitivity: "Public",
-    subJurisdictionIds: [7]
+    subJurisdictionIds: [7],
+    isScheduledSubscription: true
   },
   {
     name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_FUTURE",

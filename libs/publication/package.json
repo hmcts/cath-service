@@ -68,9 +68,11 @@
     "@hmcts/utiac-statutory-appeal-daily-hearing-list": "workspace:*",
     "@hmcts/web-core": "workspace:*",
     "@hmcts/wpafcc-weekly-hearing-list": "workspace:*",
-    "ajv": "8.20.0"
+    "ajv": "8.20.0",
+    "luxon": "3.7.2"
   },
   "devDependencies": {
+    "@types/luxon": "3.7.5",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }
