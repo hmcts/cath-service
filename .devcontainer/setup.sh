@@ -5,9 +5,12 @@ set -e
 export NVM_DIR="/usr/local/share/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-# Use project-specified Node version (or LTS)
+# Use the .nvmrc version, and make it nvm's default so interactive terminals get it too.
+# The Node feature in devcontainer.json installs the latest 24.x at image build time, which
+# drifts from the .nvmrc patch; `nvm use` alone only applies to this script's shell.
 nvm install
-nvm use
+nvm alias default "$(cat .nvmrc)"
+nvm use default
 corepack enable
 
 # Optional: ensure Playwright browsers are installed globally
@@ -25,9 +28,9 @@ echo "✅ kubelogin ${KUBELOGIN_VERSION} installed"
 
 # Install hai (HMCTS AI CLI) and Claude Code
 # hai runs Claude Code with the HMCTS model route and credentials, and execs `claude` from
-# PATH, so claude-code goes in alongside it. Both go under the default Node version, in a
-# subshell: an interactive shell gets the default, not the .nvmrc version selected above,
-# so globals installed under that one would be off PATH. Unpinned because hai updates
+# PATH, so claude-code goes in alongside it. Both go under nvm's default Node version (the
+# .nvmrc version, aliased above), which is what interactive shells use, so the globals are on
+# PATH there. The subshell keeps a failure from tripping `set -e`. Unpinned because hai updates
 # itself when it runs. The hmcts-lib feed allows anonymous reads so no npm auth is needed,
 # and the registry is scoped to @hmcts-cft so claude-code still comes from npmjs.
 # Not fatal under `set -e` — the dev container is usable without it.

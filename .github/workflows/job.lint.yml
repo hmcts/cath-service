@@ -14,6 +14,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      # .nvmrc is the single source of the Node version. Renovate no longer edits
+      # workflow files, so a hard-coded version here would silently drift.
+      - name: Check workflows read Node version from .nvmrc
+        run: |
+          if grep -rnE '^\s*node-version:' .github/workflows; then
+            echo "::error::Use node-version-file: '.nvmrc' instead of a hard-coded node-version"
+            exit 1
+          fi
+
       - name: Enable Corepack
         run: corepack enable
 

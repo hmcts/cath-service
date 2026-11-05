@@ -38,7 +38,7 @@ cath-service/
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 24, at the version in `.nvmrc` (`nvm install` picks it up). CI and the production images use the same version.
 - Yarn 4+
 - Docker (optional, for PostgreSQL)
 - Azure CLI (required for SSO - see Azure Authentication Setup below)
