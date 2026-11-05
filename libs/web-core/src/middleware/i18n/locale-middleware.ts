@@ -45,10 +45,12 @@ export function localeMiddleware(options: LocaleMiddlewareOptions = {}) {
     }
 
     if (req.cookies) {
+      // Lax, not strict: the locale must survive cross-site returns from identity providers
+      // (B2C, SSO, IDAM), where passport regenerates the session and drops session.locale.
       res.cookie(cookieName, locale, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000
       });
     }
