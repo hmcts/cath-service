@@ -482,6 +482,7 @@ test.describe("Email Subscriptions - Case", () => {
     // Step 7: Confirm subscription
     await page.getByRole("button", { name: /confirm/i }).click();
     await expect(page).toHaveURL("/subscription-confirmed", { timeout: 10000 });
+    await page.waitForLoadState("networkidle");
 
     // Verify confirmation panel
     const panel = page.locator(".govuk-panel--confirmation");
