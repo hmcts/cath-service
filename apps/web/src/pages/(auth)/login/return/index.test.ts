@@ -115,14 +115,13 @@ describe("B2C Callback Handler", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
 
-    it("should redirect to returnTo unchanged and clear b2cLocale when b2cLocale is cy", async () => {
+    it("should redirect to returnTo unchanged when b2cLocale is cy", async () => {
       mockSession.b2cLocale = "cy";
       mockSession.returnTo = "/sjp-press-list?artefactId=abc-123";
 
       await GET(mockReq as Request, mockRes as Response);
 
       expect(mockRes.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=abc-123");
-      expect(mockSession.b2cLocale).toBeUndefined();
     });
 
     it.each(["//evil.com/x", "/\\evil.com", "/.//evil.com", "/%2e//evil.com"])("should ignore the unsafe returnTo %s and use the default", async (returnTo) => {

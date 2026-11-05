@@ -12,9 +12,10 @@ export const GET = (req: Request, res: Response) => {
   const locale = (req.query.lng as string) || res.locals.locale || "en";
   const uiLocale = locale === "cy" ? "cy-GB" : locale;
 
-  // Store provider, return URL and locale in session
+  // Store provider and locale in session. returnTo is left as set by the page that required
+  // sign-in; the callback falls back to /account-home, so no default is stored here where it
+  // could outlive an abandoned B2C attempt and override another provider's default.
   req.session.b2cProvider = "cath";
-  req.session.returnTo = req.session.returnTo || "/account-home";
   req.session.b2cLocale = locale;
 
   // Build authorization URL with policy as query param

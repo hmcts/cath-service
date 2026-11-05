@@ -85,10 +85,10 @@ describe("B2C Login Page", () => {
     expect(req.session?.b2cProvider).toBe("cath");
   });
 
-  it("should store default returnTo in session", () => {
+  it("should not store a default returnTo in session", () => {
     GET(req as Request, res as Response);
 
-    expect(req.session?.returnTo).toBe("/account-home");
+    expect(req.session?.returnTo).toBeUndefined();
   });
 
   it("should preserve existing returnTo in session", () => {

@@ -8,10 +8,10 @@ function isValidFilename(filename: string): boolean {
   return validPattern.test(filename);
 }
 
-// Only types a browser cannot execute are previewed inline. Everything else (HTML, XML that
-// may carry an XHTML namespace, unknown types) is downloaded as an opaque octet-stream so
-// publisher-supplied content cannot run script in the admin origin, even if a proxy strips
-// Content-Disposition.
+// Only types that cannot run script in the admin origin are previewed inline. PDFs may carry
+// JavaScript, but it runs inside the browser's sandboxed PDF viewer, not the page. Everything
+// else (HTML, XML that may carry an XHTML namespace, unknown types) is downloaded as an opaque
+// octet-stream, so it stays inert even if a proxy strips Content-Disposition.
 const INLINE_CONTENT_TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
   ".csv": "text/csv",
