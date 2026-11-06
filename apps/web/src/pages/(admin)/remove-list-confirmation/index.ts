@@ -3,6 +3,7 @@ import { sendThirdPartyDeletion } from "@hmcts/legacy-third-party-fulfilment";
 import { getLocationById } from "@hmcts/location";
 import { deleteArtefacts, getArtefactsByIds } from "@hmcts/publication";
 import { AuditLogAction, findAllListTypes } from "@hmcts/system-admin-pages";
+import { sendPublicationDeletionToThirdParties } from "@hmcts/third-party-subscription-fulfilment";
 import { saveSession } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
@@ -140,6 +141,14 @@ const postHandler = async (req: Request, res: Response) => {
         provenance: artefact.provenance
       }).catch((error) => {
         console.error("Third-party deletion push failed:", error);
+      });
+
+      sendPublicationDeletionToThirdParties({
+        artefactId: artefact.artefactId,
+        listTypeId: artefact.listTypeId,
+        sensitivity: artefact.sensitivity
+      }).catch((error) => {
+        console.error("Third-party OAuth deletion failed:", { artefactId: artefact.artefactId, error: error instanceof Error ? error.message : String(error) });
       });
     }
 

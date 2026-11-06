@@ -23,7 +23,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const lngParam = locale === "cy" ? "?lng=cy" : "";
   const id = req.params.id as string;
 
-  const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true } }));
+  const user = (await findThirdPartyUserById(id)) ?? (await prisma.legacyThirdPartyUser.findUnique({ where: { id }, select: { id: true, name: true } }));
   if (!user) {
     return res.redirect(`/third-party-subscribers${lngParam}`);
   }
@@ -49,11 +49,11 @@ export const getHandler = async (req: Request, res: Response) => {
   }
 
   const [destinationUrl, tokenUrl, scope, clientId, clientSecret] = await Promise.all([
-    getSecret(createKeyVaultSecretName(id, "destination-url")),
-    getSecret(createKeyVaultSecretName(id, "token-url")),
-    getSecret(createKeyVaultSecretName(id, "scope")),
-    getSecret(createKeyVaultSecretName(id, "client-id")),
-    getSecret(createKeyVaultSecretName(id, "client-secret"))
+    getSecret(createKeyVaultSecretName(user.name, id, "destination-url")),
+    getSecret(createKeyVaultSecretName(user.name, id, "token-url")),
+    getSecret(createKeyVaultSecretName(user.name, id, "scope")),
+    getSecret(createKeyVaultSecretName(user.name, id, "client-id")),
+    getSecret(createKeyVaultSecretName(user.name, id, "client-secret"))
   ]);
 
   const isExisting = !!(destinationUrl || tokenUrl || scope || clientId || clientSecret);
