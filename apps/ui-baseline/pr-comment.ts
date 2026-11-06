@@ -17,6 +17,7 @@ export function buildComment(input: CommentInput): string {
   const defects = by("defect");
   const needsHuman = by("needs-human");
   const intended = by("intended");
+  const failures = input.reviews.flatMap((review) => review.failures ?? []);
 
   const differ = [
     ...(input.pagesChecked ? [`${input.pagesDiffer.length} of ${input.pagesChecked} page${input.pagesChecked === 1 ? "" : "s"}`] : []),
@@ -36,7 +37,8 @@ export function buildComment(input: CommentInput): string {
       "|---|---|---|---|",
       ...rows.slice(0, MAX_ROWS).map((item) => {
         const review = item.review as NonNullable<typeof item.review>;
-        const why = review.evidence ? `${cell(review.reason)}<br>${quoteEvidence(review.evidence)}` : cell(review.reason);
+        const reason = `${review.investigated?.outcome === "answered" ? "🔎 " : ""}${cell(review.reason)}`;
+        const why = review.evidence ? `${reason}<br>${quoteEvidence(review.evidence)}` : reason;
         return `| ${ICON[review.verdict]} | **${cell(item.category)} · ${cell(item.change.replace(/-/g, " "))}**<br>${cell(truncate(item.detail, 220))} | ${cell(pagesLabel(item.pages))} | ${why} |`;
       }),
       ...(rows.length > MAX_ROWS ? [`| | _…and ${rows.length - MAX_ROWS} more in the full report_ | | |`] : [])
@@ -49,10 +51,19 @@ export function buildComment(input: CommentInput): string {
     `## Parity with pip${input.ticket ? `: ticket #${input.ticket}` : ""}`,
     `**${headline}**`,
     "",
+    failures.length
+      ? `> [!WARNING]\n> The reviewer failed on part of the review, so those differences are listed as needing a human:\n${failures
+          .slice(0, 5)
+          .map((failure) => `> - ${cell(failure)}`)
+          .join("\n")}${failures.length > 5 ? `\n> - …and ${failures.length - 5} more` : ""}\n`
+      : "",
     `Checked ${checked.join(" and ") || "0 pages"} in English and Welsh against the pip baseline, with CaTH seeded from the same fixtures.`,
     "",
     reviewed && defects.length ? `### Defects\n${table(defects)}\n` : "",
     reviewed && needsHuman.length ? `### Needs a human\n${table(needsHuman)}\n` : "",
+    items.some((item) => item.review?.investigated?.outcome === "answered")
+      ? "🔎 marks a verdict reached by reading both apps' source and captures, rather than from the difference alone.\n"
+      : "",
     reviewed && intended.length
       ? `<details><summary>${intended.length} intended difference${intended.length === 1 ? "" : "s"}</summary>\n\n${table(intended)}\n\n</details>\n`
       : "",

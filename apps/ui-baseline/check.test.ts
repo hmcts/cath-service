@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   launchChromium: vi.fn(),
   openBlobContainer: vi.fn(),
   reviewFindings: vi.fn(),
+  investigateFindings: vi.fn(),
   runJourneys: vi.fn(),
   captureDownloads: vi.fn(),
   loadDownloads: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock("./core/index.js", () => ({
   launchChromium: mocks.launchChromium,
   openBlobContainer: mocks.openBlobContainer,
   reviewFindings: mocks.reviewFindings,
+  investigateFindings: mocks.investigateFindings,
   runJourneys: mocks.runJourneys
 }));
 vi.mock("./downloads.js", () => ({ captureDownloads: mocks.captureDownloads, loadDownloads: mocks.loadDownloads, seedResolver: mocks.seedResolver }));
@@ -494,6 +496,61 @@ describe("check", () => {
       expect(output).toContain("pages: review skipped (no reviewer found). Run with --reviewer, or --no-review.");
       expect(output).toContain("1 defect, 0 need a human · 2 of 4 pages differ from pip");
       expect(output).toContain("    civil-daily (English, English on mobile)");
+      expect(mocks.investigateFindings).not.toHaveBeenCalled();
+    });
+
+    it("should report reviewer failures and look again at what needs a human when --investigate is given", async () => {
+      // Arrange
+      const finding = { id: "p1", category: "content", change: "text-changed", detail: "Heading", pages: ["civil-daily en"] };
+      mocks.reviewFindings.mockResolvedValue({
+        reviewedAt: "",
+        failures: ["items p1–p1: not logged in"],
+        totals: { items: 1, intended: 0, defect: 0, needsHuman: 1 },
+        items: [{ ...finding, review: { id: "p1", verdict: "needs-human", reason: "The reviewer failed on this batch.", evidence: "" } }]
+      });
+      mocks.investigateFindings.mockResolvedValue({
+        investigated: 1,
+        resolved: 1,
+        review: {
+          reviewedAt: "",
+          failures: ["items p1–p1: not logged in"],
+          totals: { items: 1, intended: 0, defect: 1, needsHuman: 0 },
+          items: [
+            {
+              ...finding,
+              review: { id: "p1", verdict: "defect", reason: "Heading text lost", evidence: "views/x.njk:3", investigated: { outcome: "answered", turns: 4 } }
+            }
+          ]
+        }
+      });
+
+      // Act
+      const { code } = await runCheck(["--ticket", "42", "--investigate", "5"]);
+
+      // Assert
+      expect(mocks.investigateFindings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          review: path.join(out, "review/lists/review.json"),
+          out: path.join(out, "review/lists/review.json"),
+          limit: 5,
+          sources: expect.arrayContaining([
+            { label: "pip captures (lists)", path: path.join(baseline, "lists") },
+            { label: "CaTH captures (lists)", path: path.join(out, "cath/lists") }
+          ])
+        })
+      );
+      const output = logs.join("\n");
+      expect(output).toContain("    reviewer failed on items p1–p1: not logged in");
+      expect(output).toContain("lists: looked again at 1, decided 1; now 1 defects, 0 need a human, 0 intended");
+      expect(code).toBe(3);
+    });
+
+    it("should refuse an --investigate that is not a small positive number", async () => {
+      // Act
+      const { error } = await runCheck(["--ticket", "42", "--investigate", "0"]);
+
+      // Assert
+      expect(error?.message).toContain("--investigate");
     });
 
     it("should write the report for just the pages checked", async () => {

@@ -84,7 +84,11 @@ describe("reviewFindings", () => {
     expect(result.items[1].review).toEqual({ id: "f2", verdict: "defect", reason: "heading lost", evidence: "" });
     const [program, args, spawnOptions] = vi.mocked(spawnSync).mock.calls[0] as unknown as [string, string[], { input: string }];
     expect(program).toBe("claude");
-    expect(args).toEqual(["-p", "--output-format", "text", "--max-turns", "1", "--allowedTools", ""]);
+    expect(args.slice(0, 3)).toEqual(["-p", "--output-format", "json"]);
+    expect(JSON.parse(args[args.indexOf("--json-schema") + 1]).required).toEqual(["verdicts"]);
+    expect(args[args.indexOf("--tools") + 1]).toBe("");
+    expect(args).not.toContain("--allowedTools");
+    expect(result.failures).toEqual([]);
     expect(spawnOptions.input).toContain("Page titles must end with - GOV.UK");
     expect(spawnOptions.input).toContain("| pip shows a stray Welcome heading |");
     expect(spawnOptions.input).toContain("between pip (the original service) and CaTH (its replacement)");
@@ -103,8 +107,9 @@ describe("reviewFindings", () => {
 
     // Assert
     expect(spawnSync).toHaveBeenCalledWith("my-llm", ["--json"], expect.objectContaining({ encoding: "utf-8" }));
-    expect(result.items.every((item) => item.review === null)).toBe(true);
-    expect(result.totals).toEqual({ items: 3, intended: 0, defect: 0, needsHuman: 0 });
+    expect(result.items.map((item) => item.review?.verdict)).toEqual(["needs-human", "needs-human", "needs-human"]);
+    expect(result.items[0].review?.reason).toBe("The reviewer gave no usable verdict for this item.");
+    expect(result.totals).toEqual({ items: 3, intended: 0, defect: 0, needsHuman: 3 });
   });
 
   it("should read the requirements from a GitHub issue when they are given as gh:owner/repo#N", async () => {
@@ -155,28 +160,80 @@ describe("reviewFindings", () => {
     expect(second).toContain("(none recorded)");
   });
 
-  it("should fail with the reviewer's error when the reviewer exits non-zero", async () => {
+  it("should send the whole batch to a human and record why when the reviewer exits non-zero", async () => {
     // Arrange
     const { compare, out } = await setUp();
     reviewerSays("", 2, "not logged in");
 
     // Act
-    const review = reviewFindings({ compare, out });
+    const result = await reviewFindings({ compare, out });
 
     // Assert
-    await expect(review).rejects.toThrow('reviewer "claude" failed (2): not logged in');
+    expect(result.totals).toEqual({ items: 3, intended: 0, defect: 0, needsHuman: 3 });
+    expect(result.failures).toEqual(['items p1–f3: reviewer "claude" failed (2): not logged in']);
+    expect(result.items[2].review).toEqual({
+      id: "f3",
+      verdict: "needs-human",
+      reason: 'The reviewer failed on this batch (reviewer "claude" failed (2): not logged in).',
+      evidence: ""
+    });
   });
 
-  it("should fail when the reviewer's output has no verdicts array", async () => {
+  it("should not take a Claude Code result that reports an error as an answer, even when its subtype is success", async () => {
+    // Arrange
+    const { compare, out } = await setUp();
+    reviewerSays(JSON.stringify({ type: "result", subtype: "success", is_error: true, num_turns: 1, result: "API Error: 401 No Bearer token was provided." }));
+
+    // Act
+    const result = await reviewFindings({ compare, out });
+
+    // Assert
+    expect(result.totals.needsHuman).toBe(3);
+    expect(result.failures[0]).toBe("items p1–f3: reviewer stopped (success, is_error): API Error: 401 No Bearer token was provided.");
+  });
+
+  it("should take the verdicts from a Claude Code result's structured output, and send any it left out to a human", async () => {
+    // Arrange
+    const { compare, out } = await setUp();
+    const verdicts = [
+      { id: "p1", verdict: "defect", reason: "not asked for", evidence: "" },
+      { id: "f3", verdict: "defect", reason: "new axe failure", evidence: "" }
+    ];
+    reviewerSays(JSON.stringify({ type: "result", subtype: "success", is_error: false, num_turns: 2, result: "", structured_output: { verdicts } }));
+
+    // Act
+    const result = await reviewFindings({ compare, out });
+
+    // Assert
+    expect(result.items.map((item) => `${item.id} ${item.review?.verdict}`)).toEqual(["p1 defect", "f2 needs-human", "f3 defect"]);
+    expect(result.totals).toEqual({ items: 3, intended: 0, defect: 2, needsHuman: 1 });
+    expect(result.failures).toEqual([]);
+  });
+
+  it("should send the batch to a human when the reviewer's output has no verdicts array", async () => {
     // Arrange
     const { compare, out } = await setUp();
     reviewerSays('{"answer":"all fine"}');
 
     // Act
-    const review = reviewFindings({ compare, out });
+    const result = await reviewFindings({ compare, out });
 
     // Assert
-    await expect(review).rejects.toThrow("reviewer output has no verdicts array");
+    expect(result.totals.needsHuman).toBe(3);
+    expect(result.failures).toEqual(["items p1–f3: reviewer output has no verdicts array"]);
+  });
+
+  it("should send the batch to a human when the reviewer reaches its turn limit", async () => {
+    // Arrange
+    const { compare, out } = await setUp();
+    reviewerSays(JSON.stringify({ type: "result", subtype: "error_max_turns", is_error: true, num_turns: 3 }));
+
+    // Act
+    const result = await reviewFindings({ compare, out });
+
+    // Assert
+    expect(result.totals.needsHuman).toBe(3);
+    expect(result.failures).toEqual(["items p1–f3: hit the turn limit after 3 turns"]);
   });
 });
 
@@ -188,7 +245,7 @@ describe("parseVerdicts", () => {
 
   it("should drop unknown ids and verdicts, and distrust an intended verdict with no evidence", () => {
     // Arrange
-    const output = JSON.stringify({
+    const answer = {
       verdicts: [
         { id: "f1", verdict: "intended", reason: "requested", evidence: "   " },
         { id: "f2", verdict: "approved", reason: "made up" },
@@ -196,10 +253,10 @@ describe("parseVerdicts", () => {
         { verdict: "defect" },
         { id: "f2", verdict: "defect" }
       ]
-    });
+    };
 
     // Act
-    const verdicts = parseVerdicts(output, items);
+    const verdicts = parseVerdicts(answer, items);
 
     // Assert
     expect(verdicts).toEqual([
@@ -208,12 +265,12 @@ describe("parseVerdicts", () => {
     ]);
   });
 
-  it("should throw when the output is not JSON", () => {
+  it("should throw when the answer has no verdicts array", () => {
     // Act
-    const parse = () => parseVerdicts("I could not decide", items);
+    const parse = () => parseVerdicts(null, items);
 
     // Assert
-    expect(parse).toThrow();
+    expect(parse).toThrow("reviewer output has no verdicts array");
   });
 });
 

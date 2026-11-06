@@ -1,6 +1,7 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
@@ -15,6 +16,7 @@ import {
   compareJourneys,
   compareRuns,
   type FileCompareSummary,
+  investigateFindings,
   type JourneyCompareSummary,
   type JourneySuite,
   launchChromium,
@@ -43,6 +45,8 @@ const REPO_DIR = path.join(PARITY_DIR, "../..");
 // The repo's own tsx, run by its path rather than through npx, which can install packages on demand
 const TSX = path.join(REPO_DIR, "node_modules/.bin/tsx");
 const DEFAULT_BASELINE = process.env.PARITY_BASELINE ?? path.join(PARITY_DIR, "output/baseline");
+// Where pip/setup.sh clones pip's repos at the pinned commits, for --investigate to read
+const PIP_SOURCE_DIR = process.env.UI_BASELINE_PIP_DIR ?? path.join(homedir(), ".cache/ui-baseline/pip");
 const LOCALES = ["en", "cy"];
 const REPORT_PORT = 9500;
 const SIDE_BY_SIDE_WIDTH = 1600;
@@ -88,6 +92,8 @@ const { values: given } = parseArgs({
     // Skip comparing the PDF and Excel files each list generates
     "no-files": { type: "boolean", default: false },
     reviewer: { type: "string" },
+    // Look again, with read-only tools, at up to this many of each area's needs-human items
+    investigate: { type: "string" },
     serve: { type: "boolean", default: false },
     // Post (or update) the check's comment on this PR, using the dev's gh sign-in
     "post-pr": { type: "string" },
@@ -103,6 +109,7 @@ const args = {
   route: given.route?.map((value) => matching(value, ROUTE, "--route")),
   journey: given.journey?.map((value) => matching(value, JOURNEY, "--journey")),
   locale: optional(given.locale, (value) => matching(value, LOCALE, "--locale")),
+  investigate: optional(given.investigate, (value) => matching(value, /^[1-9]\d{0,2}$/, "--investigate")),
   target: optional(given.target, (value) => httpUrl(value, "--target")),
   baseline: optional(given.baseline, (value) => confinedPath(value, "--baseline")),
   out: optional(given.out, (value) => confinedPath(value, "--out")),
@@ -399,6 +406,8 @@ if (!args["no-review"] && requirements) {
       });
       const t = reviews[area].totals;
       console.log(`  ${area}: ${t.defect} defects, ${t.needsHuman} need a human, ${t.intended} intended`);
+      for (const failure of reviews[area].failures ?? []) console.log(`    reviewer failed on ${failure}`);
+      if (args.investigate && t.needsHuman) reviews[area] = await investigateArea(area);
     } catch (error) {
       console.log(`  ${area}: review skipped (${(error as Error).message.split("\n")[0]}). Run with --reviewer, or --no-review.`);
     }
@@ -807,6 +816,31 @@ async function capturedIds(dir: string): Promise<Set<string>> {
       .filter(Boolean)
       .map((line) => (JSON.parse(line) as { id: string }).id)
   );
+}
+
+// The needs-human items in one area's review, looked at again by a reviewer that can read pip's
+// source, CaTH's source and both apps' captures of the area
+async function investigateArea(area: string): Promise<ReviewResult> {
+  const reviewFile = path.join(out, "review", area, "review.json");
+  const sources = [
+    ...(existsSync(PIP_SOURCE_DIR) ? [{ label: "pip source, at the commits the baseline was recorded from", path: PIP_SOURCE_DIR }] : []),
+    { label: "CaTH source", path: REPO_DIR },
+    { label: `pip captures (${area})`, path: path.join(baseline, area) },
+    { label: `CaTH captures (${area})`, path: captured[area] }
+  ];
+  const { review, investigated, resolved } = await investigateFindings({
+    review: reviewFile,
+    out: reviewFile,
+    sources,
+    limit: Number(args.investigate),
+    requirements: path.join(out, "requirements.md"),
+    knownDefects: path.join(PARITY_DIR, "pip/KNOWN-DEFECTS.md"),
+    sourceName: "pip",
+    targetName: "CaTH"
+  });
+  const t = review.totals;
+  console.log(`  ${area}: looked again at ${investigated}, decided ${resolved}; now ${t.defect} defects, ${t.needsHuman} need a human, ${t.intended} intended`);
+  return review;
 }
 
 async function finish(): Promise<void> {

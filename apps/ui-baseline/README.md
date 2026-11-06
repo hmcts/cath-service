@@ -98,7 +98,8 @@ The check:
 3. captures those CaTH screens in English and Welsh
 4. compares them with the baseline
 5. has a reviewer judge each difference against the ticket: **intended** (the ticket asks for it,
-   quoted), **defect**, or **needs a human**
+   quoted), **defect**, or **needs a human**. A difference the reviewer gives no usable verdict for,
+   or one in a batch the reviewer failed on, needs a human; the PR comment says when that happened
 6. writes the evidence to `output/checks/ticket-<n>/evidence/`
 
 | Evidence file | What it is |
@@ -111,6 +112,24 @@ GitHub only takes attachments through its web editor, so paste `pr-comment.md` i
 comment (or use `--post-pr`), then drag the other files into it. Re-running updates the same
 comment. The comment names the commit it checked and flags uncommitted changes, so reviewers can
 tell when the evidence is out of date.
+
+### Investigating what needs a human
+
+The review judges each difference from the difference alone, so plenty come back as needing a
+human. `--investigate N` looks again at up to N of them in each area, one at a time, with a
+reviewer that can read (and only read) pip's source, CaTH's source and both apps' captures of the
+area:
+
+```bash
+yarn ui-baseline:check --ticket 591 --investigate 10
+```
+
+The investigator decides what to read next from what it has found, and stops when it can give a
+verdict. Its evidence names the files it relied on, and the PR comment marks its verdicts with 🔎.
+An item it cannot decide, or that takes more than 15 turns, stays with a human. pip's source is
+read from `$UI_BASELINE_PIP_DIR` (default `~/.cache/ui-baseline/pip`, where `record-pip` clones
+it); without it, the investigator reads CaTH and the captures only. Each item is a Claude Code
+session of its own, so it is slower and costs more than the review: keep N small.
 
 Expected differences come only from the ticket. If the reviewer marks something a defect that the
 team has agreed to change, update the ticket and re-run; there is no allow-list.
@@ -142,8 +161,9 @@ and the report shows CaTH's capture beneath each of pip's steps.
 
 Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
 `--env local|test`, `--no-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
-`claude -p` with no tools), `--serve` to browse the report on <http://localhost:9500>. It exits 1
-when there are defects.
+`claude -p` with no tools and a JSON schema for its answer; any command that reads the prompt on stdin
+and prints JSON will do), `--investigate N`, `--serve` to browse the report on <http://localhost:9500>.
+It exits 3 when there are defects (`exit-codes.ts`).
 
 ### Checking the test environment
 
