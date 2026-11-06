@@ -16,10 +16,14 @@ export interface NormaliseContext {
   seededAt?: string | null;
   // Known IDs to replace with stable names, e.g. { "<artefact:civil-and-family>": "d1c4…" }
   knownIds?: Record<string, string>;
+  // What a recording in a shared environment put before the names and emails it seeded, so they
+  // were its own and could be cleaned up (pip/run.ts): "uib3f9a2c Oxford Combined Court Centre" is
+  // compared as "Oxford Combined Court Centre", and "uib3f9a2c.parity@example.com" as "parity@example.com"
+  runToken?: string | null;
 }
 
 export function normalise(text: string, context: NormaliseContext = {}): string {
-  let result = text;
+  let result = context.runToken ? text.replace(new RegExp(`\\b${context.runToken}[ .]`, "gi"), "") : text;
   for (const [token, id] of Object.entries(context.knownIds ?? {})) if (id) result = result.split(id).join(token);
   result = result.replace(UUID, "<ID>");
   if (context.seededAt) result = maskRunDates(result, new Date(context.seededAt));

@@ -60,6 +60,7 @@ const SEED = {
   ingestion: "api",
   publications: { "civil-and-family-daily-cause-list": { artefactId: "a1", locationId: 7 } },
   rejected: {},
+  users: { "verified-media": "pip-user-1" },
   records: {
     "legacy-third-party": { userId: "legacy-1" },
     "manage-user-audit": { id: "audit-1", timestamp: "2026-09-30T14:05:06.123Z" },
@@ -149,9 +150,7 @@ describe("build-page-targets script", () => {
       source: { expectedStatus: 404, viewAs: null }
     });
     expect(targets.filter((target: { viewport?: string }) => target.viewport === "mobile")).toHaveLength(8);
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:16969/account/provenance/PI_AAD/pid-verified-media", {
-      headers: { "x-requester-id": "00000000-0000-4000-8000-000000000001" }
-    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("should report a page as pending when its data was not seeded or has no value rule", async () => {
@@ -180,12 +179,15 @@ describe("build-page-targets script", () => {
     expect(pending).toContainEqual({ path: "/delete-subscription", reason: 'records.json "location-subscription" was not seeded' });
   });
 
-  it("should stop when pip has no user for the verified fixture user", async () => {
+  it("should report a page that names a user as pending when the seed has no pip id for it", async () => {
     // Arrange
-    fetchMock.mockResolvedValue(new Response("", { status: 404 }));
+    await writeSeed({ ...SEED, users: undefined });
 
-    // Act and assert
-    await expect(import("./build-page-targets.js")).rejects.toThrow("pip has no user verified-media; run apps/ui-baseline/pip/seed.ts first");
+    // Act
+    const { pending } = await run();
+
+    // Assert
+    expect(pending).toContainEqual({ path: "/user-management", reason: "the seed has no pip id for verified-media" });
   });
 
   it("should stop when a fixture user it needs is missing", async () => {

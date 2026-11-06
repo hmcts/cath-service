@@ -6,7 +6,7 @@ import { filesStorage, loadEnvironment } from "../environments.js";
 import { loadManifest, type SeedResult } from "../fixtures/manifest.js";
 import { inRecordingScope, loadRecordingScope } from "../scope.js";
 
-// Records the PDF and Excel files the local pip generated for each seeded publication into the
+// Records the PDF and Excel files pip generated for each seeded publication into the
 // baseline, so a check can compare CaTH's files with them. pip generates them in the background
 // after accepting a publication (@Async in data-management), so each publication is waited for.
 // Flat files are the uploaded document itself, with nothing generated.
@@ -20,13 +20,14 @@ if (!out) throw new Error("usage: record-files.ts <out dir>");
 const seed = JSON.parse(await readFile(path.join(PARITY_DIR, "output/seed/pip.json"), "utf-8")) as SeedResult;
 const formats = new Map((await loadManifest()).publications.map((publication) => [publication.id, publication.format]));
 const scope = await loadRecordingScope();
-const environment = await loadEnvironment("local");
+// The pip UI_BASELINE_PIP_ENV names (pip/session.ts), whose storage holds what it generated
+const environment = await loadEnvironment(process.env.UI_BASELINE_PIP_ENV ?? "local");
 const entries = await collectFiles({
   container: openBlobContainer(filesStorage("pip", environment.pip)),
   out,
   waitSeconds: WAIT_SECONDS,
   publications: Object.entries(seed.publications)
     .filter(([id]) => formats.get(id) !== "flat-file" && inRecordingScope(scope, "lists", id))
-    .map(([id, publication]) => ({ id, artefactId: publication.artefactId, seededAt: seed.seededAt }))
+    .map(([id, publication]) => ({ id, artefactId: publication.artefactId, seededAt: seed.seededAt, runToken: seed.runToken }))
 });
 console.log(`recorded ${entries.length} files for ${new Set(entries.map((entry) => entry.id)).size} publications → ${out}`);

@@ -81,7 +81,7 @@ const { values: given } = parseArgs({
     route: { type: "string", multiple: true },
     // pip journeys to run in CaTH and compare step by step (cath/journeys/ has the ported ones)
     journey: { type: "string", multiple: true },
-    // The environment CaTH runs in (environments.json): local, or test (CaTH perftest)
+    // The environment CaTH runs in (environments.json): local, or aat (CaTH AAT)
     env: { type: "string" },
     target: { type: "string" },
     baseline: { type: "string" },
@@ -703,9 +703,10 @@ async function compareDownloads(): Promise<FileCompareSummary | null> {
 
 // pip id -> CaTH id for everything both apps were seeded with: publications, account records and
 // users, each paired through the fixture it came from. List type names map to CaTH's numeric ids,
-// which only CaTH routes that take one in the path use.
+// which only CaTH routes that take one in the path use. A baseline recorded in a shared environment
+// put the fixtures' locations at ids of its own (pip/run.ts), where CaTH has them at the fixtures'.
 function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: SignInResult | null): CathIds {
-  const ids = new Map<string, string>();
+  const ids = new Map<string, string>(Object.entries(pip?.locations ?? {}).map(([fixture, pipLocation]) => [String(pipLocation), fixture]));
   for (const [fixture, publication] of Object.entries(pip?.publications ?? {})) {
     const cathArtefact = cath?.publications[fixture]?.artefactId;
     if (cathArtefact) ids.set(publication.artefactId, cathArtefact);

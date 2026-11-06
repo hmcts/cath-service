@@ -26,24 +26,24 @@ describe("environments", () => {
   describe("loadEnvironment", () => {
     it("should load the named environment from environments.json", async () => {
       // Act
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Assert
-      expect(environment.name).toBe("test");
-      expect(environment.cath.baseUrl).toBe("https://cath.perftest.platform.hmcts.net");
+      expect(environment.name).toBe("aat");
+      expect(environment.cath.baseUrl).toBe("https://cath.aat.platform.hmcts.net");
       expect(environment.pip.keyVault).toBe("pip-ss-kv-test");
       expect(typeof environment.secret).toBe("function");
     });
 
     it("should use UI_BASELINE_ENV when no name is given", async () => {
       // Arrange
-      vi.stubEnv("UI_BASELINE_ENV", "test");
+      vi.stubEnv("UI_BASELINE_ENV", "aat");
 
       // Act
       const environment = await loadEnvironment();
 
       // Assert
-      expect(environment.name).toBe("test");
+      expect(environment.name).toBe("aat");
     });
 
     it("should default to local when no name or UI_BASELINE_ENV is given", async () => {
@@ -56,7 +56,7 @@ describe("environments", () => {
 
     it("should list the known environments, without $-keys, when the name is unknown", async () => {
       // Act and assert
-      await expect(loadEnvironment("staging")).rejects.toThrow('no environment "staging" in environments.json (one of: local, test)');
+      await expect(loadEnvironment("staging")).rejects.toThrow('no environment "staging" in environments.json (one of: local, aat)');
     });
 
     it("should refuse a $-key as an environment name", async () => {
@@ -125,7 +125,7 @@ describe("environments", () => {
     it("should take the secret from an environment variable in upper snake case before the vault", async () => {
       // Arrange
       vi.stubEnv("SOME_SECRET", "from-env");
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Act
       const value = await environment.secret(environment.cath, "some-secret");
@@ -149,7 +149,7 @@ describe("environments", () => {
     it("should read the secret from the app's vault, reusing one client per vault", async () => {
       // Arrange
       getSecret.mockResolvedValue({ value: "from-vault" });
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Act
       const first = await environment.secret(environment.cath, "some-secret");
@@ -159,14 +159,14 @@ describe("environments", () => {
       expect(first).toBe("from-vault");
       expect(second).toBe("from-vault");
       expect(secretClient).toHaveBeenCalledTimes(1);
-      expect(secretClient).toHaveBeenCalledWith("https://cath-perftest.vault.azure.net");
+      expect(secretClient).toHaveBeenCalledWith("https://cath-aat.vault.azure.net");
       expect(getSecret).toHaveBeenCalledWith("other-secret");
     });
 
     it("should give null when the vault's secret has no value", async () => {
       // Arrange
       getSecret.mockResolvedValue({});
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Act
       const value = await environment.secret(environment.pip, "some-secret");
@@ -178,7 +178,7 @@ describe("environments", () => {
     it("should give null when the vault does not have the secret", async () => {
       // Arrange
       getSecret.mockRejectedValue(Object.assign(new Error("not found"), { statusCode: 404 }));
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Act
       const value = await environment.secret(environment.cath, "some-secret");
@@ -190,7 +190,7 @@ describe("environments", () => {
     it("should rethrow any other vault error", async () => {
       // Arrange
       getSecret.mockRejectedValue(Object.assign(new Error("forbidden"), { statusCode: 403 }));
-      const environment = await loadEnvironment("test");
+      const environment = await loadEnvironment("aat");
 
       // Act and assert
       await expect(environment.secret(environment.cath, "some-secret")).rejects.toThrow("forbidden");

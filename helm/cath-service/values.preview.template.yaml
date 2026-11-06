@@ -13,7 +13,7 @@ api:
   enabled: true
 crons:
   enabled: true
-# The hosted parity check only runs in perftest
+# The hosted parity check only runs in aat
 uiBaseline:
   enabled: false
 

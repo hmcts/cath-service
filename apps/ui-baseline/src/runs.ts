@@ -147,12 +147,11 @@ export function createRunner(options: RunnerOptions): Runner {
   };
 
   return {
-    start(request, requestedBy) {
+    start(request) {
       const record: RunRecord = {
         ...validated(request),
         id: `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`,
         status: "queued",
-        requestedBy,
         createdAt: new Date().toISOString()
       };
       runs.set(record.id, record);
@@ -293,7 +292,6 @@ export type RunRequest =
 export type RunRecord = RunRequest & {
   id: string;
   status: "queued" | "running" | "finished" | "failed";
-  requestedBy: string;
   createdAt: string;
   startedAt?: string;
   finishedAt?: string;
@@ -310,7 +308,7 @@ export interface RunSummary {
 }
 
 export interface Runner {
-  start(request: RunRequest, requestedBy: string): RunRecord;
+  start(request: RunRequest): RunRecord;
   list(): RunRecord[];
   get(id: string): RunRecord | undefined;
   // The run's directory on this pod, restored from storage if need be; null for an unknown run or

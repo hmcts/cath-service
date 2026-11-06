@@ -1,23 +1,12 @@
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import express from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
-import type { Auth } from "./auth.js";
 import { createRunner } from "./runs.js";
 
-const signedIn: Auth = {
-  router: express.Router(),
-  requireUser: (_req, res, next) => {
-    res.locals.user = { name: "Tester", email: "tester@example.com" };
-    next();
-  }
-};
-const signedOut: Auth = { router: express.Router(), requireUser: (_req, res) => res.redirect("/sign-in") };
-
-async function appWith(auth = signedIn) {
+async function appWith() {
   const dataDir = await mkdtemp(path.join(tmpdir(), "app-"));
   const runner = createRunner({
     dataDir,
@@ -66,14 +55,14 @@ async function appWith(auth = signedIn) {
       return 0;
     }
   });
-  const app = createApp({ environment: "test", auth, runner, baselineStatus: async () => ({ ready: true, description: "recorded today" }) });
+  const app = createApp({ environment: "aat", runner, baselineStatus: async () => ({ ready: true, description: "recorded today" }) });
   return { app, runner };
 }
 
 describe("createApp", () => {
-  it("should answer health checks without signing in", async () => {
+  it("should answer health checks", async () => {
     // Arrange
-    const { app } = await appWith(signedOut);
+    const { app } = await appWith();
 
     // Act
     const response = await request(app).get("/health");
@@ -82,16 +71,16 @@ describe("createApp", () => {
     expect(response.status).toBe(200);
   });
 
-  it("should send people who are not signed in to sign in", async () => {
+  it("should show the start page without anyone signing in", async () => {
     // Arrange
-    const { app } = await appWith(signedOut);
+    const { app } = await appWith();
 
     // Act
     const response = await request(app).get("/");
 
     // Assert
-    expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/sign-in");
+    expect(response.status).toBe(200);
+    expect(response.text).not.toContain("Sign out");
   });
 
   it("should show the start page with the baseline in use", async () => {
@@ -127,8 +116,7 @@ describe("createApp", () => {
     expect(run).toMatchObject({
       kind: "check",
       scope: "list-types",
-      listTypes: ["CIVIL_DAILY_CAUSE_LIST", "SJP_PRESS_LIST"],
-      requestedBy: "tester@example.com"
+      listTypes: ["CIVIL_DAILY_CAUSE_LIST", "SJP_PRESS_LIST"]
     });
     expect(page.text).toContain("List types: CIVIL_DAILY_CAUSE_LIST, SJP_PRESS_LIST");
     expect(page.text).toContain("1 of 1 stages done");
@@ -207,7 +195,7 @@ describe("createApp", () => {
 
     // Assert
     expect(page.text).toContain('class="govuk-header"');
-    expect(page.text).toContain("Court and tribunal hearings: UI baseline (test)");
+    expect(page.text).toContain("Court and tribunal hearings: UI baseline (aat)");
     expect(page.text).toMatch(
       /<a class="govuk-service-navigation__link" href="\/" aria-current="page">\s*<strong class="govuk-service-navigation__active-fallback">Home<\/strong>/
     );

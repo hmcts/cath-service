@@ -51,7 +51,15 @@ export async function captureDownloads(options: CaptureDownloadsOptions): Promis
         const file = `${spec.id}/${spec.kind}.${EXTENSIONS[spec.kind]}`;
         await mkdir(path.join(options.out, spec.id), { recursive: true });
         await writeFile(path.join(options.out, file), data);
-        entries.push({ id: spec.id, kind: spec.kind, file, blob: new URL(url.href).pathname, bytes: data.length, seededAt: options.seededAt ?? null });
+        entries.push({
+          id: spec.id,
+          kind: spec.kind,
+          file,
+          blob: new URL(url.href).pathname,
+          bytes: data.length,
+          seededAt: options.seededAt ?? null,
+          ...(options.runToken ? { runToken: options.runToken } : {})
+        });
       } catch (error) {
         notServed.push(`${spec.id}: ${(error as Error).message.split("\n")[0]}`);
       } finally {
@@ -126,4 +134,5 @@ interface CaptureDownloadsOptions {
   session: (userId: string) => Promise<DownloadSession | null>;
   out: string;
   seededAt?: string | null;
+  runToken?: string | null;
 }

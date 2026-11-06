@@ -17,15 +17,15 @@ results. Screenshots are evidence for people, not something the comparison diffs
 
 The baseline is not committed: screenshots and videos are too big for git. It is recorded from
 pinned pip commits and the committed fixtures, so any two recordings match, and the latest
-recording is stored in the test environment (`cathsaperftest`, container `ui-baseline`). Fetch it
-rather than recording your own:
+recording is stored in aat (`cathsaaat`, container `ui-baseline`). Fetch it rather than recording
+your own:
 
 ```bash
-yarn ui-baseline:baseline pull --env test   # the stored baseline, into output/baseline (needs az login)
+yarn ui-baseline:baseline pull --env aat   # the stored baseline, into output/baseline (needs az login)
 ```
 
 The "UI baseline - record pip" workflow (`workflow.ui-baseline-record.yml`, run by hand) records it
-on a GitHub runner and stores it in the test environment. Re-run it when the pinned pip commits or
+on a GitHub runner and stores it in aat. Re-run it when the pinned pip commits or
 the fixtures change. To record one yourself:
 
 ```bash
@@ -35,7 +35,7 @@ yarn ui-baseline:baseline push     # optional: store it as the latest, in local 
 
 `push` and `pull` default to `--env local`: local Azurite's `ui-baseline` container, through
 `AZURE_STORAGE_CONNECTION_STRING` in the root `.env`, which is where the locally run hosted check
-reads it. Only the record workflow stores to the test environment (`--env test`).
+reads it. Only the record workflow stores to aat (`--env aat`).
 
 This needs Docker, Node and corepack, and nothing else from pip. pip is memory-hungry (its two
 backends alone use about 2 GB), so stop CaTH while recording; the recording fails with an error,
@@ -79,6 +79,49 @@ yarn ui-baseline:report    # builds the report from output/baseline and serves i
 ```
 
 It takes a baseline directory and a port as arguments, or reads `$PARITY_BASELINE`.
+
+### Recording pip test instead
+
+To record pip as it is deployed, rather than at the pinned commits:
+
+```bash
+yarn ui-baseline:record-pip --env aat                      # into output/baseline-aat
+yarn ui-baseline:check --baseline apps/ui-baseline/output/baseline-aat
+```
+
+`--env aat` is CaTH AAT paired with pip test (`environments.json`). Nothing is built or started. The
+recording:
+
+1. signs in to pip test through CFT IDAM as the workspace's own AAT IDAM test account
+   (`pip/sign-in.ts`; see [The IDAM test account](#the-idam-test-account)). IDAM only makes verified
+   users, so only `VERIFIED/CFT_IDAM` pages are captured signed in. Every other role and provenance
+   (the SSO admins, B2C and Crime IDAM media users) is reported, and its pages are not captured.
+2. seeds the fixtures as a run of its own (`pip/seed.ts`, `pip/run.ts`), beside everyone else's data.
+   Everything it makes carries the run's token: its locations are named `uib3f9a2c Oxford Combined
+   Court Centre` and placed at ids of its own, and its applicants, third parties, audit entries and
+   the system admin it makes requests as have emails or names that start with the token. Records that
+   belong to a user, such as a subscription, belong to the test account the pages are captured as.
+3. captures lists, pages, files and downloads as a local recording does. Journeys are not run: they
+   change data that cannot all be kept to the run's own.
+4. deletes everything with the run's token through pip's testing-support endpoints
+   (`pip/cleanup.ts`), however the recording ends. A run whose cleanup fails is kept in
+   `output/seed/pip-runs-aat.json` and retried by the next cleanup, or by
+   `yarn ui-baseline:clean-pip --env aat`.
+
+The comparison drops the run's token, so `uib3f9a2c Oxford Combined Court Centre` matches CaTH's
+`Oxford Combined Court Centre`, and the check maps the run's location ids back to the fixtures', as it
+maps pip's other ids. `run.json` records the commits pip test's APIs report (pip-frontend reports
+none) and `"environment": "aat"`.
+
+It needs `az login` with read access to `cath-aat`, which holds the IDAM test account, and to
+`pip-bootstrap-stg-kv`, which holds the client-credentials clients pip's functional tests call its
+APIs with (`environments.json`). Each secret
+can be given as an environment variable instead, named in upper snake case
+(`APP_PIP_ACCOUNT_MANAGEMENT_PWD` for `app-pip-account-management-pwd`). Reading the generated PDF
+and Excel files also needs read access to pip's test storage account (`pipsssatest`).
+
+Pages that list every court, such as the A to Z list and search, show pip test's own courts as well
+as the run's, so they differ from CaTH for that reason.
 
 ## Checking a ticket
 
@@ -165,21 +208,21 @@ Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check w
 and prints JSON will do), `--investigate N`, `--serve` to browse the report on <http://localhost:9500>.
 It exits 3 when there are defects (`exit-codes.ts`).
 
-### Checking the test environment
+### Checking aat
 
-`--env test` checks the deployed CaTH in perftest instead of a local one (`environments.json`;
-perftest is paired with pip's test environment, as CaTH's own chart pairs them). It runs master,
-gets little other traffic, and has test-support on. Nothing needs to run locally, but you need `az
-login` with access to the `cath-perftest` vault, and to be on the HMCTS network:
+`--env aat` checks the deployed CaTH in AAT instead of a local one, paired with pip test
+(`environments.json`). Both sign CFT users in through AAT IDAM, so one test account signs in to
+both. CaTH AAT has test-support on. Nothing needs to run locally, but you need `az login` with
+access to the `cath-aat` vault, and to be on the VPN:
 
 ```bash
-yarn ui-baseline:check --env test --all
+yarn ui-baseline:check --env aat --all
 ```
 
 Testers can run the same check without any of this from the [hosted check](../../apps/ui-baseline/README.md).
 
 Against a deployed CaTH the check seeds through the real publication API, with the client
-credentials in the environment's vault, and signs in as real test accounts (see below). The
+credentials in the environment's vault, and signs in as a real test account (see below). The
 publication API takes a list as JSON, so a non-strategic list's Excel file, which CaTH makes from
 the uploaded spreadsheet, is not made, and is reported as not compared rather than missing.
 
@@ -193,14 +236,28 @@ Pages behind sign-in are captured as the same fixture user pip's baseline used (
   the session a real sign-in leaves behind into CaTH's Redis, and the check sends that session's
   cookie. It needs the `SESSION_SECRET` and `REDIS_URL` from the root `.env` that CaTH's web app
   runs with, so it only works against a local CaTH.
-- **In the test environment**, `cath/account-sign-in.ts` signs in through CaTH's real sign-in
-  flows (SSO, Crime IDAM, CFT IDAM) as the test account `environments.json` names for each role,
-  read from the environment's vault. Fixture users with the same role share its account, so the
-  page shows the account's name. A role with no account in the vault is reported, and its pages
-  are not compared. The records signed-in pages show are created through test-support.
+- **In aat**, `cath/account-sign-in.ts` signs in through CFT IDAM (`/cft-login`), as people do,
+  as the IDAM test account `environments.json` names. IDAM only makes verified users, so only
+  `VERIFIED` has an account: fixture users with that role share it, and the page shows the
+  account's name. Admin pages are reported as not compared. The records signed-in pages show are
+  created through test-support.
 
-CaTH has no super admins, so pip's super admins are signed in to CaTH as the admin role with the
-same reach (CTSC or local).
+#### The IDAM test account
+
+One AAT IDAM account signs in to both CaTH AAT and pip test, managed as CaTH's E2E suite manages
+its own (`cft-valid-test-account`): a permanent account, with its email and password in a vault,
+read when a run starts. Ours is in `cath-aat`, which the pod mounts, so its managed identity can read
+it:
+
+| Secret | Holds |
+| --- | --- |
+| `ui-baseline-cft-test-account` | the account's email |
+| `ui-baseline-cft-test-account-password` | its password |
+
+It must not have a `citizen`, `citizen-*` or `letter-holder` role: both apps refuse CFT users with
+one (`isRejectedCFTRole` in `libs/auth/src/role-service`). Do not make it through IDAM's
+testing-support API: in AAT that deletes what it makes after about 3 hours. Until the secrets
+exist, every signed-in page is reported as not compared.
 
 ## Comparing PDF and Excel files
 
@@ -221,11 +278,10 @@ and Excel" page, the summary and the PR comment show the result.
 For a list a tester uploaded to both apps by hand, compare the two without seeding anything:
 
 ```bash
-yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env test] [--name civil-list]
+yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env aat] [--name civil-list]
 ```
 
-It also prints the list's page in each app; staff sign-in is shared between CaTH perftest and pip
-test, so whoever is signed in to one is signed in to the other. This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
+It also prints the list's page in each app. This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
 Data Reader role on it, or a connection string in `PIP_STORAGE_CONNECTION_STRING`.
 
 ## What the baseline covers
@@ -287,10 +343,9 @@ depends on one of these, check that part by hand and say so in the PR.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
 - **Not captured at all:** emails and deprecated list types. File downloads are limited to the ones listed in `routes/downloads.json`.
-- **Signed-in pages in the test environment need test accounts.** CaTH perftest's vault has a
-  Crime IDAM account (verified users) but no SSO admin accounts, so admin pages are reported as
-  not compared there until accounts in perftest's admin groups are added to `cath-perftest` under
-  the names in `environments.json`.
+- **Only verified users' pages are compared signed in, in aat.** Checks sign in through CFT IDAM
+  only, which makes verified users, so admin pages and the pages pip shows only B2C or Crime IDAM
+  media users are reported as not compared there.
 
 ### pip's own defects
 
@@ -319,8 +374,8 @@ redirect elsewhere, is reported as not compared rather than as a difference: for
 
 ## The hosted check (`src/`)
 
-The parity check is also hosted, run for testers in the test
-environment (CaTH perftest, paired with pip test). From the browser, without running anything
+The parity check is also hosted, run for testers in aat (CaTH AAT, paired with pip test). From the
+browser, without running anything
 locally, a tester can:
 
 - check all of CaTH, some list types or some pages against the recorded pip baseline (page
@@ -333,61 +388,49 @@ It is an internal tool for the CaTH team, so English only.
 
 ### Where it runs
 
-Only in perftest: the umbrella chart includes it behind `uiBaseline.enabled`, which
-`job.helm-deploy.yml` sets for perftest alone. It is deployed with release `cath-service-perftest`
-at <https://cath-cath-service-perftest-ui-baseline.perftest.platform.hmcts.net>, a host in the
-private DNS zone only, so it is reached on the HMCTS network.
+Only in aat: the umbrella chart includes it behind `uiBaseline.enabled`, which
+`job.helm-deploy.yml` sets for aat alone. Its host,
+`cath-<release>-ui-baseline.aat.platform.hmcts.net`, is in the private DNS zone only, with no
+Front Door route, so it is only reached over the VPN. That is its only access control: the app has
+no sign-in, and anyone on the VPN can start a run.
 
 ### How it works
 
 - **Runs** are queued and run one at a time (Chromium is memory-hungry, and checks seed the same
-  environment), each as a child process of the tool's own scripts: `check.ts --env test` or
+  environment), each as a child process of the tool's own scripts: `check.ts --env aat` or
   `compare-files.ts`. A check of all of CaTH takes about half an hour.
-- **The baseline** is the newest one stored in `cathsaperftest`/`ui-baseline` (recorded by the
+- **The baseline** is the newest one stored in `cathsaaat`/`ui-baseline` (recorded by the
   "UI baseline - record pip" workflow), fetched when the pod starts and again when a newer one is
   stored.
 - **Results** are archived to the same container when a run finishes, and restored from it when
   someone opens a run after the pod has restarted.
-- **Sign-in** is Entra ID through CaTH's own SSO app registration in the environment. Only members
-  of CaTH's admin groups get in (or the groups in `UI_BASELINE_ALLOWED_GROUP_IDS`), looked up through
-  Microsoft Graph as CaTH does.
+- **Runs** do not record who started them: there is no sign-in to say.
+- **Checks sign in** to CaTH and pip as the IDAM test account
+  ([The IDAM test account](#the-idam-test-account)), read from `cath-aat` when a check starts.
 
-#### Signing in, and the two apps it checks
+### Before it works in aat
 
-CaTH perftest and pip test sign staff in through the same Entra tenant, the same SSO app
-registration and the same admin groups, and this app uses them too. So a tester signed in here is
-signed in to both apps' staff pages in their own browser, without being asked again, with the same
-admin role in each.
-
-The app itself cannot use a tester's sign-in to reach either app: CaTH and pip only make a session
-from their own sign-in callback, and the token this app gets is for this app (`openid profile
-email`), not for them or for Azure storage. Checks therefore sign in as test accounts, and because
-the groups are shared, one account per admin role works in both apps.
-
-### Before it works in perftest
-
-- Register `https://cath-cath-service-perftest-ui-baseline.perftest.platform.hmcts.net/sso/return`
-  as a redirect URI on perftest's SSO app registration (`sso-client-id` in `cath-perftest`). It is
-  the same registration as pip test's (`sso-client-id` in `pip-ss-kv-test`), so agree it with the pip
-  team.
-- Grant the CaTH perftest managed identity the Storage Blob Data Reader role on pip's test storage
+- Create the permanent AAT IDAM test account and store its email and password in `cath-aat`
+  ([The IDAM test account](#the-idam-test-account)).
+- Apply the Terraform for aat, which adds the `ui-baseline` container to `cathsaaat`
+  (`ui_baseline` in `infrastructure/env-config.tf`).
+- Grant the CaTH AAT managed identity the Storage Blob Data Reader role on pip's test storage
   account (`pipsssatest`), for file comparisons. Without it, file comparisons fail with a message
   saying so.
-- Add test accounts for the admin roles to `cath-perftest`, under the names in
-  `apps/ui-baseline/environments.json`, so admin pages are compared too. Until then they are
-  reported as not compared. Each needs to be in the matching admin group (`sso-sg-*`), which pip
-  test shares, so the same accounts sign in to pip test too.
 - Record and store a baseline: run the "UI baseline - record pip" workflow once.
 
 ### Running it locally
 
 ```bash
-PORT=8090 UI_BASELINE_AUTH_DISABLED=true UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev
+az login
+PORT=8090 UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev
 ```
 
-Then open <http://localhost:8090>. `PORT` is needed because the root `.env` sets CaTH web's
-`PORT=8080`, which `dev` would otherwise pick up. `UI_BASELINE_AUTH_DISABLED` is refused when
-`NODE_ENV` is production. With `UI_BASELINE_ENV=local` it checks a local CaTH, and needs a stored
+Then open <http://localhost:8090>. There is no sign-in, and a local run reads no secrets when it
+starts: a check reads what it needs from the vault itself, as whoever `az login` signed in.
+
+`PORT` is needed because the root `.env` sets CaTH web's `PORT=8080`, which `dev` would otherwise
+pick up. With `UI_BASELINE_ENV=local` it checks a local CaTH, and needs a stored
 baseline in local Azurite's `ui-baseline` container (`yarn ui-baseline:baseline push`). Each check
 uses the latest stored baseline when it starts, so a newer push is picked up by the next check; the
 page names the baseline last fetched.
@@ -410,7 +453,7 @@ Planned next, roughly in this order:
 | `baseline.ts`, `baseline-store.ts` | `yarn ui-baseline:baseline push\|pull`: the stored baseline |
 | `environments.json`, `environments.ts` | Where CaTH and pip run in each environment a check targets, and how to sign in |
 | `fixtures/` | The publications, users and records both apps are seeded with |
-| `pip/` | Setting up and running pip locally (`setup.sh`), recording the baseline (`baseline.sh`, `record-files.ts`); pip's journeys; known pip defects |
+| `pip/` | Setting up and running pip locally (`setup.sh`), recording the baseline (`baseline.sh`, `record-files.ts`); recording pip test (`sign-in.ts`, `session.ts`, `run.ts`, `cleanup.ts`) and calling its APIs (`pip-api.ts`); pip's journeys; known pip defects |
 | `cath/` | Seeding CaTH with the same fixtures, signing in to it, and CaTH's ports of pip's journeys (`cath/journeys/`) |
 | `routes/` | pip's route inventory, page targets, and the pip → CaTH route map |
 | `report/` | The HTML report |

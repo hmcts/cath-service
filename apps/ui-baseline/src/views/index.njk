@@ -62,7 +62,6 @@
       <thead class="govuk-table__head"><tr class="govuk-table__row">
         <th scope="col" class="govuk-table__header">Started</th>
         <th scope="col" class="govuk-table__header">What</th>
-        <th scope="col" class="govuk-table__header">By</th>
         <th scope="col" class="govuk-table__header">Status</th>
       </tr></thead>
       <tbody class="govuk-table__body">
@@ -70,7 +69,6 @@
           <tr class="govuk-table__row">
             <td class="govuk-table__cell"><a class="govuk-link" href="/runs/{{ run.id }}">{{ run.createdAt | date }}</a></td>
             <td class="govuk-table__cell">{% include "run-what.njk" %}</td>
-            <td class="govuk-table__cell">{{ run.requestedBy }}</td>
             <td class="govuk-table__cell">{{ govukTag({ text: run.status, classes: "govuk-tag--" + statusColours[run.status] }) }}</td>
           </tr>
         {% endfor %}

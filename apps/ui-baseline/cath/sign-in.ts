@@ -13,7 +13,7 @@ import type { SignedInUser } from "./sign-ins.js";
 // How depends on the environment (environments.json): a local CaTH gets sessions written into its
 // Redis (session-sign-in.ts); a deployed one is signed in to as real test accounts
 // (account-sign-in.ts). Run locally with the root .env, as the web app is:
-//   tsx --env-file=.env apps/ui-baseline/cath/sign-in.ts [--env test]
+//   tsx --env-file=.env apps/ui-baseline/cath/sign-in.ts [--env aat]
 const PARITY_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const { values: args } = parseArgs({ options: { env: { type: "string" } } });

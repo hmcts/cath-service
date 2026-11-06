@@ -10,7 +10,7 @@ const BASE_URL = "https://cath.example.net";
 const API_URL = "https://cath-api.example.net";
 
 function user(id: string, role: string): ParityUser {
-  return { id, provenance: "SSO", role, provenanceUserId: id, email: `${id}@example.com`, forenames: "F", surname: "S" };
+  return { id, provenance: "CFT_IDAM", role, provenanceUserId: id, email: `${id}@example.com`, forenames: "F", surname: "S" };
 }
 
 function locator(visible = true) {
@@ -26,7 +26,7 @@ function locator(visible = true) {
   return self;
 }
 
-function fakeBrowser(options: { modernIdam?: boolean; staySignedIn?: boolean; cookies?: { name: string; value: string }[] } = {}) {
+function fakeBrowser(options: { modernIdam?: boolean; cookies?: { name: string; value: string }[] } = {}) {
   const pages: Record<string, ReturnType<typeof vi.fn>>[] = [];
   const contexts: Record<string, ReturnType<typeof vi.fn>>[] = [];
   const browser = {
@@ -38,13 +38,10 @@ function fakeBrowser(options: { modernIdam?: boolean; staySignedIn?: boolean; co
         newPage: vi.fn(async () => {
           const page = {
             goto: vi.fn(),
-            fill: vi.fn(),
-            click: vi.fn(),
             waitForURL: vi.fn(async (matcher: unknown) => {
               if (typeof matcher === "function") expect(matcher(new URL(BASE_URL))).toBe(true);
             }),
             locator: vi.fn((selector: string) => {
-              if (selector.includes('value="Yes"')) return locator(options.staySignedIn ?? false);
               if (selector === "input#email") return locator(options.modernIdam ?? false);
               return locator();
             }),
@@ -78,7 +75,9 @@ describe("signInWithAccounts", () => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "log").mockImplementation(() => {});
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({ userId: "cath-admin", email: "real@example.com", role: "SYSTEM_ADMIN", userProvenance: "SSO" })));
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ userId: "cath-verified", email: "real@example.com", role: "VERIFIED", userProvenance: "CFT_IDAM" }))
+    );
   });
 
   afterEach(() => {
@@ -86,46 +85,41 @@ describe("signInWithAccounts", () => {
     vi.restoreAllMocks();
   });
 
-  it("should sign in once per locale through SSO and share the account among the role's users", async () => {
+  it("should sign in once per locale through CFT IDAM and share the account among the role's users", async () => {
     // Arrange
-    const { browser, pages, contexts } = fakeBrowser({ staySignedIn: true });
-    const env = environment(
-      { SYSTEM_ADMIN: { flow: "sso", user: "admin-user", password: "admin-pwd" } },
-      { "admin-user": "real@example.com", "admin-pwd": "pw" }
-    );
+    const { browser, pages, contexts } = fakeBrowser();
+    const env = environment({ VERIFIED: { user: "idam-user", password: "idam-pwd" } }, { "idam-user": "real@example.com", "idam-pwd": "pw" });
 
     // Act
-    const result = await signInWithAccounts(env, [user("admin-a", "SYSTEM_ADMIN"), user("admin-b", "SYSTEM_ADMIN")]);
+    const result = await signInWithAccounts(env, [user("media-a", "VERIFIED"), user("media-b", "VERIFIED")]);
 
     // Assert
-    expect(pages[0].goto).toHaveBeenCalledWith(`${BASE_URL}/login?lng=en`);
-    expect(pages[1].goto).toHaveBeenCalledWith(`${BASE_URL}/login?lng=cy`);
+    expect(pages[0].goto).toHaveBeenCalledWith(`${BASE_URL}/cft-login?lng=en`);
+    expect(pages[1].goto).toHaveBeenCalledWith(`${BASE_URL}/cft-login?lng=cy`);
     expect(pages[0].goto).toHaveBeenCalledWith(`${BASE_URL}/?lng=en`);
-    expect(pages[0].fill).toHaveBeenCalledWith('input[type="email"]', "real@example.com");
-    expect(pages[0].fill).toHaveBeenCalledWith('input[type="password"]', "pw");
     expect(contexts.every((context) => context.close.mock.calls.length === 1)).toBe(true);
     expect(fetchMock).toHaveBeenCalledWith(`${API_URL}/test-support/users?email=real%40example.com`);
     const expected = {
-      userId: "cath-admin",
-      role: "SYSTEM_ADMIN",
+      userId: "cath-verified",
+      role: "VERIFIED",
       cookies: { en: [{ name: "session", value: "abc" }], cy: [{ name: "session", value: "abc" }] }
     };
-    expect(result.users).toEqual({ "admin-a": expected, "admin-b": expected });
-    expect(result.cathUsers["admin-b"]).toEqual({ userId: "cath-admin", email: "real@example.com", role: "SYSTEM_ADMIN", provenance: "SSO" });
+    expect(result.users).toEqual({ "media-a": expected, "media-b": expected });
+    expect(result.cathUsers["media-b"]).toEqual({ userId: "cath-verified", email: "real@example.com", role: "VERIFIED", provenance: "CFT_IDAM" });
     expect(browser.close).toHaveBeenCalled();
   });
 
-  it("should fill the Crime IDAM form for a crime account", async () => {
+  it("should read an account's secrets from its own vault when it names one", async () => {
     // Arrange
-    const { pages } = fakeBrowser();
-    const env = environment({ VERIFIED: { flow: "crime", user: "u", password: "p" } }, { u: "media@example.com", p: "pw" });
+    fakeBrowser();
+    const env = environment({ VERIFIED: { user: "u", password: "p", keyVault: "cath-bootstrap" } }, { u: "media@example.com", p: "pw" });
 
     // Act
     await signInWithAccounts(env, [user("media", "VERIFIED")]);
 
     // Assert
-    expect(pages[0].goto).toHaveBeenCalledWith(`${BASE_URL}/crime-login?lng=en`);
-    expect(pages[0].locator).toHaveBeenCalledWith('input[name="IDToken1"], input[type="text"]');
+    expect(env.secret).toHaveBeenCalledWith(expect.objectContaining({ keyVault: "cath-bootstrap" }), "u");
+    expect(env.secret).toHaveBeenCalledWith(expect.objectContaining({ keyVault: "cath-bootstrap" }), "p");
   });
 
   it.each([
@@ -134,7 +128,7 @@ describe("signInWithAccounts", () => {
   ])("should fill the CFT IDAM form when the modern form is %s", async (modernIdam) => {
     // Arrange
     const { pages } = fakeBrowser({ modernIdam });
-    const env = environment({ VERIFIED: { flow: "cft", user: "u", password: "p" } }, { u: "media@example.com", p: "pw" });
+    const env = environment({ VERIFIED: { user: "u", password: "p" } }, { u: "media@example.com", p: "pw" });
 
     // Act
     await signInWithAccounts(env, [user("media", "VERIFIED")]);
@@ -144,18 +138,18 @@ describe("signInWithAccounts", () => {
     expect(pages[0].getByRole).toHaveBeenCalledTimes(modernIdam ? 2 : 0);
   });
 
-  it("should report users whose role has no account or whose account is not in the vault", async () => {
+  it("should report users whose role has no account, as admins have none, or whose account is not in the vault", async () => {
     // Arrange
     const { browser } = fakeBrowser();
-    const env = environment({ SYSTEM_ADMIN: { flow: "sso", user: "admin-user", password: "admin-pwd" } }, {});
+    const env = environment({ VERIFIED: { user: "idam-user", password: "idam-pwd" } }, {});
 
     // Act
     const result = await signInWithAccounts(env, [user("admin", "SYSTEM_ADMIN"), user("media", "VERIFIED")]);
 
     // Assert
     expect(result.unavailable).toEqual({
-      admin: "no SYSTEM_ADMIN test account in cath-test (admin-user)",
-      media: "no VERIFIED test account configured"
+      admin: "no SYSTEM_ADMIN test account configured",
+      media: "no VERIFIED test account in cath-test (idam-user)"
     });
     expect(result.users).toEqual({});
     expect(browser.newContext).not.toHaveBeenCalled();
@@ -177,20 +171,20 @@ describe("signInWithAccounts", () => {
   it("should fail when signing in leaves no session cookie", async () => {
     // Arrange
     fakeBrowser({ cookies: [] });
-    const env = environment({ VERIFIED: { flow: "crime", user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
+    const env = environment({ VERIFIED: { user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
 
     // Act
     const result = signInWithAccounts(env, [user("media", "VERIFIED")]);
 
     // Assert
-    await expect(result).rejects.toThrow("signing in through crime left no CaTH session");
+    await expect(result).rejects.toThrow("signing in through CFT IDAM left no CaTH session");
   });
 
   it("should fail when CaTH has no user for the account after signing in", async () => {
     // Arrange
     fakeBrowser();
     fetchMock.mockResolvedValue(new Response("", { status: 404 }));
-    const env = environment({ VERIFIED: { flow: "crime", user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
+    const env = environment({ VERIFIED: { user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
 
     // Act
     const result = signInWithAccounts(env, [user("media", "VERIFIED")]);

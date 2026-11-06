@@ -47,7 +47,15 @@ async function collectOnce(options: CollectFilesOptions, publication: CollectedP
     const file = `${publication.id}/${kind}.${EXTENSIONS[kind]}`;
     await mkdir(path.join(options.out, publication.id), { recursive: true });
     await writeFile(path.join(options.out, file), data);
-    entries.push({ id: publication.id, kind, file, blob, bytes: data.length, seededAt: publication.seededAt ?? null });
+    entries.push({
+      id: publication.id,
+      kind,
+      file,
+      blob,
+      bytes: data.length,
+      seededAt: publication.seededAt ?? null,
+      ...(publication.runToken ? { runToken: publication.runToken } : {})
+    });
   }
   return entries;
 }
@@ -62,6 +70,8 @@ export interface CollectedPublication {
   artefactId: string;
   // When the publication was seeded, so dates derived from it are masked in comparison
   seededAt?: string | null;
+  // The run token on names the publication shows, when it was seeded in a shared environment
+  runToken?: string | null;
 }
 
 export interface CollectFilesOptions {

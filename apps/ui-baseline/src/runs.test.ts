@@ -32,7 +32,7 @@ describe("createRunner", () => {
     });
 
     // Act
-    const run = runner.start({ kind: "check", scope: "all" }, "tester@example.com");
+    const run = runner.start({ kind: "check", scope: "all" });
     await runner.idle();
 
     // Assert
@@ -43,7 +43,6 @@ describe("createRunner", () => {
     expect(options).toMatchObject({ cwd: "/repo", env: { UI_BASELINE_COMMIT: "abc1234" } });
     expect(runner.get(run.id)).toMatchObject({
       status: "finished",
-      requestedBy: "tester@example.com",
       baselineId: "2026-11-03",
       summary: { lists: { match: 1, differs: 3 } }
     });
@@ -54,7 +53,7 @@ describe("createRunner", () => {
     const { runner, execute } = await runnerWith();
 
     // Act
-    runner.start({ kind: "check", scope: "list-types", listTypes: ["CIVIL_DAILY_CAUSE_LIST", "SJP_PRESS_LIST"] }, "tester");
+    runner.start({ kind: "check", scope: "list-types", listTypes: ["CIVIL_DAILY_CAUSE_LIST", "SJP_PRESS_LIST"] });
     await runner.idle();
 
     // Assert
@@ -66,7 +65,7 @@ describe("createRunner", () => {
     const { runner } = await runnerWith();
 
     // Act
-    const run = runner.start({ kind: "check", scope: "routes", routes: ["/summary-of-publications"] }, "tester");
+    const run = runner.start({ kind: "check", scope: "routes", routes: ["/summary-of-publications"] });
     await runner.idle();
 
     // Assert
@@ -84,7 +83,7 @@ describe("createRunner", () => {
     });
 
     // Act
-    const run = runner.start({ kind: "files", pipArtefactId: PIP_ARTEFACT, cathArtefactId: CATH_ARTEFACT, name: "civil-list" }, "tester");
+    const run = runner.start({ kind: "files", pipArtefactId: PIP_ARTEFACT, cathArtefactId: CATH_ARTEFACT, name: "civil-list" });
     await runner.idle();
 
     // Assert
@@ -105,8 +104,8 @@ describe("createRunner", () => {
     });
 
     // Act
-    runner.start({ kind: "check", scope: "routes", routes: ["/a"] }, "tester");
-    runner.start({ kind: "check", scope: "routes", routes: ["/b"] }, "tester");
+    runner.start({ kind: "check", scope: "routes", routes: ["/a"] });
+    runner.start({ kind: "check", scope: "routes", routes: ["/b"] });
     await runner.idle();
 
     // Assert
@@ -118,10 +117,10 @@ describe("createRunner", () => {
     const { runner } = await runnerWith();
 
     // Act and assert
-    expect(() => runner.start({ kind: "files", pipArtefactId: "--all", cathArtefactId: CATH_ARTEFACT }, "tester")).toThrow(RunRequestError);
-    expect(() => runner.start({ kind: "check", scope: "list-types", listTypes: ["civil; rm -rf /"] }, "tester")).toThrow(RunRequestError);
-    expect(() => runner.start({ kind: "check", scope: "routes", routes: ["https://example.com"] }, "tester")).toThrow(RunRequestError);
-    expect(() => runner.start({ kind: "check", scope: "routes", routes: [] }, "tester")).toThrow(RunRequestError);
+    expect(() => runner.start({ kind: "files", pipArtefactId: "--all", cathArtefactId: CATH_ARTEFACT })).toThrow(RunRequestError);
+    expect(() => runner.start({ kind: "check", scope: "list-types", listTypes: ["civil; rm -rf /"] })).toThrow(RunRequestError);
+    expect(() => runner.start({ kind: "check", scope: "routes", routes: ["https://example.com"] })).toThrow(RunRequestError);
+    expect(() => runner.start({ kind: "check", scope: "routes", routes: [] })).toThrow(RunRequestError);
     expect(runner.list()).toEqual([]);
   });
 
@@ -129,8 +128,8 @@ describe("createRunner", () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
     const stored: Record<string, string> = {
-      "runs/a.json": JSON.stringify({ id: "a", kind: "check", scope: "all", status: "finished", requestedBy: "x", createdAt: "2026-10-30T10:00:00Z" }),
-      "runs/b.json": JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", requestedBy: "x", createdAt: "2026-10-30T11:00:00Z" })
+      "runs/a.json": JSON.stringify({ id: "a", kind: "check", scope: "all", status: "finished", createdAt: "2026-10-30T10:00:00Z" }),
+      "runs/b.json": JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })
     };
     const store = {
       name: "memory",
@@ -164,7 +163,7 @@ describe("createRunner", () => {
       await writeFile(path.join(outDir(args), "report/index.html"), "<p>the report</p>");
     };
     const first = createRunner({ ...(await optionsWith(writeReport)), store });
-    const run = first.start({ kind: "check", scope: "all" }, "tester@example.com");
+    const run = first.start({ kind: "check", scope: "all" });
     await first.idle();
     const second = createRunner({ ...(await optionsWith(writeReport)), store });
 
@@ -185,7 +184,7 @@ describe("createRunner", () => {
     const runner = createRunner({ ...(await optionsWith()), store });
 
     // Act
-    const run = runner.start({ kind: "check", scope: "all" }, "tester@example.com");
+    const run = runner.start({ kind: "check", scope: "all" });
     await runner.idle();
 
     // Assert
@@ -202,8 +201,8 @@ describe("createRunner", () => {
     const runner = createRunner({ ...(await optionsWith()), dataDir: blocked });
 
     // Act
-    const first = runner.start({ kind: "check", scope: "all" }, "tester");
-    const second = runner.start({ kind: "check", scope: "all" }, "tester");
+    const first = runner.start({ kind: "check", scope: "all" });
+    const second = runner.start({ kind: "check", scope: "all" });
     await runner.idle();
 
     // Assert
@@ -237,7 +236,7 @@ describe("createRunner", () => {
     });
 
     // Act
-    runner.start({ kind: "check", scope: "all" }, "tester");
+    runner.start({ kind: "check", scope: "all" });
     await runner.idle();
 
     // Assert
@@ -259,7 +258,7 @@ describe("createRunner", () => {
         return { id: "2026-11-03", dir: "/data/baseline", release: () => {} };
       }
     });
-    const run = runner.start({ kind: "check", scope: "all" }, "tester");
+    const run = runner.start({ kind: "check", scope: "all" });
     await runner.idle();
     const pending = (promise: Promise<unknown>) =>
       Promise.race([promise.then(() => "settled"), new Promise((resolve) => setTimeout(() => resolve("waiting"), 50))]);
@@ -283,7 +282,7 @@ describe("createRunner", () => {
     const runner = createRunner({ ...(await optionsWith()), execute: async () => 2 });
 
     // Act
-    const run = runner.start({ kind: "check", scope: "routes", routes: ["/not-in-the-baseline"] }, "tester");
+    const run = runner.start({ kind: "check", scope: "routes", routes: ["/not-in-the-baseline"] });
     await runner.idle();
 
     // Assert
@@ -303,7 +302,7 @@ describe("createRunner", () => {
     const runner = createRunner({ ...options, repoDir });
 
     // Act
-    const run = runner.start({ kind: "check", scope: "all" }, "tester@example.com");
+    const run = runner.start({ kind: "check", scope: "all" });
     await runner.idle();
 
     // Assert

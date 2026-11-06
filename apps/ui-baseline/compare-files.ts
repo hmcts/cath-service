@@ -5,10 +5,10 @@ import { EXIT_DIFFERENCES } from "./exit-codes.js";
 // Compares the PDF and Excel files pip and CaTH made for a publication uploaded to both, by its
 // artefact id in each (artefact-files.ts). PDFs by text only, Excel files cell by cell. Exits 1
 // when any file differs or only one app made it.
-//   yarn ui-baseline:compare-files --pip <artefact id> --cath <artefact id> [--env test] [--name civil-list]
+//   yarn ui-baseline:compare-files --pip <artefact id> --cath <artefact id> [--env aat] [--name civil-list]
 const { values: args } = parseArgs({
   options: {
-    env: { type: "string", default: "test" },
+    env: { type: "string", default: "aat" },
     pip: { type: "string" },
     cath: { type: "string" },
     name: { type: "string" },

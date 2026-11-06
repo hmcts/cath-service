@@ -19,7 +19,6 @@
   <h1 class="govuk-heading-l">{% include "run-what.njk" %}</h1>
   {{ govukSummaryList({ rows: [
     { key: { text: "Status" }, value: { html: govukTag({ text: run.status, classes: "govuk-tag--" + statusColours[run.status] }) } },
-    { key: { text: "Requested by" }, value: { text: run.requestedBy } },
     { key: { text: "Started" }, value: { text: (run.startedAt or run.createdAt) | date } },
     { key: { text: "Finished" }, value: { text: run.finishedAt | date or "Not yet" } }
   ] }) }}
