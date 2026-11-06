@@ -15,12 +15,27 @@ vi.mock("notifications-node-client", () => ({
   NotifyClient: MockNotifyClient
 }));
 
+const mockValidateEmailRateLimit = vi.fn();
+
+vi.mock("@hmcts/email-rate-limit", () => ({
+  validateEmailRateLimit: mockValidateEmailRateLimit
+}));
+
 // Import after mocking
 const { sendMediaDuplicateAccountEmail, sendMediaNewAccountEmail, sendMediaRejectionEmail } = await import("./govuk-notify-service.js");
 
 describe("GOV Notify Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockValidateEmailRateLimit.mockResolvedValue(undefined);
+  });
+
+  it("should apply the standard rate limit to media emails", async () => {
+    mockSendEmail.mockResolvedValue({ data: { id: "notification-id" } });
+
+    await sendMediaNewAccountEmail({ email: "test@example.com", fullName: "Test Reporter" });
+
+    expect(mockValidateEmailRateLimit).toHaveBeenCalledWith("test@example.com", "STANDARD", "Email");
   });
 
   describe("sendMediaRejectionEmail", () => {

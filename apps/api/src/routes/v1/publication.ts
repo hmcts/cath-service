@@ -15,6 +15,7 @@ import {
 import { uploadHtmlToS3, validatePddaHtmlUpload } from "@hmcts/pdda-html-upload";
 import { ArtefactType } from "@hmcts/publication";
 import type { NextFunction, Request, Response } from "express";
+import express from "express";
 import multer from "multer";
 
 const LCSU_JSON_REJECTION = "LCSU publications must be sent as multipart/form-data";
@@ -27,9 +28,11 @@ const upload = multer({
   limits: { fileSize: MAX_BLOB_SIZE }
 });
 
-// OAuth authentication is applied first in the middleware chain.
+// OAuth authentication is applied first, so bodies are only parsed for authenticated callers.
 export const POST = [
   authenticateApi(),
+  express.json({ limit: "100mb" }),
+  express.urlencoded({ extended: true, limit: "100mb" }),
   conditionalMulter,
   async (req: Request, res: Response) => {
     const correlationId = readCorrelationId(req);

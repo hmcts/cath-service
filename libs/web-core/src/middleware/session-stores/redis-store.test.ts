@@ -66,6 +66,7 @@ describe("expressSessionRedis", () => {
 
   it("should set secure cookie in production", () => {
     process.env.NODE_ENV = "production";
+    process.env.SESSION_SECRET = "my-secret-key";
     const mockRedisClient = { connect: vi.fn() };
 
     const middleware = expressSessionRedis({
@@ -77,6 +78,45 @@ describe("expressSessionRedis", () => {
         cookie: expect.objectContaining({
           secure: true
         })
+      })
+    });
+  });
+
+  it("should set the session cookie to SameSite=Lax", () => {
+    const mockRedisClient = { connect: vi.fn() };
+
+    const middleware = expressSessionRedis({
+      redisConnection: mockRedisClient
+    });
+
+    expect(middleware).toEqual({
+      sessionOptions: expect.objectContaining({
+        cookie: expect.objectContaining({
+          sameSite: "lax"
+        })
+      })
+    });
+  });
+
+  it("should throw when SESSION_SECRET is missing in production", () => {
+    process.env.NODE_ENV = "production";
+    const mockRedisClient = { connect: vi.fn() };
+
+    expect(() => expressSessionRedis({ redisConnection: mockRedisClient })).toThrow("SESSION_SECRET must be set in production");
+  });
+
+  it("should not require SESSION_SECRET in production when a secret is passed in session options", () => {
+    process.env.NODE_ENV = "production";
+    const mockRedisClient = { connect: vi.fn() };
+
+    const middleware = expressSessionRedis({
+      redisConnection: mockRedisClient,
+      sessionOptions: { secret: "custom-secret" }
+    });
+
+    expect(middleware).toEqual({
+      sessionOptions: expect.objectContaining({
+        secret: "custom-secret"
       })
     });
   });
