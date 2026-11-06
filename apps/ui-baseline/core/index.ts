@@ -24,4 +24,5 @@ export {
 } from "./journey/compare-journeys.js";
 export type { Journey, JourneyContext, JourneySuite } from "./journey/journey.js";
 export { type JourneyResult, type RunJourneysOptions, runJourneys } from "./journey/run-journeys.js";
+export { type InvestigateOptions, type InvestigateResult, investigateFindings, type Source } from "./review/investigate.js";
 export { type ReviewOptions, type ReviewResult, reviewFindings } from "./review/review.js";

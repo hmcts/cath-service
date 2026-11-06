@@ -22,6 +22,7 @@ const item = (verdict: VerdictName | null, overrides: Partial<Item> = {}): Item 
 const review = (items: Item[]): ReviewResult => ({
   reviewedAt: "2026-11-03T10:00:00Z",
   totals: { items: items.length, intended: 0, defect: 0, needsHuman: 0 },
+  failures: [],
   items
 });
 
@@ -125,6 +126,34 @@ describe("pr-comment", () => {
       expect(body).toContain(`${"x".repeat(214)}…`);
       expect(body).toContain("| 2 pages |");
       expect(body).toContain("Because defect<br><sub>“The ticket says so”</sub>");
+    });
+
+    it("should warn about reviewer failures and mark investigated verdicts", () => {
+      // Arrange
+      const investigated = item("defect", {
+        review: { id: "x", verdict: "defect", reason: "Heading lost", evidence: "", investigated: { outcome: "answered", turns: 4 } }
+      });
+      const failures = Array.from({ length: 6 }, (_, i) => `items p${i}: not logged in`);
+      const reviews = [{ ...review([investigated, item("needs-human")]), failures }];
+
+      // Act
+      const body = buildComment(input({ reviews }));
+
+      // Assert
+      expect(body).toContain("> [!WARNING]\n> The reviewer failed on part of the review, so those differences are listed as needing a human:");
+      expect(body).toContain("> - items p4: not logged in\n> - …and 1 more");
+      expect(body).not.toContain("items p5: not logged in");
+      expect(body).toContain("🔎 Heading lost");
+      expect(body).toContain("🔎 marks a verdict reached by reading both apps' source and captures");
+    });
+
+    it("should neither warn nor explain the marker when nothing failed or was investigated", () => {
+      // Act
+      const body = buildComment(input({ reviews: [review([item("defect")])] }));
+
+      // Assert
+      expect(body).not.toContain("[!WARNING]");
+      expect(body).not.toContain("🔎");
     });
 
     it("should show only the first 25 rows when a table has more", () => {
