@@ -42,6 +42,7 @@ export const cy = {
       "Sylwer bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
     cautionReporting:
       "Mae'r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo ag adroddiadau cywir o achosion llys. Mae'n hanfodol eich bod yn diogelu'r Data Categori Arbennig a gynhwysir ac yn cadw at gyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd HMCTS yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio.",
+    thanks: "Diolch am ddarllen y ddogfen hon yn fanwl.",
     provenanceLabels
   }
 };

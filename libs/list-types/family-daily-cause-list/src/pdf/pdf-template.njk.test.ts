@@ -87,6 +87,38 @@ describe("family-daily-cause-list pdf-template", () => {
     });
   });
 
+  describe("Caution and thank you message", () => {
+    it("should render the thank you message after the caution", () => {
+      const { $ } = renderPdf();
+
+      expect($(".footer .caution-box + p").text()).toBe(en.thanks);
+    });
+
+    it("should render the Welsh thank you message after the caution", () => {
+      const { $ } = renderPdf([], {}, cy);
+
+      expect($(".footer .caution-box + p").text()).toBe(cy.thanks);
+    });
+
+    it("should render the special category data and reporting caution in English", () => {
+      const { $ } = renderPdf();
+
+      const paragraphs = $(".footer .caution-box p");
+      expect(paragraphs).toHaveLength(2);
+      expect(paragraphs.eq(0).text()).toBe(en.cautionNote);
+      expect(paragraphs.eq(1).text()).toBe(en.cautionReporting);
+    });
+
+    it("should render the special category data and reporting caution in Welsh", () => {
+      const { $ } = renderPdf([], {}, cy);
+
+      const paragraphs = $(".footer .caution-box p");
+      expect(paragraphs).toHaveLength(2);
+      expect(paragraphs.eq(0).text()).toBe(cy.cautionNote);
+      expect(paragraphs.eq(1).text()).toBe(cy.cautionReporting);
+    });
+  });
+
   describe("Venue header address", () => {
     it("should render exactly the header address lines it is given", () => {
       const { $ } = renderPdf([], { header: { ...baseData().header, addressLines: ["1 Venue Street", "Second Line", "VN1 1AA"] } });
