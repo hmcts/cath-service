@@ -13,7 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn build:pages",
+    "build:pages": "cd src/pages && find . -name '*.njk' -exec sh -c 'mkdir -p \"../../dist/pages/$(dirname \"$1\")\" && cp \"$1\" \"../../dist/pages/$1\"' _ {} \\;",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
