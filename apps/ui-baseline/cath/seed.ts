@@ -8,7 +8,7 @@ import { loadManifest, publicationMetadata, readPayload, type SeedResult } from 
 
 // Seeds CaTH with the same publications and metadata as apps/ui-baseline/pip/seed.ts. Locations
 // already come from location-data.ts (`yarn db:seed` locally, the postgres pod when deployed).
-// A deployed CaTH (--env test) is seeded through the real publication API with the environment's
+// A deployed CaTH (--env aat) is seeded through the real publication API with the environment's
 // client credentials. A local one has none, so the artefact row is created through test-support,
 // the payload written to blob storage, and the publication processed as the upload pages process
 // it, which is what writes its PDF and Excel files. The API process must run with

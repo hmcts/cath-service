@@ -134,7 +134,7 @@ jobs:
           # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip,
           # and nowhere else.
           UI_BASELINE_ENABLED="false"
-          if [ "$ENVIRONMENT" = "perftest" ]; then UI_BASELINE_ENABLED="true"; fi
+          if [ "$ENVIRONMENT" = "aat" ]; then UI_BASELINE_ENABLED="true"; fi
 
           # CNP cluster and resource group names are a pure function of the
           # environment, so no lookup table is needed.

@@ -4,8 +4,13 @@
 # into <out>. Journeys change data, so the stack is always recreated empty first; that is what
 # makes two runs, on any machine, comparable.
 #
-# usage: baseline.sh [--ticket N] [--list-type NAME]... [--route /path]... [--journey ID]... [pip checkouts dir] [output dir]
+# usage: baseline.sh [--env NAME] [--ticket N] [--list-type NAME]... [--route /path]... [--journey ID]... [pip checkouts dir] [output dir]
 #   defaults: $UI_BASELINE_PIP_DIR or ~/.cache/ui-baseline/pip, and apps/ui-baseline/output/baseline
+# --env records a deployed pip instead (environments.json, e.g. aat) at whatever it runs, into
+# output/baseline-<env>. Nothing is built or started: the recording signs in as the environment's
+# test accounts (pip/sign-in.ts), seeds data of its own beside everyone else's (pip/seed.ts, pip/run.ts)
+# and deletes it again when it finishes, however it finishes (pip/cleanup.ts). Journeys change data
+# they cannot all keep to the run's own, so they are not run against a deployed pip.
 # Needs Docker, Node and corepack. The first run clones and builds pip (about 10 minutes); a
 # baseline run then takes about 25 minutes.
 # A ticket recording (--ticket, --list-type, --route or --journey) records only what the ticket
@@ -24,8 +29,17 @@ TSX="$REPO_DIR/node_modules/.bin/tsx"
 json_field() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]])' "$1" "$2"; }
 SCOPE_ARGS=()
 POSITIONAL=()
+ENV_NAME=local
 while [ $# -gt 0 ]; do
   case "$1" in
+    --env)
+      ENV_NAME="$2"
+      shift 2
+      ;;
+    --env=*)
+      ENV_NAME="${1#--env=}"
+      shift
+      ;;
     --ticket | --list-type | --route | --journey)
       SCOPE_ARGS+=("$1" "$2")
       shift 2
@@ -39,11 +53,13 @@ done
 set -- "${POSITIONAL[@]+"${POSITIONAL[@]}"}"
 PIP_SRC="${1:-${UI_BASELINE_PIP_DIR:-$HOME/.cache/ui-baseline/pip}}"
 DEFAULT_OUT="$PARITY_DIR/output/baseline"
+[ "$ENV_NAME" != local ] && DEFAULT_OUT="$PARITY_DIR/output/baseline-$ENV_NAME"
 SCOPE_FILE=""
 if [ ${#SCOPE_ARGS[@]} -gt 0 ]; then
   SCOPE_FILE="$(mktemp)"
   (cd "$REPO_DIR" && "$TSX" apps/ui-baseline/pip/scope.ts --out "$SCOPE_FILE" "${SCOPE_ARGS[@]}")
   DEFAULT_OUT="$PARITY_DIR/output/baselines/$(json_field "$SCOPE_FILE" name)"
+  [ "$ENV_NAME" != local ] && DEFAULT_OUT="$DEFAULT_OUT-$ENV_NAME"
 fi
 OUT="$(mkdir -p "${2:-$DEFAULT_OUT}" && cd "${2:-$DEFAULT_OUT}" && pwd)"
 if [ -n "$SCOPE_FILE" ]; then
@@ -68,40 +84,59 @@ wait_for() {
   exit 1
 }
 
-"$PARITY_DIR/pip/setup.sh" "$PIP_SRC"
-PIP_SRC="$(cd "$PIP_SRC" && pwd)"
-
-step "Recreating the pip stack empty"
-cd "$PARITY_DIR/pip"
-PIP_SRC="$PIP_SRC" docker compose down -v --remove-orphans
-PIP_SRC="$PIP_SRC" docker compose up -d
-wait_for http://localhost:18090/health
-wait_for http://localhost:16969/health
-node "$PARITY_DIR/pip/create-containers.mjs"
-
-step "Restarting pip-frontend"
-if [ -f "$FRONTEND_PID_FILE" ]; then kill "$(cat "$FRONTEND_PID_FILE")" 2>/dev/null || true; fi
-# Stop any pip-frontend started outside this script on the same port (lsof on macOS, ss on Linux)
-PORT="${PIP_FRONTEND_URL##*:}"
-if command -v lsof >/dev/null; then
-  PIDS="$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+# The pip the steps below capture, and how they sign in there (pip/session.ts)
+export UI_BASELINE_PIP_ENV="$ENV_NAME"
+if [ "$ENV_NAME" != local ]; then
+  # Where the deployed pip is, from environments.json
+  PIP_FRONTEND_URL="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip.baseUrl)' "$PARITY_DIR/environments.json" "$ENV_NAME")"
+  cd "$REPO_DIR"
+  # However the recording ends, what it seeded goes (and so does anything an earlier run left)
+  trap 'step "Cleaning up what the recording seeded in pip $ENV_NAME"; "$TSX" apps/ui-baseline/pip/cleanup.ts --env "$ENV_NAME" || echo "Cleanup failed: run tsx apps/ui-baseline/pip/cleanup.ts --env $ENV_NAME again." >&2' EXIT
+  step "Signing in to pip $ENV_NAME as its test accounts"
+  "$TSX" apps/ui-baseline/pip/sign-in.ts --env "$ENV_NAME"
+  step "Seeding pip $ENV_NAME"
+  "$TSX" apps/ui-baseline/pip/seed.ts --env "$ENV_NAME"
+  cp apps/ui-baseline/output/seed/pip.json "$OUT/seed.json"
+  # What the environment runs: pip-frontend's /info has no commit, the APIs' do
+  api_commit() { curl -sf "$1/info" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build.commit.slice(0,8))}catch{console.log("unknown")}})'; }
+  env_url() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip[process.argv[3]])' "$PARITY_DIR/environments.json" "$ENV_NAME" "$1"; }
+  PIP_COMMITS="pip-frontend@$ENV_NAME+pip-data-management@$(api_commit "$(env_url dataManagementUrl)")+pip-account-management@$(api_commit "$(env_url accountManagementUrl)")"
 else
-  PIDS="$(ss -ltnp 2>/dev/null | sed -n "s/.*:$PORT .*pid=\([0-9]*\).*/\1/p")"
+  "$PARITY_DIR/pip/setup.sh" "$PIP_SRC"
+  PIP_SRC="$(cd "$PIP_SRC" && pwd)"
+
+  step "Recreating the pip stack empty"
+  cd "$PARITY_DIR/pip"
+  PIP_SRC="$PIP_SRC" docker compose down -v --remove-orphans
+  PIP_SRC="$PIP_SRC" docker compose up -d
+  wait_for http://localhost:18090/health
+  wait_for http://localhost:16969/health
+  node "$PARITY_DIR/pip/create-containers.mjs"
+
+  step "Restarting pip-frontend"
+  if [ -f "$FRONTEND_PID_FILE" ]; then kill "$(cat "$FRONTEND_PID_FILE")" 2>/dev/null || true; fi
+  # Stop any pip-frontend started outside this script on the same port (lsof on macOS, ss on Linux)
+  PORT="${PIP_FRONTEND_URL##*:}"
+  if command -v lsof >/dev/null; then
+    PIDS="$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+  else
+    PIDS="$(ss -ltnp 2>/dev/null | sed -n "s/.*:$PORT .*pid=\([0-9]*\).*/\1/p")"
+  fi
+  for pid in $PIDS; do kill "$pid" 2>/dev/null || true; done
+  sleep 2
+  nohup "$PARITY_DIR/pip/start-frontend.sh" "$PIP_SRC/pip-frontend" > "$FRONTEND_LOG" 2>&1 &
+  echo $! > "$FRONTEND_PID_FILE"
+  wait_for "$PIP_FRONTEND_URL/"
+
+  cd "$REPO_DIR"
+  step "Seeding pip"
+  "$TSX" apps/ui-baseline/pip/seed.ts
+  # The ids pip gave each publication, record and user; a check maps those in page URLs to CaTH's
+  cp apps/ui-baseline/output/seed/pip.json "$OUT/seed.json"
+
+  commit() { git -C "$PIP_SRC/$1" rev-parse --short=8 HEAD; }
+  PIP_COMMITS="pip-frontend@$(commit pip-frontend)+pip-data-management@$(commit pip-data-management)+pip-account-management@$(commit pip-account-management)"
 fi
-for pid in $PIDS; do kill "$pid" 2>/dev/null || true; done
-sleep 2
-nohup "$PARITY_DIR/pip/start-frontend.sh" "$PIP_SRC/pip-frontend" > "$FRONTEND_LOG" 2>&1 &
-echo $! > "$FRONTEND_PID_FILE"
-wait_for "$PIP_FRONTEND_URL/"
-
-cd "$REPO_DIR"
-step "Seeding pip"
-"$TSX" apps/ui-baseline/pip/seed.ts
-# The ids pip gave each publication, record and user; a check maps those in page URLs to CaTH's
-cp apps/ui-baseline/output/seed/pip.json "$OUT/seed.json"
-
-commit() { git -C "$PIP_SRC/$1" rev-parse --short=8 HEAD; }
-PIP_COMMITS="pip-frontend@$(commit pip-frontend)+pip-data-management@$(commit pip-data-management)+pip-account-management@$(commit pip-account-management)"
 
 step "Capturing list pages"
 "$TSX" apps/ui-baseline/build-targets.ts pip "$PIP_COMMITS"
@@ -135,7 +170,10 @@ step "Recording downloads"
 step "Running journeys"
 JOURNEYS=""
 [ -n "${UI_BASELINE_SCOPE:-}" ] && JOURNEYS="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8")).journeys.join(","))' "$UI_BASELINE_SCOPE")"
-if [ -z "${UI_BASELINE_SCOPE:-}" ]; then
+if [ "$ENV_NAME" != local ]; then
+  echo "not run against a deployed pip"
+  empty_index "$OUT/journeys"
+elif [ -z "${UI_BASELINE_SCOPE:-}" ]; then
   "$TSX" "$TOOL" journeys --module apps/ui-baseline/pip/journeys/index.ts --out "$OUT/journeys" > "$OUT/journeys.log" 2>&1 || true
   tail -1 "$OUT/journeys.log"
 elif [ -n "$JOURNEYS" ]; then
@@ -154,6 +192,8 @@ const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.joi
 const summary = {
   finishedAt: new Date().toISOString(),
   pip: process.argv[2],
+  // Where it was recorded: local (a fresh, pinned stack) or a deployed environment
+  environment: process.argv[3],
   // A ticket recording: what it was limited to (pip/scope.ts); absent for a full recording
   scope: fs.existsSync(path.join(out, "scope.json")) ? JSON.parse(fs.readFileSync(path.join(out, "scope.json"), "utf-8")) : undefined,
   // A capture fails when pip answers other than the target expects (the not-found page expects 404).
@@ -168,10 +208,10 @@ const summary = {
 fs.writeFileSync(path.join(out, "run.json"), JSON.stringify(summary, null, 2) + "\n");
 console.log(JSON.stringify(summary, null, 2));
 if (summary.failedCaptures || summary.failedJourneys.length) process.exit(1);
-' "$OUT" "$PIP_COMMITS" || {
+' "$OUT" "$PIP_COMMITS" "$ENV_NAME" || {
   echo >&2
   echo "The baseline is incomplete: some captures or journeys failed (see above and the *.log files in $OUT)." >&2
-  if ! curl -sfk -o /dev/null "$PIP_FRONTEND_URL/"; then
+  if [ "$ENV_NAME" = local ] && ! curl -sfk -o /dev/null "$PIP_FRONTEND_URL/"; then
     echo "pip-frontend is no longer running. It is usually killed for lack of memory: stop other things (e.g. CaTH) and re-run." >&2
   fi
   exit 1

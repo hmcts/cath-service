@@ -7,8 +7,7 @@
 {% set serviceUrl = "/" %}
 {% set navigation = [
   { text: "Home", href: "/", active: currentPage == "home", ariaCurrent: "page" },
-  { text: "Result", href: "/runs/" + run.id, active: true, ariaCurrent: "page" } if currentPage == "result" and run,
-  { text: "Sign out", href: "/sign-out" } if user
+  { text: "Result", href: "/runs/" + run.id, active: true, ariaCurrent: "page" } if currentPage == "result" and run
 ] %}
 
 {% block pageTitle %}{{ title }} – Court and tribunal hearings: UI baseline{% endblock %}

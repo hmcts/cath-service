@@ -172,6 +172,7 @@ async function readCapture(dir: string): Promise<Capture> {
   const provenance = JSON.parse(await readFile(path.join(dir, "provenance.json"), "utf-8").catch(() => "{}"));
   const context: NormaliseContext = {
     seededAt: provenance.source?.seededAt ?? provenance.capturedAt ?? null,
+    runToken: provenance.source?.runToken ?? null,
     knownIds: provenance.source?.artefactId ? { [`<artefact:${provenance.source.fixture ?? provenance.id}>`]: provenance.source.artefactId } : {}
   };
   const nodes = parseAria(await readFile(path.join(dir, "aria.yml"), "utf-8"));

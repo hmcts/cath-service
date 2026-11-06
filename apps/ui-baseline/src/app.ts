@@ -7,14 +7,14 @@ import type { Express, Request, Response } from "express";
 import express from "express";
 import nunjucks from "nunjucks";
 import type { ProgressFile } from "../progress.js";
-import type { Auth } from "./auth.js";
 import { isReportPage, withAppNavigation } from "./report-pages.js";
 import { describeProgress } from "./run-progress.js";
 import { type Runner, type RunRequest, RunRequestError } from "./runs.js";
 
 // The hosted parity check's pages: start a check of CaTH against the pip baseline, or a comparison
 // of the files pip and CaTH made for a publication; follow a run; read its report. An internal tool
-// for the CaTH team, so English only. Everything but the health check needs signing in.
+// for the CaTH team, so English only. There is no sign-in: the app is only reachable over the VPN,
+// on an internal host of the private DNS zone (helm/values.yaml).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOVUK_FRONTEND = path.dirname(fileURLToPath(import.meta.resolve("govuk-frontend/package.json")));
 // The report's own stylesheet and the navigation it shares with these pages, served as they are now
@@ -43,9 +43,6 @@ export function createApp(options: AppOptions): Express {
   app.use("/navigation.css", express.static(path.join(__dirname, "assets/navigation.css")));
   app.use("/navigation.js", express.static(path.join(__dirname, "assets/navigation.js")));
   app.use("/app.css", express.static(path.join(__dirname, "assets/app.css")));
-  app.get("/signed-out", (_req, res) => res.render("signed-out"));
-  app.use(options.auth.router);
-  app.use(options.auth.requireUser);
   app.use(express.urlencoded({ extended: false }));
 
   app.get("/", async (_req, res) => {
@@ -54,7 +51,7 @@ export function createApp(options: AppOptions): Express {
 
   app.post("/runs", async (req, res) => {
     try {
-      const run = options.runner.start(requestFrom(req.body as Record<string, string>), res.locals.user.email || res.locals.user.name);
+      const run = options.runner.start(requestFrom(req.body as Record<string, string>));
       res.redirect(`/runs/${run.id}`);
     } catch (error) {
       if (!(error instanceof RunRequestError)) throw error;
@@ -71,7 +68,7 @@ export function createApp(options: AppOptions): Express {
       run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/files-compare.json"))
         ? JSON.parse(await readFile(path.join(dir, "files/compare/files-compare.json"), "utf-8"))
         : null;
-    // Where the publication is in each app; testers signed in here are signed in to both
+    // Where the publication is in each app
     const links =
       run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/links.json"))
         ? JSON.parse(await readFile(path.join(dir, "files/compare/links.json"), "utf-8"))
@@ -154,7 +151,6 @@ function tail(text: string, lines = 80): string {
 
 export interface AppOptions {
   environment: string;
-  auth: Auth;
   runner: Runner;
   // Which stored baseline checks compare against, for the start page
   baselineStatus: () => Promise<{ ready: boolean; description: string }>;

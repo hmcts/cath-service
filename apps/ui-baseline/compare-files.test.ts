@@ -41,7 +41,7 @@ describe("compare-files script", () => {
     await run("--pip", "p1", "--cath", "c1", "--name", "civil-list", "--out", "/tmp/out");
 
     // Assert
-    expect(compareArtefactFiles).toHaveBeenCalledWith({ env: "test", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil-list", out: "/tmp/out" });
+    expect(compareArtefactFiles).toHaveBeenCalledWith({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil-list", out: "/tmp/out" });
     expect(printed()).toContain("2 files: 2 match, 0 differ, 0 CaTH did not make, 0 only CaTH made");
     expect(printed()).toContain("→ /out/compare/files-compare.json");
     expect(printed()).not.toContain("has no files");

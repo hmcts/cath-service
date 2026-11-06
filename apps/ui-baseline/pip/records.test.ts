@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Environment } from "../environments.js";
 import type { ParityUser, SeedResult } from "../fixtures/manifest.js";
+import { type PipApi, pipApi } from "./pip-api.js";
 import { seedRecords } from "./records.js";
 
 const ACCOUNT = "http://localhost:16969";
@@ -30,6 +32,7 @@ interface PipState {
 describe("seedRecords", () => {
   const fetchMock = vi.fn();
   let state: PipState;
+  let api: PipApi;
 
   const posts = (url: string) =>
     fetchMock.mock.calls.filter(([called, init]) => called === url && init?.method === "POST").map(([, init]) => init as RequestInit);
@@ -54,13 +57,13 @@ describe("seedRecords", () => {
       },
       [`GET ${ACCOUNT}/third-party`]: () => state.thirdParties,
       [`POST ${ACCOUNT}/third-party`]: () => {
-        state.thirdParties.push({ userId: "tp-new", name: "Parity Third Party Subscriber" });
+        state.thirdParties.push({ userId: "tp-new", name: JSON.parse(init?.body as string).name });
         return "created";
       },
       [`GET ${ACCOUNT}/audit?pageSize=500`]: () => ({ content: state.audits }),
       [`POST ${ACCOUNT}/audit`]: () => ({ id: "audit-new", details: "Parity audit entry", timestamp: "2026-01-01T00:00:00" })
     };
-    if (key === `GET ${ACCOUNT}/account/provenance/THIRD_PARTY/parity-legacy-third-party`)
+    if (/^GET .*\/account\/provenance\/THIRD_PARTY\/(uib3f9a2c-)?parity-legacy-third-party$/.test(key))
       return state.legacyUser ? Response.json({ userId: "legacy-1" }) : new Response("", { status: 404 });
     const answer = answers[key];
     if (!answer) return new Response(`no fake for ${key}`, { status: 500 });
@@ -68,20 +71,24 @@ describe("seedRecords", () => {
     return new Response(typeof body === "string" ? body : JSON.stringify(body));
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.stubGlobal("fetch", fetchMock);
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => pip(url, init));
     state = { subscriptions: [], applications: [], legacyUser: false, thirdParties: [], audits: [] };
+    vi.stubEnv("PIP_DATA_MANAGEMENT_URL", DATA);
+    vi.stubEnv("PIP_ACCOUNT_MANAGEMENT_URL", ACCOUNT);
+    api = await pipApi({ name: "local", pip: { storage: {} } } as unknown as Environment);
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
   it("should create every record pip does not have yet and read back its id", async () => {
     // Act
-    const result = await seedRecords([MEDIA, ADMIN], PUBLICATIONS);
+    const result = await seedRecords(api, [MEDIA, ADMIN], PUBLICATIONS);
 
     // Assert
     expect(result).toEqual({
@@ -128,6 +135,26 @@ describe("seedRecords", () => {
     });
   });
 
+  it("should give a shared environment's run its own records, owned by the signed-in accounts", async () => {
+    // Arrange
+    const run = { token: "uib3f9a2c", startedAt: "", locationIdBase: 10_000_000 };
+
+    // Act
+    const result = await seedRecords(api, [MEDIA, ADMIN], PUBLICATIONS, { run, owners: { "verified-media": PIP_MEDIA } });
+
+    // Assert
+    expect(JSON.parse(posts(`${ACCOUNT}/subscription`)[0].body as string).userId).toBe("pip-media");
+    expect((posts(`${ACCOUNT}/application`)[0].body as FormData).get("email")).toBe("uib3f9a2c.parity.applicant@example.com");
+    expect(JSON.parse(posts(`${ACCOUNT}/account/add/pi`)[0].body as string)[0]).toMatchObject({
+      email: "uib3f9a2c.legacy-third-party@example.com",
+      provenanceUserId: "uib3f9a2c-parity-legacy-third-party"
+    });
+    expect(JSON.parse(posts(`${ACCOUNT}/third-party`)[0].body as string)).toEqual({ name: "uib3f9a2c Parity Third Party Subscriber" });
+    // The audit entry's owner, the system admin, has no test account here
+    expect(posts(`${ACCOUNT}/audit`)).toEqual([]);
+    expect(Object.keys(result)).toEqual(["location-subscription", "pending-application", "legacy-third-party", "third-party-subscriber"]);
+  });
+
   it("should reuse the records pip already has", async () => {
     // Arrange
     state.subscriptions.push({ subscriptionId: "sub-1", locationId: 9 });
@@ -137,7 +164,7 @@ describe("seedRecords", () => {
     state.audits.push({ id: "audit-1", details: "Parity audit entry", timestamp: "t1" });
 
     // Act
-    const result = await seedRecords([MEDIA, ADMIN], PUBLICATIONS);
+    const result = await seedRecords(api, [MEDIA, ADMIN], PUBLICATIONS);
 
     // Assert
     expect(result["location-subscription"].subscriptionId).toBe("sub-1");
@@ -149,7 +176,7 @@ describe("seedRecords", () => {
 
   it("should fail when records.json names a user that is not a fixture user", async () => {
     // Act
-    const result = seedRecords([ADMIN], PUBLICATIONS);
+    const result = seedRecords(api, [ADMIN], PUBLICATIONS);
 
     // Assert
     await expect(result).rejects.toThrow("records.json references unknown verified-media");
@@ -157,7 +184,7 @@ describe("seedRecords", () => {
 
   it("should fail when a subscription's publication was not seeded", async () => {
     // Act
-    const result = seedRecords([MEDIA, ADMIN], {});
+    const result = seedRecords(api, [MEDIA, ADMIN], {});
 
     // Assert
     await expect(result).rejects.toThrow("records.json references unknown civil-and-family-daily-cause-list");
@@ -170,7 +197,7 @@ describe("seedRecords", () => {
     );
 
     // Act
-    const result = seedRecords([MEDIA, ADMIN], PUBLICATIONS);
+    const result = seedRecords(api, [MEDIA, ADMIN], PUBLICATIONS);
 
     // Assert
     await expect(result).rejects.toThrow("pip GET /application failed: 500 server error");
@@ -183,7 +210,7 @@ describe("seedRecords", () => {
     );
 
     // Act
-    const result = seedRecords([MEDIA, ADMIN], PUBLICATIONS);
+    const result = seedRecords(api, [MEDIA, ADMIN], PUBLICATIONS);
 
     // Assert
     await expect(result).rejects.toThrow("pip POST /account/add/pi failed: 200");

@@ -107,6 +107,11 @@ export interface SeedResult {
   app: string;
   seededAt: string;
   ingestion: string;
+  // A seed in a shared environment (pip/run.ts): the environment, the token on what it seeded, and
+  // each fixture location id -> the id the app gave it. Absent where the app was seeded empty.
+  environment?: string;
+  runToken?: string;
+  locations?: Record<string, number>;
   // excelUploaded: false when the app was given the list as JSON, so made no Excel from the spreadsheet
   publications: Record<string, { artefactId: string; locationId: number; metadata: PublicationMetadata; excelUploaded?: boolean }>;
   // Publications the app refused, with its reason; a finding in its own right

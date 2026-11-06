@@ -14,10 +14,11 @@ nodejs:
   cpuLimits: 2000m
   environment:
     NODE_ENV: 'production'
-    UI_BASELINE_ENV: test
-  # Only secrets every environment it runs in has: a missing one stops the pod starting. Test
-  # accounts for signed-in pages are read from the vault when a check needs them, so adding one
-  # (environments.json names them) needs no change here.
+    UI_BASELINE_ENV: aat
+  # Only secrets every environment it runs in has: a missing one stops the pod starting. The IDAM
+  # test account for signed-in pages is read from the vault when a check needs it
+  # (environments.json names it), so it needs no change here. There is no sign-in to the app itself:
+  # its host is in the private DNS zone, so only people on the VPN can reach it.
   keyVaults:
     cath:
       secrets:
@@ -29,15 +30,3 @@ nodejs:
           alias: CATH_SERVICE_API_CLIENT_SECRET
         - name: app-tenant
           alias: APP_TENANT
-        - name: sso-client-id
-          alias: SSO_CLIENT_ID
-        - name: sso-client-secret
-          alias: SSO_CLIENT_SECRET
-        - name: sso-issuer-url
-          alias: SSO_ISSUER_URL
-        - name: sso-sg-system-admin
-          alias: SSO_SYSTEM_ADMIN_GROUP_ID
-        - name: sso-sg-admin-ctsc
-          alias: SSO_INTERNAL_ADMIN_CTSC_GROUP_ID
-        - name: sso-sg-admin-local
-          alias: SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID

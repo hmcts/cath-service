@@ -54,7 +54,7 @@ function secretReader(): SecretReader {
 export interface Environment {
   name: string;
   cath: CathConfig;
-  pip: AppConfig;
+  pip: PipConfig;
   // A secret by its vault name, or null when the vault does not have it
   secret: SecretReader;
 }
@@ -63,7 +63,7 @@ type SecretReader = (config: AppConfig, name: string) => Promise<string | null>;
 
 interface EnvironmentConfig {
   cath: CathConfig;
-  pip: AppConfig;
+  pip: PipConfig;
 }
 
 export interface AppConfig {
@@ -78,14 +78,34 @@ export interface CathConfig extends AppConfig {
   baseUrl: string;
   apiUrl: string;
   signIn: "session" | "accounts";
-  // CaTH role -> the vault secrets holding a test account with it, and the sign-in flow it uses
+  // CaTH role -> the vault secrets holding a test account with it, signed in through CFT IDAM
   accounts?: Record<string, TestAccount>;
   publicationApi?: { tenantId: string; clientId: string; clientSecret: string };
   filesWaitSeconds: number;
 }
 
+export interface PipConfig extends AppConfig {
+  // "<pip role>/<provenance>" (e.g. "VERIFIED/CFT_IDAM") -> a test account to sign in to a deployed
+  // pip as (pip/account-sign-in.ts). pip shows a verified user different pages by provenance.
+  accounts?: Record<string, TestAccount>;
+  accountManagementUrl?: string;
+  // How to call a deployed pip's APIs (pip/pip-api.ts): the vault secrets for the tenant and for
+  // each API's client-credentials client, as pip's own functional tests call them. Absent locally,
+  // where pip runs in dev mode and asks for no token.
+  api?: { keyVault: string; tenantId: string; dataManagement: PipApiClient; accountManagement: PipApiClient };
+}
+
+export interface PipApiClient {
+  clientId: string;
+  clientSecret: string;
+  // The API's app ID URI; the token is asked for "<scope>/.default"
+  scope: string;
+}
+
+// An AAT IDAM account: IDAM is the only sign-in a check uses, so only verified users are signed in
 export interface TestAccount {
-  flow: "sso" | "crime" | "cft";
   user: string;
   password: string;
+  // The vault holding this account's secrets, when it is not the app's own
+  keyVault?: string;
 }

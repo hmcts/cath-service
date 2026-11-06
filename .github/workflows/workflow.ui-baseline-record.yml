@@ -1,7 +1,7 @@
 name: UI baseline - record pip
 
-# Records the pip baseline apps/ui-baseline compares CaTH against, and stores it in the test
-# environment's storage (cathsaperftest, container ui-baseline) for the hosted check and anyone
+# Records the pip baseline apps/ui-baseline compares CaTH against, and stores it in aat's
+# storage (cathsaaat, container ui-baseline) for the hosted check and anyone
 # running a check to fetch with `yarn ui-baseline:baseline pull`. Run by hand: pip is pinned in
 # apps/ui-baseline/pip/setup.sh and the fixtures are committed, so the baseline only needs
 # recording again when either changes.
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       store:
-        description: "Store the recorded baseline in the test environment (otherwise only keep it as a workflow artifact)"
+        description: "Store the recorded baseline in aat (otherwise only keep it as a workflow artifact)"
         type: boolean
         default: true
 
@@ -68,9 +68,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      - name: Store the baseline in the test environment
+      - name: Store the baseline in aat
         if: inputs.store
         run: |
-          CONNECTION_STRING="$(az keyvault secret show --vault-name cath-perftest --name storageaccount-connection-string --query value -o tsv)"
+          CONNECTION_STRING="$(az keyvault secret show --vault-name cath-aat --name storageaccount-connection-string --query value -o tsv)"
           echo "::add-mask::$CONNECTION_STRING"
-          CATH_STORAGE_CONNECTION_STRING="$CONNECTION_STRING" yarn ui-baseline:baseline push --env test
+          CATH_STORAGE_CONNECTION_STRING="$CONNECTION_STRING" yarn ui-baseline:baseline push --env aat

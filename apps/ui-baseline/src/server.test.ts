@@ -1,7 +1,6 @@
 import { getPropertiesVolumeSecrets } from "@hmcts-cft/cloud-native-platform";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.js";
-import { createAuth } from "./auth.js";
 import { createBaselineCache } from "./baseline.js";
 import { createRunner } from "./runs.js";
 
@@ -17,7 +16,6 @@ vi.mock("../baseline-store.js", () => ({
   pullBaseline: vi.fn()
 }));
 vi.mock("./app.js", () => ({ createApp: vi.fn(() => ({ listen })) }));
-vi.mock("./auth.js", () => ({ createAuth: vi.fn(async () => ({ router: {}, requireUser: vi.fn() })) }));
 vi.mock("./baseline.js", () => ({ createBaselineCache: vi.fn(() => ({ ensure, status: vi.fn() })) }));
 vi.mock("./runs.js", () => ({ createRunner: vi.fn(() => ({ restore })) }));
 
@@ -27,8 +25,6 @@ async function startServer(env: Record<string, string | undefined>) {
   vi.resetModules();
   await import("./server.js");
 }
-
-const ADMIN_GROUPS = { SSO_SYSTEM_ADMIN_GROUP_ID: "system", SSO_INTERNAL_ADMIN_CTSC_GROUP_ID: "ctsc", SSO_INTERNAL_ADMIN_LOCAL_GROUP_ID: "local" };
 
 describe("server", () => {
   beforeEach(() => {
@@ -40,37 +36,27 @@ describe("server", () => {
     vi.unstubAllEnvs();
   });
 
-  it("should let CaTH's admin groups in by default, and listen on the configured port", async () => {
+  it("should listen on the configured port with no sign-in", async () => {
     // Act
-    await startServer({ ...ADMIN_GROUPS, PORT: "9123", BASE_URL: "https://ui-baseline.example", UI_BASELINE_ALLOWED_GROUP_IDS: undefined });
+    await startServer({ NODE_ENV: "production", PORT: "9123" });
 
     // Assert
-    expect(createAuth).toHaveBeenCalledWith(
-      expect.objectContaining({ disabled: false, baseUrl: "https://ui-baseline.example", allowedGroupIds: ["system", "ctsc", "local"], secureCookies: true })
-    );
     expect(listen).toHaveBeenCalledWith(9123, expect.any(Function));
+    expect(createApp).toHaveBeenCalledWith(expect.not.objectContaining({ auth: expect.anything() }));
     expect(ensure).toHaveBeenCalled();
   });
 
-  it("should let in only the groups named, when they are", async () => {
-    // Act
-    await startServer({ ...ADMIN_GROUPS, UI_BASELINE_ALLOWED_GROUP_IDS: "testers,,leads" });
-
-    // Assert
-    expect(createAuth).toHaveBeenCalledWith(expect.objectContaining({ allowedGroupIds: ["testers", "leads"], secureCookies: false }));
-  });
-
-  it("should check the test environment, and store runs where the baseline is", async () => {
+  it("should check aat by default, and store runs where the baseline is", async () => {
     // Act
     await startServer({ UI_BASELINE_ENV: undefined, GIT_COMMIT: "abc1234" });
 
     // Assert
-    expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ environment: "test", commit: "abc1234", store: { name: "store" } }));
+    expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ environment: "aat", commit: "abc1234", store: { name: "store" } }));
     expect(createBaselineCache).toHaveBeenCalledWith(expect.objectContaining({ store: { name: "store" } }));
-    expect(createApp).toHaveBeenCalledWith(expect.objectContaining({ environment: "test" }));
+    expect(createApp).toHaveBeenCalledWith(expect.objectContaining({ environment: "aat" }));
   });
 
-  it("should read the vault's secrets only in the pod", async () => {
+  it("should read no vault secrets outside the pod", async () => {
     // Act
     await startServer({ NODE_ENV: "test" });
 
@@ -84,14 +70,6 @@ describe("server", () => {
 
     // Assert
     expect(getPropertiesVolumeSecrets).toHaveBeenCalledWith({ chartPath: expect.stringMatching(/helm\/values\.yaml$/) });
-  });
-
-  it("should refuse to run without sign-in in production", async () => {
-    // Act & Assert
-    await expect(startServer({ NODE_ENV: "production", UI_BASELINE_AUTH_DISABLED: "true" })).rejects.toThrow(
-      "UI_BASELINE_AUTH_DISABLED is for a developer's machine only"
-    );
-    expect(listen).not.toHaveBeenCalled();
   });
 
   it("should keep running when earlier runs or the baseline cannot be loaded", async () => {

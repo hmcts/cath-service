@@ -25,6 +25,16 @@ describe("normalise", () => {
     expect(result).toBe(["'single' \"double\"", "  - status", "  - status", "/search?q=1", "/a?x=1"].join("\n"));
   });
 
+  it("should drop a recording's run token from the names and emails it seeded, and nothing else", () => {
+    // Act
+    const result = normalise("uib3f9a2c Oxford Combined Court Centre, UIB3F9A2C.parity@example.com, uib3f9a2cx, uib000000 Court", {
+      runToken: "uib3f9a2c"
+    });
+
+    // Assert
+    expect(result).toBe("Oxford Combined Court Centre, parity@example.com, uib3f9a2cx, uib000000 Court");
+  });
+
   it("should leave dates alone when there is no seed date", () => {
     // Act
     const result = normalise("30/10/2026 and 30 October 2026");

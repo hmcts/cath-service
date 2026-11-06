@@ -35,8 +35,9 @@ locals {
     # crime_federation_enabled reads crime-oidc-config from the app vault - see
     # tf-crime-connection-mi.tf. The secret must exist in the vault before this is true.
     # ui_baseline adds the storage for apps/ui-baseline (recorded pip baselines and check
-    # results). Only the environment testers run parity checks against has it.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true, ui_baseline = false }
+    # results) where testers run parity checks, aat. perftest, where they used to, keeps its
+    # container until its stored baselines are no longer wanted: turning it off deletes them.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true, ui_baseline = true }
     demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true, ui_baseline = false }
     ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true, ui_baseline = false }
     perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true, ui_baseline = true }
