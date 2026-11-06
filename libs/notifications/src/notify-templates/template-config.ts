@@ -11,6 +11,13 @@ import {
 const GOVUK_NOTIFY_API_KEY = process.env.GOVUK_NOTIFY_API_KEY || "";
 const CATH_SERVICE_URL = process.env.CATH_SERVICE_URL || "https://www.court-tribunal-hearings.service.gov.uk";
 
+// Only files strictly smaller than 2 MB are linked; a file of exactly 2 MB is withheld
+export const MAX_NOTIFY_ATTACHMENT_SIZE_BYTES = 2 * 1024 * 1024;
+
+export function isWithinNotifyAttachmentLimit(file: Buffer): boolean {
+  return file.length < MAX_NOTIFY_ATTACHMENT_SIZE_BYTES;
+}
+
 // hasPdf / hasExcel mean the file was generated AND is small enough to link (under 2MB), i.e. it will
 // be attached to the email. Each file is judged on its own: an oversized or missing file only drops
 // that file's link, never the other's. The PDF/Excel templates require pdf_link_*/excel_link_*

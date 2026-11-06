@@ -438,23 +438,12 @@ export interface FlatFileInfo {
   createdAt?: string;
 }
 
-export async function checkFlatFileExists(artefactId: string): Promise<FlatFileInfo> {
-  return callTestSupportApi<FlatFileInfo>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}`);
-}
-
-export interface FlatFileListItem {
-  filename: string;
-  sizeBytes: number;
-  createdAt: string;
-}
-
-export interface FlatFileListResponse {
-  artefactId: string;
-  files: FlatFileListItem[];
-}
-
-export async function listFlatFiles(artefactId: string): Promise<FlatFileListResponse> {
-  return callTestSupportApi<FlatFileListResponse>("GET", `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}&all=true`);
+// Checks the PUBLICATIONS container, where generated PDFs and Excel files are stored
+export async function checkFlatFileExists(artefactId: string, extension = ".pdf"): Promise<FlatFileInfo> {
+  return callTestSupportApi<FlatFileInfo>(
+    "GET",
+    `/test-support/flat-files?artefactId=${encodeURIComponent(artefactId)}&extension=${encodeURIComponent(extension)}`
+  );
 }
 
 export async function uploadTestFlatFileToWeb(input: UploadFlatFileInput): Promise<UploadFlatFileResponse> {

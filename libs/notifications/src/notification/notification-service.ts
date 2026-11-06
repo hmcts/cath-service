@@ -114,6 +114,7 @@ import {
   getLocationSubscriptionDeletionTemplateId,
   getSubscriptionTemplateId,
   getSystemAdminTemplateId,
+  isWithinNotifyAttachmentLimit,
   type TemplateParameters
 } from "../notify-templates/template-config.js";
 import { createNotificationAuditLog, updateNotificationStatus } from "./notification-queries.js";
@@ -129,8 +130,6 @@ import {
   type SubscriptionWithUser
 } from "./subscription-queries.js";
 import { type PublicationEvent, validatePublicationEvent } from "./validation.js";
-
-const MAX_LINKED_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 type SummaryExtractor = (jsonData: unknown) => CaseSummary[];
 type SummaryFormatter = (items: CaseSummary[]) => string;
@@ -605,6 +604,7 @@ async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | 
   const pdfBuffer = toLinkableFile(pdfBlobKey ? await downloadBlob(pdfBlobKey, CONTAINER.PUBLICATIONS) : null);
   const excelBuffer = toLinkableFile(await downloadBlob(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS));
 
+  // Only upload files to Notify when the chosen template links them; the no-links template ignores them
   return {
     templateParameters,
     templateId: getSubscriptionTemplateId({ hasPdf: !!pdfBuffer, hasExcel: !!excelBuffer }),
@@ -614,7 +614,7 @@ async function buildEmailDataWithFiles(artefactId: string, pdfBlobKey: string | 
 }
 
 function toLinkableFile(buffer: Buffer | null): Buffer | undefined {
-  return buffer && buffer.length < MAX_LINKED_FILE_SIZE_BYTES ? buffer : undefined;
+  return buffer && isWithinNotifyAttachmentLimit(buffer) ? buffer : undefined;
 }
 
 async function buildFallbackEmailData(event: PublicationEvent, userName: string, caseValue?: string): Promise<EmailTemplateData> {
