@@ -5,11 +5,17 @@ import type { Browser } from "playwright";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchChromium } from "../capture/browser.js";
 import { capturePage } from "../capture/capture-page.js";
+import { settle } from "../capture/settle.js";
 import type { JourneySuite } from "./journey.js";
 import { runJourneys } from "./run-journeys.js";
 
 vi.mock("../capture/browser.js", () => ({ launchChromium: vi.fn() }));
 vi.mock("../capture/capture-page.js", () => ({ capturePage: vi.fn() }));
+vi.mock("../capture/settle.js", () => ({
+  trackRequests: vi.fn(),
+  settle: vi.fn().mockResolvedValue(undefined),
+  gotoSettled: vi.fn((page: { goto: (url: string, options: unknown) => Promise<unknown> }, url: string) => page.goto(url, { waitUntil: "load" }))
+}));
 
 // The suite module the runner imports is written per test; the suite itself lives on globalThis
 // so a test can hand it functions
@@ -107,9 +113,9 @@ describe("runJourneys", () => {
       { journey: "search", locale: "en", ok: true, steps: 2, error: null },
       { journey: "search", locale: "cy", ok: true, steps: 2, error: null }
     ]);
-    expect(pages[0].goto).toHaveBeenCalledWith("http://localhost:8080/search", { waitUntil: "networkidle" });
-    expect(pages[1].goto).toHaveBeenCalledWith("http://localhost:8080/search?lng=cy", { waitUntil: "networkidle" });
-    expect(pages[0].waitForLoadState).toHaveBeenCalledWith("networkidle");
+    expect(pages[0].goto).toHaveBeenCalledWith("http://localhost:8080/search", { waitUntil: "load" });
+    expect(pages[1].goto).toHaveBeenCalledWith("http://localhost:8080/search?lng=cy", { waitUntil: "load" });
+    expect(settle).toHaveBeenCalledWith(pages[0]);
     expect(contexts[0].addCookies).toHaveBeenCalledWith([{ name: "consent", value: "yes", url: "http://localhost:8080" }]);
     expect(contexts[0].options).toMatchObject({ timezoneId: "Europe/London", viewport: { width: 1280, height: 800 } });
     expect(capturePage).toHaveBeenCalledWith(pages[0], path.join(outDir, "search/en/01-search"));

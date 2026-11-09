@@ -1,12 +1,13 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CompareSummary } from "../compare/compare.js";
+import { type FakeReviewer, fakeReviewer } from "./fake-reviewer.test-helper.js";
 import { buildPrompt, parseVerdicts, type ReviewItem, reviewFindings } from "./review.js";
 
-vi.mock("node:child_process", () => ({ execFileSync: vi.fn(), spawnSync: vi.fn() }));
+vi.mock("node:child_process", () => ({ execFileSync: vi.fn(), spawn: vi.fn() }));
 vi.mock("../../system-command.js", () => ({ systemCommand: (name: string) => name }));
 
 const COMPARISON: CompareSummary = {
@@ -38,8 +39,13 @@ const COMPARISON: CompareSummary = {
 };
 
 function reviewerSays(stdout: string, status = 0, stderr = "") {
-  vi.mocked(spawnSync).mockReturnValue({ status, stdout, stderr } as never);
+  vi.mocked(spawn).mockImplementation((() => fakeReviewer({ status, stdout, stderr })) as never);
 }
+
+const spawned = (n: number) => {
+  const [program, args] = vi.mocked(spawn).mock.calls[n] as unknown as [string, string[]];
+  return { program, args, input: (vi.mocked(spawn).mock.results[n].value as FakeReviewer).input };
+};
 
 async function setUp(comparison: CompareSummary = COMPARISON) {
   const dir = await mkdtemp(path.join(tmpdir(), "review-"));
@@ -82,18 +88,18 @@ describe("reviewFindings", () => {
       "f3 axe-new faq cy (expanded)"
     ]);
     expect(result.items[1].review).toEqual({ id: "f2", verdict: "defect", reason: "heading lost", evidence: "" });
-    const [program, args, spawnOptions] = vi.mocked(spawnSync).mock.calls[0] as unknown as [string, string[], { input: string }];
+    const { program, args, input } = spawned(0);
     expect(program).toBe("claude");
     expect(args.slice(0, 3)).toEqual(["-p", "--output-format", "json"]);
     expect(JSON.parse(args[args.indexOf("--json-schema") + 1]).required).toEqual(["verdicts"]);
     expect(args[args.indexOf("--tools") + 1]).toBe("");
     expect(args).not.toContain("--allowedTools");
     expect(result.failures).toEqual([]);
-    expect(spawnOptions.input).toContain("Page titles must end with - GOV.UK");
-    expect(spawnOptions.input).toContain("| pip shows a stray Welcome heading |");
-    expect(spawnOptions.input).toContain("between pip (the original service) and CaTH (its replacement)");
-    expect(spawnOptions.input).toContain("- id: f2\n  category: heading\n  change: missing");
-    expect(spawnOptions.input).not.toContain("color-contrast");
+    expect(input).toContain("Page titles must end with - GOV.UK");
+    expect(input).toContain("| pip shows a stray Welcome heading |");
+    expect(input).toContain("between pip (the original service) and CaTH (its replacement)");
+    expect(input).toContain("- id: f2\n  category: heading\n  change: missing");
+    expect(input).not.toContain("color-contrast");
     expect(JSON.parse(await readFile(path.join(out, "review.json"), "utf-8"))).toEqual(result);
   });
 
@@ -106,7 +112,7 @@ describe("reviewFindings", () => {
     const result = await reviewFindings({ compare, out, reviewer: ["my-llm", "--json"] });
 
     // Assert
-    expect(spawnSync).toHaveBeenCalledWith("my-llm", ["--json"], expect.objectContaining({ encoding: "utf-8" }));
+    expect(spawn).toHaveBeenCalledWith("my-llm", ["--json"], expect.anything());
     expect(result.items.map((item) => item.review?.verdict)).toEqual(["needs-human", "needs-human", "needs-human"]);
     expect(result.items[0].review?.reason).toBe("The reviewer gave no usable verdict for this item.");
     expect(result.totals).toEqual({ items: 3, intended: 0, defect: 0, needsHuman: 3 });
@@ -125,7 +131,7 @@ describe("reviewFindings", () => {
     expect(execFileSync).toHaveBeenCalledWith("gh", ["issue", "view", "312", "--repo", "hmcts/cath-service", "--json", "title,body,author"], {
       encoding: "utf-8"
     });
-    const prompt = (vi.mocked(spawnSync).mock.calls[0][2] as { input: string }).input;
+    const prompt = spawned(0).input;
     expect(prompt).toContain("# Migrate the home page\n\nKeep the welcome heading");
   });
 
@@ -150,7 +156,7 @@ describe("reviewFindings", () => {
     const result = await reviewFindings({ compare, out, promptOnly: true });
 
     // Assert
-    expect(spawnSync).not.toHaveBeenCalled();
+    expect(spawn).not.toHaveBeenCalled();
     expect(result.totals.items).toBe(45);
     expect((await readdir(out)).sort()).toEqual(["prompt-1.md", "prompt-2.md"]);
     const second = await readFile(path.join(out, "prompt-2.md"), "utf-8");

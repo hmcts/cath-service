@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   execFileSync: vi.fn(),
   spawn: vi.fn(),
   spawnSync: vi.fn(),
-  captureBatch: vi.fn(),
+  captureBatches: vi.fn(),
   collectFiles: vi.fn(),
   compareFileRuns: vi.fn(),
   compareJourneys: vi.fn(),
@@ -45,7 +45,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   return { ...actual, readFile };
 });
 vi.mock("./core/index.js", () => ({
-  captureBatch: mocks.captureBatch,
+  captureBatches: mocks.captureBatches,
   collectFiles: mocks.collectFiles,
   compareFileRuns: mocks.compareFileRuns,
   compareJourneys: mocks.compareJourneys,
@@ -199,7 +199,8 @@ function scriptsSucceed(seed: unknown = CATH_SEED, signIn: unknown = SIGN_IN): v
 
 // Captures every target as asked, except those a test says CaTH answered differently
 function captureAnswers(answers: Record<string, { status?: number; path?: string }> = {}): void {
-  mocks.captureBatch.mockImplementation(async (targetsFile: string, settings: { outDir: string }) => {
+  type Batch = { targetsFile: string; settings: { outDir: string }; onCaptured?: (done: number) => void; onFinished?: (results: unknown[]) => void };
+  const captureOne = ({ targetsFile, settings, onCaptured, onFinished }: Batch) => {
     const targets = JSON.parse(readFileSync(targetsFile, "utf-8")) as { id: string; url: string; locales: string[]; viewport?: string }[];
     const entries = targets.flatMap((target) =>
       target.locales.map((locale) => {
@@ -211,8 +212,12 @@ function captureAnswers(answers: Record<string, { status?: number; path?: string
     );
     for (const entry of entries) mkdirSync(path.join(settings.outDir, entry.id, entry.locale, entry.state), { recursive: true });
     writeFileSync(path.join(settings.outDir, "index.jsonl"), entries.map((entry) => `${JSON.stringify(entry)}\n`).join(""));
-    return entries.map((entry) => ({ ok: entry.status < 400 }));
-  });
+    const results = entries.map((entry) => ({ ok: entry.status < 400 }));
+    onCaptured?.(results.length);
+    onFinished?.(results);
+    return results;
+  };
+  mocks.captureBatches.mockImplementation(async (batches: Batch[]) => batches.map(captureOne));
 }
 
 function compareResults(differing: Record<string, { locale: string; state: string }[]> = {}): void {
@@ -438,7 +443,43 @@ describe("check", () => {
         `${TARGET}/summary-of-publications?locationId=PIPLOC&artefactId=CATH-ART-1`
       );
       expect(pages.find((t) => t.id === "page--list-view")?.url).toBe(`${TARGET}/list/7/CATH-ART-1?keep=1&user=CATH-USER`);
-      expect(mocks.captureBatch).toHaveBeenCalledWith(path.join(out, "targets-pages.json"), { outDir: path.join(out, "cath/pages") }, 4, expect.any(Function));
+      expect(mocks.captureBatches).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ targetsFile: path.join(out, "targets-pages.json"), settings: { outDir: path.join(out, "cath/pages") } })
+        ]),
+        4
+      );
+    });
+
+    it("should capture as many pages at once as UI_BASELINE_CONCURRENCY says when --concurrency is not given", async () => {
+      // Arrange
+      process.env.UI_BASELINE_CONCURRENCY = "6";
+
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      expect(mocks.captureBatches).toHaveBeenCalledWith(expect.any(Array), 6);
+    });
+
+    it("should capture as many pages at once as --concurrency says, over UI_BASELINE_CONCURRENCY", async () => {
+      // Arrange
+      process.env.UI_BASELINE_CONCURRENCY = "6";
+
+      // Act
+      await runCheck(["--ticket", "42", "--concurrency", "2"]);
+
+      // Assert
+      expect(mocks.captureBatches).toHaveBeenCalledWith(expect.any(Array), 2);
+    });
+
+    it("should refuse a concurrency that is not a small whole number", async () => {
+      // Act
+      const { error } = await runCheck(["--ticket", "42", "--concurrency", "0"]);
+
+      // Assert
+      expect(error?.message).toContain("--concurrency");
+      expect(mocks.captureBatches).not.toHaveBeenCalled();
     });
 
     it("should leave captures CaTH redirected or failed out of the comparison", async () => {
@@ -842,7 +883,7 @@ describe("check", () => {
       // Assert
       expect(code).toBe(0);
       expect(mocks.spawnSync.mock.calls.map((call) => call[1])).toEqual([expect.arrayContaining(["apps/ui-baseline/cath/sign-in.ts"])]);
-      expect(mocks.captureBatch).not.toHaveBeenCalled();
+      expect(mocks.captureBatches).not.toHaveBeenCalled();
       expect(mocks.runJourneys).not.toHaveBeenCalled();
       const body = readFileSync(path.join(out, "evidence/pr-comment.md"), "utf-8");
       expect(body).toContain("- journey absent: not in the pip baseline");

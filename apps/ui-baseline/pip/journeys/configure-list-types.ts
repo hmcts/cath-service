@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import { link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 
 // Ported from pip's verified/email-subscriptions-test.ts ("filter and select which list type to
@@ -16,18 +16,18 @@ export const configureListTypes: Journey = {
     await act(`subscribe to court ${COURT} for the civil and family list in English`, async () => {
       await page.locator("#subscription-choice-1").check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator(`input[type=checkbox][id="${COURT}"]`).check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator("#CIVIL_AND_FAMILY_DAILY_CAUSE_LIST").check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator("#english").check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await continueButton().click();
     });
     await checkpoint("subscription-confirmed");

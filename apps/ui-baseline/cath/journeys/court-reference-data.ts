@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import type { CathJourneyData } from "./index.js";
 import { chooseCourt, link, primaryButton } from "./steps.js";
 
@@ -37,7 +37,7 @@ export const courtReferenceData: Journey = {
     await checkpoint("system-admin-dashboard");
     await act("reference data card, then upload reference data", async () => {
       await link(page, "/reference-data").click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await link(page, "/reference-data-upload").click();
     });
     await checkpoint("reference-data-upload");

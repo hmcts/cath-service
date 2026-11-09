@@ -5,8 +5,14 @@ import type { Browser } from "playwright";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { capturePage, expandAll } from "./capture-page.js";
 import { captureTarget } from "./capture-target.js";
+import { settle, trackRequests } from "./settle.js";
 
 vi.mock("./capture-page.js", () => ({ capturePage: vi.fn(), expandAll: vi.fn() }));
+vi.mock("./settle.js", () => ({
+  trackRequests: vi.fn(),
+  settle: vi.fn().mockResolvedValue(undefined),
+  gotoSettled: vi.fn((page: { goto: (url: string, options: unknown) => Promise<unknown> }, url: string) => page.goto(url, { waitUntil: "load" }))
+}));
 
 function fakeBrowser(status: number | null = 200) {
   const page = {
@@ -53,7 +59,8 @@ describe("captureTarget", () => {
       reducedMotion: "reduce",
       ignoreHTTPSErrors: true
     });
-    expect(page.goto).toHaveBeenCalledWith("http://localhost/page", { waitUntil: "networkidle" });
+    expect(page.goto).toHaveBeenCalledWith("http://localhost/page", { waitUntil: "load" });
+    expect(trackRequests).toHaveBeenCalledWith(context);
     expect(capturePage).toHaveBeenCalledWith(page, path.join(outDir, "home/en/default"), { region: "#main", status: 200 });
     expect(context.addCookies).not.toHaveBeenCalled();
     expect(context.close).toHaveBeenCalledTimes(1);
@@ -85,7 +92,7 @@ describe("captureTarget", () => {
 
     // Assert
     expect(results.map((r) => r.state)).toEqual(["default", "expanded"]);
-    expect(page.waitForLoadState).toHaveBeenCalledWith("networkidle");
+    expect(settle).toHaveBeenCalledWith(page);
     expect((await readFile(path.join(outDir, "index.jsonl"), "utf-8")).trim().split("\n")).toHaveLength(2);
   });
 
@@ -104,8 +111,8 @@ describe("captureTarget", () => {
     // Assert
     expect(results[0].locale).toBe("cy");
     expect(context.addCookies).toHaveBeenCalledWith([{ name: "session", value: "abc", url: "http://localhost/list?x=1" }]);
-    expect(page.goto).toHaveBeenNthCalledWith(1, "http://localhost/sign-in", { waitUntil: "networkidle" });
-    expect(page.goto).toHaveBeenNthCalledWith(2, "http://localhost/list?x=1&lng=cy", { waitUntil: "networkidle" });
+    expect(page.goto).toHaveBeenNthCalledWith(1, "http://localhost/sign-in", { waitUntil: "load" });
+    expect(page.goto).toHaveBeenNthCalledWith(2, "http://localhost/list?x=1&lng=cy", { waitUntil: "load" });
     expect(browser.newContext).toHaveBeenCalledWith(expect.objectContaining({ timezoneId: "UTC" }));
     const provenance = JSON.parse(await readFile(path.join(outDir, "list/cy/default/provenance.json"), "utf-8"));
     expect(provenance.timezone).toBe("UTC");

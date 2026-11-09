@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { systemCommand } from "../../system-command.js";
 import type { CompareSummary, Finding } from "../compare/compare.js";
-import { runReviewer } from "./reviewer-command.js";
+import { forEachReviewer, runReviewer } from "./reviewer-command.js";
 
 // Classifies each difference `parity compare` found as intended, a defect, or needing a human,
 // judged only against the ticket's requirements and the source app's known defects. Repeated
@@ -49,20 +49,22 @@ export async function reviewFindings(options: ReviewOptions): Promise<ReviewResu
   const knownDefects = options.knownDefects ? await readFile(options.knownDefects, "utf-8") : "";
   const items = reviewItems(comparison);
 
-  const verdicts: Verdict[] = [];
-  const failures: string[] = [];
-  for (let start = 0; start < items.length; start += BATCH_SIZE) {
-    const batch = items.slice(start, start + BATCH_SIZE);
-    const prompt = buildPrompt({ requirements, knownDefects, items: batch, sourceName: options.sourceName, targetName: options.targetName });
-    if (options.promptOnly) {
-      await mkdir(options.out, { recursive: true });
-      await writeFile(path.join(options.out, `prompt-${start / BATCH_SIZE + 1}.md`), prompt);
-      continue;
-    }
-    const judged = judgeBatch(options.reviewer ?? DEFAULT_REVIEWER, prompt, batch);
-    verdicts.push(...judged.verdicts);
-    if (judged.failure) failures.push(judged.failure);
+  const batches = Array.from({ length: Math.ceil(items.length / BATCH_SIZE) }, (_, i) => items.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE));
+  const prompts = batches.map((batch) =>
+    buildPrompt({ requirements, knownDefects, items: batch, sourceName: options.sourceName, targetName: options.targetName })
+  );
+  if (options.promptOnly) {
+    await mkdir(options.out, { recursive: true });
+    await Promise.all(prompts.map((prompt, i) => writeFile(path.join(options.out, `prompt-${i + 1}.md`), prompt)));
   }
+  const judged = options.promptOnly
+    ? []
+    : await forEachReviewer(
+        batches.map((batch, i) => ({ batch, prompt: prompts[i] })),
+        ({ batch, prompt }) => judgeBatch(options.reviewer ?? DEFAULT_REVIEWER, prompt, batch)
+      );
+  const verdicts = judged.flatMap((batch) => batch.verdicts);
+  const failures = judged.flatMap((batch) => batch.failure ?? []);
 
   const reviewed = items.map((item) => ({ ...item, review: verdicts.find((v) => v.id === item.id) ?? null }));
   const result: ReviewResult = {
@@ -165,10 +167,10 @@ function reviewItems(comparison: CompareSummary): ReviewItem[] {
 
 // Every item in the batch comes back with a verdict. One the reviewer left out, or answered in a
 // shape parseVerdicts rejects, goes to a human: a missing verdict is not a sign that all is well.
-function judgeBatch(command: string[], prompt: string, batch: ReviewItem[]): { verdicts: Verdict[]; failure?: string } {
+async function judgeBatch(command: string[], prompt: string, batch: ReviewItem[]): Promise<{ verdicts: Verdict[]; failure?: string }> {
   const range = `${batch[0].id}–${batch[batch.length - 1].id}`;
   try {
-    const answer = runReviewer(command, prompt);
+    const answer = await runReviewer(command, prompt);
     if (answer.outcome === "turn-limit") throw new Error(`hit the turn limit after ${answer.turns ?? "?"} turns`);
     const judged = parseVerdicts(answer.json, batch);
     return { verdicts: batch.map((item) => judged.find((v) => v.id === item.id) ?? unjudged(item, "The reviewer gave no usable verdict for this item.")) };

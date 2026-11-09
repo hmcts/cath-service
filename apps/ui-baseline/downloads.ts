@@ -1,7 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type FileEntry, type FileKind, launchChromium } from "./core/index.js";
+import { type FileEntry, type FileKind, gotoSettled, launchChromium, trackRequests } from "./core/index.js";
 
 // Fetches the files pip and CaTH answer with rather than a page (routes/downloads.json), each as
 // the user it is for, into <out>/<id>/ with an index.jsonl compareFileRuns reads. Each is fetched
@@ -34,12 +34,13 @@ export async function captureDownloads(options: CaptureDownloadsOptions): Promis
         continue;
       }
       const context = await browser.newContext({ ignoreHTTPSErrors: true });
+      trackRequests(context);
       // One file that cannot be fetched is reported, and the rest are still fetched
       try {
         if (session.cookies?.length) await context.addCookies(session.cookies.map((cookie) => ({ ...cookie, url: options.baseUrl })));
         if (session.setup?.length) {
           const page = await context.newPage();
-          for (const setupUrl of session.setup) await page.goto(setupUrl, { waitUntil: "networkidle" });
+          for (const setupUrl of session.setup) await gotoSettled(page, setupUrl);
         }
         const response = await context.request.get(url.href);
         const type = response.headers()["content-type"] ?? "";

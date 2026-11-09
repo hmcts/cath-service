@@ -10,7 +10,7 @@ import {
   type Verdict,
   verdictRules
 } from "./review.js";
-import { runReviewer } from "./reviewer-command.js";
+import { forEachReviewer, runReviewer } from "./reviewer-command.js";
 
 // Looks again, one at a time, at the differences a review left to a human, this time with
 // read-only access to both apps' source and captures. Unlike the batch review this is an agentic
@@ -50,21 +50,16 @@ export async function investigateFindings(options: InvestigateOptions): Promise<
   const command = options.investigator ?? investigatorCommand(options.sources.map((s) => s.path));
   const pending = review.items.filter((item) => item.review?.verdict === "needs-human").slice(0, options.limit);
 
-  const revisited = new Map<string, Verdict>();
-  const failures: string[] = [];
-  for (const item of pending) {
-    const prompt = buildInvestigationPrompt({
-      item,
-      requirements,
-      knownDefects,
-      sources: options.sources,
-      sourceName: options.sourceName,
-      targetName: options.targetName
-    });
-    const outcome = investigate(command, prompt, item);
-    revisited.set(item.id, outcome.verdict);
-    if (outcome.failure) failures.push(outcome.failure);
-  }
+  // Each item is its own conversation, so several are looked at once
+  const outcomes = await forEachReviewer(pending, (item) =>
+    investigate(
+      command,
+      buildInvestigationPrompt({ item, requirements, knownDefects, sources: options.sources, sourceName: options.sourceName, targetName: options.targetName }),
+      item
+    )
+  );
+  const revisited = new Map<string, Verdict>(pending.map((item, i) => [item.id, outcomes[i].verdict]));
+  const failures = outcomes.flatMap((outcome) => outcome.failure ?? []);
 
   const items = review.items.map((item) => ({ ...item, review: revisited.get(item.id) ?? item.review }));
   const result: ReviewResult = {
@@ -118,10 +113,10 @@ ${item.review?.reason ?? "(none)"}
 }
 
 // The earlier needs-human verdict stands unless the investigation ends with a usable answer
-function investigate(command: string[], prompt: string, item: ReviewItem & { review: Verdict | null }): { verdict: Verdict; failure?: string } {
+async function investigate(command: string[], prompt: string, item: ReviewItem & { review: Verdict | null }): Promise<{ verdict: Verdict; failure?: string }> {
   const earlier: Verdict = item.review ?? { id: item.id, verdict: "needs-human", reason: "", evidence: "" };
   try {
-    const answer = runReviewer(command, prompt);
+    const answer = await runReviewer(command, prompt);
     if (answer.outcome === "turn-limit") {
       return {
         verdict: {

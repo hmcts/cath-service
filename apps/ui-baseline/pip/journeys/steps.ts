@@ -1,5 +1,6 @@
 import { locationData } from "@hmcts/location/location-data";
 import type { Page } from "playwright";
+import { gotoSettled, settle } from "../../core/index.js";
 
 // Locale-neutral helpers: journeys run in English and Welsh, so they select by id, name and
 // link target rather than by visible text.
@@ -22,15 +23,15 @@ export function link(page: Page, href: string) {
 // Leaves the signed-in user with no subscriptions, without capturing anything; journeys that do
 // not end empty call it so the next locale's run starts from the same state
 export async function unsubscribeFromEverything(page: Page, baseUrl: string): Promise<void> {
-  await page.goto(`${baseUrl}/bulk-unsubscribe`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${baseUrl}/bulk-unsubscribe`);
   const selectAll = await page.locator("#select-all-cases, #select-all-locations").all();
   if (selectAll.length === 0) return;
   for (const checkbox of selectAll) await checkbox.check();
   await page.locator("#bulk-unsubscribe-button").click();
-  await page.waitForLoadState("networkidle");
+  await settle(page);
   await page.locator('input[name="bulk-unsubscribe-choice"]').first().check();
   await primaryButton(page).click();
-  await page.waitForLoadState("networkidle");
+  await settle(page);
 }
 
 // pip matches court searches against the name in the page's language, so journeys type the Welsh

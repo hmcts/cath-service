@@ -9,8 +9,9 @@ import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
 import type { SignInResult } from "./cath/sign-in.js";
 import { confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
 import {
+  type CaptureResult,
   type CompareSummary,
-  captureBatch,
+  captureBatches,
   collectFiles,
   compareFileRuns,
   compareJourneys,
@@ -97,6 +98,8 @@ const { values: given } = parseArgs({
     serve: { type: "boolean", default: false },
     // Post (or update) the check's comment on this PR, using the dev's gh sign-in
     "post-pr": { type: "string" },
+    // Pages captured at once; the hosted check sets UI_BASELINE_CONCURRENCY to suit its pod's CPU
+    concurrency: { type: "string" },
     repo: { type: "string", default: "hmcts/cath-service" }
   }
 });
@@ -114,6 +117,7 @@ const args = {
   baseline: optional(given.baseline, (value) => confinedPath(value, "--baseline")),
   out: optional(given.out, (value) => confinedPath(value, "--out")),
   "post-pr": optional(given["post-pr"], (value) => matching(value, TICKET, "--post-pr")),
+  concurrency: Number(matching(given.concurrency ?? process.env.UI_BASELINE_CONCURRENCY ?? "4", /^[1-9]\d?$/, "--concurrency")),
   repo: matching(given.repo, REPO, "--repo")
 };
 
@@ -336,27 +340,49 @@ if (includeNotFound)
     )
   );
 const captured: Record<string, string> = {};
-for (const [area, targets] of [
-  ["lists", listTargets],
-  ["pages", pageTargets]
-] as const) {
-  if (!targets.length) {
-    progress.skip(CAPTURE_STAGE[area], `no ${area === "lists" ? "list pages" : "other pages"} in scope`);
-    continue;
-  }
-  const targetsFile = path.join(out, `targets-${area}.json`);
-  await writeFile(targetsFile, JSON.stringify(targets, null, 2));
-  // Counted per page and language, as captureBatch captures them
-  progress.start(
-    CAPTURE_STAGE[area],
-    targets.reduce((sum, target) => sum + target.locales.length, 0)
+// Lists and other pages are captured from one queue, so neither waits for the other's slowest pages;
+// each stage is done, and its unserved pages dropped, as soon as its own captures are in
+const captureAreas = (
+  [
+    ["lists", listTargets],
+    ["pages", pageTargets]
+  ] as const
+).filter(([area, targets]) => {
+  if (!targets.length) progress.skip(CAPTURE_STAGE[area], `no ${area === "lists" ? "list pages" : "other pages"} in scope`);
+  return targets.length > 0;
+});
+const finishing: Promise<void>[] = [];
+if (captureAreas.length)
+  await captureBatches(
+    await Promise.all(
+      captureAreas.map(async ([area, targets]) => {
+        const targetsFile = path.join(out, `targets-${area}.json`);
+        await writeFile(targetsFile, JSON.stringify(targets, null, 2));
+        captured[area] = path.join(out, "cath", area);
+        // Counted per page and language, as captureBatches captures them
+        progress.start(
+          CAPTURE_STAGE[area],
+          targets.reduce((sum, target) => sum + target.locales.length, 0)
+        );
+        return {
+          targetsFile,
+          settings: { outDir: captured[area] },
+          onCaptured: (done: number) => progress.advance(CAPTURE_STAGE[area], done),
+          onFinished: (results: CaptureResult[]) => {
+            finishing.push(
+              (async () => {
+                console.log(`  ${area}: ${results.filter((r) => r.ok).length} captured, ${results.filter((r) => !r.ok).length} failed`);
+                for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
+                progress.complete(CAPTURE_STAGE[area]);
+              })()
+            );
+          }
+        };
+      })
+    ),
+    args.concurrency
   );
-  const results = await captureBatch(targetsFile, { outDir: path.join(out, "cath", area) }, 4, (done) => progress.advance(CAPTURE_STAGE[area], done));
-  console.log(`  ${area}: ${results.filter((r) => r.ok).length} captured, ${results.filter((r) => !r.ok).length} failed`);
-  captured[area] = path.join(out, "cath", area);
-  for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
-  progress.complete(CAPTURE_STAGE[area]);
-}
+await Promise.all(finishing);
 
 // ---------- 3b. Run pip's journeys in CaTH and compare them ----------
 // Only journeys ported to CaTH (cath/journeys/) can run; the rest are reported as not compared.

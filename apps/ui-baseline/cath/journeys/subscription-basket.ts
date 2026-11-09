@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import type { CathJourneyData } from "./index.js";
 import { inlineAction, link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 
@@ -22,7 +22,7 @@ export const subscriptionBasket: Journey = {
     const chooseCourts = async (...courts: string[]) => {
       await page.locator('input[name="subscriptionMethod"][value="courtOrTribunal"]').check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       for (const court of courts) await page.locator(`#location-${court}`).check();
       await continueButton().click();
     };

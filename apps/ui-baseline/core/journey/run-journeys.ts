@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import type { Browser } from "playwright";
 import { launchChromium } from "../capture/browser.js";
 import { capturePage } from "../capture/capture-page.js";
+import { gotoSettled, settle, trackRequests } from "../capture/settle.js";
 import type { Journey, JourneySuite } from "./journey.js";
 
 const PLAYWRIGHT_VERSION = createRequire(import.meta.url)("playwright/package.json").version as string;
@@ -53,6 +54,7 @@ async function runOne(browser: Browser, suite: JourneySuite, journey: Journey, l
     ignoreHTTPSErrors: true,
     recordVideo: { dir: videoDir, size: VIEWPORT }
   });
+  trackRequests(context);
   if (suite.cookies?.length) await context.addCookies(suite.cookies.map((cookie) => ({ ...cookie, url: suite.baseUrl })));
   const page = await context.newPage();
 
@@ -71,11 +73,11 @@ async function runOne(browser: Browser, suite: JourneySuite, journey: Journey, l
       locale,
       data: suite.data ?? {},
       goto: async (pagePath) => {
-        await page.goto(withLocale(`${suite.baseUrl}${pagePath}`, locale), { waitUntil: "networkidle" });
+        await gotoSettled(page, withLocale(`${suite.baseUrl}${pagePath}`, locale));
       },
       act: async (description, action) => {
         await action();
-        await page.waitForLoadState("networkidle");
+        await settle(page);
         pendingAction = description;
       },
       checkpoint: async (name, note) => {

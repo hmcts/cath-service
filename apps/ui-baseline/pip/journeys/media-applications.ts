@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import { primaryButton } from "./steps.js";
 
 // Ported from pip's admin/manage-media-account-request-test.ts, plus rejection. Each run creates its
@@ -60,7 +60,7 @@ export const mediaApplications: Journey = {
     await act("choose a reason, continue and answer yes", async () => {
       await page.locator("#rejection-reasons").check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator('input[name="reject-confirmation"][value="Yes"]').check();
       await continueButton().click();
     });

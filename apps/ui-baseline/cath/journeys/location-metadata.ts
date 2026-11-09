@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import { chooseCourt, courtNames, link, primaryButton } from "./steps.js";
 
 // CaTH's side of pip/journeys/location-metadata.ts: create, update and delete a court's caution and
@@ -32,7 +32,7 @@ export const locationMetadata: Journey = {
     await goto("/system-admin-dashboard");
     await act("reference data card, then location metadata", async () => {
       await link(page, "/reference-data").click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await link(page, "/location-metadata-search").click();
     });
     await checkpoint("location-metadata-search");

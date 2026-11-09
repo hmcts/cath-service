@@ -1,5 +1,6 @@
 import { locationData } from "@hmcts/location/location-data";
 import type { Page } from "playwright";
+import { gotoSettled, settle } from "../../core/index.js";
 
 // Locale-neutral helpers for CaTH's journeys, the counterparts of pip/journeys/steps.ts. They
 // select by id, name and value rather than visible text, so the same journey runs in Welsh.
@@ -20,15 +21,15 @@ export function link(page: Page, href: string) {
 
 // Leaves the signed-in user with no subscriptions, without capturing anything, as pip's helper does
 export async function unsubscribeFromEverything(page: Page, baseUrl: string): Promise<void> {
-  await page.goto(`${baseUrl}/bulk-unsubscribe`, { waitUntil: "networkidle" });
+  await gotoSettled(page, `${baseUrl}/bulk-unsubscribe`);
   const subscriptions = await page.locator("#all-subscriptions input[name=subscriptions]").all();
   if (subscriptions.length === 0) return;
   for (const checkbox of subscriptions) await checkbox.check();
   await primaryButton(page).click();
-  await page.waitForLoadState("networkidle");
+  await settle(page);
   await page.locator('input[name="confirm"][value="yes"]').check();
   await primaryButton(page).click();
-  await page.waitForLoadState("networkidle");
+  await settle(page);
 }
 
 // A court's English and Welsh names, from location-data.ts, which CaTH's reference data is built from

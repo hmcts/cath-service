@@ -159,7 +159,7 @@ tell when the evidence is out of date.
 ### Investigating what needs a human
 
 The review judges each difference from the difference alone, so plenty come back as needing a
-human. `--investigate N` looks again at up to N of them in each area, one at a time, with a
+human. `--investigate N` looks again at up to N of them in each area, four at a time, with a
 reviewer that can read (and only read) pip's source, CaTH's source and both apps' captures of the
 area:
 
@@ -205,7 +205,9 @@ and the report shows CaTH's capture beneath each of pip's steps.
 Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
 `--env local|test`, `--no-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
 `claude -p` with no tools and a JSON schema for its answer; any command that reads the prompt on stdin
-and prints JSON will do), `--investigate N`, `--serve` to browse the report on <http://localhost:9500>.
+and prints JSON will do; the review runs up to four of them at once), `--investigate N`,
+`--concurrency N` for how many pages are captured at once (default 4, or `UI_BASELINE_CONCURRENCY`;
+the hosted check sets 6 for its pod's CPU), `--serve` to browse the report on <http://localhost:9500>.
 It exits 3 when there are defects (`exit-codes.ts`).
 
 ### Checking aat
