@@ -1,14 +1,16 @@
 import { DeleteObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { API_BASE_URL } from "../../utils/test-support-api.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/publication`;
 
 // LCSU validates the full x-* header set exactly like a publication, but persists nothing.
-const REQUIRED_HEADERS = {
+// x-court-id is this run's own court, set in beforeAll; the uploaded HTML still lands in S3 and is not cleaned up
+const REQUIRED_HEADERS: Record<string, string> = {
   "x-provenance": "PDDA",
-  "x-court-id": "1",
+  "x-court-id": "",
   "x-content-date": "2024-01-15",
   "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
   "x-language": "ENGLISH",
@@ -68,6 +70,11 @@ function htmlPart(name: string) {
 }
 
 test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
+  test.beforeAll(async () => {
+    const court = await createUniqueTestLocation({ namePrefix: "PDDA LCSU Court" });
+    REQUIRED_HEADERS["x-court-id"] = String(court.locationId);
+  });
+
   test.skip(!hasS3Credentials(), "Skipping S3 functional tests - AWS credentials not configured");
 
   const bucketName = process.env.AWS_S3_XHIBIT_BUCKET_NAME || "";
@@ -99,7 +106,7 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
     // file goes to S3.
     expect(body.artefactId).toBe("");
     expect(body.type).toBe("LCSU");
-    expect(body.locationId).toBe("1");
+    expect(body.locationId).toBe(REQUIRED_HEADERS["x-court-id"]);
     expect(body.provenance).toBe("PDDA");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.sensitivity).toBe("PUBLIC");

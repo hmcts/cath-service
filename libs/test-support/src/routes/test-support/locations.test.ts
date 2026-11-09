@@ -187,6 +187,103 @@ describe("locations routes", () => {
       );
     });
 
+    it("should create location references with the generated id as the default provenance id", async () => {
+      // Arrange
+      mockRequest.body = {
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        locationReferences: [{ provenance: "SNL" }]
+      };
+      vi.mocked(prisma.location.create).mockImplementation(
+        (args: any) => Promise.resolve({ locationId: args.data.locationId, name: "Test Court", welshName: "Llys Prawf" }) as any
+      );
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { data } = vi.mocked(prisma.location.create).mock.calls[0][0] as any;
+      expect(data.locationReferences).toEqual({
+        create: [{ provenance: "SNL", provenanceLocationId: String(data.locationId), provenanceLocationType: "VENUE" }]
+      });
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should create location references with an explicit provenance id and type", async () => {
+      // Arrange
+      mockRequest.body = {
+        name: "Test Court",
+        welshName: "Llys Prawf",
+        locationReferences: [{ provenance: "CP_CATH", provenanceLocationId: "CP-123", provenanceLocationType: "OWNING_HEARING_LOCATION" }]
+      };
+      vi.mocked(prisma.location.create).mockResolvedValue({ locationId: 90001, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.location.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          locationReferences: {
+            create: [{ provenance: "CP_CATH", provenanceLocationId: "CP-123", provenanceLocationType: "OWNING_HEARING_LOCATION" }]
+          }
+        })
+      });
+    });
+
+    it("should not create location references when none are requested", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf" };
+      vi.mocked(prisma.location.create).mockResolvedValue({ locationId: 90001, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { data } = vi.mocked(prisma.location.create).mock.calls[0][0] as any;
+      expect(data).not.toHaveProperty("locationReferences");
+    });
+
+    it("should include location references when upserting a fixed location id", async () => {
+      // Arrange
+      mockRequest.body = { locationId: 12345, name: "Test Court", welshName: "Llys Prawf", locationReferences: [{ provenance: "SNL" }] };
+      vi.mocked(prisma.location.upsert).mockResolvedValue({ locationId: 12345, name: "Test Court", welshName: "Llys Prawf" } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      const { create } = vi.mocked(prisma.location.upsert).mock.calls[0][0] as any;
+      expect(create.locationReferences).toEqual({
+        create: [{ provenance: "SNL", provenanceLocationId: "12345", provenanceLocationType: "VENUE" }]
+      });
+    });
+
+    it("should return 400 when a location reference has no provenance", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf", locationReferences: [{ provenanceLocationId: "1" }] };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "locationReferences must be an array of objects with a provenance" });
+      expect(prisma.location.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when locationReferences is not an array", async () => {
+      // Arrange
+      mockRequest.body = { name: "Test Court", welshName: "Llys Prawf", locationReferences: "SNL" };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.location.create).not.toHaveBeenCalled();
+    });
+
     it("should return 400 when name is missing", async () => {
       // Arrange
       mockRequest.body = { welshName: "Llys Prawf" };

@@ -1,11 +1,12 @@
 import { randomInt } from "node:crypto";
 import { type Location, prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
-import type { CreateLocationInput } from "../../types.js";
+import { isUniqueConstraintClashOn } from "../../prisma-errors.js";
+import type { CreateLocationInput, LocationReferenceInput } from "../../types.js";
 
-const PRISMA_UNIQUE_CONSTRAINT_CODE = "P2002";
 const LOCATION_ID_COLUMN = "location_id";
 const MAX_GENERATED_ID_ATTEMPTS = 5;
+const DEFAULT_PROVENANCE_LOCATION_TYPE = "VENUE";
 
 export const GET = async (req: Request, res: Response) => {
   try {
@@ -42,6 +43,12 @@ export const POST = async (req: Request, res: Response) => {
     if (!input.name || !input.welshName) {
       return res.status(400).json({
         error: "name and welshName are required"
+      });
+    }
+
+    if (input.locationReferences !== undefined && !hasValidLocationReferences(input.locationReferences)) {
+      return res.status(400).json({
+        error: "locationReferences must be an array of objects with a provenance"
       });
     }
 
@@ -98,7 +105,7 @@ async function createLocationWithGeneratedId(input: CreateLocationInput, attempt
   try {
     return await prisma.location.create({ data: buildLocationCreateData(generateLocationId(), input) });
   } catch (error) {
-    if (!isLocationIdClash(error) || attempt >= MAX_GENERATED_ID_ATTEMPTS) {
+    if (!isUniqueConstraintClashOn(error, LOCATION_ID_COLUMN) || attempt >= MAX_GENERATED_ID_ATTEMPTS) {
       throw error;
     }
     return createLocationWithGeneratedId(input, attempt + 1);
@@ -117,8 +124,27 @@ function buildLocationCreateData(locationId: number, input: CreateLocationInput)
     },
     locationSubJurisdictions: {
       create: (input.subJurisdictionIds || [1]).map((subJurisdictionId) => ({ subJurisdictionId }))
-    }
+    },
+    ...(input.locationReferences?.length ? { locationReferences: { create: buildLocationReferences(locationId, input.locationReferences) } } : {})
   };
+}
+
+// The provenance id defaults to the location id so a test can send it as x-court-id without knowing it up front
+function buildLocationReferences(locationId: number, references: LocationReferenceInput[]) {
+  return references.map((reference) => ({
+    provenance: reference.provenance,
+    provenanceLocationId: reference.provenanceLocationId || String(locationId),
+    provenanceLocationType: reference.provenanceLocationType || DEFAULT_PROVENANCE_LOCATION_TYPE
+  }));
+}
+
+function hasValidLocationReferences(references: unknown): references is LocationReferenceInput[] {
+  return (
+    Array.isArray(references) &&
+    references.every(
+      (reference) => typeof reference === "object" && reference !== null && typeof reference.provenance === "string" && reference.provenance !== ""
+    )
+  );
 }
 
 function defaultEmail(input: CreateLocationInput): string {
@@ -127,24 +153,4 @@ function defaultEmail(input: CreateLocationInput): string {
 
 function generateLocationId(): number {
   return randomInt(90000, 100000);
-}
-
-// name and welsh_name are unique too; a clash on those will not be fixed by a new id, so only location_id is retried
-function isLocationIdClash(error: unknown): boolean {
-  if (typeof error !== "object" || error === null || (error as PrismaKnownError).code !== PRISMA_UNIQUE_CONSTRAINT_CODE) {
-    return false;
-  }
-
-  const { meta } = error as PrismaKnownError;
-  // The pg driver adapter reports the columns under driverAdapterError; the native engine uses target
-  const fields = meta?.driverAdapterError?.cause?.constraint?.fields ?? meta?.target ?? [];
-  return fields.includes(LOCATION_ID_COLUMN);
-}
-
-interface PrismaKnownError {
-  code?: unknown;
-  meta?: {
-    target?: string[];
-    driverAdapterError?: { cause?: { constraint?: { fields?: string[] } } };
-  };
 }

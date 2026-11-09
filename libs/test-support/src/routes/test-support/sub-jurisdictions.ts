@@ -6,7 +6,12 @@ export const GET = async (req: Request, res: Response) => {
     const { first } = req.query;
 
     if (first === "true") {
-      const subJurisdiction = await prisma.subJurisdiction.findFirst();
+      // Test locations take this sub-jurisdiction, and the subscription journey only offers list types linked to it.
+      // Without the filter and ordering, stray rows from other runs can come back first and leave that page empty.
+      const subJurisdiction = await prisma.subJurisdiction.findFirst({
+        where: { listTypes: { some: { listType: { deletedAt: null } } } },
+        orderBy: { subJurisdictionId: "asc" }
+      });
       if (!subJurisdiction) {
         return res.status(404).json({ error: "No sub-jurisdiction found" });
       }
