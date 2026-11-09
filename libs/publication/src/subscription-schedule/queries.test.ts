@@ -26,6 +26,10 @@ function buildRow(overrides = {}) {
     contentDate: DAY.contentDate,
     language: "ENGLISH",
     isFlatFile: false,
+    sensitivity: "PUBLIC",
+    provenance: "MANUAL_UPLOAD",
+    displayFrom: DAY.start,
+    displayTo: null,
     listType: { name: "MAGISTRATES_ADULT_COURT_LIST_DAILY" },
     ...overrides
   };
@@ -41,7 +45,7 @@ describe("subscription schedule queries", () => {
   });
 
   describe("findArtefactsDisplayedFromToday", () => {
-    it("should filter by the London day, not expired, received before today and non-scheduled list types", async () => {
+    it("should filter by the London day, not expired and received before today, including scheduled list types", async () => {
       // Arrange
       vi.mocked(prisma.artefact.findMany).mockResolvedValue([]);
 
@@ -52,13 +56,11 @@ describe("subscription schedule queries", () => {
       expect(whereClause()).toEqual({
         displayFrom: { gte: DAY.start, lt: DAY.end },
         OR: [{ displayTo: null }, { displayTo: { gt: NOW } }],
-        lastReceivedDate: { lt: DAY.start },
-        listType: { name: { notIn: expect.arrayContaining(SCHEDULED_NAMES) } }
+        lastReceivedDate: { lt: DAY.start }
       });
-      expect((whereClause() as { listType: { name: { notIn: string[] } } }).listType.name.notIn).toHaveLength(SCHEDULED_NAMES.length);
     });
 
-    it("should map rows to scheduled artefacts with the list type name", async () => {
+    it("should map rows to scheduled artefacts with the list type name and the third-party push fields", async () => {
       // Arrange
       vi.mocked(prisma.artefact.findMany).mockResolvedValue([buildRow({ listType: { name: "CIVIL_DAILY_CAUSE_LIST" } })] as never);
 
@@ -74,7 +76,11 @@ describe("subscription schedule queries", () => {
           listTypeName: "CIVIL_DAILY_CAUSE_LIST",
           contentDate: DAY.contentDate,
           language: "ENGLISH",
-          isFlatFile: false
+          isFlatFile: false,
+          sensitivity: "PUBLIC",
+          provenance: "MANUAL_UPLOAD",
+          displayFrom: DAY.start,
+          displayTo: null
         }
       ]);
     });

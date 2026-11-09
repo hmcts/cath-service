@@ -28,6 +28,11 @@ job:
           alias: AZURE_STORAGE_CONNECTION_STRING
         - name: storageaccount-name
           alias: AZURE_STORAGE_ACCOUNT_NAME
+        # Third-party push secrets (Courtel), for the display-from run
+        - name: auto-pip-stg-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE
   schedule: "0 0/10 * * *" # this is just a placeholder, configure in your flux
   concurrencyPolicy: Forbid
   # A run hung on an unreachable Redis would otherwise block every later run under Forbid.

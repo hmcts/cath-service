@@ -21,7 +21,7 @@ describe("displayFromSubscriptions", () => {
 
   it("should trigger subscriptions, log the summary and close connections", async () => {
     // Arrange
-    const summary = { total: 3, succeeded: 2, failed: 1 };
+    const summary = { email: { total: 3, succeeded: 2, failed: 1 }, thirdParty: { total: 4, sent: 2, skipped: 1, failed: 1 } };
     vi.mocked(triggerDisplayFromSubscriptions).mockResolvedValue(summary);
 
     // Act

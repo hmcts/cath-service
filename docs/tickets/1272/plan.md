@@ -19,7 +19,7 @@ TEMPLATE SOURCE: n/a
   - `pdfFilePath`, which is the blob key `${artefactId}.pdf` (`libs/list-types/common/src/pdf/pdf-utilities.ts:34-40`). A missing blob is tolerated because `downloadBlob` returns null on 404 (`libs/azure-blob/src/blob-client.ts:62-65`).
   - `locale`, which drives list-type subscriptions (`service.ts:687-688`)
 - The xlsx is loaded by convention from `${artefactId}.xlsx` (`libs/notifications/src/notification/notification-service.ts:604-606`). At upload, `locale` is derived from `language === "WELSH" ? "cy" : "en"` (`libs/api/src/blob-ingestion/repository/service.ts:171`).
-- **Scope: email subscribers only.** Third-party (Courtel) push via `sendThirdPartyPublications` is out of scope for this ticket.
+- **Scope: email subscribers only.** Third-party (Courtel) push via `sendThirdPartyPublications` is out of scope for this ticket. **Superseded 2026-11-09**, see "Scope change: third-party push" below.
 - There is **no** `isScheduledSubscription` flag on master:
   - `ListTypeData` has no such field (`libs/list-types/common/src/list-type-data.ts:1-11`).
   - `ListType` has no such column (`libs/postgres-prisma/prisma/schema/location.prisma:46-67`).
@@ -277,6 +277,41 @@ Unit tests only. A cron has no user journey, and asserting emails would need Not
    - It calls the trigger, logs the summary, and closes Redis and Prisma.
    - When the trigger rejects, the error propagates and Redis and Prisma are still closed.
 
+## Scope change: third-party push (2026-11-09)
+
+Agreed while planning #588. #588 stops the upload path notifying future-dated publications. Neither #568 (OAuth push, PR #1215, whose plan defers "the daily job for publications that become displayable later") nor any other ticket covered sending them to API subscribers later. This ticket's wording ("subscription notifications ... when a publication becomes visible") does not limit it to email.
+
+### Display-from run pushes to Courtel
+- `findArtefactsDisplayedFromToday` no longer excludes scheduled list types. It also selects `sensitivity`, `provenance`, `displayFrom` and `displayTo` for the push headers.
+- `triggerDisplayFromSubscriptions` runs two sequential passes over the same artefacts:
+  - **Email**: every artefact except scheduled list types, whose email is still sent by the scheduled run. Same as before.
+  - **Third party**: every artefact, through `pushPublicationToThirdParties` with `isUpdate: false`. This is legacy's display-from branch (`checkNewlyActiveArtefacts`: scheduled list types get `sendArtefactForApiSubscription`, everything else gets all subscriptions).
+- The result is `{ email: TriggerSummary, thirdParty: { total, sent, skipped, failed } }`. `skipped` means Courtel secrets are unset or nobody subscribes to the list type. A rejected push is logged with the artefactId and counted as failed. The run still exits 0.
+- JSON is loaded once per pass, so a non-scheduled artefact's blob is read twice. Accepted to keep each pass independent.
+- The `lastReceivedDate < start of today` filter applies to both passes: an artefact received today was pushed at upload.
+- The scheduled-list-type run stays email only, as legacy.
+
+### Courtel files come from blob storage
+These are existing defects, fixed here because the cron push depends on them:
+- `executePush` read the PDF with `fs.readFile`, but `processPublication` passed the blob key `<artefactId>.pdf`, so every push with a PDF failed.
+- No caller passed `flatFilePath`, so flat files were pushed as an empty POST.
+
+Now `executePush` and `pushWithRetry` take file contents (`PushFiles`: `pdf?: Buffer`, `flatFile?: { buffer, fileName }`). `sendThirdPartyPublications` takes a `loadFiles` callback, which it calls only after the secrets and subscriber checks, so uploads with no Courtel subscribers download nothing. `pushPublicationToThirdParties` in `libs/publication/src/processing/service.ts` supplies it, because the legacy lib must not depend on `@hmcts/publication`:
+- Flat file: `loadFlatFileAttachment` (the email path's loader). It is named with the uploaded name when that has an extension, otherwise with the artefactId. A missing flat file fails the push rather than sending it empty.
+- JSON: `downloadBlob(<pdf blob>, PUBLICATIONS)`. A missing PDF sends the JSON alone, as when generation is skipped.
+
+`sendThirdPartyPublications` now returns `"sent" | "failed" | "skipped"`. The upload path still ignores it.
+
+The request shape is unchanged: one multipart with `json` and `pdf` parts, or a `file` part. Legacy (`pip-publication-services` `LegacyThirdPartyService`) sends JSON and PDF as two POSTs, adds the Welsh PDF, names flat files with `sourceArtefactId`, and sets `x-source-artefact-id` to `sourceArtefactId` and the PDF call's `x-provenance` to `CATH`. Matching that is a separate issue, linked to #323, to be confirmed with Courtel first.
+
+### Courtel secrets for api and crons
+- `apps/api/helm/values.yaml` had none, so the API ingestion path never pushed. Both charts now mount `auto-pip-stg-courtel-api` -> `COURTEL_API_URL` and `courtel-certificate` -> `COURTEL_CERTIFICATE`, as `apps/web/helm/values.yaml` does. `getPropertiesVolumeSecrets` sets them as environment variables by alias.
+- The name stays `auto-pip-stg-courtel-api` in every environment, because that is the only name in cath-aat, cath-demo, cath-perftest and cath-stg (checked 2026-11-09). `auto-pip-<ENV>-courtel-api` would stop the pods starting there. For prod, #1097 reports the value is being copied as `auto-pip-prod-courtel-api`, so all three charts need the same rename when that is settled.
+- `apps/api/helm/values.dev.yaml` is unchanged, so local API runs do not push to the real Courtel endpoint.
+
+### Until #588 ships
+The upload path still pushes future-dated publications immediately, so the display-from run would push them a second time. This is the same as the existing email double-send, and it is covered by the same rule: hmcts/cnp-flux-config#48744 must not merge before #588.
+
 ## CLARIFICATIONS NEEDED
 
 None outstanding. Resolved 2026-10-29:
@@ -285,4 +320,4 @@ None outstanding. Resolved 2026-10-29:
 2. **Send times**: match legacy, in UTC: display-from `0 1 * * *`, scheduled `30 10 * * *`.
 3. **Partial failure**: the job succeeds (exit 0) and logs the failure count and artefact IDs, so Kubernetes does not retry.
 4. **Scheduled query**: include null `displayTo` (follows the ticket's "not expired yet", unlike legacy); no `displayFrom` check (as legacy).
-5. **Scheduled list types in the display-from cron**: excluded; this matches legacy, which never emailed them from that branch.
+5. **Scheduled list types in the display-from cron**: excluded from email; this matches legacy, which never emailed them from that branch. Since 2026-11-09 they are still pushed to third parties there (see "Scope change").

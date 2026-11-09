@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import fs from "node:fs/promises";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
@@ -13,13 +12,12 @@ const CONTENT_TYPE_MAP: Record<string, string> = {
   ".pdf": "application/pdf"
 };
 
-function getContentType(filePath: string): string {
-  const ext = path.extname(filePath).toLowerCase();
+function getContentType(fileName: string): string {
+  const ext = path.extname(fileName).toLowerCase();
   return CONTENT_TYPE_MAP[ext] ?? "application/octet-stream";
 }
 
-async function buildMultipartBody(boundary: string, jsonBody: string | null, pdfPath: string): Promise<Buffer> {
-  const pdfBuffer = await fs.readFile(pdfPath);
+function buildMultipartBody(boundary: string, jsonBody: string | null, pdfBuffer: Buffer): Buffer {
   const parts: Buffer[] = [];
 
   if (jsonBody !== null) {
@@ -33,14 +31,14 @@ async function buildMultipartBody(boundary: string, jsonBody: string | null, pdf
   return Buffer.concat(parts);
 }
 
-async function buildFlatFileMultipartBody(boundary: string, flatFilePath: string): Promise<Buffer> {
-  const fileBuffer = await fs.readFile(flatFilePath);
-  const fileName = path.basename(flatFilePath);
-  const contentType = getContentType(flatFilePath);
+function buildFlatFileMultipartBody(boundary: string, flatFile: PushFlatFile): Buffer {
+  const contentType = getContentType(flatFile.fileName);
   const parts: Buffer[] = [];
 
-  parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`));
-  parts.push(fileBuffer);
+  parts.push(
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${flatFile.fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`)
+  );
+  parts.push(flatFile.buffer);
   parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
 
   return Buffer.concat(parts);
@@ -51,8 +49,7 @@ export async function executePush(
   certPem: string,
   headers: Record<string, string>,
   body: string | null,
-  pdfPath?: string,
-  flatFilePath?: string
+  files: PushFiles = {}
 ): Promise<{ statusCode: number; success: boolean }> {
   const parsedUrl = new URL(url);
   const isHttps = parsedUrl.protocol === "https:";
@@ -62,13 +59,13 @@ export async function executePush(
   let bodyBuffer: Buffer;
   const requestHeaders: Record<string, string | number> = { ...headers };
 
-  if (flatFilePath) {
+  if (files.flatFile) {
     const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
-    bodyBuffer = await buildFlatFileMultipartBody(boundary, flatFilePath);
+    bodyBuffer = buildFlatFileMultipartBody(boundary, files.flatFile);
     requestHeaders["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
-  } else if (pdfPath) {
+  } else if (files.pdf) {
     const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
-    bodyBuffer = await buildMultipartBody(boundary, body, pdfPath);
+    bodyBuffer = buildMultipartBody(boundary, body, files.pdf);
     requestHeaders["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
   } else {
     bodyBuffer = body !== null ? Buffer.from(body, "utf-8") : Buffer.alloc(0);
@@ -118,4 +115,14 @@ export async function executePush(
 
 function isSuccessStatus(statusCode: number): boolean {
   return [200, 201, 202, 204].includes(statusCode);
+}
+
+export interface PushFiles {
+  pdf?: Buffer;
+  flatFile?: PushFlatFile;
+}
+
+export interface PushFlatFile {
+  buffer: Buffer;
+  fileName: string;
 }

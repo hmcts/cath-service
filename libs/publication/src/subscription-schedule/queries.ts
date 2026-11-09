@@ -10,17 +10,21 @@ const SCHEDULED_ARTEFACT_SELECT = {
   contentDate: true,
   language: true,
   isFlatFile: true,
+  sensitivity: true,
+  provenance: true,
+  displayFrom: true,
+  displayTo: true,
   listType: { select: { name: true } }
 } as const;
 
+// Scheduled list types are included: they still go to API subscribers here, and only their email is left to the scheduled run.
 export async function findArtefactsDisplayedFromToday(day: LondonDay, now: Date): Promise<ScheduledArtefact[]> {
   const rows = await prisma.artefact.findMany({
     where: {
       displayFrom: { gte: day.start, lt: day.end },
       OR: notExpired(now),
       // Artefacts received today were already notified by the upload path.
-      lastReceivedDate: { lt: day.start },
-      listType: { name: { notIn: SCHEDULED_SUBSCRIPTION_LIST_TYPE_NAMES } }
+      lastReceivedDate: { lt: day.start }
     },
     select: SCHEDULED_ARTEFACT_SELECT
   });
@@ -55,7 +59,11 @@ function toScheduledArtefacts(rows: ScheduledArtefactRow[]): ScheduledArtefact[]
       listTypeName: row.listType.name,
       contentDate: row.contentDate,
       language: row.language,
-      isFlatFile: row.isFlatFile
+      isFlatFile: row.isFlatFile,
+      sensitivity: row.sensitivity,
+      provenance: row.provenance,
+      displayFrom: row.displayFrom,
+      displayTo: row.displayTo
     }));
 }
 
@@ -66,6 +74,10 @@ interface ScheduledArtefactRow {
   contentDate: Date;
   language: string;
   isFlatFile: boolean;
+  sensitivity: string;
+  provenance: string;
+  displayFrom: Date | null;
+  displayTo: Date | null;
   listType: { name: string };
 }
 
@@ -77,4 +89,8 @@ export interface ScheduledArtefact {
   contentDate: Date;
   language: string;
   isFlatFile: boolean;
+  sensitivity: string;
+  provenance: string;
+  displayFrom: Date | null;
+  displayTo: Date | null;
 }

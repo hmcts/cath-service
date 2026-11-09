@@ -5,7 +5,7 @@ import {
   reformatAdministrativeCourtDailyCauseListExcel
 } from "@hmcts/administrative-court-daily-cause-list";
 import { type AstDailyHearingList, generateAstDailyHearingListPdf, reformatAstDailyHearingListExcel } from "@hmcts/ast-daily-hearing-list";
-import { CONTAINER, deleteBlob } from "@hmcts/azure-blob";
+import { CONTAINER, deleteBlob, downloadBlob } from "@hmcts/azure-blob";
 import {
   type BusinessAndPropertyRollsData,
   generateBusinessAndPropertyDivisionRollsBuildingDailyCauseListPdf,
@@ -50,7 +50,7 @@ import {
   type InterimApplicationsData,
   reformatInterimApplicationsDailyCauseListExcel
 } from "@hmcts/interim-applications-daily-cause-list";
-import { sendThirdPartyPublications } from "@hmcts/legacy-third-party-fulfilment";
+import { type PushFiles, sendThirdPartyPublications, type ThirdPartyPushOutcome, type ThirdPartyPushParams } from "@hmcts/legacy-third-party-fulfilment";
 import { type SjpJson, saveExcelToStorage } from "@hmcts/list-types-common";
 import { getLocationById } from "@hmcts/location";
 import {
@@ -782,11 +782,15 @@ interface ProcessPublicationParams {
   sensitivity?: string;
   language?: string;
   isUpdate?: boolean;
-  flatFilePath?: string;
   uploadedExcel?: Buffer;
   skipNotifications?: boolean;
   skipThirdPartyPush?: boolean;
   logPrefix?: string;
+}
+
+export interface ThirdPartyPublicationParams extends Omit<ThirdPartyPushParams, "loadFiles"> {
+  /** Blob name of the generated PDF in the publications container, if one was generated. */
+  pdfBlobName?: string;
 }
 
 interface ProcessPublicationResult {
@@ -813,7 +817,6 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     sensitivity = "",
     language = "",
     isUpdate = false,
-    flatFilePath,
     uploadedExcel,
     skipNotifications = false,
     skipThirdPartyPush = false,
@@ -903,7 +906,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   }
 
   if (!skipThirdPartyPush) {
-    sendThirdPartyPublications({
+    pushPublicationToThirdParties({
       artefactId,
       locationId,
       listTypeId,
@@ -915,8 +918,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       provenance: provenance ?? "",
       isUpdate,
       jsonData,
-      pdfPath: result.pdfPath,
-      flatFilePath,
+      pdfBlobName: result.pdfPath,
       logPrefix
     }).catch((error) => {
       console.error(`${logPrefix} Third-party push failed:`, error);
@@ -924,6 +926,32 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   }
 
   return result;
+}
+
+// The files are downloaded here because @hmcts/legacy-third-party-fulfilment must not depend on @hmcts/publication.
+export function pushPublicationToThirdParties(params: ThirdPartyPublicationParams): Promise<ThirdPartyPushOutcome> {
+  const { pdfBlobName, ...pushParams } = params;
+  const logPrefix = params.logPrefix ?? "[ThirdParty]";
+
+  return sendThirdPartyPublications({
+    ...pushParams,
+    loadFiles: () => loadThirdPartyFiles(params.artefactId, pdfBlobName, logPrefix)
+  });
+}
+
+async function loadThirdPartyFiles(artefactId: string, pdfBlobName: string | undefined, logPrefix: string): Promise<PushFiles | null> {
+  const flatFileResult = await loadFlatFileAttachment(artefactId, logPrefix);
+  if (flatFileResult.status === "missing") {
+    return null;
+  }
+  if (flatFileResult.status === "found") {
+    const { buffer, fileName } = flatFileResult.flatFile;
+    return { flatFile: { buffer, fileName: fileName ?? artefactId } };
+  }
+
+  // A JSON publication with no PDF (generation skipped or failed) is still pushed as JSON.
+  const pdf = pdfBlobName ? await downloadBlob(pdfBlobName, CONTAINER.PUBLICATIONS) : null;
+  return pdf ? { pdf } : {};
 }
 
 // An update reuses the artefactId, so files from the previous version would otherwise still be served and

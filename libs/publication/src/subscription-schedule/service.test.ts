@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPublicationJson } from "../file-storage/file-retrieval.js";
-import { sendPublicationNotificationsForArtefact } from "../processing/service.js";
+import { pushPublicationToThirdParties, sendPublicationNotificationsForArtefact } from "../processing/service.js";
 import { findArtefactsDisplayedFromToday, findScheduledListTypeArtefactsForToday } from "./queries.js";
 import { triggerDisplayFromSubscriptions, triggerScheduledListTypeSubscriptions } from "./service.js";
 
@@ -9,6 +9,7 @@ vi.mock("../file-storage/file-retrieval.js", () => ({
 }));
 
 vi.mock("../processing/service.js", () => ({
+  pushPublicationToThirdParties: vi.fn(),
   sendPublicationNotificationsForArtefact: vi.fn()
 }));
 
@@ -29,6 +30,10 @@ function buildArtefact(overrides = {}) {
     contentDate: new Date("2026-06-02T00:00:00.000Z"),
     language: "ENGLISH",
     isFlatFile: false,
+    sensitivity: "PUBLIC",
+    provenance: "MANUAL_UPLOAD",
+    displayFrom: new Date("2026-06-01T23:00:00.000Z"),
+    displayTo: null,
     ...overrides
   };
 }
@@ -41,12 +46,17 @@ describe("subscription schedule service", () => {
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(getPublicationJson).mockResolvedValue(JSON_DATA);
     vi.mocked(sendPublicationNotificationsForArtefact).mockResolvedValue({ success: true });
+    vi.mocked(pushPublicationToThirdParties).mockResolvedValue("sent");
   });
 
   describe("triggerDisplayFromSubscriptions", () => {
+    function buildDisplayFromArtefact(overrides = {}) {
+      return buildArtefact({ listTypeName: "CIVIL_DAILY_CAUSE_LIST", ...overrides });
+    }
+
     it("should email each artefact with the loaded JSON and the PDF blob key", async () => {
       // Arrange
-      const artefact = buildArtefact({ listTypeName: "CIVIL_DAILY_CAUSE_LIST" });
+      const artefact = buildDisplayFromArtefact();
       vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([artefact]);
 
       // Act
@@ -64,12 +74,55 @@ describe("subscription schedule service", () => {
         locale: "en",
         logPrefix: "[SubscriptionSchedule]"
       });
-      expect(result).toEqual({ total: 1, succeeded: 1, failed: 0 });
+      expect(result.email).toEqual({ total: 1, succeeded: 1, failed: 0 });
+    });
+
+    it("should push each artefact to third parties as a new publication", async () => {
+      // Arrange
+      const artefact = buildDisplayFromArtefact();
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([artefact]);
+
+      // Act
+      const result = await triggerDisplayFromSubscriptions(NOW);
+
+      // Assert
+      expect(pushPublicationToThirdParties).toHaveBeenCalledWith({
+        artefactId: "artefact-1",
+        locationId: "123",
+        listTypeId: 999,
+        contentDate: artefact.contentDate,
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: artefact.displayFrom,
+        displayTo: null,
+        provenance: "MANUAL_UPLOAD",
+        isUpdate: false,
+        jsonData: JSON_DATA,
+        pdfBlobName: "artefact-1.pdf",
+        logPrefix: "[SubscriptionSchedule]"
+      });
+      expect(result.thirdParty).toEqual({ total: 1, sent: 1, skipped: 0, failed: 0 });
+    });
+
+    it("should push scheduled list types to third parties without emailing them", async () => {
+      // Arrange
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildArtefact({ listTypeName: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY" })]);
+
+      // Act
+      const result = await triggerDisplayFromSubscriptions(NOW);
+
+      // Assert
+      expect(sendPublicationNotificationsForArtefact).not.toHaveBeenCalled();
+      expect(pushPublicationToThirdParties).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "artefact-1" }));
+      expect(result).toEqual({
+        email: { total: 0, succeeded: 0, failed: 0 },
+        thirdParty: { total: 1, sent: 1, skipped: 0, failed: 0 }
+      });
     });
 
     it("should use the Welsh locale for Welsh publications", async () => {
       // Arrange
-      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildArtefact({ language: "WELSH" })]);
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildDisplayFromArtefact({ language: "WELSH" })]);
 
       // Act
       await triggerDisplayFromSubscriptions(NOW);
@@ -80,7 +133,7 @@ describe("subscription schedule service", () => {
 
     it("should not load JSON for flat files", async () => {
       // Arrange
-      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildArtefact({ isFlatFile: true })]);
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildDisplayFromArtefact({ isFlatFile: true })]);
 
       // Act
       const result = await triggerDisplayFromSubscriptions(NOW);
@@ -88,15 +141,16 @@ describe("subscription schedule service", () => {
       // Assert
       expect(getPublicationJson).not.toHaveBeenCalled();
       expect(sendPublicationNotificationsForArtefact).toHaveBeenCalledWith(expect.objectContaining({ jsonData: undefined }));
-      expect(result).toEqual({ total: 1, succeeded: 1, failed: 0 });
+      expect(pushPublicationToThirdParties).toHaveBeenCalledWith(expect.objectContaining({ jsonData: undefined }));
+      expect(result.email).toEqual({ total: 1, succeeded: 1, failed: 0 });
     });
 
-    it("should continue past failed artefacts and report the summary", async () => {
+    it("should continue past failed emails and report the summary", async () => {
       // Arrange
       vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([
-        buildArtefact({ artefactId: "first" }),
-        buildArtefact({ artefactId: "second" }),
-        buildArtefact({ artefactId: "third" })
+        buildDisplayFromArtefact({ artefactId: "first" }),
+        buildDisplayFromArtefact({ artefactId: "second" }),
+        buildDisplayFromArtefact({ artefactId: "third" })
       ]);
       vi.mocked(sendPublicationNotificationsForArtefact).mockResolvedValueOnce({ success: true }).mockResolvedValueOnce({ success: false });
       vi.mocked(getPublicationJson).mockResolvedValueOnce(JSON_DATA).mockResolvedValueOnce(JSON_DATA).mockRejectedValueOnce(new Error("Blob unparseable"));
@@ -105,24 +159,66 @@ describe("subscription schedule service", () => {
       const result = await triggerDisplayFromSubscriptions(NOW);
 
       // Assert
-      expect(getPublicationJson).toHaveBeenCalledTimes(3);
       expect(sendPublicationNotificationsForArtefact).toHaveBeenCalledTimes(2);
-      expect(result).toEqual({ total: 3, succeeded: 1, failed: 2 });
+      expect(result.email).toEqual({ total: 3, succeeded: 1, failed: 2 });
       expect(consoleErrorSpy).toHaveBeenCalledWith("[SubscriptionSchedule] Failed to trigger subscriptions for artefact:", {
         artefactId: "second",
-        listTypeName: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+        listTypeName: "CIVIL_DAILY_CAUSE_LIST",
         error: "Subscription notifications were not sent"
       });
       expect(consoleErrorSpy).toHaveBeenCalledWith("[SubscriptionSchedule] Failed to trigger subscriptions for artefact:", {
         artefactId: "third",
-        listTypeName: "MAGISTRATES_ADULT_COURT_LIST_DAILY",
+        listTypeName: "CIVIL_DAILY_CAUSE_LIST",
         error: "Blob unparseable"
       });
     });
 
-    it("should count an artefact as failed when its JSON is missing", async () => {
+    it("should still push to third parties when an artefact's email fails", async () => {
       // Arrange
-      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildArtefact()]);
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildDisplayFromArtefact()]);
+      vi.mocked(sendPublicationNotificationsForArtefact).mockResolvedValue({ success: false });
+
+      // Act
+      const result = await triggerDisplayFromSubscriptions(NOW);
+
+      // Assert
+      expect(pushPublicationToThirdParties).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        email: { total: 1, succeeded: 0, failed: 1 },
+        thirdParty: { total: 1, sent: 1, skipped: 0, failed: 0 }
+      });
+    });
+
+    it("should count each third-party outcome and continue past a rejected push", async () => {
+      // Arrange
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([
+        buildDisplayFromArtefact({ artefactId: "first" }),
+        buildDisplayFromArtefact({ artefactId: "second" }),
+        buildDisplayFromArtefact({ artefactId: "third" }),
+        buildDisplayFromArtefact({ artefactId: "fourth" })
+      ]);
+      vi.mocked(pushPublicationToThirdParties)
+        .mockResolvedValueOnce("sent")
+        .mockResolvedValueOnce("skipped")
+        .mockResolvedValueOnce("failed")
+        .mockRejectedValueOnce(new Error("Blob unavailable"));
+
+      // Act
+      const result = await triggerDisplayFromSubscriptions(NOW);
+
+      // Assert
+      expect(pushPublicationToThirdParties).toHaveBeenCalledTimes(4);
+      expect(result.thirdParty).toEqual({ total: 4, sent: 1, skipped: 1, failed: 2 });
+      expect(consoleErrorSpy).toHaveBeenCalledWith("[SubscriptionSchedule] Failed to push artefact to third parties:", {
+        artefactId: "fourth",
+        listTypeName: "CIVIL_DAILY_CAUSE_LIST",
+        error: "Blob unavailable"
+      });
+    });
+
+    it("should count an artefact as failed on both channels when its JSON is missing", async () => {
+      // Arrange
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildDisplayFromArtefact()]);
       vi.mocked(getPublicationJson).mockResolvedValue(null);
 
       // Act
@@ -130,12 +226,16 @@ describe("subscription schedule service", () => {
 
       // Assert
       expect(sendPublicationNotificationsForArtefact).not.toHaveBeenCalled();
-      expect(result).toEqual({ total: 1, succeeded: 0, failed: 1 });
+      expect(pushPublicationToThirdParties).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        email: { total: 1, succeeded: 0, failed: 1 },
+        thirdParty: { total: 1, sent: 0, skipped: 0, failed: 1 }
+      });
     });
 
     it("should log a non-Error rejection as a string", async () => {
       // Arrange
-      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildArtefact()]);
+      vi.mocked(findArtefactsDisplayedFromToday).mockResolvedValue([buildDisplayFromArtefact()]);
       vi.mocked(getPublicationJson).mockRejectedValue("boom");
 
       // Act
@@ -161,7 +261,10 @@ describe("subscription schedule service", () => {
         },
         NOW
       );
-      expect(result).toEqual({ total: 0, succeeded: 0, failed: 0 });
+      expect(result).toEqual({
+        email: { total: 0, succeeded: 0, failed: 0 },
+        thirdParty: { total: 0, sent: 0, skipped: 0, failed: 0 }
+      });
     });
   });
 

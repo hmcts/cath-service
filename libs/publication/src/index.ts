@@ -45,6 +45,8 @@ export {
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
 export {
+  type DisplayFromTriggerSummary,
+  type ThirdPartyTriggerSummary,
   type TriggerSummary,
   triggerDisplayFromSubscriptions,
   triggerScheduledListTypeSubscriptions
