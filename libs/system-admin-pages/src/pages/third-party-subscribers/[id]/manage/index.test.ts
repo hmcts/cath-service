@@ -35,6 +35,7 @@ describe("third-party-subscribers manage user page", () => {
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
         id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
+        status: "PENDING",
         createdAt: new Date("2026-01-15"),
         subscriptions: [{ id: "s1", thirdPartyUserId: "user-1", listType: "CIVIL_DAILY_CAUSE_LIST", sensitivity: "PUBLIC" }]
       } as never);
@@ -48,7 +49,8 @@ describe("third-party-subscribers manage user page", () => {
         expect.objectContaining({
           pageTitle: "Manage subscriber",
           name: "Test Corp",
-          subscriptionCount: 1
+          subscriptionCount: 1,
+          statusLabel: "Pending"
         })
       );
     });
@@ -58,6 +60,7 @@ describe("third-party-subscribers manage user page", () => {
       vi.mocked(findThirdPartyUserById).mockResolvedValue({
         id: "00000000-0000-0000-0000-000000000001",
         name: "Test Corp",
+        status: "PENDING",
         createdAt: new Date(),
         subscriptions: []
       } as never);
@@ -68,5 +71,57 @@ describe("third-party-subscribers manage user page", () => {
       // Assert
       expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ subscriptionCount: 0 }));
     });
+
+    it.each([
+      ["en", "PENDING", "Pending"],
+      ["en", "ACTIVE", "Active"],
+      ["en", "SUSPENDED", "Suspended"],
+      ["cy", "PENDING", "Yn yr arfaeth"],
+      ["cy", "ACTIVE", "Gweithredol"],
+      ["cy", "SUSPENDED", "Wedi'i atal"]
+    ])("should pass the %s label for the %s status", async (locale, status, label) => {
+      // Arrange
+      res.locals = { locale };
+      vi.mocked(findThirdPartyUserById).mockResolvedValue({ ...buildUser(), status } as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ statusLabel: label }));
+    });
+
+    it("should fall back to the raw value when the stored status is unknown", async () => {
+      // Arrange
+      vi.mocked(findThirdPartyUserById).mockResolvedValue({ ...buildUser(), status: "LEGACY" } as never);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("third-party-subscribers/[id]/manage/index", expect.objectContaining({ statusLabel: "LEGACY" }));
+    });
+
+    it("should redirect to the Welsh users list when user not found in Welsh", async () => {
+      // Arrange
+      res.locals = { locale: "cy" };
+      vi.mocked(findThirdPartyUserById).mockResolvedValue(null);
+
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      expect(res.redirect).toHaveBeenCalledWith("/third-party-subscribers?lng=cy");
+    });
   });
 });
+
+function buildUser() {
+  return {
+    id: "00000000-0000-0000-0000-000000000001",
+    name: "Test Corp",
+    status: "PENDING",
+    createdAt: new Date("2026-01-15"),
+    subscriptions: []
+  };
+}

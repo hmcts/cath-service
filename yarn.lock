@@ -2408,6 +2408,7 @@ __metadata:
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/publication": "workspace:*"
     "@hmcts/subscriptions": "workspace:*"
+    "@hmcts/test-support": "workspace:*"
     "@hmcts/third-party-subscription-fulfilment": "workspace:*"
     "@hmcts/third-party-user": "workspace:*"
     "@hmcts/web-core": "workspace:*"
@@ -2429,6 +2430,7 @@ __metadata:
   dependencies:
     "@hmcts/azure-blob": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/third-party-user": "workspace:*"
     "@types/nunjucks": "npm:3.2.6"
     cheerio: "npm:1.2.0"
     nunjucks: "npm:3.2.4"
