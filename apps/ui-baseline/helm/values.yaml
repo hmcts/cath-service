@@ -8,13 +8,19 @@ nodejs:
   replicas: 1
   autoscaling:
     enabled: false
+  # Idle between checks and CPU-bound during one (axe and rendering in Chromium), so a small
+  # request with a limit it can burst to, as other CFT pods with bursty load set them. A check
+  # captures UI_BASELINE_CONCURRENCY pages at once: about one and a half per CPU of the limit, as
+  # captures also wait on CaTH. Raise the two together. Deployed by GitHub Actions without
+  # global.devMode, so these keys apply, not the dev* ones.
   memoryRequests: 1Gi
-  memoryLimits: 3Gi
+  memoryLimits: 4Gi
   cpuRequests: 500m
-  cpuLimits: 2000m
+  cpuLimits: 4000m
   environment:
     NODE_ENV: 'production'
     UI_BASELINE_ENV: aat
+    UI_BASELINE_CONCURRENCY: '6'
   # Only secrets every environment it runs in has: a missing one stops the pod starting. The IDAM
   # test account for signed-in pages is read from the vault when a check needs it
   # (environments.json names it), so it needs no change here. There is no sign-in to the app itself:

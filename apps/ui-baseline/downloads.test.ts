@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchChromium } from "./core/index.js";
 import { captureDownloads, type DownloadSpec, loadDownloads, seedResolver } from "./downloads.js";
 
-vi.mock("./core/index.js", () => ({ launchChromium: vi.fn() }));
+vi.mock("./core/index.js", () => ({
+  launchChromium: vi.fn(),
+  trackRequests: vi.fn(),
+  gotoSettled: vi.fn((page: { goto: (url: string) => Promise<unknown> }, url: string) => page.goto(url))
+}));
 
 describe("seedResolver", () => {
   it("should give a fixture's artefact id and a record's field from an app's seed", () => {

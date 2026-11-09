@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Browser } from "playwright";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchChromium } from "./browser.js";
-import { captureBatch } from "./capture-batch.js";
+import { captureBatch, captureBatches } from "./capture-batch.js";
 import { type CaptureResult, type CaptureTarget, captureTarget } from "./capture-target.js";
 
 vi.mock("./browser.js", () => ({ launchChromium: vi.fn() }));
@@ -198,5 +198,110 @@ describe("captureBatch", () => {
     expect(console.log).toHaveBeenCalledWith("retrying 2 failed captures one at a time");
     expect(await readFile(path.join(outDir, "index.jsonl"), "utf-8")).toBe("");
     expect(live.close).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("captureBatches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  it("should capture every batch into its own directory from one browser", async () => {
+    // Arrange
+    const lists = await setUp([{ id: "civil", url: "http://localhost/civil" }]);
+    const pages = await setUp([{ id: "home", url: "http://localhost/", locales: ["en", "cy"] }]);
+    const browser = fakeBrowser();
+    vi.mocked(launchChromium).mockResolvedValue(browser as unknown as Browser);
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) => [ok(target)]);
+
+    // Act
+    const results = await captureBatches(
+      [
+        { targetsFile: lists.targetsFile, settings: { outDir: lists.outDir } },
+        { targetsFile: pages.targetsFile, settings: { outDir: pages.outDir } }
+      ],
+      2
+    );
+
+    // Assert
+    expect(results.map((batch) => batch.map((r) => `${r.id} ${r.locale}`).sort())).toEqual([["civil en"], ["home cy", "home en"]]);
+    expect(vi.mocked(captureTarget).mock.calls.map(([, target, settings]) => `${target.id} ${settings.outDir}`)).toEqual(
+      expect.arrayContaining([`civil ${lists.outDir}`, `home ${pages.outDir}`])
+    );
+    expect(launchChromium).toHaveBeenCalledTimes(1);
+    expect(browser.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("should start the next batch's captures while the first batch's slowest page is still going", async () => {
+    // Arrange
+    const lists = await setUp([
+      { id: "slow-list", url: "http://localhost/slow" },
+      { id: "quick-list", url: "http://localhost/quick" }
+    ]);
+    const pages = await setUp([{ id: "home", url: "http://localhost/" }]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    const order: string[] = [];
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) => {
+      await new Promise((resolve) => setTimeout(resolve, target.id === "slow-list" ? 30 : 1));
+      order.push(target.id);
+      return [ok(target)];
+    });
+
+    // Act
+    await captureBatches(
+      [
+        { targetsFile: lists.targetsFile, settings: { outDir: lists.outDir } },
+        { targetsFile: pages.targetsFile, settings: { outDir: pages.outDir } }
+      ],
+      2
+    );
+
+    // Assert
+    expect(order).toEqual(["quick-list", "home", "slow-list"]);
+  });
+
+  it("should tell a batch it has finished as soon as its captures are in, before the other batch ends", async () => {
+    // Arrange
+    const lists = await setUp([{ id: "civil", url: "http://localhost/civil" }]);
+    const pages = await setUp([{ id: "slow-page", url: "http://localhost/slow" }]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    const events: string[] = [];
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) => {
+      await new Promise((resolve) => setTimeout(resolve, target.id === "slow-page" ? 30 : 1));
+      events.push(`captured ${target.id}`);
+      return [ok(target)];
+    });
+
+    // Act
+    await captureBatches(
+      [
+        { targetsFile: lists.targetsFile, settings: { outDir: lists.outDir }, onFinished: (results) => events.push(`lists finished with ${results.length}`) },
+        { targetsFile: pages.targetsFile, settings: { outDir: pages.outDir }, onFinished: (results) => events.push(`pages finished with ${results.length}`) }
+      ],
+      2
+    );
+
+    // Assert
+    expect(events).toEqual(["captured civil", "lists finished with 1", "captured slow-page", "pages finished with 1"]);
+  });
+
+  it("should tell a batch with a failure it has finished only after its retry", async () => {
+    // Arrange
+    const lists = await setUp([{ id: "civil", url: "http://localhost/civil" }]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    let attempts = 0;
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) =>
+      ++attempts === 1 ? [{ ...ok(target), ok: false, error: "timeout" }] : [ok(target)]
+    );
+    const onFinished = vi.fn();
+
+    // Act
+    await captureBatches([{ targetsFile: lists.targetsFile, settings: { outDir: lists.outDir }, onFinished }], 1);
+
+    // Assert
+    expect(attempts).toBe(2);
+    expect(onFinished).toHaveBeenCalledTimes(1);
+    expect(onFinished.mock.calls[0][0]).toEqual([ok({ id: "civil", url: "http://localhost/civil", locale: "en" })]);
   });
 });

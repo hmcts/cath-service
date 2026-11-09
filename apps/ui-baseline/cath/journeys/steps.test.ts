@@ -67,7 +67,10 @@ describe("CaTH journey steps", () => {
       await unsubscribeFromEverything(page, "https://cath.test");
 
       // Assert
-      expect(actions).toEqual([{ selector: "page", action: "goto", args: ["https://cath.test/bulk-unsubscribe", { waitUntil: "networkidle" }] }]);
+      expect(actions).toEqual([
+        { selector: "page", action: "goto", args: ["https://cath.test/bulk-unsubscribe", { waitUntil: "load" }] },
+        { selector: "page", action: "waitForLoadState", args: ["networkidle"] }
+      ]);
     });
 
     it("should tick every subscription, continue and confirm when the user has subscriptions", async () => {
@@ -85,7 +88,7 @@ describe("CaTH journey steps", () => {
         'input[name="confirm"][value="yes"]'
       ]);
       expect(did("click").map((entry) => entry.selector)).toEqual([PRIMARY, PRIMARY]);
-      expect(did("waitForLoadState")).toHaveLength(2);
+      expect(did("waitForLoadState")).toHaveLength(3);
     });
   });
 

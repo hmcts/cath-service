@@ -12,12 +12,25 @@ export async function captureBatch(
   concurrency: number,
   onCaptured?: (done: number, total: number) => void
 ): Promise<CaptureResult[]> {
-  const entries = JSON.parse(await readFile(targetsFile, "utf-8")) as BatchEntry[];
-  const targets = entries.flatMap(({ locales, ...target }) => (locales ?? [target.locale ?? "en"]).map((locale) => ({ ...target, locale })));
+  const [results] = await captureBatches([{ targetsFile, settings, onCaptured }], concurrency);
+  return results;
+}
 
-  // A baseline directory must only ever hold one run, or index.jsonl mixes runs
-  await rm(settings.outDir, { recursive: true, force: true });
-  await mkdir(settings.outDir, { recursive: true });
+// Captures several targets files, each into its own directory, from one queue in one browser, so
+// the workers that finish one batch's last pages go straight on to the next batch rather than wait
+// for the slowest page of the first. A batch's onFinished is told its results as soon as all of
+// them are in: when its last capture ends, or after its retries if any failed.
+export async function captureBatches(batches: CaptureBatch[], concurrency: number): Promise<CaptureResult[][]> {
+  const loaded = await Promise.all(
+    batches.map(async (batch) => {
+      const entries = JSON.parse(await readFile(batch.targetsFile, "utf-8")) as BatchEntry[];
+      const targets = entries.flatMap(({ locales, ...target }) => (locales ?? [target.locale ?? "en"]).map((locale) => ({ ...target, locale })));
+      // A baseline directory must only ever hold one run, or index.jsonl mixes runs
+      await rm(batch.settings.outDir, { recursive: true, force: true });
+      await mkdir(batch.settings.outDir, { recursive: true });
+      return { ...batch, targets, results: [] as CaptureResult[], done: 0 };
+    })
+  );
 
   // One shared browser; if it dies (a crashed page can take it down, e.g. when memory runs out)
   // it is relaunched so the rest of the batch carries on
@@ -32,7 +45,7 @@ export async function captureBatch(
     });
     return relaunching;
   };
-  const capture = async (target: CaptureTarget) =>
+  const capture = async (target: CaptureTarget, settings: CaptureSettings) =>
     captureTarget(await liveBrowser(), target, settings).catch((error: Error) => [
       { ok: false, id: target.id, locale: target.locale ?? "en", state: "default", outDir: "", status: null, error: error.message }
     ]);
@@ -40,41 +53,46 @@ export async function captureBatch(
     for (const result of captured)
       console.log(`${result.ok ? "ok  " : "FAIL"} ${result.id} ${result.locale}/${result.state}${result.error ? ` — ${result.error}` : ""}`);
   };
+  const failedTargets = (batch: (typeof loaded)[number]) =>
+    batch.targets.filter((target) => batch.results.some((r) => !r.ok && r.id === target.id && r.locale === (target.locale ?? "en")));
 
-  const results: CaptureResult[] = [];
-  const queue = [...targets];
-  let done = 0;
+  const queue = loaded.flatMap((batch) => batch.targets.map((target) => ({ batch, target })));
   try {
     await Promise.all(
       Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
-        for (let target = queue.shift(); target; target = queue.shift()) {
-          const captured = await capture(target);
+        for (let next = queue.shift(); next; next = queue.shift()) {
+          const { batch, target } = next;
+          const captured = await capture(target, batch.settings);
           log(captured);
-          results.push(...captured);
-          done += 1;
-          onCaptured?.(done, targets.length);
+          batch.results.push(...captured);
+          batch.done += 1;
+          batch.onCaptured?.(batch.done, batch.targets.length);
+          if (batch.done === batch.targets.length && !failedTargets(batch).length) batch.onFinished?.(batch.results);
         }
       })
     );
     // Failures are usually the machine being busy rather than the page, so each gets one more go,
     // alone, starting from a clean directory. A retry replaces the target's earlier results.
-    const failed = targets.filter((target) => results.some((r) => !r.ok && r.id === target.id && r.locale === (target.locale ?? "en")));
-    if (failed.length) console.log(`retrying ${failed.length} failed capture${failed.length === 1 ? "" : "s"} one at a time`);
-    for (const target of failed) {
-      // Its folder and its index lines go together, so a retry that fails leaves no line behind
-      // pointing at a capture that is no longer there
-      await rm(path.join(settings.outDir, target.id, target.locale ?? "en"), { recursive: true, force: true });
-      await dropIndexLines(path.join(settings.outDir, "index.jsonl"), target.id, target.locale ?? "en");
-      const captured = await capture(target);
-      log(captured);
-      const locale = target.locale ?? "en";
-      for (let i = results.length - 1; i >= 0; i--) if (results[i].id === target.id && results[i].locale === locale) results.splice(i, 1);
-      results.push(...captured);
+    for (const batch of loaded) {
+      const failed = failedTargets(batch);
+      if (!failed.length) continue;
+      console.log(`retrying ${failed.length} failed capture${failed.length === 1 ? "" : "s"} one at a time`);
+      for (const target of failed) {
+        const locale = target.locale ?? "en";
+        // Its folder and its index lines go together, so a retry that fails leaves no line behind
+        // pointing at a capture that is no longer there
+        await rm(path.join(batch.settings.outDir, target.id, locale), { recursive: true, force: true });
+        await dropIndexLines(path.join(batch.settings.outDir, "index.jsonl"), target.id, locale);
+        const captured = await capture(target, batch.settings);
+        log(captured);
+        batch.results = [...batch.results.filter((r) => r.id !== target.id || r.locale !== locale), ...captured];
+      }
+      batch.onFinished?.(batch.results);
     }
   } finally {
     await browser.close();
   }
-  return results;
+  return loaded.map((batch) => batch.results);
 }
 
 // Removes a target-language capture's lines from the index, as its folder is removed for a retry
@@ -89,4 +107,11 @@ async function dropIndexLines(file: string, id: string, locale: string): Promise
 
 export interface BatchEntry extends CaptureTarget {
   locales?: string[];
+}
+
+export interface CaptureBatch {
+  targetsFile: string;
+  settings: CaptureSettings;
+  onCaptured?: (done: number, total: number) => void;
+  onFinished?: (results: CaptureResult[]) => void;
 }

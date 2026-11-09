@@ -1,8 +1,9 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readReviewerOutput, runReviewer } from "./reviewer-command.js";
+import { type FakeReviewer, fakeReviewer } from "./fake-reviewer.test-helper.js";
+import { forEachReviewer, REVIEWERS_AT_ONCE, readReviewerOutput, runReviewer } from "./reviewer-command.js";
 
-vi.mock("node:child_process", () => ({ spawnSync: vi.fn() }));
+vi.mock("node:child_process", () => ({ spawn: vi.fn() }));
 
 const envelope = (fields: Record<string, unknown>) => JSON.stringify({ type: "result", subtype: "success", is_error: false, num_turns: 1, ...fields });
 
@@ -71,30 +72,69 @@ describe("runReviewer", () => {
     vi.clearAllMocks();
   });
 
-  it("should pass the prompt on stdin and read what the reviewer printed", () => {
+  it("should pass the prompt on stdin and read what the reviewer printed", async () => {
     // Arrange
-    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: '{"verdicts":[]}', stderr: "" } as never);
+    vi.mocked(spawn).mockImplementation((() => fakeReviewer({ stdout: '{"verdicts":[]}' })) as never);
 
     // Act
-    const answer = runReviewer(["my-llm", "--json"], "the prompt");
+    const answer = await runReviewer(["my-llm", "--json"], "the prompt");
 
     // Assert
-    expect(spawnSync).toHaveBeenCalledWith("my-llm", ["--json"], expect.objectContaining({ input: "the prompt", encoding: "utf-8" }));
+    expect(spawn).toHaveBeenCalledWith("my-llm", ["--json"], { stdio: ["pipe", "pipe", "pipe"] });
+    expect((vi.mocked(spawn).mock.results[0].value as FakeReviewer).input).toBe("the prompt");
     expect(answer).toEqual({ outcome: "answered", json: { verdicts: [] } });
   });
 
-  it("should throw with the reviewer's error when it exits non-zero or cannot start", () => {
+  it("should throw with the reviewer's error when it exits non-zero", async () => {
     // Arrange
-    vi.mocked(spawnSync)
-      .mockReturnValueOnce({ status: 2, stdout: "", stderr: "not logged in" } as never)
-      .mockReturnValueOnce({ status: null, stdout: "", stderr: "", error: new Error("spawn claude ENOENT") } as never);
+    vi.mocked(spawn).mockImplementation((() => fakeReviewer({ status: 2, stderr: "not logged in" })) as never);
 
     // Act
-    const failed = () => runReviewer(["claude"], "p");
-    const missing = () => runReviewer(["claude"], "p");
+    const failed = runReviewer(["claude"], "p");
 
     // Assert
-    expect(failed).toThrow('reviewer "claude" failed (2): not logged in');
-    expect(missing).toThrow('reviewer "claude" failed (null): Error: spawn claude ENOENT');
+    await expect(failed).rejects.toThrow('reviewer "claude" failed (2): not logged in');
+  });
+
+  it("should throw with the spawn error when the reviewer cannot start", async () => {
+    // Arrange
+    vi.mocked(spawn).mockImplementation((() => fakeReviewer({ error: new Error("spawn claude ENOENT") })) as never);
+
+    // Act
+    const missing = runReviewer(["claude"], "p");
+
+    // Assert
+    await expect(missing).rejects.toThrow('reviewer "claude" failed (null): Error: spawn claude ENOENT');
+  });
+});
+
+describe("forEachReviewer", () => {
+  it("should run no more than REVIEWERS_AT_ONCE at a time and answer in the items' order", async () => {
+    // Arrange
+    const items = Array.from({ length: 10 }, (_, i) => i);
+    let running = 0;
+    let peak = 0;
+
+    // Act
+    const answers = await forEachReviewer(items, async (item) => {
+      running++;
+      peak = Math.max(peak, running);
+      // Later items finish first, so the order is not just the order they finished in
+      await new Promise((resolve) => setTimeout(resolve, 20 - item));
+      running--;
+      return `answer ${item}`;
+    });
+
+    // Assert
+    expect(peak).toBe(REVIEWERS_AT_ONCE);
+    expect(answers).toEqual(items.map((item) => `answer ${item}`));
+  });
+
+  it("should answer with nothing when there are no items", async () => {
+    // Act
+    const answers = await forEachReviewer([], async () => "never");
+
+    // Assert
+    expect(answers).toEqual([]);
   });
 });

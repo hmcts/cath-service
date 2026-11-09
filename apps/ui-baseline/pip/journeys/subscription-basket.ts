@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import { link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 
 // Ported from pip's verified/email-subscriptions-test.ts ("remove subscriptions or add new
@@ -19,7 +19,7 @@ export const subscriptionBasket: Journey = {
     const chooseCourts = async (...courts: string[]) => {
       await page.locator("#subscription-choice-1").check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       for (const court of courts) await page.locator(`input[type=checkbox][id="${court}"]`).check();
       await continueButton().click();
     };

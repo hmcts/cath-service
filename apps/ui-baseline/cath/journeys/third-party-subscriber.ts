@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import type { CathJourneyData } from "./index.js";
 import { link, primaryButton } from "./steps.js";
 
@@ -91,6 +91,6 @@ async function setPublicAndSave(page: Page, listType: string): Promise<void> {
       if ((await radio.count()) > 0) await radio.check();
     }
     await primaryButton(page).click();
-    await page.waitForLoadState("networkidle");
+    await settle(page);
   }
 }

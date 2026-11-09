@@ -1,4 +1,4 @@
-import type { Journey } from "../../core/index.js";
+import { type Journey, settle } from "../../core/index.js";
 import type { CathJourneyData } from "./index.js";
 import { link, primaryButton, unsubscribeFromEverything } from "./steps.js";
 
@@ -27,18 +27,18 @@ export const configureListTypes: Journey = {
     await act(`subscribe to court ${COURT} for the civil and family list in English`, async () => {
       await page.locator('input[name="subscriptionMethod"][value="courtOrTribunal"]').check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator(`#location-${COURT}`).check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await listType(CIVIL_AND_FAMILY).check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await page.locator('input[name="language"][value="ENGLISH"]').check();
       await continueButton().click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       await continueButton().click();
     });
     await checkpoint("subscription-confirmed");

@@ -42,7 +42,10 @@ describe("pip journey steps", () => {
       await unsubscribeFromEverything(page, "http://pip.test");
 
       // Assert
-      expect(actions).toEqual([{ selector: "page", action: "goto", args: ["http://pip.test/bulk-unsubscribe", { waitUntil: "networkidle" }] }]);
+      expect(actions).toEqual([
+        { selector: "page", action: "goto", args: ["http://pip.test/bulk-unsubscribe", { waitUntil: "load" }] },
+        { selector: "page", action: "waitForLoadState", args: ["networkidle"] }
+      ]);
     });
 
     it("should select every table, continue and answer yes when the user has subscriptions", async () => {
@@ -62,7 +65,7 @@ describe("pip journey steps", () => {
         "#bulk-unsubscribe-button",
         `main form >> filter(has=${SUBMIT}) >> last >> ${SUBMIT} >> first`
       ]);
-      expect(did("waitForLoadState")).toHaveLength(2);
+      expect(did("waitForLoadState")).toHaveLength(3);
     });
   });
 

@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import type { Browser, BrowserContextOptions, Page } from "playwright";
 import { capturePage, expandAll } from "./capture-page.js";
+import { gotoSettled, settle, trackRequests } from "./settle.js";
 
 const PLAYWRIGHT_VERSION = createRequire(import.meta.url)("playwright/package.json").version as string;
 const DEFAULT_TIMEZONE = "Europe/London";
@@ -16,18 +17,19 @@ export async function captureTarget(browser: Browser, target: CaptureTarget, set
   const locale = target.locale ?? "en";
   const mobile = target.viewport === "mobile";
   const context = await browser.newContext(contextOptions(settings, mobile ? VIEWPORTS.mobile : VIEWPORTS.desktop));
+  trackRequests(context);
   const page = await context.newPage();
   try {
     if (target.cookies?.length) await context.addCookies(target.cookies.map((cookie) => ({ ...cookie, url: target.url })));
-    for (const setupUrl of target.setup ?? []) await page.goto(setupUrl, { waitUntil: "networkidle" });
+    for (const setupUrl of target.setup ?? []) await gotoSettled(page, setupUrl);
 
-    const response = await page.goto(withLocale(target.url, locale), { waitUntil: "networkidle" });
+    const response = await gotoSettled(page, withLocale(target.url, locale));
     await page.evaluate(() => document.fonts.ready);
     const status = response?.status() ?? null;
 
     const results = [await captureState(page, target, settings, locale, mobile ? "mobile" : "default", status)];
     if (!mobile && (await expandAll(page))) {
-      await page.waitForLoadState("networkidle");
+      await settle(page);
       results.push(await captureState(page, target, settings, locale, "expanded", status));
     }
     return results;

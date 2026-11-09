@@ -1,8 +1,9 @@
 export { launchChromium } from "./capture/browser.js";
-export { type BatchEntry, captureBatch } from "./capture/capture-batch.js";
+export { type BatchEntry, type CaptureBatch, captureBatch, captureBatches } from "./capture/capture-batch.js";
 export { type AxeSummary, type CaptureMeta, type CaptureOptions, capturePage, expandAll } from "./capture/capture-page.js";
 export { type CaptureServer, type CaptureServerOptions, startCaptureServer } from "./capture/capture-server.js";
 export { type CaptureResult, type CaptureSettings, type CaptureTarget, captureTarget } from "./capture/capture-target.js";
+export { gotoSettled, settle, trackRequests } from "./capture/settle.js";
 export { type CompareOptions, type CompareSummary, compareRuns, type Finding, type PairResult, type Pattern } from "./compare/compare.js";
 export {
   compareExcel,

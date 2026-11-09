@@ -67,6 +67,8 @@ export function fakePage(options: FakePageOptions = {}) {
     locator: (selector: string) => locator(selector, selector),
     goto: (url: string, gotoOptions?: unknown) => record("page", "goto", [url, gotoOptions]),
     waitForLoadState: (state: string) => record("page", "waitForLoadState", [state]),
+    // An untracked context, so settle() waits as networkidle and the wait is recorded
+    context: () => ({}),
     url: () => (typeof options.url === "function" ? options.url() : (options.url ?? "http://localhost:8080/journey"))
   };
 
