@@ -146,5 +146,37 @@ describe("date-formatting", () => {
       const result = formatDdMmYyyyDate("05/03/2026", "en");
       expect(result).toBe("5 March 2026");
     });
+
+    it("should format an unpadded day and month", () => {
+      const result = formatDdMmYyyyDate("5/10/2026", "en");
+      expect(result).toBe("5 October 2026");
+    });
+
+    it("should use Welsh month names for the cy locale", () => {
+      const result = formatDdMmYyyyDate("20/10/2026", "cy");
+      expect(result).toBe("20 Hydref 2026");
+    });
+
+    it("should return its own output unchanged when called twice", () => {
+      // Arrange
+      const once = formatDdMmYyyyDate("20/02/2025", "en");
+
+      // Act
+      const twice = formatDdMmYyyyDate(once, "en");
+
+      // Assert
+      expect(twice).toBe("20 February 2025");
+    });
+
+    it.each([
+      ["an impossible date", "31/02/2025"],
+      ["free text containing dates", "w/c 15/01/2025 to 17/01/2025"],
+      ["a case reference", "CO/1234/2025"],
+      ["text", "TBC"],
+      ["an empty string", ""]
+    ])("should return %s unchanged", (_description, value) => {
+      const result = formatDdMmYyyyDate(value, "en");
+      expect(result).toBe(value);
+    });
   });
 });

@@ -31,6 +31,7 @@ export interface SjpCasePublic {
 
 export interface SjpCasePress extends Omit<SjpCasePublic, "offence"> {
   dateOfBirth: Date | null;
+  rawDateOfBirth: string | null;
   age: number | null;
   reference: string | null;
   address: string | null;

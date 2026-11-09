@@ -1,4 +1,4 @@
-import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
+import { autoFitColumns, formatDdMmYyyyDate, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
 import { cyDaily, cyFuture } from "../locales/cy.js";
 import { enDaily, enFuture } from "../locales/en.js";
@@ -63,7 +63,7 @@ export async function generateMagistratesAdultCourtListExcel(options: ExcelGener
           sanitiseCellValue(session.sessionStart),
           sanitiseCellValue(caseItem.blockStart),
           sanitiseCellValue(caseItem.defendantName),
-          sanitiseCellValue(caseItem.dateOfBirth),
+          sanitiseCellValue(formatDdMmYyyyDate(caseItem.dateOfBirth, locale)),
           sanitiseCellValue(caseItem.address),
           sanitiseCellValue(caseItem.age),
           sanitiseCellValue(caseItem.informant),

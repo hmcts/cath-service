@@ -340,6 +340,25 @@ describe("renderMagistratesStandardListData", () => {
     expect(offences[0].offenceMaxPenalty).toBe("6 months imprisonment");
   });
 
+  it.each([
+    ["a month that does not exist", "2025-13-01T00:00:00Z"],
+    ["a day that does not exist", "2025-02-31T00:00:00Z"]
+  ])("should return the plea date unchanged when it has %s", async (_description, pleaDate) => {
+    // Arrange
+    const json = JSON.parse(JSON.stringify(FULL_JSON));
+    json.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0].party[0].offence[0].pleaDate = pleaDate;
+
+    // Act
+    const result = await renderMagistratesStandardListData(json, {
+      locale: "en",
+      locationId: "123",
+      contentDate: new Date("2025-01-13T00:00:00.000Z")
+    });
+
+    // Assert
+    expect(result.listData[0].sittings[0].hearings[0].offences[0].pleaDate).toBe(pleaDate);
+  });
+
   it("should include reporting restriction details on case", async () => {
     const jsonWithRestriction: MagistratesStandardList = {
       ...FULL_JSON,
