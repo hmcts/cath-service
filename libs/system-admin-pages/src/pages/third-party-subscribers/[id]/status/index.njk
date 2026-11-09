@@ -1,0 +1,51 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+
+{% block backLink %}
+  <a href="/third-party-subscribers/{{ userId }}/manage{{ lngParam }}" class="govuk-back-link">{{ back }}</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
+
+    {% set statusError = { text: errors[0].text } if errors else null %}
+
+    <form method="post" novalidate>
+      {{ govukSelect({
+        id: "status",
+        name: "status",
+        label: {
+          text: statusLabel,
+          classes: "govuk-!-font-weight-bold"
+        },
+        items: statusItems,
+        errorMessage: statusError
+      }) }}
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: confirmButton
+        }) }}
+        {{ govukButton({
+          text: cancelLink,
+          href: "/third-party-subscribers/" + userId + "/manage" + lngParam,
+          classes: "govuk-button--warning"
+        }) }}
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

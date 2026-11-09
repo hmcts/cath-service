@@ -526,11 +526,13 @@ export async function createOrGetListType(input: CreateListTypeInput): Promise<L
 // Third Party Users
 interface CreateThirdPartyUserInput {
   name: string;
+  status?: "PENDING" | "ACTIVE" | "SUSPENDED";
 }
 
 interface ThirdPartyUserRecord {
   id: string;
   name: string;
+  status: string;
   createdAt: string;
 }
 

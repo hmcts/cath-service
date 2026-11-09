@@ -48,8 +48,10 @@ function buildArtefact(overrides: Partial<FulfilmentArtefact> = {}): FulfilmentA
   };
 }
 
-const SUBSCRIBER_1 = { id: "user-1", name: "Courtel" };
-const SUBSCRIBER_2 = { id: "user-2", name: "Snl" };
+const SUBSCRIBER_1 = { id: "user-1", name: "Courtel", status: "ACTIVE" };
+const SUBSCRIBER_2 = { id: "user-2", name: "Snl", status: "ACTIVE" };
+const PENDING_SUBSCRIBER = { id: "user-3", name: "Pending Corp", status: "PENDING" };
+const SUSPENDED_SUBSCRIBER = { id: "user-4", name: "Suspended Corp", status: "SUSPENDED" };
 
 function destinationUrlFor(userId: string): string {
   return `https://${userId}.example/publication`;
@@ -428,6 +430,80 @@ describe("third-party fulfilment service", () => {
 
       // Assert
       expect(getDestinationUrl).not.toHaveBeenCalled();
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("subscriber status", () => {
+    const DELIVERIES = [
+      ["a new publication", "POST", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA })],
+      ["an updated publication", "PUT", () => sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: true, jsonData: JSON_DATA })],
+      ["a deleted publication", "DELETE", () => sendPublicationDeletionToThirdParties({ artefactId: ARTEFACT_ID, listTypeId: 999, sensitivity: "PUBLIC" })]
+    ] as const;
+
+    it.each(DELIVERIES)("should deliver %s only to ACTIVE subscribers and log each skipped subscriber", async (_label, method, deliver) => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([PENDING_SUBSCRIBER, SUBSCRIBER_1, SUSPENDED_SUBSCRIBER, SUBSCRIBER_2]);
+
+      // Act
+      await deliver();
+
+      // Assert
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      const urls = mockFetch.mock.calls.map(([url]) => url as string);
+      expect(urls.every((url) => url.includes("user-1") || url.includes("user-2"))).toBe(true);
+      expect(mockFetch.mock.calls.every(([, init]) => (init as RequestInit).method === method)).toBe(true);
+      expect(getDestinationUrl).not.toHaveBeenCalledWith(PENDING_SUBSCRIBER.name, PENDING_SUBSCRIBER.id);
+      expect(getAccessToken).not.toHaveBeenCalledWith(SUSPENDED_SUBSCRIBER.name, SUSPENDED_SUBSCRIBER.id);
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining("Third-party subscriber skipped: status is not ACTIVE"), {
+        userId: "user-3",
+        status: "PENDING",
+        artefactId: ARTEFACT_ID
+      });
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining("Third-party subscriber skipped: status is not ACTIVE"), {
+        userId: "user-4",
+        status: "SUSPENDED",
+        artefactId: ARTEFACT_ID
+      });
+    });
+
+    it.each(DELIVERIES)("should deliver %s to every subscriber without skip logs when all are ACTIVE", async (_label, _method, deliver) => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([SUBSCRIBER_1, SUBSCRIBER_2]);
+
+      // Act
+      await deliver();
+
+      // Assert
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(console.info).not.toHaveBeenCalledWith(expect.stringContaining("status is not ACTIVE"), expect.anything());
+    });
+
+    it.each(DELIVERIES)("should send nothing for %s without throwing when no subscriber is ACTIVE", async (_label, _method, deliver) => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([PENDING_SUBSCRIBER, SUSPENDED_SUBSCRIBER]);
+
+      // Act
+      await expect(deliver()).resolves.toBeUndefined();
+
+      // Assert
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(getDestinationUrl).not.toHaveBeenCalled();
+      expect(getAccessToken).not.toHaveBeenCalled();
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining("status is not ACTIVE"), expect.objectContaining({ userId: "user-3" }));
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining("status is not ACTIVE"), expect.objectContaining({ userId: "user-4" }));
+      expect(console.info).toHaveBeenCalledWith(expect.stringContaining("no matching subscribers"), expect.objectContaining({ artefactId: ARTEFACT_ID }));
+      expect(console.error).not.toHaveBeenCalled();
+    });
+
+    it("should skip a subscriber whose stored status is not a known value", async () => {
+      // Arrange
+      vi.mocked(findMatchingSubscriptions).mockResolvedValue([{ id: "user-5", name: "Odd Corp", status: "active" }]);
+
+      // Act
+      await sendPublicationToThirdParties({ artefactId: ARTEFACT_ID, isUpdate: false, jsonData: JSON_DATA });
+
+      // Assert
       expect(mockFetch).not.toHaveBeenCalled();
     });
   });

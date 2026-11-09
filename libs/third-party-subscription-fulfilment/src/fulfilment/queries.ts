@@ -35,7 +35,7 @@ export async function findMatchingSubscriptions(listTypeName: string, sensitivit
 
   const subscriptions = await prisma.thirdPartySubscription.findMany({
     where: { listTypeId: listType.id, sensitivity: { in: sensitivities } },
-    select: { thirdPartyUser: { select: { id: true, name: true } } }
+    select: { thirdPartyUser: { select: { id: true, name: true, status: true } } }
   });
 
   return subscriptions.map((subscription) => subscription.thirdPartyUser);
@@ -44,6 +44,7 @@ export async function findMatchingSubscriptions(listTypeName: string, sensitivit
 export interface Subscriber {
   id: string;
   name: string;
+  status: string;
 }
 
 export interface FulfilmentArtefact {

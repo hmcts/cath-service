@@ -1,4 +1,7 @@
 import { prisma } from "@hmcts/postgres-prisma";
+import type { ThirdPartyUserStatus } from "./subscriber-status.js";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function findAllThirdPartyUsers() {
   return prisma.thirdPartyUser.findMany({
@@ -10,6 +13,10 @@ export async function findAllThirdPartyUsers() {
 }
 
 export async function findThirdPartyUserById(id: string) {
+  if (!UUID_PATTERN.test(id)) {
+    return null;
+  }
+
   return prisma.thirdPartyUser.findUnique({
     where: { id },
     include: { subscriptions: true }
@@ -56,6 +63,10 @@ export async function updateThirdPartySubscriptions(userId: string, subscription
       });
     }
   });
+}
+
+export async function updateThirdPartyUserStatus(id: string, status: ThirdPartyUserStatus) {
+  return prisma.thirdPartyUser.update({ where: { id }, data: { status } });
 }
 
 export async function deleteThirdPartyUser(id: string) {

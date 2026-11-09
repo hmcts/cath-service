@@ -22,7 +22,9 @@ export enum AuditLogAction {
   REMOVE_LIST = "Remove list",
   UPDATE_LOCATION_JURISDICTION = "Update location jurisdiction",
   UPDATE_THIRD_PARTY_OAUTH_CONFIG = "Update third party OAuth config",
-  UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions"
+  UPDATE_THIRD_PARTY_SUBSCRIBER_STATUS = "Update third party subscriber status",
+  UPDATE_THIRD_PARTY_SUBSCRIPTIONS = "Update third party subscriptions",
+  VIEW_THIRD_PARTY_SUBSCRIBER_STATUS = "View third party subscriber status"
 }
 
 export interface AuditLogData {

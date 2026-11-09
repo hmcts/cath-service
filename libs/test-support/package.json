@@ -25,6 +25,7 @@
   "dependencies": {
     "@hmcts/azure-blob": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*",
     "cheerio": "1.2.0",
     "nunjucks": "3.2.4"
   },
