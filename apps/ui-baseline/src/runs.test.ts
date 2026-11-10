@@ -121,7 +121,22 @@ describe("createRunner", () => {
     expect(() => runner.start({ kind: "check", scope: "list-types", listTypes: ["civil; rm -rf /"] })).toThrow(RunRequestError);
     expect(() => runner.start({ kind: "check", scope: "routes", routes: ["https://example.com"] })).toThrow(RunRequestError);
     expect(() => runner.start({ kind: "check", scope: "routes", routes: [] })).toThrow(RunRequestError);
+    expect(() => runner.start({ kind: "check", scope: "routes", routes: ["/../etc"] })).toThrow(RunRequestError);
     expect(runner.list()).toEqual([]);
+  });
+
+  it("should take every route the command line takes, as the route map names them", async () => {
+    // Arrange
+    const { runner, execute } = await runnerWith();
+    const routes = ["/", "/robots.txt", "/publication/[id]", "/media-applications/[id]/approve", "/manage-user/[userId]"];
+
+    // Act
+    runner.start({ kind: "check", scope: "routes", routes });
+    await runner.idle();
+
+    // Assert
+    const args = execute.mock.calls[0][1];
+    expect(args.filter((_, i) => args[i - 1] === "--route")).toEqual(routes);
   });
 
   it("should restore stored runs, marking any that were cut short", async () => {

@@ -84,6 +84,79 @@ describe("compareRuns", () => {
     expect(JSON.parse(await readFile(path.join(out, "compare.json"), "utf-8"))).toEqual(summary);
   });
 
+  it("should compare pip's opened page with CaTH's page as it first appears when CaTH has nothing to open", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+    const opened = '- heading "Find a court" [level=1]\n- paragraph: Search by name\n- paragraph: Opening hours 9 to 5';
+    await writeRun(path.join(dir, "source"), [
+      { id: "court", aria: '- heading "Find a court" [level=1]\n- paragraph: Search by name' },
+      { id: "court", state: "expanded", aria: opened }
+    ]);
+    // CaTH shows the opening hours outright, so it captured no expanded state
+    await writeRun(path.join(dir, "target"), [{ id: "court", aria: opened }]);
+
+    // Act
+    const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+    // Assert
+    const expanded = summary.results.find((r) => r.state === "expanded");
+    expect(expanded).toMatchObject({ verdict: "differs", targetState: "default" });
+    expect(describeFindings(expanded?.findings ?? [])).toEqual([
+      "page collapsed-content: the source hides some of this page until it is opened and the target has nothing to open, so the target's page is compared as it first appears"
+    ]);
+    expect(summary.totals.notCaptured).toBe(0);
+  });
+
+  it("should report the content CaTH lost when pip collapsed it and CaTH left it out", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+    const page = '- heading "Find a court" [level=1]\n- paragraph: Search by name';
+    await writeRun(path.join(dir, "source"), [
+      { id: "court", aria: page },
+      { id: "court", state: "expanded", aria: `${page}\n- paragraph: Opening hours 9 to 5` }
+    ]);
+    await writeRun(path.join(dir, "target"), [{ id: "court", aria: page }]);
+
+    // Act
+    const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+    // Assert
+    const expanded = summary.results.find((r) => r.state === "expanded");
+    expect(expanded?.verdict).toBe("differs");
+    expect(describeFindings(expanded?.findings ?? []).some((finding) => finding.includes("Opening hours 9 to 5"))).toBe(true);
+  });
+
+  it("should compare CaTH's opened page with pip's page as it first appears when only CaTH has something to open", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+    const page = '- heading "Find a court" [level=1]\n- paragraph: Search by name';
+    await writeRun(path.join(dir, "source"), [{ id: "court", aria: page }]);
+    await writeRun(path.join(dir, "target"), [
+      { id: "court", aria: page },
+      { id: "court", state: "expanded", aria: page }
+    ]);
+
+    // Act
+    const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+    // Assert
+    expect(summary.results.map((r) => `${r.state} ${r.verdict}`)).toEqual(["default match", "expanded differs"]);
+    expect(summary.results[1]).toMatchObject({ sourceState: "default", findings: [expect.objectContaining({ change: "collapsed-content" })] });
+  });
+
+  it("should still report pip's opened page as not compared when CaTH has no capture of the page at all", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+    await writeRun(path.join(dir, "source"), [{ id: "court", state: "expanded", aria: '- heading "Find a court" [level=1]' }]);
+    await writeRun(path.join(dir, "target"), []);
+
+    // Act
+    const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+    // Assert
+    expect(summary.results.map((r) => `${r.state} ${r.verdict}`)).toEqual(["expanded not-captured"]);
+  });
+
   it("should compare nothing when the source run has no index", async () => {
     // Arrange
     const dir = await mkdtemp(path.join(tmpdir(), "compare-"));

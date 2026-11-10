@@ -188,7 +188,18 @@ node -e '
 const fs = require("node:fs"), path = require("node:path");
 const out = process.argv[1];
 const lines = (file) => fs.existsSync(file) ? fs.readFileSync(file, "utf-8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line)) : [];
+// Every capture a step was asked for, as captureBatch expands the targets file: a page in each of its
+// languages, at desktop or mobile width (a mobile target has the same id as the page, and the state "mobile")
+const width = (mobile) => (mobile ? "mobile" : "desktop");
+const asked = (file) => fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf-8")).flatMap((t) => (t.locales ?? [t.locale ?? "en"]).map((locale) => [t.id, locale, width(t.viewport === "mobile")].join("|"))) : [];
+// Pairs asked for that never reached the index: all of them when the capture step died before writing
+// one (Chromium would not start, say), which its log then has no count of failures for
+const missing = (targetsFile, index) => {
+  const captured = new Set(index.map((c) => [c.id, c.locale, width(c.state === "mobile")].join("|")));
+  return asked(targetsFile).filter((pair) => !captured.has(pair));
+};
 const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.join(out, "pages/index.jsonl")), journeys = lines(path.join(out, "journeys/index.jsonl")), files = lines(path.join(out, "files/index.jsonl")), downloads = lines(path.join(out, "downloads/index.jsonl"));
+const missingCaptures = [...missing(process.argv[4], lists), ...missing(process.argv[5], pages)];
 const summary = {
   finishedAt: new Date().toISOString(),
   pip: process.argv[2],
@@ -202,13 +213,16 @@ const summary = {
     const match = fs.existsSync(path.join(out, log)) && fs.readFileSync(path.join(out, log), "utf-8").match(/(\d+) failed/g);
     return sum + (match ? Number(match.at(-1).split(" ")[0]) : 0);
   }, 0),
+  // Pages asked for and not captured at all, counted on their own so a step that crashed cannot pass
+  missingCaptures: missingCaptures.length,
   captures: { listPages: lists.length, otherPages: pages.length, journeyRuns: journeys.length, journeyCheckpoints: journeys.reduce((sum, j) => sum + j.steps, 0), generatedFiles: files.length, downloads: downloads.length },
   failedJourneys: journeys.filter((j) => !j.ok).map((j) => `${j.journey} ${j.locale}: ${j.error?.split("\n")[0]}`)
 };
 fs.writeFileSync(path.join(out, "run.json"), JSON.stringify(summary, null, 2) + "\n");
 console.log(JSON.stringify(summary, null, 2));
-if (summary.failedCaptures || summary.failedJourneys.length) process.exit(1);
-' "$OUT" "$PIP_COMMITS" "$ENV_NAME" || {
+if (missingCaptures.length) console.error("not captured: " + missingCaptures.slice(0, 20).join(", ") + (missingCaptures.length > 20 ? ", ..." : ""));
+if (summary.failedCaptures || summary.missingCaptures || summary.failedJourneys.length) process.exit(1);
+' "$OUT" "$PIP_COMMITS" "$ENV_NAME" apps/ui-baseline/output/targets/pip.json apps/ui-baseline/output/targets/pip-pages.json || {
   echo >&2
   echo "The baseline is incomplete: some captures or journeys failed (see above and the *.log files in $OUT)." >&2
   if [ "$ENV_NAME" = local ] && ! curl -sfk -o /dev/null "$PIP_FRONTEND_URL/"; then

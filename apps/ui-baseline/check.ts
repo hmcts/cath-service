@@ -909,8 +909,8 @@ async function sideBySide(dir: string): Promise<string[]> {
       .map((r) => ({
         name: `${r.id}-${r.locale}${r.state === "default" ? "" : `-${r.state}`}.png`,
         label: `${r.id} (${r.locale === "cy" ? "Welsh" : "English"}${STATE_LABEL[r.state] ?? ` (${r.state})`})`,
-        pip: path.join(baseline, area, r.id, r.locale, r.state, "page.png"),
-        cath: path.join(captured[area], r.id, r.locale, r.state, "page.png")
+        pip: path.join(baseline, area, r.id, r.locale, r.sourceState ?? r.state, "page.png"),
+        cath: path.join(captured[area], r.id, r.locale, r.targetState ?? r.state, "page.png")
       }))
   );
   if (!pairs.length) return [];
