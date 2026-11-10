@@ -159,14 +159,13 @@ export function createRunner(options: RunnerOptions): Runner {
       // disk is full) is failed here, so the queue carries on with the runs after it
       queue = queue
         .then(() => perform(record))
-        .catch((error: Error) => {
+        .catch(async (error: Error) => {
           console.error(`[ui-baseline] run ${record.id} failed: ${error.message}`);
-          runs.set(record.id, {
-            ...(runs.get(record.id) as RunRecord),
-            status: "failed",
-            finishedAt: new Date().toISOString(),
-            error: error.message
-          });
+          const failed: RunRecord = { ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: error.message };
+          runs.set(record.id, failed);
+          // Stored too, as perform would have, or another pod would find it still running and lose the error
+          await archive(failed).catch((archiveError: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${archiveError.message}`));
+          await publish(failed);
         });
       return record;
     },

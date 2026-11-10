@@ -226,6 +226,24 @@ describe("createRunner", () => {
     errors.mockRestore();
   });
 
+  it("should store a run that fails outside its own error handling as failed, with its error", async () => {
+    // Arrange
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const blocked = path.join(await mkdtemp(path.join(tmpdir(), "runs-")), "a-file");
+    await writeFile(blocked, "where the runs' folder should be, so nothing can be saved");
+    const store = memoryStore();
+    const runner = createRunner({ ...(await optionsWith()), dataDir: blocked, store });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    const stored = JSON.parse((store.blobs.get(`runs/${run.id}.json`) as Buffer).toString("utf-8"));
+    expect(stored).toMatchObject({ id: run.id, status: "failed", error: expect.stringMatching(/ENOTDIR|EEXIST/) });
+    errors.mockRestore();
+  });
+
   it("should have no directory for a run it does not know", async () => {
     // Arrange
     const runner = createRunner({ ...(await optionsWith()), store: memoryStore() });

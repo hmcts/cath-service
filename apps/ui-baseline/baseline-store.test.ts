@@ -68,6 +68,26 @@ describe("baseline-store", () => {
       await expect(pushBaseline(environment(), dir)).rejects.toThrow("is incomplete");
     });
 
+    it("should refuse a baseline with pages that were asked for and never captured", async () => {
+      // Arrange
+      const dir = await baselineDir({ ...RUN, missingCaptures: 3 });
+
+      // Act and assert
+      await expect(pushBaseline(environment(), dir)).rejects.toThrow("is incomplete");
+      expect(store.blobs.size).toBe(0);
+    });
+
+    it("should refuse a recording of a deployed pip, but store a local one", async () => {
+      // Arrange
+      const deployed = await baselineDir({ ...RUN, environment: "aat" });
+      const local = await baselineDir({ ...RUN, environment: "local" });
+
+      // Act and assert
+      await expect(pushBaseline(environment(), deployed)).rejects.toThrow("was recorded from pip in aat, not a local pinned pip");
+      expect(store.blobs.size).toBe(0);
+      await expect(pushBaseline(environment(), local)).resolves.toMatchObject({ finishedAt: RUN.finishedAt });
+    });
+
     it("should refuse a ticket recording", async () => {
       // Arrange
       const dir = await baselineDir({ ...RUN, scope: { name: "ticket-312" } });
@@ -108,6 +128,16 @@ describe("baseline-store", () => {
       expect(pulled).toEqual({ id: older.id, blob: older.blob });
       expect(JSON.parse(await readFile(path.join(target, "run.json"), "utf-8")).finishedAt).toBe(RUN.finishedAt);
     });
+  });
+
+  it("should refuse to pull into a directory outside the output, temp and data folders, leaving it alone", async () => {
+    // Arrange
+    await pushBaseline(environment(), await baselineDir(RUN));
+    const outside = process.cwd();
+
+    // Act and assert
+    await expect(pullBaseline(environment(), outside)).rejects.toThrow("the baseline directory must be inside");
+    expect(existsSync(path.join(outside, "package.json"))).toBe(true);
   });
 
   describe("latestBaseline", () => {

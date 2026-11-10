@@ -6,7 +6,10 @@ import { BlobServiceClient, RestError } from "@azure/storage-blob";
 export function openBlobContainer(storage: StorageSpec): BlobContainer {
   const service = storage.connectionString
     ? BlobServiceClient.fromConnectionString(storage.connectionString)
-    : new BlobServiceClient(`https://${storage.accountName}.blob.core.windows.net`, new DefaultAzureCredential());
+    : new BlobServiceClient(
+        `https://${storage.accountName}.blob.core.windows.net`,
+        new DefaultAzureCredential({ managedIdentityClientId: process.env.MANAGED_IDENTITY_CLIENT_ID })
+      );
   const container = service.getContainerClient(storage.container);
   return {
     name: `${storage.accountName ?? "connection string"}/${storage.container}`,

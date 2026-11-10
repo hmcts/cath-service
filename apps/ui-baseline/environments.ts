@@ -35,7 +35,8 @@ export function filesStorage(app: "cath" | "pip", config: AppConfig, container =
 
 function secretReader(): SecretReader {
   const clients = new Map<string, SecretClient>();
-  const credential = new DefaultAzureCredential();
+  // The pod's user-assigned identity, as libs/azure-blob uses; unset on a laptop, where az login is used
+  const credential = new DefaultAzureCredential({ managedIdentityClientId: process.env.MANAGED_IDENTITY_CLIENT_ID });
   return async (config, name) => {
     const fromEnv = process.env[name.toUpperCase().replace(/-/g, "_")];
     if (fromEnv) return fromEnv;

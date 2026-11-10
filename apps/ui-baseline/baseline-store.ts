@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { confinedPath } from "./cli-input.js";
 import { type BlobContainer, openBlobContainer } from "./core/index.js";
 import { type Environment, filesStorage } from "./environments.js";
 import { systemCommand } from "./system-command.js";
@@ -27,11 +28,18 @@ export async function pushBaseline(environment: Environment, dir: string): Promi
     finishedAt: string;
     failedCaptures: number;
     failedJourneys: string[];
+    // Absent from recordings made before baseline.sh counted them
+    missingCaptures?: number;
+    environment?: string;
     scope?: { name: string };
   };
-  if (run.failedCaptures || run.failedJourneys.length) throw new Error(`the baseline in ${dir} is incomplete (see its run.json), so it is not stored`);
+  if (run.failedCaptures || run.missingCaptures || run.failedJourneys.length)
+    throw new Error(`the baseline in ${dir} is incomplete (see its run.json), so it is not stored`);
   // The stored baseline is the one every check falls back to, so it must be a full recording
   if (run.scope) throw new Error(`the baseline in ${dir} is a ticket recording (${run.scope.name}), not all of pip, so it is not stored`);
+  // A deployed pip is recorded signed in as verified users only and without journeys, so it is not all of pip either
+  if (run.environment && run.environment !== "local")
+    throw new Error(`the baseline in ${dir} was recorded from pip in ${run.environment}, not a local pinned pip, so it is not stored`);
 
   const id = `${run.finishedAt.replace(/[:.]/g, "-")}`;
   const stored: StoredBaseline = { id, blob: `baselines/${id}.tar.gz`, pip: run.pip, finishedAt: run.finishedAt, pushedAt: new Date().toISOString() };
@@ -49,8 +57,10 @@ export async function pushBaseline(environment: Environment, dir: string): Promi
   return stored;
 }
 
-// Downloads a stored baseline (the latest unless an id is given) into dir, replacing what is there
+// Downloads a stored baseline (the latest unless an id is given) into dir, replacing what is there.
+// dir is emptied first, so it must be inside the output, temp or data folder (cli-input.ts)
 export async function pullBaseline(environment: Environment, dir: string, id?: string): Promise<StoredBaseline> {
+  confinedPath(dir, "the baseline directory");
   const container = baselineContainer(environment);
   const stored = id ? ({ id, blob: `baselines/${id}.tar.gz` } as StoredBaseline) : await latestBaseline(container);
   const scratch = await mkdtemp(path.join(tmpdir(), "ui-baseline-"));
