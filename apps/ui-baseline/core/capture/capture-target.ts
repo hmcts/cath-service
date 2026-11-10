@@ -1,12 +1,12 @@
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 import type { Browser, BrowserContextOptions, Page } from "playwright";
+import playwrightPackage from "playwright/package.json" with { type: "json" };
 import { acceptsUnverifiedCertificate } from "./browser.js";
 import { capturePage, expandAll } from "./capture-page.js";
 import { gotoSettled, settle, trackRequests } from "./settle.js";
 
-const PLAYWRIGHT_VERSION = createRequire(import.meta.url)("playwright/package.json").version as string;
+const PLAYWRIGHT_VERSION = playwrightPackage.version;
 const DEFAULT_TIMEZONE = "Europe/London";
 // Desktop as the baseline was first recorded; mobile at the narrowest width GOV.UK pages are tested at
 const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 375, height: 812 } } as const;

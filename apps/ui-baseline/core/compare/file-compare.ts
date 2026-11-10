@@ -44,7 +44,12 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
       continue;
     }
     const [sourceData, targetData] = await Promise.all([readFile(path.join(options.source, source.file)), readFile(path.join(options.target, target.file))]);
-    const pair = await COMPARERS[kind](sourceData, targetData, source, target);
+    // A file one app wrote that cannot be read (a truncated PDF, say) differs; the rest are still compared
+    const pair = await COMPARERS[kind](sourceData, targetData, source, target).catch(
+      (error: Error): PairComparison => ({
+        findings: [{ category: kind, change: "unreadable", detail: `the files could not be compared: ${error.message.split("\n")[0]}` }]
+      })
+    );
     if (pair.texts) {
       await mkdir(path.join(options.out, id), { recursive: true });
       await writeFile(path.join(options.out, id, `${kind}-source.txt`), `${pair.texts.source.join("\n")}\n`);

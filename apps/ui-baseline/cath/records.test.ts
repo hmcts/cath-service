@@ -452,17 +452,25 @@ describe("testSupportRecordStore", () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 
-    it("should upload a missing proof of ID for an existing application without creating another", async () => {
+    it("should make an existing application without its proof of ID again with it, as test-support only takes one at creation", async () => {
       // Arrange
-      fetchMock.mockResolvedValueOnce(json({ id: "m1", proofOfIdPath: null }));
+      fetchMock
+        .mockResolvedValueOnce(json({ id: "m1", proofOfIdPath: null }))
+        .mockResolvedValueOnce(new Response(null, { status: 204 }))
+        .mockResolvedValueOnce(json({ id: "m2" }));
 
       // Act
       const id = await store.ensureMediaApplication(application, image);
 
       // Assert
-      expect(id).toBe("m1");
-      expect(files.upload).toHaveBeenCalled();
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(id).toBe("m2");
+      expect(call(1)).toMatchObject({ url: `${API}/test-support/media-applications/m1`, method: "DELETE" });
+      expect(files.upload).toHaveBeenCalledWith("ui-baseline-a-b-example-com.png", image.data, "image/png");
+      expect(call(2)).toEqual({
+        url: `${API}/test-support/media-applications`,
+        method: "POST",
+        body: { ...application, status: "PENDING", proofOfIdPath: "ui-baseline-a-b-example-com.png" }
+      });
     });
 
     it("should rethrow a failure other than 404", async () => {

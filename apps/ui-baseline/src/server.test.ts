@@ -5,7 +5,8 @@ import { createBaselineCache } from "./baseline.js";
 import { createRunner } from "./runs.js";
 
 const listen = vi.fn();
-const ensure = vi.fn(async () => "/data/baseline");
+const release = vi.fn();
+const ensure = vi.fn(async () => ({ id: "2026-11-03", dir: "/data/baseline", release }));
 const restore = vi.fn(async () => {});
 
 vi.mock("@hmcts-cft/cloud-native-platform", () => ({ getPropertiesVolumeSecrets: vi.fn(async () => {}) }));
@@ -44,6 +45,15 @@ describe("server", () => {
     expect(listen).toHaveBeenCalledWith(9123, expect.any(Function));
     expect(createApp).toHaveBeenCalledWith(expect.not.objectContaining({ auth: expect.anything() }));
     expect(ensure).toHaveBeenCalled();
+  });
+
+  it("should let go of the baseline it fetches at start, so a newer one can replace it on disk", async () => {
+    // Act
+    await startServer({ NODE_ENV: "production" });
+    await vi.waitFor(() => expect(release).toHaveBeenCalled());
+
+    // Assert
+    expect(release).toHaveBeenCalledTimes(1);
   });
 
   it("should check aat by default, and store runs where the baseline is", async () => {

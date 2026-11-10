@@ -60,7 +60,9 @@ function maskRunDates(text: string, seededAt: Date): string {
   // 23 October 2026 / 23rd October 2026 / 23 Oct 2026 / 23 Hydref 2026, optionally followed by a time
   const names = [...MONTHS_EN, ...MONTHS_EN.map((m) => m.slice(0, 3)), "Sept", ...MONTHS_CY].join("|");
   result = result.replace(
-    new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? (${names}) (\\d{4})((?:,? (?:at|am) )?\\d{1,2}[:.]\\d{2}(?::\\d{2})?\\s?(?:am|pm|yb|yh)?)?`, "gi"),
+    // The time is after ", at ", " at " (" am " in Welsh), ", " or a space, and a space after it is only
+    // taken with "am", "pm", "yb" or "yh", so a time at the end of a line never joins it to the next
+    new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? (${names}) (\\d{4})((?:,? (?:at|am) |,? )\\d{1,2}[:.]\\d{2}(?::\\d{2})?(?: ?(?:am|pm|yb|yh))?)?`, "gi"),
     (m, d, month, y, time) => {
       const index = monthIndex(month);
       const token = index === null ? null : offsetToken(new Date(Number(y), index, Number(d)));

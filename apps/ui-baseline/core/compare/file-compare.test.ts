@@ -210,6 +210,40 @@ describe("compareFileRuns", () => {
   });
 });
 
+describe("compareFileRuns with a file that cannot be read", () => {
+  it("should record the pair as differing and still compare the other files", async () => {
+    // Arrange
+    const root = await mkdtemp(path.join(tmpdir(), "file-compare-"));
+    const run = async (name: string, files: [string, Buffer][]) => {
+      const dir = path.join(root, name);
+      for (const [id, data] of files) {
+        await mkdir(path.join(dir, id), { recursive: true });
+        await writeFile(path.join(dir, id, "pdf.pdf"), data);
+      }
+      const entries = files.map(([id, data]) => ({ id, kind: "pdf", file: `${id}/pdf.pdf`, blob: "x.pdf", bytes: data.length }));
+      await writeFile(path.join(dir, "index.jsonl"), entries.map((entry) => `${JSON.stringify(entry)}\n`).join(""));
+      return dir;
+    };
+    const plain = await read("plain.pdf");
+    const source = await run("pip", [
+      ["civil", plain],
+      ["sjp", plain]
+    ]);
+    // CaTH wrote half a PDF for the civil list
+    const target = await run("cath", [
+      ["civil", plain.subarray(0, 200)],
+      ["sjp", plain]
+    ]);
+
+    // Act
+    const summary = await compareFileRuns({ source, target, out: path.join(root, "compare") });
+
+    // Assert
+    expect(summary.results.map((r) => `${r.id} ${r.verdict}`)).toEqual(["civil differs", "sjp match"]);
+    expect(summary.results[0].findings).toEqual([expect.objectContaining({ category: "pdf", change: "unreadable" })]);
+  });
+});
+
 describe("compareFileRuns with other kinds of file", () => {
   it("should compare CSV and binary files, report extra files, and keep only the listed publications", async () => {
     // Arrange

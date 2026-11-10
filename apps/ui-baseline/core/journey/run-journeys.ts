@@ -1,14 +1,14 @@
 import { appendFile, mkdir, rename, rm, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Browser } from "playwright";
+import playwrightPackage from "playwright/package.json" with { type: "json" };
 import { acceptsUnverifiedCertificate, launchChromium } from "../capture/browser.js";
 import { capturePage } from "../capture/capture-page.js";
 import { gotoSettled, settle, trackRequests } from "../capture/settle.js";
 import type { Journey, JourneySuite } from "./journey.js";
 
-const PLAYWRIGHT_VERSION = createRequire(import.meta.url)("playwright/package.json").version as string;
+const PLAYWRIGHT_VERSION = playwrightPackage.version;
 const TIMEZONE = "Europe/London";
 const VIEWPORT = { width: 1280, height: 800 };
 

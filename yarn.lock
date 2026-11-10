@@ -2514,7 +2514,6 @@ __metadata:
     express: "npm:5.2.1"
     govuk-frontend: "npm:6.2.0"
     nunjucks: "npm:3.2.4"
-    openid-client: "npm:6.8.5"
     pdfjs-dist: "npm:6.4.299"
     playwright: "npm:1.62.1"
     redis: "npm:5.12.1"

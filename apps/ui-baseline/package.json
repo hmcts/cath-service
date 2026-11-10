@@ -71,7 +71,6 @@
     "express": "5.2.1",
     "govuk-frontend": "6.2.0",
     "nunjucks": "3.2.4",
-    "openid-client": "6.8.5",
     "pdfjs-dist": "6.4.299",
     "playwright": "1.62.1",
     "redis": "5.12.1",
