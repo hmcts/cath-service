@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { healthcheck } from "@hmcts-cft/cloud-native-platform";
@@ -81,8 +81,11 @@ export function createApp(options: AppOptions): Express {
   });
 
   // A check's report and a file comparison's extracted texts, served from the run's directory
-  app.use("/runs/:id/report", runFiles(options.runner, "check/report", { linkBack: (html, id) => withAppNavigation(views, html, id), waitForBaseline: true }));
-  app.use("/runs/:id/files", runFiles(options.runner, "files/compare"));
+  app.use(
+    "/runs/:id/report",
+    runFiles(options.runner, options.dataDir, "check/report", { linkBack: (html, id) => withAppNavigation(views, html, id), waitForBaseline: true })
+  );
+  app.use("/runs/:id/files", runFiles(options.runner, options.dataDir, "files/compare"));
 
   app.use((_req: Request, res: Response) => res.status(404).render("not-found"));
   return app;
@@ -95,6 +98,7 @@ export function createApp(options: AppOptions): Express {
 // this pod's disk; nothing else does, as a baseline is several hundred megabytes.
 function runFiles(
   runner: Runner,
+  dataDir: string,
   subdirectory: string,
   { linkBack, waitForBaseline = false }: { linkBack?: (html: string, runId: string) => string; waitForBaseline?: boolean } = {}
 ) {
@@ -103,12 +107,26 @@ function runFiles(
     const dir = runner.get(id) && (await runner.directory(id, { waitForBaseline }));
     if (!dir) return res.status(404).render("not-found");
     const root = path.join(dir, subdirectory);
+    if (!(await servable(dataDir, root, req.path))) return res.status(404).render("not-found");
     const asset = linkBack && REPORT_ASSETS.get(req.path);
     if (asset) return res.sendFile(asset);
     const page = linkBack && req.path.endsWith(".html") ? await reportPage(root, req.path) : null;
     if (page && linkBack) return res.type("html").send(linkBack(page, id));
     express.static(root, { dotfiles: "deny" })(req, res, next);
   };
+}
+
+// A run's report links into its baseline with symlinks, which are archived as links and restored
+// from storage. So a file is served only if, with every symlink followed, it is inside the app's data
+// folder (the runs and baselines): a link planted in a stored archive cannot reach the pod's own files,
+// such as /proc/self/environ. A path that does not exist is left to express.static, which finds nothing.
+async function servable(dataDir: string, root: string, requestPath: string): Promise<boolean> {
+  const relative = safeDecode(requestPath);
+  if (relative === null) return false;
+  const file = await realpath(path.join(root, relative)).catch(() => null);
+  if (file === null) return true;
+  const allowed = await realpath(dataDir);
+  return file === allowed || file.startsWith(`${allowed}${path.sep}`);
 }
 
 // A page of the report itself, as make-report.mjs wraps it, rather than one of the captured pip or
@@ -152,6 +170,8 @@ function tail(text: string, lines = 80): string {
 export interface AppOptions {
   environment: string;
   runner: Runner;
+  // Where the runs and baselines are kept; only files inside it are served
+  dataDir: string;
   // Which stored baseline checks compare against, for the start page
   baselineStatus: () => Promise<{ ready: boolean; description: string }>;
 }
