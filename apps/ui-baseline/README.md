@@ -5,8 +5,10 @@ compares a CaTH screen against it. Use it when building a screen: run the check 
 fix what it finds, and attach the evidence to your PR.
 
 Screens are compared by their **accessibility tree** (headings, tables, form controls, buttons,
-links and text, as a screen reader would meet them), plus page details and axe accessibility
-results. Screenshots are evidence for people, not something the comparison diffs.
+links and text, as a screen reader would meet them), in the main region and in the header, banners
+and footer around it, plus page details and axe accessibility results. Each CaTH screen is also
+[checked for accessibility on its own](#checking-accessibility), so issues CaTH copied from pip are
+not missed. Screenshots are evidence for people, not something the comparison diffs.
 
 > **This is a first prototype.** It is usable now, and the team should start using it on screen
 > tickets straight away, but it has known gaps (see [Limits](#limits) and
@@ -286,6 +288,38 @@ yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in
 It also prints the list's page in each app. This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
 Data Reader role on it, or a connection string in `PIP_STORAGE_CONNECTION_STRING`.
 
+## Checking accessibility
+
+A comparison with pip cannot see an issue both apps have, and an audit of CaTH found most of its
+issues were exactly that. So every CaTH capture is also checked on its own
+(`core/compare/accessibility.ts`), and the result is listed beside the comparison: on each page in
+the report, on the report's Accessibility page, and in the PR comment. These findings are not
+differences from pip and do not change a page's verdict.
+
+| Check | What it finds | WCAG |
+|---|---|---|
+| `axe-<rule>` | Every axe violation, including ones pip has too | as axe |
+| `axe-needs-review-<rule>` | What axe could not decide, such as the contrast of text styled as disabled | as axe |
+| `label-in-name` | A link or button whose name does not contain the words it shows (`Cymraeg` named "Change language to Welsh") | 2.5.3 |
+| `link-text-is-url`, `ambiguous-link-text` | A link whose text is an address; several links with the same text going to different places | 2.4.4 |
+| `link-to-nowhere`, `in-page-link-target` | `href="#"` (not a GOV.UK back link); an in-page link whose target is not on the page | 2.4.3 |
+| `error-summary-target` | An error summary link that does not point at a form control, so focus does not move | 2.4.3 |
+| `error-without-summary` | An error message with no error summary | 3.3.1 |
+| `ungrouped-choices` | Radios, or checkboxes outside a table, with no fieldset and legend | 1.3.1 |
+| `legend-repeats-heading` | A legend repeating a heading outside its fieldset, rather than wrapping it | 1.3.1 (advisory) |
+| `no-h1`, `bold-as-heading` | A page with no h1; bold text starting a section where a heading may belong | 1.3.1 |
+| `empty-table-header`, `table-without-caption` | An empty column header; tables with no caption | 1.3.1 |
+| `multiple-labels`, `duplicate-id` | A field with several labels; form controls sharing an id | 1.3.1, 4.1.2 |
+| `sort-control-is-link` | A sortable column sorted by a link rather than a button | 4.1.2 |
+| `new-tab-unannounced` | A link opening a new tab without saying so | 3.2.5 (advisory) |
+| `reflow` | A page that scrolls sideways at 320px wide (a table scrolling in its own container is fine) | 1.4.10 |
+
+The checks read what a capture records: both accessibility trees, the page's HTML (`page.html`;
+captures from before it fall back to the main region's), axe's results and `meta.json`'s
+`reflow` measurement. They are not a substitute for testing with assistive technology. Keyboard
+behaviour (where focus goes, tooltips), focus styles, session timeouts, layout, and states the seed
+does not produce (every form's empty-submit error, filters applied) still need a person.
+
 ## What the baseline covers
 
 Recorded from pip-frontend `f9ccef8a`, pip-data-management `7fe83c36` and pip-account-management
@@ -345,6 +379,8 @@ depends on one of these, check that part by hand and say so in the PR.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
 - **Not captured at all:** emails and deprecated list types. File downloads are limited to the ones listed in `routes/downloads.json`.
+- **Accessibility checks see what a capture records, not how a page behaves.** See
+  [Checking accessibility](#checking-accessibility) for what still needs testing by hand.
 - **Only verified users' pages are compared signed in, in aat.** Checks sign in through CFT IDAM
   only, which makes verified users, so admin pages and the pages pip shows only B2C or Crime IDAM
   media users are reported as not compared there.

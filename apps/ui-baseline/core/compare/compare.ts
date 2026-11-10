@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { type AccessibilityFinding, checkAccessibility } from "./accessibility.js";
 import { type AriaNode, type PageStructure, parseAria, structureOf } from "./aria.js";
 import { type NormaliseContext, normalise } from "./normalise.js";
 
@@ -29,11 +30,13 @@ export async function compareRuns(options: CompareOptions): Promise<CompareSumma
     target: options.target,
     comparedAt: new Date().toISOString(),
     patterns: patternsOf(results),
+    accessibilityPatterns: accessibilityPatternsOf(results),
     totals: {
       pairs: results.length,
       match: results.filter((r) => r.verdict === "match").length,
       differs: results.filter((r) => r.verdict === "differs").length,
-      notCaptured: results.filter((r) => r.verdict === "not-captured").length
+      notCaptured: results.filter((r) => r.verdict === "not-captured").length,
+      accessibility: results.reduce((sum, r) => sum + (r.accessibility?.length ?? 0), 0)
     },
     results
   };
@@ -117,6 +120,23 @@ function patternsOf(results: PairResult[]): Pattern[] {
   return [...byKey.values()].filter((pattern) => pattern.pages.length > 1).sort((a, b) => b.pages.length - a.pages.length);
 }
 
+// Accessibility findings on the target, grouped like the differences, but every one kept: an issue
+// on a single page matters as much as one on many
+function accessibilityPatternsOf(results: PairResult[]): AccessibilityPattern[] {
+  const byKey = new Map<string, AccessibilityPattern>();
+  for (const result of results) {
+    for (const finding of result.accessibility ?? []) {
+      const detail = finding.detail.replace(/ \(×\d+\)$/, "");
+      const key = `${finding.change}|${detail}`;
+      const pattern = byKey.get(key) ?? { change: finding.change, detail, wcag: finding.wcag, pages: [] };
+      const page = `${result.id} ${result.locale}${result.state === "default" ? "" : ` (${result.state})`}`;
+      if (!pattern.pages.includes(page)) pattern.pages.push(page);
+      byKey.set(key, pattern);
+    }
+  }
+  return [...byKey.values()].sort((a, b) => b.pages.length - a.pages.length || a.change.localeCompare(b.change));
+}
+
 // Page-specific parts are reduced to their shape so the same change on different pages groups together
 function patternDetail(finding: Finding): string {
   if (finding.category === "page" && finding.change === "title") {
@@ -149,6 +169,7 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
     ),
     ...compareTargets(sourceCapture, targetCapture, options.expectedTarget),
     ...compareText(source.text, target.text, source, target),
+    ...compareFrame(sourceCapture.frame, targetCapture.frame),
     ...compareMeta(sourceCapture.meta, targetCapture.meta),
     ...(await compareAxe(sourceDir, targetDir))
   ];
@@ -161,7 +182,8 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
     locale: sourceEntry.locale,
     state: sourceEntry.state,
     verdict: differences.length ? "differs" : "match",
-    findings: unique
+    findings: unique,
+    accessibility: await checkAccessibility(targetDir)
   };
 }
 
@@ -177,8 +199,11 @@ async function readCapture(dir: string): Promise<Capture> {
   };
   const nodes = parseAria(await readFile(path.join(dir, "aria.yml"), "utf-8"));
   const meta = JSON.parse(await readFile(path.join(dir, "meta.json"), "utf-8")) as RawMeta;
+  const pageAria = path.join(dir, "page.aria.yml");
+  const frame = existsSync(pageAria) ? withoutRegion(parseAria(await readFile(pageAria, "utf-8"))) : null;
   return {
     structure: structureOf(nodes.map((node) => normaliseNode(node, context))),
+    frame: frame && structureOf(frame.map((node) => normaliseNode(node, context))),
     linkTargets: structureOf(nodes).links.map((link) => link.url),
     pageUrl: typeof provenance.url === "string" ? provenance.url : null,
     meta: {
@@ -188,6 +213,12 @@ async function readCapture(dir: string): Promise<Capture> {
       actions: (meta.forms ?? []).map((form) => form.action)
     }
   };
+}
+
+// The page around the compared region (header, banners, navigation, footer): the whole page's tree
+// with the main region taken out
+function withoutRegion(nodes: AriaNode[]): AriaNode[] {
+  return nodes.filter((node) => node.role !== "main").map((node) => ({ ...node, children: withoutRegion(node.children) }));
 }
 
 // A screen-reader status region is captured mid-update, so what it says is not compared
@@ -325,6 +356,29 @@ function compareText(a: string[], b: string[], source?: PageStructure, target?: 
   return findings;
 }
 
+// Links, buttons, headings and controls outside the main region, by name. Where they lead is not
+// compared: their addresses carry each page's own path and query.
+function compareFrame(source: PageStructure | null, target: PageStructure | null): Finding[] {
+  if (!source || !target) return [];
+  const describe = (role: string) => (name: string) => `${role} "${name}"`;
+  return countedDifferences(
+    "frame",
+    [
+      ...source.links.map((l) => describe("link")(l.text)),
+      ...source.buttons.map(describe("button")),
+      ...source.headings.map((h) => describe(`h${h.level}`)(h.text)),
+      ...source.controls.map((c) => describe(c.role)(c.label))
+    ],
+    [
+      ...target.links.map((l) => describe("link")(l.text)),
+      ...target.buttons.map(describe("button")),
+      ...target.headings.map((h) => describe(`h${h.level}`)(h.text)),
+      ...target.controls.map((c) => describe(c.role)(c.label))
+    ],
+    (item) => item
+  );
+}
+
 function compareMeta(a: Capture["meta"], b: Capture["meta"]): Finding[] {
   const findings: Finding[] = [];
   if (a.title !== b.title) findings.push({ category: "page", change: "title", detail: `"${a.title}" → "${b.title}"` });
@@ -445,6 +499,15 @@ export interface PairResult {
   state: string;
   verdict: "match" | "differs" | "not-captured";
   findings: Finding[];
+  // The target's own accessibility issues, whatever the source does; not part of the verdict
+  accessibility?: AccessibilityFinding[];
+}
+
+export interface AccessibilityPattern {
+  change: string;
+  detail: string;
+  wcag: string;
+  pages: string[];
 }
 
 export interface Pattern {
@@ -459,12 +522,14 @@ export interface CompareSummary {
   target: string;
   comparedAt: string;
   patterns: Pattern[];
-  totals: { pairs: number; match: number; differs: number; notCaptured: number };
+  accessibilityPatterns?: AccessibilityPattern[];
+  totals: { pairs: number; match: number; differs: number; notCaptured: number; accessibility?: number };
   results: PairResult[];
 }
 
 interface Capture {
   structure: PageStructure;
+  frame: PageStructure | null;
   // Each link's target as captured, in the order of structure.links
   linkTargets: (string | null)[];
   pageUrl: string | null;

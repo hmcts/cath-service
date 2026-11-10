@@ -55,6 +55,14 @@ const journeysComparison =
 const journeyResultFor = (id, locale) => journeysComparison?.results.find((r) => r.journey === id && r.locale === locale) ?? null;
 const routeMap =
   args["route-map"] && existsSync(args["route-map"]) ? new Map(JSON.parse(readFileSync(args["route-map"], "utf-8")).routes.map((e) => [e.pip, e])) : new Map();
+// CaTH's own accessibility findings from each comparison, whatever pip does. A report from before
+// these checks has none, and so no Accessibility section.
+const accessibilityAreas = [
+  { area: "lists", label: "List pages", summary: comparison },
+  { area: "pages", label: "Other pages", summary: pagesComparison },
+  { area: "journeys", label: "Journey steps", summary: journeysComparison?.pages }
+].filter((a) => a.summary?.accessibilityPatterns);
+const hasAccessibility = accessibilityAreas.length > 0;
 const pageResultFor = (id, locale) => pagesComparison?.results.find((r) => r.id === id && r.locale === locale && r.state === "default") ?? null;
 const resultFor = (id, locale) => comparison?.results.find((r) => r.id === id && r.locale === locale && r.state === "default") ?? null;
 
@@ -95,7 +103,7 @@ function layout({ file, title, active, body, depth = 0 }) {
     body,
     depth,
     active,
-    has: { comparison: Boolean(comparison), files: Boolean(filesComparison) },
+    has: { comparison: Boolean(comparison), files: Boolean(filesComparison), accessibility: hasAccessibility },
     footerMeta: FOOTER_META,
     filterScript: FILTER_SCRIPT
   });
@@ -198,7 +206,8 @@ const CATEGORY = {
   page: ["Page", "light-blue"],
   "axe-new": ["Accessibility: new in CaTH", "red"],
   "axe-fixed": ["Accessibility: fixed in CaTH", "green"],
-  "axe-inherited": ["Accessibility: inherited from pip", "yellow"]
+  "axe-inherited": ["Accessibility: inherited from pip", "yellow"],
+  frame: ["Header, banners and footer", "light-blue"]
 };
 const categoryTag = (category) => tag(CATEGORY[category]?.[0] ?? category, CATEGORY[category]?.[1] ?? "grey");
 const differenceCount = (result) => result.findings.filter((f) => f.category !== "axe-inherited").length;
@@ -206,6 +215,25 @@ const differenceCount = (result) => result.findings.filter((f) => f.category !==
 function findingsBlock(result) {
   if (!result) return "";
   if (result.verdict === "not-captured") return `<div class="govuk-inset-text">Not compared: CaTH did not capture this page.</div>`;
+  return `${differencesBlock(result)}${accessibilityBlock(result.accessibility)}`;
+}
+
+// CaTH's own accessibility issues on the page, checked against WCAG on their own, not against pip
+function accessibilityBlock(findings) {
+  if (!findings) return "";
+  if (!findings.length) return `<p class="govuk-body-s">No accessibility issues found by the checks on CaTH's own page.</p>`;
+  const items = findings
+    .map(
+      (f) =>
+        `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)} <span class="govuk-hint parity-inline-hint">(${esc(f.wcag)})</span></li>`
+    )
+    .join("");
+  return `<h3 class="govuk-heading-s">${findings.length} accessibility ${plural(findings.length, "issue", "issues")} in CaTH</h3>
+    <p class="govuk-body-s">Checked on CaTH's page alone, so these include issues pip has too.</p>
+    <ul class="govuk-list govuk-list--bullet parity-findings">${items}</ul>`;
+}
+
+function differencesBlock(result) {
   const differences = result.findings.filter((f) => f.category !== "axe-inherited");
   const inherited = result.findings.filter((f) => f.category === "axe-inherited");
   if (!differences.length)
@@ -687,6 +715,49 @@ if (comparison) {
     <table class="govuk-table" id="patterns-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Pages</th><th class="govuk-table__header">Category</th><th class="govuk-table__header">Finding</th></tr></thead>
     <tbody class="govuk-table__body">${patternRows}</tbody></table>
     ${narrow.length ? `<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${narrow.length} smaller patterns (2 to ${WIDE - 1} pages)</span></summary><div class="govuk-details__text"><table class="govuk-table"><tbody class="govuk-table__body">${narrowRows}</tbody></table></div></details>` : ""}`
+  });
+}
+
+// ---------- accessibility ----------
+// Each check's findings across the report, grouped by check: the same check failing on many pages
+// usually has one cause in a shared template
+if (hasAccessibility) {
+  const pageLink = (area, page) => {
+    const [id, locale] = page.split(" ");
+    const file = area === "lists" ? `lists/${id}.html#tab-${locale}` : area === "pages" ? `pages/${id}.html` : `journeys/${id}.html`;
+    return `<a class="govuk-link" href="${esc(file)}">${esc(page)}</a>`;
+  };
+  const sections = accessibilityAreas
+    .map(({ area, label, summary }) => {
+      const byCheck = Object.entries(Object.groupBy(summary.accessibilityPatterns, (p) => p.change)).sort(
+        (a, b) => new Set(b[1].flatMap((p) => p.pages)).size - new Set(a[1].flatMap((p) => p.pages)).size
+      );
+      if (!byCheck.length) return `<h2 class="govuk-heading-m">${esc(label)}</h2><p class="govuk-body">No accessibility issues found.</p>`;
+      const rows = byCheck
+        .map(([check, patterns]) => {
+          const pages = new Set(patterns.flatMap((p) => p.pages));
+          const details = patterns
+            .map(
+              (p) =>
+                `<li>${esc(p.detail)}<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${p.pages.length} ${plural(p.pages.length, "page", "pages")}</span></summary><div class="govuk-details__text">${p.pages.map((page) => pageLink(area, page)).join(", ")}</div></details></li>`
+            )
+            .join("");
+          return `<tr class="govuk-table__row"><td class="govuk-table__cell parity-count">${pages.size}</td><td class="govuk-table__cell"><span class="parity-change">${esc(check.replace(/-/g, " "))}</span><br><span class="govuk-hint parity-inline-hint">${esc(patterns[0].wcag)}</span></td><td class="govuk-table__cell"><ul class="govuk-list parity-findings">${details}</ul></td></tr>`;
+        })
+        .join("");
+      return `<h2 class="govuk-heading-m">${esc(label)}</h2>
+      ${filterBox(`accessibility-${area}`, "check or finding")}
+      <table class="govuk-table" id="accessibility-${area}"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Pages</th><th class="govuk-table__header">Check</th><th class="govuk-table__header">Findings</th></tr></thead>
+      <tbody class="govuk-table__body">${rows}</tbody></table>`;
+    })
+    .join("");
+  layout({
+    file: "accessibility.html",
+    active: "accessibility.html",
+    title: "Accessibility",
+    body: `<h1 class="govuk-heading-l">Accessibility in CaTH</h1>
+    <p class="govuk-body">Each CaTH page checked on its own against WCAG 2.2: every axe result, including what axe could not decide, and checks axe does not make, such as visible text missing from a link's name, radios with no fieldset, links that go nowhere, error summaries that do not move focus and pages that do not reflow. Unlike the comparison, these include issues pip has too. They do not replace testing with assistive technology: keyboard behaviour, timeouts, zoom and screen reader announcements still need a person.</p>
+    ${sections}`
   });
 }
 

@@ -62,7 +62,10 @@ function fakePage(viewport: { width: number; height: number } | null = { width: 
     innerText: vi.fn().mockResolvedValue("  Find   a court \n\n  Search  \n"),
     innerHTML: vi.fn().mockResolvedValue("<h1>Find a court</h1>")
   };
-  const body = { ariaSnapshot: vi.fn().mockResolvedValue('- banner\n- main:\n  - heading "Find a court" [level=1]') };
+  const body = {
+    ariaSnapshot: vi.fn().mockResolvedValue('- banner\n- main:\n  - heading "Find a court" [level=1]'),
+    innerHTML: vi.fn().mockResolvedValue("<header></header><main><h1>Find a court</h1></main>")
+  };
   const styleElement = { remove: vi.fn() };
   const style = { evaluate: vi.fn(async (fn: (element: unknown) => unknown) => fn(styleElement)) };
   const page = {
@@ -90,7 +93,7 @@ describe("capturePage", () => {
             { id: "color-contrast", impact: "serious", help: "Contrast", helpUrl: "https://axe/cc", nodes: [{ target: ["main", "p"] }] },
             { id: "region", impact: undefined, help: "Regions", helpUrl: "https://axe/r", nodes: [] }
           ],
-          incomplete: [{}],
+          incomplete: [{ id: "color-contrast", impact: "serious", help: "Contrast", helpUrl: "https://axe/cc", nodes: [{ target: [".disabled"] }] }],
           passes: [{}, {}]
         })
       };
@@ -131,13 +134,15 @@ describe("capturePage", () => {
       links: [
         { text: "Home", href: "/" },
         { text: "", href: "/a" }
-      ]
+      ],
+      reflow: { width: 320, scrollWidth: 1000 }
     });
     expect(page.locator).toHaveBeenCalledWith("main");
     expect(await readFile(path.join(outDir, "aria.yml"), "utf-8")).toBe('- heading "Find a court" [level=1]\n');
     expect(await readFile(path.join(outDir, "page.aria.yml"), "utf-8")).toContain("- banner");
     expect(await readFile(path.join(outDir, "text.txt"), "utf-8")).toBe("Find a court\nSearch\n");
     expect(await readFile(path.join(outDir, "raw.html"), "utf-8")).toBe("<h1>Find a court</h1>");
+    expect(await readFile(path.join(outDir, "page.html"), "utf-8")).toBe("<header></header><main><h1>Find a court</h1></main>");
     expect(JSON.parse(await readFile(path.join(outDir, "meta.json"), "utf-8"))).toEqual(meta);
     expect(JSON.parse(await readFile(path.join(outDir, "axe.json"), "utf-8"))).toEqual({
       violations: [
@@ -145,11 +150,14 @@ describe("capturePage", () => {
         { id: "region", impact: null, help: "Regions", helpUrl: "https://axe/r", targets: [] }
       ],
       incompleteCount: 1,
+      incomplete: [{ id: "color-contrast", impact: "serious", help: "Contrast", helpUrl: "https://axe/cc", targets: [".disabled"] }],
       passesCount: 2
     });
     expect(page.screenshot).toHaveBeenCalledTimes(1);
     expect(page.screenshot).toHaveBeenCalledWith({ path: path.join(outDir, "page.png"), fullPage: true, animations: "disabled" });
     expect(page.addStyleTag).not.toHaveBeenCalled();
+    expect(page.setViewportSize).toHaveBeenNthCalledWith(1, { width: 320, height: 800 });
+    expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 1280, height: 800 });
   });
 
   it("should read the given region, falling back to the body for details, when a region is given", async () => {
@@ -203,6 +211,7 @@ describe("capturePage", () => {
     // Assert
     expect(page.screenshot).toHaveBeenCalledTimes(1);
     expect(page.setViewportSize).not.toHaveBeenCalled();
+    expect(JSON.parse(await readFile(path.join(outDir, "meta.json"), "utf-8")).reflow).toBeNull();
   });
 
   it("should fail without writing anything when the region never appears", async () => {
