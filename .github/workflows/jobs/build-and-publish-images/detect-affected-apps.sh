@@ -10,6 +10,8 @@ set -euo pipefail
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
 #   - promotable_apps: affected_apps without the aat-only apps, which are never promoted to prod
+#   - verify_apps: on a pull request, the aat-only apps whose own files or the root Dockerfile
+#     changed, whose stage is built (not pushed) so a broken one shows up before master
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
 #   - needs_shared_build: boolean, true if any affected app uses the shared build stage
@@ -85,6 +87,8 @@ main() {
   done
 
   local use_fallback="false"
+  # The files changed since the base, when there is one to compare with
+  local changed_files=""
 
   # Use provided base SHA, or default to origin/master
   if [ -n "$BASE_SHA" ]; then
@@ -107,7 +111,6 @@ main() {
   if [ "$use_fallback" = "false" ]; then
     # Assigned rather than piped into grep, so a git failure is visible here
     # instead of reading as "no Dockerfile change".
-    local changed_files
     if ! changed_files="$(git diff --name-only "$BASE_SHA" HEAD)"; then
       echo "Error: git diff against $BASE_SHA failed" >&2
       exit 1
@@ -156,9 +159,18 @@ main() {
 
   local without_aat_only
   without_aat_only=$(echo "$affected_apps" | jq -c --argjson skip "$AAT_ONLY_APPS" 'map(select(. as $app | $skip | index($app) | not))')
+  local verify_apps="[]"
   if [ "${PULL_REQUEST:-false}" = "true" ]; then
     affected_apps="$without_aat_only"
     echo "Pull request: leaving out apps built on master only ($AAT_ONLY_APPS)"
+    # Their stage is still built when the pull request could have broken it: its own files, or the
+    # root Dockerfile or .dockerignore, changed (or there is no base to tell from)
+    local app
+    for app in $(echo "$AAT_ONLY_APPS" | jq -r '.[]'); do
+      if [ "$use_fallback" = "true" ] || echo "$changed_files" | grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$)"; then
+        verify_apps=$(echo "$verify_apps" | jq -c --arg app "$app" '. + [$app]')
+      fi
+    done
   fi
 
   # Determine if we have any changes
@@ -180,6 +192,7 @@ main() {
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "affected-apps=$affected_apps" >> "$GITHUB_OUTPUT"
     echo "promotable-apps=$without_aat_only" >> "$GITHUB_OUTPUT"
+    echo "verify-apps=$verify_apps" >> "$GITHUB_OUTPUT"
     echo "helm-apps=$helm_apps" >> "$GITHUB_OUTPUT"
     echo "has-changes=$has_changes" >> "$GITHUB_OUTPUT"
     echo "needs-shared-build=$needs_shared_build" >> "$GITHUB_OUTPUT"
@@ -188,6 +201,7 @@ main() {
   # Log results
   echo "Affected apps (buildable): $affected_apps"
   echo "Promotable apps: $without_aat_only"
+  echo "Built without pushing: $verify_apps"
   echo "Helm apps (all): $helm_apps"
   echo "Has changes: $has_changes"
   echo "Needs shared build: $needs_shared_build"
