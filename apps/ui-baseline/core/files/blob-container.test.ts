@@ -17,7 +17,7 @@ vi.mock("@azure/storage-blob", () => {
   return { BlobServiceClient, RestError: FakeRestError };
 });
 
-const blobClient = { downloadToBuffer: vi.fn(), downloadToFile: vi.fn() };
+const blobClient = { downloadToBuffer: vi.fn(), downloadToFile: vi.fn(), getProperties: vi.fn() };
 const blockBlobClient = { uploadData: vi.fn(), uploadFile: vi.fn() };
 const containerClient = {
   getBlobClient: vi.fn(() => blobClient),
@@ -152,6 +152,45 @@ describe("openBlobContainer", () => {
 
       // Assert
       await expect(download).rejects.toThrow("socket hang up");
+    });
+  });
+
+  describe("size", () => {
+    it("should give the blob's size from its properties, without downloading it", async () => {
+      // Arrange
+      blobClient.getProperties.mockResolvedValue({ contentLength: 1234 });
+      const container = openBlobContainer({ accountName: "pipsa", container: "publications" });
+
+      // Act
+      const size = await container.size("a1.pdf");
+
+      // Assert
+      expect(size).toBe(1234);
+      expect(blobClient.downloadToBuffer).not.toHaveBeenCalled();
+    });
+
+    it("should give null when the blob does not exist", async () => {
+      // Arrange
+      blobClient.getProperties.mockRejectedValue(restError(404));
+      const container = openBlobContainer({ accountName: "pipsa", container: "publications" });
+
+      // Act
+      const size = await container.size("a1.pdf");
+
+      // Assert
+      expect(size).toBeNull();
+    });
+
+    it("should rethrow any other error", async () => {
+      // Arrange
+      blobClient.getProperties.mockRejectedValue(restError(500));
+      const container = openBlobContainer({ accountName: "pipsa", container: "publications" });
+
+      // Act
+      const size = container.size("a1.pdf");
+
+      // Assert
+      await expect(size).rejects.toThrow("status 500");
     });
   });
 

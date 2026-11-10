@@ -9,7 +9,8 @@ import type { BlobContainer } from "./blob-container.js";
 // with waitSeconds each publication is polled until it has every kind it is expected to have (those
 // the other app made for it) and they have stopped changing, or the time runs out. A publication with
 // no expected kinds is polled until it has some files and they have stopped changing (a list type
-// that has no files waits the whole time).
+// that has no files waits the whole time). Polling reads only the files' sizes; each file is
+// downloaded once, when they have settled.
 const BLOB_NAMES: Record<PublicationFileKind, (artefactId: string) => string> = {
   pdf: (artefactId) => `${artefactId}.pdf`,
   "pdf-welsh": (artefactId) => `${artefactId}_cy.pdf`,
@@ -29,23 +30,31 @@ export async function collectFiles(options: CollectFilesOptions): Promise<FileEn
 }
 
 async function collectSettled(options: CollectFilesOptions, publication: CollectedPublication, deadline: number): Promise<FileEntry[]> {
-  let previous = await collectOnce(options, publication);
+  let previous = await sizesOf(options, publication);
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
-    const current = await collectOnce(options, publication);
-    const complete = publication.expectedKinds?.length
-      ? publication.expectedKinds.every((kind) => current.some((entry) => entry.kind === kind))
-      : current.length > 0;
+    const current = await sizesOf(options, publication);
+    const complete = publication.expectedKinds?.length ? publication.expectedKinds.every((kind) => current.has(kind)) : current.size > 0;
     const settled = complete && signature(current) === signature(previous);
     previous = current;
     if (settled) break;
   }
-  return previous;
+  return download(options, publication, [...previous.keys()]);
 }
 
-async function collectOnce(options: CollectFilesOptions, publication: CollectedPublication): Promise<FileEntry[]> {
-  const entries: FileEntry[] = [];
+// The size of each kind of file the publication has so far
+async function sizesOf(options: CollectFilesOptions, publication: CollectedPublication): Promise<Map<PublicationFileKind, number>> {
+  const sizes = new Map<PublicationFileKind, number>();
   for (const kind of Object.keys(BLOB_NAMES) as PublicationFileKind[]) {
+    const bytes = await options.container.size(BLOB_NAMES[kind](publication.artefactId));
+    if (bytes !== null) sizes.set(kind, bytes);
+  }
+  return sizes;
+}
+
+async function download(options: CollectFilesOptions, publication: CollectedPublication, kinds: PublicationFileKind[]): Promise<FileEntry[]> {
+  const entries: FileEntry[] = [];
+  for (const kind of kinds) {
     const blob = BLOB_NAMES[kind](publication.artefactId);
     const data = await options.container.download(blob);
     if (!data) continue;
@@ -65,8 +74,8 @@ async function collectOnce(options: CollectFilesOptions, publication: CollectedP
   return entries;
 }
 
-function signature(entries: FileEntry[]): string {
-  return entries.map((entry) => `${entry.kind}:${entry.bytes}`).join(",");
+function signature(sizes: Map<PublicationFileKind, number>): string {
+  return [...sizes].map(([kind, bytes]) => `${kind}:${bytes}`).join(",");
 }
 
 export interface CollectedPublication {

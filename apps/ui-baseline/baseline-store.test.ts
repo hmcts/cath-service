@@ -187,6 +187,9 @@ function memoryStore(): BlobContainer & { blobs: Map<string, Buffer> } {
     async download(blobName) {
       return blobs.get(blobName) ?? null;
     },
+    async size(blobName) {
+      return blobs.get(blobName)?.length ?? null;
+    },
     async upload(blobName, data) {
       blobs.set(blobName, data);
     },
