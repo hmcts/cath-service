@@ -69,10 +69,13 @@ jobs:
       - name: Find Helm apps
         id: apps
         run: |
-          # Same derivation as detect-affected-apps.sh, so the two cannot drift.
+          # Same derivation as detect-affected-apps.sh, so the two cannot drift, less the apps deployed
+          # to aat only (jobs/aat-only-apps): they are never promoted, and these environments do not
+          # deploy them, so there is no image of theirs to find here
+          AAT_ONLY_APPS=$(grep -v '^#' .github/workflows/jobs/aat-only-apps | jq -R -s -c 'split("\n") | map(select(. != ""))')
           HELM_APPS=$(find apps/*/helm -name Chart.yaml 2>/dev/null \
             | sed 's|apps/\([^/]*\)/helm/Chart.yaml|\1|' \
-            | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            | jq -R -s -c --argjson skip "${AAT_ONLY_APPS}" 'split("\n") | map(select(. != "")) | map(select(. as $app | $skip | index($app) | not))')
 
           if [ "${HELM_APPS}" = "[]" ]; then
             echo "::error::No apps with Helm charts found under apps/*/helm"

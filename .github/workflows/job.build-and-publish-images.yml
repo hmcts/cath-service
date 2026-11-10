@@ -11,6 +11,9 @@ on:
       affected-apps:
         description: "JSON array of apps that were affected by changes"
         value: ${{ jobs.detect-affected.outputs.affected-apps }}
+      promotable-apps:
+        description: "JSON array of affected apps that are promoted to prod (all but the aat-only apps)"
+        value: ${{ jobs.detect-affected.outputs.promotable-apps }}
       helm-apps:
         description: "JSON array of all apps with Helm charts"
         value: ${{ jobs.detect-affected.outputs.helm-apps }}
@@ -61,6 +64,7 @@ jobs:
     needs: get-last-successful-sha
     outputs:
       affected-apps: ${{ steps.detect.outputs.affected-apps }}
+      promotable-apps: ${{ steps.detect.outputs.promotable-apps }}
       helm-apps: ${{ steps.detect.outputs.helm-apps }}
       has-changes: ${{ steps.detect.outputs.has-changes }}
       needs-shared-build: ${{ steps.detect.outputs.needs-shared-build }}
