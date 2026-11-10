@@ -8,6 +8,7 @@ import express from "express";
 import nunjucks from "nunjucks";
 import type { ProgressFile } from "../progress.js";
 import { isReportPage, withAppNavigation } from "./report-pages.js";
+import { formToken, sameSiteForm } from "./request-forgery.js";
 import { describeProgress } from "./run-progress.js";
 import { type Runner, type RunRequest, RunRequestError } from "./runs.js";
 
@@ -44,12 +45,13 @@ export function createApp(options: AppOptions): Express {
   app.use("/navigation.js", express.static(path.join(__dirname, "assets/navigation.js")));
   app.use("/app.css", express.static(path.join(__dirname, "assets/app.css")));
   app.use(express.urlencoded({ extended: false }));
+  app.use(formToken());
 
   app.get("/", async (_req, res) => {
     res.render("index", { runs: options.runner.list(), baseline: await options.baselineStatus() });
   });
 
-  app.post("/runs", async (req, res) => {
+  app.post("/runs", sameSiteForm(), async (req, res) => {
     try {
       const run = options.runner.start(requestFrom(req.body as Record<string, string>));
       res.redirect(`/runs/${run.id}`);

@@ -433,7 +433,10 @@ Only in aat: the umbrella chart includes it behind `uiBaseline.enabled`, which
 `job.helm-deploy.yml` sets for aat alone. Its host,
 `cath-<release>-ui-baseline.aat.platform.hmcts.net`, is in the private DNS zone only, with no
 Front Door route, so it is only reached over the VPN. That is its only access control: the app has
-no sign-in, and anyone on the VPN can start a run.
+no sign-in, and anyone on the VPN can start a run. What another site cannot do is start one through
+a VPN user's browser (`src/request-forgery.ts`): each form carries a token matching a `SameSite=Strict`
+cookie only this app sets, and a post the browser marks as cross-site, or whose `Origin` is another
+host, is refused.
 
 ### How it works
 

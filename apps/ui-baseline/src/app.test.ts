@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import type { Express } from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
@@ -68,6 +69,19 @@ async function appWith() {
   return { app, runner };
 }
 
+// Posts a form to /runs as the start page's own form would: with the page's cookie and token
+async function postForm(app: Express, body: Record<string, string>, headers: Record<string, string> = {}) {
+  const startPage = await request(app).get("/");
+  const cookie = (startPage.headers["set-cookie"] as unknown as string[])[0].split(";")[0];
+  const token = startPage.text.match(/name="formToken" value="([0-9a-f]+)"/)?.[1] as string;
+  return request(app)
+    .post("/runs")
+    .set("Cookie", cookie)
+    .set(headers)
+    .type("form")
+    .send({ ...body, formToken: token });
+}
+
 describe("createApp", () => {
   it("should answer health checks", async () => {
     // Arrange
@@ -111,10 +125,7 @@ describe("createApp", () => {
     const { app, runner } = await appWith();
 
     // Act
-    const started = await request(app)
-      .post("/runs")
-      .type("form")
-      .send({ kind: "check", scope: "list-types", listTypes: "civil_daily_cause_list\nSJP_PRESS_LIST" });
+    const started = await postForm(app, { kind: "check", scope: "list-types", listTypes: "civil_daily_cause_list\nSJP_PRESS_LIST" });
     await runner.idle();
     const page = await request(app).get(started.headers.location);
     const report = await request(app).get(`${started.headers.location}/report/index.html`);
@@ -139,10 +150,11 @@ describe("createApp", () => {
   it("should link to the publication in both apps after comparing its files", async () => {
     // Arrange
     const { app, runner } = await appWith();
-    const started = await request(app)
-      .post("/runs")
-      .type("form")
-      .send({ kind: "files", pipArtefactId: "2a7b1d4e-0000-4000-8000-000000000001", cathArtefactId: "2a7b1d4e-0000-4000-8000-000000000002" });
+    const started = await postForm(app, {
+      kind: "files",
+      pipArtefactId: "2a7b1d4e-0000-4000-8000-000000000001",
+      cathArtefactId: "2a7b1d4e-0000-4000-8000-000000000002"
+    });
     await runner.idle();
 
     // Act
@@ -160,7 +172,7 @@ describe("createApp", () => {
     const { app, runner } = await appWith();
 
     // Act
-    const response = await request(app).post("/runs").type("form").send({ kind: "files", pipArtefactId: "not-an-id", cathArtefactId: "" });
+    const response = await postForm(app, { kind: "files", pipArtefactId: "not-an-id", cathArtefactId: "" });
 
     // Assert
     expect(response.status).toBe(400);
@@ -169,10 +181,82 @@ describe("createApp", () => {
     expect(runner.list()).toEqual([]);
   });
 
+  describe("starting a run from another site", () => {
+    it("should start a run posted from the start page's own form", async () => {
+      // Arrange
+      const { app, runner } = await appWith();
+
+      // Act
+      const response = await postForm(
+        app,
+        { kind: "check", scope: "all" },
+        { Host: "cath-ui-baseline.aat.platform.hmcts.net", Origin: "https://cath-ui-baseline.aat.platform.hmcts.net", "Sec-Fetch-Site": "same-origin" }
+      );
+      await runner.idle();
+
+      // Assert
+      expect(response.status).toBe(302);
+      expect(runner.list()).toHaveLength(1);
+    });
+
+    it("should refuse a form posted without the start page's token, or with another one", async () => {
+      // Arrange
+      const { app, runner } = await appWith();
+      const startPage = await request(app).get("/");
+      const cookie = (startPage.headers["set-cookie"] as unknown as string[])[0].split(";")[0];
+
+      // Act
+      const noToken = await request(app).post("/runs").set("Cookie", cookie).type("form").send({ kind: "check", scope: "all" });
+      const noCookie = await request(app)
+        .post("/runs")
+        .type("form")
+        .send({ kind: "check", scope: "all", formToken: "a".repeat(64) });
+      const otherToken = await request(app)
+        .post("/runs")
+        .set("Cookie", cookie)
+        .type("form")
+        .send({ kind: "check", scope: "all", formToken: "b".repeat(64) });
+
+      // Assert
+      for (const response of [noToken, noCookie, otherToken]) {
+        expect(response.status).toBe(403);
+        expect(response.text).toContain("That request was refused");
+      }
+      expect(runner.list()).toEqual([]);
+    });
+
+    it("should refuse a form the browser says came from another site, even with a token", async () => {
+      // Arrange
+      const { app, runner } = await appWith();
+
+      // Act
+      const crossSite = await postForm(app, { kind: "check", scope: "all" }, { "Sec-Fetch-Site": "cross-site" });
+      const otherOrigin = await postForm(app, { kind: "check", scope: "all" }, { Origin: "https://attacker.example" });
+      const nullOrigin = await postForm(app, { kind: "check", scope: "all" }, { Origin: "null" });
+
+      // Assert
+      expect([crossSite.status, otherOrigin.status, nullOrigin.status]).toEqual([403, 403, 403]);
+      expect(runner.list()).toEqual([]);
+    });
+
+    it("should set the form cookie HttpOnly and SameSite=Strict, and Secure behind HTTPS", async () => {
+      // Arrange
+      const { app } = await appWith();
+
+      // Act
+      const plain = await request(app).get("/");
+      const secure = await request(app).get("/").set("X-Forwarded-Proto", "https");
+
+      // Assert
+      expect((plain.headers["set-cookie"] as unknown as string[])[0]).toMatch(/^ui-baseline-form=[0-9a-f]{64}; Path=\/; HttpOnly; SameSite=Strict$/);
+      expect((secure.headers["set-cookie"] as unknown as string[])[0]).toMatch(/; Secure$/);
+    });
+  });
+
   it("should follow a report's links into its baseline, but not links to files outside the data folder", async () => {
     // Arrange
     const { app, runner } = await appWith();
-    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    const started = await postForm(app, { kind: "check", scope: "all" });
     await runner.idle();
 
     // Act
@@ -192,7 +276,7 @@ describe("createApp", () => {
   it("should put Home and Result first in a report page's navigation, new or old, leaving the captured pages as they are", async () => {
     // Arrange
     const { app, runner } = await appWith();
-    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    const started = await postForm(app, { kind: "check", scope: "all" });
     await runner.idle();
     const navigation = (html: string) => (html.match(/<ul class="govuk-service-navigation__list">([\s\S]*)<\/ul>/)?.[1] ?? "").replace(/\s+/g, " ");
 
@@ -235,7 +319,7 @@ describe("createApp", () => {
   it("should serve a report the navigation's and its own stylesheet as they are now, whenever it was written", async () => {
     // Arrange
     const { app, runner } = await appWith();
-    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    const started = await postForm(app, { kind: "check", scope: "all" });
     await runner.idle();
 
     // Act
@@ -253,7 +337,7 @@ describe("createApp", () => {
   it("should not serve files outside a run's report", async () => {
     // Arrange
     const { app, runner } = await appWith();
-    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    const started = await postForm(app, { kind: "check", scope: "all" });
     await runner.idle();
 
     // Act

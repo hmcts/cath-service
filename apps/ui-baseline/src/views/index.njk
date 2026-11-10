@@ -29,6 +29,7 @@
     <div class="govuk-grid-column-one-half">
       <h2 class="govuk-heading-m">Check CaTH's pages</h2>
       <form method="post" action="/runs" novalidate>
+        <input type="hidden" name="formToken" value="{{ formToken }}">
         <input type="hidden" name="kind" value="check">
         {{ govukRadios({
           name: "scope",
@@ -47,6 +48,7 @@
       <h2 class="govuk-heading-m">Compare a publication's files</h2>
       <p class="govuk-body">For a list you uploaded to both pip and CaTH in {{ environment }}: compares the PDF's text and the Excel file's cells.</p>
       <form method="post" action="/runs" novalidate>
+        <input type="hidden" name="formToken" value="{{ formToken }}">
         <input type="hidden" name="kind" value="files">
         {{ govukInput({ name: "pipArtefactId", id: "pipArtefactId", label: { text: "Artefact id in pip" }, value: data.pipArtefactId, spellcheck: false, classes: "govuk-input--width-30" }) }}
         {{ govukInput({ name: "cathArtefactId", id: "cathArtefactId", label: { text: "Artefact id in CaTH" }, value: data.cathArtefactId, spellcheck: false, classes: "govuk-input--width-30" }) }}
