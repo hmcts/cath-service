@@ -199,6 +199,29 @@ describe("captureBatch", () => {
     expect(await readFile(path.join(outDir, "index.jsonl"), "utf-8")).toBe("");
     expect(live.close).toHaveBeenCalledTimes(1);
   });
+
+  it("should try to relaunch again for the next capture when a relaunch fails, rather than fail every capture after it", async () => {
+    // Arrange
+    const { targetsFile, outDir } = await setUp([
+      { id: "a", url: "http://localhost/a" },
+      { id: "b", url: "http://localhost/b" }
+    ]);
+    const live = fakeBrowser();
+    vi.mocked(launchChromium)
+      .mockResolvedValueOnce(fakeBrowser(false) as unknown as Browser)
+      .mockRejectedValueOnce(new Error("out of memory"))
+      .mockResolvedValue(live as unknown as Browser);
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target) => [ok(target)]);
+
+    // Act
+    const results = await captureBatch(targetsFile, { outDir }, 1);
+
+    // Assert
+    expect(results.map((r) => `${r.id} ${r.ok}`).sort()).toEqual(["a true", "b true"]);
+    expect(launchChromium).toHaveBeenCalledTimes(3);
+    expect(console.log).toHaveBeenCalledWith("FAIL a en/default — out of memory");
+    expect(live.close).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("captureBatches", () => {

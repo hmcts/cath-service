@@ -9,20 +9,51 @@ import { type NormaliseContext, normalise } from "./normalise.js";
 // state in a target run (e.g. CaTH). Deterministic: each pair gets a verdict and a list of
 // categorised findings; judging whether a finding is intended comes later, against the ticket.
 const REWORD_SIMILARITY = 0.5;
+// capturePage's states: as a page first appears, and with its collapsed content opened, which is only
+// captured when there is some. A page with nothing to open shows everything in its default state.
+const DEFAULT_STATE = "default";
+const EXPANDED_STATE = "expanded";
+const OPENED_ONLY_IN_SOURCE: Finding = {
+  category: "page",
+  change: "collapsed-content",
+  detail: "the source hides some of this page until it is opened and the target has nothing to open, so the target's page is compared as it first appears"
+};
+const OPENED_ONLY_IN_TARGET: Finding = {
+  category: "page",
+  change: "collapsed-content",
+  detail: "the target hides some of this page until it is opened and the source has nothing to open, so the source's page is compared as it first appears"
+};
 
 export async function compareRuns(options: CompareOptions): Promise<CompareSummary> {
-  const sourceIndex = await readIndex(options.source);
-  const targetIndex = new Map((await readIndex(options.target)).map((entry) => [key(entry), entry]));
-  const pairs = sourceIndex.filter((entry) => !options.only || options.only.includes(entry.id));
+  const inScope = (entry: IndexEntry) => !options.only || options.only.includes(entry.id);
+  const sourceEntries = (await readIndex(options.source)).filter(inScope);
+  const sourceIndex = new Map(sourceEntries.map((entry) => [key(entry), entry]));
+  const targetIndex = new Map((await readIndex(options.target)).filter(inScope).map((entry) => [key(entry), entry]));
+  const defaultOf = (entry: IndexEntry) => key({ ...entry, state: DEFAULT_STATE });
 
   const results: PairResult[] = [];
-  for (const sourceEntry of pairs) {
+  for (const sourceEntry of sourceEntries) {
     const targetEntry = targetIndex.get(key(sourceEntry));
-    if (!targetEntry) {
-      results.push({ id: sourceEntry.id, locale: sourceEntry.locale, state: sourceEntry.state, verdict: "not-captured", findings: [] });
+    if (targetEntry) {
+      results.push(await comparePair(options, sourceEntry, targetEntry));
       continue;
     }
-    results.push(await comparePair(options, sourceEntry, targetEntry));
+    // Content the source collapses and the target shows outright (or leaves out) is in the target's
+    // default state, so a page that lost its collapsed content differs rather than going uncompared
+    const shownOutright = sourceEntry.state === EXPANDED_STATE ? targetIndex.get(defaultOf(sourceEntry)) : undefined;
+    if (shownOutright) {
+      results.push(withFinding({ ...(await comparePair(options, sourceEntry, shownOutright)), targetState: DEFAULT_STATE }, OPENED_ONLY_IN_SOURCE));
+      continue;
+    }
+    results.push({ id: sourceEntry.id, locale: sourceEntry.locale, state: sourceEntry.state, verdict: "not-captured", findings: [] });
+  }
+  // And the other way: content only the target collapses, opened, against the source's whole page
+  for (const targetEntry of targetIndex.values()) {
+    if (targetEntry.state !== EXPANDED_STATE || sourceIndex.has(key(targetEntry))) continue;
+    const sourceDefault = sourceIndex.get(defaultOf(targetEntry));
+    if (!sourceDefault) continue;
+    const pair = await comparePair(options, sourceDefault, targetEntry);
+    results.push(withFinding({ ...pair, state: EXPANDED_STATE, sourceState: DEFAULT_STATE }, OPENED_ONLY_IN_TARGET));
   }
 
   const summary: CompareSummary = {
@@ -43,6 +74,11 @@ export async function compareRuns(options: CompareOptions): Promise<CompareSumma
   await mkdir(options.out, { recursive: true });
   await writeFile(path.join(options.out, "compare.json"), `${JSON.stringify(summary, null, 2)}\n`);
   return summary;
+}
+
+// A pair compared across states always differs: one app collapses content the other does not
+function withFinding(pair: PairResult, finding: Finding): PairResult {
+  return { ...pair, verdict: "differs", findings: [finding, ...pair.findings] };
 }
 
 function dedupe(findings: Finding[]): Finding[] {
@@ -498,6 +534,10 @@ export interface PairResult {
   locale: string;
   state: string;
   verdict: "match" | "differs" | "not-captured";
+  // The state each side was captured in, where it is not `state`: one app collapses content the
+  // other shows outright, so its opened page is compared with the other's page as it first appears
+  sourceState?: string;
+  targetState?: string;
   findings: Finding[];
   // The target's own accessibility issues, whatever the source does; not part of the verdict
   accessibility?: AccessibilityFinding[];

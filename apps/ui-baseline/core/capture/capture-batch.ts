@@ -38,17 +38,23 @@ export async function captureBatches(batches: CaptureBatch[], concurrency: numbe
   let relaunching: Promise<Browser> | null = null;
   const liveBrowser = async () => {
     if (browser.isConnected()) return browser;
-    relaunching ??= launchChromium().then((launched) => {
-      browser = launched;
-      relaunching = null;
-      return launched;
-    });
+    // Cleared however the launch ends, so one that fails (memory not yet freed, say) fails only the
+    // captures waiting on it, and the next capture tries again
+    relaunching ??= launchChromium()
+      .then((launched) => {
+        browser = launched;
+        return launched;
+      })
+      .finally(() => {
+        relaunching = null;
+      });
     return relaunching;
   };
+  // A browser that cannot be relaunched fails the capture, not the whole batch
   const capture = async (target: CaptureTarget, settings: CaptureSettings) =>
-    captureTarget(await liveBrowser(), target, settings).catch((error: Error) => [
-      { ok: false, id: target.id, locale: target.locale ?? "en", state: "default", outDir: "", status: null, error: error.message }
-    ]);
+    liveBrowser()
+      .then((live) => captureTarget(live, target, settings))
+      .catch((error: Error) => [{ ok: false, id: target.id, locale: target.locale ?? "en", state: "default", outDir: "", status: null, error: error.message }]);
   const log = (captured: CaptureResult[]) => {
     for (const result of captured)
       console.log(`${result.ok ? "ok  " : "FAIL"} ${result.id} ${result.locale}/${result.state}${result.error ? ` — ${result.error}` : ""}`);

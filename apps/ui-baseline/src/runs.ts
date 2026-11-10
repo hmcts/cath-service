@@ -4,6 +4,7 @@ import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { LIST_TYPE, ROUTE } from "../cli-input.js";
 import type { BlobContainer } from "../core/index.js";
 import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
@@ -14,8 +15,6 @@ import { systemCommand } from "../system-command.js";
 // there when it is asked for after the pod has restarted.
 const RUNS_PREFIX = "runs/";
 const ARTEFACT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const LIST_TYPE = /^[A-Z][A-Z0-9_]{2,}$/;
-const ROUTE = /^\/[a-z0-9][a-z0-9/-]*$/;
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
