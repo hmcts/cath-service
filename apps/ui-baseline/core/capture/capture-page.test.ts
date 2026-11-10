@@ -116,6 +116,7 @@ describe("capturePage", () => {
     expect(meta).toEqual({
       url: "http://localhost:8080/search",
       status: 200,
+      region: "main",
       title: "Find a court",
       lang: "en",
       h1: ["Find a court", ""],
@@ -135,7 +136,7 @@ describe("capturePage", () => {
         { text: "Home", href: "/" },
         { text: "", href: "/a" }
       ],
-      reflow: { width: 320, scrollWidth: 1000 }
+      reflow: null
     });
     expect(page.locator).toHaveBeenCalledWith("main");
     expect(await readFile(path.join(outDir, "aria.yml"), "utf-8")).toBe('- heading "Find a court" [level=1]\n');
@@ -156,8 +157,39 @@ describe("capturePage", () => {
     expect(page.screenshot).toHaveBeenCalledTimes(1);
     expect(page.screenshot).toHaveBeenCalledWith({ path: path.join(outDir, "page.png"), fullPage: true, animations: "disabled" });
     expect(page.addStyleTag).not.toHaveBeenCalled();
-    expect(page.setViewportSize).toHaveBeenNthCalledWith(1, { width: 320, height: 800 });
-    expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 1280, height: 800 });
+    expect(page.setViewportSize).not.toHaveBeenCalled();
+  });
+
+  it("should measure reflow at 320px on a mobile capture and restore its width", async () => {
+    // Arrange
+    const outDir = await mkdtemp(path.join(tmpdir(), "capture-page-"));
+    const { page } = fakePage({ width: 375, height: 800 });
+
+    // Act
+    const meta = await capturePage(page as unknown as Page, outDir);
+
+    // Assert
+    expect(meta.reflow).toEqual({ width: 320, scrollWidth: 1000 });
+    expect(page.setViewportSize).toHaveBeenCalledWith({ width: 320, height: 800 });
+    expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 375, height: 800 });
+  });
+
+  it("should restore a mobile capture's width when measuring reflow fails", async () => {
+    // Arrange
+    const outDir = await mkdtemp(path.join(tmpdir(), "capture-page-"));
+    const { page } = fakePage({ width: 375, height: 800 });
+    const evaluate = page.evaluate.getMockImplementation() as (fn: () => unknown, arg?: unknown) => Promise<unknown>;
+    page.evaluate.mockImplementation(async (fn: () => unknown, arg?: unknown) => {
+      if (page.setViewportSize.mock.calls.at(-1)?.[0]?.width === 320) throw new Error("Execution context was destroyed");
+      return evaluate(fn, arg);
+    });
+
+    // Act
+    const capture = capturePage(page as unknown as Page, outDir);
+
+    // Assert
+    await expect(capture).rejects.toThrow("Execution context was destroyed");
+    expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 375, height: 800 });
   });
 
   it("should read the given region, falling back to the body for details, when a region is given", async () => {
@@ -195,6 +227,22 @@ describe("capturePage", () => {
     expect(page.addStyleTag).toHaveBeenCalledTimes(1);
     expect(page.setViewportSize).toHaveBeenNthCalledWith(1, { width: 2000, height: 800 });
     expect(page.screenshot).toHaveBeenLastCalledWith({ path: path.join(outDir, "page-full.png"), fullPage: true, animations: "disabled" });
+    expect(styleElement.remove).toHaveBeenCalledTimes(1);
+    expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 1280, height: 800 });
+  });
+
+  it("should restore the viewport and styles when the widened screenshot fails", async () => {
+    // Arrange
+    const outDir = await mkdtemp(path.join(tmpdir(), "capture-page-"));
+    vi.stubGlobal("document", fakeDocument([{ scrollWidth: 1700, clientWidth: 900, left: 267.5, overflowX: "auto" }]));
+    const { page, styleElement } = fakePage();
+    page.screenshot.mockResolvedValueOnce(Buffer.from("")).mockRejectedValueOnce(new Error("Target closed"));
+
+    // Act
+    const capture = capturePage(page as unknown as Page, outDir);
+
+    // Assert
+    await expect(capture).rejects.toThrow("Target closed");
     expect(styleElement.remove).toHaveBeenCalledTimes(1);
     expect(page.setViewportSize).toHaveBeenLastCalledWith({ width: 1280, height: 800 });
   });

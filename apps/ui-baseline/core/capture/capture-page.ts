@@ -8,6 +8,10 @@ const DEFAULT_REGION = "main";
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 // WCAG 1.4.10: content must reflow at 320 CSS pixels, the width of 1280 at 400% zoom
 const REFLOW_WIDTH = 320;
+// Reflow is measured on mobile captures only. From there to 320px crosses none of GOV.UK Frontend's
+// breakpoints (the first is 641px), so no component tears down or rebuilds, and a desktop capture,
+// and the journey step after it, are never resized.
+const MOBILE_WIDTH_MAX = 640;
 
 // Captures one page state: the region's accessibility tree and text (the comparison), the whole
 // page's tree and HTML (the frame: header, navigation, banners, footer), page details, axe results,
@@ -98,21 +102,28 @@ async function screenshot(page: Page, outDir: string): Promise<void> {
   if (!viewport || neededWidth <= viewport.width) return;
 
   const style = await page.addStyleTag({ content: "body * { overflow: visible !important; max-width: none !important; }" });
-  await page.setViewportSize({ width: neededWidth, height: viewport.height });
-  await page.screenshot({ path: path.join(outDir, "page-full.png"), fullPage: true, animations: "disabled" });
-  await style.evaluate((element) => (element as HTMLElement).remove());
-  await page.setViewportSize(viewport);
+  // Restored however the screenshot ends, as a journey carries on in the same page
+  try {
+    await page.setViewportSize({ width: neededWidth, height: viewport.height });
+    await page.screenshot({ path: path.join(outDir, "page-full.png"), fullPage: true, animations: "disabled" });
+  } finally {
+    await style.evaluate((element) => (element as HTMLElement).remove()).catch(() => {});
+    await page.setViewportSize(viewport);
+  }
 }
 
 // How wide the page is at 320px: wider means it scrolls sideways. A table that scrolls inside its
 // own container does not widen the page, so only content that breaks the layout is caught.
 async function measureReflow(page: Page): Promise<{ width: number; scrollWidth: number } | null> {
   const viewport = page.viewportSize();
-  if (!viewport) return null;
-  await page.setViewportSize({ width: REFLOW_WIDTH, height: viewport.height });
-  const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-  await page.setViewportSize(viewport);
-  return { width: REFLOW_WIDTH, scrollWidth };
+  if (!viewport || viewport.width > MOBILE_WIDTH_MAX) return null;
+  try {
+    await page.setViewportSize({ width: REFLOW_WIDTH, height: viewport.height });
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    return { width: REFLOW_WIDTH, scrollWidth };
+  } finally {
+    await page.setViewportSize(viewport);
+  }
 }
 
 async function readMeta(page: Page, options: CaptureOptions): Promise<CaptureMeta> {
@@ -137,7 +148,7 @@ async function readMeta(page: Page, options: CaptureOptions): Promise<CaptureMet
     };
   }, options.region ?? DEFAULT_REGION);
 
-  return { url: page.url(), status: options.status ?? null, ...dom };
+  return { url: page.url(), status: options.status ?? null, region: options.region ?? DEFAULT_REGION, ...dom };
 }
 
 function normaliseWhitespace(text: string): string {
@@ -156,6 +167,8 @@ export interface CaptureOptions {
 export interface CaptureMeta {
   url: string;
   status: number | null;
+  // The region compared; the frame is the page around it
+  region: string;
   title: string;
   lang: string;
   h1: string[];

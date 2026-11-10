@@ -10,7 +10,7 @@ interface Capture {
   state?: string;
   aria: string;
   pageAria?: string;
-  meta?: Partial<{ title: string; lang: string; forms: { action?: string | null; fields: { name: string }[] }[] }>;
+  meta?: Partial<{ title: string; lang: string; region: string; forms: { action?: string | null; fields: { name: string }[] }[] }>;
   axe?: { id: string; impact: string | null; help: string }[];
   provenance?: Record<string, unknown>;
 }
@@ -456,6 +456,86 @@ describe("compareRuns", () => {
       // Assert
       expect(same).toEqual([]);
       expect(oneSided).toEqual([]);
+    });
+
+    it("should still call a page a match when only its frame differs", async () => {
+      // Arrange
+      const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+      await writeRun(path.join(dir, "source"), [{ id: "page", aria: main.trim(), pageAria: frame('  - link "Cymraeg":\n    - /url: "#"') }]);
+      await writeRun(path.join(dir, "target"), [{ id: "page", aria: main.trim(), pageAria: frame('  - link "Change language to Welsh":\n    - /url: "#"') }]);
+
+      // Act
+      const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+      // Assert
+      expect(summary.results[0].verdict).toBe("match");
+      expect(summary.results[0].findings.map((f) => f.category)).toEqual(["frame", "frame"]);
+    });
+
+    it("should not report again in the frame what moved between the frame and the main region", async () => {
+      // Arrange
+      const source = { aria: `${main.trim()}\n- link "Back":\n  - /url: "#"`, pageAria: frame('  - link "Cymraeg":\n    - /url: "#"') };
+      const target = { aria: main.trim(), pageAria: frame('  - link "Cymraeg":\n    - /url: "#"\n  - link "Back":\n    - /url: "#"') };
+
+      // Act
+      const findings = await compareOne(source, target);
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['link missing: "Back"']);
+    });
+
+    it("should not compare a frame when another region than main was captured", async () => {
+      // Arrange
+      const meta = { region: "#content" };
+      const source = { aria: main.trim(), meta, pageAria: frame('  - link "Cymraeg":\n    - /url: "#"') };
+      const target = { aria: main.trim(), meta, pageAria: frame('  - link "English":\n    - /url: "#"') };
+
+      // Act
+      const findings = await compareOne(source, target);
+
+      // Assert
+      expect(findings).toEqual([]);
+    });
+  });
+
+  describe("checking the target's accessibility", () => {
+    const page = '- heading "Find a court" [level=2]';
+
+    it("should check a capture only the target has, as well as the pairs", async () => {
+      // Arrange
+      const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+      await writeRun(path.join(dir, "source"), [{ id: "court", aria: page }]);
+      await writeRun(path.join(dir, "target"), [
+        { id: "court", aria: page },
+        { id: "new-admin-page", aria: page }
+      ]);
+
+      // Act
+      const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+      // Assert
+      expect(summary.results.map((r) => r.id)).toEqual(["court"]);
+      expect(summary.targetOnly?.map((r) => `${r.id} ${r.accessibility.map((f) => f.change)}`)).toEqual(["new-admin-page no-h1"]);
+      expect(summary.accessibilityPatterns?.find((p) => p.change === "no-h1")?.pages).toEqual(["court en", "new-admin-page en"]);
+      expect(summary.totals.accessibility).toBe(2);
+    });
+
+    it("should check the target's default page once when pip's expanded page is compared with it", async () => {
+      // Arrange
+      const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+      await writeRun(path.join(dir, "source"), [
+        { id: "court", aria: page },
+        { id: "court", state: "expanded", aria: `${page}\n- paragraph: Opening hours` }
+      ]);
+      await writeRun(path.join(dir, "target"), [{ id: "court", aria: page }]);
+
+      // Act
+      const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+      // Assert
+      expect(summary.results.find((r) => r.state === "expanded")?.accessibility).toBeUndefined();
+      expect(summary.accessibilityPatterns?.find((p) => p.change === "no-h1")?.pages).toEqual(["court en"]);
+      expect(summary.targetOnly).toEqual([]);
     });
   });
 

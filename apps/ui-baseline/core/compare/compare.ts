@@ -13,6 +13,12 @@ const REWORD_SIMILARITY = 0.5;
 // captured when there is some. A page with nothing to open shows everything in its default state.
 const DEFAULT_STATE = "default";
 const EXPANDED_STATE = "expanded";
+// capturePage's default region; the frame is the page around it
+const DEFAULT_REGION = "main";
+// Findings that do not by themselves make a page differ: accessibility issues CaTH inherits unchanged
+// from pip, and differences in the header, banners and footer, which every page shares, so one change
+// there would otherwise make every page differ
+const NOT_DECIDING = new Set(["axe-inherited", "frame"]);
 const OPENED_ONLY_IN_SOURCE: Finding = {
   category: "page",
   change: "collapsed-content",
@@ -42,7 +48,9 @@ export async function compareRuns(options: CompareOptions): Promise<CompareSumma
     // default state, so a page that lost its collapsed content differs rather than going uncompared
     const shownOutright = sourceEntry.state === EXPANDED_STATE ? targetIndex.get(defaultOf(sourceEntry)) : undefined;
     if (shownOutright) {
-      results.push(withFinding({ ...(await comparePair(options, sourceEntry, shownOutright)), targetState: DEFAULT_STATE }, OPENED_ONLY_IN_SOURCE));
+      // The target's default state is checked for accessibility in its own pair, so not again here
+      const pair = await comparePair(options, sourceEntry, shownOutright, { checkTarget: false });
+      results.push(withFinding({ ...pair, targetState: DEFAULT_STATE }, OPENED_ONLY_IN_SOURCE));
       continue;
     }
     results.push({ id: sourceEntry.id, locale: sourceEntry.locale, state: sourceEntry.state, verdict: "not-captured", findings: [] });
@@ -55,21 +63,31 @@ export async function compareRuns(options: CompareOptions): Promise<CompareSumma
     const pair = await comparePair(options, sourceDefault, targetEntry);
     results.push(withFinding({ ...pair, state: EXPANDED_STATE, sourceState: DEFAULT_STATE }, OPENED_ONLY_IN_TARGET));
   }
+  // Captures only the target has (a page or journey step the source has no counterpart for) are not
+  // compared, but are still checked for accessibility, which does not depend on the source
+  const compared = (entry: IndexEntry) => sourceIndex.has(key(entry)) || (entry.state === EXPANDED_STATE && sourceIndex.has(defaultOf(entry)));
+  const targetOnly: TargetOnlyResult[] = [];
+  for (const targetEntry of targetIndex.values()) {
+    if (compared(targetEntry)) continue;
+    const dir = path.join(options.target, targetEntry.id, targetEntry.locale, targetEntry.state);
+    targetOnly.push({ id: targetEntry.id, locale: targetEntry.locale, state: targetEntry.state, accessibility: await checkAccessibility(dir) });
+  }
 
   const summary: CompareSummary = {
     source: options.source,
     target: options.target,
     comparedAt: new Date().toISOString(),
     patterns: patternsOf(results),
-    accessibilityPatterns: accessibilityPatternsOf(results),
+    accessibilityPatterns: accessibilityPatternsOf([...results, ...targetOnly]),
     totals: {
       pairs: results.length,
       match: results.filter((r) => r.verdict === "match").length,
       differs: results.filter((r) => r.verdict === "differs").length,
       notCaptured: results.filter((r) => r.verdict === "not-captured").length,
-      accessibility: results.reduce((sum, r) => sum + (r.accessibility?.length ?? 0), 0)
+      accessibility: [...results, ...targetOnly].reduce((sum, r) => sum + (r.accessibility?.length ?? 0), 0)
     },
-    results
+    results,
+    targetOnly
   };
   await mkdir(options.out, { recursive: true });
   await writeFile(path.join(options.out, "compare.json"), `${JSON.stringify(summary, null, 2)}\n`);
@@ -158,7 +176,7 @@ function patternsOf(results: PairResult[]): Pattern[] {
 
 // Accessibility findings on the target, grouped like the differences, but every one kept: an issue
 // on a single page matters as much as one on many
-function accessibilityPatternsOf(results: PairResult[]): AccessibilityPattern[] {
+function accessibilityPatternsOf(results: (PairResult | TargetOnlyResult)[]): AccessibilityPattern[] {
   const byKey = new Map<string, AccessibilityPattern>();
   for (const result of results) {
     for (const finding of result.accessibility ?? []) {
@@ -184,7 +202,7 @@ function patternDetail(finding: Finding): string {
   return finding.detail;
 }
 
-async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, targetEntry: IndexEntry): Promise<PairResult> {
+async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, targetEntry: IndexEntry, { checkTarget = true } = {}): Promise<PairResult> {
   const sourceDir = path.join(options.source, sourceEntry.id, sourceEntry.locale, sourceEntry.state);
   const targetDir = path.join(options.target, targetEntry.id, targetEntry.locale, targetEntry.state);
   const [sourceCapture, targetCapture] = await Promise.all([readCapture(sourceDir), readCapture(targetDir)]);
@@ -205,21 +223,20 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
     ),
     ...compareTargets(sourceCapture, targetCapture, options.expectedTarget),
     ...compareText(source.text, target.text, source, target),
-    ...compareFrame(sourceCapture.frame, targetCapture.frame),
+    ...compareFrame(sourceCapture, targetCapture),
     ...compareMeta(sourceCapture.meta, targetCapture.meta),
     ...(await compareAxe(sourceDir, targetDir))
   ];
   // The same finding can occur several times on one page (e.g. a heading repeated per court)
   const unique = dedupe(pairReworded(findings));
-  // Accessibility findings that CaTH inherits unchanged from pip are not differences between them
-  const differences = unique.filter((f) => f.category !== "axe-inherited");
+  const differences = unique.filter((f) => !NOT_DECIDING.has(f.category));
   return {
     id: sourceEntry.id,
     locale: sourceEntry.locale,
     state: sourceEntry.state,
     verdict: differences.length ? "differs" : "match",
     findings: unique,
-    accessibility: await checkAccessibility(targetDir)
+    ...(checkTarget ? { accessibility: await checkAccessibility(targetDir) } : {})
   };
 }
 
@@ -236,7 +253,10 @@ async function readCapture(dir: string): Promise<Capture> {
   const nodes = parseAria(await readFile(path.join(dir, "aria.yml"), "utf-8"));
   const meta = JSON.parse(await readFile(path.join(dir, "meta.json"), "utf-8")) as RawMeta;
   const pageAria = path.join(dir, "page.aria.yml");
-  const frame = existsSync(pageAria) ? withoutRegion(parseAria(await readFile(pageAria, "utf-8"))) : null;
+  // Only the main region can be taken out of the page's tree by its role, so a capture of another
+  // region has no frame to compare
+  const capturedMain = (meta.region ?? DEFAULT_REGION) === DEFAULT_REGION;
+  const frame = capturedMain && existsSync(pageAria) ? withoutRegion(parseAria(await readFile(pageAria, "utf-8"))) : null;
   return {
     structure: structureOf(nodes.map((node) => normaliseNode(node, context))),
     frame: frame && structureOf(frame.map((node) => normaliseNode(node, context))),
@@ -254,7 +274,7 @@ async function readCapture(dir: string): Promise<Capture> {
 // The page around the compared region (header, banners, navigation, footer): the whole page's tree
 // with the main region taken out
 function withoutRegion(nodes: AriaNode[]): AriaNode[] {
-  return nodes.filter((node) => node.role !== "main").map((node) => ({ ...node, children: withoutRegion(node.children) }));
+  return nodes.filter((node) => node.role !== DEFAULT_REGION).map((node) => ({ ...node, children: withoutRegion(node.children) }));
 }
 
 // A screen-reader status region is captured mid-update, so what it says is not compared
@@ -393,25 +413,20 @@ function compareText(a: string[], b: string[], source?: PageStructure, target?: 
 }
 
 // Links, buttons, headings and controls outside the main region, by name. Where they lead is not
-// compared: their addresses carry each page's own path and query.
-function compareFrame(source: PageStructure | null, target: PageStructure | null): Finding[] {
-  if (!source || !target) return [];
-  const describe = (role: string) => (name: string) => `${role} "${name}"`;
-  return countedDifferences(
-    "frame",
-    [
-      ...source.links.map((l) => describe("link")(l.text)),
-      ...source.buttons.map(describe("button")),
-      ...source.headings.map((h) => describe(`h${h.level}`)(h.text)),
-      ...source.controls.map((c) => describe(c.role)(c.label))
-    ],
-    [
-      ...target.links.map((l) => describe("link")(l.text)),
-      ...target.buttons.map(describe("button")),
-      ...target.headings.map((h) => describe(`h${h.level}`)(h.text)),
-      ...target.controls.map((c) => describe(c.role)(c.label))
-    ],
-    (item) => item
+// compared: their addresses carry each page's own path and query. Something that moved between the
+// main region and the frame (a back link, say) is already reported by the region's checks, so not here.
+function compareFrame(source: Capture, target: Capture): Finding[] {
+  if (!source.frame || !target.frame) return [];
+  const items = (structure: PageStructure) => [
+    ...structure.links.map((l) => `link "${l.text}"`),
+    ...structure.buttons.map((b) => `button "${b}"`),
+    ...structure.headings.map((h) => `h${h.level} "${h.text}"`),
+    ...structure.controls.map((c) => `${c.role} "${c.label}"`)
+  ];
+  const inSourceMain = new Set(items(source.structure));
+  const inTargetMain = new Set(items(target.structure));
+  return countedDifferences("frame", items(source.frame), items(target.frame), (item) => item).filter(
+    (f) => !(f.change === "missing" && inTargetMain.has(f.detail)) && !(f.change === "extra" && inSourceMain.has(f.detail))
   );
 }
 
@@ -543,6 +558,14 @@ export interface PairResult {
   accessibility?: AccessibilityFinding[];
 }
 
+// A capture only the target has: nothing to compare it with, but checked for accessibility all the same
+export interface TargetOnlyResult {
+  id: string;
+  locale: string;
+  state: string;
+  accessibility: AccessibilityFinding[];
+}
+
 export interface AccessibilityPattern {
   change: string;
   detail: string;
@@ -565,6 +588,8 @@ export interface CompareSummary {
   accessibilityPatterns?: AccessibilityPattern[];
   totals: { pairs: number; match: number; differs: number; notCaptured: number; accessibility?: number };
   results: PairResult[];
+  // Absent from compare.json written before captures only the target has were checked
+  targetOnly?: TargetOnlyResult[];
 }
 
 interface Capture {
@@ -578,6 +603,7 @@ interface Capture {
 
 interface RawMeta {
   title?: string;
+  region?: string;
   lang: string;
   forms?: { action: string | null; fields: { name: string }[] }[];
 }

@@ -31,9 +31,14 @@ const REFLOW_WIDTH = 320;
 const NEW_TAB_WARNING = /new (tab|window)|tab newydd|ffenestr newydd/i;
 const ERROR_PREFIX = /^(Error|Gwall):/;
 const ERROR_SUMMARY_TITLE = /^(There is a problem|Mae yna broblem|Mae problem)/i;
-const FORM_CONTROL_TAGS = new Set(["input", "select", "textarea"]);
 const SHORT_NAME = 2;
 const HEADING_LIKE_LENGTH = 60;
+// Per page and check: a list page can repeat one issue on every row, and each would be a finding
+const MAX_PER_CHECK = 5;
+// The fragment "top" scrolls to the top of the page whether or not anything has that id
+const TOP_FRAGMENT = /^top$/i;
+const FOCUSABLE_TAGS = new Set(["input", "select", "textarea", "button"]);
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
 
 export async function checkAccessibility(dir: string): Promise<AccessibilityFinding[]> {
   const read = (file: string) => (existsSync(path.join(dir, file)) ? readFile(path.join(dir, file), "utf-8") : Promise.resolve(null));
@@ -50,26 +55,28 @@ export async function checkAccessibility(dir: string): Promise<AccessibilityFind
   // Older captures hold only the region's HTML, which cannot say where a link outside it leads
   const html = pageHtml ?? regionHtml ?? "";
 
-  return dedupe([
-    ...labelInName(page),
-    ...linkTextIsUrl(page),
-    ...ambiguousLinks(main),
-    ...linksToNowhere(html),
-    ...(pageHtml ? inPageLinkTargets(pageHtml) : []),
-    ...errorSummaryTargets(html),
-    ...ungroupedChoices(main),
-    ...legendRepeatsHeading(main),
-    ...noH1(main),
-    ...tableHeaders(main),
-    ...boldAsHeadings(main),
-    ...errorWithoutSummary(main),
-    ...multipleLabels(html),
-    ...sortLinks(html),
-    ...duplicateIds(html),
-    ...newTabUnannounced(html),
-    ...axeFindings(axe),
-    ...reflow(meta)
-  ]);
+  return capped(
+    dedupe([
+      ...labelInName(page),
+      ...linkTextIsUrl(page),
+      ...ambiguousLinks(main),
+      ...linksToNowhere(html),
+      ...(pageHtml ? inPageLinkTargets(pageHtml) : []),
+      ...errorSummaryTargets(html),
+      ...ungroupedChoices(main),
+      ...legendRepeatsHeading(main),
+      ...noH1(main),
+      ...tableHeaders(main),
+      ...boldAsHeadings(html),
+      ...errorWithoutSummary(main),
+      ...multipleLabels(html),
+      ...sortLinks(html),
+      ...duplicateIds(html),
+      ...newTabUnannounced(html),
+      ...axeFindings(axe),
+      ...reflow(meta)
+    ])
+  );
 }
 
 function finding(rule: keyof typeof RULES, detail: string): AccessibilityFinding {
@@ -115,29 +122,31 @@ function inPageLinkTargets(html: string): AccessibilityFinding[] {
   const ids = new Set([...html.matchAll(/\s(?:id|name)="([^"]+)"/g)].map((m) => m[1]));
   return anchors(html)
     .map((a) => ({ a, target: attribute(a.attributes, "href")?.match(/^#(.+)$/)?.[1] }))
-    .filter(({ target }) => target && !ids.has(decodeURIComponent(target)))
+    .filter(({ target }) => target && !TOP_FRAGMENT.test(target) && !ids.has(decodedFragment(target)))
     .map(({ a, target }) => finding("in-page-link-target", `"${a.text}" links to #${target}, which is not on the page`));
 }
 
-// GOV.UK's error summary moves focus only to a form control with the link's id; a link to anything
-// else just scrolls, leaving focus in the summary
+// A link in GOV.UK's error summary moves focus to a form control with its id, as following any link
+// to a focusable element does; a link to anything else just scrolls, leaving focus in the summary
 function errorSummaryTargets(html: string): AccessibilityFinding[] {
-  const summary = html.match(/class="govuk-error-summary[\s\S]*?<\/ul>/)?.[0];
+  const summary = html.match(/class="[^"]*\bgovuk-error-summary\b[\s\S]*?<\/ul>/)?.[0];
   if (!summary) return [];
   return anchors(summary).flatMap((a) => {
     const target = attribute(a.attributes, "href")?.match(/^#(.+)$/)?.[1];
     if (!target) return [];
-    const tag = html.match(new RegExp(`<(\\w+)\\b[^>]*\\sid="${escapeRegExp(target)}"`))?.[1]?.toLowerCase();
-    if (tag && FORM_CONTROL_TAGS.has(tag)) return [];
+    const element = html.match(new RegExp(`<(\\w+)\\b([^>]*)\\sid="${escapeRegExp(decodedFragment(target))}"([^>]*)>`));
+    const tag = element?.[1]?.toLowerCase();
+    if (tag && (FOCUSABLE_TAGS.has(tag) || /\stabindex="/.test(`${element?.[2]}${element?.[3]}`))) return [];
     const where = tag ? `a <${tag}>` : "nothing on the page";
     return [finding("error-summary-target", `"${a.text}" links to #${target}, ${where}, so focus does not move to the field`)];
   });
 }
 
-// Radios, or checkboxes outside a table, with no fieldset and legend to say what they answer
+// Radios, or checkboxes outside a table, with no fieldset and legend to say what they answer. A
+// fieldset with no legend is a group with no name, which says no more than no fieldset does.
 function ungroupedChoices(nodes: AriaNode[]): AccessibilityFinding[] {
   const outsideGroups = walk(nodes).filter(
-    ({ node, ancestors }) => !ancestors.some((a) => a.role === "group" || a.role === "radiogroup") && node.role !== "root"
+    ({ node, ancestors }) => !ancestors.some((a) => (a.role === "group" || a.role === "radiogroup") && a.name) && node.role !== "root"
   );
   const radios = outsideGroups.filter(({ node }) => node.role === "radio");
   const checkboxes = outsideGroups.filter(
@@ -183,17 +192,13 @@ function tableHeaders(nodes: AriaNode[]): AccessibilityFinding[] {
   ];
 }
 
-// A short bold run that starts a paragraph is usually a heading in all but markup
-function boldAsHeadings(nodes: AriaNode[]): AccessibilityFinding[] {
-  return walk(nodes)
-    .filter(({ node }) => node.role === "paragraph" && node.children.length > 1)
-    .flatMap(({ node }) => {
-      const first = node.children[0];
-      const text = first.role === "strong" ? first.text || first.name : "";
-      return text && text.length <= HEADING_LIKE_LENGTH
-        ? [finding("bold-as-heading", `"${text}" is bold text starting a section, so may need to be a heading`)]
-        : [];
-    });
+// A short bold paragraph, or a bold line with a line break after it, is a heading in all but markup.
+// Bold followed by text on the same line ("Judge: Jane Smith") is a label, and is not reported.
+function boldAsHeadings(html: string): AccessibilityFinding[] {
+  return [...html.matchAll(/<p\b[^>]*>\s*<(?:strong|b)\b[^>]*>([^<]{1,200})<\/(?:strong|b)>\s*(<br\s*\/?>|<\/p>)/g)]
+    .map((m) => decodeEntities(m[1]).replace(/\s+/g, " ").trim())
+    .filter((text) => text && text.length <= HEADING_LIKE_LENGTH && !text.endsWith(":"))
+    .map((text) => finding("bold-as-heading", `"${text}" is a bold line on its own, so may need to be a heading`));
 }
 
 function errorWithoutSummary(nodes: AriaNode[]): AccessibilityFinding[] {
@@ -258,10 +263,10 @@ function newTabUnannounced(html: string): AccessibilityFinding[] {
 // Every axe violation on the page, including ones the other app has too, and the checks axe could
 // not decide (colour contrast over images or disabled-looking text, say), which need a person
 function axeFindings(json: string | null): AccessibilityFinding[] {
-  if (!json) return [];
-  const axe = JSON.parse(json) as AxeFile;
+  const axe = parsed<AxeFile>(json);
+  if (!axe) return [];
   return [
-    ...axe.violations.map((v) => ({
+    ...(axe.violations ?? []).map((v) => ({
       category: "accessibility" as const,
       change: `axe-${v.id}`,
       detail: `${v.help} (${v.targets?.length ?? 1} element${v.targets?.length === 1 ? "" : "s"})`,
@@ -277,7 +282,7 @@ function axeFindings(json: string | null): AccessibilityFinding[] {
 }
 
 function reflow(json: string | null): AccessibilityFinding[] {
-  const measured = json ? (JSON.parse(json) as { reflow?: { width: number; scrollWidth: number } }).reflow : undefined;
+  const measured = parsed<{ reflow?: { width: number; scrollWidth: number } | null }>(json)?.reflow;
   if (!measured || measured.scrollWidth <= measured.width + 1) return [];
   return [finding("reflow", `at ${REFLOW_WIDTH}px wide the page is ${measured.scrollWidth}px wide, so it scrolls sideways`)];
 }
@@ -309,12 +314,45 @@ function names(items: { node: AriaNode }[]): string {
 function anchors(html: string): { attributes: string; text: string }[] {
   return [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map((m) => ({
     attributes: m[1],
-    text: m[2]
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ")
+    text: decodeEntities(m[2].replace(/<[^>]+>/g, " "))
       .replace(/\s+/g, " ")
       .trim()
   }));
+}
+
+// Text as the page shows it, so a detail read from HTML matches the same text read from the tree
+function decodeEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
+    if (code.startsWith("#x") || code.startsWith("#X")) return String.fromCodePoint(Number.parseInt(code.slice(2), 16));
+    if (code.startsWith("#")) return String.fromCodePoint(Number(code.slice(1)));
+    return ENTITIES[code.toLowerCase()] ?? entity;
+  });
+}
+
+// A fragment as an id: percent-decoded when it can be, as browsers do, and as written when it cannot
+function decodedFragment(fragment: string): string {
+  try {
+    return decodeURIComponent(fragment);
+  } catch {
+    return fragment;
+  }
+}
+
+// A capture's JSON, or null when it is missing or cannot be read, so one bad file loses only its own checks
+function parsed<T>(json: string | null): T | null {
+  if (!json) return null;
+  try {
+    return JSON.parse(json) as T;
+  } catch {
+    return null;
+  }
+}
+
+// At most MAX_PER_CHECK findings of each check on a page, and one more saying how many were left out
+function capped(findings: AccessibilityFinding[]): AccessibilityFinding[] {
+  return [...Map.groupBy(findings, (f) => f.change).values()].flatMap((group) =>
+    group.length <= MAX_PER_CHECK ? group : [...group.slice(0, MAX_PER_CHECK), { ...group[0], detail: `and ${group.length - MAX_PER_CHECK} more on this page` }]
+  );
 }
 
 function attribute(attributes: string, name: string): string | undefined {
