@@ -46,5 +46,9 @@ app.listen(PORT, () => console.log(`[ui-baseline] checking CaTH in ${environment
 // fills in as they load
 runner.restore().catch((error: Error) => console.error(`[ui-baseline] could not load earlier runs: ${error.message}`));
 
-// Fetched now so the first check does not wait for it
-baseline.ensure().catch((error: Error) => console.error(`[ui-baseline] could not fetch the baseline: ${error.message}`));
+// Fetched now so the first check does not wait for it, and let go at once: holding it would keep it
+// on the pod's disk however many newer baselines replaced it
+baseline
+  .ensure()
+  .then((fetched) => fetched.release())
+  .catch((error: Error) => console.error(`[ui-baseline] could not fetch the baseline: ${error.message}`));

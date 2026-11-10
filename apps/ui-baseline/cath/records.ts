@@ -166,7 +166,8 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
       body: body ? JSON.stringify(body) : undefined
     });
     if (!response.ok) throw new Error(`${method} /test-support${endpoint} failed: ${response.status} ${(await response.text()).slice(0, 300)}`);
-    return (await response.json()) as T;
+    // A delete answers 204, with no body
+    return (response.status === 204 ? null : await response.json()) as T;
   };
   const query = (params: Record<string, string>) => `?${new URLSearchParams(params)}`;
   return {
@@ -183,10 +184,12 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
         }
       );
       if (existing?.proofOfIdPath) return existing.id;
-      // test-support takes the proof of ID's path at creation, so it is uploaded first under a fixed name
+      // test-support takes the proof of ID's path at creation only, so an application without one is
+      // made again with it, uploaded first under a fixed name
+      if (existing) await api("DELETE", `/media-applications/${encodeURIComponent(existing.id)}`);
       const blobKey = `ui-baseline-${application.email.replace(/[^a-z0-9]+/g, "-")}${image.extension}`;
       await files.upload(blobKey, image.data, "image/png");
-      return existing?.id ?? (await api<{ id: string }>("POST", "/media-applications", { ...application, status: "PENDING", proofOfIdPath: blobKey })).id;
+      return (await api<{ id: string }>("POST", "/media-applications", { ...application, status: "PENDING", proofOfIdPath: blobKey })).id;
     },
     async ensureLegacyThirdPartyUser(name) {
       const [found] = await api<{ id: string }[]>("GET", `/legacy-third-party-users${query({ name })}`);

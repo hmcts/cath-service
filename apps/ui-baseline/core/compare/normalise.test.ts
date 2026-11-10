@@ -85,4 +85,15 @@ describe("normalise", () => {
       "1 September 2023"
     ]);
   });
+
+  it("should mask a time after a written date when only a space or a comma comes between them", () => {
+    // Arrange
+    const text = ["Published 30 October 2026 10:12am", "Published 30 October 2026, 14:03", "30 October 2026 2 lists"].join("\n");
+
+    // Act
+    const result = normalise(text, SEEDED);
+
+    // Assert
+    expect(result.split("\n")).toEqual(["Published <RUN_DATE> <RUN_TIME>", "Published <RUN_DATE> <RUN_TIME>", "<RUN_DATE> 2 lists"]);
+  });
 });
