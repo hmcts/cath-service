@@ -10,6 +10,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Dates this close to the seed date come from "now" (display windows, created and audit dates);
 // fixture dates are years earlier and are compared as they are
 const RUN_DATE_WINDOW_DAYS = 45;
+// Both apps show dates in London time, whatever time zone the comparison runs in
+const LONDON_DAY = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "numeric", day: "numeric" });
 
 export interface NormaliseContext {
   // When the data shown was seeded (provenance.source.seededAt), in ISO form
@@ -41,19 +43,24 @@ export function normalise(text: string, context: NormaliseContext = {}): string 
 }
 
 function maskRunDates(text: string, seededAt: Date): string {
-  const offsetToken = (date: Date) => {
-    const days = Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - utcDay(seededAt)) / DAY_MS);
+  // A date as written (year, month from 0, day), days from the London day the data was seeded on
+  const seededDay = londonDay(seededAt);
+  const offsetToken = (year: number, month: number, day: number) => {
+    const days = Math.round((Date.UTC(year, month, day) - seededDay) / DAY_MS);
     return Math.abs(days) <= RUN_DATE_WINDOW_DAYS ? `<RUN_DATE${days === 0 ? "" : days > 0 ? `+${days}` : days}>` : null;
   };
   let result = text
-    // 2026-10-23T10:12:16, optionally with fractions and zone
+    // 2026-10-23T10:12:16, optionally with fractions and zone. One ending Z is an instant, so its
+    // date is the London date it falls on; one without is already a London wall-clock time.
     .replace(/\b(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?Z?/g, (m, y, mo, d) => {
-      const token = offsetToken(new Date(Number(y), Number(mo) - 1, Number(d)));
+      const day = m.endsWith("Z") ? londonDay(new Date(m)) : Date.UTC(Number(y), Number(mo) - 1, Number(d));
+      const date = new Date(day);
+      const token = offsetToken(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
       return token ? `${token} <RUN_TIME>` : m;
     })
     // 23/10/2026 and 23/10/2026 10:12:16, also URL-encoded as 23%2F10%2F2026+10%3A12%3A16
     .replace(/\b(\d{2})(?:\/|%2F)(\d{2})(?:\/|%2F)(\d{4})((?:\s|\+)\d{2}(?::|%3A)\d{2}(?:(?::|%3A)\d{2})?)?/g, (m, d, mo, y, time) => {
-      const token = offsetToken(new Date(Number(y), Number(mo) - 1, Number(d)));
+      const token = offsetToken(Number(y), Number(mo) - 1, Number(d));
       return token ? `${token}${time ? " <RUN_TIME>" : ""}` : m;
     });
 
@@ -65,7 +72,7 @@ function maskRunDates(text: string, seededAt: Date): string {
     new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? (${names}) (\\d{4})((?:,? (?:at|am) |,? )\\d{1,2}[:.]\\d{2}(?::\\d{2})?(?: ?(?:am|pm|yb|yh))?)?`, "gi"),
     (m, d, month, y, time) => {
       const index = monthIndex(month);
-      const token = index === null ? null : offsetToken(new Date(Number(y), index, Number(d)));
+      const token = index === null ? null : offsetToken(Number(y), index, Number(d));
       return token ? `${token}${time ? " <RUN_TIME>" : ""}` : m;
     }
   );
@@ -80,6 +87,8 @@ function monthIndex(name: string): number | null {
   return cy >= 0 ? cy : null;
 }
 
-function utcDay(date: Date): number {
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+// The London date an instant falls on, as a UTC midnight to count days from
+function londonDay(instant: Date): number {
+  const part = (type: string) => Number(LONDON_DAY.formatToParts(instant).find((p) => p.type === type)?.value);
+  return Date.UTC(part("year"), part("month") - 1, part("day"));
 }

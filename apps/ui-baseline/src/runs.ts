@@ -21,6 +21,15 @@ const INTERRUPTED = "interrupted";
 const RUN_TIME_LIMIT_MS = 2 * 60 * 60 * 1000;
 // How long a stopped run has to remove what it seeded in CaTH (check.ts) before it is killed
 const STOP_GRACE_MS = 2 * 60 * 1000;
+// A running run's record is stored again this often, so another pod can tell it is still going: a
+// redeploy starts the new pod while the old one finishes its run (drain, server.ts)
+const HEARTBEAT_MS = 60 * 1000;
+// A run whose record has not been stored for this long is no longer going anywhere
+const HEARTBEAT_STALE_MS = 3 * 60 * 1000;
+// How often a pod looks at the stored record of a run going on another pod
+const WATCH_MS = 30 * 1000;
+const RESTARTED_BEFORE_START = "The hosted check restarted before this run began. Start it again.";
+const RESTARTING = "The hosted check is restarting. Start the run again in a few minutes.";
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
@@ -34,6 +43,11 @@ export function createRunner(options: RunnerOptions): Runner {
   const restoring = new Map<string, Promise<string>>();
   const execute = options.execute ?? executeScript;
   let queue: Promise<void> = Promise.resolve();
+  // Set when the pod is stopping: the run going is finished, and no other is started
+  let draining = false;
+  const heartbeatMs = options.heartbeatMs ?? HEARTBEAT_MS;
+  const watchMs = options.watchMs ?? WATCH_MS;
+  const watching = new Set<ReturnType<typeof setInterval>>();
   // Run records go to storage in the order they change, so a later one is never overwritten by an earlier
   let publishing: Promise<void> = Promise.resolve();
 
@@ -56,10 +70,21 @@ export function createRunner(options: RunnerOptions): Runner {
   };
 
   const perform = async (record: RunRecord) => {
+    if (draining) {
+      const failed: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: RESTARTED_BEFORE_START };
+      runs.set(record.id, failed);
+      await publish(failed);
+      return;
+    }
     const dir = runDir(record.id);
     let baseline: PinnedBaseline | null = null;
+    const heartbeat = setInterval(() => {
+      const current = runs.get(record.id);
+      if (current?.status === "running") void publish({ ...current, heartbeatAt: new Date().toISOString() });
+    }, heartbeatMs);
     try {
-      await save({ ...record, status: "running", startedAt: new Date().toISOString() });
+      const startedAt = new Date().toISOString();
+      await save({ ...record, status: "running", startedAt, heartbeatAt: startedAt });
       // A check keeps to the baseline it started with: its report links into that baseline's directory,
       // which is held until the check ends so it is not deleted from under it
       baseline = record.kind === "check" ? await options.baseline() : null;
@@ -84,6 +109,7 @@ export function createRunner(options: RunnerOptions): Runner {
     } catch (error) {
       await save({ ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: (error as Error).message });
     } finally {
+      clearInterval(heartbeat);
       baseline?.release();
     }
     await archive(runs.get(record.id) as RunRecord).catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
@@ -158,8 +184,29 @@ export function createRunner(options: RunnerOptions): Runner {
     }
   };
 
+  // A run going on another pod (the one a redeploy is replacing): its stored record is looked at
+  // until the run ends there, or that pod stops storing it, when the run was cut short
+  const watch = (store: BlobContainer, id: string) => {
+    const timer = setInterval(async () => {
+      const data = await store.download(`${RUNS_PREFIX}${id}.json`).catch(() => null);
+      const stored = data ? (JSON.parse(data.toString("utf-8")) as RunRecord) : null;
+      if (!stored) return;
+      if (!stillGoing(stored)) {
+        clearInterval(timer);
+        watching.delete(timer);
+        const ended = stored.status === "queued" || stored.status === "running" ? { ...stored, status: "failed" as const, error: INTERRUPTED } : stored;
+        runs.set(id, ended);
+        if (ended !== stored) await publish(ended);
+        return;
+      }
+      runs.set(id, stored);
+    }, watchMs);
+    watching.add(timer);
+  };
+
   return {
     start(request) {
+      if (draining) throw new RunRequestError(RESTARTING);
       const record: RunRecord = {
         ...validated(request),
         id: `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`,
@@ -209,6 +256,12 @@ export function createRunner(options: RunnerOptions): Runner {
           runs.set(record.id, record);
           return;
         }
+        // Still going on the pod this one is replacing: left to finish there, and watched
+        if (stillGoing(record)) {
+          runs.set(record.id, record);
+          watch(store, record.id);
+          return;
+        }
         // Stored as well, or every pod after this one would find it still running
         const interrupted: RunRecord = { ...record, status: "failed", error: INTERRUPTED };
         runs.set(record.id, interrupted);
@@ -220,8 +273,24 @@ export function createRunner(options: RunnerOptions): Runner {
       };
       await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
     },
-    idle: () => queue
+    idle: () => queue,
+    drain() {
+      draining = true;
+      return queue;
+    },
+    stopWatching() {
+      for (const timer of watching) clearInterval(timer);
+      watching.clear();
+    }
   };
+}
+
+// A queued or running record another pod is still storing: a running one by its heartbeat, a queued
+// one by when it was queued
+function stillGoing(record: RunRecord): boolean {
+  if (record.status !== "queued" && record.status !== "running") return false;
+  const lastSeen = Date.parse(record.heartbeatAt ?? record.createdAt);
+  return Date.now() - lastSeen < HEARTBEAT_STALE_MS;
 }
 
 // The tool's script and arguments for a run; the arguments go straight to the process, never a shell
@@ -348,6 +417,8 @@ export type RunRecord = RunRequest & {
   createdAt: string;
   startedAt?: string;
   finishedAt?: string;
+  // When the pod running it last stored it, while it runs (HEARTBEAT_MS)
+  heartbeatAt?: string;
   // The baseline a check compared against
   baselineId?: string;
   summary?: RunSummary | null;
@@ -364,6 +435,11 @@ export interface Runner {
   start(request: RunRequest): RunRecord;
   list(): RunRecord[];
   get(id: string): RunRecord | undefined;
+  // Stops starting runs, fails those still queued, and settles when the one going has finished, so a
+  // pod being replaced finishes its run rather than cutting it short (server.ts, on SIGTERM)
+  drain(): Promise<void>;
+  // Stops looking at runs going on another pod
+  stopWatching(): void;
   // The run's directory on this pod, restored from storage if need be; null for an unknown run or
   // one that could not be restored. A queued run's directory may not exist yet. A check's baseline is
   // fetched too if the pod does not have it; waitForBaseline waits for that, for its report.
@@ -386,6 +462,10 @@ export interface RunnerOptions {
   execute?: typeof executeScript;
   // How long a run may take before it is stopped; RUN_TIME_LIMIT_MS when not given
   timeLimitMs?: number;
+  // How often a running run's record is stored again, and how often one going on another pod is
+  // looked at; HEARTBEAT_MS and WATCH_MS when not given
+  heartbeatMs?: number;
+  watchMs?: number;
 }
 
 export interface PinnedBaseline {

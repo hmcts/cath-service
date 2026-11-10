@@ -152,6 +152,7 @@ describe("createRunner", () => {
       name: "memory",
       list: async () => [...Object.keys(stored), "runs/a.tar.gz"],
       download: async (name: string) => (name in stored ? Buffer.from(stored[name]) : null),
+      size: async () => null,
       upload: async () => {},
       uploadFile: async () => {},
       downloadToFile: async () => {}
@@ -181,6 +182,7 @@ describe("createRunner", () => {
       name: "memory",
       list: async () => ["runs/b.json"],
       download: async () => Buffer.from(JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })),
+      size: async () => null,
       upload: async (name: string, data: Buffer) => {
         uploads[name] = data.toString("utf-8");
       },
@@ -464,6 +466,7 @@ function memoryStore() {
     name: "memory",
     list: async (prefix: string) => [...blobs.keys()].filter((name) => name.startsWith(prefix)),
     download: async (name: string) => blobs.get(name) ?? null,
+    size: async (name: string) => blobs.get(name)?.length ?? null,
     upload: async (name: string, data: Buffer) => {
       blobs.set(name, data);
     },
@@ -475,3 +478,110 @@ function memoryStore() {
     }
   };
 }
+
+describe("createRunner when pods are replaced", () => {
+  function sharedStore() {
+    const blobs = new Map<string, Buffer>();
+    const uploads: { name: string; record: Record<string, unknown> }[] = [];
+    return {
+      blobs,
+      uploads,
+      store: {
+        name: "memory",
+        list: async (prefix: string) => [...blobs.keys()].filter((name) => name.startsWith(prefix)),
+        download: async (name: string) => blobs.get(name) ?? null,
+        size: async (name: string) => blobs.get(name)?.length ?? null,
+        upload: async (name: string, data: Buffer) => {
+          blobs.set(name, data);
+          if (name.endsWith(".json")) uploads.push({ name, record: JSON.parse(data.toString("utf-8")) });
+        },
+        uploadFile: async () => {},
+        downloadToFile: async () => {}
+      }
+    };
+  }
+  const baseline = async () => ({ id: "b", dir: "/data/baseline", release: () => {} });
+
+  it("should finish the run going when drained, fail the ones queued behind it, and start no other", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    let finish: () => void = () => {};
+    const execute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store: null, baseline, execute });
+    const going = runner.start({ kind: "check", scope: "routes", routes: ["/a"] });
+    const queued = runner.start({ kind: "check", scope: "routes", routes: ["/b"] });
+    await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // Act
+    const drained = runner.drain();
+    finish();
+    await drained;
+
+    // Assert
+    expect(runner.get(going.id)?.status).not.toBe("queued");
+    expect(runner.get(queued.id)).toMatchObject({ status: "failed", error: expect.stringContaining("restarted before this run began") });
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(() => runner.start({ kind: "check", scope: "all" })).toThrow("restarting");
+  });
+
+  it("should store a running run's record again as it goes, so another pod can tell it is still going", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, uploads } = sharedStore();
+    const execute = vi.fn(() => new Promise<number>((resolve) => setTimeout(() => resolve(0), 120)));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute, heartbeatMs: 20 });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    const beats = uploads.filter((upload) => upload.name === `runs/${run.id}.json` && upload.record.status === "running");
+    expect(beats.length).toBeGreaterThan(2);
+    expect(new Set(beats.map((beat) => beat.record.heartbeatAt)).size).toBeGreaterThan(1);
+  });
+
+  it("should leave a run another pod is still going with as running, and show how it ends there", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const record = { id: "r1", kind: "check", scope: "all", status: "running", createdAt: new Date().toISOString(), heartbeatAt: new Date().toISOString() };
+    blobs.set("runs/r1.json", Buffer.from(JSON.stringify(record)));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 0, watchMs: 20 });
+
+    // Act
+    await runner.restore();
+    const whileGoing = runner.get("r1")?.status;
+    blobs.set("runs/r1.json", Buffer.from(JSON.stringify({ ...record, status: "finished", finishedAt: new Date().toISOString() })));
+
+    // Assert
+    expect(whileGoing).toBe("running");
+    await vi.waitFor(() => expect(runner.get("r1")?.status).toBe("finished"));
+    runner.stopWatching();
+  });
+
+  it("should mark a watched run interrupted, and store it so, once the other pod stops storing it", async () => {
+    // Arrange
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs, uploads } = sharedStore();
+    const lastBeat = new Date(Date.now() - 170 * 1000).toISOString();
+    blobs.set(
+      "runs/r2.json",
+      Buffer.from(JSON.stringify({ id: "r2", kind: "check", scope: "all", status: "running", createdAt: lastBeat, heartbeatAt: lastBeat }))
+    );
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 0 });
+
+    // Act
+    await runner.restore();
+    const whileGoing = runner.get("r2")?.status;
+    await vi.advanceTimersByTimeAsync(30 * 1000);
+
+    // Assert
+    expect(whileGoing).toBe("running");
+    expect(runner.get("r2")).toMatchObject({ status: "failed", error: "interrupted" });
+    expect(uploads.at(-1)?.record).toMatchObject({ id: "r2", status: "failed", error: "interrupted" });
+    runner.stopWatching();
+    vi.useRealTimers();
+  });
+});

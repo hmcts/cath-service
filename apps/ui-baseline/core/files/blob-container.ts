@@ -25,6 +25,15 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
         throw error;
       }
     },
+    // The blob's size from its properties, without downloading it; null when there is no such blob
+    async size(blobName) {
+      try {
+        return (await container.getBlobClient(blobName).getProperties()).contentLength ?? null;
+      } catch (error) {
+        if (error instanceof RestError && error.statusCode === 404) return null;
+        throw error;
+      }
+    },
     async upload(blobName, data, contentType) {
       await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType } });
     },
@@ -52,6 +61,7 @@ export interface StorageSpec {
 export interface BlobContainer {
   name: string;
   download(blobName: string): Promise<Buffer | null>;
+  size(blobName: string): Promise<number | null>;
   upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
   uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
   downloadToFile(blobName: string, file: string): Promise<void>;

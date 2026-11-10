@@ -86,6 +86,18 @@ describe("normalise", () => {
     ]);
   });
 
+  it("should count days from the London date the data was seeded on, whatever zone the comparison runs in", () => {
+    // Arrange: seeded at 23:30 UTC in summer, already the next day in London (BST)
+    const seeded = { seededAt: "2026-07-10T23:30:00Z" };
+    const text = ["11 July 2026", "11/07/2026", "2026-07-10T23:30:00Z", "2026-07-11T00:30:00", "10 July 2026"].join("\n");
+
+    // Act
+    const result = normalise(text, seeded);
+
+    // Assert
+    expect(result.split("\n")).toEqual(["<RUN_DATE>", "<RUN_DATE>", "<RUN_DATE> <RUN_TIME>", "<RUN_DATE> <RUN_TIME>", "<RUN_DATE-1>"]);
+  });
+
   it("should mask a time after a written date when only a space or a comma comes between them", () => {
     // Arrange
     const text = ["Published 30 October 2026 10:12am", "Published 30 October 2026, 14:03", "30 October 2026 2 lists"].join("\n");

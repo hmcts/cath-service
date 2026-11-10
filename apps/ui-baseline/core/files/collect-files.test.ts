@@ -9,6 +9,7 @@ function memoryContainer(blobs: Record<string, string>): BlobContainer {
   return {
     name: "memory",
     download: async (name) => (name in blobs ? Buffer.from(blobs[name]) : null),
+    size: async (name) => (name in blobs ? Buffer.byteLength(blobs[name]) : null),
     upload: async () => {},
     uploadFile: async () => {},
     downloadToFile: async () => {},
@@ -74,19 +75,25 @@ describe("collectFiles", () => {
       vi.useRealTimers();
     });
 
-    it("should poll until the files stop changing when waitSeconds is given", async () => {
+    it("should poll the files' sizes until they stop changing, then download each once", async () => {
       // Arrange
       const out = await mkdtemp(path.join(tmpdir(), "collect-"));
       vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
       // The PDF appears on the second look and grows once before it settles
       const versions = [null, "pd", "pdf", "pdf", "pdf"];
       let looks = 0;
+      let current: string | null = null;
+      const downloaded: string[] = [];
       const container: BlobContainer = {
         ...memoryContainer({}),
-        download: async (name) => {
+        size: async (name) => {
           if (name !== "a1.pdf") return null;
-          const version = versions[Math.min(looks++, versions.length - 1)];
-          return version === null ? null : Buffer.from(version);
+          current = versions[Math.min(looks++, versions.length - 1)];
+          return current === null ? null : current.length;
+        },
+        download: async (name) => {
+          downloaded.push(name);
+          return current === null ? null : Buffer.from(current);
         }
       };
 
@@ -95,6 +102,7 @@ describe("collectFiles", () => {
 
       // Assert
       expect(looks).toBe(4);
+      expect(downloaded).toEqual(["a1.pdf"]);
       expect(entries).toEqual([expect.objectContaining({ kind: "pdf", bytes: 3 })]);
       expect(await readFile(path.join(out, "civil/pdf.pdf"), "utf-8")).toBe("pdf");
     });
@@ -106,11 +114,11 @@ describe("collectFiles", () => {
       // The PDF is there from the first look; the Excel is written three polls later
       let polls = 0;
       const container: BlobContainer = {
-        ...memoryContainer({}),
-        download: async (name) => {
+        ...memoryContainer({ "a1.pdf": "pdf", "a1.xlsx": "excel" }),
+        size: async (name) => {
           if (name === "a1.pdf") polls++;
-          if (name === "a1.pdf") return Buffer.from("pdf");
-          if (name === "a1.xlsx" && polls > 3) return Buffer.from("excel");
+          if (name === "a1.pdf") return 3;
+          if (name === "a1.xlsx" && polls > 3) return 5;
           return null;
         }
       };
@@ -129,7 +137,7 @@ describe("collectFiles", () => {
       // Arrange
       const out = await mkdtemp(path.join(tmpdir(), "collect-"));
       vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
-      const container: BlobContainer = { ...memoryContainer({}), download: async (name) => (name === "a1.pdf" ? Buffer.from("pdf") : null) };
+      const container = memoryContainer({ "a1.pdf": "pdf" });
 
       // Act
       const entries = await withClockRunning(
@@ -140,15 +148,20 @@ describe("collectFiles", () => {
       expect(entries.map((entry) => entry.kind)).toEqual(["pdf"]);
     });
 
-    it("should wait the whole time and record nothing when a publication never gets files", async () => {
+    it("should wait the whole time and download nothing when a publication never gets files", async () => {
       // Arrange
       const out = await mkdtemp(path.join(tmpdir(), "collect-"));
       vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
       let looks = 0;
+      let downloads = 0;
       const container: BlobContainer = {
         ...memoryContainer({}),
-        download: async () => {
+        size: async () => {
           looks++;
+          return null;
+        },
+        download: async () => {
+          downloads++;
           return null;
         }
       };
@@ -160,6 +173,7 @@ describe("collectFiles", () => {
       expect(entries).toEqual([]);
       // One look at each of the three kinds, initially and after each of three polls
       expect(looks).toBe(12);
+      expect(downloads).toBe(0);
     });
   });
 });
