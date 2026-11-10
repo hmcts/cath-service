@@ -5,6 +5,8 @@ set -euo pipefail
 # Purpose: Detect which apps have been affected by changes using Turborepo
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
+# Environment:
+#   PULL_REQUEST: "true" for a pull request's build, which leaves out MASTER_ONLY_APPS
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
 #   - helm_apps: JSON array of all apps with Helm charts
@@ -17,6 +19,11 @@ set -euo pipefail
 BASE_SHA="${1:-}"
 
 DOCKERFILE="Dockerfile"
+
+# Apps built on master only. ui-baseline is deployed to aat alone (job.helm-deploy.yml) and preview
+# never enables it, so a pull request's image would never be used; it depends on most of the
+# workspace's libs, so it would otherwise be built for nearly every pull request.
+MASTER_ONLY_APPS="ui-baseline"
 
 # Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
 dockerfile_stages() {
@@ -143,6 +150,11 @@ main() {
         echo "$app_name"
       fi
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
+  fi
+
+  if [ "${PULL_REQUEST:-false}" = "true" ]; then
+    affected_apps=$(echo "$affected_apps" | jq -c --arg skip "$MASTER_ONLY_APPS" '($skip | split(" ")) as $skip | map(select(. as $app | $skip | index($app) | not))')
+    echo "Pull request: leaving out apps built on master only ($MASTER_ONLY_APPS)"
   fi
 
   # Determine if we have any changes
