@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { BlobContainer } from "../core/index.js";
 import { loadManifest } from "../fixtures/manifest.js";
+import { runEmail, runName } from "./run.js";
 
 // Creates the account-side records in records.json in CaTH, the counterpart of pip/records.ts, so
 // pages that show them have the same data as the baseline. Each is matched on its natural key
@@ -12,10 +13,14 @@ import { loadManifest } from "../fixtures/manifest.js";
 // create-media-account form stores it.
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../fixtures");
 
-// runLocations: on a shared CaTH, the courts the check's run seeded (run.ts), fixture location id ->
-// the run's court. Subscriptions go to those, never to a real court, where they would be sent every
-// list anyone publishes there; one whose court the run did not seed is left out.
-export async function seedRecords(store: RecordStore, cathUsers: Record<string, CathUser>, runLocations?: Record<string, number>): Promise<SeedRecords> {
+// run: on a shared CaTH, the check's run (run.ts). What is seeded is named with its token, so the run
+// removes it, and subscriptions go to the run's courts (fixture location id -> the run's court),
+// never to a real court, where they would be sent every list anyone publishes there; one whose
+// court the run did not seed is left out.
+export async function seedRecords(store: RecordStore, cathUsers: Record<string, CathUser>, run?: SeedRun): Promise<SeedRecords> {
+  const runLocations = run?.locations;
+  const name = (value: string) => (run ? runName(run.token, value) : value);
+  const email = (value: string) => (run ? runEmail(run.token, value) : value);
   const records = JSON.parse(await readFile(path.join(FIXTURES_DIR, "records.json"), "utf-8")) as RecordsFile;
   const manifest = await loadManifest();
   const result: SeedRecords = {};
@@ -41,21 +46,21 @@ export async function seedRecords(store: RecordStore, cathUsers: Record<string, 
   for (const application of records.mediaApplications) {
     const image = await readFile(path.join(FIXTURES_DIR, application.image));
     const applicantId = await store.ensureMediaApplication(
-      { name: application.fullName, email: application.email.toLowerCase(), employer: application.employer },
+      { name: name(application.fullName), email: email(application.email.toLowerCase()), employer: application.employer },
       { data: image, extension: path.extname(application.image) }
     );
     result[application.id] = { applicantId };
   }
 
   // pip's legacy third-party users are named by their provenance id, which is what its pages show
-  for (const legacy of records.legacyThirdPartyUsers) result[legacy.id] = { userId: await store.ensureLegacyThirdPartyUser(legacy.provenanceUserId) };
+  for (const legacy of records.legacyThirdPartyUsers) result[legacy.id] = { userId: await store.ensureLegacyThirdPartyUser(name(legacy.provenanceUserId)) };
 
-  for (const subscriber of records.thirdPartySubscribers) result[subscriber.id] = { userId: await store.ensureThirdPartySubscriber(subscriber.name) };
+  for (const subscriber of records.thirdPartySubscribers) result[subscriber.id] = { userId: await store.ensureThirdPartySubscriber(name(subscriber.name)) };
 
   for (const entry of records.auditEntries) {
     const user = cathUsers[entry.user];
     if (!user) continue;
-    const { id, timestamp } = await store.ensureAuditEntry(user, entry.action, entry.details);
+    const { id, timestamp } = await store.ensureAuditEntry(user, entry.action, name(entry.details));
     result[entry.id] = { id, timestamp };
   }
 
@@ -95,7 +100,8 @@ export async function prismaRecordStore(): Promise<RecordStore> {
     },
     async ensureAuditEntry(user, action, details) {
       const found =
-        (await prisma.auditLog.findFirst({ where: { action, details } })) ??
+        // The user's own entry, never someone else's with the same action and details
+        (await prisma.auditLog.findFirst({ where: { action, details, userId: user.userId } })) ??
         (await prisma.auditLog.create({
           data: { action, details, userId: user.userId, userEmail: user.email, userRole: user.role, userProvenance: user.provenance }
         }));
@@ -200,7 +206,10 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
       return (found ?? (await api<{ id: string }>("POST", "/third-party-users", { name }))).id;
     },
     async ensureAuditEntry(user, action, details) {
-      const [found] = await api<{ id: string; timestamp: string }[]>("GET", `/audit-logs${query({ action, details })}`);
+      // The user's own entry, never someone else's with the same action and details
+      const found = (await api<{ id: string; timestamp: string; userId: string }[]>("GET", `/audit-logs${query({ action, details })}`)).find(
+        (candidate) => candidate.userId === user.userId
+      );
       const entry = found ?? (await api<{ id: string; timestamp: string }>("POST", "/audit-logs", { userId: user.userId, action, details }));
       return { id: entry.id, timestamp: new Date(entry.timestamp).toISOString() };
     },
@@ -304,6 +313,11 @@ export interface ThrowawayPublication {
   contentDate: string;
   displayFrom: string;
   displayTo: string;
+}
+
+export interface SeedRun {
+  token: string;
+  locations: Record<string, number>;
 }
 
 interface RecordsFile {

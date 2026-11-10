@@ -113,12 +113,12 @@ describe("cath sign-in script", () => {
     expect(mocks.signInWithAccounts).toHaveBeenCalledWith(environment, USERS);
     expect(mocks.filesStorage).toHaveBeenCalledWith("cath", environment.cath, "files");
     expect(mocks.testSupportRecordStore).toHaveBeenCalledWith("https://api", expect.objectContaining({ upload: expect.any(Function) }));
-    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers, { "9": 90001 });
+    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers, { token: "uicsm9x2kababcd", locations: { "9": 90001 } });
     expect(mocks.disconnect).not.toHaveBeenCalled();
     expect(JSON.parse(await readFile(output, "utf-8")).environment).toBe("test");
   });
 
-  it("should give a deployed CaTH's records no courts when nothing was seeded, so none are subscribed to a real court", async () => {
+  it("should create no records in a deployed CaTH when nothing was seeded, as no run would remove them", async () => {
     // Arrange
     process.argv = ["node", "sign-in.ts", "--env", "test"];
     mocks.loadEnvironment.mockResolvedValue({ name: "test", cath: { signIn: "accounts", apiUrl: "https://api" } });
@@ -132,6 +132,7 @@ describe("cath sign-in script", () => {
     await import("./sign-in.js");
 
     // Assert
-    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers, {});
+    expect(mocks.seedRecords).not.toHaveBeenCalled();
+    expect(JSON.parse(await readFile(output, "utf-8")).records).toEqual({});
   });
 });

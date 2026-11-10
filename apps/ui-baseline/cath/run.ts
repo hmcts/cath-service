@@ -1,4 +1,7 @@
 import { randomBytes } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { locationData } from "@hmcts/location/location-data";
 
 // A check of a deployed CaTH (aat) seeds courts of its own rather than publishing to the real ones:
@@ -14,9 +17,20 @@ const TOKEN_IN_NAME = /^(uic[0-9a-z]{8,}) /;
 // Longer than any check takes, so a run still going (a developer's, beside the hosted one) is left alone
 const STALE_AFTER_MS = 3 * 60 * 60 * 1000;
 const SUBSCRIPTION_BY_LOCATION = "LOCATION_ID";
+const RECORDS_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../fixtures/records.json");
 
 export function newRunToken(now = Date.now()): string {
   return `${TOKEN_PREFIX}${Math.floor(now / 1000).toString(36)}${randomBytes(2).toString("hex")}`;
+}
+
+// A record the run seeds is named with its token, as its courts are, so a later run can find it and
+// the comparison drops the token: "uicsm9x2kab Parity Applicant", "uicsm9x2kab.applicant@example.com"
+export function runName(token: string, name: string): string {
+  return `${token} ${name}`;
+}
+
+export function runEmail(token: string, email: string): string {
+  return `${token}.${email}`;
 }
 
 // When the run with this token started, from the seconds it carries
@@ -43,7 +57,8 @@ export async function createRunLocations(api: CathApi, token: string, fixtureLoc
 }
 
 // Removes what runs seeded on their courts, then the courts: the run with this token, or every run
-// started more than STALE_AFTER_MS ago
+// started more than STALE_AFTER_MS ago. A run that cannot be removed does not stop the others; it is
+// named in the error thrown once they have all been tried.
 export async function removeRuns(api: CathApi, which: { token: string } | { staleAt: number }): Promise<number> {
   const locations = (await api("GET", "/test-support/locations")) as { locationId: number; name: string }[];
   const byRun = new Map<string, number[]>();
@@ -53,13 +68,41 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
     const removable = "token" in which ? token === which.token : runStartedAt(token) < which.staleAt - STALE_AFTER_MS;
     if (removable) byRun.set(token, [...(byRun.get(token) ?? []), location.locationId]);
   }
+  const failed: string[] = [];
   for (const [token, locationIds] of byRun) {
-    for (const locationId of locationIds) await api("DELETE", "/test-support/artefacts", { locationId: String(locationId) });
-    await api("DELETE", "/test-support/subscriptions", { searchType: SUBSCRIPTION_BY_LOCATION, searchValues: locationIds.map(String) });
-    await api("DELETE", "/test-support/locations", { locationIds });
-    console.log(`removed run ${token}: ${locationIds.length} courts and what was published to them`);
+    try {
+      await removeRunRecords(api, token);
+      // The courts go last: while any are left, a later run can find the run and finish removing it
+      for (const locationId of locationIds) await api("DELETE", "/test-support/artefacts", { locationId: String(locationId) });
+      await api("DELETE", "/test-support/subscriptions", { searchType: SUBSCRIPTION_BY_LOCATION, searchValues: locationIds.map(String) });
+      await api("DELETE", "/test-support/locations", { locationIds });
+      console.log(`removed run ${token}: ${locationIds.length} courts and what was published to them`);
+    } catch (error) {
+      failed.push(`${token} (${(error as Error).message.split("\n")[0]})`);
+    }
   }
+  if (failed.length) throw new Error(`could not remove run${failed.length === 1 ? "" : "s"} ${failed.join(", ")}`);
   return byRun.size;
+}
+
+// The account-side records the run seeded (records.ts), found by its token. Audit entries stay, as
+// test-support cannot delete them (an audit trail keeps entries), with the token in their details.
+async function removeRunRecords(api: CathApi, token: string): Promise<void> {
+  const records = JSON.parse(await readFile(RECORDS_FILE, "utf-8")) as { mediaApplications: { email: string }[] };
+  for (const { email } of records.mediaApplications) {
+    const application = (await api("GET", `/test-support/media-applications?${new URLSearchParams({ email: runEmail(token, email.toLowerCase()) })}`).catch(
+      (error: Error) => {
+        if (error.message.includes("failed: 404")) return null;
+        throw error;
+      }
+    )) as { id: string } | null;
+    if (application) await api("DELETE", `/test-support/media-applications/${encodeURIComponent(application.id)}`);
+  }
+  const ownedByRun = (users: { id: string; name: string }[]) => users.filter((user) => user.name.startsWith(runName(token, ""))).map((user) => user.id);
+  const legacy = ownedByRun((await api("GET", "/test-support/legacy-third-party-users")) as { id: string; name: string }[]);
+  if (legacy.length) await api("DELETE", "/test-support/legacy-third-party-users", { ids: legacy });
+  const subscribers = ownedByRun((await api("GET", "/test-support/third-party-users")) as { id: string; name: string }[]);
+  if (subscribers.length) await api("DELETE", "/test-support/third-party-users", { ids: subscribers });
 }
 
 // A call to CaTH's API (test-support), giving back its JSON

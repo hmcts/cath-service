@@ -42,6 +42,8 @@ const { extractAndStoreArtefactSearch } = await import("@hmcts/publication");
 const ADMIN: CathUser = { userId: "admin-id", email: "admin@example.com", role: "SYSTEM_ADMIN", provenance: "SSO" };
 const MEDIA: CathUser = { userId: "media-id", email: "media@example.com", role: "VERIFIED", provenance: "PI_AAD" };
 
+const RUN = "uicsm9x2kababcd";
+
 describe("seedRecords", () => {
   function fakeStore(): RecordStore {
     return {
@@ -86,13 +88,30 @@ describe("seedRecords", () => {
     });
   });
 
+  it("should name what a run seeds with its token, so the run can find and remove it", async () => {
+    // Arrange
+    const store = fakeStore();
+
+    // Act
+    await seedRecords(store, { "verified-media": MEDIA, "system-admin": ADMIN }, { token: RUN, locations: {} });
+
+    // Assert
+    expect(store.ensureMediaApplication).toHaveBeenCalledWith(
+      { name: `${RUN} Parity Applicant`, email: `${RUN}.parity.applicant@example.com`, employer: "Parity News" },
+      expect.anything()
+    );
+    expect(store.ensureLegacyThirdPartyUser).toHaveBeenCalledWith(`${RUN} parity-legacy-third-party`);
+    expect(store.ensureThirdPartySubscriber).toHaveBeenCalledWith(`${RUN} Parity Third Party Subscriber`);
+    expect(store.ensureAuditEntry).toHaveBeenCalledWith(ADMIN, "MANAGE_USER", `${RUN} Parity audit entry`);
+  });
+
   it("should subscribe to the run's copy of the court when the run seeded courts of its own", async () => {
     // Arrange
     const store = fakeStore();
     const court = (await loadManifest()).publications.find((p) => p.id === "civil-and-family-daily-cause-list")?.locationId;
 
     // Act
-    const result = await seedRecords(store, { "verified-media": MEDIA }, { [String(court)]: 90001 });
+    const result = await seedRecords(store, { "verified-media": MEDIA }, { token: RUN, locations: { [String(court)]: 90001 } });
 
     // Assert
     expect(store.ensureSubscription).toHaveBeenCalledWith("media-id", "LOCATION_ID", "90001");
@@ -104,7 +123,7 @@ describe("seedRecords", () => {
     const store = fakeStore();
 
     // Act
-    const result = await seedRecords(store, { "verified-media": MEDIA }, {});
+    const result = await seedRecords(store, { "verified-media": MEDIA }, { token: RUN, locations: {} });
 
     // Assert
     expect(store.ensureSubscription).not.toHaveBeenCalled();
@@ -212,7 +231,7 @@ describe("prismaRecordStore", () => {
 
     // Assert
     expect(entry).toEqual({ id: "a1", timestamp: "2026-01-02T03:04:05.000Z" });
-    expect(prisma.auditLog.findFirst).toHaveBeenCalledWith({ where: { action: "MANAGE_USER", details: "details" } });
+    expect(prisma.auditLog.findFirst).toHaveBeenCalledWith({ where: { action: "MANAGE_USER", details: "details", userId: "admin-id" } });
     expect(prisma.auditLog.create).toHaveBeenCalledWith({
       data: { action: "MANAGE_USER", details: "details", userId: "admin-id", userEmail: "admin@example.com", userRole: "SYSTEM_ADMIN", userProvenance: "SSO" }
     });
@@ -523,8 +542,9 @@ describe("testSupportRecordStore", () => {
   it("should return an existing audit entry or create one as the user, with an ISO timestamp", async () => {
     // Arrange
     fetchMock
-      .mockResolvedValueOnce(json([{ id: "a1", timestamp: "2026-01-02T03:04:05Z" }]))
-      .mockResolvedValueOnce(json([]))
+      .mockResolvedValueOnce(json([{ id: "a1", timestamp: "2026-01-02T03:04:05Z", userId: "admin-id" }]))
+      // Someone else's entry with the same action and details is not the user's
+      .mockResolvedValueOnce(json([{ id: "theirs", timestamp: "2026-01-01T00:00:00Z", userId: "someone-else" }]))
       .mockResolvedValueOnce(json({ id: "a2", timestamp: "2026-01-03T00:00:00Z" }));
 
     // Act
