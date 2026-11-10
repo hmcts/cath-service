@@ -6,7 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { ARTEFACT_ID, LIST_TYPE, ROUTE } from "../cli-input.js";
 import type { BlobContainer } from "../core/index.js";
-import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK } from "../exit-codes.js";
+import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK, EXIT_TIMED_OUT } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
 
 // Runs parity checks and file comparisons one at a time, each as a child process of the tool's own
@@ -16,6 +16,11 @@ import { systemCommand } from "../system-command.js";
 const RUNS_PREFIX = "runs/";
 // The error a run that was queued or running when its pod stopped is restored with
 const INTERRUPTED = "interrupted";
+// How long a run may take before it is stopped, so one that hangs (Chromium, a sign-in, a blob poll)
+// cannot hold up the queue until the pod restarts. A check of all of CaTH takes well under an hour.
+const RUN_TIME_LIMIT_MS = 2 * 60 * 60 * 1000;
+// How long a stopped run has to remove what it seeded in CaTH (check.ts) before it is killed
+const STOP_GRACE_MS = 2 * 60 * 1000;
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
@@ -61,7 +66,12 @@ export function createRunner(options: RunnerOptions): Runner {
       if (baseline) await save({ ...(runs.get(record.id) as RunRecord), baselineId: baseline.id });
       await publish(runs.get(record.id) as RunRecord);
       const { script, args } = commandFor(record, dir, options.environment, baseline?.dir ?? null);
-      const code = await execute(script, args, { cwd: options.repoDir, log: path.join(dir, "log.txt"), env: { UI_BASELINE_COMMIT: options.commit } });
+      const code = await execute(script, args, {
+        cwd: options.repoDir,
+        log: path.join(dir, "log.txt"),
+        env: { UI_BASELINE_COMMIT: options.commit },
+        timeLimitMs: options.timeLimitMs ?? RUN_TIME_LIMIT_MS
+      });
       // A report written before a crash is not a finished run
       const summary = COMPLETED.has(code) ? await summarise(record, dir) : null;
       await save({
@@ -195,7 +205,14 @@ export function createRunner(options: RunnerOptions): Runner {
         const record = JSON.parse(data.toString("utf-8")) as RunRecord;
         // A run started on this pod while the others were loading is newer than anything stored
         if (runs.has(record.id)) return;
-        runs.set(record.id, record.status === "queued" || record.status === "running" ? { ...record, status: "failed", error: INTERRUPTED } : record);
+        if (record.status !== "queued" && record.status !== "running") {
+          runs.set(record.id, record);
+          return;
+        }
+        // Stored as well, or every pod after this one would find it still running
+        const interrupted: RunRecord = { ...record, status: "failed", error: INTERRUPTED };
+        runs.set(record.id, interrupted);
+        await publish(interrupted);
       };
       const next = [...names];
       const worker = async () => {
@@ -234,6 +251,7 @@ function commandFor(record: RunRecord, dir: string, environment: string, baselin
 
 // Why a run that did not complete ended, for its page
 function stoppedBecause(code: number): string {
+  if (code === EXIT_TIMED_OUT) return "The run was stopped because it took longer than its time limit. The log shows the step it was on.";
   if (code === EXIT_NOTHING_TO_CHECK)
     return "There was nothing to check: none of the list types or pages asked for are in the baseline. The log says what was left out, and why.";
   return `the tool stopped with exit code ${code}`;
@@ -268,16 +286,50 @@ function validated(request: RunRequest): RunRequest {
   return request;
 }
 
-function executeScript(script: string, args: string[], options: { cwd: string; log: string; env: Record<string, string | undefined> }): Promise<number> {
+// Runs the script, stopping it at its time limit: SIGTERM first, which a check answers by removing
+// what it seeded, then SIGKILL if it has not ended within STOP_GRACE_MS. A stopped run ends with
+// EXIT_TIMED_OUT. The script runs in a process group of its own and the signals go to the whole
+// group, so the Chromium it started is stopped with it; left running, it would hold the script's
+// output open, and the run would never be seen to end.
+function executeScript(
+  script: string,
+  args: string[],
+  options: { cwd: string; log: string; env: Record<string, string | undefined>; timeLimitMs: number }
+): Promise<number> {
   return new Promise((resolve, reject) => {
     const log = createWriteStream(options.log);
-    const child = spawn(path.join(options.cwd, "node_modules/.bin/tsx"), [script, ...args], { cwd: options.cwd, env: { ...process.env, ...options.env } });
+    const child = spawn(path.join(options.cwd, "node_modules/.bin/tsx"), [script, ...args], {
+      cwd: options.cwd,
+      env: { ...process.env, ...options.env },
+      detached: true
+    });
+    const signal = (name: NodeJS.Signals) => {
+      try {
+        if (child.pid) process.kill(-child.pid, name);
+      } catch {
+        // The group has already gone
+      }
+    };
     child.stdout.pipe(log);
     child.stderr.pipe(log);
-    child.on("error", reject);
+    let timedOut = false;
+    let killing: NodeJS.Timeout | undefined;
+    const limit = setTimeout(() => {
+      timedOut = true;
+      log.write(`\n[ui-baseline] stopped after ${Math.round(options.timeLimitMs / 60000)} minutes, its time limit\n`);
+      signal("SIGTERM");
+      killing = setTimeout(() => signal("SIGKILL"), STOP_GRACE_MS);
+    }, options.timeLimitMs);
+    child.on("error", (error) => {
+      clearTimeout(limit);
+      clearTimeout(killing);
+      reject(error);
+    });
     child.on("close", (code) => {
+      clearTimeout(limit);
+      clearTimeout(killing);
       log.end();
-      resolve(code ?? 1);
+      resolve(timedOut ? EXIT_TIMED_OUT : (code ?? 1));
     });
   });
 }
@@ -332,6 +384,8 @@ export interface RunnerOptions {
   // A baseline on this pod's disk, fetched if need be: the latest, or the one with the given id
   baseline: (id?: string) => Promise<PinnedBaseline>;
   execute?: typeof executeScript;
+  // How long a run may take before it is stopped; RUN_TIME_LIMIT_MS when not given
+  timeLimitMs?: number;
 }
 
 export interface PinnedBaseline {

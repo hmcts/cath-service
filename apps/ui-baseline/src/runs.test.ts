@@ -9,10 +9,12 @@ const CATH_ARTEFACT = "2a7b1d4e-0000-4000-8000-000000000002";
 
 async function runnerWith(write: (args: string[]) => Promise<void> = async () => {}) {
   const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
-  const execute = vi.fn(async (_script: string, args: string[], _options: { cwd: string; log: string; env: Record<string, string | undefined> }) => {
-    await write(args);
-    return 0;
-  });
+  const execute = vi.fn(
+    async (_script: string, args: string[], _options: { cwd: string; log: string; env: Record<string, string | undefined>; timeLimitMs: number }) => {
+      await write(args);
+      return 0;
+    }
+  );
   const baseline = vi.fn(async (_id?: string) => ({ id: "2026-11-03", dir: "/data/baseline", release: vi.fn() }));
   const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "abc1234", store: null, baseline, execute });
   return { runner, execute, baseline, dataDir };
@@ -169,6 +171,78 @@ describe("createRunner", () => {
 
     // Assert
     expect(runner.list().map((run) => `${run.id} ${run.status} ${run.error ?? ""}`.trim())).toEqual(["b failed interrupted", "a finished"]);
+  });
+
+  it("should store a run it marks interrupted, so the next pod does not find it still running", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const uploads: Record<string, string> = {};
+    const store = {
+      name: "memory",
+      list: async () => ["runs/b.json"],
+      download: async () => Buffer.from(JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })),
+      upload: async (name: string, data: Buffer) => {
+        uploads[name] = data.toString("utf-8");
+      },
+      uploadFile: async () => {},
+      downloadToFile: async () => {}
+    };
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline: async () => ({ id: "", dir: "", release: () => {} })
+    });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(JSON.parse(uploads["runs/b.json"])).toMatchObject({ id: "b", status: "failed", error: "interrupted" });
+  });
+
+  it("should give each run its time limit, and say a run that went past it was stopped", async () => {
+    // Arrange
+    const { runner, execute } = await runnerWith();
+    execute.mockResolvedValueOnce(124);
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    expect(execute.mock.calls[0][2].timeLimitMs).toBe(2 * 60 * 60 * 1000);
+    expect(runner.get(run.id)).toMatchObject({ status: "failed", error: expect.stringContaining("took longer than its time limit") });
+  });
+
+  it("should stop a run that hangs at its time limit, asking it to end before killing it", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const repoDir = await mkdtemp(path.join(tmpdir(), "runs-repo-"));
+    await mkdir(path.join(repoDir, "node_modules/.bin"), { recursive: true });
+    // A stand-in for tsx that hangs until asked to stop, then says so and ends
+    await writeFile(path.join(repoDir, "node_modules/.bin/tsx"), "#!/bin/sh\ntrap 'echo asked to stop; exit 0' TERM\nsleep 30 &\nwait\n", { mode: 0o755 });
+    const runner = createRunner({
+      dataDir,
+      repoDir,
+      environment: "test",
+      commit: "x",
+      store: null,
+      baseline: async () => ({ id: "b", dir: "/data/baseline", release: () => {} }),
+      timeLimitMs: 300
+    });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    expect(runner.get(run.id)).toMatchObject({ status: "failed", error: expect.stringContaining("took longer than its time limit") });
+    const log = await readFile(path.join(dataDir, "runs", run.id, "log.txt"), "utf-8");
+    expect(log).toContain("asked to stop");
+    expect(log).toContain("its time limit");
   });
 
   it("should not try to fetch a run that was cut short, which was never archived", async () => {

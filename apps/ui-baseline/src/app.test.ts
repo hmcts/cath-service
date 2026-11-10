@@ -225,6 +225,24 @@ describe("createApp", () => {
       expect(runner.list()).toEqual([]);
     });
 
+    it("should refuse, not fail on, a token as long as the real one in characters but not in bytes", async () => {
+      // Arrange
+      const { app, runner } = await appWith();
+      const startPage = await request(app).get("/");
+      const cookie = (startPage.headers["set-cookie"] as unknown as string[])[0].split(";")[0];
+
+      // Act
+      const response = await request(app)
+        .post("/runs")
+        .set("Cookie", cookie)
+        .type("form")
+        .send({ kind: "check", scope: "all", formToken: `${"a".repeat(63)}é` });
+
+      // Assert
+      expect(response.status).toBe(403);
+      expect(runner.list()).toEqual([]);
+    });
+
     it("should refuse a form the browser says came from another site, even with a token", async () => {
       // Arrange
       const { app, runner } = await appWith();

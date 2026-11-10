@@ -50,7 +50,9 @@ function fromAnotherSite(req: Request): boolean {
 function tokenMatches(req: Request): boolean {
   const expected = cookie(req, COOKIE);
   const given = (req.body as Record<string, unknown> | undefined)?.[TOKEN_FIELD];
-  if (!expected || !TOKEN.test(expected) || typeof given !== "string" || given.length !== expected.length) return false;
+  // Both are checked as tokens first, so the two buffers compared are always the same 64 bytes: a
+  // given value of the right length in characters but not in bytes would make timingSafeEqual throw
+  if (!expected || !TOKEN.test(expected) || typeof given !== "string" || !TOKEN.test(given)) return false;
   return timingSafeEqual(Buffer.from(given), Buffer.from(expected));
 }
 

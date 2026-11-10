@@ -9,3 +9,5 @@
 export const EXIT_DIFFERENCES = 3;
 // check found nothing in the baseline to compare for the list types, pages and journeys asked for
 export const EXIT_NOTHING_TO_CHECK = 2;
+// The hosted check stopped a run that went past its time limit (src/runs.ts), as `timeout` exits
+export const EXIT_TIMED_OUT = 124;
