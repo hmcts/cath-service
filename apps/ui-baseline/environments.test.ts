@@ -1,3 +1,4 @@
+import { DefaultAzureCredential } from "@azure/identity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type AppConfig, filesStorage, loadEnvironment } from "./environments.js";
 
@@ -161,6 +162,20 @@ describe("environments", () => {
       expect(secretClient).toHaveBeenCalledTimes(1);
       expect(secretClient).toHaveBeenCalledWith("https://cath-aat.vault.azure.net");
       expect(getSecret).toHaveBeenCalledWith("other-secret");
+    });
+
+    it("should read vaults as the pod's managed identity when MANAGED_IDENTITY_CLIENT_ID is set", async () => {
+      // Arrange
+      vi.stubEnv("MANAGED_IDENTITY_CLIENT_ID", "client-id-123");
+      getSecret.mockResolvedValue({ value: "from-vault" });
+
+      // Act
+      const environment = await loadEnvironment("aat");
+      await environment.secret(environment.cath, "some-secret");
+
+      // Assert
+      expect(DefaultAzureCredential).toHaveBeenCalledWith({ managedIdentityClientId: "client-id-123" });
+      vi.unstubAllEnvs();
     });
 
     it("should give null when the vault's secret has no value", async () => {

@@ -68,6 +68,18 @@ describe("openBlobContainer", () => {
     expect(container.name).toBe("pipsa/publications");
   });
 
+  it("should use the pod's managed identity when MANAGED_IDENTITY_CLIENT_ID is set", () => {
+    // Arrange
+    vi.stubEnv("MANAGED_IDENTITY_CLIENT_ID", "client-id-123");
+
+    // Act
+    openBlobContainer({ accountName: "pipsa", container: "publications" });
+
+    // Assert
+    expect(DefaultAzureCredential).toHaveBeenCalledWith({ managedIdentityClientId: "client-id-123" });
+    vi.unstubAllEnvs();
+  });
+
   describe("download", () => {
     it("should return the blob's contents when it exists", async () => {
       // Arrange
