@@ -86,6 +86,8 @@ jobs:
 
       - name: Detect affected apps
         id: detect
+        env:
+          PULL_REQUEST: ${{ github.event_name == 'pull_request' }}
         run: .github/workflows/jobs/build-and-publish-images/detect-affected-apps.sh "${{ needs.get-last-successful-sha.outputs.sha }}"
 
   generate-metadata:
