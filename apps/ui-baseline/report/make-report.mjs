@@ -210,7 +210,9 @@ const CATEGORY = {
   frame: ["Header, banners and footer", "light-blue"]
 };
 const categoryTag = (category) => tag(CATEGORY[category]?.[0] ?? category, CATEGORY[category]?.[1] ?? "grey");
-const differenceCount = (result) => result.findings.filter((f) => f.category !== "axe-inherited").length;
+// As compare.ts: findings that do not by themselves make a page differ from pip
+const NOT_DECIDING = new Set(["axe-inherited", "frame"]);
+const differenceCount = (result) => result.findings.filter((f) => !NOT_DECIDING.has(f.category)).length;
 
 function findingsBlock(result) {
   if (!result) return "";
@@ -234,10 +236,10 @@ function accessibilityBlock(findings) {
 }
 
 function differencesBlock(result) {
-  const differences = result.findings.filter((f) => f.category !== "axe-inherited");
+  const differences = result.findings.filter((f) => !NOT_DECIDING.has(f.category));
   const inherited = result.findings.filter((f) => f.category === "axe-inherited");
   if (!differences.length)
-    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Matches pip after normalisation${inherited.length ? ` · ${inherited.length} accessibility issue(s) inherited from pip` : ""}</p></div>`;
+    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Matches pip after normalisation${inherited.length ? ` · ${inherited.length} accessibility issue(s) inherited from pip` : ""}</p></div>${frameBlock(result)}`;
   const groups = Object.entries(Object.groupBy(differences, (f) => f.category));
   const rows = groups
     .map(
@@ -247,7 +249,15 @@ function differencesBlock(result) {
     .join("");
   return `<h3 class="govuk-heading-s">${differences.length} finding${differences.length === 1 ? "" : "s"} after normalisation</h3>
     <table class="govuk-table parity-findings-table"><tbody class="govuk-table__body">${rows}</tbody></table>
-    ${inherited.length ? `<p class="govuk-body-s">${categoryTag("axe-inherited")} ${inherited.map((f) => esc(f.detail.split(":")[0])).join(", ")}</p>` : ""}`;
+    ${inherited.length ? `<p class="govuk-body-s">${categoryTag("axe-inherited")} ${inherited.map((f) => esc(f.detail.split(":")[0])).join(", ")}</p>` : ""}
+    ${frameBlock(result)}`;
+}
+
+// The header, banners and footer: the same on every page, so listed but not counted as the page differing
+function frameBlock(result) {
+  const frame = result.findings.filter((f) => f.category === "frame");
+  if (!frame.length) return "";
+  return `<p class="govuk-body-s">${categoryTag("frame")} ${frame.map((f) => `<span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}`).join("; ")}</p>`;
 }
 
 // A page also captured on mobile, and as other roles (ids "<page>@<user>"): one row each, with its

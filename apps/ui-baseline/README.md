@@ -5,8 +5,9 @@ compares a CaTH screen against it. Use it when building a screen: run the check 
 fix what it finds, and attach the evidence to your PR.
 
 Screens are compared by their **accessibility tree** (headings, tables, form controls, buttons,
-links and text, as a screen reader would meet them), in the main region and in the header, banners
-and footer around it, plus page details and axe accessibility results. Each CaTH screen is also
+links and text, as a screen reader would meet them) in the main region, plus page details and axe
+accessibility results. The header, banners and footer around it are compared too, and their
+differences listed, but as every page shares them they do not on their own make a page differ. Each CaTH screen is also
 [checked for accessibility on its own](#checking-accessibility), so issues CaTH copied from pip are
 not missed. Screenshots are evidence for people, not something the comparison diffs.
 
@@ -294,7 +295,9 @@ A comparison with pip cannot see an issue both apps have, and an audit of CaTH f
 issues were exactly that. So every CaTH capture is also checked on its own
 (`core/compare/accessibility.ts`), and the result is listed beside the comparison: on each page in
 the report, on the report's Accessibility page, and in the PR comment. These findings are not
-differences from pip and do not change a page's verdict.
+differences from pip and do not change a page's verdict. Captures only CaTH has (a page or journey
+step pip has no counterpart for) are checked as well, as `targetOnly` in `compare.json`. A check
+that repeats on every row of a list is reported five times a page, with a count of the rest.
 
 | Check | What it finds | WCAG |
 |---|---|---|
@@ -307,12 +310,12 @@ differences from pip and do not change a page's verdict.
 | `error-without-summary` | An error message with no error summary | 3.3.1 |
 | `ungrouped-choices` | Radios, or checkboxes outside a table, with no fieldset and legend | 1.3.1 |
 | `legend-repeats-heading` | A legend repeating a heading outside its fieldset, rather than wrapping it | 1.3.1 (advisory) |
-| `no-h1`, `bold-as-heading` | A page with no h1; bold text starting a section where a heading may belong | 1.3.1 |
+| `no-h1`, `bold-as-heading` | A page with no h1; a bold line on its own (bold followed by a line break, or a whole bold paragraph) where a heading may belong. Bold labels followed by their value, such as "Judge:", are not reported | 1.3.1 |
 | `empty-table-header`, `table-without-caption` | An empty column header; tables with no caption | 1.3.1 |
 | `multiple-labels`, `duplicate-id` | A field with several labels; form controls sharing an id | 1.3.1, 4.1.2 |
 | `sort-control-is-link` | A sortable column sorted by a link rather than a button | 4.1.2 |
 | `new-tab-unannounced` | A link opening a new tab without saying so | 3.2.5 (advisory) |
-| `reflow` | A page that scrolls sideways at 320px wide (a table scrolling in its own container is fine) | 1.4.10 |
+| `reflow` | A page that scrolls sideways at 320px wide (a table scrolling in its own container is fine). Measured on each page's mobile capture only, so desktop captures and journeys are never resized | 1.4.10 |
 
 The checks read what a capture records: both accessibility trees, the page's HTML (`page.html`;
 captures from before it fall back to the main region's), axe's results and `meta.json`'s

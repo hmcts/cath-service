@@ -223,18 +223,22 @@ ${CLEAN_ARIA.replace(/^/gm, "  ")}`;
     expect(findings).toEqual(["empty-table-header: table 1 has 1 empty column header", "table-without-caption: 1 of 2 tables have no caption"]);
   });
 
-  it("should report bold text that starts a paragraph as a possible heading", async () => {
+  it("should report a bold line on its own as a possible heading, but not a bold label followed by its value", async () => {
     // Arrange
-    const aria = `${CLEAN_ARIA}
-- paragraph:
-  - strong: Public
-  - text: Publication available to all users.`;
+    const html = `<p class="govuk-body"><strong>Public</strong><br>Publication available to all users.</p>
+<p><strong>Business &amp; Property</strong></p>
+<p><strong>Judge:</strong><br>Jane Smith</p>
+<p><strong>Courtroom</strong> 1</p>
+<p class="govuk-phase-banner__content"><strong class="govuk-tag">beta</strong><span>This is a new service</span></p>`;
 
     // Act
-    const findings = await check({ aria });
+    const findings = await check({ html });
 
     // Assert
-    expect(findings).toEqual(['bold-as-heading: "Public" is bold text starting a section, so may need to be a heading']);
+    expect(findings).toEqual([
+      'bold-as-heading: "Public" is a bold line on its own, so may need to be a heading',
+      'bold-as-heading: "Business & Property" is a bold line on its own, so may need to be a heading'
+    ]);
   });
 
   it("should report a field with several labels, form controls sharing an id, and new tabs opened without warning", async () => {
@@ -296,6 +300,83 @@ ${CLEAN_ARIA.replace(/^/gm, "  ")}`;
     // Assert
     expect(wideFindings).toEqual(["reflow: at 320px wide the page is 760px wide, so it scrolls sideways"]);
     expect(fitsFindings).toEqual([]);
+  });
+
+  it("should not report #top, which browsers scroll to without a target, nor fail on a malformed fragment", async () => {
+    // Arrange
+    const pageHtml = '<a href="#top">Back to top</a><a href="#TOP">Top</a><a href="#100%">Broken</a>';
+
+    // Act
+    const findings = await check({ pageHtml });
+
+    // Assert
+    expect(findings).toEqual(['in-page-link-target: "Broken" links to #100%, which is not on the page']);
+  });
+
+  it("should decode entities in text read from HTML", async () => {
+    // Arrange
+    const html = '<a href="/list" target="_blank">Business &amp; Property &#8211; English&nbsp;(Saesneg)</a>';
+
+    // Act
+    const findings = await check({ html });
+
+    // Assert
+    expect(findings).toEqual(['new-tab-unannounced: "Business & Property – English (Saesneg)" opens in a new tab without saying so']);
+  });
+
+  it("should list at most five findings of one check on a page, and say how many more there were", async () => {
+    // Arrange
+    const html = Array.from({ length: 8 }, (_, i) => `<a href="/case/${i}" target="_blank">Case ${i}</a>`).join("");
+
+    // Act
+    const findings = await check({ html });
+
+    // Assert
+    expect(findings).toEqual([
+      ...[0, 1, 2, 3, 4].map((i) => `new-tab-unannounced: "Case ${i}" opens in a new tab without saying so`),
+      "new-tab-unannounced: and 3 more on this page"
+    ]);
+  });
+
+  it("should count radios in a fieldset with no legend as not grouped", async () => {
+    // Arrange
+    const aria = `${CLEAN_ARIA}
+- group:
+  - radio "Yes"
+  - radio "No"`;
+
+    // Act
+    const findings = await check({ aria });
+
+    // Assert
+    expect(findings).toEqual(['ungrouped-choices: 2 radios ("Yes", "No") are not in a fieldset with a legend']);
+  });
+
+  it("should find an error summary whatever its class order, and accept links to buttons and focusable elements", async () => {
+    // Arrange
+    const html = `<div class="app-errors govuk-error-summary" data-module="govuk-error-summary"><ul>
+<li><a href="#upload">Choose a file</a></li><li><a href="#types">Select a list type</a></li><li><a href="#table">Select a row</a></li></ul></div>
+<button id="upload">Choose</button><div id="types" tabindex="-1"></div><table id="table"></table>`;
+
+    // Act
+    const findings = await check({ html });
+
+    // Assert
+    expect(findings).toEqual(['error-summary-target: "Select a row" links to #table, a <table>, so focus does not move to the field']);
+  });
+
+  it("should skip axe and reflow checks when their files cannot be read, keeping the other checks", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "accessibility-"));
+    await writeFile(path.join(dir, "aria.yml"), '- heading "Title" [level=2]');
+    await writeFile(path.join(dir, "axe.json"), "{ not json");
+    await writeFile(path.join(dir, "meta.json"), "");
+
+    // Act
+    const findings = (await checkAccessibility(dir)).map((f) => f.change);
+
+    // Assert
+    expect(findings).toEqual(["no-h1"]);
   });
 
   it("should count a finding repeated on the page once", async () => {
