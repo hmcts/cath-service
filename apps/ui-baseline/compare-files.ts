@@ -1,5 +1,6 @@
 import { parseArgs } from "node:util";
 import { compareArtefactFiles } from "./artefact-files.js";
+import { ARTEFACT_ID, matching } from "./cli-input.js";
 import { EXIT_DIFFERENCES } from "./exit-codes.js";
 
 // Compares the PDF and Excel files pip and CaTH made for a publication uploaded to both, by its
@@ -16,6 +17,8 @@ const { values: args } = parseArgs({
   }
 });
 if (!args.pip || !args.cath) throw new Error("--pip and --cath (the publication's artefact id in each app) are required");
+matching(args.pip, ARTEFACT_ID, "--pip");
+matching(args.cath, ARTEFACT_ID, "--cath");
 
 const { out, summary, pipHasFiles, cathHasFiles, links } = await compareArtefactFiles({
   env: args.env,

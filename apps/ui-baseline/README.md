@@ -16,6 +16,30 @@ not missed. Screenshots are evidence for people, not something the comparison di
 > [Not done yet](#not-done-yet)) that will be closed as it is developed. If it gets something
 > wrong or gets in your way, say so: that feedback decides what gets fixed first.
 
+## Locally and when deployed
+
+The same tool runs in two places. Locally, you run it against CaTH on your own machine, from the
+command line or the app. Deployed, it is the [hosted check](#the-hosted-check-src) in AAT, which
+testers use from the browser. What differs between them:
+
+| | Locally | Deployed (AAT) |
+|---|---|---|
+| **How you start a check** | `yarn ui-baseline:check` (results in `output/checks/<name>/`), or the app: `PORT=8090 UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev` ([Running it locally](#running-it-locally)) | The hosted check's start page, at `cath-<release>-ui-baseline.aat.platform.hmcts.net`, over the VPN |
+| **CaTH it checks** | Your local CaTH (`yarn dev`, <http://localhost:8080>) | CaTH AAT, paired with pip test (`environments.json`) |
+| **The pip baseline** | Recorded from pinned pip on your machine (`yarn ui-baseline:record-pip`), or pulled from aat, in `output/baseline`; the app uses the one pushed to local Azurite's `ui-baseline` container | The newest one the "UI baseline - record pip" workflow stored in `cathsaaat`/`ui-baseline` |
+| **Seeding** | Records through test-support, publications written to storage and processed as uploads are ([`cath/seed.ts`](cath/seed.ts)) | Through CaTH's real publication API, with the client credentials in `cath-aat` |
+| **Signing in** | A session written into CaTH's Redis for each fixture user ([Signing in to CaTH](#signing-in-to-cath)) | The IDAM test account, through `/cft-login` ([The IDAM test account](#the-idam-test-account)) |
+| **What is compared** | Everything: every role's pages, and all journeys with `--all` | Verified users' pages only (admin pages are reported as not compared); journeys only when named, and two cannot run |
+| **Azure access** | As you, through `az login` | As the pod's managed identity (`MANAGED_IDENTITY_CLIENT_ID`) |
+| **Certificates** | Self-signed ones accepted, for `localhost` and `host.docker.internal` only | Always verified: a check never sends the test account's password to a server it cannot verify |
+| **Where runs are kept** | The CLI: `output/checks/`. The app: `UI_BASELINE_DATA_DIR` (default `/tmp/ui-baseline`), archived to local Azurite | The pod's `/tmp`, archived to `cathsaaat` when a run ends and restored from there after a restart |
+| **Captures at once** | 4 (`--concurrency` or `UI_BASELINE_CONCURRENCY`) | 6, in a pod with 4 CPUs and 4 GB (`helm/values.yaml`) |
+| **Who can start a run** | Anyone on your machine | Anyone on the VPN; no sign-in. Not another site through a VPN user's browser ([Where it runs](#where-it-runs)) |
+
+Either way, the reports the app serves show captured pages sandboxed (`Content-Security-Policy:
+sandbox`), so nothing CaTH or pip showed runs as the app, and only serve files that are inside the
+app's data folder once symlinks are followed.
+
 ## Getting the pip baseline
 
 The baseline is not committed: screenshots and videos are too big for git. It is recorded from
@@ -462,6 +486,17 @@ host, is refused.
   account (`pipsssatest`), for file comparisons. Without it, file comparisons fail with a message
   saying so.
 - Record and store a baseline: run the "UI baseline - record pip" workflow once.
+
+Recommended, not yet done:
+
+- **Gate the record workflow behind a GitHub Environment.** It logs in to Azure over OIDC with the
+  repository's `AZURE_CLIENT_ID` and can write to `cathsaaat`. Adding `environment: ui-baseline`
+  to its job changes the subject Azure sees to `repo:hmcts/cath-service:environment:ui-baseline`,
+  so first add a federated credential for that subject to the app registration (which needs Entra
+  access), then create the environment with required reviewers, then add it to the workflow.
+  Adding it to the workflow first makes the Azure login fail.
+- **Protect the test-support routes** this tool seeds and reads through (user lookup, audit logs):
+  they have no authentication in aat, ithc and perftest.
 
 ### Running it locally
 

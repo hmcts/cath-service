@@ -1,5 +1,5 @@
 import type { BrowserContext } from "playwright";
-import { launchChromium } from "../core/index.js";
+import { acceptsUnverifiedCertificate, launchChromium } from "../core/index.js";
 import type { Environment } from "../environments.js";
 import type { ParityUser } from "../fixtures/manifest.js";
 import { CFT_LOGIN_PATH, cftIdamForm, SIGN_IN_TIMEOUT_MS } from "../sign-in-forms.js";
@@ -32,7 +32,7 @@ export async function signInWithAccounts(environment: Environment, users: Parity
 
       const cookies: SignIns["users"][string]["cookies"] = {};
       for (const locale of LOCALES) {
-        const context = await browser.newContext({ ignoreHTTPSErrors: true });
+        const context = await browser.newContext({ ignoreHTTPSErrors: acceptsUnverifiedCertificate(cath.baseUrl) });
         try {
           cookies[locale] = await signIn(context, cath.baseUrl, email, password, locale);
         } finally {

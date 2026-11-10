@@ -1,4 +1,4 @@
-export { launchChromium } from "./capture/browser.js";
+export { acceptsUnverifiedCertificate, launchChromium } from "./capture/browser.js";
 export { type BatchEntry, type CaptureBatch, captureBatch, captureBatches } from "./capture/capture-batch.js";
 export { type AxeSummary, type CaptureMeta, type CaptureOptions, capturePage, expandAll } from "./capture/capture-page.js";
 export { type CaptureServer, type CaptureServerOptions, startCaptureServer } from "./capture/capture-server.js";
@@ -16,7 +16,7 @@ export {
 } from "./compare/file-compare.js";
 export { normalise } from "./compare/normalise.js";
 export { type BlobContainer, openBlobContainer, type StorageSpec } from "./files/blob-container.js";
-export { type CollectedPublication, collectFiles } from "./files/collect-files.js";
+export { type CollectedPublication, collectFiles, type PublicationFileKind } from "./files/collect-files.js";
 export {
   type CompareJourneysOptions,
   compareJourneys,

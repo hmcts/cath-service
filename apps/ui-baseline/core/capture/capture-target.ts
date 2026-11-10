@@ -2,6 +2,7 @@ import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import type { Browser, BrowserContextOptions, Page } from "playwright";
+import { acceptsUnverifiedCertificate } from "./browser.js";
 import { capturePage, expandAll } from "./capture-page.js";
 import { gotoSettled, settle, trackRequests } from "./settle.js";
 
@@ -16,7 +17,7 @@ const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 375,
 export async function captureTarget(browser: Browser, target: CaptureTarget, settings: CaptureSettings): Promise<CaptureResult[]> {
   const locale = target.locale ?? "en";
   const mobile = target.viewport === "mobile";
-  const context = await browser.newContext(contextOptions(settings, mobile ? VIEWPORTS.mobile : VIEWPORTS.desktop));
+  const context = await browser.newContext(contextOptions(settings, mobile ? VIEWPORTS.mobile : VIEWPORTS.desktop, target.url));
   trackRequests(context);
   const page = await context.newPage();
   try {
@@ -72,14 +73,14 @@ async function captureState(
   }
 }
 
-function contextOptions(settings: CaptureSettings, viewport: { width: number; height: number }): BrowserContextOptions {
+function contextOptions(settings: CaptureSettings, viewport: { width: number; height: number }, url: string): BrowserContextOptions {
   return {
     viewport,
     deviceScaleFactor: 1,
     locale: "en-GB",
     timezoneId: settings.timezone ?? DEFAULT_TIMEZONE,
     reducedMotion: "reduce",
-    ignoreHTTPSErrors: true
+    ignoreHTTPSErrors: acceptsUnverifiedCertificate(url)
   };
 }
 

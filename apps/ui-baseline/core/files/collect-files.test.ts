@@ -99,6 +99,47 @@ describe("collectFiles", () => {
       expect(await readFile(path.join(out, "civil/pdf.pdf"), "utf-8")).toBe("pdf");
     });
 
+    it("should keep polling past a PDF that has settled until the Excel the publication should have appears", async () => {
+      // Arrange
+      const out = await mkdtemp(path.join(tmpdir(), "collect-"));
+      vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+      // The PDF is there from the first look; the Excel is written three polls later
+      let polls = 0;
+      const container: BlobContainer = {
+        ...memoryContainer({}),
+        download: async (name) => {
+          if (name === "a1.pdf") polls++;
+          if (name === "a1.pdf") return Buffer.from("pdf");
+          if (name === "a1.xlsx" && polls > 3) return Buffer.from("excel");
+          return null;
+        }
+      };
+
+      // Act
+      const entries = await withClockRunning(
+        collectFiles({ container, out, waitSeconds: 60, publications: [{ id: "civil", artefactId: "a1", expectedKinds: ["pdf", "excel"] }] })
+      );
+
+      // Assert
+      expect(entries.map((entry) => entry.kind)).toEqual(["pdf", "excel"]);
+      expect(polls).toBe(5);
+    });
+
+    it("should stop at the deadline with what there is when an expected file never appears", async () => {
+      // Arrange
+      const out = await mkdtemp(path.join(tmpdir(), "collect-"));
+      vi.useFakeTimers({ toFake: ["setTimeout", "Date"] });
+      const container: BlobContainer = { ...memoryContainer({}), download: async (name) => (name === "a1.pdf" ? Buffer.from("pdf") : null) };
+
+      // Act
+      const entries = await withClockRunning(
+        collectFiles({ container, out, waitSeconds: 12, publications: [{ id: "civil", artefactId: "a1", expectedKinds: ["pdf", "excel"] }] })
+      );
+
+      // Assert
+      expect(entries.map((entry) => entry.kind)).toEqual(["pdf"]);
+    });
+
     it("should wait the whole time and record nothing when a publication never gets files", async () => {
       // Arrange
       const out = await mkdtemp(path.join(tmpdir(), "collect-"));

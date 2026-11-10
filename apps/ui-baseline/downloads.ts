@@ -1,7 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { type FileEntry, type FileKind, gotoSettled, launchChromium, trackRequests } from "./core/index.js";
+import { acceptsUnverifiedCertificate, type FileEntry, type FileKind, gotoSettled, launchChromium, trackRequests } from "./core/index.js";
 
 // Fetches the files pip and CaTH answer with rather than a page (routes/downloads.json), each as
 // the user it is for, into <out>/<id>/ with an index.jsonl compareFileRuns reads. Each is fetched
@@ -33,7 +33,7 @@ export async function captureDownloads(options: CaptureDownloadsOptions): Promis
         notServed.push(`${spec.id}: ${side.as} could not be signed in`);
         continue;
       }
-      const context = await browser.newContext({ ignoreHTTPSErrors: true });
+      const context = await browser.newContext({ ignoreHTTPSErrors: acceptsUnverifiedCertificate(options.baseUrl) });
       trackRequests(context);
       // One file that cannot be fetched is reported, and the rest are still fetched
       try {

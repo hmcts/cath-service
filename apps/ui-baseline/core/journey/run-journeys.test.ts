@@ -9,7 +9,10 @@ import { settle } from "../capture/settle.js";
 import type { JourneySuite } from "./journey.js";
 import { runJourneys } from "./run-journeys.js";
 
-vi.mock("../capture/browser.js", () => ({ launchChromium: vi.fn() }));
+vi.mock("../capture/browser.js", async () => ({
+  launchChromium: vi.fn(),
+  acceptsUnverifiedCertificate: (await vi.importActual<typeof import("../capture/browser.js")>("../capture/browser.js")).acceptsUnverifiedCertificate
+}));
 vi.mock("../capture/capture-page.js", () => ({ capturePage: vi.fn() }));
 vi.mock("../capture/settle.js", () => ({
   trackRequests: vi.fn(),

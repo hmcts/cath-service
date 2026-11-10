@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Browser } from "playwright";
-import { launchChromium } from "../capture/browser.js";
+import { acceptsUnverifiedCertificate, launchChromium } from "../capture/browser.js";
 import { capturePage } from "../capture/capture-page.js";
 import { gotoSettled, settle, trackRequests } from "../capture/settle.js";
 import type { Journey, JourneySuite } from "./journey.js";
@@ -51,7 +51,7 @@ async function runOne(browser: Browser, suite: JourneySuite, journey: Journey, l
     locale: "en-GB",
     timezoneId: TIMEZONE,
     reducedMotion: "reduce",
-    ignoreHTTPSErrors: true,
+    ignoreHTTPSErrors: acceptsUnverifiedCertificate(suite.baseUrl),
     recordVideo: { dir: videoDir, size: VIEWPORT }
   });
   trackRequests(context);

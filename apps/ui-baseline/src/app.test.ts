@@ -253,6 +253,40 @@ describe("createApp", () => {
     });
   });
 
+  it("should serve what CaTH and pip showed sandboxed, and the report itself as it is, all without type sniffing", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await postForm(app, { kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Act
+    const reportPage = await request(app).get(`${started.headers.location}/report/lists.html`);
+    const capturedPage = await request(app).get(`${started.headers.location}/report/lists/cath/page.html`);
+
+    // Assert
+    expect(reportPage.headers["content-security-policy"]).toBeUndefined();
+    expect(capturedPage.headers["content-security-policy"]).toBe("sandbox");
+    for (const response of [reportPage, capturedPage]) expect(response.headers["x-content-type-options"]).toBe("nosniff");
+  });
+
+  it("should show the last 80 lines of a long log", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await postForm(app, { kind: "check", scope: "all" });
+    await runner.idle();
+    const dir = (await runner.directory(started.headers.location.split("/").pop() as string)) as string;
+    await writeFile(path.join(dir, "log.txt"), `${Array.from({ length: 100_000 }, (_, i) => `capture ${i}`).join("\n")}\n`);
+
+    // Act
+    const page = await request(app).get(started.headers.location);
+
+    // Assert
+    const shown = page.text.match(/capture \d+/g) ?? [];
+    expect(shown).toHaveLength(80);
+    expect(shown[0]).toBe("capture 99920");
+    expect(shown.at(-1)).toBe("capture 99999");
+  });
+
   it("should follow a report's links into its baseline, but not links to files outside the data folder", async () => {
     // Arrange
     const { app, runner } = await appWith();

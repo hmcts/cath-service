@@ -37,6 +37,18 @@ describe("captureTarget", () => {
     vi.mocked(expandAll).mockResolvedValue(false);
   });
 
+  it("should not accept a certificate it cannot verify from a deployed CaTH", async () => {
+    // Arrange
+    const outDir = await mkdtemp(path.join(tmpdir(), "capture-target-"));
+    const { browser } = fakeBrowser();
+
+    // Act
+    await captureTarget(browser as unknown as Browser, { id: "home", url: "https://cath.aat.platform.hmcts.net/page" }, { outDir });
+
+    // Assert
+    expect(browser.newContext).toHaveBeenCalledWith(expect.objectContaining({ ignoreHTTPSErrors: false }));
+  });
+
   it("should capture the default state with provenance and an index line when the page has nothing collapsed", async () => {
     // Arrange
     const outDir = await mkdtemp(path.join(tmpdir(), "capture-target-"));
