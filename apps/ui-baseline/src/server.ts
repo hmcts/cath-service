@@ -39,7 +39,7 @@ const runner = createRunner({
   baseline: (id) => baseline.ensure(id)
 });
 
-const app = createApp({ environment: environmentName, runner, baselineStatus: () => baseline.status() });
+const app = createApp({ environment: environmentName, runner, dataDir, baselineStatus: () => baseline.status() });
 app.listen(PORT, () => console.log(`[ui-baseline] checking CaTH in ${environmentName} on port ${PORT}`));
 
 // Loaded once the pod is listening, so a long history does not hold up its start: the list of runs

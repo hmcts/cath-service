@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import request from "supertest";
@@ -38,6 +38,15 @@ async function appWith() {
         '<nav class="govuk-service-navigation__wrapper" aria-label="Menu"><ul class="govuk-service-navigation__list"><li>Overview</li></ul></nav><main>the other pages</main>'
       );
       await mkdir(path.join(out, "report/lists/cath"), { recursive: true });
+      // A report links into its baseline, in the data folder; a planted link could point anywhere
+      const baselineLists = path.join(dataDir, "baselines/2026-11-03/lists");
+      await mkdir(baselineLists, { recursive: true });
+      await writeFile(path.join(baselineLists, "page.html"), "a page pip showed");
+      await symlink(baselineLists, path.join(out, "report/lists/pip"));
+      const outside = path.join(await mkdtemp(path.join(tmpdir(), "outside-")), "environ");
+      await writeFile(outside, "SECRET=from-the-pod");
+      await symlink(outside, path.join(out, "report/environ"));
+      await symlink(path.dirname(outside), path.join(out, "report/elsewhere"));
       await writeFile(
         path.join(out, "report/lists/cath/page.html"),
         '<div class="govuk-width-container"><main class="govuk-main-wrapper" id="main-content">a page CaTH showed</main></div>'
@@ -55,7 +64,7 @@ async function appWith() {
       return 0;
     }
   });
-  const app = createApp({ environment: "aat", runner, baselineStatus: async () => ({ ready: true, description: "recorded today" }) });
+  const app = createApp({ environment: "aat", runner, dataDir, baselineStatus: async () => ({ ready: true, description: "recorded today" }) });
   return { app, runner };
 }
 
@@ -158,6 +167,26 @@ describe("createApp", () => {
     expect(response.text).toContain("There is a problem");
     expect(response.text).toContain("Enter both artefact ids");
     expect(runner.list()).toEqual([]);
+  });
+
+  it("should follow a report's links into its baseline, but not links to files outside the data folder", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await request(app).post("/runs").type("form").send({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Act
+    const baselinePage = await request(app).get(`${started.headers.location}/report/lists/pip/page.html`);
+    const linkedFile = await request(app).get(`${started.headers.location}/report/environ`);
+    const linkedFolder = await request(app).get(`${started.headers.location}/report/elsewhere/environ`);
+
+    // Assert
+    expect(baselinePage.status).toBe(200);
+    expect(baselinePage.text).toBe("a page pip showed");
+    for (const response of [linkedFile, linkedFolder]) {
+      expect(response.status).toBe(404);
+      expect(response.text).not.toContain("SECRET");
+    }
   });
 
   it("should put Home and Result first in a report page's navigation, new or old, leaving the captured pages as they are", async () => {
