@@ -1,0 +1,7 @@
+{% extends "layout.njk" %}
+{% set title = "That request was refused" %}
+{% block page_content %}
+  <h1 class="govuk-heading-l">{{ title }}</h1>
+  <p class="govuk-body">Runs can only be started from this app's own pages. If you started this one here, the page may have been open a long time: go back to the start page and try again.</p>
+  <p class="govuk-body"><a class="govuk-link" href="/">Go to the parity check</a></p>
+{% endblock %}
