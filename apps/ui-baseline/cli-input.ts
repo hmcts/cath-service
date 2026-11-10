@@ -15,6 +15,8 @@ export const ROUTE = /^(?!.*\.\.)\/[A-Za-z0-9[\]._/-]*$/;
 export const JOURNEY = /^[a-z0-9][a-z0-9-]*$/;
 export const LOCALE = /^(en|cy)$/;
 export const REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+// A publication's id in pip or CaTH, which names its files in storage
+export const ARTEFACT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // The value, if it has the expected shape; otherwise an error naming the option
 export function matching(value: string, pattern: RegExp, option: string): string {

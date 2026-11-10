@@ -22,6 +22,7 @@ import {
   type JourneySuite,
   launchChromium,
   openBlobContainer,
+  type PublicationFileKind,
   type ReviewResult,
   reviewFindings,
   runJourneys
@@ -674,6 +675,17 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
   step("Comparing PDF and Excel files");
   progress.start("files");
   const cathFiles = path.join(out, "cath/files");
+  // What pip made for each fixture is what CaTH should make, so polling waits for all of it. An Excel
+  // file is not expected from a list seeded as JSON through the publication API.
+  const pipKinds = Map.groupBy(
+    (await readFile(path.join(baseline, "files/index.jsonl"), "utf-8"))
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as { id: string; kind: PublicationFileKind }),
+    (entry) => entry.id
+  );
+  const expectedKinds = (id: string) =>
+    (pipKinds.get(id) ?? []).map((entry) => entry.kind).filter((kind) => kind && (kind !== "excel" || seed?.publications[id]?.excelUploaded !== false));
   await collectFiles({
     container: openBlobContainer(filesStorage("cath", environment.cath)),
     out: cathFiles,
@@ -681,7 +693,8 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
     publications: listed.map((publication) => ({
       id: publication.id,
       artefactId: (seed as SeedResult).publications[publication.id].artefactId,
-      seededAt: seed?.seededAt
+      seededAt: seed?.seededAt,
+      expectedKinds: expectedKinds(publication.id)
     }))
   });
   const summary = await compareFileRuns({

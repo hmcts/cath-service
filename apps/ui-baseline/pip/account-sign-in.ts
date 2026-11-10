@@ -1,5 +1,5 @@
 import type { BrowserContext } from "playwright";
-import { launchChromium } from "../core/index.js";
+import { acceptsUnverifiedCertificate, launchChromium } from "../core/index.js";
 import type { Environment } from "../environments.js";
 import type { ParityUser } from "../fixtures/manifest.js";
 import { CFT_LOGIN_PATH, cftIdamForm, SIGN_IN_TIMEOUT_MS } from "../sign-in-forms.js";
@@ -44,7 +44,7 @@ export async function signInToPipWithAccounts(environment: Environment, users: P
       try {
         const cookies: PipSignedInUser["cookies"] = {};
         for (const locale of LOCALES) {
-          const context = await browser.newContext({ ignoreHTTPSErrors: true });
+          const context = await browser.newContext({ ignoreHTTPSErrors: acceptsUnverifiedCertificate(pip.baseUrl) });
           try {
             cookies[locale] = await signIn(context, pip.baseUrl, role, email, password, locale);
           } finally {

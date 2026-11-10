@@ -4,7 +4,7 @@ import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { LIST_TYPE, ROUTE } from "../cli-input.js";
+import { ARTEFACT_ID, LIST_TYPE, ROUTE } from "../cli-input.js";
 import type { BlobContainer } from "../core/index.js";
 import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
@@ -14,7 +14,8 @@ import { systemCommand } from "../system-command.js";
 // developer runs. Each run's directory is archived to storage when it finishes, and restored from
 // there when it is asked for after the pod has restarted.
 const RUNS_PREFIX = "runs/";
-const ARTEFACT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// The error a run that was queued or running when its pod stopped is restored with
+const INTERRUPTED = "interrupted";
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
@@ -130,6 +131,8 @@ export function createRunner(options: RunnerOptions): Runner {
     const store = options.store;
     // A run waiting or going on this pod has nothing stored yet: its directory fills as it runs
     if (!store || record.status === "queued" || record.status === "running" || existsSync(path.join(dir, "run.json"))) return dir;
+    // A run cut short by a pod stopping was never archived, so there is nothing to fetch each time it is opened
+    if (record.error === INTERRUPTED) return null;
     // Not on this pod's disk: restore it from storage, once however many requests ask at the same time
     let restored = restoring.get(record.id);
     if (!restored) {
@@ -192,7 +195,7 @@ export function createRunner(options: RunnerOptions): Runner {
         const record = JSON.parse(data.toString("utf-8")) as RunRecord;
         // A run started on this pod while the others were loading is newer than anything stored
         if (runs.has(record.id)) return;
-        runs.set(record.id, record.status === "queued" || record.status === "running" ? { ...record, status: "failed", error: "interrupted" } : record);
+        runs.set(record.id, record.status === "queued" || record.status === "running" ? { ...record, status: "failed", error: INTERRUPTED } : record);
       };
       const next = [...names];
       const worker = async () => {

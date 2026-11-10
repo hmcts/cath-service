@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
-import { readFile, realpath } from "node:fs/promises";
+import { open, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { healthcheck } from "@hmcts-cft/cloud-native-platform";
-import type { Express, Request, Response } from "express";
+import type { Express, Request, RequestHandler, Response } from "express";
 import express from "express";
 import nunjucks from "nunjucks";
 import type { ProgressFile } from "../progress.js";
@@ -17,6 +17,10 @@ import { type Runner, type RunRequest, RunRequestError } from "./runs.js";
 // for the CaTH team, so English only. There is no sign-in: the app is only reachable over the VPN,
 // on an internal host of the private DNS zone (helm/values.yaml).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOG_LINES = 80;
+const CAPTURED_CONTENT_POLICY = "sandbox";
+// Far more than 80 lines of a check's log, which are short
+const LOG_TAIL_BYTES = 64 * 1024;
 const GOVUK_FRONTEND = path.dirname(fileURLToPath(import.meta.resolve("govuk-frontend/package.json")));
 // The report's own stylesheet and the navigation it shares with these pages, served as they are now
 // for every report, so one written before them still has them
@@ -65,7 +69,7 @@ export function createApp(options: AppOptions): Express {
     const run = options.runner.get(req.params.id);
     if (!run) return res.status(404).render("not-found");
     const dir = await options.runner.directory(run.id);
-    const log = dir && existsSync(path.join(dir, "log.txt")) ? tail(await readFile(path.join(dir, "log.txt"), "utf-8")) : "";
+    const log = dir && existsSync(path.join(dir, "log.txt")) ? await logTail(path.join(dir, "log.txt")) : "";
     const files =
       run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/files-compare.json"))
         ? JSON.parse(await readFile(path.join(dir, "files/compare/files-compare.json"), "utf-8"))
@@ -104,17 +108,29 @@ function runFiles(
   subdirectory: string,
   { linkBack, waitForBaseline = false }: { linkBack?: (html: string, runId: string) => string; waitForBaseline?: boolean } = {}
 ) {
+  // One file server per run's folder, made when it is first asked for, not on every request
+  const servers = new Map<string, RequestHandler>();
+  const serverFor = (root: string) => {
+    const server = servers.get(root) ?? express.static(root, { dotfiles: "deny" });
+    servers.set(root, server);
+    return server;
+  };
   return async (req: Request, res: Response, next: () => void) => {
     const id = String(req.params.id);
     const dir = runner.get(id) && (await runner.directory(id, { waitForBaseline }));
     if (!dir) return res.status(404).render("not-found");
     const root = path.join(dir, subdirectory);
     if (!(await servable(dataDir, root, req.path))) return res.status(404).render("not-found");
+    // Nothing a run holds is read as a type other than the one it is served as
+    res.setHeader("X-Content-Type-Options", "nosniff");
     const asset = linkBack && REPORT_ASSETS.get(req.path);
     if (asset) return res.sendFile(asset);
     const page = linkBack && req.path.endsWith(".html") ? await reportPage(root, req.path) : null;
     if (page && linkBack) return res.type("html").send(linkBack(page, id));
-    express.static(root, { dotfiles: "deny" })(req, res, next);
+    // Anything else is what CaTH and pip showed, or files they made: shown sandboxed, so no script in
+    // it runs, and it has an origin of its own rather than this app's
+    res.setHeader("Content-Security-Policy", CAPTURED_CONTENT_POLICY);
+    serverFor(root)(req, res, next);
   };
 }
 
@@ -165,8 +181,21 @@ function requestFrom(body: Record<string, string>): RunRequest {
 }
 
 // The end of a run's log, which is where its progress and result are
-function tail(text: string, lines = 80): string {
-  return text.trimEnd().split("\n").slice(-lines).join("\n");
+// The end of a run's log, read from the end of the file: a check of all of CaTH writes a line per
+// capture, and the run page is refreshed while it runs, so the whole file is not read each time
+async function logTail(file: string, lines = LOG_LINES): Promise<string> {
+  const handle = await open(file, "r");
+  try {
+    const { size } = await handle.stat();
+    const length = Math.min(size, LOG_TAIL_BYTES);
+    const { buffer } = await handle.read(Buffer.alloc(length), 0, length, size - length);
+    // Read from part way through a line, the first line is partial, so it is left out
+    const text = buffer.toString("utf-8");
+    const whole = length < size ? text.slice(text.indexOf("\n") + 1) : text;
+    return whole.trimEnd().split("\n").slice(-lines).join("\n");
+  } finally {
+    await handle.close();
+  }
 }
 
 export interface AppOptions {

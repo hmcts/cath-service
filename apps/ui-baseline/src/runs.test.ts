@@ -170,6 +170,28 @@ describe("createRunner", () => {
     // Assert
     expect(runner.list().map((run) => `${run.id} ${run.status} ${run.error ?? ""}`.trim())).toEqual(["b failed interrupted", "a finished"]);
   });
+
+  it("should not try to fetch a run that was cut short, which was never archived", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const downloadToFile = vi.fn(async () => Promise.reject(new Error("BlobNotFound")));
+    const store = {
+      ...memoryStore(),
+      list: async () => ["runs/b.json"],
+      download: async () => Buffer.from(JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })),
+      downloadToFile
+    };
+    const runner = createRunner({ ...(await optionsWith()), dataDir, store });
+    await runner.restore();
+
+    // Act
+    const first = await runner.directory("b");
+    const second = await runner.directory("b");
+
+    // Assert
+    expect([first, second]).toEqual([null, null]);
+    expect(downloadToFile).not.toHaveBeenCalled();
+  });
   it("should store each finished run, and restore it on another pod when it is asked for", async () => {
     // Arrange
     const store = memoryStore();

@@ -5,9 +5,11 @@ import type { BlobContainer } from "./blob-container.js";
 
 // Downloads the files an app generated for each publication, by the names both pip and CaTH store
 // them under in their publications container, into <out>/<id>/ with an index.jsonl compareFileRuns
-// reads. Deployed apps generate the files after the publication is accepted, so with waitSeconds
-// each publication is polled until its files stop changing, or the time runs out (a list type that
-// has no files waits the whole time).
+// reads. Deployed apps generate the files after the publication is accepted, and one at a time, so
+// with waitSeconds each publication is polled until it has every kind it is expected to have (those
+// the other app made for it) and they have stopped changing, or the time runs out. A publication with
+// no expected kinds is polled until it has some files and they have stopped changing (a list type
+// that has no files waits the whole time).
 const BLOB_NAMES: Record<PublicationFileKind, (artefactId: string) => string> = {
   pdf: (artefactId) => `${artefactId}.pdf`,
   "pdf-welsh": (artefactId) => `${artefactId}_cy.pdf`,
@@ -31,7 +33,10 @@ async function collectSettled(options: CollectFilesOptions, publication: Collect
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
     const current = await collectOnce(options, publication);
-    const settled = current.length > 0 && signature(current) === signature(previous);
+    const complete = publication.expectedKinds?.length
+      ? publication.expectedKinds.every((kind) => current.some((entry) => entry.kind === kind))
+      : current.length > 0;
+    const settled = complete && signature(current) === signature(previous);
     previous = current;
     if (settled) break;
   }
@@ -72,6 +77,8 @@ export interface CollectedPublication {
   seededAt?: string | null;
   // The run token on names the publication shows, when it was seeded in a shared environment
   runToken?: string | null;
+  // The kinds of file it should have, so polling does not stop when only the first has been written
+  expectedKinds?: PublicationFileKind[];
 }
 
 export interface CollectFilesOptions {
@@ -82,4 +89,4 @@ export interface CollectFilesOptions {
 }
 
 // The files an app keeps per publication in its publications container
-type PublicationFileKind = Extract<FileKind, "pdf" | "pdf-welsh" | "excel">;
+export type PublicationFileKind = Extract<FileKind, "pdf" | "pdf-welsh" | "excel">;

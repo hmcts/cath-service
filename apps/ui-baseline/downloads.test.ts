@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { launchChromium } from "./core/index.js";
 import { captureDownloads, type DownloadSpec, loadDownloads, seedResolver } from "./downloads.js";
 
-vi.mock("./core/index.js", () => ({
+vi.mock("./core/index.js", async () => ({
+  acceptsUnverifiedCertificate: (await vi.importActual<typeof import("./core/capture/browser.js")>("./core/capture/browser.js")).acceptsUnverifiedCertificate,
   launchChromium: vi.fn(),
   trackRequests: vi.fn(),
   gotoSettled: vi.fn((page: { goto: (url: string) => Promise<unknown> }, url: string) => page.goto(url))

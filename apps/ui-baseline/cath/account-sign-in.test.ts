@@ -3,7 +3,10 @@ import type { Environment } from "../environments.js";
 import type { ParityUser } from "../fixtures/manifest.js";
 import { signInWithAccounts } from "./account-sign-in.js";
 
-vi.mock("../core/index.js", () => ({ launchChromium: vi.fn() }));
+vi.mock("../core/index.js", async () => ({
+  launchChromium: vi.fn(),
+  acceptsUnverifiedCertificate: (await vi.importActual<typeof import("../core/capture/browser.js")>("../core/capture/browser.js")).acceptsUnverifiedCertificate
+}));
 const { launchChromium } = await import("../core/index.js");
 
 const BASE_URL = "https://cath.example.net";

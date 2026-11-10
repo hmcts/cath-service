@@ -163,7 +163,13 @@ function makeBaseline(options: { journeys?: string[]; files?: boolean; downloads
   mkdirSync(path.join(baseline, "lists/civil-daily/en/default"), { recursive: true });
   writeJson(path.join(baseline, "seed.json"), PIP_SEED);
   for (const id of options.journeys ?? []) mkdirSync(path.join(baseline, "journeys", id, "en"), { recursive: true });
-  if (options.files) writeIndex(path.join(baseline, "files/index.jsonl"), ["civil-daily"]);
+  // pip made a PDF and an Excel file for the list
+  if (options.files) mkdirSync(path.join(baseline, "files"), { recursive: true });
+  if (options.files)
+    writeFileSync(
+      path.join(baseline, "files/index.jsonl"),
+      ["pdf", "excel"].map((kind) => `${JSON.stringify({ id: "civil-daily", kind, file: `civil-daily/${kind}` })}\n`).join("")
+    );
   if (options.downloads) writeIndex(path.join(baseline, "downloads/index.jsonl"), ["dl-1"]);
   if (options.scope) writeJson(path.join(baseline, "scope.json"), { name: "ticket-42", publications: ["civil-daily"], pages: [], journeys: [], routes: [] });
 }
@@ -510,7 +516,8 @@ describe("check", () => {
       expect(mocks.collectFiles).toHaveBeenCalledWith(
         expect.objectContaining({
           out: path.join(out, "cath/files"),
-          publications: [{ id: "civil-daily", artefactId: "CATH-ART-1", seededAt: CATH_SEED.seededAt }]
+          // CaTH was seeded with the list as JSON, so only the PDF is waited for
+          publications: [{ id: "civil-daily", artefactId: "CATH-ART-1", seededAt: CATH_SEED.seededAt, expectedKinds: ["pdf"] }]
         })
       );
       const summary = JSON.parse(readFileSync(path.join(out, "compare/files/files-compare.json"), "utf-8"));

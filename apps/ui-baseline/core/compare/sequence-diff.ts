@@ -1,6 +1,8 @@
 // Myers' O(ND) diff over two sequences of strings, grouped into runs. Used for document text, where
-// the two sides are mostly the same and the order of what differs matters. Memory grows with the
-// number of edits, so past maxEdits the sequences are reported as too different to diff (null).
+// the two sides are mostly the same and the order of what differs matters. Each step keeps only the
+// diagonals it can have reached (2d + 3 of them at step d), so memory grows with the square of the
+// number of edits, not with their number times the longest possible diff; past maxEdits the sequences
+// are reported as too different to diff (null).
 const DEFAULT_MAX_EDITS = 2000;
 
 export function diffSequences(a: readonly string[], b: readonly string[], maxEdits = DEFAULT_MAX_EDITS): DiffRun[] | null {
@@ -9,7 +11,8 @@ export function diffSequences(a: readonly string[], b: readonly string[], maxEdi
   const v = new Int32Array(2 * max + 3);
   const trace: Int32Array[] = [];
   for (let d = 0; d <= max; d++) {
-    trace.push(v.slice());
+    // Before step d only diagonals -d+1 to d-1 have been set, and backtracking from d reads k-1 and k+1
+    trace.push(v.slice(offset - d - 1, offset + d + 2));
     for (let k = -d; k <= d; k += 2) {
       let x = k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1]) ? v[offset + k + 1] : v[offset + k - 1] + 1;
       let y = x - k;
@@ -18,18 +21,20 @@ export function diffSequences(a: readonly string[], b: readonly string[], maxEdi
         y++;
       }
       v[offset + k] = x;
-      if (x >= a.length && y >= b.length) return group(backtrack(trace, a, b, offset));
+      if (x >= a.length && y >= b.length) return group(backtrack(trace, a, b));
     }
   }
   return null;
 }
 
-function backtrack(trace: Int32Array[], a: readonly string[], b: readonly string[], offset: number): DiffStep[] {
+function backtrack(trace: Int32Array[], a: readonly string[], b: readonly string[]): DiffStep[] {
   const steps: DiffStep[] = [];
   let x = a.length;
   let y = b.length;
   for (let d = trace.length - 1; d >= 0; d--) {
     const v = trace[d];
+    // trace[d] starts at diagonal -d-1
+    const offset = d + 1;
     const k = x - y;
     const previousK = k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1]) ? k + 1 : k - 1;
     const previousX = v[offset + previousK];

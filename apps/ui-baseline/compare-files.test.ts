@@ -3,6 +3,9 @@ import { type ArtefactFilesResult, compareArtefactFiles } from "./artefact-files
 
 vi.mock("./artefact-files.js", () => ({ compareArtefactFiles: vi.fn() }));
 
+const PIP = "2a7b1d4e-0000-4000-8000-000000000001";
+const CATH = "2a7b1d4e-0000-4000-8000-000000000002";
+
 describe("compare-files script", () => {
   const argv = process.argv;
   let log: ReturnType<typeof vi.spyOn>;
@@ -29,7 +32,13 @@ describe("compare-files script", () => {
 
   it("should refuse to run without both artefact ids", async () => {
     // Act and assert
-    await expect(run("--pip", "p1")).rejects.toThrow("--pip and --cath (the publication's artefact id in each app) are required");
+    await expect(run("--pip", PIP)).rejects.toThrow("--pip and --cath (the publication's artefact id in each app) are required");
+    expect(compareArtefactFiles).not.toHaveBeenCalled();
+  });
+
+  it("should refuse an artefact id that is not a publication id", async () => {
+    // Act and assert
+    await expect(run("--pip", PIP, "--cath", "../../etc/passwd")).rejects.toThrow('--cath "../../etc/passwd" is not valid');
     expect(compareArtefactFiles).not.toHaveBeenCalled();
   });
 
@@ -38,10 +47,10 @@ describe("compare-files script", () => {
     vi.mocked(compareArtefactFiles).mockResolvedValue(result({ totals: { files: 2, match: 2, differs: 0, missing: 0, extra: 0 }, results: [] }));
 
     // Act
-    await run("--pip", "p1", "--cath", "c1", "--name", "civil-list", "--out", "/tmp/out");
+    await run("--pip", PIP, "--cath", CATH, "--name", "civil-list", "--out", "/tmp/out");
 
     // Assert
-    expect(compareArtefactFiles).toHaveBeenCalledWith({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil-list", out: "/tmp/out" });
+    expect(compareArtefactFiles).toHaveBeenCalledWith({ env: "aat", pipArtefactId: PIP, cathArtefactId: CATH, name: "civil-list", out: "/tmp/out" });
     expect(printed()).toContain("2 files: 2 match, 0 differ, 0 CaTH did not make, 0 only CaTH made");
     expect(printed()).toContain("→ /out/compare/files-compare.json");
     expect(printed()).not.toContain("has no files");
@@ -64,13 +73,13 @@ describe("compare-files script", () => {
     );
 
     // Act
-    await run("--pip", "p1", "--cath", "c1", "--env", "local");
+    await run("--pip", PIP, "--cath", CATH, "--env", "local");
 
     // Assert
     expect(compareArtefactFiles).toHaveBeenCalledWith(expect.objectContaining({ env: "local" }));
     const output = printed();
-    expect(output).toContain("pip has no files for p1");
-    expect(output).toContain("CaTH has no files for c1");
+    expect(output).toContain(`pip has no files for ${PIP}`);
+    expect(output).toContain(`CaTH has no files for ${CATH}`);
     expect(output).toContain("\nexcel: differs");
     expect(output).toContain("  cell changed: A1: x → y");
     expect(output).not.toContain("pdf: match");
@@ -88,7 +97,7 @@ describe("compare-files script", () => {
     );
 
     // Act
-    await run("--pip", "p1", "--cath", "c1");
+    await run("--pip", PIP, "--cath", CATH);
 
     // Assert
     expect(printed()).toContain("  CaTH: no page\n  pip:  https://pip/list");
