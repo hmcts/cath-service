@@ -23,9 +23,10 @@
 
 ### Publications via ingestion
 - [x] `e2e-tests/fixtures/list-types/civil-daily-cause-list.json`: minimal valid payload with a placeholder case number/name (D7)
-- [x] `verified-user/email-subscriptions.spec.ts`: upload via `uploadTestPublication()` with a prefixed case number/name instead of `createTestArtefact`; fail fast if `CIVIL_DAILY_CAUSE_LIST` has no `list_search_config` (D7)
+- [x] `verified-user/email-subscriptions.spec.ts`: upload via `uploadTestPublication()` with a prefixed case number/name instead of `createTestArtefact`; read the `list_search_config` field names before uploading (D7)
 - [x] `libs/test-support/src/routes/test-support/artefacts.ts`: remove the `list_search_config` upsert (lines 55-67); update `artefacts.test.ts` (D7)
 - [x] Add a read-only test-support check for a list type's search config, used by the fail-fast above (D7)
+- [x] D7 revised 2026-11-10: `POST /test-support/list-search-config` (create-if-missing, never overwrites) + unit tests; `global-setup.ts` calls `ensureListSearchConfig()` for `CIVIL_DAILY_CAUSE_LIST`
 
 ### Global setup: location 9 (D8)
 - [x] `e2e-tests/fixtures/test-reference-data.csv`: remove the `9` (Test SJP Court) row
@@ -53,7 +54,9 @@
 
 ### Docs and verification
 - [ ] `.claude/rules/e2e-testing.md`: "create your own user, court, subscription and publication; read-only use of real courts (location 9 only for the SJP entry points); list types by name or label" rule, plus `uploadTestPublication` and `buildLocationCsv`
-- [ ] Environment prerequisite (D7): confirm `CIVIL_DAILY_CAUSE_LIST` has a search config on preview and aat (set once through "Configure list type")
+- [x] ~~Environment prerequisite (D7): set `CIVIL_DAILY_CAUSE_LIST` search config by hand on preview and aat~~ replaced by global setup (D7 revised)
+- [x] Skip tests blocked by app/environment issues with `test.fixme` + issue annotation (#1395 items 1–7; SJP download → #1383); remove each skip once its item is fixed
+- [ ] Tell the developer D7 changed (tests now create the search config when missing)
 - [x] Grep `e2e-tests/tests` for `locationId: "9"`, `x-court-id": "1"`, `9001`, numeric `listType` `selectOption`: none left (apart from `account-home` / `view-option` reading location 9)
 - [ ] `yarn lint:fix`, `yarn test`, `yarn test:e2e`
 - [ ] 3 consecutive preview passes with `workers: 4`
