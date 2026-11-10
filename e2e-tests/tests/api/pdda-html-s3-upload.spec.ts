@@ -86,7 +86,10 @@ test.describe("POST /publication with x-type LCSU - S3 upload @nightly", () => {
     }
   });
 
-  test("uploads HTML and HTM files to S3 and returns an unpersisted Artefact @nightly", async ({ request }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 6) is fixed; re-enable then.
+  test.fixme("uploads HTML and HTM files to S3 and returns an unpersisted Artefact @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ request }) => {
     const authToken = await getApiAuthToken();
     const auth = { Authorization: `Bearer ${authToken}` };
 

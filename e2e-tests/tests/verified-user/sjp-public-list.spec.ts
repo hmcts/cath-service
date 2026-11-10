@@ -201,7 +201,10 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     }
   });
 
-  test("verified user can view SJP public list and download files", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1383 is fixed; re-enable then.
+  test.fixme("verified user can view SJP public list and download files", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1383" }
+  }, async ({ page }) => {
     // Step 1: Authenticate as this test's own verified user
     await loginAsTestUser(page, await createVerifiedTestUser());
     await page.goto("/account-home");

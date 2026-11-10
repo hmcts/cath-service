@@ -240,7 +240,6 @@ interface ListSearchConfig {
   caseNameFieldName: string;
 }
 
-// Read-only: the config is an environment prerequisite, so its absence fails the caller rather than being created here
 export async function getListSearchConfig(listTypeName: string): Promise<ListSearchConfig> {
   try {
     return await callTestSupportApi<ListSearchConfig>("GET", `/test-support/list-search-config?listTypeName=${encodeURIComponent(listTypeName)}`);
@@ -248,9 +247,14 @@ export async function getListSearchConfig(listTypeName: string): Promise<ListSea
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
       `${listTypeName} has no list search config, so ingestion will not extract case search data. ` +
-        `Set it once for this environment through System Admin > Configure list type. (${message})`
+        `Global setup should have created it through ensureListSearchConfig(). (${message})`
     );
   }
+}
+
+// Creates the config only where the environment has none (e.g. a fresh PR preview database); an existing config is never changed
+export async function ensureListSearchConfig(config: ListSearchConfig): Promise<ListSearchConfig> {
+  return callTestSupportApi<ListSearchConfig>("POST", "/test-support/list-search-config", config);
 }
 
 export async function getFirstListType(): Promise<unknown> {

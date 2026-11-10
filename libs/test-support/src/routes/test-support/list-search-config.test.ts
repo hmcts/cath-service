@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "./list-search-config.js";
+import { GET, POST } from "./list-search-config.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
@@ -99,6 +99,93 @@ describe("list-search-config routes", () => {
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(500);
       expect(mockResponse.json).toHaveBeenCalledWith({ error: "Failed to fetch list search config" });
+    });
+  });
+
+  describe("POST", () => {
+    const validBody = { listTypeName: "CIVIL_DAILY_CAUSE_LIST", caseNumberFieldName: "caseNumber", caseNameFieldName: "caseName" };
+
+    it("should create the config when the list type has none", async () => {
+      // Arrange
+      mockRequest.body = validBody;
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 42, name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue({
+        listTypeId: 42,
+        caseNumberFieldName: "caseNumber",
+        caseNameFieldName: "caseName"
+      } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.listSearchConfig.upsert).toHaveBeenCalledWith({
+        where: { listTypeId: 42 },
+        create: { listTypeId: 42, caseNumberFieldName: "caseNumber", caseNameFieldName: "caseName" },
+        update: {}
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith(validBody);
+    });
+
+    it("should return the existing config unchanged when the environment already has one", async () => {
+      // Arrange
+      mockRequest.body = validBody;
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue({ id: 42, name: "CIVIL_DAILY_CAUSE_LIST" } as any);
+      vi.mocked(prisma.listSearchConfig.upsert).mockResolvedValue({
+        listTypeId: 42,
+        caseNumberFieldName: "case_number",
+        caseNameFieldName: "case_name"
+      } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(vi.mocked(prisma.listSearchConfig.upsert).mock.calls[0][0].update).toEqual({});
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        listTypeName: "CIVIL_DAILY_CAUSE_LIST",
+        caseNumberFieldName: "case_number",
+        caseNameFieldName: "case_name"
+      });
+    });
+
+    it("should return 404 when the list type does not exist", async () => {
+      // Arrange
+      mockRequest.body = { ...validBody, listTypeName: "UNKNOWN_LIST" };
+      vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "List type UNKNOWN_LIST not found" });
+      expect(prisma.listSearchConfig.upsert).not.toHaveBeenCalled();
+    });
+
+    it.each(["listTypeName", "caseNumberFieldName", "caseNameFieldName"])("should return 400 when %s is missing", async (field) => {
+      // Arrange
+      mockRequest.body = { ...validBody, [field]: "" };
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.listType.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("should return 500 on database error", async () => {
+      // Arrange
+      mockRequest.body = validBody;
+      vi.mocked(prisma.listType.findUnique).mockRejectedValue(new Error("DB error"));
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: "Failed to ensure list search config" });
     });
   });
 });

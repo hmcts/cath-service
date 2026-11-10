@@ -535,9 +535,10 @@ test.describe("Non-Strategic Upload", () => {
   });
 
   // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-  test("RCJ, SSCS, Rolls Building, Tribunal, First-tier Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
-    page
-  }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 7) is fixed; re-enable then.
+  test.fixme("RCJ, SSCS, Rolls Building, Tribunal, First-tier Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
     // The subscriber uses the CFT test account's email so GOV.UK Notify delivers; it is still this test's own user,

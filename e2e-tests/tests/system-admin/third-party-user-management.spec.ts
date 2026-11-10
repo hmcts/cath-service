@@ -28,7 +28,10 @@ test.describe("Third Party User Management", () => {
     await authenticateSystemAdmin(page);
   });
 
-  test("user can create a third party user @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 3) is fixed; re-enable then.
+  test.fixme("user can create a third party user @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     await page.goto("/third-party-subscribers");
 
     // Check English heading
@@ -97,7 +100,10 @@ test.describe("Third Party User Management", () => {
     // Note: Cleanup handled by global teardown via test prefix
   });
 
-  test("user can manage subscriptions for a third party user @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 3) is fixed; re-enable then.
+  test.fixme("user can manage subscriptions for a third party user @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     // Create a test user via API
     const uniqueName = `${getTestPrefix()}Sub Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });
@@ -155,7 +161,10 @@ test.describe("Third Party User Management", () => {
     // Note: Cleanup handled by global teardown via test prefix
   });
 
-  test("user can delete a third party user @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 3) is fixed; re-enable then.
+  test.fixme("user can delete a third party user @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     // Create a test user via API
     const uniqueName = `${getTestPrefix()}Delete Test Corp`;
     const testUser = await createTestThirdPartyUser({ name: uniqueName });

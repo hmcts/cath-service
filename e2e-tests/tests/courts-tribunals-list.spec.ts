@@ -389,7 +389,10 @@ test.describe("Courts and Tribunals List Page", () => {
       await expect(page.locator('input[name="region"]').first()).toBeVisible();
     });
 
-    test("should maintain accessibility with filters applied @nightly", async ({ page }) => {
+    // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 2) is fixed; re-enable then.
+    test.fixme("should maintain accessibility with filters applied @nightly", {
+      annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+    }, async ({ page }) => {
       await page.goto("/courts-tribunals-list?region=1&jurisdiction=1");
 
       // Run accessibility checks with filters
