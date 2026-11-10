@@ -120,7 +120,8 @@ jobs:
     with:
       change-id: aat
       short-sha: ${{ needs.build-stage.outputs.short-sha }}
-      affected-apps: ${{ needs.build-stage.outputs.affected-apps }}
+      # aat-only apps (jobs/aat-only-apps) are never promoted to prod
+      affected-apps: ${{ needs.build-stage.outputs.promotable-apps }}
       helm-apps: ${{ needs.build-stage.outputs.helm-apps }}
     secrets: inherit
 

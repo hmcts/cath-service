@@ -11,6 +11,9 @@ on:
       affected-apps:
         description: "JSON array of apps that were affected by changes"
         value: ${{ jobs.build-and-publish-images.outputs.affected-apps }}
+      promotable-apps:
+        description: "JSON array of affected apps that are promoted to prod (all but the aat-only apps)"
+        value: ${{ jobs.build-and-publish-images.outputs.promotable-apps }}
       helm-apps:
         description: "JSON array of all apps with Helm charts"
         value: ${{ jobs.build-and-publish-images.outputs.helm-apps }}

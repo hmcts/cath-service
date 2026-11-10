@@ -1,0 +1,4 @@
+# Apps built on master only, deployed to aat only (job.helm-deploy.yml), and never promoted to prod.
+# Read by build-and-publish-images/detect-affected-apps.sh and job.resolve-promoted-images.yml.
+# One app per line; lines starting with # are ignored.
+ui-baseline

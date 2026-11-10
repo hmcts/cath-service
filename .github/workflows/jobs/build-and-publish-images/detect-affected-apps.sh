@@ -6,9 +6,10 @@ set -euo pipefail
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
 # Environment:
-#   PULL_REQUEST: "true" for a pull request's build, which leaves out MASTER_ONLY_APPS
+#   PULL_REQUEST: "true" for a pull request's build, which leaves out the aat-only apps
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
+#   - promotable_apps: affected_apps without the aat-only apps, which are never promoted to prod
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
 #   - needs_shared_build: boolean, true if any affected app uses the shared build stage
@@ -20,10 +21,11 @@ BASE_SHA="${1:-}"
 
 DOCKERFILE="Dockerfile"
 
-# Apps built on master only. ui-baseline is deployed to aat alone (job.helm-deploy.yml) and preview
-# never enables it, so a pull request's image would never be used; it depends on most of the
-# workspace's libs, so it would otherwise be built for nearly every pull request.
-MASTER_ONLY_APPS="ui-baseline"
+# Apps deployed to aat only (.github/workflows/jobs/aat-only-apps): built on master only, as preview
+# never enables them, so a pull request's image would never be used (ui-baseline depends on most of
+# the workspace's libs, so it would otherwise be built for nearly every pull request), and never
+# promoted, as nothing beyond aat deploys them.
+AAT_ONLY_APPS="$(grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../aat-only-apps" | jq -R -s -c 'split("\n") | map(select(. != ""))')"
 
 # Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
 dockerfile_stages() {
@@ -152,9 +154,11 @@ main() {
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
   fi
 
+  local without_aat_only
+  without_aat_only=$(echo "$affected_apps" | jq -c --argjson skip "$AAT_ONLY_APPS" 'map(select(. as $app | $skip | index($app) | not))')
   if [ "${PULL_REQUEST:-false}" = "true" ]; then
-    affected_apps=$(echo "$affected_apps" | jq -c --arg skip "$MASTER_ONLY_APPS" '($skip | split(" ")) as $skip | map(select(. as $app | $skip | index($app) | not))')
-    echo "Pull request: leaving out apps built on master only ($MASTER_ONLY_APPS)"
+    affected_apps="$without_aat_only"
+    echo "Pull request: leaving out apps built on master only ($AAT_ONLY_APPS)"
   fi
 
   # Determine if we have any changes
@@ -175,6 +179,7 @@ main() {
   # Output results for GitHub Actions
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "affected-apps=$affected_apps" >> "$GITHUB_OUTPUT"
+    echo "promotable-apps=$without_aat_only" >> "$GITHUB_OUTPUT"
     echo "helm-apps=$helm_apps" >> "$GITHUB_OUTPUT"
     echo "has-changes=$has_changes" >> "$GITHUB_OUTPUT"
     echo "needs-shared-build=$needs_shared_build" >> "$GITHUB_OUTPUT"
@@ -182,6 +187,7 @@ main() {
 
   # Log results
   echo "Affected apps (buildable): $affected_apps"
+  echo "Promotable apps: $without_aat_only"
   echo "Helm apps (all): $helm_apps"
   echo "Has changes: $has_changes"
   echo "Needs shared build: $needs_shared_build"
