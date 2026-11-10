@@ -257,6 +257,29 @@ if (seedIds.length && !args["no-seed"]) {
 } else progress.skip("seed", args["no-seed"] ? "not asked for" : "nothing to seed");
 const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
 
+// What the check seeded in a shared CaTH is removed however the check ends: once its files are
+// compared (step 4c), when a later step throws (the disposal below runs as this module's top level
+// ends, as a finally would), or when the check is stopped (the hosted runner's time limit, say).
+// --keep-seed leaves it. A removal that fails does not fail the check: a later check removes the
+// run once it is three hours old.
+let seedRemoved = false;
+const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
+const onStop = (signal: keyof typeof stopped) => void removeSeed().finally(() => process.exit(stopped[signal]));
+const removeSeed = async (): Promise<void> => {
+  if (seedRemoved || !seed?.runToken || args["keep-seed"]) return;
+  seedRemoved = true;
+  for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
+  step("Removing what the check seeded");
+  try {
+    await removeRuns(cathApi(process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl), { token: seed.runToken });
+    await rm(seedFile, { force: true });
+  } catch (error) {
+    console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
+  }
+};
+await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
+if (seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
+
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);
 if (needsSignIn) {
@@ -420,17 +443,8 @@ progress.complete("compare");
 const filesCompared = await compareGeneratedFiles();
 
 // ---------- 4c. Remove what the check seeded in a shared CaTH ----------
-// It is all on the run's own courts (cath/run.ts), so it goes with them. A removal that fails does
-// not fail the check: the next check removes the run once it is three hours old.
-if (seed?.runToken && !args["keep-seed"]) {
-  step("Removing what the check seeded");
-  try {
-    await removeRuns(cathApi(process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl), { token: seed.runToken });
-    await rm(seedFile, { force: true });
-  } catch (error) {
-    console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
-  }
-}
+// Everything after this reads files the check wrote, not CaTH, so nothing seeded is needed any more
+await removeSeed();
 
 // ---------- 5. Review against the ticket ----------
 const reviews: Record<string, ReviewResult> = {};

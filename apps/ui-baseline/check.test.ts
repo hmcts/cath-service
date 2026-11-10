@@ -460,6 +460,7 @@ describe("check", () => {
     });
 
     describe("of a shared CaTH, seeded on courts of the run's own", () => {
+      const listenersBefore = process.listenerCount("SIGTERM");
       const RUN_SEED = { ...CATH_SEED, environment: "aat", runToken: "uicsm9x2kababcd", locations: { "9": 90001 } };
 
       it("should drop the run's token from CaTH's captures and take pip's court to the run's copy of it", async () => {
@@ -488,6 +489,37 @@ describe("check", () => {
         // Assert
         expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" });
         expect(existsSync(seedFile())).toBe(false);
+      });
+
+      it("should still remove the run when a step after seeding fails", async () => {
+        // Arrange
+        mocks.spawnSync.mockImplementation((_command: string, args: string[], options: { env: Record<string, string> }) => {
+          if (args.includes("apps/ui-baseline/cath/seed.ts")) {
+            writeJson(options.env.PARITY_SEED_OUTPUT, RUN_SEED);
+            return { status: 0, stdout: "", stderr: "" };
+          }
+          return { status: 1, stdout: "", stderr: "Error: IDAM refused the test account" };
+        });
+
+        // Act
+        const { error } = await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(error?.message).toBe("signing in to CaTH failed");
+        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" });
+        expect(existsSync(seedFile())).toBe(false);
+      });
+
+      it("should remove the run only once when the check succeeds", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+
+        // Act
+        await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(mocks.removeRuns).toHaveBeenCalledTimes(1);
+        expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
       });
 
       it("should leave the run in place when --keep-seed is given", async () => {

@@ -114,6 +114,9 @@ describe("cath seed script", () => {
     if (url === `${API}/test-support/locations` && method === "POST") return Response.json({ locationId: 90000 + ++locationCount });
     if (url === `${API}/test-support/locations` && method === "DELETE") return Response.json({ deleted: 1 });
     if (url === `${API}/test-support/subscriptions` && method === "DELETE") return Response.json({ deleted: 0 });
+    // A run's records, which removing it looks for: none here
+    if (url.startsWith(`${API}/test-support/media-applications?`)) return new Response("not found", { status: 404 });
+    if (url === `${API}/test-support/legacy-third-party-users` || url === `${API}/test-support/third-party-users`) return Response.json([]);
     return new Response("unexpected", { status: 500 });
   }
 
@@ -356,6 +359,41 @@ describe("cath seed script", () => {
       expect(calls(`${API}/test-support/artefacts`, "DELETE").map(body)).toEqual([{ locationId: "91" }, { locationId: "92" }]);
       expect(calls(`${API}/test-support/subscriptions`, "DELETE").map(body)).toEqual([{ searchType: "LOCATION_ID", searchValues: ["91", "92"] }]);
       expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [91, 92] }]);
+    });
+
+    it("should still seed when an old run cannot be removed, leaving it for a later run", async () => {
+      // Arrange
+      existingLocations = [{ locationId: 91, name: `${tokenAt(Date.now() - 4 * 60 * 60 * 1000)} Oxford Combined Court Centre` }];
+      fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+        url === `${API}/test-support/artefacts` && init?.method === "DELETE" ? new Response("locked", { status: 500 }) : route(url, init)
+      );
+
+      // Act
+      await import("./seed.js");
+
+      // Assert
+      const result = JSON.parse(await readFile(output, "utf-8"));
+      expect(Object.keys(result.publications)).toContain("json-list");
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining("left for a later run: could not remove run"));
+    });
+
+    it("should remove the courts it made when it fails before recording the run", async () => {
+      // Arrange
+      fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+        if (url === `${API}/test-support/locations` && init?.method === "POST") {
+          // The court is made, but CaTH fails to answer, so the run stops partway
+          existingLocations.push({ locationId: 95, name: body(init).name });
+          return new Response("timeout", { status: 504 });
+        }
+        return route(url, init);
+      });
+
+      // Act
+      const seeding = import("./seed.js");
+
+      // Assert
+      await expect(seeding).rejects.toThrow("POST /test-support/locations failed: 504");
+      expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [95] }]);
     });
 
     it("should remove the run its previous seed recorded, however recent", async () => {

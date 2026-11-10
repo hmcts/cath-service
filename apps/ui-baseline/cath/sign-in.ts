@@ -41,7 +41,11 @@ const seeded = deployed
       () => null
     )
   : null;
-const records = deployed ? await seedRecords(store, signIns.cathUsers, seeded?.locations ?? {}) : await seedRecords(store, signIns.cathUsers);
+// On a deployed CaTH, records are only seeded as part of a run, which removes them; with no run
+// (nothing was seeded), they would be left in the shared CaTH for good, so none are made
+const run = seeded?.runToken ? { token: seeded.runToken, locations: seeded.locations ?? {} } : null;
+if (deployed && !run) console.log("no records created: nothing was seeded, so there is no run to remove them with");
+const records = !deployed ? await seedRecords(store, signIns.cathUsers) : run ? await seedRecords(store, signIns.cathUsers, run) : {};
 if (environment.cath.signIn === "session") await (await import("@hmcts/postgres-prisma")).prisma.$disconnect();
 
 // Looked up by name, never assumed: list type ids differ between environments
