@@ -4,15 +4,21 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { convertExcelForListTypeName, validateListTypeJson } from "@hmcts/list-types-common";
 import { type Environment, loadEnvironment } from "../environments.js";
-import { loadManifest, publicationMetadata, readPayload, type SeedResult } from "../fixtures/manifest.js";
+import { loadManifest, type PublicationFixture, publicationMetadata, readPayload, type SeedResult } from "../fixtures/manifest.js";
+import { cathApi, createRunLocations, newRunToken, removeRuns } from "./run.js";
 
-// Seeds CaTH with the same publications and metadata as apps/ui-baseline/pip/seed.ts. Locations
-// already come from location-data.ts (`yarn db:seed` locally, the postgres pod when deployed).
-// A deployed CaTH (--env aat) is seeded through the real publication API with the environment's
-// client credentials. A local one has none, so the artefact row is created through test-support,
-// the payload written to blob storage, and the publication processed as the upload pages process
-// it, which is what writes its PDF and Excel files. The API process must run with
-// TZ=Europe/London so the metadata's London wall-clock times are read the same way pip reads them.
+// Seeds CaTH with the same publications and metadata as apps/ui-baseline/pip/seed.ts.
+// A deployed CaTH (--env aat) is shared, so, as CaTH's own E2E tests do, each run publishes through
+// the real publication API (with the environment's client credentials) to courts of its own:
+// copies of the fixture courts under the run's token (run.ts). Nobody else subscribes to them, so no
+// one else is notified, and no one else's lists show on their pages. The check removes them when it
+// ends (check.ts), and the next run removes any a run left behind. A local CaTH is seeded at the
+// fixture courts themselves (location-data.ts): through the publication API when the root .env has
+// a client for it, otherwise with the artefact
+// row created through test-support, the payload written to blob storage, and the publication
+// processed as the upload pages process it, which is what writes its PDF and Excel files. The API
+// process must run with TZ=Europe/London so the metadata's London wall-clock times are read the
+// same way pip reads them.
 const { values: args } = parseArgs({ options: { env: { type: "string" }, only: { type: "string" } } });
 const environment = await loadEnvironment(args.env);
 const API_URL = process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl;
@@ -27,24 +33,41 @@ const only = args.only ? new Set(args.only.split(",").filter(Boolean)) : null;
 const seededAt = new Date();
 const loaded = await loadManifest();
 const manifest = { ...loaded, publications: loaded.publications.filter((publication) => !only || only.has(publication.id)) };
+const api = cathApi(API_URL);
 const listTypes = (await api("GET", "/test-support/list-types")) as ListTypeRow[];
 
+const deployed = environment.cath.signIn !== "session";
 const token = await apiToken(environment);
-if (!token && environment.cath.signIn !== "session")
-  throw new Error(`no publication API credentials for ${environment.name}: a deployed CaTH can only be seeded through its publication API`);
+if (!token && deployed) throw new Error(`no publication API credentials for ${environment.name}: a deployed CaTH is seeded through its publication API`);
 const local = token ? null : await localPublishing();
 
 await removePreviousSeed();
+// Runs that ended without removing what they seeded (the pod restarted, say), however old the file
+// that recorded them; never one recent enough to still be going
+if (deployed) await removeRuns(api, { staleAt: Date.now() });
+// A flat file has no page of its own: CaTH lists it on the court's summary of publications
+const seedable = manifest.publications.filter((publication) => publication.paths.cath || (publication.format === "flat-file" && publication.cathListType));
+const run = deployed ? newRunToken() : null;
+const locations = run
+  ? await createRunLocations(
+      api,
+      run,
+      seedable.map((publication) => publication.locationId)
+    )
+  : null;
+const locationOf = (publication: PublicationFixture) => locations?.[String(publication.locationId)] ?? publication.locationId;
 const result: SeedResult = {
   app: "cath",
   seededAt: seededAt.toISOString(),
-  ingestion: token ? "publication API POST /publication" : "test-support POST /test-support/artefacts + blob upload + processPublication",
+  ingestion: token
+    ? `publication API POST /publication${run ? ", on courts of the run's own" : ""}`
+    : "test-support POST /test-support/artefacts + blob upload + processPublication",
+  ...(run && locations ? { environment: environment.name, runToken: run, locations } : {}),
   publications: {},
   rejected: {}
 };
-for (const publication of manifest.publications) {
-  // A flat file has no page of its own: CaTH lists it on the court's summary of publications
-  if (!publication.paths.cath && !(publication.format === "flat-file" && publication.cathListType)) continue;
+for (const publication of seedable) {
+  const locationId = locationOf(publication);
   try {
     const listType = listTypes.find((row) => row.name === publication.cathListType);
     if (!listType) throw new Error(`CaTH has no list type ${publication.cathListType}`);
@@ -52,8 +75,8 @@ for (const publication of manifest.publications) {
     const raw = await readPayload(publication);
     if (publication.format === "flat-file") {
       const metadata = publicationMetadata(publication, manifest, seededAt);
-      const artefactId = await seedFlatFile(listType, publication.locationId, metadata, raw, path.basename(publication.payload));
-      result.publications[publication.id] = { artefactId, locationId: publication.locationId, metadata };
+      const artefactId = await seedFlatFile(listType, locationId, metadata, raw, path.basename(publication.payload));
+      result.publications[publication.id] = { artefactId, locationId, metadata };
       console.log(`published ${publication.id} → ${artefactId}`);
       continue;
     }
@@ -68,15 +91,15 @@ for (const publication of manifest.publications) {
 
     const metadata = publicationMetadata(publication, manifest, seededAt);
     const artefactId = local
-      ? await local.publish(listType, publication.locationId, metadata, json, payload, publication.format === "excel" ? raw : undefined)
-      : (await publish(token as string, publication.locationId, listType.name, metadata, payload)).artefactId;
+      ? await local.publish(listType, locationId, metadata, json, payload, publication.format === "excel" ? raw : undefined)
+      : (await publish(token as string, locationId, listType.name, metadata, payload)).artefactId;
 
     // The publication API takes JSON only, so a list whose Excel file is the uploaded spreadsheet reformatted has none
     result.publications[publication.id] = {
       artefactId,
-      locationId: publication.locationId,
+      locationId,
       metadata,
-      ...(token && publication.format === "excel" ? { excelUploaded: false } : {})
+      ...(!local && publication.format === "excel" ? { excelUploaded: false } : {})
     };
     console.log(`published ${publication.id} → ${artefactId}`);
   } catch (error) {
@@ -222,20 +245,15 @@ async function removePreviousSeed(): Promise<void> {
     () => null
   );
   if (!previous) return;
-  const artefactIds = Object.values(previous.publications).map((publication) => publication.artefactId);
-  if (artefactIds.length) await api("DELETE", "/test-support/artefacts", { artefactIds });
+  // A run on courts of its own goes with its courts
+  if (previous.runToken) {
+    await removeRuns(api, { token: previous.runToken });
+  } else {
+    const artefactIds = Object.values(previous.publications).map((publication) => publication.artefactId);
+    if (artefactIds.length) await api("DELETE", "/test-support/artefacts", { artefactIds });
+    console.log(`removed ${artefactIds.length} artefacts from the previous seed`);
+  }
   await rm(OUTPUT, { force: true });
-  console.log(`removed ${artefactIds.length} artefacts from the previous seed`);
-}
-
-async function api(method: string, endpoint: string, body?: unknown): Promise<unknown> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method,
-    headers: { "content-type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if (!response.ok) throw new Error(`${method} ${endpoint} failed: ${response.status} ${await response.text()}`);
-  return response.status === 204 ? null : response.json();
 }
 
 interface ListTypeRow {

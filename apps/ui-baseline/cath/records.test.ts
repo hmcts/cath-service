@@ -1,6 +1,7 @@
 import { prisma } from "@hmcts/postgres-prisma";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BlobContainer } from "../core/index.js";
+import { loadManifest } from "../fixtures/manifest.js";
 import { type CathUser, prismaRecordStore, type RecordStore, seedRecords, testSupportRecordStore } from "./records.js";
 
 vi.mock("@hmcts/postgres-prisma", () => {
@@ -83,6 +84,31 @@ describe("seedRecords", () => {
       "third-party-subscriber": { userId: "tp-1" },
       "manage-user-audit": { id: "audit-1", timestamp: "2026-01-01T00:00:00.000Z" }
     });
+  });
+
+  it("should subscribe to the run's copy of the court when the run seeded courts of its own", async () => {
+    // Arrange
+    const store = fakeStore();
+    const court = (await loadManifest()).publications.find((p) => p.id === "civil-and-family-daily-cause-list")?.locationId;
+
+    // Act
+    const result = await seedRecords(store, { "verified-media": MEDIA }, { [String(court)]: 90001 });
+
+    // Assert
+    expect(store.ensureSubscription).toHaveBeenCalledWith("media-id", "LOCATION_ID", "90001");
+    expect(result["location-subscription"]).toEqual({ subscriptionId: "sub-1", locationId: "90001" });
+  });
+
+  it("should subscribe to no court when the run seeded none for the subscription's list, rather than to the real court", async () => {
+    // Arrange
+    const store = fakeStore();
+
+    // Act
+    const result = await seedRecords(store, { "verified-media": MEDIA }, {});
+
+    // Assert
+    expect(store.ensureSubscription).not.toHaveBeenCalled();
+    expect(result["location-subscription"]).toBeUndefined();
   });
 
   it("should skip the records of users who could not be signed in", async () => {

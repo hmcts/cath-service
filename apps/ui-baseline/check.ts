@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
+import { cathApi, removeRuns } from "./cath/run.js";
 import type { SignInResult } from "./cath/sign-in.js";
 import { confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
 import {
@@ -90,6 +91,9 @@ const { values: given } = parseArgs({
     locale: { type: "string" },
     out: { type: "string" },
     "no-seed": { type: "boolean", default: false },
+    // On a shared CaTH, leave what the check seeded in place when it ends, to look at or to check
+    // again with --no-seed; a later check removes it once it is three hours old
+    "keep-seed": { type: "boolean", default: false },
     "no-review": { type: "boolean", default: false },
     // Skip comparing the PDF and Excel files each list generates
     "no-files": { type: "boolean", default: false },
@@ -260,7 +264,7 @@ if (needsSignIn) {
   progress.start("sign-in");
   const signingIn = spawnSync(TSX, [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/sign-in.ts", ...envArgs], {
     cwd: REPO_DIR,
-    env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile },
+    env: { ...process.env, PARITY_SIGN_IN_OUTPUT: signInFile, PARITY_SEED_OUTPUT: seedFile },
     encoding: "utf-8"
   });
   for (const line of `${signingIn.stdout}${signingIn.stderr}`.split("\n").filter((l) => /signed in|not signed in|Error/.test(l)))
@@ -307,7 +311,7 @@ const listTargets = scope.publications.flatMap((publication) => {
           ? `${targetBase}/summary-of-publications?locationId=${seeded.locationId}`
           : `${targetBase}${publication.paths.cath}?artefactId=${seeded.artefactId}`,
       locales,
-      source: { app: "cath", fixture: publication.id, ingestion: seed?.ingestion, viewAs: publication.viewAs ?? null, ...seeded }
+      source: { app: "cath", fixture: publication.id, ingestion: seed?.ingestion, viewAs: publication.viewAs ?? null, ...seeded, ...runOf(seed) }
     },
     publication.viewAs,
     "lists"
@@ -325,7 +329,7 @@ const pageTargets = scope.routes.flatMap((route) => {
       id: route.id,
       url: `${targetBase}${cathUrl.path}`,
       locales,
-      source: { app: "cath", kind: "page", route: route.cath, pipRoute: route.pip, viewAs: route.viewAs } as Record<string, unknown>
+      source: { app: "cath", kind: "page", route: route.cath, pipRoute: route.pip, viewAs: route.viewAs, ...runOf(seed) } as Record<string, unknown>
     },
     route.viewAs,
     "pages"
@@ -414,6 +418,19 @@ progress.complete("compare");
 // fixture. A list seeded through the publication API (JSON only) has no Excel from a spreadsheet,
 // so for those a missing Excel is not counted.
 const filesCompared = await compareGeneratedFiles();
+
+// ---------- 4c. Remove what the check seeded in a shared CaTH ----------
+// It is all on the run's own courts (cath/run.ts), so it goes with them. A removal that fails does
+// not fail the check: the next check removes the run once it is three hours old.
+if (seed?.runToken && !args["keep-seed"]) {
+  step("Removing what the check seeded");
+  try {
+    await removeRuns(cathApi(process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl), { token: seed.runToken });
+    await rm(seedFile, { force: true });
+  } catch (error) {
+    console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
+  }
+}
 
 // ---------- 5. Review against the ticket ----------
 const reviews: Record<string, ReviewResult> = {};
@@ -694,6 +711,7 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
       id: publication.id,
       artefactId: (seed as SeedResult).publications[publication.id].artefactId,
       seededAt: seed?.seededAt,
+      ...runOf(seed),
       expectedKinds: expectedKinds(publication.id)
     }))
   });
@@ -728,7 +746,8 @@ async function compareDownloads(): Promise<FileCompareSummary | null> {
       return cookies ? { cookies: [...apps.cath.cookies, ...cookies] } : null;
     },
     out: cathDownloads,
-    seededAt: seed?.seededAt
+    seededAt: seed?.seededAt,
+    ...runOf(seed)
   });
   for (const line of notServed) scope.skipped.push(`download ${line}`);
   const summary = await compareFileRuns({
@@ -746,7 +765,10 @@ async function compareDownloads(): Promise<FileCompareSummary | null> {
 // which only CaTH routes that take one in the path use. A baseline recorded in a shared environment
 // put the fixtures' locations at ids of its own (pip/run.ts), where CaTH has them at the fixtures'.
 function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: SignInResult | null): CathIds {
-  const ids = new Map<string, string>(Object.entries(pip?.locations ?? {}).map(([fixture, pipLocation]) => [String(pipLocation), fixture]));
+  // A check of a shared CaTH seeded copies of the fixture courts too, at ids of their own
+  const ids = new Map<string, string>(
+    Object.entries(pip?.locations ?? {}).map(([fixture, pipLocation]) => [String(pipLocation), String(cath?.locations?.[fixture] ?? fixture)])
+  );
   for (const [fixture, publication] of Object.entries(pip?.publications ?? {})) {
     const cathArtefact = cath?.publications[fixture]?.artefactId;
     if (cathArtefact) ids.set(publication.artefactId, cathArtefact);
@@ -763,6 +785,11 @@ function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: S
   }
   const publications = new Map(Object.entries(cath?.publications ?? {}).map(([fixture, p]) => [fixture, p.artefactId]));
   return { ids, publications, listTypes: new Map(Object.entries(signedIn?.listTypes ?? {})) };
+}
+
+// What a capture of a shared CaTH carries, so the comparison drops the run's token from its court names
+function runOf(seed: SeedResult | null): { runToken?: string } {
+  return seed?.runToken ? { runToken: seed.runToken } : {};
 }
 
 // Where a link or form on a pip page should lead in CaTH: another site as it is; the page itself (a

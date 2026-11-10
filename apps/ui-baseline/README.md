@@ -27,7 +27,7 @@ testers use from the browser. What differs between them:
 | **How you start a check** | `yarn ui-baseline:check` (results in `output/checks/<name>/`), or the app: `PORT=8090 UI_BASELINE_ENV=local yarn workspace @hmcts/ui-baseline dev` ([Running it locally](#running-it-locally)) | The hosted check's start page, at `cath-<release>-ui-baseline.aat.platform.hmcts.net`, over the VPN |
 | **CaTH it checks** | Your local CaTH (`yarn dev`, <http://localhost:8080>) | CaTH AAT, paired with pip test (`environments.json`) |
 | **The pip baseline** | Recorded from pinned pip on your machine (`yarn ui-baseline:record-pip`), or pulled from aat, in `output/baseline`; the app uses the one pushed to local Azurite's `ui-baseline` container | The newest one the "UI baseline - record pip" workflow stored in `cathsaaat`/`ui-baseline` |
-| **Seeding** | Records through test-support, publications written to storage and processed as uploads are ([`cath/seed.ts`](cath/seed.ts)) | Through CaTH's real publication API, with the client credentials in `cath-aat` |
+| **Seeding** | Records through test-support, publications written to storage and processed as uploads are ([`cath/seed.ts`](cath/seed.ts)) | Through CaTH's real publication API, with the client credentials in `cath-aat`, on courts of the run's own that are removed when the check ends ([Checking aat](#checking-aat)) |
 | **Signing in** | A session written into CaTH's Redis for each fixture user ([Signing in to CaTH](#signing-in-to-cath)) | The IDAM test account, through `/cft-login` ([The IDAM test account](#the-idam-test-account)) |
 | **What is compared** | Everything: every role's pages, and all journeys with `--all` | Verified users' pages only (admin pages are reported as not compared); journeys only when named, and two cannot run |
 | **Azure access** | As you, through `az login` | As the pod's managed identity (`MANAGED_IDENTITY_CLIENT_ID`) |
@@ -230,7 +230,7 @@ journey not ported to CaTH yet is listed as not compared. The PR comment gets a 
 and the report shows CaTH's capture beneath each of pip's steps.
 
 Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
-`--env local|test`, `--no-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
+`--env local|test`, `--no-seed`, `--keep-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
 `claude -p` with no tools and a JSON schema for its answer; any command that reads the prompt on stdin
 and prints JSON will do; the review runs up to four of them at once), `--investigate N`,
 `--concurrency N` for how many pages are captured at once (default 4, or `UI_BASELINE_CONCURRENCY`;
@@ -250,10 +250,21 @@ yarn ui-baseline:check --env aat --all
 
 Testers can run the same check without any of this from the [hosted check](../../apps/ui-baseline/README.md).
 
-Against a deployed CaTH the check seeds through the real publication API, with the client
-credentials in the environment's vault, and signs in as a real test account (see below). The
-publication API takes a list as JSON, so a non-strategic list's Excel file, which CaTH makes from
-the uploaded spreadsheet, is not made, and is reported as not compared rather than missing.
+Against a deployed CaTH, which other people use too, the check works as CaTH's own E2E tests do: it
+publishes through the real publication API, with the client credentials in the environment's
+vault, to courts of its own. Each is a copy of a fixture court named with the run's token
+(`uicsm9x2kab Oxford Combined Court Centre`), which the comparison drops
+([`cath/run.ts`](cath/run.ts)). Nobody else subscribes to those courts, so publishing to them
+notifies no one else, and no one else's lists show on their pages. The check signs in as a real
+test account (see below), and the account's subscriptions go to the run's courts.
+
+When the check ends it removes the run's courts and everything published to them. A run that could
+not be removed (the pod restarted mid-check, say) is removed by the next check once it is three
+hours old, so a run still going alongside is left alone. `--keep-seed` leaves the run in place, to
+look at or to check again with `--no-seed`, until a later check removes it.
+
+The publication API takes a list as JSON, so a non-strategic list's Excel file, which CaTH makes from the
+uploaded spreadsheet, is not made, and is reported as not compared rather than missing.
 
 ### Signing in to CaTH
 

@@ -12,7 +12,10 @@ import { loadManifest } from "../fixtures/manifest.js";
 // create-media-account form stores it.
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../fixtures");
 
-export async function seedRecords(store: RecordStore, cathUsers: Record<string, CathUser>): Promise<SeedRecords> {
+// runLocations: on a shared CaTH, the courts the check's run seeded (run.ts), fixture location id ->
+// the run's court. Subscriptions go to those, never to a real court, where they would be sent every
+// list anyone publishes there; one whose court the run did not seed is left out.
+export async function seedRecords(store: RecordStore, cathUsers: Record<string, CathUser>, runLocations?: Record<string, number>): Promise<SeedRecords> {
   const records = JSON.parse(await readFile(path.join(FIXTURES_DIR, "records.json"), "utf-8")) as RecordsFile;
   const manifest = await loadManifest();
   const result: SeedRecords = {};
@@ -25,7 +28,12 @@ export async function seedRecords(store: RecordStore, cathUsers: Record<string, 
       manifest.publications.find((p) => p.id === subscription.publication),
       subscription.publication
     );
-    const searchValue = String(publication.locationId);
+    const runLocation = runLocations?.[String(publication.locationId)];
+    if (runLocations && runLocation === undefined) {
+      console.log(`not subscribed: ${subscription.id}: the run seeded no court for ${publication.id}`);
+      continue;
+    }
+    const searchValue = String(runLocation ?? publication.locationId);
     const subscriptionId = await store.ensureSubscription(user.userId, subscription.searchType, searchValue);
     result[subscription.id] = { subscriptionId, locationId: searchValue };
   }
