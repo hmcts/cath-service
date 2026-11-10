@@ -226,6 +226,68 @@ describe("pr-comment", () => {
         "Checked commit `abc1234` by tester against `http://localhost:8080` · baseline `apps/ui-baseline/output/baseline` · Tue, 03 Nov 2026 10:00:00 GMT"
       );
     });
+
+    it("should list CaTH's accessibility issues by check, most pages first, when the comparisons carry them", () => {
+      // Arrange
+      const withPatterns = (accessibilityPatterns: CompareSummary["accessibilityPatterns"]): CompareSummary => ({ ...comparison([]), accessibilityPatterns });
+      const pages = withPatterns([
+        { change: "no-h1", detail: "the page has no h1", wcag: "1.3.1 Info and Relationships (A)", pages: ["delete-subscription en"] },
+        {
+          change: "label-in-name",
+          detail: 'link shows "Cymraeg" but is named "Change language to Welsh"',
+          wcag: "2.5.3 Label in Name (A)",
+          pages: ["search en", "view-option en"]
+        }
+      ]);
+      const journeys = withPatterns([
+        {
+          change: "label-in-name",
+          detail: 'link shows "View" but is named "Opens in new window"',
+          wcag: "2.5.3 Label in Name (A)",
+          pages: ["media-applications en (review)"]
+        }
+      ]);
+
+      // Act
+      const body = buildComment(input({ comparisons: [pages], accessibility: [pages, journeys] }));
+
+      // Assert
+      expect(body).toContain("### Accessibility\n2 checks found issues on 4 page states");
+      expect(body).toContain(
+        '| label in name | 2.5.3 Label in Name (A) | 3 pages | link shows "Cymraeg" but is named "Change language to Welsh" <sub>and 1 more</sub> |\n| no h1 | 1.3.1 Info and Relationships (A) | delete-subscription (English) | the page has no h1 |'
+      );
+    });
+
+    it("should name the languages of a single page captured on mobile or as a journey step", () => {
+      // Arrange
+      const journeys: CompareSummary = {
+        ...comparison([]),
+        accessibilityPatterns: [
+          {
+            change: "error-without-summary",
+            detail: "no summary",
+            wcag: "3.3.1",
+            pages: ["email-subscriptions en (delete-subscription-no-answer)", "email-subscriptions cy (delete-subscription-no-answer)"]
+          }
+        ]
+      };
+
+      // Act
+      const body = buildComment(input({ accessibility: [journeys] }));
+
+      // Assert
+      expect(body).toContain("| error without summary | 3.3.1 | email-subscriptions (English, Welsh) | no summary |");
+    });
+
+    it("should say no issues were found when the checks ran clean, and nothing when they did not run", () => {
+      // Act
+      const clean = buildComment(input({ comparisons: [{ ...comparison([]), accessibilityPatterns: [] }] }));
+      const notRun = buildComment(input({ comparisons: [comparison([])] }));
+
+      // Assert
+      expect(clean).toContain("### Accessibility\nThe checks found no accessibility issues in CaTH's pages.");
+      expect(notRun).not.toContain("### Accessibility");
+    });
   });
 
   describe("postComment", () => {

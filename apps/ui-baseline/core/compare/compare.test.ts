@@ -9,6 +9,7 @@ interface Capture {
   locale?: string;
   state?: string;
   aria: string;
+  pageAria?: string;
   meta?: Partial<{ title: string; lang: string; forms: { action?: string | null; fields: { name: string }[] }[] }>;
   axe?: { id: string; impact: string | null; help: string }[];
   provenance?: Record<string, unknown>;
@@ -24,6 +25,7 @@ async function writeRun(dir: string, captures: Capture[], extraIndexLines: objec
     const captureDir = path.join(dir, capture.id, capture.locale ?? "en", capture.state ?? "default");
     await mkdir(captureDir, { recursive: true });
     await writeFile(path.join(captureDir, "aria.yml"), capture.aria);
+    if (capture.pageAria) await writeFile(path.join(captureDir, "page.aria.yml"), capture.pageAria);
     await writeFile(path.join(captureDir, "meta.json"), JSON.stringify({ ...META, ...capture.meta }));
     if (capture.axe) await writeFile(path.join(captureDir, "axe.json"), JSON.stringify({ violations: capture.axe }));
     if (capture.provenance) await writeFile(path.join(captureDir, "provenance.json"), JSON.stringify(capture.provenance));
@@ -78,7 +80,7 @@ describe("compareRuns", () => {
 
     // Assert
     expect(summary.results.map((r) => `${r.id} ${r.locale} ${r.verdict}`)).toEqual(["home en match", "home cy not-captured", "faq en differs"]);
-    expect(summary.totals).toEqual({ pairs: 3, match: 1, differs: 1, notCaptured: 1 });
+    expect(summary.totals).toEqual({ pairs: 3, match: 1, differs: 1, notCaptured: 1, accessibility: 0 });
     expect(JSON.parse(await readFile(path.join(out, "compare.json"), "utf-8"))).toEqual(summary);
   });
 
@@ -90,7 +92,7 @@ describe("compareRuns", () => {
     const summary = await compareRuns({ source: path.join(dir, "missing"), target: path.join(dir, "missing"), out: path.join(dir, "out") });
 
     // Assert
-    expect(summary.totals).toEqual({ pairs: 0, match: 0, differs: 0, notCaptured: 0 });
+    expect(summary.totals).toEqual({ pairs: 0, match: 0, differs: 0, notCaptured: 0, accessibility: 0 });
   });
 
   describe("headings", () => {
@@ -351,6 +353,36 @@ describe("compareRuns", () => {
 
       // Assert
       expect(findings).toEqual([]);
+    });
+  });
+
+  describe("the frame around the main region", () => {
+    const main = '  - heading "Find a court" [level=1]';
+    const frame = (links: string) => `- banner:\n${links}\n- main:\n${main}\n- contentinfo:\n  - heading "Support links" [level=2]`;
+
+    it("should report a frame link renamed in the target, ignoring the main region", async () => {
+      // Arrange
+      const source = { aria: main.trim(), pageAria: frame('  - link "Cymraeg":\n    - /url: "#"') };
+      const target = { aria: main.trim(), pageAria: frame('  - link "Change language to Welsh":\n    - /url: "?lng=cy"\n    - text: Cymraeg') };
+
+      // Act
+      const findings = await compareOne(source, target);
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['frame missing: link "Cymraeg"', 'frame extra: link "Change language to Welsh"']);
+    });
+
+    it("should find no frame difference when the frames match or either side has no page tree", async () => {
+      // Arrange
+      const pageAria = frame('  - link "Cymraeg":\n    - /url: "?lng=cy"');
+
+      // Act
+      const same = await compareOne({ aria: main.trim(), pageAria }, { aria: main.trim(), pageAria: pageAria.replace("?lng=cy", "#") });
+      const oneSided = await compareOne({ aria: main.trim() }, { aria: main.trim(), pageAria });
+
+      // Assert
+      expect(same).toEqual([]);
+      expect(oneSided).toEqual([]);
     });
   });
 

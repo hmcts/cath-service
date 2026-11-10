@@ -8,11 +8,12 @@
 export const APP_NAVIGATION = "<!-- ui-baseline: app navigation -->";
 
 // The report's sections, in order. The pages it captured are under one menu; a section's own pages
-// (a list, a page, a journey) count as being in it. Comparison and Files are only written when
-// there is a comparison of pages or of files.
+// (a list, a page, a journey) count as being in it. Comparison, Accessibility and Files are only
+// written when there is a comparison of pages, accessibility checks or a comparison of files.
 const SECTIONS = [
   { href: "index.html", text: "Overview" },
   { href: "comparison.html", text: "Comparison", needs: "comparison" },
+  { href: "accessibility.html", text: "Accessibility", needs: "accessibility" },
   {
     text: "Pages",
     items: [

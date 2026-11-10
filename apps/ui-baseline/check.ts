@@ -572,6 +572,7 @@ const body = buildComment({
   skipped: scope.skipped,
   evidence: ["report.zip", ...screenshots],
   comparisons: Object.values(comparisons),
+  accessibility: [...Object.values(comparisons), ...(journeysCompared ? [journeysCompared.pages] : [])],
   reviews: Object.values(reviews),
   files: filesCompared ? { compared: filesCompared.totals.files, differ: filesDiffer } : undefined,
   journeys: journeysCompared ? { compared: journeysCompared.totals.runs, differ: journeysDiffer } : undefined

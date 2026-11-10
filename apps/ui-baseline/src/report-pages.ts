@@ -48,7 +48,7 @@ function redrawn(views: nunjucks.Environment, html: string): string | null {
     body: html.slice(start + OLD_MAIN.length, end),
     depth: (html.match(OLD_DEPTH)?.[1] ?? "").length / "../".length,
     active: navigation.match(OLD_ACTIVE)?.[1] ?? null,
-    has: { comparison: hasSection("comparison.html"), files: hasSection("files.html") },
+    has: { comparison: hasSection("comparison.html"), files: hasSection("files.html"), accessibility: hasSection("accessibility.html") },
     footerMeta: footerMeta(baseline ? { finished: baseline[1], pip: baseline[2] } : null),
     filterScript: html.match(OLD_FILTER_SCRIPT)?.[1] ?? ""
   });

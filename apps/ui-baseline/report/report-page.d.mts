@@ -6,7 +6,7 @@ export interface ReportPageOptions {
   body: string;
   depth: number;
   active: string | null;
-  has: { comparison: boolean; files: boolean };
+  has: { comparison: boolean; files: boolean; accessibility?: boolean };
   footerMeta: string;
   filterScript: string;
 }

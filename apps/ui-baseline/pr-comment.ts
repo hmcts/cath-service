@@ -68,6 +68,7 @@ export function buildComment(input: CommentInput): string {
       ? `<details><summary>${intended.length} intended difference${intended.length === 1 ? "" : "s"}</summary>\n\n${table(intended)}\n\n</details>\n`
       : "",
     !reviewed && input.comparisons.length ? `<details><summary>Findings by category</summary>\n\n${categorySummary(input.comparisons)}\n\n</details>\n` : "",
+    accessibilitySection(input.accessibility ?? input.comparisons),
     input.files
       ? input.files.differ.length
         ? `### PDF and Excel files\n${input.files.differ.length} of ${input.files.compared} files differ from pip (PDFs by text only):\n${input.files.differ.map((file) => `- ${cell(file)}`).join("\n")}\n`
@@ -127,8 +128,41 @@ function categorySummary(comparisons: CompareSummary[]): string {
   ].join("\n");
 }
 
+// CaTH's own accessibility issues, by check, from every area checked. They are not differences from
+// pip, so they are not reviewed against the ticket: each is for the team to fix or accept.
+function accessibilitySection(summaries: CompareSummary[]): string {
+  const patterns = summaries.flatMap((summary) => summary.accessibilityPatterns ?? []);
+  if (!summaries.some((summary) => summary.accessibilityPatterns)) return "";
+  if (!patterns.length) return "### Accessibility\nThe checks found no accessibility issues in CaTH's pages.\n";
+  const byCheck = [...Map.groupBy(patterns, (p) => p.change).entries()]
+    .map(([check, group]) => ({ check, group, pages: new Set(group.flatMap((p) => p.pages)) }))
+    .sort((a, b) => b.pages.size - a.pages.size);
+  const pageCount = new Set(patterns.flatMap((p) => p.pages)).size;
+  const rows = byCheck
+    .slice(0, MAX_ROWS)
+    .map(
+      ({ check, group, pages }) =>
+        `| ${cell(check.replace(/-/g, " "))} | ${cell(group[0].wcag)} | ${cell(pagesLabel([...pages]))} | ${cell(truncate(group[0].detail, 160))}${group.length > 1 ? ` <sub>and ${group.length - 1} more</sub>` : ""} |`
+    );
+  return [
+    "### Accessibility",
+    `${byCheck.length} check${byCheck.length === 1 ? "" : "s"} found issues on ${pageCount} page state${pageCount === 1 ? "" : "s"}, checking CaTH on its own against WCAG 2.2, so these include issues pip has too. Keyboard behaviour, timeouts, zoom and screen reader announcements still need testing by hand.`,
+    "",
+    "<details><summary>Issues by check</summary>",
+    "",
+    "| Check | WCAG | Pages | Example |",
+    "|---|---|---|---|",
+    ...rows,
+    ...(byCheck.length > MAX_ROWS ? [`| _…and ${byCheck.length - MAX_ROWS} more in the full report_ | | | |`] : []),
+    "",
+    "</details>",
+    ""
+  ].join("\n");
+}
+
 function pagesLabel(pages: string[]): string {
-  const languages = (page: string) => (page.endsWith(" cy") ? "Welsh" : page.endsWith(" en") ? "English" : "");
+  // A page is "<id> <locale>", with " (<state>)" after it for a mobile capture or a journey step
+  const languages = (page: string) => ({ cy: "Welsh", en: "English" })[page.match(/ (en|cy)( \(.*\))?$/)?.[1] ?? ""] ?? "";
   const ids = [...new Set(pages.map((page) => page.replace(/ (en|cy)( \(.*\))?$/, "")))];
   if (ids.length === 1) return `${ids[0]} (${[...new Set(pages.map(languages))].filter(Boolean).join(", ")})`;
   return `${ids.length} pages`;
@@ -160,6 +194,8 @@ export interface CommentInput {
   pages: { label: string; english: string; welsh: string }[];
   skipped: string[];
   comparisons: CompareSummary[];
+  // Where CaTH's own accessibility findings come from, when not just the comparisons (journey steps too)
+  accessibility?: CompareSummary[];
   reviews: ReviewResult[];
   // The PDF and Excel files compared, and a line for each that differs
   files?: { compared: number; differ: string[] };
