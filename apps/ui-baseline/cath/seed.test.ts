@@ -98,6 +98,9 @@ describe("cath seed script", () => {
   let dir: string;
   let output: string;
   let artefactCount: number;
+  let locationCount: number;
+  // What GET /test-support/locations answers: CaTH's locations, including runs' own courts
+  let existingLocations: { locationId: number; name: string }[];
 
   function route(url: string, init?: RequestInit): Response {
     const method = init?.method ?? "GET";
@@ -107,6 +110,10 @@ describe("cath seed script", () => {
     if (url === `${API}/test-support/flat-files`) return Response.json({});
     if (url.startsWith("https://login.microsoftonline.com/")) return Response.json({ access_token: "token-1" });
     if (url === `${API}/publication`) return Response.json({ artefactId: `api-${++artefactCount}` });
+    if (url === `${API}/test-support/locations` && method === "GET") return Response.json(existingLocations);
+    if (url === `${API}/test-support/locations` && method === "POST") return Response.json({ locationId: 90000 + ++locationCount });
+    if (url === `${API}/test-support/locations` && method === "DELETE") return Response.json({ deleted: 1 });
+    if (url === `${API}/test-support/subscriptions` && method === "DELETE") return Response.json({ deleted: 0 });
     return new Response("unexpected", { status: 500 });
   }
 
@@ -117,6 +124,8 @@ describe("cath seed script", () => {
     vi.resetModules();
     vi.clearAllMocks();
     artefactCount = 0;
+    locationCount = 0;
+    existingLocations = [];
     dir = await mkdtemp(path.join(tmpdir(), "cath-seed-"));
     output = path.join(dir, "seed", "cath-local.json");
     process.argv = ["node", "seed.ts"];
@@ -284,6 +293,85 @@ describe("cath seed script", () => {
 
     // Assert
     await expect(result).rejects.toThrow("no publication API credentials for test");
+  });
+
+  describe("a deployed CaTH", () => {
+    const body = (init: RequestInit) => JSON.parse(String(init.body));
+    const header = (init: RequestInit, name: string) => (init.headers as Record<string, string>)[name];
+    // A run token as run.ts makes them, for a run started at this time
+    const tokenAt = (ms: number) => `uic${Math.floor(ms / 1000).toString(36)}abcd`;
+
+    const secrets: Record<string, string> = { "client-name": "vault-client", "tenant-name": "vault-tenant", "secret-name": "vault-secret" };
+
+    beforeEach(() => {
+      mocks.loadEnvironment.mockResolvedValue({
+        name: "aat",
+        cath: { apiUrl: API, signIn: "accounts", publicationApi: { clientId: "client-name", tenantId: "tenant-name", clientSecret: "secret-name" } },
+        secret: vi.fn(async (_config: unknown, name: string) => secrets[name])
+      });
+    });
+
+    it("should publish through the publication API, as CaTH's E2E tests do, to courts of the run's own", async () => {
+      // Act
+      await import("./seed.js");
+
+      // Assert
+      const result = JSON.parse(await readFile(output, "utf-8"));
+      expect(result.runToken).toMatch(/^uic[0-9a-z]{8,}$/);
+      expect(result).toMatchObject({ environment: "aat", locations: { "9": 90001 } });
+      expect(result.ingestion).toBe("publication API POST /publication, on courts of the run's own");
+      const [court] = calls(`${API}/test-support/locations`);
+      expect(body(court)).toEqual({
+        name: `${result.runToken} Single Justice Procedure`,
+        welshName: `${result.runToken} Gweithdrefn Un Ynad`,
+        regionIds: [1, 2, 3, 4, 5],
+        subJurisdictionIds: [7]
+      });
+      const published = calls(`${API}/publication`);
+      expect(published).toHaveLength(3);
+      expect(published.map((init) => header(init, "x-court-id"))).toEqual(["90001", "90001", "90001"]);
+      expect(published.every((init) => header(init, "Authorization") === "Bearer token-1")).toBe(true);
+      expect(calls("https://login.microsoftonline.com/vault-tenant/oauth2/v2.0/token")).toHaveLength(1);
+      expect(result.publications["json-list"]).toMatchObject({ artefactId: expect.stringMatching(/^api-/), locationId: 90001 });
+      expect(result.publications["excel-list"].excelUploaded).toBe(false);
+      expect(body(calls(`${API}/test-support/artefacts`)[0])).toMatchObject({ locationId: "90001", isFlatFile: true });
+      expect(mocks.processPublication).not.toHaveBeenCalled();
+    });
+
+    it("should first remove runs old enough to be over, with what was published to their courts, and leave recent ones", async () => {
+      // Arrange
+      const old = tokenAt(Date.now() - 4 * 60 * 60 * 1000);
+      const recent = tokenAt(Date.now() - 10 * 60 * 1000);
+      existingLocations = [
+        { locationId: 91, name: `${old} Oxford Combined Court Centre` },
+        { locationId: 92, name: `${old} Single Justice Procedure` },
+        { locationId: 93, name: `${recent} Oxford Combined Court Centre` },
+        { locationId: 9, name: "Single Justice Procedure" }
+      ];
+
+      // Act
+      await import("./seed.js");
+
+      // Assert
+      expect(calls(`${API}/test-support/artefacts`, "DELETE").map(body)).toEqual([{ locationId: "91" }, { locationId: "92" }]);
+      expect(calls(`${API}/test-support/subscriptions`, "DELETE").map(body)).toEqual([{ searchType: "LOCATION_ID", searchValues: ["91", "92"] }]);
+      expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [91, 92] }]);
+    });
+
+    it("should remove the run its previous seed recorded, however recent", async () => {
+      // Arrange
+      const previous = tokenAt(Date.now() - 60 * 1000);
+      await mkdir(path.dirname(output), { recursive: true });
+      await writeFile(output, JSON.stringify({ app: "cath", runToken: previous, publications: { "json-list": { artefactId: "old-1" } }, rejected: {} }));
+      existingLocations = [{ locationId: 94, name: `${previous} Single Justice Procedure` }];
+
+      // Act
+      await import("./seed.js");
+
+      // Assert
+      expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [94] }]);
+      expect(calls(`${API}/test-support/artefacts`, "DELETE").map(body)).toEqual([{ locationId: "94" }]);
+    });
   });
 
   it("should fail when a client id is set without its tenant or secret", async () => {

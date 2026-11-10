@@ -10,6 +10,7 @@ import { NOT_FOUND_ID, NOT_FOUND_PATH } from "./variants.js";
 // and imports it afresh, with every collaborator that would reach a browser, CaTH, GitHub or Azure
 // mocked. The mocks are hoisted so they survive vi.resetModules.
 const mocks = vi.hoisted(() => ({
+  removeRuns: vi.fn(),
   execFileSync: vi.fn(),
   spawn: vi.fn(),
   spawnSync: vi.fn(),
@@ -58,6 +59,7 @@ vi.mock("./core/index.js", () => ({
 }));
 vi.mock("./downloads.js", () => ({ captureDownloads: mocks.captureDownloads, loadDownloads: mocks.loadDownloads, seedResolver: mocks.seedResolver }));
 vi.mock("./environments.js", () => ({ filesStorage: mocks.filesStorage, loadEnvironment: mocks.loadEnvironment }));
+vi.mock("./cath/run.js", () => ({ cathApi: (apiUrl: string) => `api at ${apiUrl}`, removeRuns: mocks.removeRuns }));
 vi.mock("./fixtures/manifest.js", () => ({ loadManifest: mocks.loadManifest }));
 vi.mock("./pr-comment.js", async (importOriginal) => ({ ...(await importOriginal<typeof import("./pr-comment.js")>()), postComment: mocks.postComment }));
 vi.mock("./scope.js", async (importOriginal) => ({ ...(await importOriginal<typeof import("./scope.js")>()), ticketText: mocks.ticketText }));
@@ -455,6 +457,71 @@ describe("check", () => {
         ]),
         4
       );
+    });
+
+    describe("of a shared CaTH, seeded on courts of the run's own", () => {
+      const RUN_SEED = { ...CATH_SEED, environment: "aat", runToken: "uicsm9x2kababcd", locations: { "9": 90001 } };
+
+      it("should drop the run's token from CaTH's captures and take pip's court to the run's copy of it", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+        writeJson(path.join(baseline, "seed.json"), { ...PIP_SEED, locations: { "9": "PIPLOC" } });
+
+        // Act
+        await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(targetsIn("lists")[0].source).toMatchObject({ runToken: "uicsm9x2kababcd" });
+        expect(targetsIn("pages").every((target) => target.source.runToken === "uicsm9x2kababcd")).toBe(true);
+        expect(targetsIn("pages").find((t) => t.id === "page--summary-of-publications")?.url).toBe(
+          `${TARGET}/summary-of-publications?locationId=90001&artefactId=CATH-ART-1`
+        );
+      });
+
+      it("should remove the run, and its record, when the check ends", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+
+        // Act
+        await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" });
+        expect(existsSync(seedFile())).toBe(false);
+      });
+
+      it("should leave the run in place when --keep-seed is given", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+
+        // Act
+        await runCheck(["--ticket", "42", "--keep-seed"]);
+
+        // Assert
+        expect(mocks.removeRuns).not.toHaveBeenCalled();
+        expect(existsSync(seedFile())).toBe(true);
+      });
+
+      it("should finish the check when the run cannot be removed, leaving it to a later check", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+        mocks.removeRuns.mockRejectedValueOnce(new Error("DELETE /test-support/locations failed: 500"));
+
+        // Act
+        const { error } = await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(error).toBeUndefined();
+        expect(logs.join("\n")).toContain("could not remove run uicsm9x2kababcd, so a later check will");
+      });
+    });
+
+    it("should remove nothing when CaTH was seeded at the fixture courts themselves", async () => {
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      expect(mocks.removeRuns).not.toHaveBeenCalled();
     });
 
     it("should capture as many pages at once as UI_BASELINE_CONCURRENCY says when --concurrency is not given", async () => {

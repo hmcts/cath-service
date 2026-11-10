@@ -1,10 +1,10 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { openBlobContainer } from "../core/index.js";
 import { filesStorage, loadEnvironment } from "../environments.js";
-import { loadUsers } from "../fixtures/manifest.js";
+import { loadUsers, type SeedResult } from "../fixtures/manifest.js";
 import { prismaRecordStore, type SeedRecords, seedRecords, testSupportRecordStore } from "./records.js";
 import type { SignedInUser } from "./sign-ins.js";
 
@@ -19,6 +19,8 @@ const PARITY_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..")
 const { values: args } = parseArgs({ options: { env: { type: "string" } } });
 const environment = await loadEnvironment(args.env);
 const output = process.env.PARITY_SIGN_IN_OUTPUT ?? path.join(PARITY_DIR, "output/seed", `cath-sign-in-${environment.name}.json`);
+// What seed.ts seeded, at the path it wrote it to: a deployed CaTH's subscriptions go to its run's courts
+const seedOutput = process.env.PARITY_SEED_OUTPUT ?? path.join(PARITY_DIR, "output/seed", `cath-${environment.name}.json`);
 const users = await loadUsers();
 
 const signIns =
@@ -32,7 +34,14 @@ const store =
   environment.cath.signIn === "session"
     ? await prismaRecordStore()
     : testSupportRecordStore(environment.cath.apiUrl, openBlobContainer(filesStorage("cath", environment.cath, "files")));
-const records = await seedRecords(store, signIns.cathUsers);
+const deployed = environment.cath.signIn !== "session";
+const seeded = deployed
+  ? await readFile(seedOutput, "utf-8").then(
+      (text) => JSON.parse(text) as SeedResult,
+      () => null
+    )
+  : null;
+const records = deployed ? await seedRecords(store, signIns.cathUsers, seeded?.locations ?? {}) : await seedRecords(store, signIns.cathUsers);
 if (environment.cath.signIn === "session") await (await import("@hmcts/postgres-prisma")).prisma.$disconnect();
 
 // Looked up by name, never assumed: list type ids differ between environments

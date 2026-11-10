@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -47,6 +47,7 @@ describe("cath sign-in script", () => {
     dir = await mkdtemp(path.join(tmpdir(), "cath-sign-in-"));
     output = path.join(dir, "nested", "sign-in.json");
     vi.stubEnv("PARITY_SIGN_IN_OUTPUT", output);
+    vi.stubEnv("PARITY_SEED_OUTPUT", path.join(dir, "seed.json"));
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "log").mockImplementation(() => {});
     fetchMock.mockResolvedValue(new Response(JSON.stringify([{ id: 7, name: "CIVIL_DAILY_CAUSE_LIST" }])));
@@ -102,6 +103,7 @@ describe("cath sign-in script", () => {
     mocks.openBlobContainer.mockReturnValue({ upload: vi.fn() });
     const store = { kind: "test-support" };
     mocks.testSupportRecordStore.mockReturnValue(store);
+    await writeFile(path.join(dir, "seed.json"), JSON.stringify({ runToken: "uicsm9x2kababcd", locations: { "9": 90001 } }));
 
     // Act
     await import("./sign-in.js");
@@ -111,8 +113,25 @@ describe("cath sign-in script", () => {
     expect(mocks.signInWithAccounts).toHaveBeenCalledWith(environment, USERS);
     expect(mocks.filesStorage).toHaveBeenCalledWith("cath", environment.cath, "files");
     expect(mocks.testSupportRecordStore).toHaveBeenCalledWith("https://api", expect.objectContaining({ upload: expect.any(Function) }));
-    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers);
+    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers, { "9": 90001 });
     expect(mocks.disconnect).not.toHaveBeenCalled();
     expect(JSON.parse(await readFile(output, "utf-8")).environment).toBe("test");
+  });
+
+  it("should give a deployed CaTH's records no courts when nothing was seeded, so none are subscribed to a real court", async () => {
+    // Arrange
+    process.argv = ["node", "sign-in.ts", "--env", "test"];
+    mocks.loadEnvironment.mockResolvedValue({ name: "test", cath: { signIn: "accounts", apiUrl: "https://api" } });
+    mocks.signInWithAccounts.mockResolvedValue(SIGN_INS);
+    mocks.filesStorage.mockReturnValue({ container: "files" });
+    mocks.openBlobContainer.mockReturnValue({ upload: vi.fn() });
+    const store = { kind: "test-support" };
+    mocks.testSupportRecordStore.mockReturnValue(store);
+
+    // Act
+    await import("./sign-in.js");
+
+    // Assert
+    expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers, {});
   });
 });
