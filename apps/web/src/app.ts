@@ -75,6 +75,8 @@ const __dirname = path.dirname(__filename);
 const isLocalDev = process.env.LOCAL_DEV === "true";
 const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
+// Under Azure Cache for Redis's 10-minute idle timeout.
+const REDIS_PING_INTERVAL_MS = 300_000;
 
 export async function createApp(): Promise<Express> {
   await getPropertiesVolumeSecrets({ chartPath, omit: localEnvOverrides(), vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
@@ -242,9 +244,12 @@ function localEnvOverrides(): string[] {
     .map(([key]) => key);
 }
 
+// Session store client. Azure Cache for Redis closes connections that are idle
+// for 10 minutes, which node-redis logs as SocketClosedUnexpectedlyError, so it
+// pings to keep the connection open (#1033).
 const getRedisClient = async (config: { get: (key: string) => any }) => {
   const url = process.env.REDIS_URL ?? config.get("redis.url");
-  const redisClient = createClient({ url });
+  const redisClient = createClient({ url, pingInterval: REDIS_PING_INTERVAL_MS });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
   await redisClient.connect();

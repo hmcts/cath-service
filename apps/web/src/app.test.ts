@@ -324,7 +324,8 @@ describe("Web Application", () => {
     it("should connect to Redis", async () => {
       const { createClient } = await import("redis");
       expect(createClient).toHaveBeenCalledWith({
-        url: "redis://localhost:6379"
+        url: "redis://localhost:6379",
+        pingInterval: 300_000
       });
     });
 
