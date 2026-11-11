@@ -4,3 +4,4 @@ export {
   sendMediaNewAccountEmail,
   sendMediaRejectionEmail
 } from "./govuk-notify-service.js";
+export { sendMediaApplicationReportEmail } from "./media-application-report-email.js";
