@@ -325,8 +325,11 @@ For a list a tester uploaded to both apps by hand, compare the two without seedi
 yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env aat] [--name civil-list]
 ```
 
-It also prints the list's page in each app. This reads pip's files from pip's test storage account (`pipsssatest`), which needs the Storage Blob
-Data Reader role on it, or a connection string in `PIP_STORAGE_CONNECTION_STRING`.
+It also prints the list's page in each app. In aat, pip's files are downloaded from pip-frontend
+(`/list-download-files`) as the IDAM test account, as a verified user downloads them, so it needs
+no access to pip's storage. The account sees what a verified CFT user may: a classified list
+restricted to another provenance is reported as not served, and pip serves no separate Welsh PDF
+there, so CaTH's is shown as made only by CaTH. Locally, pip's files are read from its storage.
 
 ## Checking accessibility
 
@@ -497,9 +500,6 @@ host, is refused.
   ([The IDAM test account](#the-idam-test-account)).
 - Apply the Terraform for aat, which adds the `ui-baseline` container to `cathsaaat`
   (`ui_baseline` in `infrastructure/env-config.tf`).
-- Grant the CaTH AAT managed identity the Storage Blob Data Reader role on pip's test storage
-  account (`pipsssatest`), for file comparisons. Without it, file comparisons fail with a message
-  saying so.
 - Record and store a baseline: run the "UI baseline - record pip" workflow once.
 
 Recommended, not yet done:
