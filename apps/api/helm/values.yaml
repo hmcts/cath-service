@@ -33,7 +33,7 @@ nodejs:
         - name: govuk-notify-api-key
           alias: GOVUK_NOTIFY_API_KEY
         # Third-party push secrets (Courtel)
-        - name: auto-pip-stg-courtel-api
+        - name: auto-pip-<ENV>-courtel-api
           alias: COURTEL_API_URL
         - name: courtel-certificate
           alias: COURTEL_CERTIFICATE

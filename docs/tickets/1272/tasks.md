@@ -35,10 +35,10 @@
 - [x] `findArtefactsDisplayedFromToday` includes scheduled list types and selects the push fields; `triggerDisplayFromSubscriptions` emails non-scheduled artefacts and pushes every artefact to third parties, returning `{ email, thirdParty }`
 - [x] Courtel PDFs and flat files are read from blob storage, not the local filesystem: `PushFiles` buffers in `executePush`/`pushWithRetry`, `loadFiles` callback on `sendThirdPartyPublications`, `pushPublicationToThirdParties` in `processing/service.ts`; drop the unused `flatFilePath` param from `processPublication`
 - [x] `sendThirdPartyPublications` returns `"sent" | "failed" | "skipped"`; a missing flat file fails the push instead of sending it empty
-- [x] Courtel secrets (`auto-pip-stg-courtel-api`, `courtel-certificate`) in `apps/api/helm/values.yaml` and `apps/crons/helm/values.yaml`
+- [x] Courtel secrets (`auto-pip-<ENV>-courtel-api`, `courtel-certificate`, matching web after #1385) in `apps/api/helm/values.yaml` and `apps/crons/helm/values.yaml`
 - [x] Tests: `libs/publication` 678, `libs/legacy-third-party-fulfilment` 58, `apps/crons` 22 pass; Biome clean on changed files; `turbo build` of `@hmcts/crons...`, `@hmcts/api...` and `@hmcts/web...` succeeds
 - [x] Raise a separate issue (linked to #323) for matching legacy's Courtel request format, after confirming it with Courtel (#1380)
-- [ ] Note the `auto-pip-stg-courtel-api` prod rename for all three charts on #1097
+- [x] Prod Courtel secret name: switched api and crons to `auto-pip-<ENV>-courtel-api`, as #1385 (#1097) asked; no separate note needed
 - [x] Update the PR #1306 description: third-party scope, Courtel fixes, the double push until #588 ships
 
 ### Verification

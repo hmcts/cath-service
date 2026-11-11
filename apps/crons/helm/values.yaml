@@ -29,7 +29,7 @@ job:
         - name: storageaccount-name
           alias: AZURE_STORAGE_ACCOUNT_NAME
         # Third-party push secrets (Courtel), for the display-from run
-        - name: auto-pip-stg-courtel-api
+        - name: auto-pip-<ENV>-courtel-api
           alias: COURTEL_API_URL
         - name: courtel-certificate
           alias: COURTEL_CERTIFICATE

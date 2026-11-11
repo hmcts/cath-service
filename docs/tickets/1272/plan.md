@@ -305,8 +305,9 @@ Now `executePush` and `pushWithRetry` take file contents (`PushFiles`: `pdf?: Bu
 The request shape is unchanged: one multipart with `json` and `pdf` parts, or a `file` part. Legacy (`pip-publication-services` `LegacyThirdPartyService`) sends JSON and PDF as two POSTs, adds the Welsh PDF, names flat files with `sourceArtefactId`, and sets `x-source-artefact-id` to `sourceArtefactId` and the PDF call's `x-provenance` to `CATH`. Matching that is #1380 (follow-up to #323), to be confirmed with Courtel first.
 
 ### Courtel secrets for api and crons
-- `apps/api/helm/values.yaml` had none, so the API ingestion path never pushed. Both charts now mount `auto-pip-stg-courtel-api` -> `COURTEL_API_URL` and `courtel-certificate` -> `COURTEL_CERTIFICATE`, as `apps/web/helm/values.yaml` does. `getPropertiesVolumeSecrets` sets them as environment variables by alias.
-- The name stays `auto-pip-stg-courtel-api` in every environment, because that is the only name in cath-aat, cath-demo, cath-perftest and cath-stg (checked 2026-11-09). `auto-pip-<ENV>-courtel-api` would stop the pods starting there. For prod, #1097 reports the value is being copied as `auto-pip-prod-courtel-api`, so all three charts need the same rename when that is settled.
+- `apps/api/helm/values.yaml` had none, so the API ingestion path never pushed. Both charts now mount `auto-pip-<ENV>-courtel-api` -> `COURTEL_API_URL` and `courtel-certificate` -> `COURTEL_CERTIFICATE`, as `apps/web/helm/values.yaml` does since #1385 (#1097).
+  - #1385 seeded `auto-pip-aat-`, `-demo-` and `-perftest-courtel-api` on 2026-11-10. `cath-prod` holds `auto-pip-prod-courtel-api`, the name PIP uses. #1385 asked #1306 to use the same name, because the old `auto-pip-stg-courtel-api` is missing in prod and the pods would not start.
+  - The crons `job` chart and web's `nodejs` chart both use `library` 2.3.1. Its `_secretproviderclass.tpl` replaces `<ENV>` with `global.environment` and mounts each secret under its alias. `getPropertiesVolumeSecrets` then sets `COURTEL_API_URL` from the alias, as it does for web's `b2c-<ENV>-*` secrets.
 - `apps/api/helm/values.dev.yaml` is unchanged, so local API runs do not push to the real Courtel endpoint.
 
 ### Until #588 ships
