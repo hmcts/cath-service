@@ -21,6 +21,10 @@ const LOG_LINES = 80;
 const CAPTURED_CONTENT_POLICY = "sandbox";
 // Far more than 80 lines of a check's log, which are short
 const LOG_TAIL_BYTES = 64 * 1024;
+// Where make-report.mjs writes the report's own pages: at its top, and one per list, page and journey.
+// The captured pip and CaTH pages are deeper, under lists/ and data/, so whatever markup they carry
+// they are never taken for one.
+const REPORT_PAGE_PATH = /^\/(?:(?:lists|pages|journeys)\/)?[^/]+\.html$/;
 const GOVUK_FRONTEND = path.dirname(fileURLToPath(import.meta.resolve("govuk-frontend/package.json")));
 // The report's own stylesheet and the navigation it shares with these pages, served as they are now
 // for every report, so one written before them still has them
@@ -70,19 +74,12 @@ export function createApp(options: AppOptions): Express {
     if (!run) return res.status(404).render("not-found");
     const dir = await options.runner.directory(run.id);
     const log = dir && existsSync(path.join(dir, "log.txt")) ? await logTail(path.join(dir, "log.txt")) : "";
-    const files =
-      run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/files-compare.json"))
-        ? JSON.parse(await readFile(path.join(dir, "files/compare/files-compare.json"), "utf-8"))
-        : null;
+    const files = run.kind === "files" && dir ? await readJson(path.join(dir, "files/compare/files-compare.json")) : null;
     // Where the publication is in each app
-    const links =
-      run.kind === "files" && dir && existsSync(path.join(dir, "files/compare/links.json"))
-        ? JSON.parse(await readFile(path.join(dir, "files/compare/links.json"), "utf-8"))
-        : null;
-    // How far a check has got, as it writes it (check.ts); replaced whole, so never read half written
-    const progressFile = run.kind === "check" && dir ? path.join(dir, "check/progress.json") : null;
-    const progress =
-      progressFile && existsSync(progressFile) ? describeProgress(JSON.parse(await readFile(progressFile, "utf-8")) as ProgressFile, run.status) : null;
+    const links = run.kind === "files" && dir ? await readJson(path.join(dir, "files/compare/links.json")) : null;
+    // How far a check has got, as it writes it (check.ts)
+    const progressFile = run.kind === "check" && dir ? await readJson<ProgressFile>(path.join(dir, "check/progress.json")) : null;
+    const progress = progressFile ? describeProgress(progressFile, run.status) : null;
     res.render("run", { run, log, files, links, progress, hasReport: run.kind === "check" && !!dir && existsSync(path.join(dir, "check/report/index.html")) });
   });
 
@@ -151,11 +148,22 @@ async function servable(dataDir: string, root: string, requestPath: string): Pro
 // CaTH pages kept beside it; null for anything else, which is served as it is
 async function reportPage(root: string, requestPath: string): Promise<string | null> {
   const relative = safeDecode(requestPath);
-  if (relative === null || relative.split("/").some((segment) => segment.startsWith("."))) return null;
+  if (relative === null || !REPORT_PAGE_PATH.test(relative) || relative.split("/").some((segment) => segment.startsWith("."))) return null;
   const file = path.join(root, relative);
   if (!file.startsWith(`${root}${path.sep}`) || !existsSync(file)) return null;
   const html = await readFile(file, "utf-8").catch(() => null);
   return html && isReportPage(html) ? html : null;
+}
+
+// A JSON file a run writes, or null when it is not there yet or is read while it is being written:
+// the run page is refreshed as a run goes, and files-compare.json and links.json are not replaced whole
+async function readJson<T = unknown>(file: string): Promise<T | null> {
+  if (!existsSync(file)) return null;
+  try {
+    return JSON.parse(await readFile(file, "utf-8")) as T;
+  } catch {
+    return null;
+  }
 }
 
 function safeDecode(value: string): string | null {
@@ -180,7 +188,6 @@ function requestFrom(body: Record<string, string>): RunRequest {
   return { kind: "check", scope: "all" };
 }
 
-// The end of a run's log, which is where its progress and result are
 // The end of a run's log, read from the end of the file: a check of all of CaTH writes a line per
 // capture, and the run page is refreshed while it runs, so the whole file is not read each time
 async function logTail(file: string, lines = LOG_LINES): Promise<string> {

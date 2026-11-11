@@ -247,7 +247,7 @@ const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.nam
 if (seeding) {
   step("Seeding CaTH");
   progress.start("seed");
-  const seeding = spawnSync(
+  const seedProcess = spawnSync(
     TSX,
     [...(existsSync(path.join(REPO_DIR, ".env")) ? ["--env-file=.env"] : []), "apps/ui-baseline/cath/seed.ts", ...envArgs, `--only=${seedIds.join(",")}`],
     {
@@ -256,8 +256,9 @@ if (seeding) {
       encoding: "utf-8"
     }
   );
-  for (const line of `${seeding.stdout}${seeding.stderr}`.split("\n").filter((l) => /published|REJECTED|Error/.test(l))) console.log(`  ${line.trim()}`);
-  if (seeding.status !== 0) throw new Error("seeding CaTH failed");
+  for (const line of `${seedProcess.stdout}${seedProcess.stderr}`.split("\n").filter((l) => /published|REJECTED|Error/.test(l)))
+    console.log(`  ${line.trim()}`);
+  if (seedProcess.status !== 0) throw new Error("seeding CaTH failed");
   progress.complete("seed");
 } else progress.skip("seed", args["no-seed"] ? "not asked for" : "nothing to seed");
 const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;

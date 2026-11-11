@@ -547,8 +547,7 @@ describe("testSupportRecordStore", () => {
     // Arrange
     fetchMock
       .mockResolvedValueOnce(json([{ id: "a1", timestamp: "2026-01-02T03:04:05Z", userId: "admin-id" }]))
-      // Someone else's entry with the same action and details is not the user's
-      .mockResolvedValueOnce(json([{ id: "theirs", timestamp: "2026-01-01T00:00:00Z", userId: "someone-else" }]))
+      .mockResolvedValueOnce(json([]))
       .mockResolvedValueOnce(json({ id: "a2", timestamp: "2026-01-03T00:00:00Z" }));
 
     // Act
@@ -558,7 +557,8 @@ describe("testSupportRecordStore", () => {
     // Assert
     expect(existing).toEqual({ id: "a1", timestamp: "2026-01-02T03:04:05.000Z" });
     expect(created).toEqual({ id: "a2", timestamp: "2026-01-03T00:00:00.000Z" });
-    expect(call(0).url).toBe(`${API}/test-support/audit-logs?action=MANAGE_USER&details=d`);
+    // Only the user's own entry, never someone else's with the same action and details
+    expect(call(0).url).toBe(`${API}/test-support/audit-logs?action=MANAGE_USER&details=d&userId=admin-id`);
     expect(call(2).body).toEqual({ userId: "admin-id", action: "MANAGE_USER", details: "d" });
   });
 

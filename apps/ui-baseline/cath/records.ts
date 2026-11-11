@@ -210,9 +210,7 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
     },
     async ensureAuditEntry(user, action, details) {
       // The user's own entry, never someone else's with the same action and details
-      const found = (await api<{ id: string; timestamp: string; userId: string }[]>("GET", `/audit-logs${query({ action, details })}`)).find(
-        (candidate) => candidate.userId === user.userId
-      );
+      const [found] = await api<{ id: string; timestamp: string }[]>("GET", `/audit-logs${query({ action, details, userId: user.userId })}`);
       const entry = found ?? (await api<{ id: string; timestamp: string }>("POST", "/audit-logs", { userId: user.userId, action, details }));
       return { id: entry.id, timestamp: new Date(entry.timestamp).toISOString() };
     },

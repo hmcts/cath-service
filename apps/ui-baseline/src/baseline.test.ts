@@ -28,6 +28,18 @@ async function cache(latestId: { value: string }, root?: string) {
 const kept = async (root: string) => (await readdir(root)).sort();
 
 describe("createBaselineCache", () => {
+  it("should refuse a baseline id that reaches outside the baselines folder, without fetching it", async () => {
+    // Arrange
+    const { baselines, pull } = await cache({ value: "one" });
+
+    // Act
+    const asked = baselines.ensure("../runs");
+
+    // Assert
+    await expect(asked).rejects.toThrow('"../runs" is not a baseline id');
+    expect(pull).not.toHaveBeenCalled();
+  });
+
   it("should fetch the latest baseline once, however many ask at the same time", async () => {
     // Arrange
     const { baselines, pull, root } = await cache({ value: "one" });
