@@ -1,0 +1,47 @@
+name: Probe PROD Reachability
+
+# Throwaway for #1099: can the self-hosted runners reach the PROD hosts? The
+# cath host resolves to Front Door, whose WAF only allows the IDAM IP list, so
+# each runner prints its public IP to compare against that list. Delete this
+# file before the PR merges.
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/probe.prod-reachability.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe (${{ matrix.runner-group }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner-group: [azure-prod, azure-nonprod]
+    runs-on:
+      group: ${{ matrix.runner-group }}
+
+    steps:
+      - name: Public egress IP
+        run: |
+          curl -s --max-time 10 https://api.ipify.org || echo "could not fetch the public IP"
+          echo
+
+      - name: Probe the PROD hosts
+        run: |
+          for url in \
+            https://cath.platform.hmcts.net/ \
+            https://cath.platform.hmcts.net/health \
+            https://cath.platform.hmcts.net/test-support/health \
+            https://cath-api.platform.hmcts.net/ \
+            https://cath-api.platform.hmcts.net/health; do
+            host=$(echo "${url}" | sed -E 's#^https?://##; s#/.*$##')
+            echo "=== ${url}"
+            getent hosts "${host}" || echo "no DNS answer for ${host}"
+            curl -s -o /dev/null --max-time 20 \
+              -w "status=%{http_code} ip=%{remote_ip} time=%{time_total}s\n" "${url}" \
+              || echo "curl failed"
+          done
