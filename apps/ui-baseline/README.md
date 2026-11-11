@@ -309,8 +309,12 @@ exist, every signed-in page is reported as not compared.
 ## Comparing PDF and Excel files
 
 When a publication is accepted, pip and CaTH each write a PDF and, for some lists, an Excel file
-to their `publications` container (`<artefactId>.pdf`, `<artefactId>.xlsx`, and for pip's
-bilingual lists `<artefactId>_cy.pdf`). The check compares them for every list it checks: the
+to their `publications` container (`<artefactId>.pdf` and `<artefactId>.xlsx`). CaTH writes one
+PDF, in the list's language. pip does the same, except for a Welsh or bilingual list of a list type
+with an additional PDF: then `<artefactId>.pdf` is in English and the Welsh one is
+`<artefactId>_cy.pdf` (pip-data-management, `PublicationFileGenerationService.generatePdfs`), so
+for those lists pip has a Welsh PDF CaTH does not make, and CaTH's PDF is Welsh where pip's is
+English. The check compares them for every list it checks: the
 baseline holds pip's (`files/`), and the check collects CaTH's after seeding. The report's "PDF
 and Excel" page, the summary and the PR comment show the result.
 
@@ -331,8 +335,10 @@ yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in
 It also prints the list's page in each app. In aat, pip's files are downloaded from pip-frontend
 (`/list-download-files`) as the IDAM test account, as a verified user downloads them, so it needs
 no access to pip's storage. The account sees what a verified CFT user may: a classified list
-restricted to another provenance is reported as not served, and pip serves no separate Welsh PDF
-there, so CaTH's is shown as made only by CaTH. Locally, pip's files are read from its storage.
+restricted to another provenance is reported as not served. pip-frontend serves only the
+primary `<artefactId>.pdf`, never the `_cy` one, so for the Welsh and bilingual lists above
+CaTH's Welsh PDF is compared with pip's English one and shows as different throughout. Locally,
+pip's files are read from its storage.
 
 ## Checking accessibility
 
