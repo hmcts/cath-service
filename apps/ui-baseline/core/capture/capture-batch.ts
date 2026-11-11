@@ -4,6 +4,11 @@ import type { Browser } from "playwright";
 import { launchChromium } from "./browser.js";
 import { type CaptureResult, type CaptureSettings, type CaptureTarget, captureTarget } from "./capture-target.js";
 
+// The states a target's capture is stored as (capture-target.ts): a page's desktop and mobile targets
+// share its id and locale, so a target's results, folders and index lines are told apart by these
+const DESKTOP_STATES = ["default", "expanded"];
+const MOBILE_STATES = ["mobile"];
+
 // Captures every target in a targets file. Each entry may list several locales. onCaptured is told
 // after each target-language capture how many of them are done; a retry is not counted again.
 export async function captureBatch(
@@ -54,13 +59,14 @@ export async function captureBatches(batches: CaptureBatch[], concurrency: numbe
   const capture = async (target: CaptureTarget, settings: CaptureSettings) =>
     liveBrowser()
       .then((live) => captureTarget(live, target, settings))
-      .catch((error: Error) => [{ ok: false, id: target.id, locale: target.locale ?? "en", state: "default", outDir: "", status: null, error: error.message }]);
+      .catch((error: Error) => [
+        { ok: false, id: target.id, locale: target.locale ?? "en", state: statesOf(target)[0], outDir: "", status: null, error: error.message }
+      ]);
   const log = (captured: CaptureResult[]) => {
     for (const result of captured)
       console.log(`${result.ok ? "ok  " : "FAIL"} ${result.id} ${result.locale}/${result.state}${result.error ? ` — ${result.error}` : ""}`);
   };
-  const failedTargets = (batch: (typeof loaded)[number]) =>
-    batch.targets.filter((target) => batch.results.some((r) => !r.ok && r.id === target.id && r.locale === (target.locale ?? "en")));
+  const failedTargets = (batch: (typeof loaded)[number]) => batch.targets.filter((target) => batch.results.some((r) => !r.ok && belongsTo(target, r)));
 
   const queue = loaded.flatMap((batch) => batch.targets.map((target) => ({ batch, target })));
   try {
@@ -85,13 +91,14 @@ export async function captureBatches(batches: CaptureBatch[], concurrency: numbe
       console.log(`retrying ${failed.length} failed capture${failed.length === 1 ? "" : "s"} one at a time`);
       for (const target of failed) {
         const locale = target.locale ?? "en";
-        // Its folder and its index lines go together, so a retry that fails leaves no line behind
-        // pointing at a capture that is no longer there
-        await rm(path.join(batch.settings.outDir, target.id, locale), { recursive: true, force: true });
-        await dropIndexLines(path.join(batch.settings.outDir, "index.jsonl"), target.id, locale);
+        // Its folders and its index lines go together, so a retry that fails leaves no line behind
+        // pointing at a capture that is no longer there. Only this target's states: the page's other
+        // viewport, captured fine, is left as it is.
+        for (const state of statesOf(target)) await rm(path.join(batch.settings.outDir, target.id, locale, state), { recursive: true, force: true });
+        await dropIndexLines(path.join(batch.settings.outDir, "index.jsonl"), target);
         const captured = await capture(target, batch.settings);
         log(captured);
-        batch.results = [...batch.results.filter((r) => r.id !== target.id || r.locale !== locale), ...captured];
+        batch.results = [...batch.results.filter((r) => !belongsTo(target, r)), ...captured];
       }
       batch.onFinished?.(batch.results);
     }
@@ -101,13 +108,19 @@ export async function captureBatches(batches: CaptureBatch[], concurrency: numbe
   return loaded.map((batch) => batch.results);
 }
 
-// Removes a target-language capture's lines from the index, as its folder is removed for a retry
-async function dropIndexLines(file: string, id: string, locale: string): Promise<void> {
+function statesOf(target: CaptureTarget): string[] {
+  return target.viewport === "mobile" ? MOBILE_STATES : DESKTOP_STATES;
+}
+
+// Whether a result or index line is one of this target's captures
+function belongsTo(target: CaptureTarget, capture: { id: string; locale: string; state: string }): boolean {
+  return capture.id === target.id && capture.locale === (target.locale ?? "en") && statesOf(target).includes(capture.state);
+}
+
+// Removes a target's lines from the index, as its folders are removed for a retry
+async function dropIndexLines(file: string, target: CaptureTarget): Promise<void> {
   const lines = (await readFile(file, "utf-8").catch(() => "")).split("\n").filter(Boolean);
-  const kept = lines.filter((line) => {
-    const entry = JSON.parse(line) as { id: string; locale: string };
-    return entry.id !== id || entry.locale !== locale;
-  });
+  const kept = lines.filter((line) => !belongsTo(target, JSON.parse(line) as { id: string; locale: string; state: string }));
   await writeFile(file, kept.map((line) => `${line}\n`).join(""));
 }
 

@@ -131,7 +131,7 @@ describe("captureBatch", () => {
       .split("\n")
       .map((line) => JSON.parse(line));
     expect(index.map((entry) => `${entry.id} ${entry.locale}`)).toEqual(["home en", "faq en"]);
-    await expect(stat(path.join(outDir, "home", "cy"))).rejects.toThrow();
+    await expect(stat(path.join(outDir, "home", "cy", "default"))).rejects.toThrow();
   });
 
   it("should retry each failed target once and keep only the retry's results and index lines", async () => {
@@ -170,6 +170,37 @@ describe("captureBatch", () => {
     ]);
     expect(console.log).toHaveBeenCalledWith("FAIL faq en/expanded — timeout");
     expect(console.log).toHaveBeenCalledWith("retrying 1 failed capture one at a time");
+  });
+
+  it("should retry only the viewport that failed, leaving the page's other viewport's capture in place", async () => {
+    // Arrange
+    const { targetsFile, outDir } = await setUp([
+      { id: "home", url: "http://localhost/" },
+      { id: "home", url: "http://localhost/", viewport: "mobile" }
+    ]);
+    vi.mocked(launchChromium).mockResolvedValue(fakeBrowser() as unknown as Browser);
+    let mobileAttempts = 0;
+    vi.mocked(captureTarget).mockImplementation(async (_browser, target, settings) => {
+      const state = target.viewport === "mobile" ? "mobile" : "default";
+      if (state === "mobile") mobileAttempts++;
+      await mkdir(path.join(settings.outDir, "home", "en", state), { recursive: true });
+      await writeFile(path.join(settings.outDir, "home", "en", state, "page.png"), "png");
+      await writeFile(path.join(settings.outDir, "index.jsonl"), `${JSON.stringify({ id: "home", locale: "en", state })}\n`, { flag: "a" });
+      return state === "mobile" && mobileAttempts === 1 ? [{ ...ok(target, "mobile"), ok: false, error: "timeout" }] : [ok(target, state)];
+    });
+
+    // Act
+    const results = await captureBatch(targetsFile, { outDir }, 2);
+
+    // Assert
+    expect(captureTarget).toHaveBeenCalledTimes(3);
+    expect(results.map((r) => `${r.state} ${r.ok}`).sort()).toEqual(["default true", "mobile true"]);
+    expect(await readFile(path.join(outDir, "home/en/default/page.png"), "utf-8")).toBe("png");
+    const index = (await readFile(path.join(outDir, "index.jsonl"), "utf-8"))
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line).state);
+    expect(index.sort()).toEqual(["default", "mobile"]);
   });
 
   it("should record a failed default state and relaunch the browser when a capture throws after the browser dies", async () => {

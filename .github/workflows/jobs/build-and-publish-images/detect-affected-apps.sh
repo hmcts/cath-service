@@ -46,7 +46,7 @@ buildable_apps() {
   stages="$(dockerfile_stages)"
   for dir in apps/*/; do
     app="$(basename "$dir")"
-    if echo "$stages" | grep -qx "$app"; then
+    if grep -qx "$app" <<<"$stages"; then
       echo "$app"
     fi
   done
@@ -80,7 +80,7 @@ main() {
   local buildable app
   buildable="$(buildable_apps)"
   for app in $(echo "$helm_apps" | jq -r '.[]'); do
-    if ! echo "$buildable" | grep -qx "$app"; then
+    if ! grep -qx "$app" <<<"$buildable"; then
       echo "Error: apps/${app}/helm/Chart.yaml exists but ${DOCKERFILE} has no '${app}' stage" >&2
       exit 1
     fi
@@ -118,7 +118,7 @@ main() {
 
     # These sit outside every workspace, so Turborepo cannot attribute a change
     # in them to any app.
-    if echo "$changed_files" | grep -qE '^(Dockerfile[^/]*|\.dockerignore)$'; then
+    if grep -qE '^(Dockerfile[^/]*|\.dockerignore)$' <<<"$changed_files"; then
       echo "Root Dockerfile or .dockerignore changed - building all apps"
       use_fallback="true"
     fi
@@ -151,7 +151,7 @@ main() {
   else
     # Extract paths, filter to apps directory, strip apps/ prefix, and keep only buildable apps
     affected_apps=$(echo "$affected_json" | jq -r '.packages.items[].path // empty' | { grep '^apps/' || true; } | sed 's|^apps/||' | while read -r app_name; do
-      if echo "$buildable" | grep -qx "$app_name"; then
+      if grep -qx "$app_name" <<<"$buildable"; then
         echo "$app_name"
       fi
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
@@ -169,7 +169,7 @@ main() {
     # source is left to the pull request's lint and tests, which run for the lib's dependents too.
     local app
     for app in $(echo "$AAT_ONLY_APPS" | jq -r '.[]'); do
-      if [ "$use_fallback" = "true" ] || echo "$changed_files" | grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)"; then
+      if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
         verify_apps=$(echo "$verify_apps" | jq -c --arg app "$app" '. + [$app]')
       fi
     done

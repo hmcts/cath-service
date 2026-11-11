@@ -440,6 +440,26 @@ describe("createRunner", () => {
     const log = await readFile(path.join(options.dataDir, "runs", run.id, "log.txt"), "utf-8");
     expect(log).toBe("ran apps/ui-baseline/check.ts for abc1234\n");
   });
+
+  it("should keep writing the log when one of the script's streams ends before the other", async () => {
+    // Arrange
+    const repoDir = await mkdtemp(path.join(tmpdir(), "repo-"));
+    await mkdir(path.join(repoDir, "node_modules/.bin"), { recursive: true });
+    await writeFile(path.join(repoDir, "node_modules/.bin/tsx"), "#!/bin/sh\necho early\nexec 1>&-\nsleep 0.2\necho late >&2\n");
+    await chmod(path.join(repoDir, "node_modules/.bin/tsx"), 0o755);
+    const { execute: _execute, ...options } = await optionsWith();
+    const store = memoryStore();
+    const runner = createRunner({ ...options, repoDir, store });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    const log = await readFile(path.join(options.dataDir, "runs", run.id, "log.txt"), "utf-8");
+    expect(log).toBe("early\nlate\n");
+    expect(store.blobs.has(`runs/${run.id}.tar.gz`)).toBe(true);
+  });
 });
 
 async function optionsWith(write: (args: string[]) => Promise<void> = async () => {}) {
@@ -634,6 +654,45 @@ describe("createRunner when pods are replaced", () => {
     expect(whileGoing).toBe("running");
     await vi.waitFor(() => expect(runner.get("r1")?.status).toBe("finished"));
     runner.stopWatching();
+  });
+
+  it("should pass over a watched run's record that is half written, and read the next one whole", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const record = { id: "r3", kind: "check", scope: "all", status: "running", createdAt: new Date().toISOString(), heartbeatAt: new Date().toISOString() };
+    blobs.set("runs/r3.json", Buffer.from(JSON.stringify(record)));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 0, watchMs: 20 });
+    await runner.restore();
+
+    // Act
+    blobs.set("runs/r3.json", Buffer.from('{"id":"r3","sta'));
+    await vi.waitFor(() => expect(console.error).toHaveBeenCalledWith(expect.stringContaining("could not read stored run r3")));
+    blobs.set("runs/r3.json", Buffer.from(JSON.stringify({ ...record, status: "finished", finishedAt: new Date().toISOString() })));
+
+    // Assert
+    await vi.waitFor(() => expect(runner.get("r3")?.status).toBe("finished"));
+    runner.stopWatching();
+  });
+
+  it("should load the other stored runs when one record cannot be read", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    blobs.set("runs/bad.json", Buffer.from(""));
+    blobs.set(
+      "runs/good.json",
+      Buffer.from(JSON.stringify({ id: "good", kind: "check", scope: "all", status: "finished", createdAt: "2026-10-30T11:00:00Z" }))
+    );
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 0 });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(runner.list().map((run) => run.id)).toEqual(["good"]);
   });
 
   it("should mark a watched run interrupted, and store it so, once the other pod stops storing it", async () => {

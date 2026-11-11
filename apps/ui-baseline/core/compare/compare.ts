@@ -31,7 +31,8 @@ const OPENED_ONLY_IN_TARGET: Finding = {
 };
 
 export async function compareRuns(options: CompareOptions): Promise<CompareSummary> {
-  const inScope = (entry: IndexEntry) => !options.only || options.only.includes(entry.id);
+  const only = options.only ? new Set(options.only) : null;
+  const inScope = (entry: IndexEntry) => !only || only.has(entry.id);
   const sourceEntries = (await readIndex(options.source)).filter(inScope);
   const sourceIndex = new Map(sourceEntries.map((entry) => [key(entry), entry]));
   const targetIndex = new Map((await readIndex(options.target)).filter(inScope).map((entry) => [key(entry), entry]));

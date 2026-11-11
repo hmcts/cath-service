@@ -268,7 +268,8 @@ Its audit entry is not named with the token: test-support cannot delete one, so 
 test account's entry. A run that could not be removed (the pod restarted mid-check, say) is removed by a later
 check once it is three hours old, so a run still going alongside is left alone. With nothing
 seeded there is no run, so no records are made in a shared CaTH. `--keep-seed` leaves the run in place, to
-look at or to check again with `--no-seed`, until a later check removes it.
+look at or to check again with `--no-seed` (which leaves it too), until the next check that seeds
+removes it. A check that seeds nothing never reads or removes a kept run.
 
 The publication API takes a list as JSON, so a non-strategic list's Excel file, which CaTH makes from the
 uploaded spreadsheet, is not made, and is reported as not compared rather than missing.
