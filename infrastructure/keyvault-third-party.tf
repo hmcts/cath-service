@@ -9,7 +9,7 @@ module "third_party_key_vault" {
   resource_group_name = azurerm_resource_group.shared.name
 
   # Write access - see the note in infrastructure/keyvault.tf.
-  product_group_name = "DTS PIP Non-Prod"
+  product_group_name = local.key_vault_product_group_name
 
   common_tags             = local.common_tags
   create_managed_identity = false

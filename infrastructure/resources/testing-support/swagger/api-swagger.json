@@ -1,0 +1,214 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CaTH Testing Support API",
+    "version": "1.0.0",
+    "description": "Mock third party for non-production environments. Every operation validates the caller's Entra ID bearer token and returns a fixed `200` from API Management without calling a backend. Use it to test third-party OAuth configuration and to receive new, updated and deleted publication requests.\n\nRequest a token for the CaTH service API audience (scope `api://<client-id>/.default`) from the CaTH tenant.",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "Testing Support",
+      "description": "Mock third-party endpoints."
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/third-party": {
+      "get": {
+        "tags": ["Testing Support"],
+        "summary": "Third-party health check",
+        "operationId": "thirdPartyHealthCheck",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorised"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Testing Support"],
+        "summary": "Third-party new publication",
+        "operationId": "thirdPartyNewPublication",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PublicationPush"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorised"
+          }
+        }
+      }
+    },
+    "/third-party/{publicationId}": {
+      "put": {
+        "tags": ["Testing Support"],
+        "summary": "Third-party updated publication",
+        "operationId": "thirdPartyUpdatePublication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PublicationId"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PublicationPush"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorised"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Testing Support"],
+        "summary": "Third-party deleted publication",
+        "operationId": "thirdPartyDeletePublication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PublicationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorised"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Microsoft Entra ID bearer token for the CaTH service API audience. Send it as `Authorization: Bearer <token>`. A missing, malformed, expired or wrong-audience token is rejected with `401`."
+      }
+    },
+    "parameters": {
+      "PublicationId": {
+        "name": "publicationId",
+        "in": "path",
+        "required": true,
+        "description": "Identifier of the publication the request relates to.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "requestBodies": {
+      "PublicationPush": {
+        "required": false,
+        "description": "Accepted and ignored. The response does not depend on the body.",
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "$ref": "#/components/schemas/PublicationPush"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Request received.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MockResponse"
+            },
+            "example": {
+              "response code": 200,
+              "description": "Successful health check."
+            }
+          }
+        }
+      },
+      "Unauthorised": {
+        "description": "Missing, invalid or wrong-audience bearer token."
+      }
+    },
+    "schemas": {
+      "MockResponse": {
+        "type": "object",
+        "required": ["response code", "description"],
+        "properties": {
+          "response code": {
+            "type": "integer",
+            "example": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Describes the operation that was received."
+          }
+        }
+      },
+      "PublicationPush": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/PublicationMetadata"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "PublicationMetadata": {
+        "type": "object",
+        "properties": {
+          "publicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "listType": {
+            "type": "string"
+          },
+          "locationName": {
+            "type": "string"
+          },
+          "contentDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sensitivity": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "displayFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "displayTo": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

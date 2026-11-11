@@ -20,8 +20,14 @@ export const DELETE = async (req: Request, res: Response) => {
       locations: 0,
       listTypes: 0,
       mediaApplications: 0,
-      thirdPartyUsers: 0
+      thirdPartyUsers: 0,
+      subJurisdictions: 0,
+      jurisdictions: 0,
+      regions: 0
     };
+
+    // Notification subscribers share the real CFT test account email, so they are only recognisable by their prefixed provenance id
+    const prefixedUserWhere = { OR: [{ email: { startsWith: prefix } }, { userProvenanceId: { startsWith: prefix } }] };
 
     // Delete artefacts at locations with the prefix
     const testLocations = await prisma.location.findMany({
@@ -37,9 +43,9 @@ export const DELETE = async (req: Request, res: Response) => {
       results.artefacts = artefactResult.count;
     }
 
-    // Delete subscriptions for users with the prefix email
+    // Delete subscriptions for users with the prefix email or provenance id
     const testUsers = await prisma.user.findMany({
-      where: { email: { startsWith: prefix } },
+      where: prefixedUserWhere,
       select: { userId: true }
     });
     const testUserIds = testUsers.map((u) => u.userId);
@@ -68,9 +74,9 @@ export const DELETE = async (req: Request, res: Response) => {
       results.subscriptions += subscriptionByLocationResult.count;
     }
 
-    // Delete users with prefix email
+    // Delete users with prefix email or provenance id
     const userResult = await prisma.user.deleteMany({
-      where: { email: { startsWith: prefix } }
+      where: prefixedUserWhere
     });
     results.users = userResult.count;
 
@@ -85,6 +91,11 @@ export const DELETE = async (req: Request, res: Response) => {
       where: { name: { startsWith: prefix } }
     });
     results.listTypes = listTypeResult.count;
+
+    // Reference data goes after locations and list types so their link rows are already gone where they cascade
+    results.subJurisdictions = await deletePrefixedSubJurisdictions(prefix);
+    results.jurisdictions = await deletePrefixedJurisdictions(prefix);
+    results.regions = await deletePrefixedRegions(prefix);
 
     // Delete media applications with prefix in name or email
     const mediaAppResult = await prisma.mediaApplication.deleteMany({
@@ -116,3 +127,45 @@ export const DELETE = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to cleanup test data" });
   }
 };
+
+// The link tables cascade from location and list type but not from sub-jurisdiction, so links to unprefixed rows are removed first
+async function deletePrefixedSubJurisdictions(prefix: string): Promise<number> {
+  const subJurisdictions = await prisma.subJurisdiction.findMany({
+    where: { name: { startsWith: prefix } },
+    select: { subJurisdictionId: true }
+  });
+  const subJurisdictionIds = subJurisdictions.map((s) => s.subJurisdictionId);
+
+  if (subJurisdictionIds.length === 0) {
+    return 0;
+  }
+
+  await prisma.locationSubJurisdiction.deleteMany({ where: { subJurisdictionId: { in: subJurisdictionIds } } });
+  await prisma.listTypeSubJurisdiction.deleteMany({ where: { subJurisdictionId: { in: subJurisdictionIds } } });
+  const result = await prisma.subJurisdiction.deleteMany({ where: { subJurisdictionId: { in: subJurisdictionIds } } });
+  return result.count;
+}
+
+// A prefixed jurisdiction still holding an unprefixed sub-jurisdiction is left alone rather than deleting real data with it
+async function deletePrefixedJurisdictions(prefix: string): Promise<number> {
+  const result = await prisma.jurisdiction.deleteMany({
+    where: { name: { startsWith: prefix }, subJurisdictions: { none: {} } }
+  });
+  return result.count;
+}
+
+async function deletePrefixedRegions(prefix: string): Promise<number> {
+  const regions = await prisma.region.findMany({
+    where: { name: { startsWith: prefix } },
+    select: { regionId: true }
+  });
+  const regionIds = regions.map((r) => r.regionId);
+
+  if (regionIds.length === 0) {
+    return 0;
+  }
+
+  await prisma.locationRegion.deleteMany({ where: { regionId: { in: regionIds } } });
+  const result = await prisma.region.deleteMany({ where: { regionId: { in: regionIds } } });
+  return result.count;
+}

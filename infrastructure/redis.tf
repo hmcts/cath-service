@@ -28,32 +28,49 @@ module "redis" {
   # behaviour is unchanged.
   private_endpoint_subnet = local.redis_subnet_override ? data.azurerm_subnet.redis_private_endpoint[0].id : ""
 
+  # Sizing - see local.sizing in infrastructure/env-config.tf.
   redis_version = "6"
-  sku_name      = "Basic"
-  family        = "C"
-  capacity      = 0
+  sku_name      = local.sizing.redis_sku_name
+  family        = local.sizing.redis_family
+  capacity      = local.sizing.redis_capacity
 }
 
 resource "azurerm_key_vault_secret" "redis_host" {
-  name         = "redis-host"
-  value        = module.redis.host_name
-  key_vault_id = module.key_vault.key_vault_id
+  name            = "redis-host"
+  value           = module.redis.host_name
+  key_vault_id    = module.key_vault.key_vault_id
+  expiration_date = local.secret_expiry
+  tags            = merge(local.common_tags, { source = "Redis" })
+
+  depends_on = [module.redis]
 }
 
 resource "azurerm_key_vault_secret" "redis_port" {
-  name         = "redis-port"
-  value        = tostring(module.redis.redis_port)
-  key_vault_id = module.key_vault.key_vault_id
+  name            = "redis-port"
+  value           = tostring(module.redis.redis_port)
+  key_vault_id    = module.key_vault.key_vault_id
+  expiration_date = local.secret_expiry
+  tags            = merge(local.common_tags, { source = "Redis" })
+
+  depends_on = [module.redis]
 }
 
 resource "azurerm_key_vault_secret" "redis_access_key" {
-  name         = "redis-access-key"
-  value        = module.redis.access_key
-  key_vault_id = module.key_vault.key_vault_id
+  name            = "redis-access-key"
+  value           = module.redis.access_key
+  key_vault_id    = module.key_vault.key_vault_id
+  expiration_date = local.secret_expiry
+  tags            = merge(local.common_tags, { source = "Redis" })
+
+  depends_on = [module.redis]
 }
 
 resource "azurerm_key_vault_secret" "redis_url" {
-  name         = "redis-url"
-  value        = "rediss://:${module.redis.access_key}@${module.redis.host_name}:${module.redis.redis_port}"
-  key_vault_id = module.key_vault.key_vault_id
+  name            = "redis-url"
+  value           = "rediss://:${module.redis.access_key}@${module.redis.host_name}:${module.redis.redis_port}"
+  key_vault_id    = module.key_vault.key_vault_id
+  expiration_date = local.secret_expiry
+  tags            = merge(local.common_tags, { source = "Redis" })
+
+  depends_on = [module.redis]
 }

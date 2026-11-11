@@ -3,7 +3,7 @@ import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET, POST } from "./index.js";
+import { GET } from "./index.js";
 
 vi.mock("@hmcts/auth");
 vi.mock("@hmcts/account/repository/query");
@@ -253,21 +253,6 @@ describe("B2C Callback Handler", () => {
 
       expect(mockSession.lastActivity).toBeDefined();
       expect(typeof mockSession.lastActivity).toBe("number");
-    });
-  });
-
-  describe("POST handler", () => {
-    it("should handle form_post response mode", async () => {
-      mockReq.query = {};
-      mockReq.body = {
-        code: "test-auth-code",
-        state: validState
-      };
-
-      await POST(mockReq as Request, mockRes as Response);
-
-      expect(mockReq.login).toHaveBeenCalled();
-      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
   });
 

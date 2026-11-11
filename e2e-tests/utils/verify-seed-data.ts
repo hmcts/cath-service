@@ -60,7 +60,7 @@ export async function verifySeedData(): Promise<VerificationResult> {
     }
 
     // Verify specific test locations exist
-    const requiredLocationIds = [9001, 9];
+    const requiredLocationIds = [9001];
     for (const locationId of requiredLocationIds) {
       const location = locations.find((l: any) => l.locationId === locationId);
       if (!location) {
@@ -81,14 +81,6 @@ export async function verifySeedData(): Promise<VerificationResult> {
     // Check artefacts
     const artefacts = await getAllTestArtefacts();
     console.log(`✓ Found ${artefacts.length} artefacts`);
-
-    // Verify locationId=9 has artefacts
-    const sjpArtefacts = await getArtefactsByLocation("9");
-    if ((sjpArtefacts as unknown[]).length === 0) {
-      errors.push("Location 9 (SJP Court) has no artefacts");
-    } else {
-      console.log(`  ✓ Location 9 has ${(sjpArtefacts as unknown[]).length} artefacts`);
-    }
 
     // Verify locationId=9001 has NO artefacts (for "no publications" test)
     const alphaArtefacts = await getArtefactsByLocation("9001");

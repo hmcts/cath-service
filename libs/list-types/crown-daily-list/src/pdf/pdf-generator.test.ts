@@ -75,8 +75,7 @@ describe("generateCrownDailyListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,
@@ -94,8 +93,7 @@ describe("generateCrownDailyListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test-artefact-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     const result = await generateCrownDailyListPdf({
@@ -313,30 +311,5 @@ describe("generateCrownDailyListPdf", () => {
 
     expect(result.success).toBe(true);
     expect(renderCrownDailyListData).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ locale: "cy" }));
-  });
-
-  it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: Buffer.alloc(3 * 1024 * 1024),
-      sizeBytes: 3 * 1024 * 1024
-    });
-    mockSavePdfToStorage.mockResolvedValue({
-      success: true,
-      pdfPath: "/storage/temp/uploads/large.pdf",
-      sizeBytes: 3 * 1024 * 1024,
-      exceedsMaxSize: true
-    });
-
-    const result = await generateCrownDailyListPdf({
-      artefactId: "large-pdf",
-      contentDate: new Date("2025-11-12"),
-      locale: "en",
-      locationId: "101",
-      jsonData: mockJsonData as any
-    });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 });

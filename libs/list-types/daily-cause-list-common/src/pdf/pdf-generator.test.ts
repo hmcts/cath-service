@@ -64,8 +64,7 @@ describe("generateDailyCauseListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,
@@ -79,8 +78,7 @@ describe("generateDailyCauseListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     const result = await generateDailyCauseListPdf(

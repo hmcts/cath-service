@@ -16,7 +16,8 @@ export const GET = async (req: Request, res: Response) => {
     }
 
     if (name || first === "true") {
-      const where = name ? { name: { contains: name as string } } : {};
+      // Exact match: a partial match would return the run-prefixed copy (or another run's) instead of the real list type
+      const where = name ? { name: name as string } : {};
       const listType = await (prisma as any).listType.findFirst({ where });
       if (!listType) {
         return res.status(404).json({ error: "List type not found" });
