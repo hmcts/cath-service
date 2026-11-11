@@ -6,11 +6,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { compareArtefactFiles } from "./artefact-files.js";
 import { collectFiles, compareFileRuns, openBlobContainer } from "./core/index.js";
 import { filesStorage, loadEnvironment } from "./environments.js";
-import { loadManifest } from "./fixtures/manifest.js";
+import { loadManifest, loadUsers } from "./fixtures/manifest.js";
+import { signInToPipWithAccounts } from "./pip/account-sign-in.js";
 
 vi.mock("./core/index.js", () => ({ collectFiles: vi.fn(), compareFileRuns: vi.fn(), openBlobContainer: vi.fn() }));
 vi.mock("./environments.js", () => ({ loadEnvironment: vi.fn(), filesStorage: vi.fn() }));
-vi.mock("./fixtures/manifest.js", () => ({ loadManifest: vi.fn() }));
+vi.mock("./fixtures/manifest.js", () => ({ loadManifest: vi.fn(), loadUsers: vi.fn() }));
+vi.mock("./pip/account-sign-in.js", () => ({ signInToPipWithAccounts: vi.fn() }));
 
 const ENVIRONMENT = {
   name: "test",
@@ -111,5 +113,77 @@ describe("compareArtefactFiles", () => {
 
     // Assert
     expect(result.links).toBeNull();
+  });
+
+  describe("in a deployed environment", () => {
+    const VERIFIED_CFT = { id: "verified-cft", role: "VERIFIED", provenance: "CFT_IDAM" };
+    const DEPLOYED = { ...ENVIRONMENT, pip: { ...ENVIRONMENT.pip, accounts: { "VERIFIED/CFT_IDAM": { user: "u", password: "p" } } } };
+
+    beforeEach(() => {
+      vi.mocked(loadEnvironment).mockResolvedValue(DEPLOYED as never);
+      vi.mocked(loadUsers).mockResolvedValue([{ id: "verified-media" }, VERIFIED_CFT] as never);
+      vi.mocked(signInToPipWithAccounts).mockResolvedValue({
+        users: { "verified-cft": { account: "VERIFIED/CFT_IDAM", email: "e", role: "VERIFIED", cookies: { en: [{ name: "session", value: "s1" }] } } },
+        unavailable: {}
+      });
+    });
+
+    it("should download pip's files from pip-frontend as its verified test account, not from pip's storage", async () => {
+      // Arrange
+      const out = path.join(await mkdtemp(path.join(tmpdir(), "artefact-")), "out");
+      fetchMock.mockImplementation(async (url: string) => {
+        if (url === "https://pip/list-download-files?artefactId=p1&type=pdf")
+          return new Response("%PDF-1.7", { headers: { "content-type": "application/pdf" } });
+        if (url === "https://pip/list-download-files?artefactId=p1&type=excel")
+          return new Response("PK", { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } });
+        return new Response("not found", { status: 404 });
+      });
+
+      // Act
+      const result = await compareArtefactFiles({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil", out });
+
+      // Assert
+      expect(signInToPipWithAccounts).toHaveBeenCalledWith(DEPLOYED, [VERIFIED_CFT]);
+      const downloads = fetchMock.mock.calls.filter(([url]) => String(url).startsWith("https://pip/"));
+      expect(downloads.map(([, init]) => ((init as RequestInit).headers as Record<string, string>).cookie)).toEqual(["session=s1", "session=s1"]);
+      expect(filesStorage).not.toHaveBeenCalledWith("pip", expect.anything());
+      expect(await readFile(path.join(out, "pip/civil/pdf.pdf"), "utf-8")).toBe("%PDF-1.7");
+      const index = (await readFile(path.join(out, "pip/index.jsonl"), "utf-8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(index.map((entry) => `${entry.kind} ${entry.file}`)).toEqual(["pdf civil/pdf.pdf", "excel civil/excel.xlsx"]);
+      expect(result.pipHasFiles).toBe(true);
+    });
+
+    it("should leave out a file pip will not serve the account, answering with its error page", async () => {
+      // Arrange
+      const out = path.join(await mkdtemp(path.join(tmpdir(), "artefact-")), "out");
+      vi.spyOn(console, "log").mockImplementation(() => {});
+      fetchMock.mockImplementation(async (url: string) =>
+        url.endsWith("type=pdf")
+          ? new Response("%PDF-1.7", { headers: { "content-type": "application/pdf" } })
+          : new Response("<html>error</html>", { headers: { "content-type": "text/html; charset=utf-8" } })
+      );
+
+      // Act
+      await compareArtefactFiles({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil", out });
+
+      // Assert
+      const index = (await readFile(path.join(out, "pip/index.jsonl"), "utf-8")).trim().split("\n");
+      expect(index).toHaveLength(1);
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining("pip served no excel for p1 to its test account (200 text/html)"));
+    });
+
+    it("should say why when the test account cannot be signed in to pip", async () => {
+      // Arrange
+      vi.mocked(signInToPipWithAccounts).mockResolvedValue({ users: {}, unavailable: { "verified-cft": "no VERIFIED/CFT_IDAM test account in cath-aat (u)" } });
+
+      // Act
+      const result = compareArtefactFiles({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil" });
+
+      // Assert
+      await expect(result).rejects.toThrow("could not sign in to pip to download its files: no VERIFIED/CFT_IDAM test account in cath-aat (u)");
+    });
   });
 });
