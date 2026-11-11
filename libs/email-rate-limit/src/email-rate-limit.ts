@@ -1,6 +1,7 @@
 import { tryConsumeToken } from "@hmcts/redis";
 
 const KEY_PREFIX = "email-rate-limit";
+const RATE_LIMIT_ERROR_NAME = "EmailRateLimitError";
 const DEFAULT_STANDARD_CAPACITY = 10;
 const DEFAULT_HIGH_CAPACITY = 200;
 const DEFAULT_INTERVAL_MINUTES = 30;
@@ -18,8 +19,14 @@ export async function validateEmailRateLimit(email: string, emailLimit: EmailLim
   });
 
   if (!isWithinLimit) {
-    throw new Error(`Rate limit has been exceeded. ${description} failed to be sent to ${maskEmail(email)}`);
+    const error = new Error(`Rate limit has been exceeded. ${description} failed to be sent to ${maskEmail(email)}`);
+    error.name = RATE_LIMIT_ERROR_NAME;
+    throw error;
   }
+}
+
+export function isEmailRateLimitError(error: unknown): boolean {
+  return error instanceof Error && error.name === RATE_LIMIT_ERROR_NAME;
 }
 
 function getCapacity(emailLimit: EmailLimit): number {

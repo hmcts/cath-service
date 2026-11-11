@@ -2,6 +2,7 @@ import { type EmailLimit, validateEmailRateLimit } from "@hmcts/email-rate-limit
 import { NotifyClient } from "notifications-node-client";
 
 const DEFAULT_EMAIL_LIMIT: EmailLimit = "STANDARD";
+const DEFAULT_EMAIL_DESCRIPTION = "Email";
 
 export interface SendNotifyEmailParams {
   apiKey: string;
@@ -10,6 +11,8 @@ export interface SendNotifyEmailParams {
   personalisation?: Record<string, unknown>;
   reference?: string;
   emailLimit?: EmailLimit;
+  // Names the email in the rate-limit rejection message, e.g. "OTP email failed to be sent to ..."
+  emailDescription?: string;
 }
 
 export interface SendNotifyEmailResult {
@@ -27,7 +30,7 @@ interface NotifyEmailResponse {
 }
 
 export async function sendNotifyEmail(params: SendNotifyEmailParams): Promise<SendNotifyEmailResult> {
-  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, "Email");
+  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, params.emailDescription ?? DEFAULT_EMAIL_DESCRIPTION);
   return deliverNotifyEmail(params);
 }
 
@@ -35,7 +38,7 @@ export async function sendNotifyEmailWithRetry(
   params: SendNotifyEmailParams,
   options: { retryAttempts: number; retryDelayMs: number }
 ): Promise<SendNotifyEmailResult> {
-  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, "Email");
+  await validateEmailRateLimit(params.emailAddress, params.emailLimit ?? DEFAULT_EMAIL_LIMIT, params.emailDescription ?? DEFAULT_EMAIL_DESCRIPTION);
   return retryWithBackoff(() => deliverNotifyEmail(params), options.retryAttempts, options.retryDelayMs);
 }
 

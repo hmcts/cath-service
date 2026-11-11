@@ -2,7 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import jwksClient, { type JwksClient } from "jwks-rsa";
 
-const REQUIRED_ROLE = "api.publisher.user";
+export const API_ROLE = {
+  PUBLISHER: "api.publisher.user",
+  B2C: "api.request.b2c"
+} as const;
 
 // One message for every way a bearer token can fail — absent, malformed, unverifiable or
 // expired. Publishers reach CaTH through APIM, which phrases OAuth rejections this way, so a
@@ -18,7 +21,7 @@ const JWKS_CLIENTS = new Map<string, JwksClient>();
  * Middleware to authenticate API requests using OAuth 2.0
  * Validates bearer token and checks for required app role
  */
-export function authenticateApi() {
+export function authenticateApi(requiredRole: ApiRole = API_ROLE.PUBLISHER) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
@@ -33,8 +36,8 @@ export function authenticateApi() {
       const claims = await validateToken(token);
 
       // Check for required app role
-      if (!hasRequiredRole(claims, REQUIRED_ROLE)) {
-        return res.status(403).json(authError(403, `Insufficient permissions. Required role: ${REQUIRED_ROLE}`));
+      if (!hasRequiredRole(claims, requiredRole)) {
+        return res.status(403).json(authError(403, `Insufficient permissions. Required role: ${requiredRole}`));
       }
 
       // Attach claims to request for downstream use
@@ -139,3 +142,5 @@ export interface AuthErrorBody {
   statusCode: number;
   message: string;
 }
+
+type ApiRole = (typeof API_ROLE)[keyof typeof API_ROLE];

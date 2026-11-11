@@ -90,6 +90,8 @@ tags:
     description: Court and tribunal reference data.
   - name: Downloads
     description: Retrieval of published artefacts.
+  - name: Notifications
+    description: Emails sent on behalf of other systems.
   - name: Service
     description: Service metadata and health.
 
@@ -278,6 +280,109 @@ paths:
           $ref: "#/components/responses/PublicationConflict"
         "500":
           $ref: "#/components/responses/PublicationServerError"
+
+  /notify/otp:
+    post:
+      tags: [Notifications]
+      summary: Send a B2C one-time password email
+      description: |
+        Sends the B2C OTP email through GOV.UK Notify, with the `otp` as the template's only
+        personalisation. Called by the Azure AD B2C password-reset policy through APIM; not part
+        of the publisher API.
+
+        Requires the `api.request.b2c` app role in the token's `roles` claim (the publisher role is
+        not enough). The body is parsed only after the token is verified, and is capped at 10 KB.
+
+        Each recipient is subject to the `HIGH` per-recipient email rate limit. A rejected send is
+        reported as `429`, as the incumbent does. The OTP and the email address are never logged.
+      operationId: sendOtpEmail
+      security:
+        - azureAd: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpEmail"
+      responses:
+        "200":
+          description: |
+            Email accepted by GOV.UK Notify. The body is the client reference ID (a UUID generated
+            per request and sent to Notify as the notification `reference`).
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+              example: "740e5834-3a29-46b4-9a6f-16142fde533a"
+        "400":
+          description: |
+            Validation failed, the JSON was malformed, or GOV.UK Notify rejected the send. Validation messages name the field but never echo its value.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+              examples:
+                validation:
+                  summary: Missing or invalid fields
+                  value:
+                    message: "otp must not be empty, email must be a valid email address"
+                    timestamp: "2026-11-10T11:56:27.611"
+                malformed:
+                  summary: Body is not valid JSON
+                  value:
+                    message: Malformed JSON request body
+                    timestamp: "2026-11-10T11:56:27.611"
+                notify:
+                  summary: GOV.UK Notify rejected the send
+                  value:
+                    message: "email_address Not a valid email address"
+                    timestamp: "2026-11-10T11:56:27.611"
+        "401":
+          description: Missing, malformed, unverifiable or expired bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorResponse"
+              example:
+                statusCode: 401
+                message: Access denied due to invalid OAuth information
+        "403":
+          description: Token is valid but lacks the `api.request.b2c` app role.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthErrorResponse"
+              example:
+                statusCode: 403
+                message: "Insufficient permissions. Required role: api.request.b2c"
+        "413":
+          description: Body larger than 10 KB.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+              example:
+                message: Request body too large
+                timestamp: "2026-11-10T11:56:27.611"
+        "429":
+          description: The recipient has exceeded the `HIGH` per-recipient email rate limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+              example:
+                message: "Rate limit has been exceeded. B2C OTP email failed to be sent to u***@example.com"
+                timestamp: "2026-11-10T11:56:27.611"
+        "500":
+          description: Unexpected failure, such as the rate-limit store being unreachable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+              example:
+                message: Internal server error
+                timestamp: "2026-11-10T11:56:27.611"
 
   /api/flat-file/{artefactId}/download:
     get:
@@ -926,6 +1031,21 @@ components:
         type:
           type: string
           enum: [LIST, LCSU]
+
+    OtpEmail:
+      type: object
+      required: [otp, email]
+      properties:
+        otp:
+          type: string
+          minLength: 1
+          description: The one-time password. Must not be empty; whitespace is accepted, as the incumbent does.
+          example: "123456"
+        email:
+          type: string
+          format: email
+          description: Recipient address. Surrounding whitespace is trimmed before sending.
+          example: user@example.com
 
     Message:
       type: object

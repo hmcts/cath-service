@@ -10,3 +10,4 @@ export {
 } from "./notification/notification-service.js";
 export type { PublicationEvent } from "./notification/validation.js";
 export type { FlatFileAttachment } from "./notify-templates/send-email.js";
+export { type OtpEmailResult, sendOtpEmail } from "./otp/otp-email-service.js";
