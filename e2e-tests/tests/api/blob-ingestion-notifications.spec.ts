@@ -1,34 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import {
-  cleanupTestNotifications,
-  cleanupTestSubscriptions,
-  cleanupTestUsers,
+  createNotificationSubscriber,
   createTestSubscription,
-  createTestUser,
   getGovNotifyEmail,
   getNotificationsByPublicationId,
   waitForNotifications
 } from "../../utils/notification-helpers.js";
+import { uploadTestPublication } from "../../utils/publication-upload.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const ENDPOINT = `${API_BASE_URL}/publication`;
-
-// Publication metadata travels in x-* headers; the body is the payload itself.
-function createPublicationHeaders(locationId: number, token: string) {
-  return {
-    "x-provenance": "MANUAL_UPLOAD",
-    "x-court-id": locationId.toString(),
-    "x-content-date": "2024-12-01",
-    "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
-    "x-language": "ENGLISH",
-    "x-type": "LIST",
-    "x-display-from": "2024-12-01T00:00:00.000Z",
-    "x-display-to": "2024-12-02T00:00:00.000Z",
-    Authorization: `Bearer ${token}`
-  };
-}
+const PUBLICATION_DATES = {
+  contentDate: "2024-12-01",
+  displayFrom: "2024-12-01T00:00:00.000Z",
+  displayTo: "2024-12-02T00:00:00.000Z"
+};
 
 function createValidPayload(locationName: string) {
   return {
@@ -52,59 +37,25 @@ function createValidPayload(locationName: string) {
   };
 }
 
+// Users, subscriptions, notifications and artefacts all hang off this test's prefixed court or prefixed
+// subscriber, so global-teardown removes them
 test.describe("Blob Ingestion - Notification E2E Tests", () => {
-  // Shared test location for the entire test suite
-  let testLocationId: number;
-  let testLocationName: string;
-
-  const testData: {
-    userIds: string[];
-    subscriptionIds: string[];
-    publicationIds: string[];
-  } = {
-    userIds: [],
-    subscriptionIds: [],
-    publicationIds: []
-  };
-
-  // Create test location before all tests run
-  test.beforeAll(async () => {
-    const testLocation = await createUniqueTestLocation({ namePrefix: "Blob Ingestion Notification Court" });
-    testLocationId = testLocation.locationId;
-    testLocationName = testLocation.name;
-  });
-
-  test.afterEach(async ({ request: _ }) => {
-    await cleanupTestNotifications(testData.publicationIds);
-    await cleanupTestSubscriptions(testData.subscriptionIds);
-    await cleanupTestUsers(testData.userIds);
-
-    testData.userIds = [];
-    testData.subscriptionIds = [];
-    testData.publicationIds = [];
-  });
-
-  test("should verify GOV.UK Notify email content", async ({ request }) => {
+  test("should verify GOV.UK Notify email content", async () => {
     test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
 
-    const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
-    testData.userIds.push(testUser.userId);
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Blob Ingestion Notification Court" });
+    const testUser = await createNotificationSubscriber();
+    await createTestSubscription(testUser.userId, testLocation.locationId);
 
-    const subscription = await createTestSubscription(testUser.userId, testLocationId);
-    testData.subscriptionIds.push(subscription.subscriptionId);
-
-    const token = await getApiAuthToken();
-    const response = await request.post(ENDPOINT, {
-      data: createValidPayload(testLocationName),
-      headers: createPublicationHeaders(testLocationId, token)
+    const { artefactId } = await uploadTestPublication({
+      locationId: testLocation.locationId,
+      listTypeName: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+      payload: createValidPayload(testLocation.name),
+      ...PUBLICATION_DATES
     });
 
-    expect(response.status()).toBe(201);
-    const result = await response.json();
-    testData.publicationIds.push(result.artefactId);
-
     // Wait for async notification processing with retry logic (wait for govNotifyId to be populated)
-    const notifications = await waitForNotifications(result.artefactId, 30, 2000, true);
+    const notifications = await waitForNotifications(artefactId, 30, 2000, true);
 
     // Verify notification was created
     expect(notifications.length).toBeGreaterThan(0);
@@ -118,7 +69,7 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
 
     expect(govNotifyEmail.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT!);
     expect(govNotifyEmail.body).toContain("Civil and Family Daily Cause List");
-    expect(govNotifyEmail.body).toContain(testLocationName);
+    expect(govNotifyEmail.body).toContain(testLocation.name);
     // Status can be: delivered, sending, pending, created, or permanent-failure (for test accounts)
     expect(govNotifyEmail.status).toMatch(/delivered|sending|pending|created|permanent-failure/);
   });
@@ -127,20 +78,20 @@ test.describe("Blob Ingestion - Notification E2E Tests", () => {
   // because the API now validates that email is required when creating users.
   // Users without email addresses cannot be created through the API.
 
-  test("should not send notifications when no subscriptions exist", async ({ request }) => {
-    const token = await getApiAuthToken();
-    const response = await request.post(ENDPOINT, {
-      data: createValidPayload("Non-existent Court"),
-      headers: createPublicationHeaders(999, token)
-    });
+  test("should not send notifications when no subscriptions exist", async () => {
+    // An own court nobody subscribes to, rather than a fixed id that may belong to a real court
+    const unsubscribedLocation = await createUniqueTestLocation({ namePrefix: "Unsubscribed Blob Ingestion Court" });
 
-    expect(response.status()).toBe(201);
-    const result = await response.json();
-    testData.publicationIds.push(result.artefactId);
+    const { artefactId } = await uploadTestPublication({
+      locationId: unsubscribedLocation.locationId,
+      listTypeName: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+      payload: createValidPayload(unsubscribedLocation.name),
+      ...PUBLICATION_DATES
+    });
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const notifications = await getNotificationsByPublicationId(result.artefactId);
+    const notifications = await getNotificationsByPublicationId(artefactId);
     expect(notifications).toHaveLength(0);
   });
 });

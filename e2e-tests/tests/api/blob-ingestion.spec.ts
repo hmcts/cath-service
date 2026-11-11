@@ -1,14 +1,17 @@
 import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { loadListTypeFixture } from "../../utils/publication-payloads.js";
+import { API_BASE_URL } from "../../utils/test-support-api.js";
 
-const API_BASE_URL = "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/publication`;
 const LEGACY_ENDPOINT = `${API_BASE_URL}/v1/publication`;
 
 // All publication metadata travels in x-* headers; the body is the payload itself.
-const REQUIRED_HEADERS = {
+// x-court-id is this run's own court, set in beforeAll, so publications never land on a real court
+const REQUIRED_HEADERS: Record<string, string> = {
   "x-provenance": "MANUAL_UPLOAD",
-  "x-court-id": "1",
+  "x-court-id": "",
   "x-content-date": "2024-01-15",
   "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
   "x-language": "ENGLISH",
@@ -16,8 +19,18 @@ const REQUIRED_HEADERS = {
 };
 
 const PAYLOAD = { cases: [] };
+// Successful publications must satisfy the Civil and Family schema; PAYLOAD is only for requests rejected before it
+const VALID_PAYLOAD = loadListTypeFixture("civil-and-family-daily-cause-list");
 
 test.describe("POST /publication - JSON publication", () => {
+  // The court also owns an SNL location reference (defaulting to its own id) so SNL resolution is checked against it
+  let court: { locationId: number };
+
+  test.beforeAll(async () => {
+    court = await createUniqueTestLocation({ namePrefix: "Blob Ingestion Court", locationReferences: [{ provenance: "SNL" }] });
+    REQUIRED_HEADERS["x-court-id"] = String(court.locationId);
+  });
+
   test("authentication validation - missing, invalid format, invalid token, empty, and malformed JWT @nightly", async ({ request }) => {
     // STEP 1: Test missing Authorization header
     let response = await request.post(ENDPOINT, { data: PAYLOAD, headers: REQUIRED_HEADERS });
@@ -75,14 +88,14 @@ test.describe("POST /publication - JSON publication", () => {
 
     // STEP 1: A minimal spec-valid request — no x-sensitivity, no display dates, no wrapper
     let response = await request.post(ENDPOINT, {
-      data: PAYLOAD,
+      data: VALID_PAYLOAD,
       headers: { ...REQUIRED_HEADERS, Authorization: `Bearer ${token}` }
     });
 
     expect(response.status()).toBe(201);
     let body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    expect(body.locationId).toBe("1");
+    expect(body.locationId).toBe(String(court.locationId));
     expect(body.contentDate).toBe("2024-01-15T00:00:00.000Z");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.language).toBe("ENGLISH");
@@ -101,7 +114,7 @@ test.describe("POST /publication - JSON publication", () => {
 
     // STEP 2: The same request against the legacy /v1 path behaves identically
     response = await request.post(LEGACY_ENDPOINT, {
-      data: PAYLOAD,
+      data: VALID_PAYLOAD,
       headers: { ...REQUIRED_HEADERS, Authorization: `Bearer ${token}` }
     });
 
@@ -111,7 +124,7 @@ test.describe("POST /publication - JSON publication", () => {
 
     // STEP 3: Explicit optional headers are echoed back
     response = await request.post(ENDPOINT, {
-      data: PAYLOAD,
+      data: VALID_PAYLOAD,
       headers: {
         ...REQUIRED_HEADERS,
         "x-sensitivity": "CLASSIFIED",
@@ -131,18 +144,15 @@ test.describe("POST /publication - JSON publication", () => {
 
     // STEP 4: A provenance location id resolves for SNL
     response = await request.post(ENDPOINT, {
-      data: PAYLOAD,
-      headers: { ...REQUIRED_HEADERS, "x-provenance": "SNL", "x-court-id": "9001", Authorization: `Bearer ${token}` }
+      data: VALID_PAYLOAD,
+      headers: { ...REQUIRED_HEADERS, "x-provenance": "SNL", "x-court-id": String(court.locationId), Authorization: `Bearer ${token}` }
     });
 
     expect(response.status()).toBe(201);
     body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    // locationId is the *resolved* id, so its exact value depends on the seeded location
-    // reference for SNL/9001. Asserting only that it resolved rather than hardcoding an id:
-    // a NoMatch prefix here would mean the reference data is missing, not that the API is wrong.
-    expect(body.locationId).toBeTruthy();
-    expect(body.locationId).not.toMatch(/^NoMatch/);
+    // The court's own SNL reference resolves to the court
+    expect(body.locationId).toBe(String(court.locationId));
   });
 
   test("rejects invalid headers and payloads with a Message body @nightly", async ({ request }) => {

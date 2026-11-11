@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@playwright/test";
 import { NotifyClient } from "notifications-node-client";
+import { generateTestId } from "./dynamic-test-data.js";
+import { prefixName } from "./test-prefix.js";
 import {
   createTestSubscription as createSubscriptionApi,
   createTestUser as createUserApi,
@@ -47,6 +49,30 @@ export async function createTestUser(email: string, firstName = "Test", surname 
     firstName: user.firstName,
     surname: user.surname
   };
+}
+
+/**
+ * A subscriber whose notifications GOV.UK Notify will actually deliver: the team API key only delivers to allowlisted
+ * addresses, so it uses the CFT test account's email. The user row is still this test's own: user.email is not unique,
+ * emails are matched by the test's own publication or notification id, and the prefixed provenance id lets
+ * global-teardown delete the user and its subscriptions.
+ */
+export async function createNotificationSubscriber(firstName = "Notify", surname = "Subscriber"): Promise<TestUser> {
+  const email = process.env.CFT_VALID_TEST_ACCOUNT;
+  if (!email) {
+    throw new Error("CFT_VALID_TEST_ACCOUNT is not set; it is the only address the Notify team key delivers to");
+  }
+
+  const user = await createUserApi({
+    email,
+    firstName,
+    surname,
+    userProvenance: "CFT_IDAM",
+    userProvenanceId: prefixName(`notify-${generateTestId()}`),
+    role: "VERIFIED"
+  });
+
+  return { userId: user.userId, email: user.email, firstName: user.firstName, surname: user.surname };
 }
 
 export async function createTestSubscription(userId: string, locationId: number): Promise<TestSubscription> {

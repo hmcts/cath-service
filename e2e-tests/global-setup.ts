@@ -3,7 +3,7 @@ import { seedListTypes } from "./utils/seed-list-types.js";
 import { seedLocationData } from "./utils/seed-location-data.js";
 import { seedAllReferenceData } from "./utils/seed-reference-data.js";
 import { generateTestPrefix, setTestPrefix } from "./utils/test-prefix.js";
-import { checkTestSupportHealth } from "./utils/test-support-api.js";
+import { checkTestSupportHealth, ensureListSearchConfig } from "./utils/test-support-api.js";
 import { verifySeedData } from "./utils/verify-seed-data.js";
 
 async function globalSetup(_config: FullConfig) {
@@ -57,7 +57,11 @@ async function globalSetup(_config: FullConfig) {
     console.log("Seeding test location data...");
     await seedLocationData(testPrefix);
 
-    // Step 6: Verify all seed data is correct
+    // Step 6: Case subscription tests need case search data extracted from CIVIL_DAILY_CAUSE_LIST uploads
+    console.log("Ensuring list search config for CIVIL_DAILY_CAUSE_LIST...");
+    await ensureListSearchConfig({ listTypeName: "CIVIL_DAILY_CAUSE_LIST", caseNumberFieldName: "caseNumber", caseNameFieldName: "caseName" });
+
+    // Step 7: Verify all seed data is correct
     console.log("\nVerifying seed data...");
     const verificationResult = await verifySeedData();
 

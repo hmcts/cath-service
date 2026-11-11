@@ -3,20 +3,14 @@ import { expect, test } from "@playwright/test";
 import ExcelJSPkg from "exceljs";
 import { axeCheck } from "../../utils/axe-helper.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
-import {
-  assertEmailDownloadLinks,
-  cleanupTestNotifications,
-  cleanupTestSubscriptions,
-  cleanupTestUsers,
-  createTestSubscription,
-  createTestUser,
-  waitForNotifications
-} from "../../utils/notification-helpers.js";
+import { assertEmailDownloadLinks, createNotificationSubscriber, createTestSubscription, waitForNotifications } from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
-import { checkFlatFileExists, deleteTestArtefacts, getLatestArtefactByLocationAndListType, getListTypeByName } from "../../utils/test-support-api.js";
+import { checkFlatFileExists, getLatestArtefactByLocationAndListType, getListTypeByName, getListTypeOptionLabel } from "../../utils/test-support-api.js";
 
 const { Workbook } = ExcelJSPkg;
 
+// Option values are list_type.id, which differs per environment, so the CST list type is chosen by its label
+const CST_LIST_TYPE_NAME = "CST_WEEKLY_HEARING_LIST";
 const KB_DIVISION_LIST_TYPE_NAME = "KINGS_BENCH_DIVISION_DAILY_CAUSE_LIST";
 const SSCS_LONDON_LIST_TYPE_NAME = "SSCS_LONDON_DAILY_HEARING_LIST";
 const SSCS_SHEET_NAME = "SSCS hearings";
@@ -127,6 +121,7 @@ const FTT_RPT_CY_HEADINGS = [
 ];
 
 let testLocationId: number;
+let cstListTypeLabel: string;
 
 // Note: target-size and link-name rules are disabled due to pre-existing site-wide footer accessibility issues
 
@@ -249,14 +244,14 @@ async function uploadExcelAndConfirm(page: Page, upload: ExcelUpload): Promise<s
   });
   await page.getByRole("button", { name: /continue/i }).click();
   await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
-  await expect(page.locator("h1")).toHaveText("File upload summary");
+  await expect(page.locator("h1")).toHaveText("File Upload Summary");
   if (upload.checkAccessibility) {
     expect((await axeCheck(page).analyze()).violations).toEqual([]);
   }
 
   await page.getByRole("button", { name: "Confirm" }).click();
   await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
-  await expect(page.locator(".govuk-panel__title")).toHaveText("File upload successful");
+  await expect(page.locator(".govuk-panel__title")).toHaveText("File Upload Successful");
   if (upload.checkAccessibility) {
     expect((await axeCheck(page).analyze()).violations).toEqual([]);
     await page.goto("/non-strategic-upload-success?lng=cy");
@@ -296,16 +291,18 @@ async function expectPdfAndExcelLinksInEmail(artefactId: string): Promise<void> 
     throw new Error(`No sent notification for ${artefactId}`);
   }
 
-  await assertEmailDownloadLinks(sentNotification.govNotifyId, 2);
+  const email = await assertEmailDownloadLinks(sentNotification.govNotifyId, 2);
+  expect(email.email_address).toBe(process.env.CFT_VALID_TEST_ACCOUNT);
 }
 
 function rowValues(worksheet: ExcelJSPkg.Worksheet, rowNumber: number): unknown[] {
   return (worksheet.getRow(rowNumber).values as unknown[]).slice(1);
 }
 
+// The upload form only accepts two-digit day and month values
 async function fillDate(page: Page, prefix: string, date: Date) {
-  await page.fill(`input[name="${prefix}-day"]`, String(date.getDate()));
-  await page.fill(`input[name="${prefix}-month"]`, String(date.getMonth() + 1));
+  await page.fill(`input[name="${prefix}-day"]`, String(date.getDate()).padStart(2, "0"));
+  await page.fill(`input[name="${prefix}-month"]`, String(date.getMonth() + 1).padStart(2, "0"));
   await page.fill(`input[name="${prefix}-year"]`, String(date.getFullYear()));
 }
 
@@ -327,541 +324,524 @@ async function authenticateSystemAdmin(page: Page) {
   }
 }
 
-test.describe
-  .skip("Non-Strategic Upload", () => {
-    test.beforeAll(async () => {
-      const testLocation = await createUniqueTestLocation({ namePrefix: "Non-Strategic Upload Court" });
-      testLocationId = testLocation.locationId;
-    });
-
-    test.beforeEach(async ({ page }) => {
-      await authenticateSystemAdmin(page);
-    });
-
-    test("complete non-strategic upload journey with form validation, summary, success, Welsh, and accessibility", async ({ page }) => {
-      // STEP 1: Load form page and verify all elements
-      await page.goto("/non-strategic-upload");
-      await expect(page).toHaveTitle("Upload - Upload Excel file - Court and tribunal hearings - GOV.UK");
-
-      const heading = page.getByRole("heading", { name: /upload Excel file/i });
-      await expect(heading).toBeVisible();
-
-      // Verify form fields exist
-      const fileUpload = page.locator('input[name="file"]');
-      await expect(fileUpload).toBeVisible();
-
-      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
-      await courtInput.waitFor({ state: "visible", timeout: 10000 });
-      await expect(courtInput).toBeVisible();
-
-      await expect(page.locator('select[name="listType"]')).toBeVisible();
-      await expect(page.locator('input[name="hearingStartDate-day"]')).toBeVisible();
-      await expect(page.locator('select[name="sensitivity"]')).toBeVisible();
-      await expect(page.locator('select[name="language"]')).toBeVisible();
-      await expect(page.locator('input[name="displayFrom-day"]')).toBeVisible();
-      await expect(page.locator('input[name="displayTo-day"]')).toBeVisible();
-
-      // STEP 2: Test empty form validation
-      await page.getByRole("button", { name: /continue/i }).click();
-      await expect(page).toHaveURL("/non-strategic-upload");
-
-      let errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-
-      const fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
-      await expect(fileErrorMessage).toBeVisible();
-
-      // STEP 3: Test accessibility with error state
-      let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // STEP 4: Test invalid file type validation
-      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
-      await page.waitForTimeout(1000);
-
-      await page.selectOption('select[name="listType"]', "9");
-      await page.fill('input[name="hearingStartDate-day"]', "15");
-      await page.fill('input[name="hearingStartDate-month"]', "06");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
-      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
-      await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "10");
-      await page.fill('input[name="displayFrom-month"]', "06");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "20");
-      await page.fill('input[name="displayTo-month"]', "06");
-      await page.fill('input[name="displayTo-year"]', "2025");
-
-      const fileInput = page.locator('input[name="file"]');
-      await fileInput.setInputFiles({
-        name: "test.txt",
-        mimeType: "text/plain",
-        buffer: Buffer.from("test content")
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      await expect(page).toHaveURL(/\/non-strategic-upload/);
-
-      errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-      const errorLink = errorSummary.getByRole("link", { name: /the selected file type is not supported/i });
-      await expect(errorLink).toBeVisible();
-
-      // STEP 5: Test file size validation
-      const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
-      await fileInput.setInputFiles({
-        name: "large-file.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: largeBuffer
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-      await expect(errorSummary.getByRole("link", { name: /the selected file must be smaller than 2mb/i })).toBeVisible();
-
-      // STEP 6: Test date range validation (re-fill all fields since form state may be lost after validation errors)
-      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
-      await page.waitForTimeout(1000);
-
-      await page.selectOption('select[name="listType"]', "9");
-      await page.fill('input[name="hearingStartDate-day"]', "15");
-      await page.fill('input[name="hearingStartDate-month"]', "06");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
-      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
-      await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "06");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "10"); // Invalid: to date (10) before from date (20)
-      await page.fill('input[name="displayTo-month"]', "06");
-      await page.fill('input[name="displayTo-year"]', "2025");
-
-      const fileInputStep6 = page.locator('input[name="file"]');
-      await fileInputStep6.setInputFiles({
-        name: "test.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: await createMinimalExcelFile()
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-      await expect(errorSummary.getByRole("link", { name: /'display to' date must be the same as or later than 'display from' date/i })).toBeVisible();
-
-      // STEP 7: Complete valid form submission
-      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
-      await page.waitForTimeout(1000);
-
-      await page.selectOption('select[name="listType"]', "9");
-      await page.fill('input[name="hearingStartDate-day"]', "23");
-      await page.fill('input[name="hearingStartDate-month"]', "10");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
-      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
-      await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "10");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "30");
-      await page.fill('input[name="displayTo-month"]', "10");
-      await page.fill('input[name="displayTo-year"]', "2025");
-
-      await fileInput.setInputFiles({
-        name: "test-hearing-list.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: await createMinimalExcelFile()
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
-
-      // STEP 8: Verify summary page
-      await expect(page.locator("h1")).toHaveText("File upload summary");
-
-      const values = page.locator(".govuk-summary-list__value");
-      await expect(values.nth(1)).toContainText("test-hearing-list.xlsx");
-      await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
-      await expect(values.nth(3)).toContainText("23 October 2025");
-      await expect(values.nth(4)).toContainText("Public");
-      await expect(values.nth(5)).toContainText("English");
-      await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
-
-      // Verify change links
-      const changeLinks = page.locator(".govuk-summary-list__actions a");
-      await expect(changeLinks).toHaveCount(7);
-      for (let i = 0; i < 7; i++) {
-        await expect(changeLinks.nth(i)).toContainText("Change");
-      }
-
-      // Test accessibility on summary page
-      accessibilityScanResults = await axeCheck(page).analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // STEP 9: Confirm upload
-      await page.getByRole("button", { name: "Confirm" }).click();
-      await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
-
-      // STEP 10: Verify success page
-      const successPanel = page.locator(".govuk-panel");
-      await expect(successPanel).toBeVisible();
-      await expect(page.locator(".govuk-panel__title")).toHaveText("File upload successful");
-      await expect(successPanel).toContainText("Your file has been uploaded");
-
-      // Verify next steps links
-      const uploadLink = page.getByRole("link", { name: "Upload another file" });
-      await expect(uploadLink).toBeVisible();
-      await expect(uploadLink).toHaveAttribute("href", "/non-strategic-upload");
-
-      const removeLink = page.getByRole("link", { name: "Remove file" });
-      await expect(removeLink).toBeVisible();
-
-      const homeLink = page.getByRole("link", { name: "Home" });
-      await expect(homeLink).toBeVisible();
-
-      // Test accessibility on success page
-      accessibilityScanResults = await axeCheck(page).analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // STEP 11: Test Welsh on success page
-      await page.goto("/non-strategic-upload-success?lng=cy");
-      await expect(page.locator(".govuk-panel__title")).toHaveText("Wedi llwyddo i uwchlwytho ffeiliau");
-      await expect(page.getByRole("heading", { name: "Beth yr ydych eisiau ei wneud nesaf?" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "uwchlwytho ffeil arall" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Dileu ffeil" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Tudalen hafan" })).toBeVisible();
-
-      // STEP 12: Test keyboard navigation - navigate back to upload (from Welsh page)
-      const welshUploadLink = page.getByRole("link", { name: "uwchlwytho ffeil arall" });
-      await welshUploadLink.focus();
-      await page.keyboard.press("Enter");
-      await expect(page).toHaveURL("/non-strategic-upload");
-    });
-
-    // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
-    test("RCJ, SSCS, Rolls Building, Tribunal, First-tier Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", async ({
-      page
-    }) => {
-      test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
-
-      const testUser = await createTestUser(process.env.CFT_VALID_TEST_ACCOUNT!);
-      const subscription = await createTestSubscription(testUser.userId, testLocationId);
-      const kbListType = (await getListTypeByName(KB_DIVISION_LIST_TYPE_NAME)) as { id: number } | null;
-      const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
-      const businessAndPropertyListType = (await getListTypeByName(BUSINESS_AND_PROPERTY_LIST_TYPE_NAME)) as { id: number } | null;
-      const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
-      const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
-      const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
-      const adminCourtListType = (await getListTypeByName(BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME)) as { id: number } | null;
-      const fttRptLondonListType = (await getListTypeByName(FTT_RPT_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
-      if (
-        !kbListType ||
-        !sscsListType ||
-        !businessAndPropertyListType ||
-        !interimApplicationsListType ||
-        !grcListType ||
-        !cicListType ||
-        !adminCourtListType ||
-        !fttRptLondonListType
-      ) {
-        throw new Error("Expected list types are not seeded");
-      }
-      const artefactIds: string[] = [];
-
-      try {
-        // STEP 1: Upload a KB Division workbook with an unformatted time and an extra column, checking accessibility on the way
-        const kbArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: kbListType.id,
-          language: "ENGLISH",
-          fileName: "kb-division.xlsx",
-          buffer: await createKbDivisionExcelFile(),
-          checkAccessibility: true
-        });
-        artefactIds.push(kbArtefactId);
-
-        // STEP 2: The KB Excel has localised headings and formatted values, and the unknown column is dropped
-        const kbWorksheet = await downloadReformattedWorksheet(page, kbArtefactId, "KB hearings");
-        expect(rowValues(kbWorksheet, 1)).toEqual(["Venue", "Judge", "Time", "Case number", "Case details", "Hearing type", "Additional information"]);
-        expect(kbWorksheet.getCell("A1").font?.bold).toBe(true);
-        expect(rowValues(kbWorksheet, 2)).toEqual(["Court 1", "Mr Justice Smith", "10:30am", "KB-2026-000001", "Smith v Jones", "Trial", ""]);
-
-        // STEP 3: The KB subscription email links both the PDF and the Excel
-        await expectPdfAndExcelLinksInEmail(kbArtefactId);
-
-        // STEP 4: An English SSCS upload gets English headings, its unknown column dropped, and both email links
-        const sscsArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: sscsListType.id,
-          language: "ENGLISH",
-          fileName: "sscs-london.xlsx",
-          buffer: await createSscsExcelFile()
-        });
-        artefactIds.push(sscsArtefactId);
-
-        const sscsWorksheet = await downloadReformattedWorksheet(page, sscsArtefactId, SSCS_SHEET_NAME);
-        expect(rowValues(sscsWorksheet, 1)).toEqual(SSCS_EN_HEADINGS);
-        expect(sscsWorksheet.getCell("A1").font?.bold).toBe(true);
-        expect(rowValues(sscsWorksheet, 2)).toEqual(SSCS_ROW);
-        expect(rowValues(sscsWorksheet, 1)).not.toContain("Internal notes");
-        await expectPdfAndExcelLinksInEmail(sscsArtefactId);
-
-        // STEP 5: A Welsh SSCS upload gets the Welsh headings
-        const welshSscsArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: sscsListType.id,
-          language: "WELSH",
-          fileName: "sscs-london-cy.xlsx",
-          buffer: await createSscsExcelFile()
-        });
-        artefactIds.push(welshSscsArtefactId);
-
-        const welshSscsWorksheet = await downloadReformattedWorksheet(page, welshSscsArtefactId, SSCS_SHEET_NAME);
-        expect(rowValues(welshSscsWorksheet, 1)).toEqual(SSCS_CY_HEADINGS);
-        expect(rowValues(welshSscsWorksheet, 2)).toEqual(SSCS_ROW);
-
-        // STEP 6: A Business and Property upload keeps only its section tabs, drops the extra tab and column, and normalises the time
-        const businessAndPropertyArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: businessAndPropertyListType.id,
-          language: "ENGLISH",
-          fileName: "business-and-property-rolls.xlsx",
-          buffer: await createBusinessAndPropertyExcelFile()
-        });
-        artefactIds.push(businessAndPropertyArtefactId);
-
-        const businessAndPropertyWorkbook = await downloadReformattedWorkbook(page, businessAndPropertyArtefactId);
-        expect(businessAndPropertyWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Appeal List", "Insolvency & Companies Court"]);
-        const appealWorksheet = businessAndPropertyWorkbook.getWorksheet("Appeal List") as ExcelJSPkg.Worksheet;
-        expect(rowValues(appealWorksheet, 1)).toEqual(BUSINESS_AND_PROPERTY_EN_HEADINGS);
-        expect(appealWorksheet.getCell("A1").font?.bold).toBe(true);
-        expect(rowValues(appealWorksheet, 2)).toEqual(["Mr Justice Smith", "10:30am", "Court 1", "Appeal", "BL-2026-000001", "Smith v Jones", "Remote"]);
-        expect(rowValues(appealWorksheet, 1)).not.toContain("Internal notes");
-        await expectPdfAndExcelLinksInEmail(businessAndPropertyArtefactId);
-
-        // STEP 7: A Welsh Interim Applications upload gets the Welsh headings and only the Hearing List tab
-        const interimArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: interimApplicationsListType.id,
-          language: "WELSH",
-          fileName: "interim-applications-cy.xlsx",
-          buffer: await createInterimApplicationsExcelFile()
-        });
-        artefactIds.push(interimArtefactId);
-
-        const interimWorkbook = await downloadReformattedWorkbook(page, interimArtefactId);
-        expect(interimWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Hearing List"]);
-        const interimWorksheet = interimWorkbook.getWorksheet("Hearing List") as ExcelJSPkg.Worksheet;
-        expect(rowValues(interimWorksheet, 1)).toEqual(INTERIM_APPLICATIONS_CY_HEADINGS);
-        expect(rowValues(interimWorksheet, 2)).toEqual([
-          "Mr Justice Smith",
-          "10.30am",
-          "Court 1",
-          "Interim application",
-          "BL-2026-000002",
-          "Acme v Widget",
-          "In person"
-        ]);
-
-        // STEP 8: An English GRC upload gets English headings, the PDF's long-form date, its unknown column dropped, and both email links
-        const grcArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: grcListType.id,
-          language: "ENGLISH",
-          fileName: "grc-weekly.xlsx",
-          buffer: await createTribunalExcelFile(GRC_SHEET_NAME, GRC_UPLOADED_HEADER, GRC_ROW)
-        });
-        artefactIds.push(grcArtefactId);
-
-        const grcWorksheet = await downloadReformattedWorksheet(page, grcArtefactId, GRC_SHEET_NAME);
-        expect(rowValues(grcWorksheet, 1)).toEqual(GRC_EN_HEADINGS);
-        expect(grcWorksheet.getCell("A1").font?.bold).toBe(true);
-        expect(rowValues(grcWorksheet, 2)).toEqual(["2 January 2026", ...GRC_ROW.slice(1)]);
-        expect(rowValues(grcWorksheet, 1)).not.toContain("Internal notes");
-        expect(rowValues(grcWorksheet, 2)).not.toContain("Appellant is vulnerable");
-        await expectPdfAndExcelLinksInEmail(grcArtefactId);
-
-        // STEP 9: A Welsh CIC upload gets the Welsh headings, including the venue/platform alias, the Welsh long-form date, and both email links
-        const cicArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: cicListType.id,
-          language: "WELSH",
-          fileName: "cic-weekly-cy.xlsx",
-          buffer: await createTribunalExcelFile(CIC_SHEET_NAME, CIC_UPLOADED_HEADER, CIC_ROW)
-        });
-        artefactIds.push(cicArtefactId);
-
-        const cicWorksheet = await downloadReformattedWorksheet(page, cicArtefactId, CIC_SHEET_NAME);
-        expect(rowValues(cicWorksheet, 1)).toEqual(CIC_CY_HEADINGS);
-        expect(rowValues(cicWorksheet, 2)).toEqual(["2 Ionawr 2026", ...CIC_ROW.slice(1)]);
-        await expectPdfAndExcelLinksInEmail(cicArtefactId);
-
-        // STEP 10: A Welsh Birmingham Administrative Court upload gets the Welsh headings, the normalised time, its unknown column dropped, and both email links
-        const adminCourtArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: adminCourtListType.id,
-          language: "WELSH",
-          fileName: "birmingham-administrative-court-cy.xlsx",
-          buffer: await createAdminCourtExcelFile(),
-          checkAccessibility: true
-        });
-        artefactIds.push(adminCourtArtefactId);
-
-        const adminCourtWorksheet = await downloadReformattedWorksheet(page, adminCourtArtefactId, BIRMINGHAM_ADMIN_COURT_SHEET_NAME);
-        expect(rowValues(adminCourtWorksheet, 1)).toEqual(ADMIN_COURT_CY_HEADINGS);
-        expect(adminCourtWorksheet.getCell("A1").font?.bold).toBe(true);
-        expect(rowValues(adminCourtWorksheet, 2)).toEqual([
-          "Court 1",
-          "Mr Justice Smith",
-          "10:30am",
-          "AC-2026-000001",
-          "R (Smith) v Secretary of State",
-          "Judicial Review",
-          ""
-        ]);
-        expect(rowValues(adminCourtWorksheet, 1)).not.toContain("Internal notes");
-        expect(rowValues(adminCourtWorksheet, 2)).not.toContain("Claimant is vulnerable");
-        await expectPdfAndExcelLinksInEmail(adminCourtArtefactId);
-
-        // STEP 11: A Welsh RPT London upload gets the Welsh headings and the long Welsh date, drops the extra column, and links both files
-        const fttRptArtefactId = await uploadExcelAndConfirm(page, {
-          listTypeId: fttRptLondonListType.id,
-          language: "WELSH",
-          fileName: "ftt-rpt-london-cy.xlsx",
-          buffer: await createFttRptExcelFile()
-        });
-        artefactIds.push(fttRptArtefactId);
-
-        const fttRptWorksheet = await downloadReformattedWorksheet(page, fttRptArtefactId, FTT_RPT_SHEET_NAME);
-        expect(rowValues(fttRptWorksheet, 1)).toEqual(FTT_RPT_CY_HEADINGS);
-        expect(rowValues(fttRptWorksheet, 2)).toEqual([
-          "15 Ionawr 2026",
-          "10.30am",
-          "10 Alfred Place",
-          "Rent repairs",
-          "LON/00AA/2026/0001",
-          "Judge Jones",
-          "Mr Patel",
-          "In person",
-          "None"
-        ]);
-        expect(rowValues(fttRptWorksheet, 1)).not.toContain("Internal notes");
-        await expectPdfAndExcelLinksInEmail(fttRptArtefactId);
-      } finally {
-        if (artefactIds.length > 0) {
-          await cleanupTestNotifications(artefactIds);
-          await deleteTestArtefacts({ artefactIds });
-        }
-        await cleanupTestSubscriptions([subscription.subscriptionId]);
-        await cleanupTestUsers([testUser.userId]);
-      }
-    });
-
-    test("court name validation and autocomplete functionality @nightly", async ({ page }) => {
-      await page.goto("/non-strategic-upload");
-
-      const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
-      await courtInput.waitFor({ state: "visible", timeout: 10000 });
-      await expect(courtInput).toHaveAttribute("role", "combobox");
-
-      const fileInput = page.locator('input[name="file"]');
-      await fileInput.setInputFiles({
-        name: "test.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: await createMinimalExcelFile()
-      });
-
-      // Test empty court name validation
-      await page.getByRole("button", { name: /continue/i }).click();
-      let errorSummary = page.locator(".govuk-error-summary");
-      let errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
-      await expect(errorLink).toBeVisible();
-
-      // Test short court name validation
-      await courtInput.fill("AB");
-      await page.getByRole("button", { name: /continue/i }).click();
-      errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible();
-      errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
-      await expect(errorLink).toBeVisible();
-
-      // Test invalid court name validation
-      await courtInput.fill("Invalid Court Name That Does Not Exist");
-      await page.waitForTimeout(500); // Wait for autocomplete to settle
-      await page.getByRole("button", { name: /continue/i }).click();
-      errorSummary = page.locator(".govuk-error-summary");
-      await expect(errorSummary).toBeVisible({ timeout: 10000 });
-      errorLink = errorSummary.getByRole("link", { name: /please enter and select a valid court/i });
-      await expect(errorLink).toBeVisible();
-
-      // Verify court name value is preserved after validation error
-      const preservedCourtName = "Invalid Court Name";
-      await courtInput.fill(preservedCourtName);
-      await page.waitForTimeout(500); // Wait for autocomplete to settle
-      await page.getByRole("button", { name: /continue/i }).click();
-      await page.waitForTimeout(500); // Wait for page to reload with preserved value
-      await expect(courtInput).toHaveValue(preservedCourtName, { timeout: 10000 });
-    });
-
-    test("session management - redirect and refresh behavior @nightly", async ({ page }) => {
-      // Test direct access to success page without session redirects
-      await page.goto("/non-strategic-upload-success");
-      await expect(page).toHaveURL("/non-strategic-upload");
-
-      // Complete an upload
-      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
-      await page.waitForTimeout(1000);
-
-      await page.selectOption('select[name="listType"]', "9");
-      await page.fill('input[name="hearingStartDate-day"]', "23");
-      await page.fill('input[name="hearingStartDate-month"]', "10");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
-      await page.selectOption('select[name="sensitivity"]', "PUBLIC");
-      await page.selectOption('select[name="language"]', "ENGLISH");
-      await page.fill('input[name="displayFrom-day"]', "20");
-      await page.fill('input[name="displayFrom-month"]', "10");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "30");
-      await page.fill('input[name="displayTo-month"]', "10");
-      await page.fill('input[name="displayTo-year"]', "2025");
-
-      const fileInput = page.locator('input[name="file"]');
-      await fileInput.setInputFiles({
-        name: "test-session.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: await createMinimalExcelFile()
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/);
-      await page.getByRole("button", { name: "Confirm" }).click();
-      await page.waitForURL("/non-strategic-upload-success");
-
-      // Refresh should redirect back to non-strategic-upload (session cleared)
-      await page.reload();
-      await expect(page).toHaveURL("/non-strategic-upload");
-
-      // Test multiple sequential uploads work
-      await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
-      await page.waitForTimeout(1000);
-
-      await page.selectOption('select[name="listType"]', "9");
-      await page.fill('input[name="hearingStartDate-day"]', "25");
-      await page.fill('input[name="hearingStartDate-month"]', "11");
-      await page.fill('input[name="hearingStartDate-year"]', "2025");
-      await page.selectOption('select[name="sensitivity"]', "PRIVATE");
-      await page.selectOption('select[name="language"]', "WELSH");
-      await page.fill('input[name="displayFrom-day"]', "24");
-      await page.fill('input[name="displayFrom-month"]', "11");
-      await page.fill('input[name="displayFrom-year"]', "2025");
-      await page.fill('input[name="displayTo-day"]', "26");
-      await page.fill('input[name="displayTo-month"]', "11");
-      await page.fill('input[name="displayTo-year"]', "2025");
-
-      await fileInput.setInputFiles({
-        name: "second-upload.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        buffer: await createMinimalExcelFile()
-      });
-
-      await page.getByRole("button", { name: /continue/i }).click();
-      await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/);
-      await page.getByRole("button", { name: "Confirm" }).click();
-      await page.waitForURL("/non-strategic-upload-success");
-      await expect(page).toHaveURL("/non-strategic-upload-success");
-    });
+test.describe("Non-Strategic Upload", () => {
+  test.beforeAll(async () => {
+    const testLocation = await createUniqueTestLocation({ namePrefix: "Non-Strategic Upload Court" });
+    testLocationId = testLocation.locationId;
+    cstListTypeLabel = await getListTypeOptionLabel(CST_LIST_TYPE_NAME);
   });
+
+  test.beforeEach(async ({ page }) => {
+    await authenticateSystemAdmin(page);
+  });
+
+  test("complete non-strategic upload journey with form validation, summary, success, Welsh, and accessibility", async ({ page }) => {
+    // STEP 1: Load form page and verify all elements
+    await page.goto("/non-strategic-upload");
+    await expect(page).toHaveTitle("Upload excel file - Excel file upload - Court and tribunal hearings - GOV.UK");
+
+    const heading = page.getByRole("heading", { name: /upload Excel file/i });
+    await expect(heading).toBeVisible();
+
+    // Verify form fields exist
+    const fileUpload = page.locator('input[name="file"]');
+    await expect(fileUpload).toBeVisible();
+
+    const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
+    await expect(courtInput).toBeVisible();
+
+    await expect(page.locator('select[name="listType"]')).toBeVisible();
+    await expect(page.locator('input[name="hearingStartDate-day"]')).toBeVisible();
+    await expect(page.locator('select[name="sensitivity"]')).toBeVisible();
+    await expect(page.locator('select[name="language"]')).toBeVisible();
+    await expect(page.locator('input[name="displayFrom-day"]')).toBeVisible();
+    await expect(page.locator('input[name="displayTo-day"]')).toBeVisible();
+
+    // STEP 2: Test empty form validation
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(page).toHaveURL("/non-strategic-upload");
+
+    let errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+
+    const fileErrorMessage = page.locator("#file").locator("..").locator(".govuk-error-message");
+    await expect(fileErrorMessage).toBeVisible();
+
+    // STEP 3: Test accessibility with error state
+    let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // STEP 4: Test invalid file type validation
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', { label: cstListTypeLabel });
+    await page.fill('input[name="hearingStartDate-day"]', "15");
+    await page.fill('input[name="hearingStartDate-month"]', "06");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "10");
+    await page.fill('input[name="displayFrom-month"]', "06");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "20");
+    await page.fill('input[name="displayTo-month"]', "06");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    const fileInput = page.locator('input[name="file"]');
+    await fileInput.setInputFiles({
+      name: "test.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("test content")
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(page).toHaveURL(/\/non-strategic-upload/);
+
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    const errorLink = errorSummary.getByRole("link", { name: /the selected file type is not supported/i });
+    await expect(errorLink).toBeVisible();
+
+    // STEP 5: Test file size validation
+    const largeBuffer = Buffer.alloc(3 * 1024 * 1024);
+    await fileInput.setInputFiles({
+      name: "large-file.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: largeBuffer
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    await expect(errorSummary.getByRole("link", { name: /the selected file must be smaller than 2mb/i })).toBeVisible();
+
+    // STEP 6: Test date range validation (re-fill all fields since form state may be lost after validation errors)
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', { label: cstListTypeLabel });
+    await page.fill('input[name="hearingStartDate-day"]', "15");
+    await page.fill('input[name="hearingStartDate-month"]', "06");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "20");
+    await page.fill('input[name="displayFrom-month"]', "06");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "10"); // Invalid: to date (10) before from date (20)
+    await page.fill('input[name="displayTo-month"]', "06");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    const fileInputStep6 = page.locator('input[name="file"]');
+    await fileInputStep6.setInputFiles({
+      name: "test.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await createMinimalExcelFile()
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    await expect(errorSummary.getByRole("link", { name: /'display to' date must be the same as or later than 'display from' date/i })).toBeVisible();
+
+    // STEP 7: Complete valid form submission
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', { label: cstListTypeLabel });
+    await page.fill('input[name="hearingStartDate-day"]', "23");
+    await page.fill('input[name="hearingStartDate-month"]', "10");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "20");
+    await page.fill('input[name="displayFrom-month"]', "10");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "30");
+    await page.fill('input[name="displayTo-month"]', "10");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    await fileInput.setInputFiles({
+      name: "test-hearing-list.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await createMinimalExcelFile()
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/, { timeout: 10000 });
+
+    // STEP 8: Verify summary page
+    await expect(page.locator("h1")).toHaveText("File Upload Summary");
+
+    const values = page.locator(".govuk-summary-list__value");
+    await expect(values.nth(1)).toContainText("test-hearing-list.xlsx");
+    await expect(values.nth(2)).toContainText("Care Standards Tribunal Weekly Hearing List");
+    await expect(values.nth(3)).toContainText("23 October 2025");
+    await expect(values.nth(4)).toContainText("Public");
+    await expect(values.nth(5)).toContainText("English");
+    await expect(values.nth(6)).toContainText("20 October 2025 to 30 October 2025");
+
+    // Verify change links
+    const changeLinks = page.locator(".govuk-summary-list__actions a");
+    await expect(changeLinks).toHaveCount(7);
+    for (let i = 0; i < 7; i++) {
+      await expect(changeLinks.nth(i)).toContainText("Change");
+    }
+
+    // Test accessibility on summary page
+    accessibilityScanResults = await axeCheck(page).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // STEP 9: Confirm upload
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL("/non-strategic-upload-success", { timeout: 10000 });
+
+    // STEP 10: Verify success page
+    const successPanel = page.locator(".govuk-panel");
+    await expect(successPanel).toBeVisible();
+    await expect(page.locator(".govuk-panel__title")).toHaveText("File Upload Successful");
+    await expect(successPanel).toContainText("Your file has been uploaded");
+
+    // Verify next steps links
+    const uploadLink = page.getByRole("link", { name: "Upload another file" });
+    await expect(uploadLink).toBeVisible();
+    await expect(uploadLink).toHaveAttribute("href", "/non-strategic-upload");
+
+    const removeLink = page.getByRole("link", { name: "Remove file" });
+    await expect(removeLink).toBeVisible();
+
+    const homeLink = page.getByRole("link", { name: "Home" });
+    await expect(homeLink).toBeVisible();
+
+    // Test accessibility on success page
+    accessibilityScanResults = await axeCheck(page).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // STEP 11: Test Welsh on success page
+    await page.goto("/non-strategic-upload-success?lng=cy");
+    await expect(page.locator(".govuk-panel__title")).toHaveText("Wedi llwyddo i uwchlwytho ffeiliau");
+    await expect(page.getByRole("heading", { name: "Beth yr ydych eisiau ei wneud nesaf?" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "uwchlwytho ffeil arall" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Dileu ffeil" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Tudalen hafan" })).toBeVisible();
+
+    // STEP 12: Test keyboard navigation - navigate back to upload (from Welsh page)
+    const welshUploadLink = page.getByRole("link", { name: "uwchlwytho ffeil arall" });
+    await welshUploadLink.focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL("/non-strategic-upload");
+  });
+
+  // Stays inside the skipped describe until the SSO specs are re-enabled; the unit tests are the real check until then
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 7) is fixed; re-enable then.
+  test.fixme("RCJ, SSCS, Rolls Building, Tribunal, First-tier Tribunal and Administrative Court Excel uploads send reformatted Excel and PDF links in email @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
+    test.skip(!process.env.GOVUK_NOTIFY_API_KEY, "Skipping: GOVUK_NOTIFY_API_KEY not set");
+
+    // The subscriber uses the CFT test account's email so GOV.UK Notify delivers; it is still this test's own user,
+    // identified by a prefixed provenance id, so global-teardown removes it with its subscription
+    const testUser = await createNotificationSubscriber();
+    await createTestSubscription(testUser.userId, testLocationId);
+    const kbListType = (await getListTypeByName(KB_DIVISION_LIST_TYPE_NAME)) as { id: number } | null;
+    const sscsListType = (await getListTypeByName(SSCS_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
+    const businessAndPropertyListType = (await getListTypeByName(BUSINESS_AND_PROPERTY_LIST_TYPE_NAME)) as { id: number } | null;
+    const interimApplicationsListType = (await getListTypeByName(INTERIM_APPLICATIONS_LIST_TYPE_NAME)) as { id: number } | null;
+    const grcListType = (await getListTypeByName(GRC_LIST_TYPE_NAME)) as { id: number } | null;
+    const cicListType = (await getListTypeByName(CIC_LIST_TYPE_NAME)) as { id: number } | null;
+    const adminCourtListType = (await getListTypeByName(BIRMINGHAM_ADMIN_COURT_LIST_TYPE_NAME)) as { id: number } | null;
+    const fttRptLondonListType = (await getListTypeByName(FTT_RPT_LONDON_LIST_TYPE_NAME)) as { id: number } | null;
+    if (
+      !kbListType ||
+      !sscsListType ||
+      !businessAndPropertyListType ||
+      !interimApplicationsListType ||
+      !grcListType ||
+      !cicListType ||
+      !adminCourtListType ||
+      !fttRptLondonListType
+    ) {
+      throw new Error("Expected list types are not seeded");
+    }
+    // STEP 1: Upload a KB Division workbook with an unformatted time and an extra column, checking accessibility on the way
+    const kbArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: kbListType.id,
+      language: "ENGLISH",
+      fileName: "kb-division.xlsx",
+      buffer: await createKbDivisionExcelFile(),
+      checkAccessibility: true
+    });
+
+    // STEP 2: The KB Excel has localised headings and formatted values, and the unknown column is dropped
+    const kbWorksheet = await downloadReformattedWorksheet(page, kbArtefactId, "KB hearings");
+    expect(rowValues(kbWorksheet, 1)).toEqual(["Venue", "Judge", "Time", "Case number", "Case details", "Hearing type", "Additional information"]);
+    expect(kbWorksheet.getCell("A1").font?.bold).toBe(true);
+    expect(rowValues(kbWorksheet, 2)).toEqual(["Court 1", "Mr Justice Smith", "10:30am", "KB-2026-000001", "Smith v Jones", "Trial", ""]);
+
+    // STEP 3: The KB subscription email links both the PDF and the Excel
+    await expectPdfAndExcelLinksInEmail(kbArtefactId);
+
+    // STEP 4: An English SSCS upload gets English headings, its unknown column dropped, and both email links
+    const sscsArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: sscsListType.id,
+      language: "ENGLISH",
+      fileName: "sscs-london.xlsx",
+      buffer: await createSscsExcelFile()
+    });
+
+    const sscsWorksheet = await downloadReformattedWorksheet(page, sscsArtefactId, SSCS_SHEET_NAME);
+    expect(rowValues(sscsWorksheet, 1)).toEqual(SSCS_EN_HEADINGS);
+    expect(sscsWorksheet.getCell("A1").font?.bold).toBe(true);
+    expect(rowValues(sscsWorksheet, 2)).toEqual(SSCS_ROW);
+    expect(rowValues(sscsWorksheet, 1)).not.toContain("Internal notes");
+    await expectPdfAndExcelLinksInEmail(sscsArtefactId);
+
+    // STEP 5: A Welsh SSCS upload gets the Welsh headings
+    const welshSscsArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: sscsListType.id,
+      language: "WELSH",
+      fileName: "sscs-london-cy.xlsx",
+      buffer: await createSscsExcelFile()
+    });
+
+    const welshSscsWorksheet = await downloadReformattedWorksheet(page, welshSscsArtefactId, SSCS_SHEET_NAME);
+    expect(rowValues(welshSscsWorksheet, 1)).toEqual(SSCS_CY_HEADINGS);
+    expect(rowValues(welshSscsWorksheet, 2)).toEqual(SSCS_ROW);
+
+    // STEP 6: A Business and Property upload keeps only its section tabs, drops the extra tab and column, and normalises the time
+    const businessAndPropertyArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: businessAndPropertyListType.id,
+      language: "ENGLISH",
+      fileName: "business-and-property-rolls.xlsx",
+      buffer: await createBusinessAndPropertyExcelFile()
+    });
+
+    const businessAndPropertyWorkbook = await downloadReformattedWorkbook(page, businessAndPropertyArtefactId);
+    expect(businessAndPropertyWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Appeal List", "Insolvency & Companies Court"]);
+    const appealWorksheet = businessAndPropertyWorkbook.getWorksheet("Appeal List") as ExcelJSPkg.Worksheet;
+    expect(rowValues(appealWorksheet, 1)).toEqual(BUSINESS_AND_PROPERTY_EN_HEADINGS);
+    expect(appealWorksheet.getCell("A1").font?.bold).toBe(true);
+    expect(rowValues(appealWorksheet, 2)).toEqual(["Mr Justice Smith", "10:30am", "Court 1", "Appeal", "BL-2026-000001", "Smith v Jones", "Remote"]);
+    expect(rowValues(appealWorksheet, 1)).not.toContain("Internal notes");
+    await expectPdfAndExcelLinksInEmail(businessAndPropertyArtefactId);
+
+    // STEP 7: A Welsh Interim Applications upload gets the Welsh headings and only the Hearing List tab
+    const interimArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: interimApplicationsListType.id,
+      language: "WELSH",
+      fileName: "interim-applications-cy.xlsx",
+      buffer: await createInterimApplicationsExcelFile()
+    });
+
+    const interimWorkbook = await downloadReformattedWorkbook(page, interimArtefactId);
+    expect(interimWorkbook.worksheets.map((worksheet) => worksheet.name)).toEqual(["Hearing List"]);
+    const interimWorksheet = interimWorkbook.getWorksheet("Hearing List") as ExcelJSPkg.Worksheet;
+    expect(rowValues(interimWorksheet, 1)).toEqual(INTERIM_APPLICATIONS_CY_HEADINGS);
+    expect(rowValues(interimWorksheet, 2)).toEqual([
+      "Mr Justice Smith",
+      "10.30am",
+      "Court 1",
+      "Interim application",
+      "BL-2026-000002",
+      "Acme v Widget",
+      "In person"
+    ]);
+
+    // STEP 8: An English GRC upload gets English headings, the PDF's long-form date, its unknown column dropped, and both email links
+    const grcArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: grcListType.id,
+      language: "ENGLISH",
+      fileName: "grc-weekly.xlsx",
+      buffer: await createTribunalExcelFile(GRC_SHEET_NAME, GRC_UPLOADED_HEADER, GRC_ROW)
+    });
+
+    const grcWorksheet = await downloadReformattedWorksheet(page, grcArtefactId, GRC_SHEET_NAME);
+    expect(rowValues(grcWorksheet, 1)).toEqual(GRC_EN_HEADINGS);
+    expect(grcWorksheet.getCell("A1").font?.bold).toBe(true);
+    expect(rowValues(grcWorksheet, 2)).toEqual(["2 January 2026", ...GRC_ROW.slice(1)]);
+    expect(rowValues(grcWorksheet, 1)).not.toContain("Internal notes");
+    expect(rowValues(grcWorksheet, 2)).not.toContain("Appellant is vulnerable");
+    await expectPdfAndExcelLinksInEmail(grcArtefactId);
+
+    // STEP 9: A Welsh CIC upload gets the Welsh headings, including the venue/platform alias, the Welsh long-form date, and both email links
+    const cicArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: cicListType.id,
+      language: "WELSH",
+      fileName: "cic-weekly-cy.xlsx",
+      buffer: await createTribunalExcelFile(CIC_SHEET_NAME, CIC_UPLOADED_HEADER, CIC_ROW)
+    });
+
+    const cicWorksheet = await downloadReformattedWorksheet(page, cicArtefactId, CIC_SHEET_NAME);
+    expect(rowValues(cicWorksheet, 1)).toEqual(CIC_CY_HEADINGS);
+    expect(rowValues(cicWorksheet, 2)).toEqual(["2 Ionawr 2026", ...CIC_ROW.slice(1)]);
+    await expectPdfAndExcelLinksInEmail(cicArtefactId);
+
+    // STEP 10: A Welsh Birmingham Administrative Court upload gets the Welsh headings, the normalised time, its unknown column dropped, and both email links
+    const adminCourtArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: adminCourtListType.id,
+      language: "WELSH",
+      fileName: "birmingham-administrative-court-cy.xlsx",
+      buffer: await createAdminCourtExcelFile(),
+      checkAccessibility: true
+    });
+
+    const adminCourtWorksheet = await downloadReformattedWorksheet(page, adminCourtArtefactId, BIRMINGHAM_ADMIN_COURT_SHEET_NAME);
+    expect(rowValues(adminCourtWorksheet, 1)).toEqual(ADMIN_COURT_CY_HEADINGS);
+    expect(adminCourtWorksheet.getCell("A1").font?.bold).toBe(true);
+    expect(rowValues(adminCourtWorksheet, 2)).toEqual([
+      "Court 1",
+      "Mr Justice Smith",
+      "10:30am",
+      "AC-2026-000001",
+      "R (Smith) v Secretary of State",
+      "Judicial Review",
+      ""
+    ]);
+    expect(rowValues(adminCourtWorksheet, 1)).not.toContain("Internal notes");
+    expect(rowValues(adminCourtWorksheet, 2)).not.toContain("Claimant is vulnerable");
+    await expectPdfAndExcelLinksInEmail(adminCourtArtefactId);
+
+    // STEP 11: A Welsh RPT London upload gets the Welsh headings and the long Welsh date, drops the extra column, and links both files
+    const fttRptArtefactId = await uploadExcelAndConfirm(page, {
+      listTypeId: fttRptLondonListType.id,
+      language: "WELSH",
+      fileName: "ftt-rpt-london-cy.xlsx",
+      buffer: await createFttRptExcelFile()
+    });
+
+    const fttRptWorksheet = await downloadReformattedWorksheet(page, fttRptArtefactId, FTT_RPT_SHEET_NAME);
+    expect(rowValues(fttRptWorksheet, 1)).toEqual(FTT_RPT_CY_HEADINGS);
+    expect(rowValues(fttRptWorksheet, 2)).toEqual([
+      "15 Ionawr 2026",
+      "10.30am",
+      "10 Alfred Place",
+      "Rent repairs",
+      "LON/00AA/2026/0001",
+      "Judge Jones",
+      "Mr Patel",
+      "In person",
+      "None"
+    ]);
+    expect(rowValues(fttRptWorksheet, 1)).not.toContain("Internal notes");
+    await expectPdfAndExcelLinksInEmail(fttRptArtefactId);
+  });
+
+  test("court name validation and autocomplete functionality @nightly", async ({ page }) => {
+    await page.goto("/non-strategic-upload");
+
+    const courtInput = page.getByRole("combobox", { name: /court name or tribunal name/i });
+    await courtInput.waitFor({ state: "visible", timeout: 10000 });
+    await expect(courtInput).toHaveAttribute("role", "combobox");
+
+    const fileInput = page.locator('input[name="file"]');
+    await fileInput.setInputFiles({
+      name: "test.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await createMinimalExcelFile()
+    });
+
+    // Test empty court name validation
+    await page.getByRole("button", { name: /continue/i }).click();
+    let errorSummary = page.locator(".govuk-error-summary");
+    let errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
+    await expect(errorLink).toBeVisible();
+
+    // Test short court name validation
+    await courtInput.fill("AB");
+    await page.getByRole("button", { name: /continue/i }).click();
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    errorLink = errorSummary.getByRole("link", { name: /court name must be three characters or more/i });
+    await expect(errorLink).toBeVisible();
+
+    // Test invalid court name validation
+    await courtInput.fill("Invalid Court Name That Does Not Exist");
+    await page.waitForTimeout(500); // Wait for autocomplete to settle
+    await page.getByRole("button", { name: /continue/i }).click();
+    errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible({ timeout: 10000 });
+    errorLink = errorSummary.getByRole("link", { name: /please enter and select a valid court/i });
+    await expect(errorLink).toBeVisible();
+
+    // Verify court name value is preserved after validation error
+    const preservedCourtName = "Invalid Court Name";
+    await courtInput.fill(preservedCourtName);
+    await page.waitForTimeout(500); // Wait for autocomplete to settle
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.waitForTimeout(500); // Wait for page to reload with preserved value
+    await expect(courtInput).toHaveValue(preservedCourtName, { timeout: 10000 });
+  });
+
+  test("session management - redirect and refresh behavior @nightly", async ({ page }) => {
+    // Test direct access to success page without session redirects
+    await page.goto("/non-strategic-upload-success");
+    await expect(page).toHaveURL("/non-strategic-upload");
+
+    // Complete an upload
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', { label: cstListTypeLabel });
+    await page.fill('input[name="hearingStartDate-day"]', "23");
+    await page.fill('input[name="hearingStartDate-month"]', "10");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PUBLIC");
+    await page.selectOption('select[name="language"]', "ENGLISH");
+    await page.fill('input[name="displayFrom-day"]', "20");
+    await page.fill('input[name="displayFrom-month"]', "10");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "30");
+    await page.fill('input[name="displayTo-month"]', "10");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    const fileInput = page.locator('input[name="file"]');
+    await fileInput.setInputFiles({
+      name: "test-session.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await createMinimalExcelFile()
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/);
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL("/non-strategic-upload-success");
+
+    // Refresh should redirect back to non-strategic-upload (session cleared)
+    await page.reload();
+    await expect(page).toHaveURL("/non-strategic-upload");
+
+    // Test multiple sequential uploads work
+    await page.goto(`/non-strategic-upload?locationId=${testLocationId}`);
+    await page.waitForTimeout(1000);
+
+    await page.selectOption('select[name="listType"]', { label: cstListTypeLabel });
+    await page.fill('input[name="hearingStartDate-day"]', "25");
+    await page.fill('input[name="hearingStartDate-month"]', "11");
+    await page.fill('input[name="hearingStartDate-year"]', "2025");
+    await page.selectOption('select[name="sensitivity"]', "PRIVATE");
+    await page.selectOption('select[name="language"]', "WELSH");
+    await page.fill('input[name="displayFrom-day"]', "24");
+    await page.fill('input[name="displayFrom-month"]', "11");
+    await page.fill('input[name="displayFrom-year"]', "2025");
+    await page.fill('input[name="displayTo-day"]', "26");
+    await page.fill('input[name="displayTo-month"]', "11");
+    await page.fill('input[name="displayTo-year"]', "2025");
+
+    await fileInput.setInputFiles({
+      name: "second-upload.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      buffer: await createMinimalExcelFile()
+    });
+
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.waitForURL(/\/non-strategic-upload-summary\?uploadId=/);
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await page.waitForURL("/non-strategic-upload-success");
+    await expect(page).toHaveURL("/non-strategic-upload-success");
+  });
+});
 
 interface ExcelUpload {
   listTypeId: number;

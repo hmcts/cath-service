@@ -1,7 +1,6 @@
 import { getApiAuthToken } from "./api-auth-helpers.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const WEB_BASE_URL = process.env.CATH_SERVICE_WEB_URL || "https://localhost:8080";
+export const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
 
 interface CreateLocationInput {
   locationId?: number;
@@ -11,6 +10,14 @@ interface CreateLocationInput {
   contactNo?: string;
   regionIds?: number[];
   subJurisdictionIds?: number[];
+  locationReferences?: LocationReferenceInput[];
+}
+
+// provenanceLocationId defaults to the created location's id, provenanceLocationType to VENUE
+export interface LocationReferenceInput {
+  provenance: string;
+  provenanceLocationId?: string;
+  provenanceLocationType?: string;
 }
 
 interface CreateLocationResponse {
@@ -189,6 +196,21 @@ export async function deleteTestMediaApplication(id: string): Promise<void> {
   return callTestSupportApi<void>("DELETE", `/test-support/media-applications/${id}`);
 }
 
+export interface ProofOfIdFileInfo {
+  exists: boolean;
+  blobName?: string;
+  sizeBytes?: number;
+}
+
+// The ID proof lives in the FILES blob container under the key recorded on the application
+export async function checkTestMediaApplicationProofOfId(id: string): Promise<ProofOfIdFileInfo> {
+  return callTestSupportApi<ProofOfIdFileInfo>("GET", `/test-support/media-applications/${id}/proof-of-id`);
+}
+
+export async function deleteTestMediaApplicationProofOfId(id: string): Promise<void> {
+  return callTestSupportApi<void>("DELETE", `/test-support/media-applications/${id}/proof-of-id`);
+}
+
 // Reference Data
 export async function getFirstRegion(): Promise<unknown> {
   return callTestSupportApi<unknown>("GET", "/test-support/regions?first=true");
@@ -204,6 +226,35 @@ export async function getListType(id: number): Promise<unknown> {
 
 export async function getListTypeByName(name: string): Promise<unknown> {
   return callTestSupportApi<unknown>("GET", `/test-support/list-types?name=${encodeURIComponent(name)}`);
+}
+
+// The upload pages label each list type option shortenedFriendlyName || friendlyName || name
+export async function getListTypeOptionLabel(name: string): Promise<string> {
+  const listType = (await getListTypeByName(name)) as ListTypeRecord;
+  return listType.shortenedFriendlyName || listType.friendlyName || listType.name;
+}
+
+interface ListSearchConfig {
+  listTypeName: string;
+  caseNumberFieldName: string;
+  caseNameFieldName: string;
+}
+
+export async function getListSearchConfig(listTypeName: string): Promise<ListSearchConfig> {
+  try {
+    return await callTestSupportApi<ListSearchConfig>("GET", `/test-support/list-search-config?listTypeName=${encodeURIComponent(listTypeName)}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `${listTypeName} has no list search config, so ingestion will not extract case search data. ` +
+        `Global setup should have created it through ensureListSearchConfig(). (${message})`
+    );
+  }
+}
+
+// Creates the config only where the environment has none (e.g. a fresh PR preview database); an existing config is never changed
+export async function ensureListSearchConfig(config: ListSearchConfig): Promise<ListSearchConfig> {
+  return callTestSupportApi<ListSearchConfig>("POST", "/test-support/list-search-config", config);
 }
 
 export async function getFirstListType(): Promise<unknown> {
@@ -240,6 +291,17 @@ export async function seedJurisdictions(jurisdictions: JurisdictionInput[]): Pro
 
 export async function getJurisdictions(): Promise<unknown[]> {
   return callTestSupportApi<unknown[]>("GET", "/test-support/jurisdictions");
+}
+
+interface CreatedJurisdiction {
+  jurisdictionId: number;
+  name: string;
+  welshName: string;
+}
+
+// Assigns the next id like the Create Jurisdiction page, so a test can never overwrite an existing jurisdiction
+export async function createTestJurisdiction(data: { name: string; welshName: string }): Promise<CreatedJurisdiction> {
+  return callTestSupportApi<CreatedJurisdiction>("POST", "/test-support/jurisdiction", data);
 }
 
 // Sub-jurisdictions
@@ -341,6 +403,10 @@ interface CleanupResponse {
     locations: number;
     listTypes: number;
     mediaApplications: number;
+    thirdPartyUsers: number;
+    subJurisdictions: number;
+    jurisdictions: number;
+    regions: number;
   };
 }
 
@@ -365,6 +431,7 @@ interface ListTypeRecord {
   listTypeName: string;
   name: string;
   friendlyName: string;
+  shortenedFriendlyName?: string | null;
   welshFriendlyName: string;
   url: string;
   defaultSensitivity: string;
