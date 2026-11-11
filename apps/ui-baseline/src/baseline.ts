@@ -18,6 +18,10 @@ import type { PinnedBaseline } from "./runs.js";
 const MARKER = ".stored-baseline.json";
 // Besides the latest: enough for the reports people are looking at without filling the disk
 const KEPT_RECENT = 2;
+// A baseline's id as pushBaseline names it (its finish time, with : and . made -). It names a
+// directory that is deleted and replaced as the baseline is fetched, so an id read from storage that
+// could reach outside the baselines folder (a run record, latest.json) is refused.
+const BASELINE_ID = /^[A-Za-z0-9][A-Za-z0-9-]*$/;
 
 export function createBaselineCache(options: BaselineCacheOptions) {
   const fetching = new Map<string, Promise<void>>();
@@ -73,6 +77,7 @@ export function createBaselineCache(options: BaselineCacheOptions) {
 
   // Held from before the fetch starts, so a prune elsewhere cannot delete it while it arrives
   const pinned = async (id: string): Promise<PinnedBaseline> => {
+    if (!BASELINE_ID.test(id)) throw new Error(`${JSON.stringify(id)} is not a baseline id`);
     const held = hold(id);
     try {
       await fetch(id);

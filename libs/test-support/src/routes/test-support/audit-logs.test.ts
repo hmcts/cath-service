@@ -42,9 +42,50 @@ describe("audit-logs routes", () => {
       // Assert
       expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
         where: { action: "MANAGE_USER", details: "Parity audit entry" },
-        orderBy: { timestamp: "asc" }
+        orderBy: { timestamp: "asc" },
+        take: 100
       });
       expect(mockResponse.json).toHaveBeenCalledWith([]);
+    });
+
+    it("should filter entries by user", async () => {
+      // Arrange
+      mockRequest.query = { action: "MANAGE_USER", userId: "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b" };
+      vi.mocked(prisma.auditLog.findMany).mockResolvedValue([]);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.auditLog.findMany).toHaveBeenCalledWith({
+        where: { action: "MANAGE_USER", userId: "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b" },
+        orderBy: { timestamp: "asc" },
+        take: 100
+      });
+    });
+
+    it("should return 400 rather than every entry when no filter is given", async () => {
+      // Arrange
+      mockRequest.query = {};
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when the userId filter is not a UUID", async () => {
+      // Arrange
+      mockRequest.query = { userId: "user-1" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.auditLog.findMany).not.toHaveBeenCalled();
     });
   });
 
@@ -82,6 +123,24 @@ describe("audit-logs routes", () => {
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when action or details is not a string", async () => {
+      // Arrange
+      const bodies = [
+        { userId: "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b", action: { x: 1 } },
+        { userId: "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b", action: "MANAGE_USER", details: 42 }
+      ];
+
+      // Act
+      for (const body of bodies) {
+        mockRequest.body = body;
+        await POST(mockRequest as Request, mockResponse as Response);
+      }
+
+      // Assert
+      expect(vi.mocked(mockResponse.status).mock.calls).toEqual([[400], [400]]);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
     });
 
     it("should return 400 when userId is not a UUID", async () => {

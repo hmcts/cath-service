@@ -28,8 +28,8 @@ const STOP_GRACE_MS = 2 * 60 * 1000;
 // another pod can tell it is still going: a redeploy starts the new pod while the old one finishes its
 // runs (drain, server.ts)
 const HEARTBEAT_MS = 60 * 1000;
-// A run whose record has not been stored for this long is no longer going anywhere
-const HEARTBEAT_STALE_MS = 3 * 60 * 1000;
+// A run whose record has not been stored for this many heartbeats is no longer going anywhere
+const HEARTBEATS_BEFORE_STALE = 3;
 // How often a pod looks at the stored record of a run going on another pod
 const WATCH_MS = 30 * 1000;
 const RESTARTING = "The hosted check is restarting. Start the run again in a few minutes.";
@@ -50,7 +50,15 @@ export function createRunner(options: RunnerOptions): Runner {
   let draining = false;
   const heartbeatMs = options.heartbeatMs ?? HEARTBEAT_MS;
   const watchMs = options.watchMs ?? WATCH_MS;
+  const staleMs = heartbeatMs * HEARTBEATS_BEFORE_STALE;
   const watching = new Set<ReturnType<typeof setInterval>>();
+  // Runs going on another pod, each settling when it ends there. A run here waits for them before it
+  // starts: two checks at once share the IDAM test accounts and the records seeded in CaTH, so each
+  // would change what the other captures.
+  const elsewhere = new Map<string, { ended: Promise<void>; end: () => void }>();
+  // Settles once the runs stored before this pod started are loaded, so a run started meanwhile still
+  // waits for one going on the pod this one is replacing
+  let loaded: Promise<void> = Promise.resolve();
   // Run records go to storage in the order they change, so a later one is never overwritten by an earlier
   let publishing: Promise<void> = Promise.resolve();
   // The record last stored for each run, which a heartbeat stores again with a new heartbeatAt
@@ -189,18 +197,28 @@ export function createRunner(options: RunnerOptions): Runner {
   // A run going on another pod (the one a redeploy is replacing): its stored record is looked at
   // until the run ends there, or that pod stops storing it, when the run was cut short
   const watch = (store: BlobContainer, id: string) => {
+    let end = () => {};
+    const ended = new Promise<void>((resolve) => {
+      end = resolve;
+    });
+    elsewhere.set(id, { ended, end });
     // Never throws: a rejection from an interval's callback would be unhandled, and stop the pod
     const timer = setInterval(async () => {
       const data = await store.download(`${RUNS_PREFIX}${id}.json`).catch(() => null);
       // One half written or empty is passed over: the next heartbeat stores it whole
       const stored = data ? parseRecord(data, id) : null;
       if (!stored) return;
-      if (!stillGoing(stored)) {
+      if (!stillGoing(stored, staleMs)) {
         clearInterval(timer);
         watching.delete(timer);
-        const ended = stored.status === "queued" || stored.status === "running" ? { ...stored, status: "failed" as const, error: INTERRUPTED } : stored;
-        runs.set(id, ended);
-        if (ended !== stored) await publish(ended);
+        const last =
+          stored.status === "queued" || stored.status === "running"
+            ? { ...stored, status: "failed" as const, finishedAt: new Date().toISOString(), error: INTERRUPTED }
+            : stored;
+        runs.set(id, last);
+        if (last !== stored) await publish(last);
+        elsewhere.delete(id);
+        end();
         return;
       }
       runs.set(id, stored);
@@ -231,6 +249,11 @@ export function createRunner(options: RunnerOptions): Runner {
       // A run that fails outside its own error handling (its record cannot be saved, say, as the
       // disk is full) is failed here, so the queue carries on with the runs after it
       queue = queue
+        .then(() => loaded)
+        .then(async () => {
+          if (elsewhere.size) console.log(`[ui-baseline] run ${record.id} waits for the runs going on another pod: ${[...elsewhere.keys()].join(", ")}`);
+          await Promise.all([...elsewhere.values()].map(({ ended }) => ended));
+        })
         .then(() => perform(record))
         .catch(async (error: Error) => {
           console.error(`[ui-baseline] run ${record.id} failed: ${error.message}`);
@@ -256,37 +279,10 @@ export function createRunner(options: RunnerOptions): Runner {
       if (waitForBaseline) await fetching;
       return dir;
     },
-    async restore() {
-      const store = options.store;
-      if (!store) return;
-      const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"));
-      const load = async (name: string) => {
-        const data = await store.download(name);
-        if (!data) return;
-        const record = parseRecord(data, name);
-        if (!record) return;
-        // A run started on this pod while the others were loading is newer than anything stored
-        if (runs.has(record.id)) return;
-        if (record.status !== "queued" && record.status !== "running") {
-          runs.set(record.id, record);
-          return;
-        }
-        // Still going on the pod this one is replacing: left to finish there, and watched
-        if (stillGoing(record)) {
-          runs.set(record.id, record);
-          watch(store, record.id);
-          return;
-        }
-        // Stored as well, or every pod after this one would find it still running
-        const interrupted: RunRecord = { ...record, status: "failed", error: INTERRUPTED };
-        runs.set(record.id, interrupted);
-        await publish(interrupted);
-      };
-      const next = [...names];
-      const worker = async () => {
-        for (let name = next.shift(); name; name = next.shift()) await load(name);
-      };
-      await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
+    restore() {
+      const work = restoreRuns();
+      loaded = work.catch(() => undefined);
+      return work;
     },
     idle: () => queue,
     drain() {
@@ -296,8 +292,44 @@ export function createRunner(options: RunnerOptions): Runner {
     stopWatching() {
       for (const timer of watching) clearInterval(timer);
       watching.clear();
+      // A run waiting for one elsewhere is started, and fails at once if this pod is stopping (perform)
+      for (const { end } of elsewhere.values()) end();
+      elsewhere.clear();
     }
   };
+
+  async function restoreRuns() {
+    const store = options.store;
+    if (!store) return;
+    const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"));
+    const load = async (name: string) => {
+      const data = await store.download(name);
+      if (!data) return;
+      const record = parseRecord(data, name);
+      if (!record) return;
+      // A run started on this pod while the others were loading is newer than anything stored
+      if (runs.has(record.id)) return;
+      if (record.status !== "queued" && record.status !== "running") {
+        runs.set(record.id, record);
+        return;
+      }
+      // Still going on the pod this one is replacing: left to finish there, and watched
+      if (stillGoing(record, staleMs)) {
+        runs.set(record.id, record);
+        watch(store, record.id);
+        return;
+      }
+      // Stored as well, or every pod after this one would find it still running
+      const interrupted: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
+      runs.set(record.id, interrupted);
+      await publish(interrupted);
+    };
+    const next = [...names];
+    const worker = async () => {
+      for (let name = next.shift(); name; name = next.shift()) await load(name);
+    };
+    await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
+  }
 }
 
 // A stored run record, or null (logged) when it is not one: empty, or cut short as it was written
@@ -312,10 +344,10 @@ function parseRecord(data: Buffer, name: string): RunRecord | null {
 
 // A queued or running record another pod is still storing, by its heartbeat (createdAt for a record
 // stored before queued runs had one)
-function stillGoing(record: RunRecord): boolean {
+function stillGoing(record: RunRecord, staleMs: number): boolean {
   if (record.status !== "queued" && record.status !== "running") return false;
   const lastSeen = Date.parse(record.heartbeatAt ?? record.createdAt);
-  return Date.now() - lastSeen < HEARTBEAT_STALE_MS;
+  return Date.now() - lastSeen < staleMs;
 }
 
 // The tool's script and arguments for a run; the arguments go straight to the process, never a shell

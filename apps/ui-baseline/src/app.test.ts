@@ -167,6 +167,25 @@ describe("createApp", () => {
     expect(page.text).not.toContain("stages done");
   });
 
+  it("should show a file comparison while its results are still being written", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await postForm(app, {
+      kind: "files",
+      pipArtefactId: "2a7b1d4e-0000-4000-8000-000000000001",
+      cathArtefactId: "2a7b1d4e-0000-4000-8000-000000000002"
+    });
+    await runner.idle();
+    const dir = (await runner.directory(started.headers.location.split("/").pop() as string)) as string;
+    await writeFile(path.join(dir, "files/compare/files-compare.json"), '{"totals": {"files"');
+
+    // Act
+    const page = await request(app).get(started.headers.location);
+
+    // Assert
+    expect(page.status).toBe(200);
+  });
+
   it("should show the problem when a file comparison is asked for with a bad id", async () => {
     // Arrange
     const { app, runner } = await appWith();
@@ -285,6 +304,24 @@ describe("createApp", () => {
     expect(reportPage.headers["content-security-policy"]).toBeUndefined();
     expect(capturedPage.headers["content-security-policy"]).toBe("sandbox");
     for (const response of [reportPage, capturedPage]) expect(response.headers["x-content-type-options"]).toBe("nosniff");
+  });
+
+  it("should serve a captured page sandboxed even when it carries the report's navigation", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await postForm(app, { kind: "check", scope: "all" });
+    await runner.idle();
+    const dir = (await runner.directory(started.headers.location.split("/").pop() as string)) as string;
+    await writeFile(
+      path.join(dir, "check/report/lists/cath/navigation.html"),
+      '<nav class="govuk-service-navigation__wrapper" aria-label="Menu"><ul class="govuk-service-navigation__list"><li>Home</li></ul></nav>'
+    );
+
+    // Act
+    const capturedPage = await request(app).get(`${started.headers.location}/report/lists/cath/navigation.html`);
+
+    // Assert
+    expect(capturedPage.headers["content-security-policy"]).toBe("sandbox");
   });
 
   it("should show the last 80 lines of a long log", async () => {

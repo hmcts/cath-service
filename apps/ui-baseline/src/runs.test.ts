@@ -202,7 +202,7 @@ describe("createRunner", () => {
     await runner.restore();
 
     // Assert
-    expect(JSON.parse(uploads["runs/b.json"])).toMatchObject({ id: "b", status: "failed", error: "interrupted" });
+    expect(JSON.parse(uploads["runs/b.json"])).toMatchObject({ id: "b", status: "failed", error: "interrupted", finishedAt: expect.any(String) });
   });
 
   it("should give each run its time limit, and say a run that went past it was stopped", async () => {
@@ -714,8 +714,62 @@ describe("createRunner when pods are replaced", () => {
 
     // Assert
     expect(whileGoing).toBe("running");
-    expect(runner.get("r2")).toMatchObject({ status: "failed", error: "interrupted" });
+    expect(runner.get("r2")).toMatchObject({ status: "failed", error: "interrupted", finishedAt: expect.any(String) });
     expect(uploads.at(-1)?.record).toMatchObject({ id: "r2", status: "failed", error: "interrupted" });
+    runner.stopWatching();
+    vi.useRealTimers();
+  });
+
+  it("should start a run only once the run going on another pod has ended there", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const record = { id: "r4", kind: "check", scope: "all", status: "running", createdAt: new Date().toISOString(), heartbeatAt: new Date().toISOString() };
+    blobs.set("runs/r4.json", Buffer.from(JSON.stringify(record)));
+    const execute = vi.fn(async () => 0);
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute, watchMs: 20 });
+    const restoring = runner.restore();
+
+    // Act
+    const run = runner.start({ kind: "files", pipArtefactId: PIP_ARTEFACT, cathArtefactId: CATH_ARTEFACT });
+    await restoring;
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const whileOtherGoing = { status: runner.get(run.id)?.status, started: execute.mock.calls.length };
+    blobs.set("runs/r4.json", Buffer.from(JSON.stringify({ ...record, status: "finished", finishedAt: new Date().toISOString() })));
+    await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // Assert
+    expect(whileOtherGoing).toEqual({ status: "queued", started: 0 });
+    runner.stopWatching();
+  });
+
+  it("should take a run on another pod for interrupted only after several of its heartbeats are missed", async () => {
+    // Arrange
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const lastBeat = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    blobs.set(
+      "runs/r5.json",
+      Buffer.from(JSON.stringify({ id: "r5", kind: "check", scope: "all", status: "running", createdAt: lastBeat, heartbeatAt: lastBeat }))
+    );
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: async () => 0,
+      heartbeatMs: 10 * 60 * 1000
+    });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(runner.get("r5")?.status).toBe("running");
     runner.stopWatching();
     vi.useRealTimers();
   });
