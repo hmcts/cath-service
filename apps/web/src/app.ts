@@ -75,7 +75,7 @@ const __dirname = path.dirname(__filename);
 const isLocalDev = process.env.LOCAL_DEV === "true";
 const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
-// Under Azure Cache for Redis's 10-minute idle timeout; the same value as fact-admin-frontend.
+// Under Azure Cache for Redis's 10-minute idle timeout.
 const REDIS_PING_INTERVAL_MS = 300_000;
 
 export async function createApp(): Promise<Express> {
