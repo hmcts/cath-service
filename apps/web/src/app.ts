@@ -241,6 +241,8 @@ function localEnvOverrides(): string[] {
     .map(([key]) => key);
 }
 
+// Session store client. Azure Cache for Redis closes connections that are idle
+// for 10 minutes, which node-redis logs as SocketClosedUnexpectedlyError (#1033).
 const getRedisClient = async (config: { get: (key: string) => any }) => {
   const url = process.env.REDIS_URL ?? config.get("redis.url");
   const redisClient = createClient({ url });
