@@ -10,8 +10,8 @@ set -euo pipefail
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
 #   - promotable_apps: affected_apps without the aat-only apps, which are never promoted to prod
-#   - verify_apps: on a pull request, the aat-only apps whose own files or the root Dockerfile
-#     changed, whose stage is built (not pushed) so a broken one shows up before master
+#   - verify_apps: on a pull request, the aat-only apps whose own files, the root Dockerfile or
+#     the install inputs changed, whose stage is built (not pushed) so a broken one shows up before master
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
 #   - needs_shared_build: boolean, true if any affected app uses the shared build stage
@@ -163,11 +163,13 @@ main() {
   if [ "${PULL_REQUEST:-false}" = "true" ]; then
     affected_apps="$without_aat_only"
     echo "Pull request: leaving out apps built on master only ($AAT_ONLY_APPS)"
-    # Their stage is still built when the pull request could have broken it: its own files, or the
-    # root Dockerfile or .dockerignore, changed (or there is no base to tell from)
+    # Their stage is still built when the pull request could have broken the image: its own files,
+    # the root Dockerfile or .dockerignore, or what the install resolves (yarn.lock, the root
+    # package.json, Yarn's config) changed, or there is no base to tell from. A change to a lib's
+    # source is left to the pull request's lint and tests, which run for the lib's dependents too.
     local app
     for app in $(echo "$AAT_ONLY_APPS" | jq -r '.[]'); do
-      if [ "$use_fallback" = "true" ] || echo "$changed_files" | grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$)"; then
+      if [ "$use_fallback" = "true" ] || echo "$changed_files" | grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)"; then
         verify_apps=$(echo "$verify_apps" | jq -c --arg app "$app" '. + [$app]')
       fi
     done

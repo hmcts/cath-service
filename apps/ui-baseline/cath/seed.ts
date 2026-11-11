@@ -43,7 +43,6 @@ const local = token ? null : await localPublishing();
 
 await removePreviousSeed();
 // Runs that ended without removing what they seeded (the pod restarted, say), however old the file
-// that recorded them; never one recent enough to still be going
 // that recorded them; never one recent enough to still be going. One that cannot be removed now is
 // left for a later run: it must not stop this one.
 if (deployed) await removeRuns(api, { staleAt: Date.now() }).catch((error: Error) => console.log(`left for a later run: ${error.message.split("\n")[0]}`));
@@ -256,9 +255,11 @@ async function removePreviousSeed(): Promise<void> {
     () => null
   );
   if (!previous) return;
-  // A run on courts of its own goes with its courts
+  // A run on courts of its own goes with its courts. One that cannot be removed now still has them,
+  // so the stale sweep below removes it once it is old enough: it must not stop this run, or every
+  // run after it.
   if (previous.runToken) {
-    await removeRuns(api, { token: previous.runToken });
+    await removeRuns(api, { token: previous.runToken }).catch((error: Error) => console.log(`left for a later run: ${error.message.split("\n")[0]}`));
   } else {
     const artefactIds = Object.values(previous.publications).map((publication) => publication.artefactId);
     if (artefactIds.length) await api("DELETE", "/test-support/artefacts", { artefactIds });

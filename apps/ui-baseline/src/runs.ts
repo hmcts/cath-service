@@ -16,19 +16,22 @@ import { systemCommand } from "../system-command.js";
 const RUNS_PREFIX = "runs/";
 // The error a run that was queued or running when its pod stopped is restored with
 const INTERRUPTED = "interrupted";
+const RESTARTED_BEFORE_START = "The hosted check restarted before this run began. Start it again.";
+// Runs that ended without an archive, so there is nothing in storage to fetch for them
+const NEVER_ARCHIVED = new Set([INTERRUPTED, RESTARTED_BEFORE_START]);
 // How long a run may take before it is stopped, so one that hangs (Chromium, a sign-in, a blob poll)
 // cannot hold up the queue until the pod restarts. A check of all of CaTH takes well under an hour.
 const RUN_TIME_LIMIT_MS = 2 * 60 * 60 * 1000;
 // How long a stopped run has to remove what it seeded in CaTH (check.ts) before it is killed
 const STOP_GRACE_MS = 2 * 60 * 1000;
-// A running run's record is stored again this often, so another pod can tell it is still going: a
-// redeploy starts the new pod while the old one finishes its run (drain, server.ts)
+// A queued or running run's record is stored again this often, until its last record is stored, so
+// another pod can tell it is still going: a redeploy starts the new pod while the old one finishes its
+// runs (drain, server.ts)
 const HEARTBEAT_MS = 60 * 1000;
 // A run whose record has not been stored for this long is no longer going anywhere
 const HEARTBEAT_STALE_MS = 3 * 60 * 1000;
 // How often a pod looks at the stored record of a run going on another pod
 const WATCH_MS = 30 * 1000;
-const RESTARTED_BEFORE_START = "The hosted check restarted before this run began. Start it again.";
 const RESTARTING = "The hosted check is restarting. Start the run again in a few minutes.";
 const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
@@ -50,6 +53,8 @@ export function createRunner(options: RunnerOptions): Runner {
   const watching = new Set<ReturnType<typeof setInterval>>();
   // Run records go to storage in the order they change, so a later one is never overwritten by an earlier
   let publishing: Promise<void> = Promise.resolve();
+  // The record last stored for each run, which a heartbeat stores again with a new heartbeatAt
+  const published = new Map<string, RunRecord>();
 
   const runDir = (id: string) => path.join(options.dataDir, "runs", id);
   const save = async (record: RunRecord) => {
@@ -63,6 +68,7 @@ export function createRunner(options: RunnerOptions): Runner {
   const publish = (record: RunRecord) => {
     const store = options.store;
     if (!store) return Promise.resolve();
+    published.set(record.id, record);
     publishing = publishing
       .then(() => store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json"))
       .catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
@@ -78,10 +84,6 @@ export function createRunner(options: RunnerOptions): Runner {
     }
     const dir = runDir(record.id);
     let baseline: PinnedBaseline | null = null;
-    const heartbeat = setInterval(() => {
-      const current = runs.get(record.id);
-      if (current?.status === "running") void publish({ ...current, heartbeatAt: new Date().toISOString() });
-    }, heartbeatMs);
     try {
       const startedAt = new Date().toISOString();
       await save({ ...record, status: "running", startedAt, heartbeatAt: startedAt });
@@ -109,7 +111,6 @@ export function createRunner(options: RunnerOptions): Runner {
     } catch (error) {
       await save({ ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: (error as Error).message });
     } finally {
-      clearInterval(heartbeat);
       baseline?.release();
     }
     await archive(runs.get(record.id) as RunRecord).catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
@@ -167,8 +168,9 @@ export function createRunner(options: RunnerOptions): Runner {
     const store = options.store;
     // A run waiting or going on this pod has nothing stored yet: its directory fills as it runs
     if (!store || record.status === "queued" || record.status === "running" || existsSync(path.join(dir, "run.json"))) return dir;
-    // A run cut short by a pod stopping was never archived, so there is nothing to fetch each time it is opened
-    if (record.error === INTERRUPTED) return null;
+    // A run cut short by a pod stopping, or failed by one before it began, was never archived, so there
+    // is nothing to fetch each time it is opened
+    if (record.error && NEVER_ARCHIVED.has(record.error)) return null;
     // Not on this pod's disk: restore it from storage, once however many requests ask at the same time
     let restored = restoring.get(record.id);
     if (!restored) {
@@ -207,14 +209,23 @@ export function createRunner(options: RunnerOptions): Runner {
   return {
     start(request) {
       if (draining) throw new RunRequestError(RESTARTING);
+      const createdAt = new Date().toISOString();
       const record: RunRecord = {
         ...validated(request),
-        id: `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`,
+        id: `${createdAt.replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`,
         status: "queued",
-        createdAt: new Date().toISOString()
+        createdAt,
+        heartbeatAt: createdAt
       };
       runs.set(record.id, record);
       void publish(record);
+      // From when the run is queued until its last record is stored, which is after its archive: a
+      // heartbeat stores the record last stored, so a pod watching never sees the run end before its
+      // files are in storage
+      const heartbeat = setInterval(() => {
+        const last = published.get(record.id);
+        if (last?.status === "queued" || last?.status === "running") void publish({ ...last, heartbeatAt: new Date().toISOString() });
+      }, heartbeatMs);
       // A run that fails outside its own error handling (its record cannot be saved, say, as the
       // disk is full) is failed here, so the queue carries on with the runs after it
       queue = queue
@@ -226,7 +237,8 @@ export function createRunner(options: RunnerOptions): Runner {
           // Stored too, as perform would have, or another pod would find it still running and lose the error
           await archive(failed).catch((archiveError: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${archiveError.message}`));
           await publish(failed);
-        });
+        })
+        .finally(() => clearInterval(heartbeat));
       return record;
     },
     list: () => [...runs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -285,8 +297,8 @@ export function createRunner(options: RunnerOptions): Runner {
   };
 }
 
-// A queued or running record another pod is still storing: a running one by its heartbeat, a queued
-// one by when it was queued
+// A queued or running record another pod is still storing, by its heartbeat (createdAt for a record
+// stored before queued runs had one)
 function stillGoing(record: RunRecord): boolean {
   if (record.status !== "queued" && record.status !== "running") return false;
   const lastSeen = Date.parse(record.heartbeatAt ?? record.createdAt);

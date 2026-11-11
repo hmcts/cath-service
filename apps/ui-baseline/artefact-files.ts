@@ -56,7 +56,13 @@ async function pipServedFiles(environment: Environment, artefactId: string, name
   for (const [kind, { type, extension }] of Object.entries(PIP_FILE_TYPES)) {
     const url = `${baseUrl}${PIP_FILES_ROUTE}?${new URLSearchParams({ artefactId, type })}`;
     const response = await fetch(url, { headers: { cookie }, redirect: "manual" });
-    // pip answers a file it will not serve with its error page, or a redirect to sign in
+    // A redirect is pip sending the account to sign in: its session was not taken, which says nothing
+    // about whether pip has the file, so it must not be reported as a missing one
+    if (response.status >= 300 && response.status < 400)
+      throw new Error(
+        `pip did not accept its test account's session when downloading the ${kind} for ${artefactId}: it redirected to ${response.headers.get("location") ?? "another page"}`
+      );
+    // pip answers a file it will not serve to the account with its error page
     const contentType = response.headers.get("content-type") ?? "";
     if (!response.ok || contentType.startsWith("text/html")) {
       console.log(`  pip served no ${kind} for ${artefactId} to its test account (${response.status} ${contentType.split(";")[0] || "no content type"})`);
