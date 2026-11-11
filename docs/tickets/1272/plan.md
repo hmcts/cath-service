@@ -302,7 +302,7 @@ Now `executePush` and `pushWithRetry` take file contents (`PushFiles`: `pdf?: Bu
 
 `sendThirdPartyPublications` now returns `"sent" | "failed" | "skipped"`. The upload path still ignores it.
 
-The request shape is unchanged: one multipart with `json` and `pdf` parts, or a `file` part. Legacy (`pip-publication-services` `LegacyThirdPartyService`) sends JSON and PDF as two POSTs, adds the Welsh PDF, names flat files with `sourceArtefactId`, and sets `x-source-artefact-id` to `sourceArtefactId` and the PDF call's `x-provenance` to `CATH`. Matching that is a separate issue, linked to #323, to be confirmed with Courtel first.
+The request shape is unchanged: one multipart with `json` and `pdf` parts, or a `file` part. Legacy (`pip-publication-services` `LegacyThirdPartyService`) sends JSON and PDF as two POSTs, adds the Welsh PDF, names flat files with `sourceArtefactId`, and sets `x-source-artefact-id` to `sourceArtefactId` and the PDF call's `x-provenance` to `CATH`. Matching that is #1380 (follow-up to #323), to be confirmed with Courtel first.
 
 ### Courtel secrets for api and crons
 - `apps/api/helm/values.yaml` had none, so the API ingestion path never pushed. Both charts now mount `auto-pip-stg-courtel-api` -> `COURTEL_API_URL` and `courtel-certificate` -> `COURTEL_CERTIFICATE`, as `apps/web/helm/values.yaml` does. `getPropertiesVolumeSecrets` sets them as environment variables by alias.

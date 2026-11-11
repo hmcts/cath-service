@@ -37,9 +37,9 @@
 - [x] `sendThirdPartyPublications` returns `"sent" | "failed" | "skipped"`; a missing flat file fails the push instead of sending it empty
 - [x] Courtel secrets (`auto-pip-stg-courtel-api`, `courtel-certificate`) in `apps/api/helm/values.yaml` and `apps/crons/helm/values.yaml`
 - [x] Tests: `libs/publication` 678, `libs/legacy-third-party-fulfilment` 58, `apps/crons` 22 pass; Biome clean on changed files; `turbo build` of `@hmcts/crons...`, `@hmcts/api...` and `@hmcts/web...` succeeds
-- [ ] Raise a separate issue (linked to #323) for matching legacy's Courtel request format, after confirming it with Courtel
+- [x] Raise a separate issue (linked to #323) for matching legacy's Courtel request format, after confirming it with Courtel (#1380)
 - [ ] Note the `auto-pip-stg-courtel-api` prod rename for all three charts on #1097
-- [ ] Update the PR #1306 description: third-party scope, Courtel fixes, the double push until #588 ships
+- [x] Update the PR #1306 description: third-party scope, Courtel fixes, the double push until #588 ships
 
 ### Verification
 - [x] `yarn lint:fix`, `yarn test` from repo root; confirm `libs/list-types/common` guard tests still pass (fixed 2 `noUnsafeOptionalChaining` errors in `queries.test.ts`; all 71 test tasks pass at `--concurrency=2`. At default concurrency some `apps/web` template tests time out at 10s under load, unrelated to this change)
