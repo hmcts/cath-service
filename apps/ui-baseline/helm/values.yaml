@@ -14,8 +14,9 @@ nodejs:
   # captures also wait on CaTH. Raise the two together. Deployed by GitHub Actions without
   # global.devMode, so these keys apply, not the dev* ones.
   # Long enough for a run going when the pod is replaced (a master merge redeploys it) to finish: its
-  # time limit (src/runs.ts), the time it has to stop after that, and a margin
-  terminationGracePeriodSeconds: 7500
+  # time limit (src/runs.ts, 120 minutes), the 2 it has to stop after that, and 28 for what the limit
+  # does not count: fetching the baseline before the check, and archiving and storing the run after
+  terminationGracePeriodSeconds: 9000
   memoryRequests: 1Gi
   memoryLimits: 4Gi
   cpuRequests: 500m

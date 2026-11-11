@@ -238,8 +238,13 @@ const needsSignIn =
   scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
   scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
 if (!needsSignIn) progress.skip("sign-in", "no page in scope needs it");
-const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}.json`);
-if (seedIds.length && !args["no-seed"]) {
+const seeding = seedIds.length > 0 && !args["no-seed"];
+// The environment's seed file may hold a run an earlier check kept (--keep-seed). A check uses it only
+// when it seeds (replacing it) or is asked to check that run again (--no-seed); otherwise it, and the
+// sign-in and journeys it passes it to, get a file that is never written, so they neither make
+// records on that run nor remove it.
+const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}${seeding || args["no-seed"] ? "" : "-unseeded"}.json`);
+if (seeding) {
   step("Seeding CaTH");
   progress.start("seed");
   const seeding = spawnSync(
@@ -260,13 +265,14 @@ const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8"
 // What the check seeded in a shared CaTH is removed however the check ends: once its files are
 // compared (step 4c), when a later step throws (the disposal below runs as this module's top level
 // ends, as a finally would), or when the check is stopped (the hosted runner's time limit, say).
-// --keep-seed leaves it. A removal that fails does not fail the check: a later check removes the
+// --keep-seed leaves it, and a check of a kept run (--no-seed) leaves that run for the check that
+// next seeds. A removal that fails does not fail the check: a later check removes the
 // run once it is three hours old.
 let seedRemoved = false;
 const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
 const onStop = (signal: keyof typeof stopped) => void removeSeed().finally(() => process.exit(stopped[signal]));
 const removeSeed = async (): Promise<void> => {
-  if (seedRemoved || !seed?.runToken || args["keep-seed"]) return;
+  if (seedRemoved || !seeding || !seed?.runToken || args["keep-seed"]) return;
   seedRemoved = true;
   for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
   step("Removing what the check seeded");
@@ -278,7 +284,7 @@ const removeSeed = async (): Promise<void> => {
   }
 };
 await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
-if (seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
+if (seeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);

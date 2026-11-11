@@ -189,9 +189,11 @@ export function createRunner(options: RunnerOptions): Runner {
   // A run going on another pod (the one a redeploy is replacing): its stored record is looked at
   // until the run ends there, or that pod stops storing it, when the run was cut short
   const watch = (store: BlobContainer, id: string) => {
+    // Never throws: a rejection from an interval's callback would be unhandled, and stop the pod
     const timer = setInterval(async () => {
       const data = await store.download(`${RUNS_PREFIX}${id}.json`).catch(() => null);
-      const stored = data ? (JSON.parse(data.toString("utf-8")) as RunRecord) : null;
+      // One half written or empty is passed over: the next heartbeat stores it whole
+      const stored = data ? parseRecord(data, id) : null;
       if (!stored) return;
       if (!stillGoing(stored)) {
         clearInterval(timer);
@@ -261,7 +263,8 @@ export function createRunner(options: RunnerOptions): Runner {
       const load = async (name: string) => {
         const data = await store.download(name);
         if (!data) return;
-        const record = JSON.parse(data.toString("utf-8")) as RunRecord;
+        const record = parseRecord(data, name);
+        if (!record) return;
         // A run started on this pod while the others were loading is newer than anything stored
         if (runs.has(record.id)) return;
         if (record.status !== "queued" && record.status !== "running") {
@@ -295,6 +298,16 @@ export function createRunner(options: RunnerOptions): Runner {
       watching.clear();
     }
   };
+}
+
+// A stored run record, or null (logged) when it is not one: empty, or cut short as it was written
+function parseRecord(data: Buffer, name: string): RunRecord | null {
+  try {
+    return JSON.parse(data.toString("utf-8")) as RunRecord;
+  } catch (error) {
+    console.error(`[ui-baseline] could not read stored run ${name}: ${(error as Error).message}`);
+    return null;
+  }
 }
 
 // A queued or running record another pod is still storing, by its heartbeat (createdAt for a record
@@ -391,8 +404,12 @@ function executeScript(
         // The group has already gone
       }
     };
-    child.stdout.pipe(log);
-    child.stderr.pipe(log);
+    // Both streams write to the one log, so neither ends it when it ends (pipe's default), or the
+    // other's next write would fail; it is ended once the process has closed. A log that cannot be
+    // written must not stop the pod: an unhandled stream error would.
+    log.on("error", (error) => console.error(`[ui-baseline] could not write ${options.log}: ${error.message}`));
+    child.stdout.pipe(log, { end: false });
+    child.stderr.pipe(log, { end: false });
     let timedOut = false;
     let killing: NodeJS.Timeout | undefined;
     const limit = setTimeout(() => {
@@ -404,13 +421,14 @@ function executeScript(
     child.on("error", (error) => {
       clearTimeout(limit);
       clearTimeout(killing);
-      reject(error);
+      log.end(() => reject(error));
     });
+    // Settled once the log is flushed, so the run's archive holds all of it, often the last lines
+    // being the error that explains a failure
     child.on("close", (code) => {
       clearTimeout(limit);
       clearTimeout(killing);
-      log.end();
-      resolve(timedOut ? EXIT_TIMED_OUT : (code ?? 1));
+      log.end(() => resolve(timedOut ? EXIT_TIMED_OUT : (code ?? 1)));
     });
   });
 }

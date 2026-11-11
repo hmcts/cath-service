@@ -208,7 +208,7 @@ sequenceDiagram
   seeded) and, two minutes later, `SIGKILL`, to its whole process group so its Chromium goes too.
 - **Redeploys do not cut a run short.** A master merge starts a new pod, then stops the old one
   with `SIGTERM`. The old pod starts no new run, fails any queued ones with a message to start them
-  again, and finishes the one it has going (`terminationGracePeriodSeconds: 7500`). The new pod
+  again, and finishes the one it has going (`terminationGracePeriodSeconds: 9000`: the run's two-hour limit, its stop grace, and time to fetch the baseline and store the run). The new pod
   sees the recent heartbeat of each run queued or going there, leaves it and watches it until it
   ends; a run whose heartbeat stopped more than three minutes ago is marked interrupted. The
   heartbeat goes on while the run's files are archived, so a slow upload is not taken for a pod
