@@ -23,11 +23,12 @@ export const mediaApplications: Journey = {
   viewAs: "super-admin-ctsc",
   run: async ({ page, locale, goto, act, checkpoint, data }) => {
     const { records } = data as unknown as CathJourneyData;
-    const image = { data: await readFile(path.join(FIXTURES_DIR, IMAGE)), extension: path.extname(IMAGE) };
+    const image = await readFile(path.join(FIXTURES_DIR, IMAGE));
+    const extension = path.extname(IMAGE);
     const application = (purpose: string) =>
       records.ensureMediaApplication(
         { name: `Parity ${purpose} ${locale.toUpperCase()}`, email: `parity.${purpose.toLowerCase()}.${locale}@example.com`, employer: "Parity News" },
-        image
+        { data: image, extension, blobName: `ui-baseline-parity-${purpose.toLowerCase()}-${locale}${extension}` }
       );
     const toApprove = await application("Approve");
     const toReject = await application("Reject");

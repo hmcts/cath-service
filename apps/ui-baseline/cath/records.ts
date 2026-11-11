@@ -45,9 +45,11 @@ export async function seedRecords(store: RecordStore, cathUsers: Record<string, 
 
   for (const application of records.mediaApplications) {
     const image = await readFile(path.join(FIXTURES_DIR, application.image));
+    const extension = path.extname(application.image);
+    // Named for the fixture, not the run, so each run overwrites the one blob rather than leaving one behind
     const applicantId = await store.ensureMediaApplication(
       { name: name(application.fullName), email: email(application.email.toLowerCase()), employer: application.employer },
-      { data: image, extension: path.extname(application.image) }
+      { data: image, extension, blobName: `ui-baseline-${application.id}${extension}` }
     );
     result[application.id] = { applicantId };
   }
@@ -60,7 +62,9 @@ export async function seedRecords(store: RecordStore, cathUsers: Record<string, 
   for (const entry of records.auditEntries) {
     const user = cathUsers[entry.user];
     if (!user) continue;
-    const { id, timestamp } = await store.ensureAuditEntry(user, entry.action, name(entry.details));
+    // Not named with the run's token: test-support cannot delete an audit entry, so the user's one
+    // entry for it is reused by every run rather than a new one written each time
+    const { id, timestamp } = await store.ensureAuditEntry(user, entry.action, entry.details);
     result[entry.id] = { id, timestamp };
   }
 
@@ -191,11 +195,10 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
       );
       if (existing?.proofOfIdPath) return existing.id;
       // test-support takes the proof of ID's path at creation only, so an application without one is
-      // made again with it, uploaded first under a fixed name
+      // made again with it, uploaded first under its fixed name
       if (existing) await api("DELETE", `/media-applications/${encodeURIComponent(existing.id)}`);
-      const blobKey = `ui-baseline-${application.email.replace(/[^a-z0-9]+/g, "-")}${image.extension}`;
-      await files.upload(blobKey, image.data, "image/png");
-      return (await api<{ id: string }>("POST", "/media-applications", { ...application, status: "PENDING", proofOfIdPath: blobKey })).id;
+      await files.upload(image.blobName, image.data, "image/png");
+      return (await api<{ id: string }>("POST", "/media-applications", { ...application, status: "PENDING", proofOfIdPath: image.blobName })).id;
     },
     async ensureLegacyThirdPartyUser(name) {
       const [found] = await api<{ id: string }[]>("GET", `/legacy-third-party-users${query({ name })}`);
@@ -268,7 +271,11 @@ export interface CathUser {
 
 export interface RecordStore {
   ensureSubscription(userId: string, searchType: string, searchValue: string): Promise<string>;
-  ensureMediaApplication(application: { name: string; email: string; employer: string }, image: { data: Buffer; extension: string }): Promise<string>;
+  // blobName: where a deployed CaTH's proof of ID goes; a local one names it after the application
+  ensureMediaApplication(
+    application: { name: string; email: string; employer: string },
+    image: { data: Buffer; extension: string; blobName: string }
+  ): Promise<string>;
   ensureLegacyThirdPartyUser(name: string): Promise<string>;
   ensureThirdPartySubscriber(name: string): Promise<string>;
   ensureAuditEntry(user: CathUser, action: string, details: string): Promise<{ id: string; timestamp: string }>;

@@ -175,6 +175,20 @@ describe("compareArtefactFiles", () => {
       expect(console.log).toHaveBeenCalledWith(expect.stringContaining("pip served no excel for p1 to its test account (200 text/html)"));
     });
 
+    it("should fail, not report missing files, when pip sends its test account to sign in", async () => {
+      // Arrange
+      const out = path.join(await mkdtemp(path.join(tmpdir(), "artefact-")), "out");
+      fetchMock.mockImplementation(async (url: string) =>
+        url.startsWith("https://pip/") ? new Response(null, { status: 302, headers: { location: "/login" } }) : new Response("not found", { status: 404 })
+      );
+
+      // Act
+      const result = compareArtefactFiles({ env: "aat", pipArtefactId: "p1", cathArtefactId: "c1", name: "civil", out });
+
+      // Assert
+      await expect(result).rejects.toThrow("pip did not accept its test account's session when downloading the pdf for p1: it redirected to /login");
+    });
+
     it("should say why when the test account cannot be signed in to pip", async () => {
       // Arrange
       vi.mocked(signInToPipWithAccounts).mockResolvedValue({ users: {}, unavailable: { "verified-cft": "no VERIFIED/CFT_IDAM test account in cath-aat (u)" } });

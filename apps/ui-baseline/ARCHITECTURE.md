@@ -162,7 +162,7 @@ sequenceDiagram
   S->>P: POST /publication to the run's courts (API client from cath-aat)
   S-->>C: seed record: run token, the run's courts, artefact ids
   C->>I: sign in and seed records
-  I->>T: subscriptions on the run's courts, and a media application,<br/>third-party users and an audit entry named with the run token
+  I->>T: subscriptions on the run's courts, a media application and<br/>third-party users named with the run token, and the account's audit entry
   Note over C: capture, compare, compare files
   C->>T: remove the run: its records, what was published to its courts,<br/>their subscriptions, then the courts
 ```
@@ -175,8 +175,9 @@ sequenceDiagram
   (`SIGTERM`, `SIGINT`). If `seed.ts` itself fails partway, it removes its own courts.
 - **Anything left behind is found again by its token.** A run that could not be removed (the pod
   was killed, say) is removed by a later check once it is three hours old. The courts go last, so
-  a removal that fails partway leaves the courts for the next check to find the run by. Audit
-  entries stay, as an audit trail does, with the token in their details.
+  a removal that fails partway leaves the courts for the next check to find the run by, and never
+  stops that check. The audit entry is not named with the token: test-support cannot delete one, so
+  every run reuses the test account's entry.
 - **Locally**, CaTH is seeded at the fixture courts themselves (`location-data.ts`), and the
   publication is processed in this process, without notifications.
 
@@ -194,11 +195,11 @@ sequenceDiagram
   A->>R: start: validated against cli-input.ts
   R->>B: store the run, queued
   R->>X: spawn in its own process group, 2-hour limit
-  loop every minute while it runs
+  loop every minute, from queued until it is stored ended
     R->>B: store the run again (heartbeat)
   end
   X-->>R: exit code
-  R->>B: archive the run's directory, store it finished
+  R->>B: archive the run's directory, then store it ended
   T->>A: GET /runs/:id (progress, log, report)
 ```
 
@@ -208,8 +209,10 @@ sequenceDiagram
 - **Redeploys do not cut a run short.** A master merge starts a new pod, then stops the old one
   with `SIGTERM`. The old pod starts no new run, fails any queued ones with a message to start them
   again, and finishes the one it has going (`terminationGracePeriodSeconds: 7500`). The new pod
-  sees that run's recent heartbeat, leaves it running and watches it until it ends; a run whose
-  heartbeat stopped more than three minutes ago is marked interrupted.
+  sees the recent heartbeat of each run queued or going there, leaves it and watches it until it
+  ends; a run whose heartbeat stopped more than three minutes ago is marked interrupted. The
+  heartbeat goes on while the run's files are archived, so a slow upload is not taken for a pod
+  that has gone.
 - **File comparisons** read CaTH's files from `cathsaaat` and pip's from pip-frontend
   (`/list-download-files`), signed in as the IDAM test account, as a verified user downloads them,
   so the pod needs no access to pip's storage ([`artefact-files.ts`](artefact-files.ts)).
@@ -223,7 +226,7 @@ sequenceDiagram
 flowchart LR
   subgraph pr["Pull request"]
     tests["ui-baseline's tests<br/>(job.test.yml)"]
-    verify["Build the ui-baseline stage, not pushed,<br/>only when apps/ui-baseline/, the Dockerfile<br/>or .dockerignore changed"]
+    verify["Build the ui-baseline stage, not pushed,<br/>only when apps/ui-baseline/, the Dockerfile,<br/>.dockerignore, yarn.lock, the root<br/>package.json or Yarn's config changed"]
   end
   subgraph master["Merge to master"]
     build["Build and push the image<br/>when Turborepo says it is affected"]

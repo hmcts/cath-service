@@ -97,4 +97,30 @@ describe("removeRuns", () => {
     expect(calls).toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [92] } });
     expect(calls).not.toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [91] } });
   });
+
+  it("should fetch the user lists once for every run it removes, not once per run", async () => {
+    // Arrange
+    const { api, calls } = fakeApi();
+
+    // Act
+    await removeRuns(api, { staleAt: runStartedAt(RUN) + 4 * 60 * 60 * 1000 });
+
+    // Assert
+    const listFetches = calls.filter((call) => call.method === "GET" && call.endpoint.endsWith("third-party-users"));
+    expect(listFetches.map((call) => call.endpoint)).toEqual(["/test-support/legacy-third-party-users", "/test-support/third-party-users"]);
+    expect(calls).toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [91] } });
+    expect(calls).toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [92] } });
+  });
+
+  it("should fetch nothing more when there is no run to remove", async () => {
+    // Arrange
+    const { api, calls } = fakeApi();
+
+    // Act
+    const removed = await removeRuns(api, { token: "uicnotarun0000" });
+
+    // Assert
+    expect(removed).toBe(0);
+    expect(calls.map((call) => call.endpoint)).toEqual(["/test-support/locations"]);
+  });
 });

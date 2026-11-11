@@ -68,10 +68,13 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
     const removable = "token" in which ? token === which.token : runStartedAt(token) < which.staleAt - STALE_AFTER_MS;
     if (removable) byRun.set(token, [...(byRun.get(token) ?? []), location.locationId]);
   }
+  if (!byRun.size) return 0;
+  // Fetched once for every run removed, not once per run
+  const records = await runRecordLists(api);
   const failed: string[] = [];
   for (const [token, locationIds] of byRun) {
     try {
-      await removeRunRecords(api, token);
+      await removeRunRecords(api, token, records);
       // The courts go last: while any are left, a later run can find the run and finish removing it
       for (const locationId of locationIds) await api("DELETE", "/test-support/artefacts", { locationId: String(locationId) });
       await api("DELETE", "/test-support/subscriptions", { searchType: SUBSCRIPTION_BY_LOCATION, searchValues: locationIds.map(String) });
@@ -85,10 +88,19 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
   return byRun.size;
 }
 
-// The account-side records the run seeded (records.ts), found by its token. Audit entries stay, as
-// test-support cannot delete them (an audit trail keeps entries), with the token in their details.
-async function removeRunRecords(api: CathApi, token: string): Promise<void> {
-  const records = JSON.parse(await readFile(RECORDS_FILE, "utf-8")) as { mediaApplications: { email: string }[] };
+// What removeRunRecords looks through for each run's records
+async function runRecordLists(api: CathApi): Promise<RunRecordLists> {
+  const { mediaApplications } = JSON.parse(await readFile(RECORDS_FILE, "utf-8")) as { mediaApplications: { email: string }[] };
+  return {
+    mediaApplications,
+    legacyThirdPartyUsers: (await api("GET", "/test-support/legacy-third-party-users")) as { id: string; name: string }[],
+    thirdPartyUsers: (await api("GET", "/test-support/third-party-users")) as { id: string; name: string }[]
+  };
+}
+
+// The account-side records the run seeded (records.ts), found by its token. Audit entries are not
+// named with a token: test-support cannot delete them, so each run reuses the one entry.
+async function removeRunRecords(api: CathApi, token: string, records: RunRecordLists): Promise<void> {
   for (const { email } of records.mediaApplications) {
     const application = (await api("GET", `/test-support/media-applications?${new URLSearchParams({ email: runEmail(token, email.toLowerCase()) })}`).catch(
       (error: Error) => {
@@ -99,9 +111,9 @@ async function removeRunRecords(api: CathApi, token: string): Promise<void> {
     if (application) await api("DELETE", `/test-support/media-applications/${encodeURIComponent(application.id)}`);
   }
   const ownedByRun = (users: { id: string; name: string }[]) => users.filter((user) => user.name.startsWith(runName(token, ""))).map((user) => user.id);
-  const legacy = ownedByRun((await api("GET", "/test-support/legacy-third-party-users")) as { id: string; name: string }[]);
+  const legacy = ownedByRun(records.legacyThirdPartyUsers);
   if (legacy.length) await api("DELETE", "/test-support/legacy-third-party-users", { ids: legacy });
-  const subscribers = ownedByRun((await api("GET", "/test-support/third-party-users")) as { id: string; name: string }[]);
+  const subscribers = ownedByRun(records.thirdPartyUsers);
   if (subscribers.length) await api("DELETE", "/test-support/third-party-users", { ids: subscribers });
 }
 
@@ -118,4 +130,10 @@ export function cathApi(apiUrl: string): CathApi {
     if (!response.ok) throw new Error(`${method} ${endpoint} failed: ${response.status} ${await response.text()}`);
     return response.status === 204 ? null : response.json();
   };
+}
+
+interface RunRecordLists {
+  mediaApplications: { email: string }[];
+  legacyThirdPartyUsers: { id: string; name: string }[];
+  thirdPartyUsers: { id: string; name: string }[];
 }

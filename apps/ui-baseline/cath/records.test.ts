@@ -74,7 +74,7 @@ describe("seedRecords", () => {
     expect(store.ensureSubscription).toHaveBeenCalledWith("media-id", "LOCATION_ID", expect.any(String));
     expect(store.ensureMediaApplication).toHaveBeenCalledWith(
       { name: "Parity Applicant", email: "parity.applicant@example.com", employer: "Parity News" },
-      { data: expect.any(Buffer), extension: ".png" }
+      { data: expect.any(Buffer), extension: ".png", blobName: "ui-baseline-pending-application.png" }
     );
     expect(store.ensureLegacyThirdPartyUser).toHaveBeenCalledWith("parity-legacy-third-party");
     expect(store.ensureThirdPartySubscriber).toHaveBeenCalledWith("Parity Third Party Subscriber");
@@ -102,7 +102,8 @@ describe("seedRecords", () => {
     );
     expect(store.ensureLegacyThirdPartyUser).toHaveBeenCalledWith(`${RUN} parity-legacy-third-party`);
     expect(store.ensureThirdPartySubscriber).toHaveBeenCalledWith(`${RUN} Parity Third Party Subscriber`);
-    expect(store.ensureAuditEntry).toHaveBeenCalledWith(ADMIN, "MANAGE_USER", `${RUN} Parity audit entry`);
+    // test-support cannot delete an audit entry, so each run reuses the one
+    expect(store.ensureAuditEntry).toHaveBeenCalledWith(ADMIN, "MANAGE_USER", "Parity audit entry");
   });
 
   it("should subscribe to the run's copy of the court when the run seeded courts of its own", async () => {
@@ -176,7 +177,7 @@ describe("prismaRecordStore", () => {
     const data = Buffer.from("png");
 
     // Act
-    const id = await store.ensureMediaApplication(application, { data, extension: ".png" });
+    const id = await store.ensureMediaApplication(application, { data, extension: ".png", blobName: "unused-locally.png" });
 
     // Assert
     expect(id).toBe("m1");
@@ -190,7 +191,10 @@ describe("prismaRecordStore", () => {
     vi.mocked(prisma.mediaApplication.findFirst).mockResolvedValue({ id: "m1", proofOfIdPath: "m1.png" } as never);
 
     // Act
-    const id = await store.ensureMediaApplication({ name: "A", email: "a@example.com", employer: "E" }, { data: Buffer.from(""), extension: ".png" });
+    const id = await store.ensureMediaApplication(
+      { name: "A", email: "a@example.com", employer: "E" },
+      { data: Buffer.from(""), extension: ".png", blobName: "unused-locally.png" }
+    );
 
     // Assert
     expect(id).toBe("m1");
@@ -438,7 +442,7 @@ describe("testSupportRecordStore", () => {
 
   describe("ensureMediaApplication", () => {
     const application = { name: "A", email: "a.b@example.com", employer: "E" };
-    const image = { data: Buffer.from("png"), extension: ".png" };
+    const image = { data: Buffer.from("png"), extension: ".png", blobName: "ui-baseline-pending-application.png" };
 
     it("should upload the proof of ID then create the application when test-support has none", async () => {
       // Arrange
@@ -450,11 +454,11 @@ describe("testSupportRecordStore", () => {
       // Assert
       expect(id).toBe("m1");
       expect(call(0).url).toBe(`${API}/test-support/media-applications?email=a.b%40example.com`);
-      expect(files.upload).toHaveBeenCalledWith("ui-baseline-a-b-example-com.png", image.data, "image/png");
+      expect(files.upload).toHaveBeenCalledWith("ui-baseline-pending-application.png", image.data, "image/png");
       expect(call(1)).toEqual({
         url: `${API}/test-support/media-applications`,
         method: "POST",
-        body: { ...application, status: "PENDING", proofOfIdPath: "ui-baseline-a-b-example-com.png" }
+        body: { ...application, status: "PENDING", proofOfIdPath: "ui-baseline-pending-application.png" }
       });
     });
 
@@ -484,11 +488,11 @@ describe("testSupportRecordStore", () => {
       // Assert
       expect(id).toBe("m2");
       expect(call(1)).toMatchObject({ url: `${API}/test-support/media-applications/m1`, method: "DELETE" });
-      expect(files.upload).toHaveBeenCalledWith("ui-baseline-a-b-example-com.png", image.data, "image/png");
+      expect(files.upload).toHaveBeenCalledWith("ui-baseline-pending-application.png", image.data, "image/png");
       expect(call(2)).toEqual({
         url: `${API}/test-support/media-applications`,
         method: "POST",
-        body: { ...application, status: "PENDING", proofOfIdPath: "ui-baseline-a-b-example-com.png" }
+        body: { ...application, status: "PENDING", proofOfIdPath: "ui-baseline-pending-application.png" }
       });
     });
 

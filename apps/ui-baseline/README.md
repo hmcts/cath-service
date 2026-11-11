@@ -261,11 +261,11 @@ vault, to courts of its own. Each is a copy of a fixture court named with the ru
 notifies no one else, and no one else's lists show on their pages. The check signs in as a real
 test account (see below), and the account's subscriptions go to the run's courts.
 
-The account-side records a run seeds (a media application, third-party users, an audit entry) are
+The account-side records a run seeds (a media application and third-party users) are
 named with its token too. However the check ends, once its files are compared, when a step fails,
 or when it is stopped, it removes the run's courts, everything published to them and its records.
-Audit entries stay, as an audit trail does, with the token in their details so they never match a
-real one. A run that could not be removed (the pod restarted mid-check, say) is removed by a later
+Its audit entry is not named with the token: test-support cannot delete one, so every run reuses the
+test account's entry. A run that could not be removed (the pod restarted mid-check, say) is removed by a later
 check once it is three hours old, so a run still going alongside is left alone. With nothing
 seeded there is no run, so no records are made in a shared CaTH. `--keep-seed` leaves the run in place, to
 look at or to check again with `--no-seed`, until a later check removes it.

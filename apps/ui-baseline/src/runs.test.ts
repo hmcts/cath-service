@@ -541,6 +541,82 @@ describe("createRunner when pods are replaced", () => {
     expect(new Set(beats.map((beat) => beat.record.heartbeatAt)).size).toBeGreaterThan(1);
   });
 
+  it("should store a queued run's record again as it waits, so another pod does not take it for interrupted", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, uploads } = sharedStore();
+    const execute = vi.fn(() => new Promise<number>((resolve) => setTimeout(() => resolve(0), 120)));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute, heartbeatMs: 20 });
+
+    // Act
+    runner.start({ kind: "check", scope: "all" });
+    const waiting = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    const beats = uploads.filter((upload) => upload.name === `runs/${waiting.id}.json` && upload.record.status === "queued");
+    expect(new Set(beats.map((beat) => beat.record.heartbeatAt)).size).toBeGreaterThan(1);
+  });
+
+  it("should keep storing a run as running while its files are archived, and store it ended only after", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const shared = sharedStore();
+    let archiving = false;
+    const beatsWhileArchiving: Record<string, unknown>[] = [];
+    const store = {
+      ...shared.store,
+      upload: async (name: string, data: Buffer) => {
+        if (archiving) beatsWhileArchiving.push(JSON.parse(data.toString("utf-8")));
+        await shared.store.upload(name, data);
+      },
+      uploadFile: async () => {
+        archiving = true;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        archiving = false;
+      }
+    };
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 1, heartbeatMs: 20 });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    expect(beatsWhileArchiving.length).toBeGreaterThan(1);
+    expect(beatsWhileArchiving.every((record) => record.status === "running")).toBe(true);
+    expect(shared.uploads.at(-1)?.record).toMatchObject({ id: run.id, status: "failed" });
+  });
+
+  it("should not try to fetch a run failed before it began, which was never archived", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const downloadToFile = vi.fn(async () => {});
+    blobs.set(
+      "runs/q.json",
+      Buffer.from(
+        JSON.stringify({
+          id: "q",
+          kind: "check",
+          scope: "all",
+          status: "failed",
+          createdAt: "2026-10-30T11:00:00Z",
+          error: "The hosted check restarted before this run began. Start it again."
+        })
+      )
+    );
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store: { ...store, downloadToFile }, baseline });
+    await runner.restore();
+
+    // Act
+    const dir = await runner.directory("q");
+
+    // Assert
+    expect(dir).toBeNull();
+    expect(downloadToFile).not.toHaveBeenCalled();
+  });
+
   it("should leave a run another pod is still going with as running, and show how it ends there", async () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
