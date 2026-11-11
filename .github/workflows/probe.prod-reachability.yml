@@ -45,3 +45,19 @@ jobs:
               -w "status=%{http_code} ip=%{remote_ip} time=%{time_total}s\n" "${url}" \
               || echo "curl failed"
           done
+
+      # cath-api is only in the private platform.hmcts.net zone, which the runners
+      # did not resolve. Check whether the backend gateway behind it is reachable
+      # anyway: by its internal name, and by IP with the public host's SNI.
+      - name: Probe the PROD API through the backend gateway
+        run: |
+          getent hosts cath-api-prod.service.core-compute-prod.internal \
+            || echo "no DNS answer for cath-api-prod.service.core-compute-prod.internal"
+          nc -zv -w 5 10.90.96.21 443 || echo "no TCP connection to 10.90.96.21:443"
+          for path in / /health; do
+            echo "=== cath-api.platform.hmcts.net${path} via 10.90.96.21"
+            curl -s -o /dev/null --max-time 20 \
+              --resolve cath-api.platform.hmcts.net:443:10.90.96.21 \
+              -w "status=%{http_code} time=%{time_total}s\n" \
+              "https://cath-api.platform.hmcts.net${path}" || echo "curl failed"
+          done
