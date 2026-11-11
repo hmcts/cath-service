@@ -11,6 +11,9 @@ differences listed, but as every page shares them they do not on their own make 
 [checked for accessibility on its own](#checking-accessibility), so issues CaTH copied from pip are
 not missed. Screenshots are evidence for people, not something the comparison diffs.
 
+How the parts fit together, with diagrams of a recording, a check, the comparison, seeding a shared
+CaTH and the hosted check's runs, is in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 > **This is a first prototype.** It is usable now, and the team should start using it on screen
 > tickets straight away, but it has known gaps (see [Limits](#limits) and
 > [Not done yet](#not-done-yet)) that will be closed as it is developed. If it gets something
@@ -482,6 +485,9 @@ host, is refused.
 
 ### How it works
 
+[ARCHITECTURE.md](ARCHITECTURE.md#the-hosted-checks-runs) has a diagram of a run, from the form to
+its report, and of what happens when the pod is redeployed mid-run.
+
 - **Runs** are queued and run one at a time (Chromium is memory-hungry, and checks seed the same
   environment), each as a child process of the tool's own scripts: `check.ts --env aat` or
   `compare-files.ts`. A check of all of CaTH takes about half an hour.
@@ -540,6 +546,7 @@ Planned next, roughly in this order:
 
 | Path | What it is |
 |---|---|
+| `ARCHITECTURE.md` | How the parts fit together, with diagrams |
 | `core/` | The generic tool: capture, journeys, compare (pages, PDFs, Excel), review (`npx tsx core/cli.ts` for usage) |
 | `src/`, `helm/` | The hosted check for testers, and its chart |
 | `check.ts`, `pr-comment.ts` | `yarn ui-baseline:check` and its PR comment |
