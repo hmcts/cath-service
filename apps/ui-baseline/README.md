@@ -294,8 +294,11 @@ Pages behind sign-in are captured as the same fixture user pip's baseline used (
 
 One AAT IDAM account signs in to both CaTH AAT and pip test, managed as CaTH's E2E suite manages
 its own (`cft-valid-test-account`): a permanent account, with its email and password in a vault,
-read when a run starts. Ours is in `cath-aat`, which the pod mounts, so its managed identity can read
-it:
+read when a run starts. The E2E suite keeps its accounts in `cath-bootstrap-aat`, read by the CI
+runner and never by a running pod. Ours is in the app vault, `cath-aat`, because the hosted check is
+a test runner that lives in a pod. The pod does not mount the two secrets (`helm/values.yaml`): a check
+reads them from the vault when it starts (`environments.ts`), as the pod's managed identity, and a
+local check reads them as whoever `az login` signed in:
 
 | Secret | Holds |
 | --- | --- |

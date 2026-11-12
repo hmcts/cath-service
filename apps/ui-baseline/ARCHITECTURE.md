@@ -210,9 +210,14 @@ sequenceDiagram
   with `SIGTERM`. The old pod starts no new run, fails any queued ones with a message to start them
   again, and finishes the one it has going (`terminationGracePeriodSeconds: 9000`: the run's two-hour limit, its stop grace, and time to fetch the baseline and store the run). The new pod
   sees the recent heartbeat of each run queued or going there, leaves it and watches it until it
-  ends; a run whose heartbeat stopped more than three minutes ago is marked interrupted. The
+  ends; a run that has missed three heartbeats (three minutes) is marked interrupted. The
   heartbeat goes on while the run's files are archived, so a slow upload is not taken for a pod
   that has gone.
+- **A run started on the new pod waits for the old pod's run.** Two checks at once would share the
+  IDAM test account and the records seeded in AAT, and change what each other captures. So the new
+  pod queues a run until every run it is watching has ended, or been marked interrupted, and until
+  it has loaded the runs stored before it started, so one started straight after a redeploy still
+  waits. Its run page shows it queued meanwhile.
 - **File comparisons** read CaTH's files from `cathsaaat` and pip's from pip-frontend
   (`/list-download-files`), signed in as the IDAM test account, as a verified user downloads them,
   so the pod needs no access to pip's storage ([`artefact-files.ts`](artefact-files.ts)).
