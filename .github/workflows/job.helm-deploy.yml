@@ -70,10 +70,11 @@ jobs:
   helm-deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    # Must exceed the 15m0s helm timeout below plus the recovery-timeout that
-    # helm-deploy allows itself, or the job is killed mid-install and leaves the
-    # release pending, which is the state the recovery then has to clean up.
-    timeout-minutes: 35
+    # Must exceed the helm timeouts below (15m0s for cath-service, 10m0s for
+    # ui-baseline in aat) plus the recovery-timeout that helm-deploy allows itself
+    # for each, or the job is killed mid-install and leaves the release pending,
+    # which is the state the recovery then has to clean up.
+    timeout-minutes: 45
     outputs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
@@ -191,37 +192,6 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
-      # ui-baseline is deployed by digest, not tag. A master merge that did not rebuild it deploys the
-      # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
-      # which would still replace the pod, and fail the runs queued in it. A digest only changes
-      # when the image does. Elsewhere the chart is disabled and the tag is left as it was.
-      # The lookup is tried three times, 5s then 15s apart, so a passing registry error does not stop
-      # the whole release (web and api share its --atomic deploy). It never falls back to the tag: an
-      # image that cannot be found might not exist, and a pod that cannot pull it would hold the
-      # deploy for its 15 minute timeout and then roll web and api back too.
-      - name: Pin the ui-baseline image
-        run: |
-          REF=":${UI_BASELINE_IMAGE:-}"
-          if [ "${UI_BASELINE_ENABLED}" = "true" ]; then
-            IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
-            DIGEST=""
-            for WAIT in 5 15 0; do
-              DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}') && [ -n "$DIGEST" ] && break
-              DIGEST=""
-              if [ "$WAIT" -gt 0 ]; then
-                echo "::warning::Could not look up the digest of ${IMAGE}; trying again in ${WAIT}s"
-                sleep "$WAIT"
-              fi
-            done
-            if [ -z "$DIGEST" ]; then
-              echo "::error::Could not find the digest of ${IMAGE} after 3 attempts"
-              exit 1
-            fi
-            REF="@${DIGEST}"
-            echo "ui-baseline: ${IMAGE} is ${DIGEST}"
-          fi
-          echo "UI_BASELINE_IMAGE_REF=${REF}" >> "$GITHUB_ENV"
-
       # helm-deploy clears a release left in pending-upgrade by an interrupted
       # deploy before it upgrades, which is why there is no cleanup step here.
       # recover-stuck-release defaults to true; set it to false to opt out.
@@ -242,6 +212,54 @@ jobs:
           business-area: Cross-Cutting
           timeout: 15m0s
 
+      # The hosted parity check (apps/ui-baseline) is a release of its own, deployed after
+      # cath-service's. helm-deploy is --atomic, so a ui-baseline pod that cannot start (a missing
+      # secret, an image that cannot be pulled, Chromium slow to be ready) rolls back only
+      # ui-baseline, to its last good release. Neither step fails the deploy: web and api are
+      # already out, and the warning below says ui-baseline was not.
+      #
+      # It is deployed by digest, not tag. A master merge that did not rebuild it deploys the
+      # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
+      # which would still replace the pod, and hand over the runs queued in it. A digest only
+      # changes when the image does.
+      - name: Pin the ui-baseline image
+        id: ui-baseline-image
+        if: env.UI_BASELINE_ENABLED == 'true'
+        continue-on-error: true
+        run: |
+          IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}')
+          if [ -z "$DIGEST" ]; then
+            echo "::error::Could not find the digest of ${IMAGE}"
+            exit 1
+          fi
+          echo "ui-baseline: ${IMAGE} is ${DIGEST}"
+          echo "UI_BASELINE_IMAGE_REF=@${DIGEST}" >> "$GITHUB_ENV"
+
+      - name: Deploy ui-baseline
+        id: ui-baseline
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline-image.outcome == 'success'
+        continue-on-error: true
+        uses: hmcts/cnp-githubactions-library/helm-deploy@main
+        with:
+          environment: ${{ env.CLUSTER }}
+          team-name: ${{ env.TEAM_NAME }}
+          application-name: ${{ env.APPLICATION_NAME }}
+          azure-credentials: ${{ secrets[format('AZURE_CREDENTIALS_CFT_{0}', inputs.environment)] }}
+          # The resources keep the names, and the host, they had as part of cath-service's release
+          release-name: ${{ env.RELEASE_NAME }}-ui-baseline
+          namespace: ${{ env.TEAM_NAME }}
+          chart: apps/ui-baseline/helm
+          values-template: apps/ui-baseline/helm/values.aat.template.yaml
+          global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
+          business-area: Cross-Cutting
+          timeout: 10m0s
+
+      - name: Report a ui-baseline deploy that failed
+        if: env.UI_BASELINE_ENABLED == 'true' && (steps.ui-baseline-image.outcome == 'failure' || steps.ui-baseline.outcome == 'failure')
+        run: |
+          echo "::warning::The hosted parity check (ui-baseline) was not deployed; it keeps its last good release. CaTH itself was deployed. The steps above say why."
+
       # Preview hosts are registered by the preview platform, not here. Without
       # this step the release-scoped hosts have no A record and the smoke test
       # fails with HTTP 000, which reads like an app failure but is DNS.
@@ -259,9 +277,10 @@ jobs:
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
-          # Get all ingress hostnames for this release
+          # Get all ingress hostnames for this release, and for ui-baseline's where it
+          # has one (aat): a release of its own, deployed beside this one
           HOSTNAMES=$(kubectl get ingress -n ${{ env.TEAM_NAME }} \
-            -l "app.kubernetes.io/instance=${{ env.RELEASE_NAME }}" \
+            -l "app.kubernetes.io/instance in (${{ env.RELEASE_NAME }},${{ env.RELEASE_NAME }}-ui-baseline)" \
             -o jsonpath='{.items[*].spec.rules[*].host}')
 
           for HOST in $HOSTNAMES; do

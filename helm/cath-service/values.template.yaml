@@ -18,10 +18,6 @@ api:
   enabled: true
 crons:
   enabled: true
-# The hosted parity check (apps/ui-baseline): true only where testers run checks, aat.
-# Resolved by job.helm-deploy.yml.
-uiBaseline:
-  enabled: ${UI_BASELINE_ENABLED}
 
 # Web application configuration
 #
@@ -73,17 +69,6 @@ cath-crons:
     schedule: "*/5 * * * *"
     suspend: false
     kind: CronJob
-
-# Hosted parity check configuration. Reached only over the VPN: its host is in the private DNS
-# zone, with no Front Door route. That is its only access control; the app has no sign-in.
-cath-ui-baseline:
-  nodejs:
-    # Pinned to the image's digest where it is deployed (job.helm-deploy.yml), so a deploy that did
-    # not rebuild it leaves the pod running
-    image: "hmctsprod.azurecr.io/cath/cath-ui-baseline${UI_BASELINE_IMAGE_REF}"
-    ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net"
-    environment:
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Postgres Prisma Studio service configuration
 cath-postgres:

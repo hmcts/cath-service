@@ -1,0 +1,14 @@
+# The hosted parity check's release in aat, rendered with envsubst by job.helm-deploy.yml. It is a
+# release of its own, deployed after cath-service's, so a pod that cannot start rolls back only
+# this release, never web and api. Do not add shell-style ":-" defaults: envsubst leaves them as
+# they are.
+#
+# Reached only over the VPN: its host is in the private DNS zone, with no Front Door route. That
+# is its only access control; the app has no sign-in.
+nodejs:
+  # Pinned to the image's digest (job.helm-deploy.yml), so a deploy that did not rebuild it leaves
+  # the pod running
+  image: "hmctsprod.azurecr.io/cath/cath-ui-baseline${UI_BASELINE_IMAGE_REF}"
+  ingressHost: "${TEAM_NAME}-{{ .Release.Name }}.{{ .Values.global.environment }}.platform.hmcts.net"
+  environment:
+    MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
