@@ -2,11 +2,13 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST } from "./index.js";
 
-vi.mock("node:fs/promises", () => ({
-  default: {
-    access: vi.fn()
-  }
-}));
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    getBlobProperties: vi.fn()
+  };
+});
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
@@ -31,7 +33,7 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-import fs from "node:fs/promises";
+import { CONTAINER, getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, getSjpListById, getSjpPublicCases, getUniquePostcodes, getUniqueProsecutors } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 
@@ -81,7 +83,7 @@ describe("SJP Public List Controller", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(fs.access).mockRejectedValue(new Error("ENOENT"));
+    vi.mocked(getBlobProperties).mockResolvedValue(null);
     givenArtefact("PUBLIC");
   });
 
@@ -515,83 +517,144 @@ describe("SJP Public List Controller", () => {
       );
     });
 
-    it("should pass downloadDisclaimerUrl when files exist and user is verified", async () => {
-      const req = mockRequest({
-        query: { artefactId: "test-123" },
-        user: { role: "VERIFIED" } as any
-      });
-      const res = mockResponse();
+    describe("download a copy button", () => {
+      const givenPublicList = () => {
+        vi.mocked(getSjpListById).mockResolvedValue({
+          artefactId: ARTEFACT_ID,
+          listType: "public",
+          contentDate: new Date("2025-01-20"),
+          publicationDate: new Date("2025-01-20T09:00:00Z"),
+          caseCount: 10,
+          locationId: 1
+        });
+        vi.mocked(getSjpPublicCases).mockResolvedValue({ cases: [], totalCases: 0 });
+        vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
+        vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
+        vi.mocked(calculatePagination).mockReturnValue({
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 0,
+          itemsPerPage: 1000,
+          hasNext: false,
+          hasPrevious: false,
+          pageNumbers: [1]
+        });
+      };
 
-      vi.mocked(fs.access).mockResolvedValue(undefined);
+      const givenBlobs = (blobs: { pdf?: boolean; xlsx?: boolean }) => {
+        vi.mocked(getBlobProperties).mockImplementation(async (blobName: string) => {
+          if (blobName.endsWith(".pdf")) return blobs.pdf ? { size: 1024 } : null;
+          if (blobName.endsWith(".xlsx")) return blobs.xlsx ? { size: 2048 } : null;
+          return null;
+        });
+      };
 
-      vi.mocked(getSjpListById).mockResolvedValue({
-        artefactId: "test-123",
-        listType: "public",
-        contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
-      });
+      const verifiedRequest = (overrides?: Partial<Request>) =>
+        mockRequest({ query: { artefactId: ARTEFACT_ID }, user: { role: "VERIFIED", provenance: ALLOWED_PROVENANCE } as never, ...overrides });
 
-      vi.mocked(getSjpPublicCases).mockResolvedValue({ cases: [], totalCases: 0 });
-      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
-      vi.mocked(calculatePagination).mockReturnValue({
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 0,
-        itemsPerPage: 1000,
-        hasNext: false,
-        hasPrevious: false,
-        pageNumbers: [1]
-      });
-
-      await GET(req, res);
-
-      expect(res.render).toHaveBeenCalledWith(
-        "sjp-public-list",
-        expect.objectContaining({
-          downloadDisclaimerUrl: "/sjp-public-list/list-download-disclaimer?artefactId=test-123"
-        })
-      );
-    });
-
-    it("should pass null downloadDisclaimerUrl when no files exist", async () => {
-      const req = mockRequest({
-        query: { artefactId: "test-123" }
-      });
-      const res = mockResponse();
-
-      vi.mocked(getSjpListById).mockResolvedValue({
-        artefactId: "test-123",
-        listType: "public",
-        contentDate: new Date("2025-01-20"),
-        publicationDate: new Date("2025-01-20T09:00:00Z"),
-        caseCount: 10,
-        locationId: 1
+      beforeEach(() => {
+        givenPublicList();
       });
 
-      vi.mocked(getSjpPublicCases).mockResolvedValue({ cases: [], totalCases: 0 });
-      vi.mocked(getUniqueProsecutors).mockResolvedValue([]);
-      vi.mocked(getUniquePostcodes).mockResolvedValue({ postcodes: [], hasLondonPostcodes: false, londonPostcodes: [] });
-      vi.mocked(calculatePagination).mockReturnValue({
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 0,
-        itemsPerPage: 1000,
-        hasNext: false,
-        hasPrevious: false,
-        pageNumbers: [1]
+      it("should pass downloadDisclaimerUrl when the user is verified and only the PDF blob exists", async () => {
+        // Arrange
+        givenBlobs({ pdf: true });
+        const res = mockResponse();
+
+        // Act
+        await GET(verifiedRequest(), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith(
+          "sjp-public-list",
+          expect.objectContaining({ downloadDisclaimerUrl: `/sjp-public-list/list-download-disclaimer?artefactId=${ARTEFACT_ID}` })
+        );
+        expect(getBlobProperties).toHaveBeenCalledWith(`${ARTEFACT_ID}.pdf`, CONTAINER.PUBLICATIONS);
+        expect(getBlobProperties).toHaveBeenCalledWith(`${ARTEFACT_ID}.xlsx`, CONTAINER.PUBLICATIONS);
       });
 
-      await GET(req, res);
+      it("should pass downloadDisclaimerUrl when the user is verified and only the Excel blob exists", async () => {
+        // Arrange
+        givenBlobs({ xlsx: true });
+        const res = mockResponse();
 
-      expect(res.render).toHaveBeenCalledWith(
-        "sjp-public-list",
-        expect.objectContaining({
-          downloadDisclaimerUrl: null
-        })
-      );
+        // Act
+        await GET(verifiedRequest(), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith(
+          "sjp-public-list",
+          expect.objectContaining({ downloadDisclaimerUrl: `/sjp-public-list/list-download-disclaimer?artefactId=${ARTEFACT_ID}` })
+        );
+      });
+
+      it("should pass null downloadDisclaimerUrl when the user is verified and no blobs exist", async () => {
+        // Arrange
+        givenBlobs({});
+        const res = mockResponse();
+
+        // Act
+        await GET(verifiedRequest(), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+      });
+
+      it("should pass null downloadDisclaimerUrl and not query Blob Storage when the user is anonymous", async () => {
+        // Arrange
+        givenBlobs({ pdf: true, xlsx: true });
+        const res = mockResponse();
+
+        // Act
+        await GET(mockRequest({ query: { artefactId: ARTEFACT_ID } }), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+        expect(getBlobProperties).not.toHaveBeenCalled();
+      });
+
+      it("should pass null downloadDisclaimerUrl and not query Blob Storage when the user is not verified", async () => {
+        // Arrange
+        givenBlobs({ pdf: true, xlsx: true });
+        const res = mockResponse();
+
+        // Act
+        await GET(mockRequest({ query: { artefactId: ARTEFACT_ID }, user: { role: "SYSTEM_ADMIN" } as never }), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+        expect(getBlobProperties).not.toHaveBeenCalled();
+      });
+
+      it("should still render the list with null downloadDisclaimerUrl when Blob Storage errors", async () => {
+        // Arrange
+        vi.mocked(getBlobProperties).mockRejectedValue(new Error("Blob Storage unavailable"));
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const res = mockResponse();
+
+        // Act
+        await GET(verifiedRequest(), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-public-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+        expect(consoleErrorSpy).toHaveBeenCalled();
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should use the delta path prefix for downloadDisclaimerUrl on the delta list", async () => {
+        // Arrange
+        givenBlobs({ pdf: true, xlsx: true });
+        const res = mockResponse();
+
+        // Act
+        await GET(verifiedRequest({ path: "/sjp-delta-public-list" }), res);
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith(
+          "sjp-public-list",
+          expect.objectContaining({ downloadDisclaimerUrl: `/sjp-delta-public-list/list-download-disclaimer?artefactId=${ARTEFACT_ID}` })
+        );
+      });
     });
 
     it("should pass showFilter=true to template when showFilter query param is set", async () => {
