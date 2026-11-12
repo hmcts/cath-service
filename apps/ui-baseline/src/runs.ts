@@ -247,20 +247,7 @@ export function createRunner(options: RunnerOptions): Runner {
         // Storage now names this pod as the run's, so the run is this pod's to run or hand over,
         // even if the watching stopped while the claim was written
         stop();
-        if (isDraining) {
-          // The pod began stopping as it claimed the run: handed over again, as drain does
-          const now = new Date().toISOString();
-          const next: RunRecord = { ...rest, handedOverAt: now, heartbeatAt: now };
-          runs.set(id, next);
-          await publish(next);
-          return;
-        }
-        console.log(`[ui-baseline] took over run ${id}, queued on a pod that stopped`);
-        runs.set(id, claimed);
-        published.set(id, claimed);
-        // Kept going while it waits here, as a run queued here would be
-        beat(id);
-        enqueue(claimed);
+        await takeClaimed(rest, claimed);
         return;
       }
       if (!stillGoing(stored, staleMs)) {
@@ -284,6 +271,24 @@ export function createRunner(options: RunnerOptions): Runner {
       looking.add(looked);
     }, watchMs);
     watching.add(timer);
+  };
+
+  // A run this pod has just claimed (watch): queued here, or, if the pod began stopping as it claimed
+  // it, handed over again, as drain does. unclaimed is the record as it was before the claim.
+  const takeClaimed = async (unclaimed: Omit<RunRecord, "handedOverAt">, claimed: RunRecord) => {
+    if (isDraining) {
+      const now = new Date().toISOString();
+      const next = { ...unclaimed, handedOverAt: now, heartbeatAt: now } as RunRecord;
+      runs.set(claimed.id, next);
+      await publish(next);
+      return;
+    }
+    console.log(`[ui-baseline] took over run ${claimed.id}, queued on a pod that stopped`);
+    runs.set(claimed.id, claimed);
+    published.set(claimed.id, claimed);
+    // Kept going while it waits here, as a run queued here would be
+    beat(claimed.id);
+    enqueue(claimed);
   };
 
   // From when a run is queued until its last record is stored, which is after its archive: a heartbeat
@@ -436,7 +441,10 @@ export function createRunner(options: RunnerOptions): Runner {
     // are loaded before the history. A run's id starts with the day it was asked for.
     const since = daysAgo(RESTORE_DAYS);
     const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json") && path.basename(blob).slice(0, 10) >= since);
-    await loadAll(store, names.sort().reverse());
+    await loadAll(
+      store,
+      names.toSorted((a, b) => b.localeCompare(a))
+    );
   }
 
   // The runs stored since yesterday that this pod does not know. A run's id starts with when it was
