@@ -127,6 +127,11 @@ COPY --chown=hmcts:hmcts apps/ui-baseline ./apps/ui-baseline
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Not --conditions=production: the tool and the libs it uses resolve to their TypeScript sources
 ENV NODE_ENV=production
+# The commit the image was built from, which a check's report records (src/server.ts). Built in,
+# not set by the chart: a value that changed on every deploy would replace the pod on every master
+# merge, even when its image had not changed. Last, so a new commit rebuilds no layer before it.
+ARG GIT_COMMIT=unknown
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 WORKDIR /opt/app/apps/ui-baseline
 EXPOSE 8090

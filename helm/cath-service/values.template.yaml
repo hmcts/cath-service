@@ -78,10 +78,11 @@ cath-crons:
 # zone, with no Front Door route. That is its only access control; the app has no sign-in.
 cath-ui-baseline:
   nodejs:
-    image: "hmctsprod.azurecr.io/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+    # Pinned to the image's digest where it is deployed (job.helm-deploy.yml), so a deploy that did
+    # not rebuild it leaves the pod running
+    image: "hmctsprod.azurecr.io/cath/cath-ui-baseline${UI_BASELINE_IMAGE_REF}"
     ingressHost: "${TEAM_NAME}-{{ .Release.Name }}-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net"
     environment:
-      GIT_COMMIT: "${SHORT_SHA}"
       MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
 
 # Postgres Prisma Studio service configuration
