@@ -493,9 +493,11 @@ a VPN user's browser (`src/request-forgery.ts`): each form carries a token match
 cookie only this app sets, and a post the browser marks as cross-site, or whose `Origin` is another
 host, is refused.
 
-Its pod is replaced only when a master merge rebuilds its image, which happens when
-`apps/ui-baseline/` or a library it uses changes, not on every merge
-([ARCHITECTURE.md](ARCHITECTURE.md#building-and-deploying-it)).
+Its pod is replaced only when a master merge rebuilds its image, not on every merge. The image is
+rebuilt when `apps/ui-baseline/` or a library it uses changes, or anything every image is built from:
+the root `Dockerfile` or `.dockerignore`, `yarn.lock`, the root `package.json` or Yarn's config
+([ARCHITECTURE.md](ARCHITECTURE.md#building-and-deploying-it)). A replacement does not cost a tester
+a run: the run going finishes on the old pod, and the runs queued behind it move to the new one.
 
 ### How it works
 

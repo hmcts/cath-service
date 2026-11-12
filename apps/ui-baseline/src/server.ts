@@ -43,9 +43,10 @@ const app = createApp({ environment: environmentName, runner, dataDir, baselineS
 app.listen(PORT, () => console.log(`[ui-baseline] checking CaTH in ${environmentName} on port ${PORT}`));
 
 // A redeploy starts the new pod, then stops this one: it finishes the run it has going (within the
-// chart's terminationGracePeriodSeconds), starts no other, and the new pod shows the run until it ends
+// chart's terminationGracePeriodSeconds), starts no other, and hands the runs queued here to the new
+// pod, which shows the run going here until it ends
 process.once("SIGTERM", () => {
-  console.log("[ui-baseline] stopping: finishing the run going, starting no other");
+  console.log("[ui-baseline] stopping: finishing the run going, handing the queued ones to the next pod");
   runner.stopWatching();
   void runner.drain().finally(() => process.exit(0));
 });

@@ -16,6 +16,8 @@ import { systemCommand } from "../system-command.js";
 const RUNS_PREFIX = "runs/";
 // The error a run that was queued or running when its pod stopped is restored with
 const INTERRUPTED = "interrupted";
+// A queued run is handed to the next pod when its own stops. With no storage to hand it over through
+// (a local run of the app), it is failed with this instead.
 const RESTARTED_BEFORE_START = "The hosted check restarted before this run began. Start it again.";
 // Runs that ended without an archive, so there is nothing in storage to fetch for them
 const NEVER_ARCHIVED = new Set([INTERRUPTED, RESTARTED_BEFORE_START]);
@@ -45,7 +47,14 @@ export function createRunner(options: RunnerOptions): Runner {
   const runs = new Map<string, RunRecord>();
   const restoring = new Map<string, Promise<string>>();
   const execute = options.execute ?? executeScript;
-  let queue: Promise<void> = Promise.resolve();
+  // This pod, as a run record names the pod that runs it (owner)
+  const pod = options.pod ?? process.env.HOSTNAME ?? `pod-${randomBytes(3).toString("hex")}`;
+  // Runs this pod will run, oldest first: its own, and those handed to it by a pod that stopped
+  const pending: RunRecord[] = [];
+  // Taking the pending runs one at a time, while there are any; null when it is not
+  let pumping: Promise<void> | null = null;
+  // Each queued or running run's heartbeat (HEARTBEAT_MS), until its last record is stored
+  const heartbeats = new Map<string, ReturnType<typeof setInterval>>();
   // Set when the pod is stopping: the run going is finished, and no other is started
   let draining = false;
   const heartbeatMs = options.heartbeatMs ?? HEARTBEAT_MS;
@@ -196,34 +205,116 @@ export function createRunner(options: RunnerOptions): Runner {
 
   // A run going on another pod (the one a redeploy is replacing): its stored record is looked at
   // until the run ends there, or that pod stops storing it, when the run was cut short
+  // A run handed over by the pod that stopped is claimed: taken into this pod's queue, if no other
+  // pod has claimed it first. Several pods can be up at once (one merge after another, each starting a
+  // pod), so the claim is a write that only succeeds if the record is as this pod read it.
   const watch = (store: BlobContainer, id: string) => {
     let end = () => {};
     const ended = new Promise<void>((resolve) => {
       end = resolve;
     });
     elsewhere.set(id, { ended, end });
+    const name = `${RUNS_PREFIX}${id}.json`;
+    const stop = () => {
+      clearInterval(timer);
+      watching.delete(timer);
+      elsewhere.delete(id);
+      end();
+    };
     // Never throws: a rejection from an interval's callback would be unhandled, and stop the pod
     const timer = setInterval(async () => {
-      const data = await store.download(`${RUNS_PREFIX}${id}.json`).catch(() => null);
+      const read = await store.downloadVersioned(name).catch(() => null);
       // One half written or empty is passed over: the next heartbeat stores it whole
-      const stored = data ? parseRecord(data, id) : null;
-      if (!stored) return;
+      const stored = read ? parseRecord(read.data, id) : null;
+      if (!read || !stored || !watching.has(timer)) return;
+      if (handedOver(stored) && stillGoing(stored, staleMs) && !draining) {
+        const { handedOverAt: _, ...rest } = stored;
+        const claimed: RunRecord = { ...rest, owner: pod, heartbeatAt: new Date().toISOString() };
+        // Another pod took it, or storage failed: looked at again on the next tick
+        const won = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(claimed)), "application/json", read.etag).catch(() => false);
+        if (!won || !watching.has(timer)) return;
+        stop();
+        console.log(`[ui-baseline] took over run ${id}, queued on a pod that stopped`);
+        runs.set(id, claimed);
+        published.set(id, claimed);
+        // Kept going while it waits here, as a run queued here would be
+        beat(id);
+        enqueue(claimed);
+        return;
+      }
       if (!stillGoing(stored, staleMs)) {
-        clearInterval(timer);
-        watching.delete(timer);
+        stop();
         const last =
           stored.status === "queued" || stored.status === "running"
             ? { ...stored, status: "failed" as const, finishedAt: new Date().toISOString(), error: INTERRUPTED }
             : stored;
         runs.set(id, last);
-        if (last !== stored) await publish(last);
-        elsewhere.delete(id);
-        end();
+        // Only if the record is still the one read: a pod may have claimed the run meanwhile
+        if (last !== stored) await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(last)), "application/json", read.etag).catch(() => false);
         return;
       }
       runs.set(id, stored);
     }, watchMs);
     watching.add(timer);
+  };
+
+  // From when a run is queued until its last record is stored, which is after its archive: a heartbeat
+  // stores the record last stored, so a pod watching never sees the run end before its files are in
+  // storage
+  const beat = (id: string) => {
+    heartbeats.set(
+      id,
+      setInterval(() => {
+        const last = published.get(id);
+        if (last?.status === "queued" || last?.status === "running") void publish({ ...last, heartbeatAt: new Date().toISOString() });
+      }, heartbeatMs)
+    );
+  };
+  const stopBeat = (id: string) => {
+    clearInterval(heartbeats.get(id));
+    heartbeats.delete(id);
+  };
+
+  // A run that fails outside its own error handling (its record cannot be saved, say, as the disk is
+  // full) is failed here, so the queue carries on with the runs after it
+  const runOne = (record: RunRecord) =>
+    perform(record)
+      .catch(async (error: Error) => {
+        console.error(`[ui-baseline] run ${record.id} failed: ${error.message}`);
+        const failed: RunRecord = { ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: error.message };
+        runs.set(record.id, failed);
+        // Stored too, as perform would have, or another pod would find it still running and lose the error
+        await archive(failed).catch((archiveError: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${archiveError.message}`));
+        await publish(failed);
+      })
+      .finally(() => stopBeat(record.id));
+
+  // Runs the pending runs one at a time, oldest first. Each waits for any run going on another pod;
+  // one that pod hands over meanwhile joins the pending runs, ahead of those asked for since.
+  const pump = (): Promise<void> => {
+    pumping ??= (async () => {
+      await loaded;
+      for (;;) {
+        while (elsewhere.size && !draining) {
+          console.log(`[ui-baseline] waiting for the runs going on another pod: ${[...elsewhere.keys()].join(", ")}`);
+          await Promise.all([...elsewhere.values()].map(({ ended }) => ended));
+        }
+        // When the pod is stopping, the runs left were handed over (drain)
+        const record = draining ? undefined : pending.shift();
+        if (!record) return;
+        await runOne(record);
+      }
+    })().finally(() => {
+      pumping = null;
+      // A run asked for as the last one ended is not left waiting
+      if (pending.length && !draining) void pump();
+    });
+    return pumping;
+  };
+  const enqueue = (record: RunRecord) => {
+    pending.push(record);
+    pending.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    void pump();
   };
 
   return {
@@ -235,35 +326,13 @@ export function createRunner(options: RunnerOptions): Runner {
         id: `${createdAt.replace(/[:.]/g, "-")}-${randomBytes(3).toString("hex")}`,
         status: "queued",
         createdAt,
-        heartbeatAt: createdAt
+        heartbeatAt: createdAt,
+        owner: pod
       };
       runs.set(record.id, record);
       void publish(record);
-      // From when the run is queued until its last record is stored, which is after its archive: a
-      // heartbeat stores the record last stored, so a pod watching never sees the run end before its
-      // files are in storage
-      const heartbeat = setInterval(() => {
-        const last = published.get(record.id);
-        if (last?.status === "queued" || last?.status === "running") void publish({ ...last, heartbeatAt: new Date().toISOString() });
-      }, heartbeatMs);
-      // A run that fails outside its own error handling (its record cannot be saved, say, as the
-      // disk is full) is failed here, so the queue carries on with the runs after it
-      queue = queue
-        .then(() => loaded)
-        .then(async () => {
-          if (elsewhere.size) console.log(`[ui-baseline] run ${record.id} waits for the runs going on another pod: ${[...elsewhere.keys()].join(", ")}`);
-          await Promise.all([...elsewhere.values()].map(({ ended }) => ended));
-        })
-        .then(() => perform(record))
-        .catch(async (error: Error) => {
-          console.error(`[ui-baseline] run ${record.id} failed: ${error.message}`);
-          const failed: RunRecord = { ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: error.message };
-          runs.set(record.id, failed);
-          // Stored too, as perform would have, or another pod would find it still running and lose the error
-          await archive(failed).catch((archiveError: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${archiveError.message}`));
-          await publish(failed);
-        })
-        .finally(() => clearInterval(heartbeat));
+      beat(record.id);
+      enqueue(record);
       return record;
     },
     list: () => [...runs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
@@ -284,19 +353,38 @@ export function createRunner(options: RunnerOptions): Runner {
       loaded = work.catch(() => undefined);
       return work;
     },
-    idle: () => queue,
-    drain() {
-      draining = true;
-      return queue;
+    async idle() {
+      while (pumping) await pumping;
     },
-    stopWatching() {
-      for (const timer of watching) clearInterval(timer);
-      watching.clear();
-      // A run waiting for one elsewhere is started, and fails at once if this pod is stopping (perform)
-      for (const { end } of elsewhere.values()) end();
-      elsewhere.clear();
-    }
+    async drain() {
+      draining = true;
+      stopWatching();
+      // Each queued run is handed to the next pod, which runs it once the run going here has ended:
+      // still queued, with no pod. Its heartbeat stops, so if no pod takes it (none is starting, as when
+      // the cluster is stopped for the night), the next pod to start marks it interrupted.
+      const handedOverAt = new Date().toISOString();
+      for (const record of pending.splice(0)) {
+        stopBeat(record.id);
+        const { owner: _, ...rest } = runs.get(record.id) as RunRecord;
+        const next: RunRecord = options.store
+          ? { ...rest, handedOverAt, heartbeatAt: handedOverAt }
+          : { ...rest, status: "failed", finishedAt: handedOverAt, error: RESTARTED_BEFORE_START };
+        runs.set(record.id, next);
+        void publish(next);
+      }
+      while (pumping) await pumping;
+      await publishing;
+    },
+    stopWatching
   };
+
+  function stopWatching() {
+    for (const timer of watching) clearInterval(timer);
+    watching.clear();
+    // A run waiting for one elsewhere is started (or, when this pod is stopping, handed over)
+    for (const { end } of elsewhere.values()) end();
+    elsewhere.clear();
+  }
 
   async function restoreRuns() {
     const store = options.store;
@@ -342,8 +430,14 @@ function parseRecord(data: Buffer, name: string): RunRecord | null {
   }
 }
 
+// A queued run whose pod stopped and handed it over to the next, for that pod to claim
+function handedOver(record: RunRecord): boolean {
+  return record.status === "queued" && !!record.handedOverAt;
+}
+
 // A queued or running record another pod is still storing, by its heartbeat (createdAt for a record
-// stored before queued runs had one)
+// stored before queued runs had one). A handed-over run counts as going until a pod claims it, or for
+// as long as a heartbeat would have kept it so.
 function stillGoing(record: RunRecord, staleMs: number): boolean {
   if (record.status !== "queued" && record.status !== "running") return false;
   const lastSeen = Date.parse(record.heartbeatAt ?? record.createdAt);
@@ -481,6 +575,10 @@ export type RunRecord = RunRequest & {
   finishedAt?: string;
   // When the pod running it last stored it, while it runs (HEARTBEAT_MS)
   heartbeatAt?: string;
+  // The pod that runs it (its HOSTNAME); none once handed over, until another pod claims it
+  owner?: string;
+  // When the pod it was queued on stopped and handed it to the next one
+  handedOverAt?: string;
   // The baseline a check compared against
   baselineId?: string;
   summary?: RunSummary | null;
@@ -497,8 +595,9 @@ export interface Runner {
   start(request: RunRequest): RunRecord;
   list(): RunRecord[];
   get(id: string): RunRecord | undefined;
-  // Stops starting runs, fails those still queued, and settles when the one going has finished, so a
-  // pod being replaced finishes its run rather than cutting it short (server.ts, on SIGTERM)
+  // Stops starting runs, hands those still queued to the next pod (or, with no storage, fails them),
+  // and settles when the one going has finished, so a pod being replaced finishes its run rather
+  // than cutting it short (server.ts, on SIGTERM)
   drain(): Promise<void>;
   // Stops looking at runs going on another pod
   stopWatching(): void;
@@ -528,6 +627,8 @@ export interface RunnerOptions {
   // looked at; HEARTBEAT_MS and WATCH_MS when not given
   heartbeatMs?: number;
   watchMs?: number;
+  // This pod's name in the run records it owns; HOSTNAME when not given
+  pod?: string;
 }
 
 export interface PinnedBaseline {

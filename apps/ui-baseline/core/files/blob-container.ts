@@ -34,8 +34,30 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
         throw error;
       }
     },
+    // The blob with its ETag, for a write that must not overwrite someone else's (uploadIfUnchanged)
+    async downloadVersioned(blobName) {
+      try {
+        const response = await container.getBlobClient(blobName).download();
+        const chunks: Buffer[] = [];
+        for await (const chunk of response.readableStreamBody ?? []) chunks.push(Buffer.from(chunk as Buffer));
+        return { data: Buffer.concat(chunks), etag: response.etag as string };
+      } catch (error) {
+        if (error instanceof RestError && error.statusCode === 404) return null;
+        throw error;
+      }
+    },
     async upload(blobName, data, contentType) {
       await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType } });
+    },
+    // Writes the blob only if it is still as it was read (its ETag); false when it was written since
+    async uploadIfUnchanged(blobName, data, contentType, etag) {
+      try {
+        await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType }, conditions: { ifMatch: etag } });
+        return true;
+      } catch (error) {
+        if (error instanceof RestError && error.statusCode === 412) return false;
+        throw error;
+      }
     },
     // Large files (a recorded baseline) are streamed rather than held in memory
     async uploadFile(blobName, file, contentType) {
@@ -61,8 +83,10 @@ export interface StorageSpec {
 export interface BlobContainer {
   name: string;
   download(blobName: string): Promise<Buffer | null>;
+  downloadVersioned(blobName: string): Promise<{ data: Buffer; etag: string } | null>;
   size(blobName: string): Promise<number | null>;
   upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
+  uploadIfUnchanged(blobName: string, data: Buffer, contentType: string, etag: string): Promise<boolean>;
   uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
   downloadToFile(blobName: string, file: string): Promise<void>;
   list(prefix: string): Promise<string[]>;

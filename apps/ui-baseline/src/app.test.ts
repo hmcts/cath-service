@@ -5,7 +5,7 @@ import type { Express } from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.js";
-import { createRunner } from "./runs.js";
+import { createRunner, type Runner, type RunRecord } from "./runs.js";
 
 async function appWith() {
   const dataDir = await mkdtemp(path.join(tmpdir(), "app-"));
@@ -434,6 +434,25 @@ describe("createApp", () => {
 
     // Assert
     expect(response.status).toBe(404);
+  });
+
+  it("should say a run handed over by a pod that restarted will still start", async () => {
+    // Arrange
+    const run: RunRecord = { id: "r1", kind: "check", scope: "all", status: "queued", createdAt: "2026-11-12T10:00:00Z", handedOverAt: "2026-11-12T10:05:00Z" };
+    const runner = { list: () => [run], get: () => run, directory: async () => null } as unknown as Runner;
+    const app = createApp({
+      environment: "aat",
+      runner,
+      dataDir: await mkdtemp(path.join(tmpdir(), "app-")),
+      baselineStatus: async () => ({ ready: true, description: "" })
+    });
+
+    // Act
+    const page = await request(app).get("/runs/r1");
+
+    // Assert
+    expect(page.status).toBe(200);
+    expect(page.text).toContain("You do not need to start it again.");
   });
 
   it("should say when a run does not exist", async () => {
