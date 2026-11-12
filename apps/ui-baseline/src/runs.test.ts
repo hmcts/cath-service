@@ -2,6 +2,7 @@ import { chmod, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { withVersions } from "../core/files/blob-versions.test-helper.js";
 import { createRunner, RunRequestError } from "./runs.js";
 
 const PIP_ARTEFACT = "2a7b1d4e-0000-4000-8000-000000000001";
@@ -148,7 +149,7 @@ describe("createRunner", () => {
       "runs/a.json": JSON.stringify({ id: "a", kind: "check", scope: "all", status: "finished", createdAt: "2026-10-30T10:00:00Z" }),
       "runs/b.json": JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })
     };
-    const store = {
+    const store = withVersions({
       name: "memory",
       list: async () => [...Object.keys(stored), "runs/a.tar.gz"],
       download: async (name: string) => (name in stored ? Buffer.from(stored[name]) : null),
@@ -156,7 +157,7 @@ describe("createRunner", () => {
       upload: async () => {},
       uploadFile: async () => {},
       downloadToFile: async () => {}
-    };
+    });
     const runner = createRunner({
       dataDir,
       repoDir: "/repo",
@@ -178,7 +179,7 @@ describe("createRunner", () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
     const uploads: Record<string, string> = {};
-    const store = {
+    const store = withVersions({
       name: "memory",
       list: async () => ["runs/b.json"],
       download: async () => Buffer.from(JSON.stringify({ id: "b", kind: "check", scope: "all", status: "running", createdAt: "2026-10-30T11:00:00Z" })),
@@ -188,7 +189,7 @@ describe("createRunner", () => {
       },
       uploadFile: async () => {},
       downloadToFile: async () => {}
-    };
+    });
     const runner = createRunner({
       dataDir,
       repoDir: "/repo",
@@ -481,7 +482,7 @@ async function optionsWith(write: (args: string[]) => Promise<void> = async () =
 // Blob storage in memory, holding uploaded files' contents
 function memoryStore() {
   const blobs = new Map<string, Buffer>();
-  return {
+  return withVersions({
     blobs,
     name: "memory",
     list: async (prefix: string) => [...blobs.keys()].filter((name) => name.startsWith(prefix)),
@@ -496,7 +497,7 @@ function memoryStore() {
     downloadToFile: async (name: string, file: string) => {
       await writeFile(file, blobs.get(name) as Buffer);
     }
-  };
+  });
 }
 
 describe("createRunner when pods are replaced", () => {
@@ -506,7 +507,7 @@ describe("createRunner when pods are replaced", () => {
     return {
       blobs,
       uploads,
-      store: {
+      store: withVersions({
         name: "memory",
         list: async (prefix: string) => [...blobs.keys()].filter((name) => name.startsWith(prefix)),
         download: async (name: string) => blobs.get(name) ?? null,
@@ -517,7 +518,7 @@ describe("createRunner when pods are replaced", () => {
         },
         uploadFile: async () => {},
         downloadToFile: async () => {}
-      }
+      })
     };
   }
   const baseline = async () => ({ id: "b", dir: "/data/baseline", release: () => {} });
@@ -542,6 +543,260 @@ describe("createRunner when pods are replaced", () => {
     expect(runner.get(queued.id)).toMatchObject({ status: "failed", error: expect.stringContaining("restarted before this run began") });
     expect(execute).toHaveBeenCalledTimes(1);
     expect(() => runner.start({ kind: "check", scope: "all" })).toThrow("restarting");
+  });
+
+  it("should hand the runs queued behind the one going to the next pod when drained, still queued and with no pod", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    let finish: () => void = () => {};
+    const execute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute, pod: "old" });
+    runner.start({ kind: "check", scope: "routes", routes: ["/a"] });
+    const queued = runner.start({ kind: "check", scope: "routes", routes: ["/b"] });
+    await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // Act
+    const drained = runner.drain();
+    finish();
+    await drained;
+
+    // Assert
+    const stored = JSON.parse((blobs.get(`runs/${queued.id}.json`) as Buffer).toString("utf-8"));
+    expect(stored).toMatchObject({ status: "queued", handedOverAt: expect.any(String) });
+    expect(stored.owner).toBeUndefined();
+    expect(runner.get(queued.id)?.status).toBe("queued");
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("should take over a run the pod it replaces handed over, and run it before the runs asked of it since", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store } = sharedStore();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: oldExecute, pod: "old" });
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    const queued = old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const newExecute = vi.fn(async () => 0);
+    const replacement = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: newExecute,
+      watchMs: 20,
+      pod: "new"
+    });
+    await replacement.restore();
+    replacement.start({ kind: "check", scope: "routes", routes: ["/asked-since"] });
+
+    // Act
+    const drained = old.drain();
+    finish();
+    await drained;
+    await vi.waitFor(() => expect(newExecute).toHaveBeenCalledTimes(2));
+
+    // Assert
+    const routesRun = newExecute.mock.calls.map((call) => (call as unknown as [string, string[]])[1].find((_, i, args) => args[i - 1] === "--route"));
+    expect(routesRun).toEqual(["/queued", "/asked-since"]);
+    expect(replacement.get(queued.id)?.owner).toBe("new");
+    replacement.stopWatching();
+  });
+
+  it("should keep a run it took over stored as queued while it waits for the old pod's run to end", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, uploads } = sharedStore();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: oldExecute,
+      heartbeatMs: 20,
+      pod: "old"
+    });
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    const queued = old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const execute = vi.fn(async () => 0);
+    const replacement = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute,
+      watchMs: 10,
+      heartbeatMs: 20,
+      pod: "new"
+    });
+    await replacement.restore();
+
+    // Act
+    const drained = old.drain();
+    await vi.waitFor(() => expect(replacement.get(queued.id)?.owner).toBe("new"));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    finish();
+    await drained;
+    await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // Assert
+    const beats = uploads.filter((upload) => upload.name === `runs/${queued.id}.json` && upload.record.owner === "new" && upload.record.status === "queued");
+    expect(new Set(beats.map((beat) => beat.record.heartbeatAt)).size).toBeGreaterThan(1);
+    replacement.stopWatching();
+  });
+
+  it("should run a handed-over run on one pod only, when two are up to take it", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store } = sharedStore();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: oldExecute,
+      pod: "old"
+    });
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const execute = vi.fn(async () => 0);
+    const pods = await Promise.all(
+      ["first", "second"].map(async (pod) => {
+        const runner = createRunner({
+          dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+          repoDir: "/repo",
+          environment: "test",
+          commit: "x",
+          store,
+          baseline,
+          execute,
+          watchMs: 5,
+          pod
+        });
+        await runner.restore();
+        return runner;
+      })
+    );
+
+    // Act
+    const drained = old.drain();
+    finish();
+    await drained;
+    await vi.waitFor(() => expect(execute).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Assert
+    expect(execute).toHaveBeenCalledTimes(1);
+    for (const pod of pods) pod.stopWatching();
+  });
+
+  it("should mark a handed-over run interrupted when no pod took it before it went stale", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store } = sharedStore();
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: oldExecute,
+      pod: "old"
+    });
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    const queued = old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const drained = old.drain();
+    finish();
+    await drained;
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const execute = vi.fn(async () => 0);
+    const morning = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute,
+      heartbeatMs: 10,
+      pod: "morning"
+    });
+
+    // Act
+    await morning.restore();
+    await morning.idle();
+
+    // Assert
+    expect(morning.get(queued.id)).toMatchObject({ status: "failed", error: "interrupted" });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("should not take a handed-over run while it is stopping itself", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute: oldExecute,
+      pod: "old"
+    });
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    const queued = old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const execute = vi.fn(async () => 0);
+    const stopping = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute,
+      watchMs: 5,
+      pod: "stopping"
+    });
+    await stopping.restore();
+
+    // Act
+    await stopping.drain();
+    const drained = old.drain();
+    finish();
+    await drained;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Assert
+    expect(JSON.parse((blobs.get(`runs/${queued.id}.json`) as Buffer).toString("utf-8"))).toMatchObject({ status: "queued", handedOverAt: expect.any(String) });
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it("should store a running run's record again as it goes, so another pod can tell it is still going", async () => {

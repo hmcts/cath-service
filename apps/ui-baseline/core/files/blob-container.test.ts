@@ -17,7 +17,7 @@ vi.mock("@azure/storage-blob", () => {
   return { BlobServiceClient, RestError: FakeRestError };
 });
 
-const blobClient = { downloadToBuffer: vi.fn(), downloadToFile: vi.fn(), getProperties: vi.fn() };
+const blobClient = { download: vi.fn(), downloadToBuffer: vi.fn(), downloadToFile: vi.fn(), getProperties: vi.fn() };
 const blockBlobClient = { uploadData: vi.fn(), uploadFile: vi.fn() };
 const containerClient = {
   getBlobClient: vi.fn(() => blobClient),
@@ -206,6 +206,68 @@ describe("openBlobContainer", () => {
     expect(containerClient.getBlockBlobClient).toHaveBeenCalledWith("a.json");
     expect(blockBlobClient.uploadData).toHaveBeenCalledWith(Buffer.from("{}"), { blobHTTPHeaders: { blobContentType: "application/json" } });
     expect(blockBlobClient.uploadFile).toHaveBeenCalledWith("/tmp/run.tar.gz", { blobHTTPHeaders: { blobContentType: "application/gzip" } });
+  });
+
+  describe("conditional reads and writes", () => {
+    it("should read a blob with its ETag", async () => {
+      // Arrange
+      blobClient.download.mockResolvedValue({
+        etag: '"0x8D"',
+        readableStreamBody: (async function* () {
+          yield Buffer.from('{"id":');
+          yield Buffer.from('"r1"}');
+        })()
+      });
+      const container = openBlobContainer({ accountName: "pipsa", container: "baselines" });
+
+      // Act
+      const read = await container.downloadVersioned("runs/r1.json");
+
+      // Assert
+      expect(read).toEqual({ data: Buffer.from('{"id":"r1"}'), etag: '"0x8D"' });
+    });
+
+    it("should give null when the blob to read with its ETag does not exist", async () => {
+      // Arrange
+      blobClient.download.mockRejectedValue(restError(404));
+      const container = openBlobContainer({ accountName: "pipsa", container: "baselines" });
+
+      // Act
+      const read = await container.downloadVersioned("runs/missing.json");
+
+      // Assert
+      expect(read).toBeNull();
+    });
+
+    it("should write only if the blob still has the ETag it was read with", async () => {
+      // Arrange
+      blockBlobClient.uploadData.mockResolvedValue({});
+      const container = openBlobContainer({ accountName: "pipsa", container: "baselines" });
+
+      // Act
+      const written = await container.uploadIfUnchanged("runs/r1.json", Buffer.from("{}"), "application/json", '"0x8D"');
+
+      // Assert
+      expect(written).toBe(true);
+      expect(blockBlobClient.uploadData).toHaveBeenCalledWith(Buffer.from("{}"), {
+        blobHTTPHeaders: { blobContentType: "application/json" },
+        conditions: { ifMatch: '"0x8D"' }
+      });
+    });
+
+    it("should say it did not write when the blob has been written since, and rethrow any other error", async () => {
+      // Arrange
+      blockBlobClient.uploadData.mockRejectedValueOnce(restError(412)).mockRejectedValueOnce(restError(500));
+      const container = openBlobContainer({ accountName: "pipsa", container: "baselines" });
+
+      // Act
+      const changed = await container.uploadIfUnchanged("runs/r1.json", Buffer.from("{}"), "application/json", '"0x8D"');
+      const failed = container.uploadIfUnchanged("runs/r1.json", Buffer.from("{}"), "application/json", '"0x8D"');
+
+      // Assert
+      expect(changed).toBe(false);
+      await expect(failed).rejects.toThrow("status 500");
+    });
   });
 
   it("should download a blob to a file", async () => {

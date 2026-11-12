@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASELINE_CONTAINER, baselineContainer, latestBaseline, pullBaseline, pushBaseline } from "./baseline-store.js";
+import { withVersions } from "./core/files/blob-versions.test-helper.js";
 import type { BlobContainer, StorageSpec } from "./core/index.js";
 import type { Environment } from "./environments.js";
 
@@ -181,7 +182,7 @@ async function baselineDir(run: Record<string, unknown>): Promise<string> {
 
 function memoryStore(): BlobContainer & { blobs: Map<string, Buffer> } {
   const blobs = new Map<string, Buffer>();
-  return {
+  const store: Omit<BlobContainer, "downloadVersioned" | "uploadIfUnchanged"> & { blobs: Map<string, Buffer> } = {
     name: "memory",
     blobs,
     async download(blobName) {
@@ -205,4 +206,5 @@ function memoryStore(): BlobContainer & { blobs: Map<string, Buffer> } {
       return [...blobs.keys()].filter((name) => name.startsWith(prefix));
     }
   };
+  return withVersions(store);
 }

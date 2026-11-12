@@ -3,10 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BlobContainer } from "./blob-container.js";
+import { withVersions } from "./blob-versions.test-helper.js";
 import { collectFiles } from "./collect-files.js";
 
 function memoryContainer(blobs: Record<string, string>): BlobContainer {
-  return {
+  const store: Omit<BlobContainer, "downloadVersioned" | "uploadIfUnchanged"> = {
     name: "memory",
     download: async (name) => (name in blobs ? Buffer.from(blobs[name]) : null),
     size: async (name) => (name in blobs ? Buffer.byteLength(blobs[name]) : null),
@@ -15,6 +16,7 @@ function memoryContainer(blobs: Record<string, string>): BlobContainer {
     downloadToFile: async () => {},
     list: async () => []
   };
+  return withVersions(store);
 }
 
 // Moves a faked clock on to each poll, letting real file I/O finish in between, so the clock only

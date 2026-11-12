@@ -208,12 +208,21 @@ sequenceDiagram
   seeded) and, two minutes later, `SIGKILL`, to its whole process group so its Chromium goes too.
 - **Redeploys do not cut a run short.** A deploy with a new ui-baseline image starts a new pod,
   then stops the old one with `SIGTERM`. A master merge that did not rebuild the image leaves the
-  pod running ([Building and deploying it](#building-and-deploying-it)). The old pod starts no new run, fails any queued ones with a message to start them
-  again, and finishes the one it has going (`terminationGracePeriodSeconds: 9000`: the run's two-hour limit, its stop grace, and time to fetch the baseline and store the run). The new pod
-  sees the recent heartbeat of each run queued or going there, leaves it and watches it until it
-  ends; a run that has missed three heartbeats (three minutes) is marked interrupted. The
-  heartbeat goes on while the run's files are archived, so a slow upload is not taken for a pod
-  that has gone.
+  pod running ([Building and deploying it](#building-and-deploying-it)). The old pod starts no new
+  run and finishes the one it has going (`terminationGracePeriodSeconds: 9000`: the run's two-hour
+  limit, its stop grace, and time to fetch the baseline and store the run). The new pod sees the
+  recent heartbeat of each run queued or going there, leaves it and watches it until it ends; a run
+  that has missed three heartbeats (three minutes) is marked interrupted. The heartbeat goes on
+  while the run's files are archived, so a slow upload is not taken for a pod that has gone.
+- **Queued runs are handed to the new pod, not failed.** On `SIGTERM` the old pod stores each run
+  still queued there as handed over: still queued, with no pod (`owner`), and its heartbeat
+  stopped. The new pod claims it and runs it, oldest first, ahead of runs asked of it since. Several
+  pods can be up at once (one merge after another each starts a pod), so a claim is a write that
+  only succeeds if the record is as the pod read it (its blob's ETag): one pod gets each run. A pod
+  that is stopping claims nothing. A handed-over run no pod claims within three heartbeats, as when
+  the cluster is stopped for the night, is marked interrupted by the next pod to start, rather than
+  run the next morning for a tester who has gone home. Its run page says it will still start. With
+  no storage (the app run locally), queued runs are failed with a message to start them again.
 - **A run started on the new pod waits for the old pod's run.** Two checks at once would share the
   IDAM test account and the records seeded in AAT, and change what each other captures. So the new
   pod queues a run until every run it is watching has ended, or been marked interrupted, and until
