@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { CATH_RUN_TOKEN, newRunToken, removeRuns, runStartedAt } from "./run.js";
+import { CATH_RUN_TOKEN, newRunToken, removeRuns } from "./run.js";
 
 describe("newRunToken", () => {
   it("should make a token the run's courts can be found by", () => {
@@ -19,22 +19,10 @@ describe("newRunToken", () => {
   });
 });
 
-describe("runStartedAt", () => {
-  it("should give back when the run started, to the second", () => {
-    // Arrange
-    const started = Date.UTC(2026, 10, 10, 15, 30, 12, 345);
-
-    // Act
-    const read = runStartedAt(newRunToken(started));
-
-    // Assert
-    expect(read).toBe(Date.UTC(2026, 10, 10, 15, 30, 12));
-  });
-});
-
 describe("removeRuns", () => {
-  const RUN = "uicsm9x2kababcd";
-  const OTHER = "uicsm9x2kbfedc";
+  const STARTED_AT = Date.UTC(2026, 10, 10, 15, 30, 12);
+  const RUN = newRunToken(STARTED_AT);
+  const OTHER = newRunToken(STARTED_AT + 60 * 1000);
 
   // A fake CaTH API holding two runs' courts and records, and one real court
   function fakeApi(fail?: (method: string, endpoint: string) => boolean) {
@@ -89,7 +77,7 @@ describe("removeRuns", () => {
     const { api, calls } = fakeApi((method, endpoint) => method === "DELETE" && endpoint === "/test-support/legacy-third-party-users");
 
     // Act
-    const removing = removeRuns(api, { staleAt: runStartedAt(RUN) + 4 * 60 * 60 * 1000 });
+    const removing = removeRuns(api, { staleAt: STARTED_AT + 4 * 60 * 60 * 1000 });
 
     // Assert
     await expect(removing).rejects.toThrow(`could not remove run ${RUN}`);
@@ -103,13 +91,25 @@ describe("removeRuns", () => {
     const { api, calls } = fakeApi();
 
     // Act
-    await removeRuns(api, { staleAt: runStartedAt(RUN) + 4 * 60 * 60 * 1000 });
+    await removeRuns(api, { staleAt: STARTED_AT + 4 * 60 * 60 * 1000 });
 
     // Assert
     const listFetches = calls.filter((call) => call.method === "GET" && call.endpoint.endsWith("third-party-users"));
     expect(listFetches.map((call) => call.endpoint)).toEqual(["/test-support/legacy-third-party-users", "/test-support/third-party-users"]);
     expect(calls).toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [91] } });
     expect(calls).toContainEqual({ method: "DELETE", endpoint: "/test-support/locations", body: { locationIds: [92] } });
+  });
+
+  it("should leave runs that started less than three hours before, as they may still be going", async () => {
+    // Arrange
+    const { api, calls } = fakeApi();
+
+    // Act
+    const removed = await removeRuns(api, { staleAt: STARTED_AT + 2 * 60 * 60 * 1000 });
+
+    // Assert
+    expect(removed).toBe(0);
+    expect(calls.filter((call) => call.method === "DELETE")).toEqual([]);
   });
 
   it("should fetch nothing more when there is no run to remove", async () => {

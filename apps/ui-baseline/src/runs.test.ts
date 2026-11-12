@@ -42,7 +42,14 @@ describe("createRunner", () => {
     expect(baseline).toHaveBeenCalled();
     const [script, args, options] = execute.mock.calls[0];
     expect(script).toBe("apps/ui-baseline/check.ts");
-    expect(args).toEqual(["--env=test", "--baseline=/data/baseline", expect.stringMatching(/--out=.*\/runs\/.*\/check$/), "--no-review", "--all"]);
+    expect(args).toEqual([
+      "--env=test",
+      "--baseline=/data/baseline",
+      expect.stringMatching(/--out=.*\/runs\/.*\/check$/),
+      "--no-review",
+      "--no-evidence",
+      "--all"
+    ]);
     expect(options).toMatchObject({ cwd: "/repo", env: { UI_BASELINE_COMMIT: "abc1234" } });
     expect(runner.get(run.id)).toMatchObject({
       status: "finished",
@@ -1095,5 +1102,133 @@ describe("createRunner when pods are replaced", () => {
     expect(runner.get("r5")?.status).toBe("running");
     runner.stopWatching();
     vi.useRealTimers();
+  });
+
+  it("should hand a run over again when the pod began stopping as it claimed it", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const handedOverAt = new Date().toISOString();
+    blobs.set(
+      "runs/r8.json",
+      Buffer.from(JSON.stringify({ id: "r8", kind: "check", scope: "all", status: "queued", createdAt: handedOverAt, heartbeatAt: handedOverAt, handedOverAt }))
+    );
+    const execute = vi.fn(async () => 0);
+    let drained: Promise<void> | undefined;
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      // SIGTERM arrives while the claim is being written
+      store: {
+        ...store,
+        uploadIfUnchanged: async (...args: Parameters<typeof store.uploadIfUnchanged>) => {
+          const won = await store.uploadIfUnchanged(...args);
+          drained ??= runner.drain();
+          return won;
+        }
+      },
+      baseline,
+      execute,
+      watchMs: 5,
+      pod: "stopping"
+    });
+    await runner.restore();
+
+    // Act
+    await vi.waitFor(() => expect(drained).toBeDefined());
+    await drained;
+
+    // Assert
+    const stored = JSON.parse((blobs.get("runs/r8.json") as Buffer).toString("utf-8"));
+    expect(stored).toMatchObject({ status: "queued", handedOverAt: expect.any(String) });
+    expect(stored.owner).toBeUndefined();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("should not store a stale run as interrupted when another pod stored it again after it was read", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const lastBeat = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const record = { id: "r7", kind: "check", scope: "all", status: "queued", createdAt: lastBeat, heartbeatAt: lastBeat, handedOverAt: lastBeat };
+    blobs.set("runs/r7.json", Buffer.from(JSON.stringify(record)));
+    const { handedOverAt: _, ...claimed } = { ...record, owner: "other", heartbeatAt: new Date().toISOString() };
+    // Another pod claims the run between this pod reading it and storing it interrupted
+    const racing = {
+      ...store,
+      downloadVersioned: async (name: string) => {
+        const read = await store.downloadVersioned(name);
+        blobs.set(name, Buffer.from(JSON.stringify(claimed)));
+        return read;
+      }
+    };
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store: racing, baseline, execute: async () => 0 });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(JSON.parse((blobs.get("runs/r7.json") as Buffer).toString("utf-8"))).toMatchObject({ status: "queued", owner: "other" });
+    expect(runner.get("r7")?.status).toBe("queued");
+    runner.stopWatching();
+  });
+
+  it("should give up on a record write that hangs, so the writes after it are still stored", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    let isFirstWrite = true;
+    const hanging = {
+      ...store,
+      upload: (name: string, data: Buffer, _contentType: string, options?: { abortSignal?: AbortSignal }) => {
+        if (!isFirstWrite) return store.upload(name, data);
+        isFirstWrite = false;
+        return new Promise<void>((_, reject) => options?.abortSignal?.addEventListener("abort", () => reject(new Error("aborted"))));
+      }
+    };
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store: hanging,
+      baseline,
+      execute: async () => 0,
+      publishTimeoutMs: 20
+    });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "routes", routes: ["/a"] });
+    await runner.idle();
+
+    // Assert
+    await vi.waitFor(() => expect(JSON.parse((blobs.get(`runs/${run.id}.json`) as Buffer).toString("utf-8")).finishedAt).toEqual(expect.any(String)));
+  });
+
+  it("should load only the runs stored in the last month, newest first", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const recordAt = (createdAt: string, suffix: string) => {
+      const id = `${createdAt.replace(/[:.]/g, "-")}-${suffix}`;
+      blobs.set(`runs/${id}.json`, Buffer.from(JSON.stringify({ id, kind: "check", scope: "all", status: "finished", createdAt })));
+      return id;
+    };
+    const old = recordAt("2020-01-01T10:00:00.000Z", "aaaaaa");
+    const earlier = recordAt(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), "bbbbbb");
+    const latest = recordAt(new Date().toISOString(), "cccccc");
+    const downloadVersioned = vi.fn(store.downloadVersioned);
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store: { ...store, downloadVersioned }, baseline });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(downloadVersioned.mock.calls.map(([name]) => name)).toEqual([`runs/${latest}.json`, `runs/${earlier}.json`]);
+    expect(runner.get(old)).toBeUndefined();
+    runner.stopWatching();
   });
 });

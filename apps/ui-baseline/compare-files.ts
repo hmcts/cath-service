@@ -1,6 +1,6 @@
 import { parseArgs } from "node:util";
 import { compareArtefactFiles } from "./artefact-files.js";
-import { ARTEFACT_ID, matching } from "./cli-input.js";
+import { ARTEFACT_ID, confinedPath, matching, NAME } from "./cli-input.js";
 import { EXIT_DIFFERENCES } from "./exit-codes.js";
 
 // Compares the PDF and Excel files pip and CaTH made for a publication uploaded to both, by its
@@ -19,13 +19,22 @@ const { values: args } = parseArgs({
 if (!args.pip || !args.cath) throw new Error("--pip and --cath (the publication's artefact id in each app) are required");
 matching(args.pip, ARTEFACT_ID, "--pip");
 matching(args.cath, ARTEFACT_ID, "--cath");
+// The comparison empties folders under --out, and names files after --name (cli-input.ts)
+if (args.name !== undefined) matching(args.name, NAME, "--name");
+const out = args.out === undefined ? undefined : confinedPath(args.out, "--out");
 
-const { out, summary, pipHasFiles, cathHasFiles, links } = await compareArtefactFiles({
+const {
+  out: written,
+  summary,
+  pipHasFiles,
+  cathHasFiles,
+  links
+} = await compareArtefactFiles({
   env: args.env,
   pipArtefactId: args.pip,
   cathArtefactId: args.cath,
   name: args.name,
-  out: args.out
+  out
 });
 if (!pipHasFiles) console.log(`pip has no files for ${args.pip}: check the id, and that pip has finished processing it`);
 if (!cathHasFiles) console.log(`CaTH has no files for ${args.cath}: check the id, and that CaTH has finished processing it`);
@@ -36,5 +45,5 @@ for (const result of summary.results.filter((r) => r.verdict !== "match")) {
   for (const finding of result.findings) console.log(`  ${finding.change.replace(/-/g, " ")}: ${finding.detail}`);
 }
 if (links) console.log(`\n${links.listType}:\n  CaTH: ${links.cath ?? "no page"}\n  pip:  ${links.pip ?? "no page"}`);
-console.log(`\n→ ${out}/compare/files-compare.json`);
+console.log(`\n→ ${written}/compare/files-compare.json`);
 process.exit(t.differs || t.missing || t.extra ? EXIT_DIFFERENCES : 0);

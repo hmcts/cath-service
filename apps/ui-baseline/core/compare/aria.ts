@@ -81,6 +81,8 @@ export function structureOf(nodes: AriaNode[]): PageStructure {
   const visit = (node: AriaNode) => {
     if (node.role === "heading") {
       structure.headings.push({ level: Number(node.attributes.find((a) => a.startsWith("level="))?.slice(6) ?? 0), text: node.name || node.text });
+      // The heading's text is its name, but a link inside it (a court's name leading to its page) is still a link
+      for (const link of linksIn(node)) visit(link);
       return;
     }
     if (node.role === "table") {
@@ -97,6 +99,11 @@ export function structureOf(nodes: AriaNode[]): PageStructure {
   };
   for (const node of nodes) visit(node);
   return structure;
+}
+
+// The links among a node's descendants, outermost first
+function linksIn(node: AriaNode): AriaNode[] {
+  return node.children.flatMap((child) => (child.role === "link" ? [child] : linksIn(child)));
 }
 
 function tableOf(table: AriaNode): { columns: string[]; rows: string[][] } {

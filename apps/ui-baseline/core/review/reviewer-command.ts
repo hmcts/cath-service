@@ -31,7 +31,7 @@ export async function forEachReviewer<T, R>(items: readonly T[], run: (item: T) 
   return answers;
 }
 
-export function readReviewerOutput(stdout: string): ReviewerAnswer {
+function readReviewerOutput(stdout: string): ReviewerAnswer {
   const envelope = parseJson(stdout.trim());
   if (!isResultEnvelope(envelope)) return { outcome: "answered", json: envelope ?? jsonWithin(stdout) };
   if (envelope.subtype === "error_max_turns") return { outcome: "turn-limit", turns: envelope.num_turns };

@@ -1,69 +1,75 @@
 import { spawn } from "node:child_process";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type FakeReviewer, fakeReviewer } from "./fake-reviewer.test-helper.js";
-import { forEachReviewer, REVIEWERS_AT_ONCE, readReviewerOutput, runReviewer } from "./reviewer-command.js";
+import { forEachReviewer, REVIEWERS_AT_ONCE, runReviewer } from "./reviewer-command.js";
 
 vi.mock("node:child_process", () => ({ spawn: vi.fn() }));
 
 const envelope = (fields: Record<string, unknown>) => JSON.stringify({ type: "result", subtype: "success", is_error: false, num_turns: 1, ...fields });
 
-describe("readReviewerOutput", () => {
-  it("should answer with the structured output when Claude Code finished successfully", () => {
+// What runReviewer makes of a reviewer that exits 0 having printed this
+const reviewed = (stdout: string) => {
+  vi.mocked(spawn).mockImplementation((() => fakeReviewer({ stdout })) as never);
+  return runReviewer(["claude"], "p");
+};
+
+describe("runReviewer's reading of what the reviewer printed", () => {
+  it("should answer with the structured output when Claude Code finished successfully", async () => {
     // Act
-    const answer = readReviewerOutput(envelope({ num_turns: 4, result: "ignored", structured_output: { verdicts: [] } }));
+    const answer = await reviewed(envelope({ num_turns: 4, result: "ignored", structured_output: { verdicts: [] } }));
 
     // Assert
     expect(answer).toEqual({ outcome: "answered", turns: 4, json: { verdicts: [] } });
   });
 
-  it("should read JSON from the result text when there is no structured output", () => {
+  it("should read JSON from the result text when there is no structured output", async () => {
     // Act
-    const answer = readReviewerOutput(envelope({ result: 'Here:\n{"verdicts":[{"id":"f1"}]}\n' }));
+    const answer = await reviewed(envelope({ result: 'Here:\n{"verdicts":[{"id":"f1"}]}\n' }));
 
     // Assert
     expect(answer).toEqual({ outcome: "answered", turns: 1, json: { verdicts: [{ id: "f1" }] } });
   });
 
-  it("should report the turn limit as an outcome of its own rather than an answer", () => {
+  it("should report the turn limit as an outcome of its own rather than an answer", async () => {
     // Act
-    const answer = readReviewerOutput(envelope({ subtype: "error_max_turns", is_error: true, num_turns: 15 }));
+    const answer = await reviewed(envelope({ subtype: "error_max_turns", is_error: true, num_turns: 15 }));
 
     // Assert
     expect(answer).toEqual({ outcome: "turn-limit", turns: 15 });
   });
 
-  it("should throw when the result is an error, even with a success subtype", () => {
+  it("should throw when the result is an error, even with a success subtype", async () => {
     // Act
-    const read = () => readReviewerOutput(envelope({ is_error: true, result: "AWS authentication failed" }));
+    const read = reviewed(envelope({ is_error: true, result: "AWS authentication failed" }));
 
     // Assert
-    expect(read).toThrow("reviewer stopped (success, is_error): AWS authentication failed");
+    await expect(read).rejects.toThrow("reviewer stopped (success, is_error): AWS authentication failed");
   });
 
-  it("should throw when the result has any other error subtype", () => {
+  it("should throw when the result has any other error subtype", async () => {
     // Act
-    const read = () => readReviewerOutput(envelope({ subtype: "error_during_execution", is_error: true }));
+    const read = reviewed(envelope({ subtype: "error_during_execution", is_error: true }));
 
     // Assert
-    expect(read).toThrow("reviewer stopped (error_during_execution, is_error)");
+    await expect(read).rejects.toThrow("reviewer stopped (error_during_execution, is_error)");
   });
 
-  it("should answer with plain JSON, or JSON inside prose, from a reviewer that is not Claude Code", () => {
+  it("should answer with plain JSON, or JSON inside prose, from a reviewer that is not Claude Code", async () => {
     // Act
-    const plain = readReviewerOutput('{"verdicts":[]}');
-    const wrapped = readReviewerOutput('Sure.\n{"verdicts":[]}\nDone.');
+    const plain = await reviewed('{"verdicts":[]}');
+    const wrapped = await reviewed('Sure.\n{"verdicts":[]}\nDone.');
 
     // Assert
     expect(plain).toEqual({ outcome: "answered", json: { verdicts: [] } });
     expect(wrapped).toEqual({ outcome: "answered", json: { verdicts: [] } });
   });
 
-  it("should throw when the reviewer answered with no JSON at all", () => {
+  it("should throw when the reviewer answered with no JSON at all", async () => {
     // Act
-    const read = () => readReviewerOutput("I could not decide");
+    const read = reviewed("I could not decide");
 
     // Assert
-    expect(read).toThrow("reviewer answered without JSON: I could not decide");
+    await expect(read).rejects.toThrow("reviewer answered without JSON: I could not decide");
   });
 });
 

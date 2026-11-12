@@ -331,6 +331,18 @@ describe("compareRuns", () => {
         'link extra: "Contact us"'
       ]);
     });
+
+    it("should compare a link inside a heading as a link, as well as the heading", async () => {
+      // Arrange
+      const source = ['- heading "Court A" [level=2]:', '  - link "Court A":', "    - /url: /court"].join("\n");
+      const target = ['- heading "Court A" [level=2]'].join("\n");
+
+      // Act
+      const findings = await compareOne({ aria: source }, { aria: target });
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['link missing: "Court A"']);
+    });
   });
 
   describe("text", () => {

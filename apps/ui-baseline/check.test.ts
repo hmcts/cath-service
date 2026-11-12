@@ -479,6 +479,23 @@ describe("check", () => {
         );
       });
 
+      it("should take the fixture court to the run's copy of it when the baseline was recorded locally", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+        // A local recording seeds pip on the fixtures' own courts, so its seed has no locations
+        writeJson(path.join(baseline, "pages/page--summary-of-publications/en/default/provenance.json"), {
+          url: "https://pip.test/summary-of-publications?locationId=9&artefactId=PIP-ART-1"
+        });
+
+        // Act
+        await runCheck(["--ticket", "42"]);
+
+        // Assert
+        expect(targetsIn("pages").find((t) => t.id === "page--summary-of-publications")?.url).toBe(
+          `${TARGET}/summary-of-publications?locationId=90001&artefactId=CATH-ART-1`
+        );
+      });
+
       it("should remove the run, and its record, when the check ends", async () => {
         // Arrange
         scriptsSucceed(RUN_SEED);
@@ -519,6 +536,24 @@ describe("check", () => {
 
         // Assert
         expect(mocks.removeRuns).toHaveBeenCalledTimes(1);
+        expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
+      });
+
+      it("should keep listening for a stop while the run is being removed, so the stop waits for the removal", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+        let finishRemoving: () => void = () => {};
+        mocks.removeRuns.mockImplementationOnce(() => new Promise<void>((resolve) => (finishRemoving = resolve)));
+
+        // Act
+        const checking = runCheck(["--ticket", "42"]);
+        await vi.waitFor(() => expect(mocks.removeRuns).toHaveBeenCalled());
+        const listenersWhileRemoving = process.listenerCount("SIGTERM");
+        finishRemoving();
+        await checking;
+
+        // Assert
+        expect(listenersWhileRemoving).toBe(listenersBefore + 1);
         expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
       });
 

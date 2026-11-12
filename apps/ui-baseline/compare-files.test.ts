@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type ArtefactFilesResult, compareArtefactFiles } from "./artefact-files.js";
 
@@ -42,15 +44,33 @@ describe("compare-files script", () => {
     expect(compareArtefactFiles).not.toHaveBeenCalled();
   });
 
+  it("should refuse an output folder outside the tool's output and temp folders, which it would empty", async () => {
+    // Act and assert
+    await expect(run("--pip", PIP, "--cath", CATH, "--out", "/home/someone/work")).rejects.toThrow("--out must be inside");
+    expect(compareArtefactFiles).not.toHaveBeenCalled();
+  });
+
+  it("should refuse a name that is not lower-case letters, numbers and hyphens", async () => {
+    // Act and assert
+    await expect(run("--pip", PIP, "--cath", CATH, "--name", "../../x")).rejects.toThrow('--name "../../x" is not valid');
+    expect(compareArtefactFiles).not.toHaveBeenCalled();
+  });
+
   it("should print the totals and exit 0 when every file matches", async () => {
     // Arrange
     vi.mocked(compareArtefactFiles).mockResolvedValue(result({ totals: { files: 2, match: 2, differs: 0, missing: 0, extra: 0 }, results: [] }));
 
     // Act
-    await run("--pip", PIP, "--cath", CATH, "--name", "civil-list", "--out", "/tmp/out");
+    await run("--pip", PIP, "--cath", CATH, "--name", "civil-list", "--out", path.join(tmpdir(), "out"));
 
     // Assert
-    expect(compareArtefactFiles).toHaveBeenCalledWith({ env: "aat", pipArtefactId: PIP, cathArtefactId: CATH, name: "civil-list", out: "/tmp/out" });
+    expect(compareArtefactFiles).toHaveBeenCalledWith({
+      env: "aat",
+      pipArtefactId: PIP,
+      cathArtefactId: CATH,
+      name: "civil-list",
+      out: path.join(tmpdir(), "out")
+    });
     expect(printed()).toContain("2 files: 2 match, 0 differ, 0 CaTH did not make, 0 only CaTH made");
     expect(printed()).toContain("→ /out/compare/files-compare.json");
     expect(printed()).not.toContain("has no files");
