@@ -4,7 +4,7 @@ import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { ARTEFACT_ID, LIST_TYPE, ROUTE } from "../cli-input.js";
+import { ARTEFACT_ID, LIST_TYPE, NAME, ROUTE } from "../cli-input.js";
 import type { BlobContainer } from "../core/index.js";
 import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK, EXIT_TIMED_OUT } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
@@ -35,11 +35,17 @@ const HEARTBEATS_BEFORE_STALE = 3;
 // How often a pod looks at the stored record of a run going on another pod
 const WATCH_MS = 30 * 1000;
 const RESTARTING = "The hosted check is restarting. Start the run again in a few minutes.";
-const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
 // Stored runs fetched at once when the pod starts
 const RESTORE_CONCURRENCY = 8;
+// How far back a starting pod loads stored runs. Older ones stay in storage, but are not listed: a
+// pod would otherwise load every run ever stored each time it starts.
+const RESTORE_DAYS = 30;
+// How long one write of a run record may take. Records are written one after another, so a write
+// that hangs would hold up every heartbeat after it, and other pods would take the run for
+// interrupted while it is still going.
+const PUBLISH_TIMEOUT_MS = 20 * 1000;
 // tar runs off the event loop, so a big run's archive does not stall the pages or the health check
 const execFileAsync = promisify(execFile);
 
@@ -56,11 +62,15 @@ export function createRunner(options: RunnerOptions): Runner {
   // Each queued or running run's heartbeat (HEARTBEAT_MS), until its last record is stored
   const heartbeats = new Map<string, ReturnType<typeof setInterval>>();
   // Set when the pod is stopping: the run going is finished, and no other is started
-  let draining = false;
+  let isDraining = false;
   const heartbeatMs = options.heartbeatMs ?? HEARTBEAT_MS;
   const watchMs = options.watchMs ?? WATCH_MS;
   const staleMs = heartbeatMs * HEARTBEATS_BEFORE_STALE;
   const watching = new Set<ReturnType<typeof setInterval>>();
+  // Looks at watched runs still in progress, which a stopping pod waits for: one may have just
+  // claimed a run, and must hand it over again before the pod stops
+  const looking = new Set<Promise<void>>();
+  const publishTimeoutMs = options.publishTimeoutMs ?? PUBLISH_TIMEOUT_MS;
   // Lists the stored runs again while the pod is up (scan), from when the first load ends
   let scanner: ReturnType<typeof setInterval> | undefined;
   // Stored runs being loaded, so two lists at once do not load, and watch, the same run twice
@@ -91,18 +101,16 @@ export function createRunner(options: RunnerOptions): Runner {
     if (!store) return Promise.resolve();
     published.set(record.id, record);
     publishing = publishing
-      .then(() => store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json"))
+      .then(() =>
+        store.upload(`${RUNS_PREFIX}${record.id}.json`, Buffer.from(JSON.stringify(record)), "application/json", {
+          abortSignal: AbortSignal.timeout(publishTimeoutMs)
+        })
+      )
       .catch((error: Error) => console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`));
     return publishing;
   };
 
   const perform = async (record: RunRecord) => {
-    if (draining) {
-      const failed: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: RESTARTED_BEFORE_START };
-      runs.set(record.id, failed);
-      await publish(failed);
-      return;
-    }
     const dir = runDir(record.id);
     let baseline: PinnedBaseline | null = null;
     try {
@@ -225,19 +233,28 @@ export function createRunner(options: RunnerOptions): Runner {
       elsewhere.delete(id);
       end();
     };
-    // Never throws: a rejection from an interval's callback would be unhandled, and stop the pod
-    const timer = setInterval(async () => {
+    const look = async () => {
       const read = await store.downloadVersioned(name).catch(() => null);
       // One half written or empty is passed over: the next heartbeat stores it whole
       const stored = read ? parseRecord(read.data, id) : null;
       if (!read || !stored || !watching.has(timer)) return;
-      if (handedOver(stored) && stillGoing(stored, staleMs) && !draining) {
+      if (handedOver(stored) && stillGoing(stored, staleMs) && !isDraining) {
         const { handedOverAt, ...rest } = stored;
         const claimed: RunRecord = { ...rest, owner: pod, takenOverAt: handedOverAt, heartbeatAt: new Date().toISOString() };
         // Another pod took it, or storage failed: looked at again on the next tick
         const won = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(claimed)), "application/json", read.etag).catch(() => false);
-        if (!won || !watching.has(timer)) return;
+        if (!won) return;
+        // Storage now names this pod as the run's, so the run is this pod's to run or hand over,
+        // even if the watching stopped while the claim was written
         stop();
+        if (isDraining) {
+          // The pod began stopping as it claimed the run: handed over again, as drain does
+          const now = new Date().toISOString();
+          const next: RunRecord = { ...rest, handedOverAt: now, heartbeatAt: now };
+          runs.set(id, next);
+          await publish(next);
+          return;
+        }
         console.log(`[ui-baseline] took over run ${id}, queued on a pod that stopped`);
         runs.set(id, claimed);
         published.set(id, claimed);
@@ -258,6 +275,13 @@ export function createRunner(options: RunnerOptions): Runner {
         return;
       }
       runs.set(id, stored);
+    };
+    // Never throws: a rejection from an interval's callback would be unhandled, and stop the pod
+    const timer = setInterval(() => {
+      const looked: Promise<void> = look()
+        .catch((error: Error) => console.error(`[ui-baseline] could not look at run ${id}: ${error.message}`))
+        .finally(() => looking.delete(looked));
+      looking.add(looked);
     }, watchMs);
     watching.add(timer);
   };
@@ -299,19 +323,19 @@ export function createRunner(options: RunnerOptions): Runner {
     pumping ??= (async () => {
       await loaded;
       for (;;) {
-        while (elsewhere.size && !draining) {
+        while (elsewhere.size && !isDraining) {
           console.log(`[ui-baseline] waiting for the runs going on another pod: ${[...elsewhere.keys()].join(", ")}`);
           await Promise.all([...elsewhere.values()].map(({ ended }) => ended));
         }
         // When the pod is stopping, the runs left were handed over (drain)
-        const record = draining ? undefined : pending.shift();
+        const record = isDraining ? undefined : pending.shift();
         if (!record) return;
         await runOne(record);
       }
     })().finally(() => {
       pumping = null;
       // A run asked for as the last one ended is not left waiting
-      if (pending.length && !draining) void pump();
+      if (pending.length && !isDraining) void pump();
     });
     return pumping;
   };
@@ -323,7 +347,7 @@ export function createRunner(options: RunnerOptions): Runner {
 
   return {
     start(request) {
-      if (draining) throw new RunRequestError(RESTARTING);
+      if (isDraining) throw new RunRequestError(RESTARTING);
       const createdAt = new Date().toISOString();
       const record: RunRecord = {
         ...validated(request),
@@ -360,7 +384,7 @@ export function createRunner(options: RunnerOptions): Runner {
       const store = options.store;
       if (store)
         void loaded.then(() => {
-          if (draining || scanner) return;
+          if (isDraining || scanner) return;
           scanner = setInterval(
             () => void scan(store).catch((error: Error) => console.error(`[ui-baseline] could not list stored runs: ${error.message}`)),
             watchMs
@@ -373,7 +397,7 @@ export function createRunner(options: RunnerOptions): Runner {
       while (pumping) await pumping;
     },
     async drain() {
-      draining = true;
+      isDraining = true;
       stopWatching();
       // Each queued run is handed to the next pod, which runs it once the run going here has ended:
       // still queued, with no pod. Its heartbeat stops, so if no pod takes it (none is starting, as when
@@ -389,6 +413,7 @@ export function createRunner(options: RunnerOptions): Runner {
         void publish(next);
       }
       while (pumping) await pumping;
+      await Promise.all([...looking]);
       await publishing;
     },
     stopWatching
@@ -407,17 +432,17 @@ export function createRunner(options: RunnerOptions): Runner {
   async function restoreRuns() {
     const store = options.store;
     if (!store) return;
-    await loadAll(
-      store,
-      (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"))
-    );
+    // Newest first, so the runs still queued or going, which another pod may be waiting to hand over,
+    // are loaded before the history. A run's id starts with the day it was asked for.
+    const since = daysAgo(RESTORE_DAYS);
+    const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json") && path.basename(blob).slice(0, 10) >= since);
+    await loadAll(store, names.sort().reverse());
   }
 
   // The runs stored since yesterday that this pod does not know. A run's id starts with when it was
   // asked for, so only those two days are listed: a run still queued or going is never older.
   async function scan(store: BlobContainer) {
-    const day = (offset: number) => new Date(Date.now() - offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const names = (await Promise.all([day(1), day(0)].map((date) => store.list(`${RUNS_PREFIX}${date}`)))).flat();
+    const names = (await Promise.all([daysAgo(1), daysAgo(0)].map((date) => store.list(`${RUNS_PREFIX}${date}`)))).flat();
     await loadAll(
       store,
       names.filter((name) => name.endsWith(".json") && !runs.has(path.basename(name, ".json")))
@@ -436,9 +461,9 @@ export function createRunner(options: RunnerOptions): Runner {
     if (loading.has(name)) return;
     loading.add(name);
     try {
-      const data = await store.download(name);
-      if (!data) return;
-      const record = parseRecord(data, name);
+      const read = await store.downloadVersioned(name);
+      if (!read) return;
+      const record = parseRecord(read.data, name);
       if (!record) return;
       // A run started on this pod while the others were loading is newer than anything stored
       if (runs.has(record.id)) return;
@@ -452,14 +477,25 @@ export function createRunner(options: RunnerOptions): Runner {
         watch(store, record.id);
         return;
       }
-      // Stored as well, or every pod after this one would find it still running
+      // Stored as well, or every pod after this one would find it still running. Only if the record is
+      // still the one read: one a pod has claimed or stored a heartbeat for since is left to that pod,
+      // and watched, as a run still going is.
       const interrupted: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
-      runs.set(record.id, interrupted);
-      await publish(interrupted);
+      const isMarked = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(interrupted)), "application/json", read.etag).catch((error: Error) => {
+        console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`);
+        return false;
+      });
+      runs.set(record.id, isMarked ? interrupted : record);
+      if (!isMarked) watch(store, record.id);
     } finally {
       loading.delete(name);
     }
   }
+}
+
+// The day (YYYY-MM-DD) the given number of days ago
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 // A stored run record, or null (logged) when it is not one: empty, or cut short as it was written
@@ -507,7 +543,7 @@ function commandFor(record: RunRecord, dir: string, environment: string, baselin
         : record.routes.flatMap((route) => ["--route", route]);
   return {
     script: "apps/ui-baseline/check.ts",
-    args: [`--env=${environment}`, `--baseline=${baseline}`, `--out=${path.join(dir, "check")}`, "--no-review", ...scope]
+    args: [`--env=${environment}`, `--baseline=${baseline}`, `--out=${path.join(dir, "check")}`, "--no-review", "--no-evidence", ...scope]
   };
 }
 
@@ -673,6 +709,8 @@ export interface RunnerOptions {
   watchMs?: number;
   // This pod's name in the run records it owns; HOSTNAME when not given
   pod?: string;
+  // How long one write of a run record may take; PUBLISH_TIMEOUT_MS when not given
+  publishTimeoutMs?: number;
 }
 
 export interface PinnedBaseline {

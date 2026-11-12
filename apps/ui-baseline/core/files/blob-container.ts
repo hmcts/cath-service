@@ -46,8 +46,9 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
         throw error;
       }
     },
-    async upload(blobName, data, contentType) {
-      await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType } });
+    // abortSignal ends a write that hangs, retries and all
+    async upload(blobName, data, contentType, options) {
+      await container.getBlockBlobClient(blobName).uploadData(data, { blobHTTPHeaders: { blobContentType: contentType }, abortSignal: options?.abortSignal });
     },
     // Writes the blob only if it is still as it was read (its ETag); false when it was written since
     async uploadIfUnchanged(blobName, data, contentType, etag) {
@@ -85,7 +86,7 @@ export interface BlobContainer {
   download(blobName: string): Promise<Buffer | null>;
   downloadVersioned(blobName: string): Promise<{ data: Buffer; etag: string } | null>;
   size(blobName: string): Promise<number | null>;
-  upload(blobName: string, data: Buffer, contentType: string): Promise<void>;
+  upload(blobName: string, data: Buffer, contentType: string, options?: { abortSignal?: AbortSignal }): Promise<void>;
   uploadIfUnchanged(blobName: string, data: Buffer, contentType: string, etag: string): Promise<boolean>;
   uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
   downloadToFile(blobName: string, file: string): Promise<void>;

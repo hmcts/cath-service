@@ -51,10 +51,10 @@ const seedable = manifest.publications.filter((publication) => publication.paths
 const run = deployed ? newRunToken() : null;
 // Until the record of the run is written, nothing else knows its token, so a run that fails partway
 // (a court that could not be created, say) removes what it seeded as this script ends
-let recorded = false;
+let isRecorded = false;
 await using _removesUnrecordedRun = {
   [Symbol.asyncDispose]: async () => {
-    if (run && !recorded) await removeRuns(api, { token: run }).catch((error: Error) => console.log(`could not remove run ${run}: ${error.message}`));
+    if (run && !isRecorded) await removeRuns(api, { token: run }).catch((error: Error) => console.log(`could not remove run ${run}: ${error.message}`));
   }
 };
 const locations = run
@@ -120,7 +120,7 @@ await local?.close();
 
 await mkdir(path.dirname(OUTPUT), { recursive: true });
 await writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`);
-recorded = true;
+isRecorded = true;
 console.log(`wrote ${OUTPUT}`);
 
 // The environment's publication API client, or for a local CaTH one given in the root .env

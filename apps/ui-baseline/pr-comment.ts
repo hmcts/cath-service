@@ -100,11 +100,11 @@ export function buildComment(input: CommentInput): string {
 
 // Creates the parity comment on the PR, or updates it if one exists
 export function postComment(repo: string, pr: number, body: string): string {
-  const comments = JSON.parse(execFileSync(systemCommand("gh"), ["api", `repos/${repo}/issues/${pr}/comments`, "--paginate"], { encoding: "utf-8" })) as {
-    id: number;
-    body: string;
-    html_url: string;
-  }[];
+  // --slurp gives one array of pages; without it gh prints each page's array after the last, which is not JSON
+  const pages = JSON.parse(
+    execFileSync(systemCommand("gh"), ["api", `repos/${repo}/issues/${pr}/comments`, "--paginate", "--slurp"], { encoding: "utf-8" })
+  ) as { id: number; body: string; html_url: string }[][];
+  const comments = pages.flat();
   const existing = comments.find((comment) => comment.body.includes(COMMENT_MARKER));
   const response = existing
     ? execFileSync(systemCommand("gh"), ["api", "--method", "PATCH", `repos/${repo}/issues/comments/${existing.id}`, "-f", `body=${body}`], {

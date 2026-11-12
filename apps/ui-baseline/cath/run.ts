@@ -33,11 +33,6 @@ export function runEmail(token: string, email: string): string {
   return `${token}.${email}`;
 }
 
-// When the run with this token started, from the seconds it carries
-export function runStartedAt(token: string): number {
-  return Number.parseInt(token.slice(TOKEN_PREFIX.length, -4), 36) * 1000;
-}
-
 // Copies of the fixture courts for the run: each fixture location id -> the id CaTH gave the copy
 export async function createRunLocations(api: CathApi, token: string, fixtureLocationIds: number[]): Promise<Record<string, number>> {
   const locations: Record<string, number> = {};
@@ -86,6 +81,11 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
   }
   if (failed.length) throw new Error(`could not remove run${failed.length === 1 ? "" : "s"} ${failed.join(", ")}`);
   return byRun.size;
+}
+
+// When the run with this token started, from the seconds it carries
+function runStartedAt(token: string): number {
+  return Number.parseInt(token.slice(TOKEN_PREFIX.length, -4), 36) * 1000;
 }
 
 // What removeRunRecords looks through for each run's records

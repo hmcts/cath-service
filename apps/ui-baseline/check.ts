@@ -95,6 +95,9 @@ const { values: given } = parseArgs({
     // again with --no-seed; a later check removes it once it is three hours old
     "keep-seed": { type: "boolean", default: false },
     "no-review": { type: "boolean", default: false },
+    // Skip the PR evidence (the zipped report, side-by-side screenshots and PR comment): the hosted
+    // check serves the report itself, and never posts to a PR
+    "no-evidence": { type: "boolean", default: false },
     // Skip comparing the PDF and Excel files each list generates
     "no-files": { type: "boolean", default: false },
     reviewer: { type: "string" },
@@ -238,13 +241,13 @@ const needsSignIn =
   scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
   scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
 if (!needsSignIn) progress.skip("sign-in", "no page in scope needs it");
-const seeding = seedIds.length > 0 && !args["no-seed"];
+const isSeeding = seedIds.length > 0 && !args["no-seed"];
 // The environment's seed file may hold a run an earlier check kept (--keep-seed). A check uses it only
 // when it seeds (replacing it) or is asked to check that run again (--no-seed); otherwise it, and the
 // sign-in and journeys it passes it to, get a file that is never written, so they neither make
 // records on that run nor remove it.
-const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}${seeding || args["no-seed"] ? "" : "-unseeded"}.json`);
-if (seeding) {
+const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}${isSeeding || args["no-seed"] ? "" : "-unseeded"}.json`);
+if (isSeeding) {
   step("Seeding CaTH");
   progress.start("seed");
   const seedProcess = spawnSync(
@@ -269,13 +272,19 @@ const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8"
 // --keep-seed leaves it, and a check of a kept run (--no-seed) leaves that run for the check that
 // next seeds. A removal that fails does not fail the check: a later check removes the
 // run once it is three hours old.
-let seedRemoved = false;
+// The listeners stay until the removal has ended: a stop that arrives while it is going waits for it,
+// where with no listener left the process would exit at once (tsx's own handler) and cut it short.
 const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
 const onStop = (signal: keyof typeof stopped) => void removeSeed().finally(() => process.exit(stopped[signal]));
-const removeSeed = async (): Promise<void> => {
-  if (seedRemoved || !seeding || !seed?.runToken || args["keep-seed"]) return;
-  seedRemoved = true;
-  for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
+let removal: Promise<void> | undefined;
+const removeSeed = (): Promise<void> => {
+  removal ??= removeSeedOnce().finally(() => {
+    for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
+  });
+  return removal;
+};
+const removeSeedOnce = async (): Promise<void> => {
+  if (!isSeeding || !seed?.runToken || args["keep-seed"]) return;
   step("Removing what the check seeded");
   try {
     await removeRuns(cathApi(process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl), { token: seed.runToken });
@@ -285,7 +294,7 @@ const removeSeed = async (): Promise<void> => {
   }
 };
 await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
-if (seeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
+if (isSeeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);
@@ -565,8 +574,8 @@ const journeysDiffer = (journeysCompared?.results ?? [])
 if (journeysCompared) console.log(`  ${journeysDiffer.length} of ${journeysCompared.totals.runs} journey runs differ from pip`);
 for (const line of journeysDiffer) console.log(`    ${line}`);
 
-if (args.all) {
-  progress.skip("evidence", "not written for a check of everything");
+if (args.all || args["no-evidence"]) {
+  progress.skip("evidence", args.all ? "not written for a check of everything" : "not asked for");
   await finish();
 }
 
@@ -786,9 +795,11 @@ async function compareDownloads(): Promise<FileCompareSummary | null> {
 // which only CaTH routes that take one in the path use. A baseline recorded in a shared environment
 // put the fixtures' locations at ids of its own (pip/run.ts), where CaTH has them at the fixtures'.
 function cathIdsFor(pip: SeedResult | null, cath: SeedResult | null, signedIn: SignInResult | null): CathIds {
-  // A check of a shared CaTH seeded copies of the fixture courts too, at ids of their own
+  // A check of a shared CaTH seeded copies of the fixture courts too, at ids of their own. Either app
+  // may have its courts at the fixtures' ids: a baseline recorded locally always does.
+  const fixtureLocations = new Set([...Object.keys(pip?.locations ?? {}), ...Object.keys(cath?.locations ?? {})]);
   const ids = new Map<string, string>(
-    Object.entries(pip?.locations ?? {}).map(([fixture, pipLocation]) => [String(pipLocation), String(cath?.locations?.[fixture] ?? fixture)])
+    [...fixtureLocations].map((fixture) => [String(pip?.locations?.[fixture] ?? fixture), String(cath?.locations?.[fixture] ?? fixture)])
   );
   for (const [fixture, publication] of Object.entries(pip?.publications ?? {})) {
     const cathArtefact = cath?.publications[fixture]?.artefactId;

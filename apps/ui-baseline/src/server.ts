@@ -47,7 +47,6 @@ app.listen(PORT, () => console.log(`[ui-baseline] checking CaTH in ${environment
 // pod, which shows the run going here until it ends
 process.once("SIGTERM", () => {
   console.log("[ui-baseline] stopping: finishing the run going, handing the queued ones to the next pod");
-  runner.stopWatching();
   void runner.drain().finally(() => process.exit(0));
 });
 
