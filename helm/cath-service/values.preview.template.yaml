@@ -13,9 +13,6 @@ api:
   enabled: true
 crons:
   enabled: true
-# The hosted parity check only runs in aat
-uiBaseline:
-  enabled: false
 
 # Per-PR isolated blob storage provisioned via Azure Service Operator
 blobstorage:

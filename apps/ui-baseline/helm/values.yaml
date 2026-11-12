@@ -1,5 +1,7 @@
 nodejs:
-  releaseNameOverride: "{{ .Release.Name }}-ui-baseline"
+  # A release of its own (job.helm-deploy.yml), named <cath-service release>-ui-baseline, so its
+  # resources keep the names they had as part of that release
+  releaseNameOverride: "{{ .Release.Name }}"
   applicationPort: 8090
   aadIdentityName: cath
   ingressHost: cath-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net
