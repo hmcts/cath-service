@@ -195,13 +195,26 @@ jobs:
       # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
       # which would still replace the pod, and fail the runs queued in it. A digest only changes
       # when the image does. Elsewhere the chart is disabled and the tag is left as it was.
+      # The lookup is tried three times, 5s then 15s apart, so a passing registry error does not stop
+      # the whole release (web and api share its --atomic deploy). It never falls back to the tag: an
+      # image that cannot be found might not exist, and a pod that cannot pull it would hold the
+      # deploy for its 15 minute timeout and then roll web and api back too.
       - name: Pin the ui-baseline image
         run: |
           REF=":${UI_BASELINE_IMAGE:-}"
           if [ "${UI_BASELINE_ENABLED}" = "true" ]; then
             IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
-            if ! DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}') || [ -z "$DIGEST" ]; then
-              echo "::error::Could not find the digest of ${IMAGE}"
+            DIGEST=""
+            for WAIT in 5 15 0; do
+              DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}') && [ -n "$DIGEST" ] && break
+              DIGEST=""
+              if [ "$WAIT" -gt 0 ]; then
+                echo "::warning::Could not look up the digest of ${IMAGE}; trying again in ${WAIT}s"
+                sleep "$WAIT"
+              fi
+            done
+            if [ -z "$DIGEST" ]; then
+              echo "::error::Could not find the digest of ${IMAGE} after 3 attempts"
               exit 1
             fi
             REF="@${DIGEST}"
