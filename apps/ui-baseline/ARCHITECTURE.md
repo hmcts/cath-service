@@ -221,8 +221,14 @@ sequenceDiagram
   only succeeds if the record is as the pod read it (its blob's ETag): one pod gets each run. A pod
   that is stopping claims nothing. A handed-over run no pod claims within three heartbeats, as when
   the cluster is stopped for the night, is marked interrupted by the next pod to start, rather than
-  run the next morning for a tester who has gone home. Its run page says it will still start. With
-  no storage (the app run locally), queued runs are failed with a message to start them again.
+  run the next morning for a tester who has gone home. Its run page says it will still start, until
+  it does (`handedOverAt`, then `takenOverAt` once claimed). With no storage (the app run locally),
+  queued runs are failed with a message to start them again.
+- **A pod lists the stored runs again every 30 seconds**, not only when it starts. The old pod still
+  takes requests until it is stopped, so a run can be queued there after the new pod first looked;
+  listing again finds it, to watch and then claim. Only runs asked for since yesterday are listed,
+  by the date their ids start with. Marking a watched run interrupted is a conditional write too: if
+  a pod claimed the run meanwhile, the record is read again rather than shown as interrupted.
 - **A run started on the new pod waits for the old pod's run.** Two checks at once would share the
   IDAM test account and the records seeded in AAT, and change what each other captures. So the new
   pod queues a run until every run it is watching has ended, or been marked interrupted, and until

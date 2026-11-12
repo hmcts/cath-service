@@ -61,6 +61,10 @@ export function createRunner(options: RunnerOptions): Runner {
   const watchMs = options.watchMs ?? WATCH_MS;
   const staleMs = heartbeatMs * HEARTBEATS_BEFORE_STALE;
   const watching = new Set<ReturnType<typeof setInterval>>();
+  // Lists the stored runs again while the pod is up (scan), from when the first load ends
+  let scanner: ReturnType<typeof setInterval> | undefined;
+  // Stored runs being loaded, so two lists at once do not load, and watch, the same run twice
+  const loading = new Set<string>();
   // Runs going on another pod, each settling when it ends there. A run here waits for them before it
   // starts: two checks at once share the IDAM test accounts and the records seeded in CaTH, so each
   // would change what the other captures.
@@ -228,8 +232,8 @@ export function createRunner(options: RunnerOptions): Runner {
       const stored = read ? parseRecord(read.data, id) : null;
       if (!read || !stored || !watching.has(timer)) return;
       if (handedOver(stored) && stillGoing(stored, staleMs) && !draining) {
-        const { handedOverAt: _, ...rest } = stored;
-        const claimed: RunRecord = { ...rest, owner: pod, heartbeatAt: new Date().toISOString() };
+        const { handedOverAt, ...rest } = stored;
+        const claimed: RunRecord = { ...rest, owner: pod, takenOverAt: handedOverAt, heartbeatAt: new Date().toISOString() };
         // Another pod took it, or storage failed: looked at again on the next tick
         const won = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(claimed)), "application/json", read.etag).catch(() => false);
         if (!won || !watching.has(timer)) return;
@@ -243,14 +247,14 @@ export function createRunner(options: RunnerOptions): Runner {
         return;
       }
       if (!stillGoing(stored, staleMs)) {
+        const ended = stored.status !== "queued" && stored.status !== "running";
+        const last: RunRecord = ended ? stored : { ...stored, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
+        // Marked interrupted only if the record is still the one read. If a pod claimed the run
+        // meanwhile, or the write failed, it is read again on the next tick.
+        if (!ended && !(await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(last)), "application/json", read.etag).catch(() => false))) return;
+        if (!watching.has(timer)) return;
         stop();
-        const last =
-          stored.status === "queued" || stored.status === "running"
-            ? { ...stored, status: "failed" as const, finishedAt: new Date().toISOString(), error: INTERRUPTED }
-            : stored;
         runs.set(id, last);
-        // Only if the record is still the one read: a pod may have claimed the run meanwhile
-        if (last !== stored) await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(last)), "application/json", read.etag).catch(() => false);
         return;
       }
       runs.set(id, stored);
@@ -351,6 +355,18 @@ export function createRunner(options: RunnerOptions): Runner {
     restore() {
       const work = restoreRuns();
       loaded = work.catch(() => undefined);
+      // Runs another pod stores after this one listed them (one queued on the pod this one is
+      // replacing, which still takes requests until it is stopped) are found by listing again
+      const store = options.store;
+      if (store)
+        void loaded.then(() => {
+          if (draining || scanner) return;
+          scanner = setInterval(
+            () => void scan(store).catch((error: Error) => console.error(`[ui-baseline] could not list stored runs: ${error.message}`)),
+            watchMs
+          );
+          scanner.unref?.();
+        });
       return work;
     },
     async idle() {
@@ -379,6 +395,8 @@ export function createRunner(options: RunnerOptions): Runner {
   };
 
   function stopWatching() {
+    clearInterval(scanner);
+    scanner = undefined;
     for (const timer of watching) clearInterval(timer);
     watching.clear();
     // A run waiting for one elsewhere is started (or, when this pod is stopping, handed over)
@@ -389,8 +407,35 @@ export function createRunner(options: RunnerOptions): Runner {
   async function restoreRuns() {
     const store = options.store;
     if (!store) return;
-    const names = (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"));
-    const load = async (name: string) => {
+    await loadAll(
+      store,
+      (await store.list(RUNS_PREFIX)).filter((blob) => blob.endsWith(".json"))
+    );
+  }
+
+  // The runs stored since yesterday that this pod does not know. A run's id starts with when it was
+  // asked for, so only those two days are listed: a run still queued or going is never older.
+  async function scan(store: BlobContainer) {
+    const day = (offset: number) => new Date(Date.now() - offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const names = (await Promise.all([day(1), day(0)].map((date) => store.list(`${RUNS_PREFIX}${date}`)))).flat();
+    await loadAll(
+      store,
+      names.filter((name) => name.endsWith(".json") && !runs.has(path.basename(name, ".json")))
+    );
+  }
+
+  async function loadAll(store: BlobContainer, names: string[]) {
+    const next = [...names];
+    const worker = async () => {
+      for (let name = next.shift(); name; name = next.shift()) await load(store, name);
+    };
+    await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
+  }
+
+  async function load(store: BlobContainer, name: string) {
+    if (loading.has(name)) return;
+    loading.add(name);
+    try {
       const data = await store.download(name);
       if (!data) return;
       const record = parseRecord(data, name);
@@ -401,7 +446,7 @@ export function createRunner(options: RunnerOptions): Runner {
         runs.set(record.id, record);
         return;
       }
-      // Still going on the pod this one is replacing: left to finish there, and watched
+      // Still going on another pod (the one this one is replacing): left to finish there, and watched
       if (stillGoing(record, staleMs)) {
         runs.set(record.id, record);
         watch(store, record.id);
@@ -411,12 +456,9 @@ export function createRunner(options: RunnerOptions): Runner {
       const interrupted: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
       runs.set(record.id, interrupted);
       await publish(interrupted);
-    };
-    const next = [...names];
-    const worker = async () => {
-      for (let name = next.shift(); name; name = next.shift()) await load(name);
-    };
-    await Promise.all(Array.from({ length: Math.min(RESTORE_CONCURRENCY, names.length) }, worker));
+    } finally {
+      loading.delete(name);
+    }
   }
 }
 
@@ -579,6 +621,8 @@ export type RunRecord = RunRequest & {
   owner?: string;
   // When the pod it was queued on stopped and handed it to the next one
   handedOverAt?: string;
+  // When it was handed over, kept once a pod has claimed it, until it starts
+  takenOverAt?: string;
   // The baseline a check compared against
   baselineId?: string;
   summary?: RunSummary | null;

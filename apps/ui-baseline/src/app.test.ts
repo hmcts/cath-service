@@ -455,6 +455,32 @@ describe("createApp", () => {
     expect(page.text).toContain("You do not need to start it again.");
   });
 
+  it("should still say a run will start once a pod has taken it over, until it starts", async () => {
+    // Arrange
+    const run: RunRecord = {
+      id: "r1",
+      kind: "check",
+      scope: "all",
+      status: "queued",
+      createdAt: "2026-11-12T10:00:00Z",
+      owner: "new",
+      takenOverAt: "2026-11-12T10:05:00Z"
+    };
+    const runner = { list: () => [run], get: () => run, directory: async () => null } as unknown as Runner;
+    const app = createApp({
+      environment: "aat",
+      runner,
+      dataDir: await mkdtemp(path.join(tmpdir(), "app-")),
+      baselineStatus: async () => ({ ready: true, description: "" })
+    });
+
+    // Act
+    const page = await request(app).get("/runs/r1");
+
+    // Assert
+    expect(page.text).toContain("You do not need to start it again.");
+  });
+
   it("should say when a run does not exist", async () => {
     // Arrange
     const { app } = await appWith();

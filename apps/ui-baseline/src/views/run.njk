@@ -24,7 +24,7 @@
   ] }) }}
 
   {% if run.error %}<p class="govuk-body govuk-error-message">{{ run.error }}</p>{% endif %}
-  {% if run.status == "queued" and run.handedOverAt %}
+  {% if run.status == "queued" and (run.handedOverAt or run.takenOverAt) %}
     <p class="govuk-body">The hosted check restarted while this run was waiting. It will start once the run before it has finished. You do not need to start it again.</p>
   {% endif %}
 

@@ -975,6 +975,74 @@ describe("createRunner when pods are replaced", () => {
     vi.useRealTimers();
   });
 
+  it("should leave a watched run as another pod stored it when that pod claimed it as it was being marked interrupted", async () => {
+    // Arrange
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const lastBeat = new Date(Date.now() - 170 * 1000).toISOString();
+    const record = { id: "r6", kind: "check", scope: "all", status: "queued", createdAt: lastBeat, heartbeatAt: lastBeat };
+    blobs.set("runs/r6.json", Buffer.from(JSON.stringify(record)));
+    // Another pod claims the run between this pod reading it and storing it interrupted
+    const racing = {
+      ...store,
+      uploadIfUnchanged: async () => {
+        blobs.set("runs/r6.json", Buffer.from(JSON.stringify({ ...record, owner: "other", heartbeatAt: new Date().toISOString() })));
+        return false;
+      }
+    };
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store: racing, baseline, execute: async () => 0 });
+
+    // Act
+    await runner.restore();
+    await vi.advanceTimersByTimeAsync(30 * 1000);
+    const afterLostWrite = runner.get("r6")?.status;
+    await vi.advanceTimersByTimeAsync(30 * 1000);
+
+    // Assert
+    expect(afterLostWrite).toBe("queued");
+    expect(runner.get("r6")).toMatchObject({ status: "queued", owner: "other" });
+    runner.stopWatching();
+    vi.useRealTimers();
+  });
+
+  it("should take over a run queued on the old pod after it had listed the stored runs", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store } = sharedStore();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    let finish: () => void = () => {};
+    const oldExecute = vi.fn(() => new Promise<number>((resolve) => (finish = () => resolve(0))));
+    const old = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: oldExecute, pod: "old" });
+    const execute = vi.fn(async () => 0);
+    const replacement = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline,
+      execute,
+      watchMs: 10,
+      pod: "new"
+    });
+    await replacement.restore();
+
+    // Act
+    old.start({ kind: "check", scope: "routes", routes: ["/going"] });
+    const queued = old.start({ kind: "check", scope: "routes", routes: ["/queued"] });
+    await vi.waitFor(() => expect(oldExecute).toHaveBeenCalledTimes(1));
+    const drained = old.drain();
+    finish();
+    await drained;
+    await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
+
+    // Assert
+    expect((execute.mock.calls[0] as unknown as [string, string[]])[1]).toContain("/queued");
+    expect(replacement.get(queued.id)).toMatchObject({ owner: "new", takenOverAt: expect.any(String) });
+    replacement.stopWatching();
+  });
+
   it("should start a run only once the run going on another pod has ended there", async () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
