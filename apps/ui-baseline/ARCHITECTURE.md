@@ -206,8 +206,9 @@ sequenceDiagram
 - **One run at a time.** Chromium is memory-hungry and checks seed the same environment, so runs
   queue. A run that goes past its two-hour limit is sent `SIGTERM` (a check removes what it
   seeded) and, two minutes later, `SIGKILL`, to its whole process group so its Chromium goes too.
-- **Redeploys do not cut a run short.** A master merge starts a new pod, then stops the old one
-  with `SIGTERM`. The old pod starts no new run, fails any queued ones with a message to start them
+- **Redeploys do not cut a run short.** A deploy with a new ui-baseline image starts a new pod,
+  then stops the old one with `SIGTERM`. A master merge that did not rebuild the image leaves the
+  pod running ([Building and deploying it](#building-and-deploying-it)). The old pod starts no new run, fails any queued ones with a message to start them
   again, and finishes the one it has going (`terminationGracePeriodSeconds: 9000`: the run's two-hour limit, its stop grace, and time to fetch the baseline and store the run). The new pod
   sees the recent heartbeat of each run queued or going there, leaves it and watches it until it
   ends; a run that has missed three heartbeats (three minutes) is marked interrupted. The
@@ -235,7 +236,7 @@ flowchart LR
   end
   subgraph master["Merge to master"]
     build["Build and push the image<br/>when Turborepo says it is affected"]
-    deploy["Deploy to aat only<br/>(uiBaseline.enabled)"]
+    deploy["Deploy to aat only<br/>(uiBaseline.enabled),<br/>pinned to the image's digest"]
     promote["Promote web, api, crons, postgres<br/>to prod: never ui-baseline"]
   end
   pr --> master
@@ -248,6 +249,21 @@ keeps ui-baseline out of pull request image builds (preview never deploys it), o
 prod, and out of the images demo, ithc and perftest look up. ui-baseline declares every workspace
 library it uses, including each list type it seeds with, so a change to any of them rebuilds its
 image on master (`package.test.ts` keeps the list complete).
+
+The pod is replaced only when its image changes. Nothing in its pod spec changes from one deploy
+to the next otherwise:
+
+- **It is deployed by digest** (`cath-ui-baseline@sha256:…`), which `job.helm-deploy.yml` looks up
+  from the tag it would have deployed. A master merge that rebuilds the image deploys
+  `aat-<sha>`; one that does not deploys the floating `aat` tag. That is the same image, but a
+  changed tag would still replace the pod. Its digest does not change.
+- **The commit a report records is built into the image** (`GIT_COMMIT`, a build argument of the
+  Dockerfile's `ui-baseline` stage), not set by the chart, where the merge's own commit would
+  change on every deploy. It is also the commit the image was built from, which the merge's commit
+  is not when the image was not rebuilt.
+
+Merges that only change libraries ui-baseline does not use, or CaTH's apps, leave it running. A
+change to any library it does use still rebuilds and replaces it, as above.
 
 ## Where things are kept
 

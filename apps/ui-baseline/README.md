@@ -493,6 +493,10 @@ a VPN user's browser (`src/request-forgery.ts`): each form carries a token match
 cookie only this app sets, and a post the browser marks as cross-site, or whose `Origin` is another
 host, is refused.
 
+Its pod is replaced only when a master merge rebuilds its image, which happens when
+`apps/ui-baseline/` or a library it uses changes, not on every merge
+([ARCHITECTURE.md](ARCHITECTURE.md#building-and-deploying-it)).
+
 ### How it works
 
 [ARCHITECTURE.md](ARCHITECTURE.md#the-hosted-checks-runs) has a diagram of a run, from the form to

@@ -191,6 +191,24 @@ jobs:
       - name: ACR login
         run: az acr login --name "${REGISTRY%.azurecr.io}"
 
+      # ui-baseline is deployed by digest, not tag. A master merge that did not rebuild it deploys the
+      # floating aat tag, after one that did deployed aat-<sha>: the same image under another name,
+      # which would still replace the pod, and fail the runs queued in it. A digest only changes
+      # when the image does. Elsewhere the chart is disabled and the tag is left as it was.
+      - name: Pin the ui-baseline image
+        run: |
+          REF=":${UI_BASELINE_IMAGE:-}"
+          if [ "${UI_BASELINE_ENABLED}" = "true" ]; then
+            IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+            if ! DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}') || [ -z "$DIGEST" ]; then
+              echo "::error::Could not find the digest of ${IMAGE}"
+              exit 1
+            fi
+            REF="@${DIGEST}"
+            echo "ui-baseline: ${IMAGE} is ${DIGEST}"
+          fi
+          echo "UI_BASELINE_IMAGE_REF=${REF}" >> "$GITHUB_ENV"
+
       # helm-deploy clears a release left in pending-upgrade by an interrupted
       # deploy before it upgrades, which is why there is no cleanup step here.
       # recover-stuck-release defaults to true; set it to false to opt out.
