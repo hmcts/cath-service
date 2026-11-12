@@ -172,7 +172,8 @@ sequenceDiagram
   sent its lists, as with the E2E tests, as CaTH chooses them by list type, not court.
 - **The run is removed however the check ends**: after the file comparison, when a later step
   fails (an `await using` disposal around the rest of `check.ts`), or when the check is stopped
-  (`SIGTERM`, `SIGINT`). If `seed.ts` itself fails partway, it removes its own courts.
+  (`SIGTERM`, `SIGINT`). A stop that arrives while the removal is going waits for it to finish.
+  If `seed.ts` itself fails partway, it removes its own courts.
 - **Anything left behind is found again by its token.** A run that could not be removed (the pod
   was killed, say) is removed by a later check once it is three hours old. The courts go last, so
   a removal that fails partway leaves the courts for the next check to find the run by, and never
@@ -219,7 +220,8 @@ sequenceDiagram
   stopped. The new pod claims it and runs it, oldest first, ahead of runs asked of it since. Several
   pods can be up at once (one merge after another each starts a pod), so a claim is a write that
   only succeeds if the record is as the pod read it (its blob's ETag): one pod gets each run. A pod
-  that is stopping claims nothing. A handed-over run no pod claims within three heartbeats, as when
+  that is stopping claims nothing, and one that began stopping while a claim was being written
+  hands the run over again. A handed-over run no pod claims within three heartbeats, as when
   the cluster is stopped for the night, is marked interrupted by the next pod to start, rather than
   run the next morning for a tester who has gone home. Its run page says it will still start, until
   it does (`handedOverAt`, then `takenOverAt` once claimed). With no storage (the app run locally),
@@ -227,8 +229,14 @@ sequenceDiagram
 - **A pod lists the stored runs again every 30 seconds**, not only when it starts. The old pod still
   takes requests until it is stopped, so a run can be queued there after the new pod first looked;
   listing again finds it, to watch and then claim. Only runs asked for since yesterday are listed,
-  by the date their ids start with. Marking a watched run interrupted is a conditional write too: if
-  a pod claimed the run meanwhile, the record is read again rather than shown as interrupted.
+  by the date their ids start with. Marking a run interrupted is a conditional write too, whether
+  the run is being watched or a pod has just started and found it stale: if a pod claimed the run
+  or stored its heartbeat meanwhile, the record is read again rather than shown as interrupted.
+- **A starting pod loads the runs of the last 30 days**, newest first, so the runs still queued or
+  going are loaded before the history. Older runs stay in storage, but are not listed.
+- **Each write of a run record gives up after 20 seconds.** Records are written one after another,
+  so a write that hung would hold up every heartbeat after it, and other pods would take a run that
+  is still going for interrupted.
 - **A run started on the new pod waits for the old pod's run.** Two checks at once would share the
   IDAM test account and the records seeded in AAT, and change what each other captures. So the new
   pod queues a run until every run it is watching has ended, or been marked interrupted, and until
@@ -251,12 +259,17 @@ flowchart LR
   end
   subgraph master["Merge to master"]
     build["Build and push the image<br/>when Turborepo says it is affected"]
-    deploy["Deploy to aat only<br/>(uiBaseline.enabled),<br/>pinned to the image's digest"]
+    deploy["Deploy to aat only,<br/>as a release of its own,<br/>pinned to the image's digest"]
     promote["Promote web, api, crons, postgres<br/>to prod: never ui-baseline"]
   end
   pr --> master
   build --> deploy --> promote
 ```
+
+ui-baseline is a Helm release of its own (`<release>-ui-baseline`, chart `helm/`, values
+`helm/values.aat.template.yaml`), deployed after cath-service's, not a subchart of it. helm-deploy
+is `--atomic`, so as a subchart a ui-baseline pod that failed to start would have rolled back web
+and api with it. On its own, only ui-baseline rolls back, and the deploy goes on with a warning.
 
 The apps deployed to aat only are listed once, in
 [`.github/workflows/jobs/aat-only-apps`](../../.github/workflows/jobs/aat-only-apps). That list
@@ -265,13 +278,16 @@ prod, and out of the images demo, ithc and perftest look up. ui-baseline declare
 library it uses, including each list type it seeds with, so a change to any of them rebuilds its
 image on master (`package.test.ts` keeps the list complete).
 
-The pod is replaced only when its image changes. Nothing in its pod spec changes from one deploy
+The pod is replaced only when its image is rebuilt. Nothing in its pod spec changes from one deploy
 to the next otherwise:
 
 - **It is deployed by digest** (`cath-ui-baseline@sha256:…`), which `job.helm-deploy.yml` looks up
   from the tag it would have deployed. A master merge that rebuilds the image deploys
   `aat-<sha>`; one that does not deploys the floating `aat` tag. That is the same image, but a
-  changed tag would still replace the pod. Its digest does not change.
+  changed tag would still replace the pod. Its digest does not change. A rebuild always gives a new
+  digest, though, even when nothing in the image changed: each build records its commit
+  (`GIT_COMMIT`, below) and the time and revision in the image's labels. So the pod is left running
+  only by merges that do not rebuild the image.
 - **The commit a report records is built into the image** (`GIT_COMMIT`, a build argument of the
   Dockerfile's `ui-baseline` stage), not set by the chart, where the merge's own commit would
   change on every deploy. It is also the commit the image was built from, which the merge's commit

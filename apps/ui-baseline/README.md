@@ -233,7 +233,8 @@ journey not ported to CaTH yet is listed as not compared. The PR comment gets a 
 and the report shows CaTH's capture beneath each of pip's steps.
 
 Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
-`--env local|test`, `--no-seed`, `--keep-seed`, `--no-review`, `--no-files`, `--reviewer "<command>"` (default:
+`--env local|test`, `--no-seed`, `--keep-seed`, `--no-review`, `--no-files`, `--no-evidence` (no PR evidence; the hosted check passes it),
+`--reviewer "<command>"` (default:
 `claude -p` with no tools and a JSON schema for its answer; any command that reads the prompt on stdin
 and prints JSON will do; the review runs up to four of them at once), `--investigate N`,
 `--concurrency N` for how many pages are captured at once (default 4, or `UI_BASELINE_CONCURRENCY`;
@@ -336,7 +337,9 @@ For a list a tester uploaded to both apps by hand, compare the two without seedi
 yarn ui-baseline:compare-files --pip <artefact id in pip> --cath <artefact id in CaTH> [--env aat] [--name civil-list]
 ```
 
-It also prints the list's page in each app. In aat, pip's files are downloaded from pip-frontend
+`--out` (default `output/files/<name>-<CaTH artefact id>`) must be inside `output/` or the system's
+temp folder, as the comparison empties folders in it, and `--name` must be lower-case letters,
+numbers and hyphens. It also prints the list's page in each app. In aat, pip's files are downloaded from pip-frontend
 (`/list-download-files`) as the IDAM test account, as a verified user downloads them, so it needs
 no access to pip's storage. The account sees what a verified CFT user may: a classified list
 restricted to another provenance is reported as not served. pip-frontend serves only the
@@ -484,8 +487,10 @@ It is an internal tool for the CaTH team, so English only.
 
 ### Where it runs
 
-Only in aat: the umbrella chart includes it behind `uiBaseline.enabled`, which
-`job.helm-deploy.yml` sets for aat alone. Its host,
+Only in aat, as a Helm release of its own (`<release>-ui-baseline`), which `job.helm-deploy.yml`
+deploys after cath-service's and in aat alone. A ui-baseline pod that cannot start rolls back only
+that release, to its last good one, and the deploy carries on with a warning: it never rolls back
+web and api, or stops them being promoted. Its host,
 `cath-<release>-ui-baseline.aat.platform.hmcts.net`, is in the private DNS zone only, with no
 Front Door route, so it is only reached over the VPN. That is its only access control: the app has
 no sign-in, and anyone on the VPN can start a run. What another site cannot do is start one through
@@ -511,7 +516,8 @@ its report, and of what happens when the pod is redeployed mid-run.
   "UI baseline - record pip" workflow), fetched when the pod starts and again when a newer one is
   stored.
 - **Results** are archived to the same container when a run finishes, and restored from it when
-  someone opens a run after the pod has restarted.
+  someone opens a run after the pod has restarted. The list of runs goes back 30 days; older runs
+  stay in storage.
 - **Runs** do not record who started them: there is no sign-in to say.
 - **Checks sign in** to CaTH and pip as the IDAM test account
   ([The IDAM test account](#the-idam-test-account)), read from `cath-aat` when a check starts.
