@@ -23,7 +23,7 @@ All Excel date values are currently written as text cells. No generator writes r
 |---|---|---|---|
 | `CROWN_ADVANCED_PDDA_LIST` | Fixed for | `13/01/2025` | `libs/list-types/crown-advanced-pdda-list/src/date-formatting.ts` (`formatShortDate`) |
 | `MAGISTRATES_STANDARD_LIST` | Date of birth, plea date, conviction date, adjourned date (`dd/MM/yyyy - {adjournedText}`) | `13/01/2025` | `libs/list-types/magistrates-standard-list/src/rendering/renderer.ts` (`formatDateFromIso`) |
-| `SJP_PRESS_LIST`, `SJP_DELTA_PRESS_LIST` | Date of birth (`dd/MM/yyyy (age)`) | `13/01/1990 (35)`. **Changed to written as sent:** the raw `dateOfBirth` plus ` (age)`, matching PIP | `libs/excel-generation/src/excel/sjp-press-list-excel-generator.ts` (`formatDateOfBirth`) |
+| `SJP_PRESS_LIST`, `SJP_DELTA_PRESS_LIST` | Date of birth (`dd/MM/yyyy (age)`) | `13/01/1990 (35)`. **No change in this ticket:** already matches PIP for well-formed DOBs; writing the DOB exactly as sent is #1366 | `libs/excel-generation/src/excel/sjp-press-list-excel-generator.ts` (`formatDateOfBirth`) |
 | `MAGISTRATES_ADULT_COURT_LIST_DAILY`, `MAGISTRATES_ADULT_COURT_LIST_FUTURE` | Date of birth | Raw passthrough of `def_dob`, e.g. `01/01/1990` | `libs/list-types/magistrates-adult-court-list/src/rendering/renderer.ts` |
 | `CROWN_FIRM_PDDA_LIST` | Sitting date | `Monday 13 January 2025` (includes weekday). **No change:** the weekday is kept to match PIP (open question 1) | `libs/list-types/crown-firm-list/src/rendering/renderer.ts` (`formatSittingDate`) |
 | Uploaded-workbook reformatters: RCJ standard lists (x8), `LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST`, `COURT_OF_APPEAL_CIVIL_DAILY_CAUSE_LIST`, SSCS lists | Any uploaded cell that is a real Excel date | `15/01/2025` (text cells are kept as typed) | `libs/list-types/common/src/conversion/excel-to-json.ts` (`formatDateValue`) via `uploaded-workbook-reformatter.ts` |
@@ -55,7 +55,7 @@ Other PIP behaviour to keep in mind:
 
 ## Acceptance criteria
 
-- [ ] Every date written to a list-type Excel download uses `d MMMM yyyy` (e.g. `20 October 2026`). There is no zero-padded day, no `dd/MM/yyyy`, and no ISO. **Exceptions:** `CROWN_FIRM_PDDA_LIST` keeps the weekday on its sitting date (e.g. `Monday 5 January 2026`), matching PIP's Excel and the list's PDF and HTML. `SJP_PRESS_LIST` and `SJP_DELTA_PRESS_LIST` write the date of birth exactly as sent in the JSON, followed by ` (age)` (e.g. `01/01/1990 (35)`), matching PIP's Excel. In uploaded workbooks, free-text columns (e.g. Additional Information) are written as uploaded, including any cell Excel stored as a date.
+- [ ] Every date written to a list-type Excel download uses `d MMMM yyyy` (e.g. `20 October 2026`). There is no zero-padded day, no `dd/MM/yyyy`, and no ISO. **Exceptions:** `CROWN_FIRM_PDDA_LIST` keeps the weekday on its sitting date (e.g. `Monday 5 January 2026`), matching PIP's Excel and the list's PDF and HTML. `SJP_PRESS_LIST` and `SJP_DELTA_PRESS_LIST` are not changed by this ticket: the date of birth stays `dd/MM/yyyy (age)` (e.g. `01/01/1990 (35)`), which already matches PIP's Excel. Unreadable, impossible or missing DOBs are handled in #1366. In uploaded workbooks, free-text columns (e.g. Additional Information) are written as uploaded, including any cell Excel stored as a date.
 - [ ] Welsh month names in Welsh Excel output, **or** English-only to match PIP (see open question 4). The decision is applied to all list types.
 - [ ] Applies to all list types in the table above, both JSON-generated and uploaded-workbook-reformatted Excel files.
 - [ ] Dates that can't be parsed are written unchanged. A download must never fail because of a bad date.
@@ -71,7 +71,7 @@ Other PIP behaviour to keep in mind:
 ## Open questions
 
 1. Should `CROWN_FIRM_PDDA_LIST` drop the weekday (`Monday 13 January 2025` → `13 January 2025`), or is the weekday a deliberate part of that list? **Answered (9 November 2026, Junaid):** keep the weekday, matching PIP.
-2. Should date of birth also use the long format (`1 January 1990`), or stay short for readability? The SJP press list adds ` (age)` after the date. **Answered (9 November 2026):** SJP press dates of birth are written as sent, matching PIP; other dates of birth use the long format.
+2. Should date of birth also use the long format (`1 January 1990`), or stay short for readability? The SJP press list adds ` (age)` after the date. **Answered (9 November 2026):** SJP press dates of birth are written as sent, matching PIP; other dates of birth use the long format. **Updated (12 November 2026):** SJP press is not changed by this ticket, because master already matches PIP for well-formed DOBs. Writing the DOB as sent is #1366.
 3. Should uploaded *text* cells that look like `dd/MM/yyyy` also be converted, or only real Excel date cells?
 4. Welsh Excel downloads: use Welsh month names (current CaTH behaviour for Crown Firm and COA Civil), or English month names to match PIP?
 5. Zero-padded day (`05 October 2026`, PIP `DateHelper` / Crown Firm) or unpadded (`5 October 2026`, PIP non-strategic lists)? Recommendation: unpadded.

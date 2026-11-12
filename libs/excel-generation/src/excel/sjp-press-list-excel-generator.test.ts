@@ -120,7 +120,7 @@ describe("generateSjpPressListExcel", () => {
     expect(headerRow.getCell(11).value).toBe("Enw'r erlynydd");
   });
 
-  it("should write DOB as sent followed by the age", async () => {
+  it("should format DOB as dd/MM/yyyy (age)", async () => {
     const buffer = await generateSjpPressListExcel(FIXTURE);
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer);
@@ -128,71 +128,6 @@ describe("generateSjpPressListExcel", () => {
     const worksheet = workbook.getWorksheet("SJP Press List");
     const row2 = worksheet!.getRow(2);
     expect(row2.getCell(3).value).toBe("01/01/1990 (35)");
-  });
-
-  it("should write DOB as sent when locale is cy", async () => {
-    const buffer = await generateSjpPressListExcel(FIXTURE, "cy");
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("01/01/1990 (35)");
-    expect(worksheet!.getRow(3).getCell(3).value).toBe("15/06/1985 (39)");
-  });
-
-  it("should write DOB without age suffix when age is missing", async () => {
-    const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", dateOfBirth: "01/01/1990" });
-
-    const buffer = await generateSjpPressListExcel(json);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("01/01/1990");
-  });
-
-  it("should write a DOB that cannot be parsed as sent", async () => {
-    const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", dateOfBirth: "not a date", age: 35 });
-
-    const buffer = await generateSjpPressListExcel(json);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("not a date (35)");
-  });
-
-  it("should write an impossible DOB as sent instead of rolling it over", async () => {
-    const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", dateOfBirth: "31/02/1990", age: 35 });
-
-    const buffer = await generateSjpPressListExcel(json);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("31/02/1990 (35)");
-  });
-
-  it("should neutralise a DOB that starts with a formula character", async () => {
-    const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", dateOfBirth: "=1+1", age: 35 });
-
-    const buffer = await generateSjpPressListExcel(json);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("'=1+1 (35)");
-  });
-
-  it("should write only the age when DOB is missing", async () => {
-    const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", age: 35 });
-
-    const buffer = await generateSjpPressListExcel(json);
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(buffer);
-
-    const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("(35)");
   });
 
   it("should map reporting restriction boolean to Active/None", async () => {
@@ -286,37 +221,3 @@ describe("generateSjpPressListExcel", () => {
     expect(row2.getCell(3).value).toBe("");
   });
 });
-
-function buildSingleAccusedJson(individualDetails: Record<string, unknown>): SjpJson {
-  return {
-    document: { publicationDate: "2025-01-01T10:00:00Z" },
-    courtLists: [
-      {
-        courtHouse: {
-          courtRoom: [
-            {
-              session: [
-                {
-                  sittings: [
-                    {
-                      hearing: [
-                        {
-                          case: [{ caseUrn: "URN-003" }],
-                          party: [
-                            { partyRole: "ACCUSED", individualDetails },
-                            { partyRole: "PROSECUTOR", organisationDetails: { organisationName: "CPS" } }
-                          ],
-                          offence: [{ offenceTitle: "Test offence" }]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
-    ]
-  } as SjpJson;
-}

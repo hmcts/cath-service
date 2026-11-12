@@ -12,7 +12,7 @@ Product answered the clarifications in section 7 after this plan was written. Th
 | 4 | The Crown Advance subscription email keeps `dd/MM/yyyy` |
 | 5 | Crown Firm keeps the weekday in the Excel (`Monday 5 January 2026`), matching PIP, which writes the same `EEEE dd MMMM yyyy` sitting date into its Excel as into the PDF and HTML (`CrownPddaListHelper.formatSittingDate`, `CrownFirmPddaListFileConverter.getExcelRows`). Reversed on 9 November 2026 and confirmed by Junaid (ticket author) by phone; it was "drop the weekday, in the Excel only" |
 | 6 | Free-text uploaded cells, including any that Excel stored as a date, are written as they are |
-| 7 | SJP press DOB is written to the Excel as sent, followed by ` (age)`, or just `(age)` when there is no DOB. This matches PIP (`SjpPressListFileConverter.getAccusedDob`, and a PIP-generated Excel showing `01/01/1800 (50)`). Values the parser can't read, or would roll over (`31/02/1990`), are therefore never lost or changed in the Excel. Decided on 9 November 2026; it was "format as `d MMMM yyyy`, accept the parser's edge cases" |
+| 7 | **SJP press is not changed by this ticket** (12 November 2026). Master already writes the DOB as `dd/MM/yyyy (age)`, which matches PIP's Excel (`SjpPressListFileConverter.getAccusedDob`) for every well-formed DOB. Writing the DOB exactly as sent, so that dashed (`05-01-1990`), impossible (`31/02/1990`), unreadable and missing DOBs also match PIP, has moved to #1366 with the same problem in the PDF and HTML. History: first "format as `d MMMM yyyy`", then on 9 November "write as sent, in this ticket" |
 | 8 | Magistrates Adult `def_dob` is `dd/MM/yyyy` only, as PIP's schema requires. CaTH's schema gets the same pattern |
 
 **How it works now.** Each list type's `excel/excel-generator.ts` takes the date its renderer already produces and converts it with a shared helper from `libs/list-types/common/src/rendering/date-formatting.ts`:
@@ -22,7 +22,7 @@ Product answered the clarifications in section 7 after this plan was written. Th
 | Magistrates Standard | DOB, plea, conviction and adjourned dates (renderer gives `dd/MM/yyyy`) | `formatDdMmYyyyDate` |
 | Crown Advance | Fixed for (renderer gives `dd/MM/yyyy`) | `formatDdMmYyyyDate` |
 | Magistrates Adult | `def_dob` (renderer passes it through raw; the schema now requires `dd/MM/yyyy`) | `formatDdMmYyyyDate` |
-| SJP Press | Nothing: the parser now also returns the raw `rawDateOfBirth` string, which the Excel writes as sent with ` (age)` | none |
+| SJP Press | Nothing. Unchanged from master (decision 7) | none |
 
 - `formatDdMmYyyyDate` is hardened as in section 2.1: anything that isn't a whole, valid `d/M/yyyy` date comes back unchanged.
 - Crown Firm is unchanged: its Excel writes the renderer's `day` heading (`Monday 5 January 2026`, Welsh weekday and month in Welsh publications), as PIP does. No `formatIsoDisplayDate` helper is added.
@@ -55,7 +55,7 @@ The code already has a shared helper for this in `@hmcts/list-types-common`. Mos
 |---|---|---|
 | Format | `d MMMM yyyy`, unpadded day (open question 5) | Matches the ticket, PIP's non-strategic lists, and what CaTH's weekly lists already produce |
 | Welsh | Welsh month names in Welsh publications (open question 4) | CaTH already does this for Crown Firm, COA Civil and 9 weekly-list reformatters (16 list types). Switching to English would be a regression |
-| Date of birth | Long format too (open question 2): `1 January 1990`, `1 January 1990 (35)` on SJP | The acceptance criteria say *every* date |
+| Date of birth | Long format too (open question 2): `1 January 1990`. **Superseded for SJP:** unchanged (decision 7) | The acceptance criteria say *every* date |
 | Crown Firm weekday | Kept in the Excel, PDF and HTML (decision 5, matching PIP) | Product decision |
 | Uploaded text cells (open question 3) | No change | Every uploaded column that is a date is already validated as `dd/MM/yyyy` at upload and converted to the long format. Free-text columns are left as typed so the Excel keeps matching the PDF (see section 2.6) |
 | PDF and HTML | **Superseded:** unchanged (decision 2). Dates are converted in each Excel generator instead | Product decision |
@@ -154,6 +154,8 @@ Outputs affected: Excel, PDF, and the web page `magistrates-adult-court-list`.
 
 ### 2.5 `SJP_PRESS_LIST` / `SJP_DELTA_PRESS_LIST`: `libs/excel-generation/src/excel/sjp-press-list-excel-generator.ts`
 
+*Superseded by section 0 (decision 7): SJP press is not changed by this ticket. See #1366.*
+
 - Line 46: pass `locale` in, as `formatDateOfBirth(sjpCase.dateOfBirth, sjpCase.age, locale)`. `generateSjpPressListExcel` already takes `locale`.
 - Line 71: replace the hand-written `padStart` body with `formatDisplayDate(dob, locale)`, and keep the ` (age)` suffix.
 - `dob` is a `Date` built by `parseDateOfBirth` in `libs/list-types/common/src/sjp/json-parser.ts:134`. Do not change that parser in this ticket. It also feeds the HTML page.
@@ -208,7 +210,7 @@ No `apps/` source changes. No `.njk` changes.
 | UTC timestamp at BST midnight (`2025-07-09T23:00:00Z`) | `10 July 2025` (London calendar date) | Today's code shows `09/07/2025`. This changes the day on purpose; see Clarifications |
 | Welsh | `20 Hydref 2026`; Welsh Crown Advance rows still sort by date | Locale passed through; sort uses raw ISO |
 | Bilingual publication | English, same as today | Locale selection unchanged |
-| SJP DOB that cannot be parsed | Empty cell (today's behaviour) | `parseDateOfBirth` returns `null`, so the raw value is already lost before the generator sees it. See Clarifications |
+| SJP DOB that cannot be parsed | Empty cell, unchanged from master | Out of scope (decision 7); tracked in #1366 |
 | SJP DOB from the ISO branch (`new Date("1990-01-01")` is UTC midnight) formatted in local time | Correct in UTC and Europe/London containers (the dev container is UTC). Would shift one day only if a container ran west of UTC | Same risk as today; not changed |
 | Wider cells | No layout change. Magistrates and Crown Advance use `autoFitColumns`; SJP DOB width 25 fits `30 September 2026 (35)` (22 characters) | n/a |
 | Cell type | Stays a text cell. No `numFmt` | Generators still write strings |
@@ -224,8 +226,8 @@ Existing artefacts keep their old Excel until they are republished. There is no 
 | Every Excel date uses `d MMMM yyyy`; no padding, no `dd/MM/yyyy`, no ISO | Sections 2.2 to 2.5 move the last four list types to the shared helpers. Section 2.6 shows uploaded lists already comply. Crown Firm already complies | Unit tests (section 5). `grep -rn "padStart\|dd/MM" libs/list-types/*/src libs/excel-generation/src --include=*.ts` shows no date formatting left in render paths, apart from `excel-to-json.ts`, `conversion/` validators, and the Crown Advance email helper if it is kept |
 | Welsh months, or English to match PIP, applied everywhere | Welsh chosen. All changed call sites pass the publication locale | A `cy` test case in every affected test file |
 | Covers JSON and uploaded-workbook Excel | JSON: sections 2.2 to 2.5. Uploaded: already compliant (section 2.6), with existing tests as evidence | Existing weekly-list reformatter tests stay green |
-| Unparseable dates written unchanged; download never fails | Helpers return input; nothing throws | Junk-input unit tests for both helpers and each renderer. SJP gap noted in Clarifications |
-| Unit tests updated for each affected generator, including a Welsh case | Renderer tests (which hold the actual dates) plus the SJP Excel test. The generator tests that mock the renderer get updated fixtures | `yarn test` from the repo root |
+| Unparseable dates written unchanged; download never fails | Helpers return input; nothing throws | Junk-input unit tests for both helpers and each renderer. SJP is out of scope (decision 7, #1366) |
+| Unit tests updated for each affected generator, including a Welsh case | Renderer tests (which hold the actual dates). The generator tests that mock the renderer get updated fixtures | `yarn test` from the repo root |
 
 ## 5. Test Scenarios
 
@@ -258,6 +260,8 @@ No new E2E test. This changes the contents of a generated file, not a user journ
 - The same renderer serves `_DAILY` and `_FUTURE`, so one set of tests covers both.
 
 **S5. SJP press publication, English and Welsh** (`libs/excel-generation/src/excel/sjp-press-list-excel-generator.test.ts`)
+
+*Superseded by section 0 (decision 7): SJP press is not changed by this ticket, so its tests are as on master.*
 - Rename and update the test at line 123: `01/01/1990 (35)` becomes `1 January 1990 (35)`.
 - Welsh gives `1 Ionawr 1990 (35)`. Age `null` gives `1 January 1990`. No DOB gives an empty cell.
 - An unparseable DOB string does not throw; the cell is empty (documents today's behaviour).

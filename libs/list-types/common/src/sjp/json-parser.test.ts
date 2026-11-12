@@ -206,7 +206,6 @@ describe("extractPressCases", () => {
     expect(cases[0].reference).toBe("REF123");
     expect(cases[0].address).toBe("123 Test Street, London, Greater London, SW1A 1AA");
     expect(cases[0].dateOfBirth).toBeInstanceOf(Date);
-    expect(cases[0].rawDateOfBirth).toBe("01/01/1990");
     expect(cases[0].age).toBeGreaterThan(0);
     expect(cases[0].offences).toHaveLength(1);
     expect(cases[0].offences[0].offenceTitle).toBe("Speeding");
