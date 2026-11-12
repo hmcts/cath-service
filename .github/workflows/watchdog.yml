@@ -134,6 +134,16 @@ jobs:
         # one attempt for these fingerprints rather than looping every 15 minutes.
         id: claim
         uses: actions/github-script@v9
+        env:
+          # The tracking issues, the deduplication state they stand for and the Slack
+          # channel all belong to the default branch: a branch run restores master's
+          # state from the cache by the default-branch fallback, so an issue it opens
+          # is master's to live with, and while that issue stays open the gate below
+          # skips the fingerprint for master as well — one branch experiment can stop
+          # a real problem being triaged indefinitely. Off master this step still
+          # claims locally, still reads the priors and still feeds triage; it just
+          # writes nothing to the remote.
+          ON_MASTER: ${{ github.ref_name == 'master' }}
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
@@ -141,8 +151,15 @@ jobs:
             const findings = JSON.parse(fs.readFileSync('/tmp/watchdog/findings.json', 'utf8'));
             const { owner, repo } = context.repo;
 
+            const onMaster = process.env.ON_MASTER === 'true';
+            if (!onMaster) {
+              core.notice(`Not on master (${context.ref}): no issue will be created, commented on, labelled or closed, no pull request will be opened and nothing will be posted to Slack. Detection and triage still run, and the report is in this log.`);
+            }
+
             // Created up front rather than relying on issues.create to invent it, so
             // the label query below cannot silently match nothing on a fresh repo.
+            // Not suppressed off master with the rest: that query runs there too, and
+            // a repository label is not state a branch run can be wrong about.
             try {
               await github.rest.issues.createLabel({
                 owner, repo, name: 'claude:watchdog',
@@ -264,11 +281,15 @@ jobs:
             const prior = [];
             for (const finding of findings) {
               const existing = open.find(i => i.body?.includes(marker(finding.normalisedFingerprint)));
-              if (existing) {
+              // The skip is what stops two overlapping master runs both triaging one
+              // problem. Off master nothing is claimed, so there is nothing to collide
+              // over, and skipping would drop the finding out of the report that is
+              // the only reason to run there.
+              if (existing && onMaster) {
                 core.info(`${finding.fingerprint}: already tracked in #${existing.number} — skipping`);
                 continue;
               }
-              const issue = await github.rest.issues.create({
+              const issue = onMaster ? await github.rest.issues.create({
                 owner, repo,
                 title: `Watchdog: ${finding.checkId} — ${finding.normalisedFingerprint}`,
                 labels: ['claude:watchdog'],
@@ -287,8 +308,10 @@ jobs:
                   JSON.stringify(finding.row, null, 2),
                   '```',
                 ].join('\n'),
-              });
-              claimed.push({ ...finding, issue: issue.data.number });
+              }) : null;
+              // Null off master, where the finding is triaged but nothing tracks it.
+              const number = issue ? issue.data.number : null;
+              claimed.push({ ...finding, issue: number });
 
               // Two lookups, because duplicated work is per check and not per problem.
               // A fingerprint carrying a build hash or a request path mints a fresh one
@@ -310,7 +333,7 @@ jobs:
               prior.push({
                 fingerprint: finding.fingerprint,
                 checkId: finding.checkId,
-                issue: issue.data.number,
+                issue: number,
                 priorIssue: priorRef(previous),
                 priorTriage: priorOf?.report || null,
                 priorHumanComments: priorOf?.humanComments || [],
@@ -324,9 +347,13 @@ jobs:
             fs.writeFileSync('/tmp/watchdog/claimed.json', JSON.stringify(claimed, null, 2));
             // Written even when empty, so the prompt can read it unconditionally.
             fs.writeFileSync('/tmp/watchdog/prior.json', JSON.stringify(prior, null, 2));
+            // Off master there are no issue numbers to list, so `issues` is empty and
+            // `numbers` is `[]`: the count still gates the steps below, and nothing
+            // that reads either of these is reached off master.
+            const numbers = claimed.map(c => c.issue).filter(n => n !== null);
             core.setOutput('count', String(claimed.length));
-            core.setOutput('issues', claimed.map(c => `#${c.issue}`).join(', '));
-            core.setOutput('numbers', JSON.stringify(claimed.map(c => c.issue)));
+            core.setOutput('issues', numbers.map(n => `#${n}`).join(', '));
+            core.setOutput('numbers', JSON.stringify(numbers));
 
       - name: Enable Corepack
         if: steps.claim.outputs.count != '0'
@@ -585,10 +612,12 @@ jobs:
         env:
           REF_NAME: ${{ github.ref_name }}
         run: |
-          echo "::warning::no pull request was opened: this run is on ${REF_NAME}, not master. The commits stayed on the runner; the report is still on the tracking issues."
+          echo "::warning::no pull request was opened: this run is on ${REF_NAME}, not master. The commits stayed on the runner, and nothing was written to the tracking issues either — the report is in this run's log."
 
       - name: Comment the report on the tracking issues
-        if: always() && steps.claim.outputs.count != '0'
+        # Off master the claim step tracked nothing, so there is no issue of this run's
+        # to comment on — and master's issues are not a branch run's to annotate.
+        if: always() && steps.claim.outputs.count != '0' && github.ref_name == 'master'
         uses: actions/github-script@v9
         env:
           PR_URL: ${{ steps.pr.outputs.url }}
@@ -770,7 +799,9 @@ jobs:
 
       - name: Post to Slack
         id: slack
-        if: always() && env.SLACK_WEBHOOK_URL != '' && steps.message.outputs.notify == 'true'
+        # The webhook posts to the team's real channel, which cannot tell a branch
+        # experiment from production. The message is still resolved and logged above.
+        if: always() && env.SLACK_WEBHOOK_URL != '' && steps.message.outputs.notify == 'true' && github.ref_name == 'master'
         uses: hmcts/cnp-githubactions-library/slack-notify@b13c3487914b60791607a1d92f1c240c5b1c115e # merged in library#38
         with:
           # No channel input: a webhook posts only to the channel it was created for.
@@ -778,7 +809,9 @@ jobs:
 
       # Only problems the channel was told about get a recovery notice.
       - name: Mark the issues as alerted
-        if: always() && steps.slack.outputs.delivered == 'true'
+        # The label is master's state and is checked independently rather than being
+        # left to follow whatever gates the Slack step above happens to carry.
+        if: always() && steps.slack.outputs.delivered == 'true' && github.ref_name == 'master'
         uses: actions/github-script@v9
         env:
           NUMBERS: ${{ steps.claim.outputs.numbers }}
@@ -809,7 +842,11 @@ jobs:
   notify-resolved:
     name: Notify resolved
     needs: [detect]
-    if: needs.detect.outputs.resolved != '[]' && needs.detect.outputs.resolved != ''
+    # Every step here is an outward effect, and off master it would be working from
+    # the wrong inputs as well: the dedup state comes from master's cache while the
+    # checks come from the branch, so anything the branch does not evaluate reads as
+    # recovered and master's open issues get closed and announced as fixed.
+    if: needs.detect.outputs.resolved != '[]' && needs.detect.outputs.resolved != '' && github.ref_name == 'master'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
