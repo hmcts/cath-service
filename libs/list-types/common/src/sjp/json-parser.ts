@@ -179,6 +179,7 @@ function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
     postcode: extractPostcode(accused),
     prosecutor,
     dateOfBirth,
+    rawDateOfBirth: accused?.individualDetails?.dateOfBirth || null,
     age: accused?.individualDetails?.age ?? null,
     reference: caseUrn,
     address: formatAddress(accused),
