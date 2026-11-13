@@ -122,6 +122,7 @@ import {
 import { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 import { getFileBuffer } from "../file-storage/file-retrieval.js";
+import { getUploadSubscriptionDecision } from "../subscription-schedule/upload-decision.js";
 import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -819,7 +820,10 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     logPrefix = "[Publication]"
   } = params;
 
+  // Taken before file generation, which can run past London midnight, so the decision matches the lastReceivedDate just written.
+  const decisionTime = new Date();
   const result: ProcessPublicationResult = {};
+  let knownListTypeName: string | undefined;
 
   if (isUpdate) {
     await deletePreviousPublicationFiles(artefactId, logPrefix);
@@ -858,9 +862,9 @@ export async function processPublication(params: ProcessPublicationParams): Prom
       listTypeName = pdfResult.listTypeName ?? "";
     } else {
       console.log(`${logPrefix} PDF skipped generation: source payload ${payloadBytes} bytes exceeds limit ${MAX_PDF_PAYLOAD_BYTES}`, { artefactId });
-      const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
-      listTypeName = listType?.name ?? "";
+      listTypeName = (await resolveListTypeName(artefactId, listTypeId, undefined, logPrefix)) ?? "";
     }
+    knownListTypeName = listTypeName || undefined;
 
     if (payloadBytes < MAX_EXCEL_PAYLOAD_BYTES) {
       const excelResult = await generatePublicationExcel({
@@ -882,7 +886,20 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     }
   }
 
-  if (!skipNotifications) {
+  const resolvedListTypeName = await resolveListTypeName(artefactId, listTypeId, knownListTypeName, logPrefix);
+  const decision = getUploadSubscriptionDecision({ displayFrom, displayTo, listTypeName: resolvedListTypeName }, decisionTime);
+
+  if (!decision.notifyEmail || !decision.pushThirdParty) {
+    console.info(`${logPrefix} Subscription notifications not sent at upload:`, {
+      artefactId,
+      listTypeName: resolvedListTypeName,
+      reason: decision.reason,
+      email: decision.notifyEmail,
+      thirdParty: decision.pushThirdParty
+    });
+  }
+
+  if (!skipNotifications && decision.notifyEmail) {
     const notificationResult = await sendPublicationNotificationsForArtefact({
       artefactId,
       locationId,
@@ -900,7 +917,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     result.notificationsFailed = notificationResult.failed;
   }
 
-  if (!skipThirdPartyPush) {
+  if (!skipThirdPartyPush && decision.pushThirdParty) {
     pushPublicationToThirdParties({
       artefactId,
       locationId,
@@ -921,6 +938,27 @@ export async function processPublication(params: ProcessPublicationParams): Prom
   }
 
   return result;
+}
+
+async function resolveListTypeName(artefactId: string, listTypeId: number, known: string | undefined, logPrefix: string): Promise<string | undefined> {
+  if (known) {
+    return known;
+  }
+
+  try {
+    const listType = await prisma.listType.findUnique({ where: { id: listTypeId }, select: { name: true } });
+    if (!listType) {
+      console.error(`${logPrefix} List type not found, no subscription emails sent at upload:`, { artefactId, listTypeId });
+    }
+    return listType?.name;
+  } catch (error) {
+    console.error(`${logPrefix} List type lookup failed, no subscription emails sent at upload:`, {
+      artefactId,
+      listTypeId,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return undefined;
+  }
 }
 
 // The files are downloaded here because @hmcts/legacy-third-party-fulfilment must not depend on @hmcts/publication.

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generatePublicationExcel, generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
 
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
@@ -1827,6 +1827,155 @@ describe("publication-processor", async () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] Third-party push failed:", expect.any(Error));
       consoleErrorSpy.mockRestore();
+    });
+
+    describe("upload subscription triggers", () => {
+      const NOW = new Date("2026-01-15T10:00:00.000Z");
+
+      beforeEach(() => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(NOW);
+        vi.mocked(getLocationById).mockResolvedValue({ id: 123, name: "Test Court", welshName: "Llys Prawf" });
+        vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024 });
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("should send email and push to third parties when the publication is displayable today", async () => {
+        // Arrange
+        const params = { ...baseParams, displayFrom: new Date("2026-01-15T00:00:00.000Z"), displayTo: new Date("2026-01-15T00:00:00.000Z") };
+
+        // Act
+        await processPublication(params);
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).toHaveBeenCalled();
+        expect(vi.mocked(prisma.listType.findUnique).mock.calls.filter(([args]) => args.select?.name)).toHaveLength(1);
+      });
+
+      it("should generate the PDF but notify nobody when displayFrom is tomorrow", async () => {
+        // Arrange
+        const consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+        const params = { ...baseParams, displayFrom: new Date("2026-01-16T00:00:00.000Z") };
+
+        // Act
+        const result = await processPublication(params);
+
+        // Assert
+        expect(result.pdfPath).toBe("test-artefact-id.pdf");
+        expect(result.notificationsSent).toBeUndefined();
+        expect(getLocationById).not.toHaveBeenCalled();
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+        expect(consoleInfoSpy).toHaveBeenCalledWith("[Publication] Subscription notifications not sent at upload:", {
+          artefactId: "test-artefact-id",
+          listTypeName: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+          reason: "FUTURE_DISPLAY_FROM",
+          email: false,
+          thirdParty: false
+        });
+        consoleInfoSpy.mockRestore();
+      });
+
+      it("should notify nobody when displayTo is before today", async () => {
+        // Arrange
+        const consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+        const params = { ...baseParams, displayFrom: new Date("2026-01-10T00:00:00.000Z"), displayTo: new Date("2026-01-14T00:00:00.000Z") };
+
+        // Act
+        const result = await processPublication(params);
+
+        // Assert
+        expect(result.pdfPath).toBe("test-artefact-id.pdf");
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+        expect(consoleInfoSpy).toHaveBeenCalledWith(
+          "[Publication] Subscription notifications not sent at upload:",
+          expect.objectContaining({ reason: "EXPIRED", email: false, thirdParty: false })
+        );
+        consoleInfoSpy.mockRestore();
+      });
+
+      it("should skip email but push to third parties for a scheduled list type flat file, resolving the name by lookup", async () => {
+        // Arrange
+        const consoleInfoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue({ name: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY" } as any);
+        const params = { ...baseParams, listTypeId: 999, jsonData: undefined, displayFrom: new Date("2026-01-15T00:00:00.000Z") };
+
+        // Act
+        const result = await processPublication(params);
+
+        // Assert
+        expect(prisma.listType.findUnique).toHaveBeenCalledWith({ where: { id: 999 }, select: { name: true } });
+        expect(result.notificationsSent).toBeUndefined();
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(sendListTypePublicationNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ artefactId: "test-artefact-id" }));
+        expect(consoleInfoSpy).toHaveBeenCalledWith(
+          "[Publication] Subscription notifications not sent at upload:",
+          expect.objectContaining({ listTypeName: "MAGISTRATES_PUBLIC_ADULT_COURT_LIST_DAILY", reason: "SCHEDULED_LIST_TYPE", email: false, thirdParty: true })
+        );
+        consoleInfoSpy.mockRestore();
+      });
+
+      it("should skip email but still push to third parties when the list type lookup fails", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "info").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockRejectedValue(new Error("DB down"));
+        const params = { ...baseParams, jsonData: undefined };
+
+        // Act
+        await processPublication(params);
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).toHaveBeenCalled();
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] List type lookup failed, no subscription emails sent at upload:", {
+          artefactId: "test-artefact-id",
+          listTypeId: 8,
+          error: "DB down"
+        });
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should skip email when the list type does not exist", async () => {
+        // Arrange
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "info").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockResolvedValue(null);
+        const params = { ...baseParams, jsonData: undefined };
+
+        // Act
+        await processPublication(params);
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).toHaveBeenCalled();
+        expect(consoleErrorSpy).toHaveBeenCalledWith("[Publication] List type not found, no subscription emails sent at upload:", {
+          artefactId: "test-artefact-id",
+          listTypeId: 8
+        });
+        consoleErrorSpy.mockRestore();
+      });
+
+      it("should not push to third parties when the list type lookup fails for an expired publication", async () => {
+        // Arrange
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "info").mockImplementation(() => {});
+        vi.mocked(prisma.listType.findUnique).mockRejectedValue(new Error("DB down"));
+        const params = { ...baseParams, jsonData: undefined, displayTo: new Date("2026-01-14T00:00:00.000Z") };
+
+        // Act
+        await processPublication(params);
+
+        // Assert
+        expect(sendLocationAndCaseSubscriptionNotifications).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
+      });
     });
 
     it("should call Excel generator for MAGISTRATES_PUBLIC_LIST and derive excelPath", async () => {
