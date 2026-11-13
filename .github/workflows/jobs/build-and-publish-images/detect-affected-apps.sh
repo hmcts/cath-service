@@ -5,8 +5,13 @@ set -euo pipefail
 # Purpose: Detect which apps have been affected by changes using Turborepo
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
+# Environment:
+#   PULL_REQUEST: "true" for a pull request's build, which leaves out the aat-only apps
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
+#   - promotable_apps: affected_apps without the aat-only apps, which are never promoted to prod
+#   - verify_apps: on a pull request, the aat-only apps whose own files, the root Dockerfile or
+#     the install inputs changed, whose stage is built (not pushed) so a broken one shows up before master
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
 #   - needs_shared_build: boolean, true if any affected app uses the shared build stage
@@ -17,6 +22,12 @@ set -euo pipefail
 BASE_SHA="${1:-}"
 
 DOCKERFILE="Dockerfile"
+
+# Apps deployed to aat only (.github/workflows/jobs/aat-only-apps): built on master only, as preview
+# never enables them, so a pull request's image would never be used (ui-baseline depends on most of
+# the workspace's libs, so it would otherwise be built for nearly every pull request), and never
+# promoted, as nothing beyond aat deploys them.
+AAT_ONLY_APPS="$(grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../aat-only-apps" | jq -R -s -c 'split("\n") | map(select(. != ""))')"
 
 # Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
 dockerfile_stages() {
@@ -35,7 +46,7 @@ buildable_apps() {
   stages="$(dockerfile_stages)"
   for dir in apps/*/; do
     app="$(basename "$dir")"
-    if echo "$stages" | grep -qx "$app"; then
+    if grep -qx "$app" <<<"$stages"; then
       echo "$app"
     fi
   done
@@ -69,13 +80,15 @@ main() {
   local buildable app
   buildable="$(buildable_apps)"
   for app in $(echo "$helm_apps" | jq -r '.[]'); do
-    if ! echo "$buildable" | grep -qx "$app"; then
+    if ! grep -qx "$app" <<<"$buildable"; then
       echo "Error: apps/${app}/helm/Chart.yaml exists but ${DOCKERFILE} has no '${app}' stage" >&2
       exit 1
     fi
   done
 
   local use_fallback="false"
+  # The files changed since the base, when there is one to compare with
+  local changed_files=""
 
   # Use provided base SHA, or default to origin/master
   if [ -n "$BASE_SHA" ]; then
@@ -98,7 +111,6 @@ main() {
   if [ "$use_fallback" = "false" ]; then
     # Assigned rather than piped into grep, so a git failure is visible here
     # instead of reading as "no Dockerfile change".
-    local changed_files
     if ! changed_files="$(git diff --name-only "$BASE_SHA" HEAD)"; then
       echo "Error: git diff against $BASE_SHA failed" >&2
       exit 1
@@ -106,7 +118,7 @@ main() {
 
     # These sit outside every workspace, so Turborepo cannot attribute a change
     # in them to any app.
-    if echo "$changed_files" | grep -qE '^(Dockerfile[^/]*|\.dockerignore)$'; then
+    if grep -qE '^(Dockerfile[^/]*|\.dockerignore)$' <<<"$changed_files"; then
       echo "Root Dockerfile or .dockerignore changed - building all apps"
       use_fallback="true"
     fi
@@ -139,10 +151,28 @@ main() {
   else
     # Extract paths, filter to apps directory, strip apps/ prefix, and keep only buildable apps
     affected_apps=$(echo "$affected_json" | jq -r '.packages.items[].path // empty' | { grep '^apps/' || true; } | sed 's|^apps/||' | while read -r app_name; do
-      if echo "$buildable" | grep -qx "$app_name"; then
+      if grep -qx "$app_name" <<<"$buildable"; then
         echo "$app_name"
       fi
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
+  fi
+
+  local without_aat_only
+  without_aat_only=$(echo "$affected_apps" | jq -c --argjson skip "$AAT_ONLY_APPS" 'map(select(. as $app | $skip | index($app) | not))')
+  local verify_apps="[]"
+  if [ "${PULL_REQUEST:-false}" = "true" ]; then
+    affected_apps="$without_aat_only"
+    echo "Pull request: leaving out apps built on master only ($AAT_ONLY_APPS)"
+    # Their stage is still built when the pull request could have broken the image: its own files,
+    # the root Dockerfile or .dockerignore, or what the install resolves (yarn.lock, the root
+    # package.json, Yarn's config) changed, or there is no base to tell from. A change to a lib's
+    # source is left to the pull request's lint and tests, which run for the lib's dependents too.
+    local app
+    for app in $(echo "$AAT_ONLY_APPS" | jq -r '.[]'); do
+      if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
+        verify_apps=$(echo "$verify_apps" | jq -c --arg app "$app" '. + [$app]')
+      fi
+    done
   fi
 
   # Determine if we have any changes
@@ -163,6 +193,8 @@ main() {
   # Output results for GitHub Actions
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "affected-apps=$affected_apps" >> "$GITHUB_OUTPUT"
+    echo "promotable-apps=$without_aat_only" >> "$GITHUB_OUTPUT"
+    echo "verify-apps=$verify_apps" >> "$GITHUB_OUTPUT"
     echo "helm-apps=$helm_apps" >> "$GITHUB_OUTPUT"
     echo "has-changes=$has_changes" >> "$GITHUB_OUTPUT"
     echo "needs-shared-build=$needs_shared_build" >> "$GITHUB_OUTPUT"
@@ -170,6 +202,8 @@ main() {
 
   # Log results
   echo "Affected apps (buildable): $affected_apps"
+  echo "Promotable apps: $without_aat_only"
+  echo "Built without pushing: $verify_apps"
   echo "Helm apps (all): $helm_apps"
   echo "Has changes: $has_changes"
   echo "Needs shared build: $needs_shared_build"

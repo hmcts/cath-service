@@ -1,0 +1,7 @@
+{
+  "$comment": "pip list type name -> CaTH list type name, for list types CaTH renamed. Inferred from the names and reviewed by a developer on 2026-10-22: a wrong pairing compares two unrelated lists, so re-review any addition. List types with the same name in both apps are not listed.",
+  "renamed": {
+    "CROWN_ADVANCE_PDDA_LIST": "CROWN_ADVANCED_PDDA_LIST",
+    "INTERIM_APPLICATIONS_CHD_DAILY_CAUSE_LIST": "INTERIM_APPLICATIONS_DAILY_CAUSE_LIST"
+  }
+}

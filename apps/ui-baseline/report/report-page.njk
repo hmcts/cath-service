@@ -1,0 +1,29 @@
+{#
+  A page of the report, rendered with the context report-page.mjs makes (by make-report.mjs, and by the hosted check for a report written before this layout). The report is a static site opened from disk, a zip or the
+  app, so every path is relative to the page (up). The app adds its own Home and Result links where
+  APP_NAVIGATION is, as it serves the report; nothing else does, as they would lead nowhere.
+#}
+{% extends "page.njk" %}
+
+{% set serviceName = "Court and tribunal hearings: UI baseline" %}
+{% set serviceUrl = up + "index.html" %}
+{% set navigationStart = appNavigationSlot %}
+{% set assetPath = up + "assets" %}
+{% set bodyClasses = "parity-report" %}
+{% set containerClasses = "parity-wide" %}
+
+{% block pageTitle %}{{ title }} – Court and tribunal hearings: UI baseline{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ up }}assets/govuk-frontend.min.css">
+  <link rel="stylesheet" href="{{ up }}assets/navigation.css">
+  <link rel="stylesheet" href="{{ up }}assets/report.css">
+{% endblock %}
+
+{% block content %}{{ body | safe }}{% endblock %}
+
+{% block bodyEnd %}
+  <script type="module">import { initAll } from "{{ up }}assets/govuk-frontend.min.js"; initAll();</script>
+  <script src="{{ up }}assets/navigation.js"></script>
+  <script>{{ filterScript | safe }}</script>
+{% endblock %}

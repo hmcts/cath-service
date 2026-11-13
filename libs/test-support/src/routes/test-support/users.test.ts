@@ -1,12 +1,13 @@
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DELETE, POST } from "./users.js";
+import { DELETE, GET, POST } from "./users.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     user: {
       create: vi.fn(),
-      deleteMany: vi.fn()
+      deleteMany: vi.fn(),
+      findFirst: vi.fn()
     }
   }
 }));
@@ -21,13 +22,61 @@ describe("users routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRequest = {
-      body: {}
+      body: {},
+      query: {}
     };
     mockResponse = {
       json: vi.fn().mockReturnThis(),
       status: vi.fn().mockReturnThis()
     };
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  describe("GET", () => {
+    it("should return the user with that email", async () => {
+      // Arrange
+      mockRequest.query = { email: "Parity.Admin@example.com" };
+      vi.mocked(prisma.user.findFirst).mockResolvedValue({
+        userId: "user-1",
+        email: "parity.admin@example.com",
+        role: "SYSTEM_ADMIN",
+        userProvenance: "SSO"
+      } as any);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.user.findFirst).toHaveBeenCalledWith({
+        where: { email: { equals: "Parity.Admin@example.com", mode: "insensitive" } },
+        orderBy: [{ lastSignedInDate: { sort: "desc", nulls: "last" } }, { createdDate: "desc" }]
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith({ userId: "user-1", email: "parity.admin@example.com", role: "SYSTEM_ADMIN", userProvenance: "SSO" });
+    });
+
+    it("should return 400 when email is missing", async () => {
+      // Arrange
+      mockRequest.query = {};
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(prisma.user.findFirst).not.toHaveBeenCalled();
+    });
+
+    it("should return 404 when no user has that email", async () => {
+      // Arrange
+      mockRequest.query = { email: "nobody@example.com" };
+      vi.mocked(prisma.user.findFirst).mockResolvedValue(null);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+    });
   });
 
   describe("POST", () => {

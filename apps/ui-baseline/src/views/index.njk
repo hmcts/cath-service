@@ -1,0 +1,82 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% set title = "Check CaTH against pip" %}
+{% set currentPage = "home" %}
+{% set statusColours = { queued: "grey", running: "blue", finished: "green", failed: "red" } %}
+
+{% block page_content %}
+  {% if errorMessage %}
+    {{ govukErrorSummary({ titleText: "There is a problem", errorList: [{ text: errorMessage }] }) }}
+  {% endif %}
+
+  <h1 class="govuk-heading-l">{{ title }}</h1>
+  <p class="govuk-body">Compares CaTH in the {{ environment }} environment with the recorded pip baseline: every page's structure, text and accessibility, and the PDF and Excel files each list makes. CaTH is seeded with the same publications pip was recorded with.</p>
+  {% if baseline %}
+    {% if baseline.ready %}
+      <p class="govuk-body">Baseline: {{ baseline.description }}.</p>
+    {% else %}
+      {{ govukWarningText({ text: "The pip baseline is " + baseline.description + ". Checks wait for it." }) }}
+    {% endif %}
+  {% endif %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-m">Check CaTH's pages</h2>
+      <form method="post" action="/runs" novalidate>
+        <input type="hidden" name="formToken" value="{{ formToken }}">
+        <input type="hidden" name="kind" value="check">
+        {{ govukRadios({
+          name: "scope",
+          fieldset: { legend: { text: "What do you want to check?", classes: "govuk-fieldset__legend--s" } },
+          items: [
+            { value: "all", text: "All of CaTH", hint: { text: "Every list type and page in the baseline. Takes about half an hour." }, checked: not data.scope or data.scope == "all" },
+            { value: "list-types", text: "Some list types", checked: data.scope == "list-types", conditional: { html: govukTextarea({ name: "listTypes", id: "listTypes", label: { text: "List type names, one per line" }, hint: { text: "For example, CIVIL_DAILY_CAUSE_LIST" }, value: data.listTypes, rows: 3 }) } },
+            { value: "routes", text: "Some pages", checked: data.scope == "routes", conditional: { html: govukTextarea({ name: "routes", id: "routes", label: { text: "Page routes, one per line" }, hint: { text: "For example, /summary-of-publications" }, value: data.routes, rows: 3 }) } }
+          ]
+        }) }}
+        {{ govukButton({ text: "Start check" }) }}
+      </form>
+    </div>
+
+    <div class="govuk-grid-column-one-half">
+      <h2 class="govuk-heading-m">Compare a publication's files</h2>
+      <p class="govuk-body">For a list you uploaded to both pip and CaTH in {{ environment }}: compares the PDF's text and the Excel file's cells.</p>
+      <form method="post" action="/runs" novalidate>
+        <input type="hidden" name="formToken" value="{{ formToken }}">
+        <input type="hidden" name="kind" value="files">
+        {{ govukInput({ name: "pipArtefactId", id: "pipArtefactId", label: { text: "Artefact id in pip" }, value: data.pipArtefactId, spellcheck: false, classes: "govuk-input--width-30" }) }}
+        {{ govukInput({ name: "cathArtefactId", id: "cathArtefactId", label: { text: "Artefact id in CaTH" }, value: data.cathArtefactId, spellcheck: false, classes: "govuk-input--width-30" }) }}
+        {{ govukInput({ name: "name", id: "name", label: { text: "Name for the results (optional)" }, hint: { text: "Lower-case letters, numbers and hyphens, for example civil-daily-list" }, value: data.name, classes: "govuk-input--width-20" }) }}
+        {{ govukButton({ text: "Compare files", classes: "govuk-button--secondary" }) }}
+      </form>
+    </div>
+  </div>
+
+  <h2 class="govuk-heading-m">Runs</h2>
+  {% if runs.length %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head"><tr class="govuk-table__row">
+        <th scope="col" class="govuk-table__header">Started</th>
+        <th scope="col" class="govuk-table__header">What</th>
+        <th scope="col" class="govuk-table__header">Status</th>
+      </tr></thead>
+      <tbody class="govuk-table__body">
+        {% for run in runs %}
+          <tr class="govuk-table__row">
+            <td class="govuk-table__cell"><a class="govuk-link" href="/runs/{{ run.id }}">{{ run.createdAt | date }}</a></td>
+            <td class="govuk-table__cell">{% include "run-what.njk" %}</td>
+            <td class="govuk-table__cell">{{ govukTag({ text: run.status, classes: "govuk-tag--" + statusColours[run.status] }) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="govuk-body">No runs yet.</p>
+  {% endif %}
+{% endblock %}

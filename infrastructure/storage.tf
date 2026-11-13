@@ -20,11 +20,14 @@ module "sa" {
   common_tags              = local.common_tags
   default_action           = "Allow"
 
-  containers = [
-    { name = "artefact", access_type = "private" },
-    { name = "files", access_type = "private" },
-    { name = "publications", access_type = "private" },
-  ]
+  containers = concat(
+    [
+      { name = "artefact", access_type = "private" },
+      { name = "files", access_type = "private" },
+      { name = "publications", access_type = "private" },
+    ],
+    local.ui_baseline ? [{ name = "ui-baseline", access_type = "private" }] : [],
+  )
 
   managed_identity_object_id = module.key_vault.managed_identity_objectid[0]
   role_assignments           = ["Storage Blob Data Contributor"]

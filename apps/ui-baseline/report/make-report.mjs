@@ -1,0 +1,866 @@
+// Verification report for parity captures. Builds a static site into <out>:
+// overview, list pages (pip vs CaTH), other pip pages, journeys, and known pip defects.
+// Styled with GOV.UK Frontend so it reads like the services it compares.
+import { execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { parseArgs } from "node:util";
+import nunjucks from "nunjucks";
+import { footerMeta, reportPageContext } from "./report-page.mjs";
+
+const { values: args } = parseArgs({
+  options: {
+    lists: { type: "string" }, // dir containing pip/ and cath/ list captures
+    manifest: { type: "string" },
+    pages: { type: "string" }, // pip non-list page captures
+    "cath-pages": { type: "string" }, // CaTH captures of mapped pages, same ids as pip's
+    "pages-compare": { type: "string" }, // compare.json of pip pages against CaTH pages
+    "route-map": { type: "string" },
+    journeys: { type: "string" },
+    "cath-journeys": { type: "string" }, // CaTH's runs of the same journeys, same ids as pip's
+    "journeys-compare": { type: "string" }, // journeys-compare.json from `parity compare-journeys`
+    defects: { type: "string" },
+    run: { type: "string" }, // run.json of the baseline run
+    compare: { type: "string" }, // compare.json from `parity compare` of the list pages
+    review: { type: "string", multiple: true }, // review.json files from `parity review`
+    "files-compare": { type: "string" }, // files-compare.json from `parity compare-files`, with the PDF texts beside it
+    govuk: { type: "string" }, // node_modules/govuk-frontend/dist/govuk
+    only: { type: "string" }, // comma-separated publication and page ids to include (a focused check)
+    title: { type: "string" }, // overview heading
+    out: { type: "string" }
+  }
+});
+const OUT = path.resolve(args.out);
+const LOCALES = ["en", "cy"];
+const ONLY = args.only ? new Set(args.only.split(",").filter(Boolean)) : null;
+const fullManifest = JSON.parse(readFileSync(args.manifest, "utf-8"));
+const manifest = {
+  ...fullManifest,
+  publications: fullManifest.publications.filter((p) => !ONLY || ONLY.has(p.id)),
+  unmatched: ONLY ? [] : fullManifest.unmatched
+};
+const run = args.run && existsSync(args.run) ? JSON.parse(readFileSync(args.run, "utf-8")) : null;
+const comparison = args.compare && existsSync(args.compare) ? JSON.parse(readFileSync(args.compare, "utf-8")) : null;
+const reviews = (args.review ?? []).filter((file) => existsSync(file)).map((file) => JSON.parse(readFileSync(file, "utf-8")));
+const reviewItemsFor = (id, locale) =>
+  reviews.flatMap((review) =>
+    review.items
+      .filter((item) => item.review && item.pages.some((page) => page === `${id} ${locale}`))
+      .map((item) => ({ ...item, requirementsSource: review.requirementsSource }))
+  );
+const filesComparison = args["files-compare"] && existsSync(args["files-compare"]) ? JSON.parse(readFileSync(args["files-compare"], "utf-8")) : null;
+const pagesComparison = args["pages-compare"] && existsSync(args["pages-compare"]) ? JSON.parse(readFileSync(args["pages-compare"], "utf-8")) : null;
+const journeysComparison =
+  args["journeys-compare"] && existsSync(args["journeys-compare"]) ? JSON.parse(readFileSync(args["journeys-compare"], "utf-8")) : null;
+const journeyResultFor = (id, locale) => journeysComparison?.results.find((r) => r.journey === id && r.locale === locale) ?? null;
+const routeMap =
+  args["route-map"] && existsSync(args["route-map"]) ? new Map(JSON.parse(readFileSync(args["route-map"], "utf-8")).routes.map((e) => [e.pip, e])) : new Map();
+// CaTH's own accessibility findings from each comparison, whatever pip does. A report from before
+// these checks has none, and so no Accessibility section.
+const accessibilityAreas = [
+  { area: "lists", label: "List pages", summary: comparison },
+  { area: "pages", label: "Other pages", summary: pagesComparison },
+  { area: "journeys", label: "Journey steps", summary: journeysComparison?.pages }
+].filter((a) => a.summary?.accessibilityPatterns);
+const hasAccessibility = accessibilityAreas.length > 0;
+const pageResultFor = (id, locale) => pagesComparison?.results.find((r) => r.id === id && r.locale === locale && r.state === "default") ?? null;
+const resultFor = (id, locale) => comparison?.results.find((r) => r.id === id && r.locale === locale && r.state === "default") ?? null;
+
+// ---------- site scaffolding ----------
+rmSync(OUT, { recursive: true, force: true });
+mkdirSync(path.join(OUT, "assets"), { recursive: true });
+// node_modules is read-only here, so copy without carrying its permissions across
+for (const source of ["govuk-frontend.min.css", "govuk-frontend.min.js", "assets/images", "assets/fonts", "assets/manifest.json"]) {
+  if (existsSync(path.join(args.govuk, source))) execFileSync("cp", ["-r", "--no-preserve=mode", path.join(args.govuk, source), path.join(OUT, "assets/")]);
+}
+cpSync(path.join(import.meta.dirname, "report.css"), path.join(OUT, "assets/report.css"));
+for (const shared of ["navigation.css", "navigation.js"]) cpSync(path.join(import.meta.dirname, "../src/assets", shared), path.join(OUT, "assets", shared));
+mkdirSync(path.join(OUT, "data"), { recursive: true });
+for (const [name, target] of [
+  ["lists", args.lists],
+  ["pages", args.pages],
+  ["cath-pages", args["cath-pages"]],
+  ["journeys", args.journeys],
+  ["cath-journeys", args["cath-journeys"]],
+  ["files", filesComparison && path.dirname(args["files-compare"])]
+]) {
+  if (target && existsSync(target)) symlinkSync(path.resolve(target), path.join(OUT, "data", name));
+}
+
+// The report's pages are built on the app's own page (src/views/page.njk) and GOV.UK Frontend's
+// templates, so the two look the same; report-page.mjs says what each page is drawn with
+const views = new nunjucks.Environment(
+  new nunjucks.FileSystemLoader([import.meta.dirname, path.join(import.meta.dirname, "../src/views"), path.dirname(args.govuk)]),
+  { autoescape: true }
+);
+const FOOTER_META = footerMeta(
+  run ? { finished: esc(new Date(run.finishedAt).toLocaleString("en-GB", { timeZone: "Europe/London" })), pip: esc(run.pip) } : null
+);
+
+function layout({ file, title, active, body, depth = 0 }) {
+  const context = reportPageContext({
+    title,
+    body,
+    depth,
+    active,
+    has: { comparison: Boolean(comparison), files: Boolean(filesComparison), accessibility: hasAccessibility },
+    footerMeta: FOOTER_META,
+    filterScript: FILTER_SCRIPT
+  });
+  mkdirSync(path.dirname(path.join(OUT, file)), { recursive: true });
+  writeFileSync(path.join(OUT, file), views.render("report-page.njk", context));
+}
+
+// Filters any table marked data-filterable using the input that points at it
+const FILTER_SCRIPT = `document.querySelectorAll('[data-filter-for]').forEach(function (input) {
+  var table = document.getElementById(input.getAttribute('data-filter-for'));
+  input.addEventListener('input', function () {
+    var q = input.value.toLowerCase();
+    table.querySelectorAll('tbody tr').forEach(function (row) { row.hidden = q && row.textContent.toLowerCase().indexOf(q) === -1; });
+  });
+});`;
+
+// ---------- helpers ----------
+function esc(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+const readJson = (file) => (existsSync(file) ? JSON.parse(readFileSync(file, "utf-8")) : null);
+const readLines = (file) =>
+  existsSync(file)
+    ? readFileSync(file, "utf-8")
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+    : [];
+const plural = (count, one, many) => (count === 1 ? one : many);
+const tag = (text, colour) => `<strong class="govuk-tag govuk-tag--${colour}">${esc(text)}</strong>`;
+const ariaHeading = (file) => (existsSync(file) ? ((readFileSync(file, "utf-8").match(/heading "([^"]*)"/) ?? [])[1] ?? "") : "");
+
+function unifiedDiff(a, b, labelA, labelB) {
+  try {
+    execFileSync("diff", ["-u", "--label", labelA, "--label", labelB, a, b], { encoding: "utf-8" });
+    return "";
+  } catch (error) {
+    return error.stdout ?? "";
+  }
+}
+function diffBlock(diff) {
+  const lines = diff.split("\n").filter((line) => !line.startsWith("---") && !line.startsWith("+++"));
+  return `<pre class="parity-diff">${lines
+    .map((line) => `<span class="${line.startsWith("@@") ? "hunk" : line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : ""}">${esc(line)}</span>`)
+    .join("\n")}</pre>`;
+}
+const changedLineCount = (diff) => diff.split("\n").filter((line) => /^[+-](?![+-]{2})/.test(line)).length;
+
+function axeSummary(file) {
+  const axe = readJson(file);
+  if (!axe) return { count: 0, html: "" };
+  const items = axe.violations
+    .map(
+      (v) =>
+        `<li>${tag(v.impact ?? "unknown", v.impact === "critical" ? "red" : v.impact === "serious" ? "orange" : "yellow")} <a class="govuk-link" href="${esc(v.helpUrl)}">${esc(v.id)}</a> – ${esc(v.help)} <span class="govuk-hint parity-inline-hint">(${v.targets.length} element${v.targets.length === 1 ? "" : "s"})</span></li>`
+    )
+    .join("");
+  return {
+    count: axe.violations.length,
+    html: axe.violations.length ? `<ul class="govuk-list parity-axe">${items}</ul>` : `<p class="govuk-body-s parity-ok">No axe violations</p>`
+  };
+}
+
+function fileLinks(base, dirOnDisk) {
+  const files = ["aria.yml", "page.aria.yml", "text.txt", "meta.json", "axe.json", "provenance.json", "page.png", "page-full.png"].filter((f) =>
+    existsSync(path.join(dirOnDisk, f))
+  );
+  return `<p class="govuk-body-s parity-files">${files.map((f) => `<a class="govuk-link" href="${base}/${f}">${f}</a>`).join(" · ")}</p>`;
+}
+
+function captureCard({ label, colour, dirOnDisk, href, depth }) {
+  const up = "../".repeat(depth);
+  if (!existsSync(path.join(dirOnDisk, "page.png"))) {
+    return `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag(label, colour)}</h3><p class="govuk-body-s">Not captured</p></div>`;
+  }
+  const provenance = readJson(path.join(dirOnDisk, "provenance.json")) ?? {};
+  const axe = axeSummary(path.join(dirOnDisk, "axe.json"));
+  const wide = existsSync(path.join(dirOnDisk, "page-full.png")) ? ` · <a class="govuk-link" href="${up}${href}/page-full.png">unclipped screenshot</a>` : "";
+  return `<div class="parity-card">
+    <h3 class="govuk-heading-s">${tag(label, colour)} <span class="parity-url">${esc(provenance.url ?? "")}</span></h3>
+    <a href="${up}${href}/page.png" class="parity-shot"><img src="${up}${href}/page.png" alt="${esc(label)} screenshot" loading="lazy"></a>
+    <p class="govuk-body-s">HTTP ${esc(provenance.status ?? "?")}${wide}</p>
+    <h4 class="govuk-heading-s parity-subheading">Accessibility (axe)</h4>${axe.html}
+    ${fileLinks(`${up}${href}`, dirOnDisk)}
+  </div>`;
+}
+
+const CATEGORY = {
+  heading: ["Headings", "blue"],
+  table: ["Tables", "purple"],
+  form: ["Form controls", "pink"],
+  button: ["Buttons", "turquoise"],
+  link: ["Links", "turquoise"],
+  text: ["Text", "grey"],
+  page: ["Page", "light-blue"],
+  "axe-new": ["Accessibility: new in CaTH", "red"],
+  "axe-fixed": ["Accessibility: fixed in CaTH", "green"],
+  "axe-inherited": ["Accessibility: inherited from pip", "yellow"],
+  frame: ["Header, banners and footer", "light-blue"]
+};
+const categoryTag = (category) => tag(CATEGORY[category]?.[0] ?? category, CATEGORY[category]?.[1] ?? "grey");
+// As compare.ts: findings that do not by themselves make a page differ from pip
+const NOT_DECIDING = new Set(["axe-inherited", "frame"]);
+const differenceCount = (result) => result.findings.filter((f) => !NOT_DECIDING.has(f.category)).length;
+
+function findingsBlock(result) {
+  if (!result) return "";
+  if (result.verdict === "not-captured") return `<div class="govuk-inset-text">Not compared: CaTH did not capture this page.</div>`;
+  return `${differencesBlock(result)}${accessibilityBlock(result.accessibility)}`;
+}
+
+// CaTH's own accessibility issues on the page, checked against WCAG on their own, not against pip
+function accessibilityBlock(findings) {
+  if (!findings) return "";
+  if (!findings.length) return `<p class="govuk-body-s">No accessibility issues found by the checks on CaTH's own page.</p>`;
+  const items = findings
+    .map(
+      (f) =>
+        `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)} <span class="govuk-hint parity-inline-hint">(${esc(f.wcag)})</span></li>`
+    )
+    .join("");
+  return `<h3 class="govuk-heading-s">${findings.length} accessibility ${plural(findings.length, "issue", "issues")} in CaTH</h3>
+    <p class="govuk-body-s">Checked on CaTH's page alone, so these include issues pip has too.</p>
+    <ul class="govuk-list govuk-list--bullet parity-findings">${items}</ul>`;
+}
+
+function differencesBlock(result) {
+  const differences = result.findings.filter((f) => !NOT_DECIDING.has(f.category));
+  const inherited = result.findings.filter((f) => f.category === "axe-inherited");
+  if (!differences.length)
+    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Matches pip after normalisation${inherited.length ? ` · ${inherited.length} accessibility issue(s) inherited from pip` : ""}</p></div>${frameBlock(result)}`;
+  const groups = Object.entries(Object.groupBy(differences, (f) => f.category));
+  const rows = groups
+    .map(
+      ([category, items]) =>
+        `<tr class="govuk-table__row"><td class="govuk-table__cell parity-category">${categoryTag(category)}</td><td class="govuk-table__cell"><ul class="govuk-list parity-findings">${items.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></td></tr>`
+    )
+    .join("");
+  return `<h3 class="govuk-heading-s">${differences.length} finding${differences.length === 1 ? "" : "s"} after normalisation</h3>
+    <table class="govuk-table parity-findings-table"><tbody class="govuk-table__body">${rows}</tbody></table>
+    ${inherited.length ? `<p class="govuk-body-s">${categoryTag("axe-inherited")} ${inherited.map((f) => esc(f.detail.split(":")[0])).join(", ")}</p>` : ""}
+    ${frameBlock(result)}`;
+}
+
+// The header, banners and footer: the same on every page, so listed but not counted as the page differing
+function frameBlock(result) {
+  const frame = result.findings.filter((f) => f.category === "frame");
+  if (!frame.length) return "";
+  return `<p class="govuk-body-s">${categoryTag("frame")} ${frame.map((f) => `<span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}`).join("; ")}</p>`;
+}
+
+// A page also captured on mobile, and as other roles (ids "<page>@<user>"): one row each, with its
+// verdict, its findings and both captures. area is "lists" or "pages"; captures sit under data/.
+function variantsBlock({ area, id, locale, ids, pipBase, cathBase, compare }) {
+  const result = (captureId, state) => compare?.results.find((r) => r.id === captureId && r.locale === locale && r.state === state) ?? null;
+  const rows = [
+    { label: "On mobile", captureId: id, state: "mobile" },
+    ...ids.filter((other) => other.startsWith(`${id}@`)).map((other) => ({ label: `As ${other.slice(id.length + 1)}`, captureId: other, state: "default" }))
+  ].filter(({ captureId, state }) => existsSync(path.join(area === "lists" ? path.join(args.lists, "pip") : args.pages, captureId, locale, state)));
+  if (!rows.length) return "";
+  const body = rows
+    .map(({ label, captureId, state }) => {
+      const r = result(captureId, state);
+      const verdict =
+        !r || r.verdict === "not-captured"
+          ? tag("not compared", "grey")
+          : differenceCount(r)
+            ? tag(`${differenceCount(r)} finding${differenceCount(r) === 1 ? "" : "s"}`, "orange")
+            : tag("match", "green");
+      const links = `<a class="govuk-link" href="../${pipBase}/${captureId}/${locale}/${state}/page.png">pip</a> · <a class="govuk-link" href="../${cathBase}/${captureId}/${locale}/${state}/page.png">CaTH</a>`;
+      const findings =
+        r && r.verdict !== "not-captured" && differenceCount(r)
+          ? `<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Findings</span></summary><div class="govuk-details__text">${findingsBlock(r)}</div></details>`
+          : "";
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell">${esc(label)}</td><td class="govuk-table__cell">${verdict}</td><td class="govuk-table__cell govuk-body-s">${links}${findings}</td></tr>`;
+    })
+    .join("");
+  return `<h3 class="govuk-heading-s">Also captured</h3><table class="govuk-table"><tbody class="govuk-table__body">${body}</tbody></table>`;
+}
+
+const VERDICT = { intended: ["Intended", "green"], defect: ["Defect", "red"], "needs-human": ["Needs a human", "yellow"] };
+
+function reviewBlock(id, locale) {
+  const items = reviewItemsFor(id, locale);
+  if (!items.length) return "";
+  const counts = Object.fromEntries(Object.keys(VERDICT).map((v) => [v, items.filter((i) => i.review.verdict === v).length]));
+  const order = { defect: 0, "needs-human": 1, intended: 2 };
+  const rows = items
+    .sort((a, b) => order[a.review.verdict] - order[b.review.verdict])
+    .map(
+      (item) => `<tr class="govuk-table__row"><td class="govuk-table__cell">${tag(...VERDICT[item.review.verdict])}</td>
+      <td class="govuk-table__cell">${categoryTag(item.category)}<br><span class="parity-change">${esc(item.change.replace(/-/g, " "))}</span> ${esc(item.detail)}</td>
+      <td class="govuk-table__cell">${esc(item.review.reason)}${item.review.evidence ? `<blockquote class="parity-evidence">${esc(item.review.evidence)}</blockquote>` : ""}</td></tr>`
+    )
+    .join("");
+  return `<div class="parity-review">
+    <h3 class="govuk-heading-m">Review against the ticket</h3>
+    <p class="govuk-body">${tag(`${counts.defect} defects`, "red")} ${tag(`${counts["needs-human"]} need a human`, "yellow")} ${tag(`${counts.intended} intended`, "green")} <span class="govuk-hint parity-inline-hint">Requirements: <code>${esc(items[0].requirementsSource ?? "none")}</code></span></p>
+    <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Verdict</th><th class="govuk-table__header">Finding</th><th class="govuk-table__header">Reason and evidence</th></tr></thead><tbody class="govuk-table__body">${rows}</tbody></table>
+  </div>`;
+}
+
+function statCard(number, label, detail = "") {
+  return `<div class="parity-stat"><p class="parity-stat__number">${esc(number)}</p><p class="parity-stat__label">${esc(label)}</p>${detail ? `<p class="parity-stat__detail">${detail}</p>` : ""}</div>`;
+}
+
+function filterBox(tableId, placeholder) {
+  return `<div class="govuk-form-group parity-filter"><label class="govuk-label" for="filter-${tableId}">Filter</label><input class="govuk-input govuk-!-width-one-half" id="filter-${tableId}" type="search" data-filter-for="${tableId}" placeholder="${esc(placeholder)}"></div>`;
+}
+
+// ---------- list pages ----------
+// Every capture id in the baseline's lists and pages, variants included
+const listIds = [...new Set(readLines(path.join(args.lists, "pip", "index.jsonl")).map((e) => e.id))];
+const pageIds = args.pages ? [...new Set(readLines(path.join(args.pages, "index.jsonl")).map((e) => e.id))] : [];
+const listRows = [];
+let pipListAxe = 0;
+let cathListAxe = 0;
+for (const publication of manifest.publications) {
+  const status = {};
+  const sections = [];
+  for (const locale of LOCALES) {
+    const rel = `${publication.id}/${locale}/default`;
+    const pipDir = path.join(args.lists, "pip", rel);
+    const cathDir = path.join(args.lists, "cath", rel);
+    const both = existsSync(path.join(pipDir, "aria.yml")) && existsSync(path.join(cathDir, "aria.yml"));
+    if (locale === "en") {
+      pipListAxe += axeSummary(path.join(pipDir, "axe.json")).count;
+      cathListAxe += axeSummary(path.join(cathDir, "axe.json")).count;
+    }
+    const ariaDiff = both ? unifiedDiff(path.join(pipDir, "aria.yml"), path.join(cathDir, "aria.yml"), "pip", "CaTH") : null;
+    const textDiff = both ? unifiedDiff(path.join(pipDir, "text.txt"), path.join(cathDir, "text.txt"), "pip", "CaTH") : null;
+    status[locale] = ariaDiff === null ? null : changedLineCount(ariaDiff);
+    sections.push(`<div class="govuk-tabs__panel${locale === "cy" ? " govuk-tabs__panel--hidden" : ""}" id="tab-${locale}">
+      <h2 class="govuk-heading-m">${locale === "en" ? "English" : "Welsh"}</h2>
+      <div class="parity-pair">
+        ${captureCard({ label: "pip", colour: "blue", dirOnDisk: pipDir, href: `data/lists/pip/${rel}`, depth: 1 })}
+        ${captureCard({ label: "CaTH", colour: "purple", dirOnDisk: cathDir, href: `data/lists/cath/${rel}`, depth: 1 })}
+      </div>
+      ${
+        ariaDiff === null
+          ? `<div class="govuk-inset-text">No comparison: ${publication.cathListType ? "CaTH page not captured (needs sign-in)" : "CaTH has no equivalent list type"}.</div>`
+          : `${reviewBlock(publication.id, locale)}${findingsBlock(resultFor(publication.id, locale))}
+             <details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Raw accessibility tree differences ${ariaDiff ? tag(`${status[locale]} lines`, "red") : tag("identical", "green")}</span></summary><div class="govuk-details__text">${ariaDiff ? diffBlock(ariaDiff) : "Identical."}</div></details>
+             <details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Raw visible text differences ${textDiff ? tag(`${changedLineCount(textDiff)} lines`, "red") : tag("identical", "green")}</span></summary><div class="govuk-details__text">${textDiff ? diffBlock(textDiff) : "Identical."}</div></details>`
+      }
+      ${variantsBlock({ area: "lists", id: publication.id, locale, ids: listIds, pipBase: "data/lists/pip", cathBase: "data/lists/cath", compare: comparison })}
+    </div>`);
+  }
+
+  const notes = (publication.notes ?? []).map((n) => `<li>${esc(n)}</li>`).join("");
+  layout({
+    file: `lists/${publication.id}.html`,
+    depth: 1,
+    active: "lists.html",
+    title: publication.listType,
+    body: `<a href="../lists.html" class="govuk-back-link">All list pages</a>
+    <span class="govuk-caption-l">List page</span><h1 class="govuk-heading-l parity-break">${esc(publication.listType)}</h1>
+    <dl class="govuk-summary-list govuk-summary-list--no-border parity-meta">
+      ${[
+        ["pip page", publication.paths.pip],
+        ["CaTH page", publication.paths.cath ?? "none"],
+        ["CaTH list type", publication.cathListType ?? "none"],
+        ["Location", publication.locationId],
+        ["Content date", publication.contentDate],
+        ["Payload", `${publication.format} · ${publication.origin}`]
+      ]
+        .map(
+          ([k, v]) =>
+            `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${esc(k)}</dt><dd class="govuk-summary-list__value"><code>${esc(v)}</code></dd></div>`
+        )
+        .join("")}
+    </dl>
+    ${notes ? `<div class="govuk-inset-text"><ul class="govuk-list govuk-list--bullet">${notes}</ul></div>` : ""}
+    <div class="govuk-tabs" data-module="govuk-tabs"><ul class="govuk-tabs__list">
+      <li class="govuk-tabs__list-item govuk-tabs__list-item--selected"><a class="govuk-tabs__tab" href="#tab-en">English</a></li>
+      <li class="govuk-tabs__list-item"><a class="govuk-tabs__tab" href="#tab-cy">Welsh</a></li>
+    </ul>${sections.join("")}</div>`
+  });
+
+  const cell = (locale) => {
+    const result = resultFor(publication.id, locale);
+    if (!result || result.verdict === "not-captured" || status[locale] === null) return `<td class="govuk-table__cell">${tag("not compared", "grey")}</td>`;
+    const count = differenceCount(result);
+    return `<td class="govuk-table__cell">${count === 0 ? tag("match", "green") : tag(`${count} finding${count === 1 ? "" : "s"}`, count > 10 ? "red" : "orange")}</td>`;
+  };
+  listRows.push(`<tr class="govuk-table__row">
+    <td class="govuk-table__cell"><a class="govuk-link parity-break" href="lists/${publication.id}.html">${esc(publication.listType)}</a></td>
+    <td class="govuk-table__cell">${tag(publication.format, publication.format === "excel" ? "turquoise" : publication.format === "flat-file" ? "grey" : "blue")}</td>
+    ${cell("en")}${cell("cy")}
+    <td class="govuk-table__cell govuk-body-s">${(publication.notes ?? []).map(esc).join("<br>")}</td></tr>`);
+}
+layout({
+  file: "lists.html",
+  active: "lists.html",
+  title: "List pages",
+  body: `<h1 class="govuk-heading-l">List pages</h1>
+  <p class="govuk-body">Each list type is seeded into pip and CaTH from the same fixture, then captured in English and Welsh. Differences are raw accessibility-tree diffs before any normalisation, so artefact IDs and formatting-only markup still show.</p>
+  ${filterBox("lists-table", "list type, format or note")}
+  <table class="govuk-table" id="lists-table"><thead class="govuk-table__head"><tr class="govuk-table__row">
+    <th class="govuk-table__header">List type</th><th class="govuk-table__header">Payload</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th><th class="govuk-table__header">Notes</th>
+  </tr></thead><tbody class="govuk-table__body">${listRows.join("")}</tbody></table>
+  ${manifest.unmatched?.length ? `<h2 class="govuk-heading-m">Not in the baseline (${manifest.unmatched.length})</h2><ul class="govuk-list govuk-list--bullet">${manifest.unmatched.map((u) => `<li><code>${esc(u.listType)}</code> – ${esc(u.reason)}</li>`).join("")}</ul>` : ""}`
+});
+
+// ---------- other pages ----------
+const pageEntries = (args.pages ? readLines(path.join(args.pages, "index.jsonl")) : []).filter(
+  (e) => e.state === "default" && e.locale === "en" && !e.id.includes("@") && (!ONLY || ONLY.has(e.id))
+);
+const pageRows = [];
+let pipPageAxe = 0;
+for (const entry of pageEntries.sort((a, b) => a.source.route.localeCompare(b.source.route))) {
+  const dirs = Object.fromEntries(LOCALES.map((l) => [l, path.join(args.pages, entry.id, l, "default")]));
+  const axeCount = axeSummary(path.join(dirs.en, "axe.json")).count;
+  pipPageAxe += axeCount;
+  const heading = ariaHeading(path.join(dirs.en, "aria.yml"));
+  const expanded = LOCALES.some((l) => existsSync(path.join(args.pages, entry.id, l, "expanded")));
+  const mapping = routeMap.get(entry.source.route);
+  const cathDirs = args["cath-pages"] ? Object.fromEntries(LOCALES.map((l) => [l, path.join(args["cath-pages"], entry.id, l, "default")])) : null;
+  const hasCath = cathDirs && existsSync(path.join(cathDirs.en, "page.png"));
+  const mappingNote = mapping
+    ? `<p class="govuk-body">CaTH equivalent: ${mapping.cath ? `<code>${esc(mapping.cath)}</code> ${tag(mapping.match === "same-path" ? "same path" : `suggested, ${mapping.confidence} confidence`, mapping.match === "same-path" || mapping.confidence === "high" ? "green" : "yellow")}` : tag("none mapped", "grey")}</p>`
+    : "";
+  const sections = LOCALES.map(
+    (locale) => `<div class="govuk-tabs__panel${locale === "cy" ? " govuk-tabs__panel--hidden" : ""}" id="tab-${locale}">
+      <div class="parity-pair">
+        ${captureCard({ label: "pip", colour: "blue", dirOnDisk: dirs[locale], href: `data/pages/${entry.id}/${locale}/default`, depth: 1 })}
+        ${hasCath ? captureCard({ label: "CaTH", colour: "purple", dirOnDisk: cathDirs[locale], href: `data/cath-pages/${entry.id}/${locale}/default`, depth: 1 }) : `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag("CaTH", "purple")}</h3><p class="govuk-body-s">${mapping?.cath ? "Not captured yet: CaTH sign-in, or a dynamic route, is still needed." : "No CaTH equivalent mapped."}</p></div>`}
+      </div>
+      ${hasCath ? findingsBlock(pageResultFor(entry.id, locale)) : ""}
+      ${variantsBlock({ area: "pages", id: entry.id, locale, ids: pageIds, pipBase: "data/pages", cathBase: "data/cath-pages", compare: pagesComparison })}
+    </div>`
+  ).join("");
+  layout({
+    file: `pages/${entry.id}.html`,
+    depth: 1,
+    active: "pages.html",
+    title: entry.source.route,
+    body: `<a href="../pages.html" class="govuk-back-link">All pages</a>
+    <span class="govuk-caption-l">pip page · ${esc(entry.source.viewAs ?? "signed out")}</span><h1 class="govuk-heading-l parity-break"><code>${esc(entry.source.route)}</code></h1>
+    <p class="govuk-body">${esc(heading)}</p>${mappingNote}
+    <div class="govuk-tabs" data-module="govuk-tabs"><ul class="govuk-tabs__list">
+      <li class="govuk-tabs__list-item govuk-tabs__list-item--selected"><a class="govuk-tabs__tab" href="#tab-en">English</a></li>
+      <li class="govuk-tabs__list-item"><a class="govuk-tabs__tab" href="#tab-cy">Welsh</a></li>
+    </ul>${sections}</div>
+    ${expanded ? `<div class="govuk-inset-text">This page also has an <strong>expanded</strong> state (collapsed content opened): <a class="govuk-link" href="../data/pages/${entry.id}/en/expanded/page.png">English</a> · <a class="govuk-link" href="../data/pages/${entry.id}/cy/expanded/page.png">Welsh</a></div>` : ""}`
+  });
+  const compareCell = (locale) => {
+    const result = hasCath ? pageResultFor(entry.id, locale) : null;
+    if (!result) return `<td class="govuk-table__cell">${tag(mapping?.cath ? "not captured" : "no CaTH page", "grey")}</td>`;
+    const count = differenceCount(result);
+    return `<td class="govuk-table__cell">${count === 0 ? tag("match", "green") : tag(`${count} finding${count === 1 ? "" : "s"}`, count > 10 ? "red" : "orange")}</td>`;
+  };
+  pageRows.push(`<tr class="govuk-table__row">
+    <td class="govuk-table__cell"><a class="govuk-link" href="pages/${entry.id}.html"><code>${esc(entry.source.route)}</code></a></td>
+    <td class="govuk-table__cell">${entry.source.viewAs ? tag(entry.source.viewAs, "grey") : tag("signed out", "green")}</td>
+    <td class="govuk-table__cell">${esc(heading)}</td>
+    <td class="govuk-table__cell">${mapping?.cath ? `<code>${esc(mapping.cath)}</code>` : "—"}</td>
+    ${compareCell("en")}${compareCell("cy")}
+    <td class="govuk-table__cell"><a href="pages/${entry.id}.html"><img class="parity-thumb" src="data/pages/${entry.id}/en/default/page.png" alt="" loading="lazy"></a></td></tr>`);
+}
+layout({
+  file: "pages.html",
+  active: "pages.html",
+  title: "Other pages",
+  body: `<h1 class="govuk-heading-l">Other pages</h1>
+  <p class="govuk-body">Every user-facing pip page from the route inventory, captured as the role its guard requires. CaTH pages come from <code>apps/ui-baseline/routes/route-map.json</code>; those that need CaTH sign-in are not captured yet.</p>
+  ${filterBox("pages-table", "route, role or heading")}
+  <table class="govuk-table" id="pages-table"><thead class="govuk-table__head"><tr class="govuk-table__row">
+    <th class="govuk-table__header">Route</th><th class="govuk-table__header">Captured as</th><th class="govuk-table__header">Heading</th><th class="govuk-table__header">CaTH page</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th><th class="govuk-table__header">Preview</th>
+  </tr></thead><tbody class="govuk-table__body">${pageRows.join("")}</tbody></table>`
+});
+
+// ---------- journeys ----------
+const JOURNEY_VERDICT = { match: ["matches", "green"], differs: ["differs", "red"], "not-run": ["not run", "grey"] };
+
+// How CaTH's run of the journey compares, with the differences in its steps (missing, moved, at another page)
+function journeyVerdict(compared) {
+  if (!compared) return "";
+  if (compared.verdict === "not-run") return `<div class="govuk-inset-text">CaTH has not run this journey: it is not ported to CaTH yet.</div>`;
+  const differing = compared.steps.filter((s) => s.source && s.target && s.verdict === "differs").length;
+  if (compared.verdict === "match")
+    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">CaTH matches pip · every step reached in order, each page matching after normalisation</p></div>`;
+  const findings = compared.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`);
+  if (differing) findings.push(`<li>${differing} step ${plural(differing, "page differs", "pages differ")} from pip: see each step below</li>`);
+  return `<div class="govuk-inset-text"><h3 class="govuk-heading-s">${tag("CaTH differs", "red")}</h3><ul class="govuk-list govuk-list--bullet">${findings.join("")}</ul></div>`;
+}
+
+// CaTH's capture of the checkpoint a pip step reached, with how its page compares
+function cathStep(id, locale, pair) {
+  if (!journeysComparison || !pair) return "";
+  if (!pair.target) return `<p class="govuk-body-s">${tag("CaTH", "purple")} did not reach this step</p>`;
+  const result = journeysComparison.pages.results.find((r) => r.id === id && r.locale === locale && r.state === pair.name) ?? null;
+  const label = pair.verdict === "match" ? tag("matches", "green") : tag(`${differenceCount(result ?? { findings: [] })} findings`, "red");
+  return `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">CaTH: ${esc(pair.target.path)}</span></summary><div class="govuk-details__text">${label}
+    ${captureCard({ label: "CaTH", colour: "purple", dirOnDisk: path.join(args["cath-journeys"], id, locale, pair.target.step), href: `data/cath-journeys/${id}/${locale}/${pair.target.step}`, depth: 1 })}
+    ${findingsBlock(result)}</div></details>`;
+}
+
+// Checkpoints CaTH reached that pip did not
+function cathOnlySteps(id, locale, compared) {
+  const extra = compared?.steps.filter((pair) => pair.target && !pair.source) ?? [];
+  if (!extra.length) return "";
+  return `<h2 class="govuk-heading-m">Only in CaTH</h2><ul class="govuk-list">${extra
+    .map(
+      (pair) =>
+        `<li>${captureCard({ label: `CaTH: ${pair.name}`, colour: "purple", dirOnDisk: path.join(args["cath-journeys"], id, locale, pair.target.step), href: `data/cath-journeys/${id}/${locale}/${pair.target.step}`, depth: 1 })}</li>`
+    )
+    .join("")}</ul>`;
+}
+
+const journeyIds =
+  args.journeys && existsSync(args.journeys)
+    ? readdirSync(args.journeys)
+        .filter((n) => statSync(path.join(args.journeys, n)).isDirectory() && (!ONLY || ONLY.has(n)))
+        .sort()
+    : [];
+const journeyRows = [];
+let checkpointTotal = 0;
+let journeyRuns = 0;
+let journeyFailures = 0;
+for (const id of journeyIds) {
+  const records = LOCALES.map((locale) => ({ locale, record: readJson(path.join(args.journeys, id, locale, "journey.json")) })).filter((r) => r.record);
+  if (!records.length) continue;
+  const first = records[0].record;
+  const panels = records.map(({ locale, record }) => {
+    journeyRuns++;
+    checkpointTotal += record.steps.length;
+    if (!record.ok) journeyFailures++;
+    const base = `../data/journeys/${id}/${locale}`;
+    const steps = record.steps
+      .map(
+        (step, i) => `<li class="parity-step">
+        <div class="parity-step__number">${i + 1}</div>
+        <div class="parity-step__body">
+          ${step.via ? `<p class="parity-step__via">${esc(step.via)}</p>` : `<p class="parity-step__via">Start</p>`}
+          <div class="parity-step__card">
+            <a href="${base}/${step.step}/page.png" class="parity-step__shot"><img src="${base}/${step.step}/page.png" alt="${esc(step.step)}" loading="lazy"></a>
+            <div>
+              <h3 class="govuk-heading-s">${esc(step.h1?.[0] || step.title || step.step)}</h3>
+              <p class="govuk-body-s"><code>${esc(step.path)}</code></p>
+              ${step.note ? `<div class="govuk-warning-text parity-note"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text">${esc(step.note)}</strong></div>` : ""}
+              <p class="govuk-body-s parity-files"><a class="govuk-link" href="${base}/${step.step}/aria.yml">aria.yml</a> · <a class="govuk-link" href="${base}/${step.step}/text.txt">text.txt</a> · <a class="govuk-link" href="${base}/${step.step}/axe.json">axe.json</a> · <a class="govuk-link" href="${base}/${step.step}/meta.json">meta.json</a></p>
+            </div>
+          </div>
+          ${cathStep(
+            id,
+            locale,
+            journeyResultFor(id, locale)?.steps.find((pair) => pair.source?.step === step.step)
+          )}
+        </div></li>`
+      )
+      .join("");
+    const video = existsSync(path.join(args.journeys, id, locale, "video.webm"))
+      ? `<video class="parity-video" controls preload="metadata" src="${base}/video.webm"></video>`
+      : "";
+    const outcome = record.ok
+      ? `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Completed · ${record.steps.length} steps</p></div>`
+      : `<div class="govuk-error-summary" data-module="govuk-error-summary"><div role="alert"><h2 class="govuk-error-summary__title">Journey stopped after ${record.steps.length} steps</h2><div class="govuk-error-summary__body"><pre class="parity-error">${esc(record.error)}</pre></div></div></div>`;
+    const compared = journeyResultFor(id, locale);
+    return `<div class="govuk-tabs__panel${locale === "cy" ? " govuk-tabs__panel--hidden" : ""}" id="tab-${locale}">${outcome}${journeyVerdict(compared)}${video}<ol class="parity-steps">${steps}</ol>${cathOnlySteps(id, locale, compared)}</div>`;
+  });
+  layout({
+    file: `journeys/${id}.html`,
+    depth: 1,
+    active: "journeys.html",
+    title: id,
+    body: `<a href="../journeys.html" class="govuk-back-link">All journeys</a>
+    <span class="govuk-caption-l">pip journey · signed in as ${esc(first.viewAs ?? "nobody")}</span><h1 class="govuk-heading-l">${esc(id)}</h1>
+    <p class="govuk-body-l">${esc(first.description)}</p>
+    <div class="govuk-tabs" data-module="govuk-tabs"><ul class="govuk-tabs__list">
+      ${records.map(({ locale }, i) => `<li class="govuk-tabs__list-item${i === 0 ? " govuk-tabs__list-item--selected" : ""}"><a class="govuk-tabs__tab" href="#tab-${locale}">${locale === "en" ? "English" : "Welsh"}</a></li>`).join("")}
+    </ul>${panels.join("")}</div>`
+  });
+  const cell = (locale) => {
+    const r = records.find((x) => x.locale === locale)?.record;
+    const compared = journeyResultFor(id, locale);
+    const cath = compared ? `<br>${tag(`CaTH ${JOURNEY_VERDICT[compared.verdict][0]}`, JOURNEY_VERDICT[compared.verdict][1])}` : "";
+    return `<td class="govuk-table__cell">${r ? (r.ok ? tag(`${r.steps.length} steps`, "green") : tag("stopped", "red")) : tag("not run", "grey")}${cath}</td>`;
+  };
+  const notes = records.some(({ record }) => record.steps.some((s) => s.note));
+  journeyRows.push(`<tr class="govuk-table__row">
+    <td class="govuk-table__cell"><a class="govuk-link" href="journeys/${id}.html">${esc(id)}</a>${notes ? `<br>${tag("has noted steps", "yellow")}` : ""}</td>
+    <td class="govuk-table__cell">${esc(first.description)}</td>
+    <td class="govuk-table__cell">${tag(first.viewAs ?? "signed out", "grey")}</td>${cell("en")}${cell("cy")}</tr>`);
+}
+layout({
+  file: "journeys.html",
+  active: "journeys.html",
+  title: "Journeys",
+  body: `<h1 class="govuk-heading-l">Journeys</h1>
+  <p class="govuk-body">pip's user flows, ported from its own end-to-end tests and run against a freshly seeded pip stack. Every step is captured like a page, with a video of the whole journey in each language.${journeysComparison ? " Journeys ported to CaTH are run there too, and compared step by step: the steps reached, their order, the page each lands on, and each step's page." : ""}</p>
+  ${filterBox("journeys-table", "journey, role or description")}
+  <table class="govuk-table" id="journeys-table"><thead class="govuk-table__head"><tr class="govuk-table__row">
+    <th class="govuk-table__header">Journey</th><th class="govuk-table__header">What it does</th><th class="govuk-table__header">Signed in as</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th>
+  </tr></thead><tbody class="govuk-table__body">${journeyRows.join("")}</tbody></table>`
+});
+
+// ---------- generated files ----------
+if (filesComparison) {
+  const t = filesComparison.totals;
+  const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" };
+  const FILE_VERDICT = {
+    match: ["Matches", "green"],
+    differs: ["Differs", "red"],
+    missing: ["CaTH has none", "orange"],
+    extra: ["Only CaTH has one", "yellow"]
+  };
+  const rows = filesComparison.results
+    .map((r) => {
+      const [label, colour] = FILE_VERDICT[r.verdict];
+      const texts =
+        (r.kind === "pdf" || r.kind === "pdf-welsh" || r.kind === "csv") && r.verdict !== "missing" && r.verdict !== "extra"
+          ? ` <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-source.txt">pip text</a> · <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-target.txt">CaTH text</a>`
+          : "";
+      const pages =
+        r.source?.pages !== undefined
+          ? `<span class="govuk-hint parity-inline-hint">pip ${r.source.pages} ${plural(r.source.pages, "page", "pages")}, CaTH ${r.target.pages}</span>`
+          : "";
+      const findings = r.findings.length
+        ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></div></details>`
+        : "";
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>`;
+    })
+    .join("");
+  layout({
+    file: "files.html",
+    active: "files.html",
+    title: "Files",
+    body: `<h1 class="govuk-heading-l">Files</h1>
+  <p class="govuk-body">The PDF and Excel files each app generated when the publication was accepted, and the files it answers with rather than a page (reference data, a proof of ID, list and flat-file downloads), fetched as the user each is for. CSV files are compared line by line, and other files byte for byte. PDFs are styled differently by design, so only their text is compared, in reading order; line breaks and page breaks are ignored. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths.</p>
+  <div class="parity-stats">${statCard(t.files, "files compared")}${statCard(t.match, "match")}${statCard(t.differs, "differ")}${statCard(t.missing, "CaTH did not make")}${statCard(t.extra, "only CaTH made")}</div>
+  <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Publication</th><th class="govuk-table__header">File</th><th class="govuk-table__header">Result</th></tr></thead>
+  <tbody class="govuk-table__body">${rows}</tbody></table>`
+  });
+}
+
+// ---------- known defects ----------
+const defectsMarkdown = args.defects && existsSync(args.defects) ? readFileSync(args.defects, "utf-8") : "";
+const defectRows = defectsMarkdown
+  .split("\n")
+  .filter((line) => line.startsWith("|") && !/^\|\s*-/.test(line))
+  .slice(1)
+  .map((line) =>
+    line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim())
+  );
+const inline = (text) => esc(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+layout({
+  file: "defects.html",
+  active: "defects.html",
+  title: "Known pip defects",
+  body: `<h1 class="govuk-heading-l">Known pip defects</h1>
+  <p class="govuk-body">pip getting it wrong, found while building the baseline. The baseline records pip as it behaves; where CaTH differs because it does not have one of these defects, that difference is intended.</p>
+  <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Where</th><th class="govuk-table__header">Defect</th><th class="govuk-table__header">Found by</th></tr></thead>
+  <tbody class="govuk-table__body">${defectRows.map((cells) => `<tr class="govuk-table__row">${cells.map((c) => `<td class="govuk-table__cell">${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+});
+
+// ---------- comparison ----------
+if (comparison) {
+  const t = comparison.totals;
+  const compared = comparison.results.filter((r) => r.verdict !== "not-captured");
+  // Counted as pages: a page matches only if every language and state of it matches
+  const pagesCompared = new Set(compared.map((r) => r.id));
+  const pagesMatching = [...pagesCompared].filter((id) => compared.filter((r) => r.id === id).every((r) => r.verdict === "match")).length;
+  const pagesNotCompared = new Set(comparison.results.filter((r) => r.verdict === "not-captured" && !pagesCompared.has(r.id)).map((r) => r.id));
+  const byCategory = Object.entries(
+    Object.groupBy(
+      compared.flatMap((r) => r.findings.filter((f) => f.category !== "axe-inherited")),
+      (f) => f.category
+    )
+  ).sort((a, b) => b[1].length - a[1].length);
+  const WIDE = 5;
+  const patternRows = comparison.patterns
+    .filter((p) => p.pages.length >= WIDE)
+    .map(
+      (p) => `<tr class="govuk-table__row">
+      <td class="govuk-table__cell parity-count">${p.pages.length}</td>
+      <td class="govuk-table__cell">${categoryTag(p.category)}</td>
+      <td class="govuk-table__cell"><span class="parity-change">${esc(p.change.replace(/-/g, " "))}</span> ${esc(p.detail)}
+        <details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Pages</span></summary><div class="govuk-details__text">${p.pages
+          .map((page) => {
+            const [id, locale] = page.split(" ");
+            return `<a class="govuk-link" href="lists/${esc(id)}.html#tab-${esc(locale)}">${esc(page)}</a>`;
+          })
+          .join(", ")}</div></details></td></tr>`
+    )
+    .join("");
+  const narrow = comparison.patterns.filter((p) => p.pages.length < WIDE);
+  const narrowRows = narrow
+    .map(
+      (p) =>
+        `<tr class="govuk-table__row"><td class="govuk-table__cell">${p.pages.length}</td><td class="govuk-table__cell">${categoryTag(p.category)}</td><td class="govuk-table__cell"><span class="parity-change">${esc(p.change.replace(/-/g, " "))}</span> ${esc(p.detail)} <span class="govuk-hint parity-inline-hint">(${p.pages.map(esc).join(", ")})</span></td></tr>`
+    )
+    .join("");
+  layout({
+    file: "comparison.html",
+    active: "comparison.html",
+    title: "Comparison",
+    body: `<h1 class="govuk-heading-l">pip against CaTH: list pages</h1>
+    <p class="govuk-body">From <code>parity compare</code>, after removing known noise (IDs and dates from seeding, quote styles, live-region announcements, link hosts). Each finding is a structural difference; whether it is intended is decided against the ticket in the next step.</p>
+    <div class="parity-stats">
+      ${statCard(pagesCompared.size, `${plural(pagesCompared.size, "page", "pages")} compared`, `${compared.length} page-language ${plural(compared.length, "pair", "pairs")}`)}
+      ${statCard(pagesMatching, `${plural(pagesMatching, "page matches", "pages match")} pip`, "in every language, after normalisation")}
+      ${statCard(pagesCompared.size - pagesMatching, plural(pagesCompared.size - pagesMatching, "page differs", "pages differ"), `${compared.reduce((sum, r) => sum + differenceCount(r), 0)} findings across ${t.differs} page-language ${plural(t.differs, "pair", "pairs")}`)}
+      ${statCard(pagesNotCompared.size, `${plural(pagesNotCompared.size, "page", "pages")} not compared`, "CaTH has no page, or it needs sign-in")}
+    </div>
+    <h2 class="govuk-heading-m">Findings by category</h2>
+    <p class="govuk-body">${byCategory.map(([c, items]) => `${categoryTag(c)} ${items.length}`).join(" &nbsp; ")}</p>
+    <h2 class="govuk-heading-m">Patterns across ${WIDE} or more pages</h2>
+    <p class="govuk-body">The same finding on several pages usually has one cause, such as a shared template or locale setting, so these are the places to start.</p>
+    ${filterBox("patterns-table", "category, change or detail")}
+    <table class="govuk-table" id="patterns-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Pages</th><th class="govuk-table__header">Category</th><th class="govuk-table__header">Finding</th></tr></thead>
+    <tbody class="govuk-table__body">${patternRows}</tbody></table>
+    ${narrow.length ? `<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${narrow.length} smaller patterns (2 to ${WIDE - 1} pages)</span></summary><div class="govuk-details__text"><table class="govuk-table"><tbody class="govuk-table__body">${narrowRows}</tbody></table></div></details>` : ""}`
+  });
+}
+
+// ---------- accessibility ----------
+// Each check's findings across the report, grouped by check: the same check failing on many pages
+// usually has one cause in a shared template
+if (hasAccessibility) {
+  const pageLink = (area, page) => {
+    const [id, locale] = page.split(" ");
+    const file = area === "lists" ? `lists/${id}.html#tab-${locale}` : area === "pages" ? `pages/${id}.html` : `journeys/${id}.html`;
+    return `<a class="govuk-link" href="${esc(file)}">${esc(page)}</a>`;
+  };
+  const sections = accessibilityAreas
+    .map(({ area, label, summary }) => {
+      const byCheck = Object.entries(Object.groupBy(summary.accessibilityPatterns, (p) => p.change)).sort(
+        (a, b) => new Set(b[1].flatMap((p) => p.pages)).size - new Set(a[1].flatMap((p) => p.pages)).size
+      );
+      if (!byCheck.length) return `<h2 class="govuk-heading-m">${esc(label)}</h2><p class="govuk-body">No accessibility issues found.</p>`;
+      const rows = byCheck
+        .map(([check, patterns]) => {
+          const pages = new Set(patterns.flatMap((p) => p.pages));
+          const details = patterns
+            .map(
+              (p) =>
+                `<li>${esc(p.detail)}<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${p.pages.length} ${plural(p.pages.length, "page", "pages")}</span></summary><div class="govuk-details__text">${p.pages.map((page) => pageLink(area, page)).join(", ")}</div></details></li>`
+            )
+            .join("");
+          return `<tr class="govuk-table__row"><td class="govuk-table__cell parity-count">${pages.size}</td><td class="govuk-table__cell"><span class="parity-change">${esc(check.replace(/-/g, " "))}</span><br><span class="govuk-hint parity-inline-hint">${esc(patterns[0].wcag)}</span></td><td class="govuk-table__cell"><ul class="govuk-list parity-findings">${details}</ul></td></tr>`;
+        })
+        .join("");
+      return `<h2 class="govuk-heading-m">${esc(label)}</h2>
+      ${filterBox(`accessibility-${area}`, "check or finding")}
+      <table class="govuk-table" id="accessibility-${area}"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Pages</th><th class="govuk-table__header">Check</th><th class="govuk-table__header">Findings</th></tr></thead>
+      <tbody class="govuk-table__body">${rows}</tbody></table>`;
+    })
+    .join("");
+  layout({
+    file: "accessibility.html",
+    active: "accessibility.html",
+    title: "Accessibility",
+    body: `<h1 class="govuk-heading-l">Accessibility in CaTH</h1>
+    <p class="govuk-body">Each CaTH page checked on its own against WCAG 2.2: every axe result, including what axe could not decide, and checks axe does not make, such as visible text missing from a link's name, radios with no fieldset, links that go nowhere, error summaries that do not move focus and pages that do not reflow. Unlike the comparison, these include issues pip has too. They do not replace testing with assistive technology: keyboard behaviour, timeouts, zoom and screen reader announcements still need a person.</p>
+    ${sections}`
+  });
+}
+
+// ---------- overview ----------
+// A focused check leads with its verdict; the full baseline leads with what it covers
+if (ONLY) {
+  const allReviewItems = reviews.flatMap((review) => review.items.filter((item) => item.review));
+  const count = (verdict) => allReviewItems.filter((item) => item.review.verdict === verdict).length;
+  const checked = [
+    ...manifest.publications.map((p) => ({
+      label: p.listType,
+      href: `lists/${p.id}.html`,
+      id: p.id,
+      kind: "List page",
+      result: (locale) => resultFor(p.id, locale)
+    })),
+    ...pageEntries.map((e) => ({ label: e.source.route, href: `pages/${e.id}.html`, id: e.id, kind: "Page", result: (locale) => pageResultFor(e.id, locale) }))
+  ];
+  const rows = checked
+    .map((item) => {
+      const items = allReviewItems.filter((r) => r.pages.some((page) => page.startsWith(`${item.id} `)));
+      const verdictTags = items.length
+        ? [
+            ["defect", "red", "defects"],
+            ["needs-human", "yellow", "need a human"],
+            ["intended", "green", "intended"]
+          ]
+            .map(([v, colour, label]) => tag(`${items.filter((r) => r.review.verdict === v).length} ${label}`, colour))
+            .join(" ")
+        : tag("not reviewed", "grey");
+      const perLocale = LOCALES.map((locale) => {
+        const result = item.result(locale);
+        return `<td class="govuk-table__cell">${!result || result.verdict === "not-captured" ? tag("not compared", "grey") : differenceCount(result) === 0 ? tag("match", "green") : tag(`${differenceCount(result)} findings`, "orange")}</td>`;
+      }).join("");
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><a class="govuk-link parity-break" href="${item.href}">${esc(item.label)}</a><br><span class="govuk-hint parity-inline-hint">${item.kind}</span></td>${perLocale}<td class="govuk-table__cell">${verdictTags}</td></tr>`;
+    })
+    .join("");
+  layout({
+    file: "index.html",
+    active: "index.html",
+    title: args.title ?? "Parity check",
+    body: `<h1 class="govuk-heading-xl">${esc(args.title ?? "Parity check")}</h1>
+    <p class="govuk-body-l">CaTH captured with the same data as the pip baseline, compared page by page${reviews.length ? " and reviewed against the ticket" : ""}.</p>
+    <div class="parity-stats">
+      ${reviews.length ? statCard(count("defect"), "defects", "differences the ticket does not explain") : ""}
+      ${reviews.length ? statCard(count("needs-human"), "need a human", "e.g. Welsh wording the ticket does not give") : ""}
+      ${reviews.length ? statCard(count("intended"), "intended", "backed by a quoted ticket line or known pip defect") : ""}
+      ${statCard(checked.length, plural(checked.length, "page checked", "pages checked"), "in English and Welsh")}
+    </div>
+    <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Checked</th><th class="govuk-table__header">English</th><th class="govuk-table__header">Welsh</th><th class="govuk-table__header">Review</th></tr></thead>
+    <tbody class="govuk-table__body">${rows}</tbody></table>
+    ${run ? "" : `<p class="govuk-body-s">Compared against the pip baseline in <code>${esc(args.lists)}</code>.</p>`}`
+  });
+}
+
+const cathLists = manifest.publications.filter((p) => existsSync(path.join(args.lists, "cath", p.id, "en/default/aria.yml"))).length;
+if (!ONLY)
+  layout({
+    file: "index.html",
+    active: "index.html",
+    title: "Overview",
+    body: `<h1 class="govuk-heading-xl">${esc(args.title ?? "pip baseline")}</h1>
+  <p class="govuk-body-l">What pip-frontend shows, captured from pip running locally on its real backends, ready to compare CaTH against.</p>
+  <div class="parity-stats">
+    ${statCard(manifest.publications.length, "list pages", cathLists ? `${cathLists} also captured in CaTH` : "in English and Welsh")}
+    ${statCard(pageEntries.length, "other pages", "public, verified, admin, system admin")}
+    ${statCard(journeyIds.length, "journeys", `${journeyRuns} runs · ${checkpointTotal} steps${journeyFailures ? ` · ${journeyFailures} stopped` : ""}`)}
+    ${statCard(defectRows.length, "known pip defects", "recorded, not reproduced in CaTH")}
+  </div>
+  <div class="parity-stats">
+    ${statCard(pipListAxe, "axe violations on pip list pages", "English")}
+    ${cathLists ? statCard(cathListAxe, "axe violations on CaTH list pages", "English") : ""}
+    ${statCard(pipPageAxe, "axe violations on other pip pages", "English")}
+  </div>
+  ${
+    run
+      ? `<h2 class="govuk-heading-m">Baseline run</h2><dl class="govuk-summary-list">
+    <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">pip commits</dt><dd class="govuk-summary-list__value"><code>${esc(run.pip)}</code></dd></div>
+    <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Finished</dt><dd class="govuk-summary-list__value">${esc(new Date(run.finishedAt).toLocaleString("en-GB", { timeZone: "Europe/London" }))}</dd></div>
+    <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Captures</dt><dd class="govuk-summary-list__value">${run.captures.listPages} list, ${run.captures.otherPages} page, ${run.captures.journeyCheckpoints} journey steps</dd></div>
+    <div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">Stopped journeys</dt><dd class="govuk-summary-list__value">${run.failedJourneys.length ? run.failedJourneys.map(esc).join("<br>") : "None"}</dd></div>
+  </dl>`
+      : ""
+  }
+  <h2 class="govuk-heading-m">How to read this</h2>
+  <ul class="govuk-list govuk-list--bullet">
+    ${comparison ? `<li><a class="govuk-link" href="comparison.html">Comparison</a> summarises pip against CaTH on the list pages: findings after normalisation, and the patterns that repeat across pages.</li>` : ""}
+    <li><a class="govuk-link" href="lists.html">List pages</a> put pip and CaTH side by side for the same publication, with the accessibility-tree and text differences.</li>
+    <li><a class="govuk-link" href="pages.html">Other pages</a> and <a class="govuk-link" href="journeys.html">journeys</a> are compared with CaTH only where a CaTH route is mapped or a journey is ported to CaTH (${esc("cath/journeys/")}); the rest are the pip baseline only.</li>
+    <li>Differences here are raw. The comparison step will remove known noise (IDs, dates from seeding, formatting-only markup) and classify what is left against the ticket.</li>
+  </ul>`
+  });
+
+console.log(
+  `built ${OUT}: ${manifest.publications.length} list pages, ${pageEntries.length} other pages, ${journeyIds.length} journeys, ${defectRows.length} defects`
+);

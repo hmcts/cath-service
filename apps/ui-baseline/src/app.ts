@@ -1,0 +1,215 @@
+import { existsSync } from "node:fs";
+import { open, readFile, realpath } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { healthcheck } from "@hmcts-cft/cloud-native-platform";
+import type { Express, Request, RequestHandler, Response } from "express";
+import express from "express";
+import nunjucks from "nunjucks";
+import type { ProgressFile } from "../progress.js";
+import { isReportPage, withAppNavigation } from "./report-pages.js";
+import { formToken, sameSiteForm } from "./request-forgery.js";
+import { describeProgress } from "./run-progress.js";
+import { type Runner, type RunRequest, RunRequestError } from "./runs.js";
+
+// The hosted parity check's pages: start a check of CaTH against the pip baseline, or a comparison
+// of the files pip and CaTH made for a publication; follow a run; read its report. An internal tool
+// for the CaTH team, so English only. There is no sign-in: the app is only reachable over the VPN,
+// on an internal host of the private DNS zone (helm/values.yaml).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const LOG_LINES = 80;
+const CAPTURED_CONTENT_POLICY = "sandbox";
+// Far more than 80 lines of a check's log, which are short
+const LOG_TAIL_BYTES = 64 * 1024;
+// Where make-report.mjs writes the report's own pages: at its top, and one per list, page and journey.
+// The captured pip and CaTH pages are deeper, under lists/ and data/, so whatever markup they carry
+// they are never taken for one.
+const REPORT_PAGE_PATH = /^\/(?:(?:lists|pages|journeys)\/)?[^/]+\.html$/;
+const GOVUK_FRONTEND = path.dirname(fileURLToPath(import.meta.resolve("govuk-frontend/package.json")));
+// The report's own stylesheet and the navigation it shares with these pages, served as they are now
+// for every report, so one written before them still has them
+const REPORT_ASSETS = new Map([
+  ["/assets/navigation.css", path.join(__dirname, "assets/navigation.css")],
+  ["/assets/navigation.js", path.join(__dirname, "assets/navigation.js")],
+  ["/assets/report.css", path.join(__dirname, "../report/report.css")]
+]);
+
+export function createApp(options: AppOptions): Express {
+  const app = express();
+  app.use(healthcheck());
+
+  const views = nunjucks.configure([path.join(__dirname, "views"), path.join(__dirname, "../report"), path.join(GOVUK_FRONTEND, "dist")], {
+    autoescape: true,
+    express: app
+  });
+  views.addFilter("date", (value: string | undefined) => (value ? new Date(value).toLocaleString("en-GB", { timeZone: "Europe/London" }) : ""));
+  app.set("view engine", "njk");
+  app.locals.environment = options.environment;
+
+  app.use("/assets", express.static(path.join(GOVUK_FRONTEND, "dist/govuk/assets")));
+  app.use("/assets/govuk-frontend.min.css", express.static(path.join(GOVUK_FRONTEND, "dist/govuk/govuk-frontend.min.css")));
+  app.use("/assets/govuk-frontend.min.js", express.static(path.join(GOVUK_FRONTEND, "dist/govuk/govuk-frontend.min.js")));
+  app.use("/navigation.css", express.static(path.join(__dirname, "assets/navigation.css")));
+  app.use("/navigation.js", express.static(path.join(__dirname, "assets/navigation.js")));
+  app.use("/app.css", express.static(path.join(__dirname, "assets/app.css")));
+  app.use(express.urlencoded({ extended: false }));
+  app.use(formToken());
+
+  app.get("/", async (_req, res) => {
+    res.render("index", { runs: options.runner.list(), baseline: await options.baselineStatus() });
+  });
+
+  app.post("/runs", sameSiteForm(), async (req, res) => {
+    try {
+      const run = options.runner.start(requestFrom(req.body as Record<string, string>));
+      res.redirect(`/runs/${run.id}`);
+    } catch (error) {
+      if (!(error instanceof RunRequestError)) throw error;
+      res.status(400).render("index", { runs: options.runner.list(), baseline: await options.baselineStatus(), errorMessage: error.message, data: req.body });
+    }
+  });
+
+  app.get("/runs/:id", async (req, res) => {
+    const run = options.runner.get(req.params.id);
+    if (!run) return res.status(404).render("not-found");
+    const dir = await options.runner.directory(run.id);
+    const log = dir && existsSync(path.join(dir, "log.txt")) ? await logTail(path.join(dir, "log.txt")) : "";
+    const files = run.kind === "files" && dir ? await readJson(path.join(dir, "files/compare/files-compare.json")) : null;
+    // Where the publication is in each app
+    const links = run.kind === "files" && dir ? await readJson(path.join(dir, "files/compare/links.json")) : null;
+    // How far a check has got, as it writes it (check.ts)
+    const progressFile = run.kind === "check" && dir ? await readJson<ProgressFile>(path.join(dir, "check/progress.json")) : null;
+    const progress = progressFile ? describeProgress(progressFile, run.status) : null;
+    res.render("run", { run, log, files, links, progress, hasReport: run.kind === "check" && !!dir && existsSync(path.join(dir, "check/report/index.html")) });
+  });
+
+  // A check's report and a file comparison's extracted texts, served from the run's directory
+  app.use(
+    "/runs/:id/report",
+    runFiles(options.runner, options.dataDir, "check/report", { linkBack: (html, id) => withAppNavigation(views, html, id), waitForBaseline: true })
+  );
+  app.use("/runs/:id/files", runFiles(options.runner, options.dataDir, "files/compare"));
+
+  app.use((_req: Request, res: Response) => res.status(404).render("not-found"));
+  return app;
+}
+
+// linkBack: gives a report page served here the app's links back to its run and to all runs. The report is also
+// opened outside this app (zipped into a PR's evidence, served by the command line), where those
+// links would go nowhere, so they are added as it is served rather than when it is written.
+// waitForBaseline: a check's report links into its baseline, so it waits for the baseline to be on
+// this pod's disk; nothing else does, as a baseline is several hundred megabytes.
+function runFiles(
+  runner: Runner,
+  dataDir: string,
+  subdirectory: string,
+  { linkBack, waitForBaseline = false }: { linkBack?: (html: string, runId: string) => string; waitForBaseline?: boolean } = {}
+) {
+  // One file server per run's folder, made when it is first asked for, not on every request
+  const servers = new Map<string, RequestHandler>();
+  const serverFor = (root: string) => {
+    const server = servers.get(root) ?? express.static(root, { dotfiles: "deny" });
+    servers.set(root, server);
+    return server;
+  };
+  return async (req: Request, res: Response, next: () => void) => {
+    const id = String(req.params.id);
+    const dir = runner.get(id) && (await runner.directory(id, { waitForBaseline }));
+    if (!dir) return res.status(404).render("not-found");
+    const root = path.join(dir, subdirectory);
+    if (!(await servable(dataDir, root, req.path))) return res.status(404).render("not-found");
+    // Nothing a run holds is read as a type other than the one it is served as
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    const asset = linkBack && REPORT_ASSETS.get(req.path);
+    if (asset) return res.sendFile(asset);
+    const page = linkBack && req.path.endsWith(".html") ? await reportPage(root, req.path) : null;
+    if (page && linkBack) return res.type("html").send(linkBack(page, id));
+    // Anything else is what CaTH and pip showed, or files they made: shown sandboxed, so no script in
+    // it runs, and it has an origin of its own rather than this app's
+    res.setHeader("Content-Security-Policy", CAPTURED_CONTENT_POLICY);
+    serverFor(root)(req, res, next);
+  };
+}
+
+// A run's report links into its baseline with symlinks, which are archived as links and restored
+// from storage. So a file is served only if, with every symlink followed, it is inside the app's data
+// folder (the runs and baselines): a link planted in a stored archive cannot reach the pod's own files,
+// such as /proc/self/environ. A path that does not exist is left to express.static, which finds nothing.
+async function servable(dataDir: string, root: string, requestPath: string): Promise<boolean> {
+  const relative = safeDecode(requestPath);
+  if (relative === null) return false;
+  const file = await realpath(path.join(root, relative)).catch(() => null);
+  if (file === null) return true;
+  const allowed = await realpath(dataDir);
+  return file === allowed || file.startsWith(`${allowed}${path.sep}`);
+}
+
+// A page of the report itself, as make-report.mjs wraps it, rather than one of the captured pip or
+// CaTH pages kept beside it; null for anything else, which is served as it is
+async function reportPage(root: string, requestPath: string): Promise<string | null> {
+  const relative = safeDecode(requestPath);
+  if (relative === null || !REPORT_PAGE_PATH.test(relative) || relative.split("/").some((segment) => segment.startsWith("."))) return null;
+  const file = path.join(root, relative);
+  if (!file.startsWith(`${root}${path.sep}`) || !existsSync(file)) return null;
+  const html = await readFile(file, "utf-8").catch(() => null);
+  return html && isReportPage(html) ? html : null;
+}
+
+// A JSON file a run writes, or null when it is not there yet or is read while it is being written:
+// the run page is refreshed as a run goes, and files-compare.json and links.json are not replaced whole
+async function readJson<T = unknown>(file: string): Promise<T | null> {
+  if (!existsSync(file)) return null;
+  try {
+    return JSON.parse(await readFile(file, "utf-8")) as T;
+  } catch {
+    return null;
+  }
+}
+
+function safeDecode(value: string): string | null {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+}
+
+function requestFrom(body: Record<string, string>): RunRequest {
+  const list = (value: string | undefined) => (value ?? "").split(/[\s,]+/).filter(Boolean);
+  if (body.kind === "files")
+    return {
+      kind: "files",
+      pipArtefactId: (body.pipArtefactId ?? "").trim(),
+      cathArtefactId: (body.cathArtefactId ?? "").trim(),
+      name: body.name?.trim() || undefined
+    };
+  if (body.scope === "list-types") return { kind: "check", scope: "list-types", listTypes: list(body.listTypes).map((name) => name.toUpperCase()) };
+  if (body.scope === "routes") return { kind: "check", scope: "routes", routes: list(body.routes) };
+  return { kind: "check", scope: "all" };
+}
+
+// The end of a run's log, read from the end of the file: a check of all of CaTH writes a line per
+// capture, and the run page is refreshed while it runs, so the whole file is not read each time
+async function logTail(file: string, lines = LOG_LINES): Promise<string> {
+  const handle = await open(file, "r");
+  try {
+    const { size } = await handle.stat();
+    const length = Math.min(size, LOG_TAIL_BYTES);
+    const { buffer } = await handle.read(Buffer.alloc(length), 0, length, size - length);
+    // Read from part way through a line, the first line is partial, so it is left out
+    const text = buffer.toString("utf-8");
+    const whole = length < size ? text.slice(text.indexOf("\n") + 1) : text;
+    return whole.trimEnd().split("\n").slice(-lines).join("\n");
+  } finally {
+    await handle.close();
+  }
+}
+
+export interface AppOptions {
+  environment: string;
+  runner: Runner;
+  // Where the runs and baselines are kept; only files inside it are served
+  dataDir: string;
+  // Which stored baseline checks compare against, for the start page
+  baselineStatus: () => Promise<{ ready: boolean; description: string }>;
+}

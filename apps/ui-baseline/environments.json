@@ -1,0 +1,79 @@
+{
+  "$comment": "Where CaTH (and the pip it is compared with) runs in each environment a check can target. local is a developer machine; aat is CaTH AAT paired with pip test, which both sign CFT users in through AAT IDAM, so one test account signs in to both. Secret names are looked up in the app keyVault (or an account own keyVault), or taken from an environment variable of the same name in upper snake case (CATH_SERVICE_API_CLIENT_ID for cath-service-api-client-id), which wins.",
+  "local": {
+    "cath": {
+      "baseUrl": "http://localhost:8080",
+      "apiUrl": "http://localhost:3001",
+      "$signIn": "session: writes each fixture user's session into local Redis (cath/sign-in.ts). Needs SESSION_SECRET and REDIS_URL from the root .env.",
+      "signIn": "session",
+      "storage": {
+        "connectionStringEnv": "AZURE_STORAGE_CONNECTION_STRING"
+      },
+      "filesWaitSeconds": 0
+    },
+    "pip": {
+      "baseUrl": "https://localhost:8180",
+      "storage": {
+        "connectionString": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:20000/devstoreaccount1;"
+      }
+    }
+  },
+  "aat": {
+    "cath": {
+      "baseUrl": "https://cath.aat.platform.hmcts.net",
+      "apiUrl": "https://cath-api.aat.platform.hmcts.net",
+      "keyVault": "cath-aat",
+      "$signIn": "accounts: signs in through CFT IDAM as the test account for each role. IDAM only makes verified users, so pages only an admin sees are reported as not compared.",
+      "signIn": "accounts",
+      "accounts": {
+        "VERIFIED": {
+          "user": "ui-baseline-cft-test-account",
+          "password": "ui-baseline-cft-test-account-password",
+          "keyVault": "cath-aat"
+        }
+      },
+      "publicationApi": {
+        "tenantId": "app-tenant",
+        "clientId": "cath-service-api-client-id",
+        "clientSecret": "cath-service-api-client-secret"
+      },
+      "storage": {
+        "accountName": "cathsaaat"
+      },
+      "$filesWaitSeconds": "The publication API makes a list's files after accepting it, so they are waited for",
+      "filesWaitSeconds": 90
+    },
+    "pip": {
+      "baseUrl": "https://pip-frontend.test.platform.hmcts.net",
+      "keyVault": "pip-ss-kv-test",
+      "$accounts": "For recording from a deployed pip (record-pip --env aat, pip/sign-in.ts), keyed <pip role>/<provenance>: the AAT IDAM account CaTH is signed in to as, since pip test signs CFT users in through AAT IDAM too. Every other role and provenance is reported as not compared.",
+      "accounts": {
+        "VERIFIED/CFT_IDAM": {
+          "user": "ui-baseline-cft-test-account",
+          "password": "ui-baseline-cft-test-account-password",
+          "keyVault": "cath-aat"
+        }
+      },
+      "dataManagementUrl": "https://pip-data-management.test.platform.hmcts.net",
+      "accountManagementUrl": "https://pip-account-management.test.platform.hmcts.net",
+      "$api": "The clients pip's own functional tests call each API with (Jenkinsfile_CNP in pip-data-management and pip-account-management), from pip's bootstrap vault, which is pip-bootstrap-stg-kv for test",
+      "api": {
+        "keyVault": "pip-bootstrap-stg-kv",
+        "tenantId": "app-tenant",
+        "dataManagement": {
+          "clientId": "app-pip-account-management-id",
+          "clientSecret": "app-pip-account-management-pwd",
+          "scope": "app-pip-data-management-scope"
+        },
+        "accountManagement": {
+          "clientId": "app-pip-publication-services-id",
+          "clientSecret": "app-pip-publication-services-pwd",
+          "scope": "app-pip-account-management-scope"
+        }
+      },
+      "storage": {
+        "accountName": "pipsssatest"
+      }
+    }
+  }
+}

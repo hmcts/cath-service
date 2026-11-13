@@ -34,11 +34,13 @@ locals {
     # Prod APIM waits for #1161.
     # crime_federation_enabled reads crime-oidc-config from the app vault - see
     # tf-crime-connection-mi.tf. The secret must exist in the vault before this is true.
-    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true }
-    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true }
-    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true }
-    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true }
-    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = null, crime_federation_enabled = true }
+    # ui_baseline adds the storage for apps/ui-baseline (recorded pip baselines and check
+    # results) where testers run parity checks, aat.
+    aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true, ui_baseline = true }
+    demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true, ui_baseline = false }
+    ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true, ui_baseline = false }
+    perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true, ui_baseline = false }
+    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = null, crime_federation_enabled = true, ui_baseline = false }
   }
 
   # Prod-or-not facts, the same split the CNP modules make internally. Not keys
@@ -124,4 +126,6 @@ locals {
   # resource, not per-environment configuration, and putting it in the map would
   # imply a new environment might want to opt in.
   storage_uses_legacy_rg = var.env == "aat"
+
+  ui_baseline = try(local.env_config[var.env].ui_baseline, false)
 }
