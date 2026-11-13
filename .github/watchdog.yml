@@ -188,9 +188,18 @@ checks:
   # share and the old `total >= 20` floor could only be crossed by a burst. sample_4xx
   # names the routes, without which a firing cannot distinguish a broken route from
   # someone probing the hostname.
+  #
+  # /test-support/** is excluded for the same reason GET /health is: it is not user
+  # traffic. Those routes exist only for the E2E harness (ENABLE_TEST_SUPPORT, off in
+  # production-like environments), and on api in AAT they are very nearly all of the
+  # traffic — 255 non-health requests in 24h. Counting them puts CI in both the
+  # numerator and the denominator, so the rate reports what an E2E run did rather than
+  # what users got. One failed readiness gate is enough on its own: global-setup polls
+  # /test-support/health up to 90 times, 2s apart, so a single 404 there arrives as 90,
+  # which is 35% of a day's api traffic. See #1198.
   - id: client-error-rate
     severity: medium
-    description: 4xx responses as a share of non-health traffic over a day.
+    description: 4xx responses as a share of non-health user traffic over a day.
     fingerprint-by: [app]
     rule: { column: rate, value: '> 0.2' }
     query: |
@@ -198,6 +207,7 @@ checks:
       | where timestamp > ago(24h)
       | where cloud_RoleInstance !has '-pr-'
       | where name !startswith 'GET /health'
+      | where name !contains '/test-support/'
       | extend app = extract(@'-(web|api|crons|postgres)-', 1, cloud_RoleInstance)
       | extend is_client_error = toint(resultCode) between (400 .. 499)
       | summarize total = count(),
