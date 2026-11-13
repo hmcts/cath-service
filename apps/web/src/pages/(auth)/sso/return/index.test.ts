@@ -18,9 +18,13 @@ vi.mock("@hmcts/account/repository/query", () => ({
   createOrUpdateUser: vi.fn().mockResolvedValue({})
 }));
 
-vi.mock("@hmcts/auth", () => ({
-  isSsoConfigured: vi.fn().mockReturnValue(true)
-}));
+vi.mock("@hmcts/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/auth")>();
+  return {
+    isSsoConfigured: vi.fn().mockReturnValue(true),
+    consumeReturnTo: actual.consumeReturnTo
+  };
+});
 
 describe("SSO callback guard middleware", () => {
   const guardMiddleware = GET[0] as (req: Request, res: Response, next: () => void) => void;
@@ -229,6 +233,34 @@ describe("SSO Return handler", () => {
     await handler(req, res);
 
     expect(res.redirect).toHaveBeenCalledWith("/some/page");
+  });
+
+  it("should ignore an off-site returnTo and redirect to the role-based dashboard", async () => {
+    const user = {
+      id: "user-4",
+      email: "admin@example.com",
+      displayName: "Admin User",
+      roles: ["System Admin"],
+      groupIds: ["group-1"],
+      role: USER_ROLES.SYSTEM_ADMIN
+    };
+
+    const req = {
+      user,
+      isAuthenticated: () => true,
+      session: { regenerate: vi.fn((cb) => cb(null)), returnTo: "/\\evil.com" },
+      login: vi.fn((_u, cb) => cb(null))
+    } as unknown as Request;
+
+    const res = {
+      redirect: vi.fn()
+    } as unknown as Response;
+
+    (req.session as any).save = vi.fn((cb: any) => cb(null));
+
+    await handler(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith("/system-admin-dashboard");
   });
 
   it("should redirect to /login with db_error when createOrUpdateUser fails", async () => {

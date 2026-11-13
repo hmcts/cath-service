@@ -5,7 +5,15 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./index.js";
 
-vi.mock("@hmcts/auth");
+vi.mock("@hmcts/auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/auth")>();
+  return {
+    getB2cBaseUrl: vi.fn(),
+    getB2cConfig: vi.fn(),
+    isB2cConfigured: vi.fn(),
+    consumeReturnTo: actual.consumeReturnTo
+  };
+});
 vi.mock("@hmcts/account/repository/query");
 vi.mock("@hmcts-cft/cloud-native-platform");
 
@@ -107,12 +115,21 @@ describe("B2C Callback Handler", () => {
       expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
 
-    it("should redirect with Welsh locale when b2cLocale is cy", async () => {
+    it("should redirect to returnTo unchanged when b2cLocale is cy", async () => {
       mockSession.b2cLocale = "cy";
+      mockSession.returnTo = "/sjp-press-list?artefactId=abc-123";
 
       await GET(mockReq as Request, mockRes as Response);
 
-      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?lng=cy");
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sjp-press-list?artefactId=abc-123");
+    });
+
+    it.each(["//evil.com/x", "/\\evil.com", "/.//evil.com", "/%2e//evil.com"])("should ignore the unsafe returnTo %s and use the default", async (returnTo) => {
+      mockSession.returnTo = returnTo;
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
 
     it("should use custom returnTo from session", async () => {
