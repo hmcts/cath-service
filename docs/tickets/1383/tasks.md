@@ -10,6 +10,7 @@ Branch from `origin/master` (not local `master`).
 - [x] In `apps/web/src/pages/(list-types)/sjp-public-list/index.ts`, remove `MONOREPO_ROOT`, `STORAGE_DIR` and `fileExists`, plus the `node:fs/promises`, `node:path` and `node:url` imports and `__filename`/`__dirname`.
 - [x] In `sjp-public-list/index.ts`, set `downloadDisclaimerUrl` from `isVerifiedUser && (await hasDownloadableFiles(artefactId))`. Check verified first so there are no blob calls for other users.
 - [x] In `apps/web/src/pages/(list-types)/sjp-press-list/index.ts`, replace the inline `getBlobProperties` pair (line 58) with `hasDownloadableFiles`, verified first. Remove the unused `@hmcts/azure-blob` import.
+- [x] In `sjp-delta-public-list/` and `sjp-delta-press-list/`, add `list-download-disclaimer.ts`, `list-download-files.ts` and `download.ts` as re-exports of the matching full-list routes, so "Download a copy" no longer returns a 404 on the New cases lists.
 - [x] Run `yarn lint:fix` and `yarn test` for `apps/web`.
 
 ## Testing Tasks
@@ -20,6 +21,7 @@ Branch from `origin/master` (not local `master`).
 - [x] Add a unit test to `sjp-public-list/index.test.ts`: unverified or anonymous user with blobs present gets `null`, and `getBlobProperties` is not called.
 - [x] Add a unit test to `sjp-public-list/index.test.ts`: when `getBlobProperties` rejects, the list still renders with `downloadDisclaimerUrl: null`.
 - [x] Add a unit test to `sjp-public-list/index.test.ts`: on the delta path, the disclaimer URL uses the `/sjp-delta-public-list` prefix.
+- [x] Add `index.test.ts` to each delta folder, asserting each delta route exports the same handlers as the matching full-list route.
 - [x] Create `sjp-download-shared.test.ts` covering `hasDownloadableFiles`: PDF only is true, Excel only is true, neither is false, and an error is false and logged. Each case asserts the `PUBLICATIONS` container.
 - [x] In `sjp-press-list/index.test.ts`, make the `@hmcts/azure-blob` mock spread `importOriginal` so `CONTAINER` exists. Update the button tests and assert the `PUBLICATIONS` container.
 - [x] In `sjp-public-list/list-download-files.test.ts` and `sjp-press-list/list-download-files.test.ts`, fix the `CONTAINER` mock and assert that `getBlobProperties` uses `CONTAINER.PUBLICATIONS`.

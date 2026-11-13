@@ -23,7 +23,7 @@ Strategy:
 Key considerations:
 - No new dependency: `apps/web/package.json` already depends on `@hmcts/azure-blob`.
 - Keep the button decision in the controller (`isVerifiedUser && hasFiles`). The verified check should come first so anonymous and public users make no Blob Storage calls.
-- `sjp-delta-public-list/index.ts` re-exports the public list `GET`/`POST`, so the delta list is fixed as well. `sjp-delta-press-list` likewise re-exports the press list.
+- `sjp-delta-public-list/index.ts` re-exports the public list `GET`/`POST`, and `sjp-delta-press-list/index.ts` the press list, so the button check is fixed for the delta lists too. The delta folders had no `list-download-disclaimer`, `list-download-files` or `download` routes, so the button linked to a 404. Add those three as re-exports of the full-list routes in both delta folders. The handlers already build onward links from `req.path`, and templates resolve by name across page folders, so nothing else changes.
 
 ## 2. Implementation Details
 
@@ -61,7 +61,7 @@ No new pages, templates, content, API endpoints or DB schema changes. `sjp-publi
 | User not VERIFIED (anonymous, or any other role) | No button, and no Blob Storage calls (verified check short-circuits). |
 | Blob Storage unavailable or erroring (non-404) | `hasDownloadableFiles` catches the error, logs `Failed to check downloadable files for artefact <id>` with the error, and returns `false`. The list still renders without the button, because the list data comes from Postgres and Blob Storage is only needed for the optional download. The files page (`getAvailableFiles`) and download route keep their current behaviour: the error goes to the global error handler. That is acceptable, since the user explicitly asked for a file there. |
 | Misconfiguration (`AZURE_STORAGE_ACCOUNT_NAME` unset) | `createBlobServiceClient` throws synchronously inside the async call, so it becomes a rejected promise and follows the error row above. |
-| Delta SJP public list | Fixed through the re-export. `req.path` is used for the disclaimer URL, so the delta prefix is preserved. |
+| Delta SJP public and press lists | The list page is fixed through the `index.ts` re-export, and `req.path` keeps the delta prefix in the disclaimer URL. The disclaimer, file-list and download routes are added as re-exports under `sjp-delta-*-list/`, so the journey stays on the delta path instead of hitting a 404. |
 | `artefactId` | Already validated by access control (`checkArtefactDataAccess`) before the blob check. The blob name is `${artefactId}.pdf` / `.xlsx`, with no path traversal risk in blob naming. |
 
 ## 4. Acceptance Criteria Mapping
