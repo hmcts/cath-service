@@ -1,78 +1,98 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 import { GET } from "./index.js";
 
-describe("Session Expired Page", () => {
-  it("should render session expired page with English content by default", async () => {
-    const req = {
-      query: {}
-    } as Request;
+describe("session-expired page", () => {
+  let req: Partial<Request>;
+  let res: Partial<Response>;
 
-    const res = {
-      render: vi.fn()
-    } as unknown as Response;
+  beforeEach(() => {
+    req = { query: { reSignInUrl: "CFT" } };
+    res = { render: vi.fn(), status: vi.fn().mockReturnThis(), locals: { locale: "en" } };
+  });
 
-    await GET(req, res);
+  it.each([
+    ["CFT", "/cft-login"],
+    ["CRIME", "/crime-login"],
+    ["AAD", "/b2c-login"],
+    ["SSO", "/login"]
+  ])("should link Sign in for reSignInUrl=%s to %s", async (reSignInUrl, signInUrl) => {
+    // Arrange
+    req.query = { reSignInUrl };
 
-    expect(res.render).toHaveBeenCalledWith("session-expired/index", {
-      pageTitle: en.pageTitle,
-      heading: en.heading,
-      bodyText: en.bodyText,
-      signInAgainLink: en.signInAgainLink
+    // Act
+    await GET(req as Request, res as Response);
+
+    // Assert
+    expect(res.render).toHaveBeenCalledWith("session-expired/index", { en, cy, t: en, signInUrl });
+    expect(res.status).not.toHaveBeenCalled();
+  });
+
+  it("should use Welsh from res.locals.locale without an lng query", async () => {
+    // Arrange
+    res.locals = { locale: "cy" };
+
+    // Act
+    await GET(req as Request, res as Response);
+
+    // Assert
+    expect(res.render).toHaveBeenCalledWith("session-expired/index", expect.objectContaining({ t: cy }));
+  });
+
+  it("should not pass a back link", async () => {
+    // Act
+    await GET(req as Request, res as Response);
+
+    // Assert
+    expect(vi.mocked(res.render as (view: string, options: object) => void).mock.calls[0][1]).not.toHaveProperty("back");
+  });
+
+  it.each([
+    ["missing", {}],
+    ["unknown", { reSignInUrl: "EVIL" }],
+    ["lower case", { reSignInUrl: "cft" }],
+    ["a URL", { reSignInUrl: "https://evil.example" }],
+    ["an array", { reSignInUrl: ["CFT", "SSO"] }],
+    ["a prototype key", { reSignInUrl: "toString" }]
+  ])("should render the 400 error page when reSignInUrl is %s", async (_description, query) => {
+    // Arrange
+    req.query = query as Request["query"];
+
+    // Act
+    await GET(req as Request, res as Response);
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.render).toHaveBeenCalledWith("errors/common", expect.objectContaining({ t: expect.objectContaining({ defaultHeading: "Error" }) }));
+    expect(res.render).not.toHaveBeenCalledWith("session-expired/index", expect.anything());
+  });
+
+  it("should render the Welsh 400 error page when the locale is cy", async () => {
+    // Arrange
+    req.query = {};
+    res.locals = { locale: "cy" };
+
+    // Act
+    await GET(req as Request, res as Response);
+
+    // Assert
+    expect(res.render).toHaveBeenCalledWith("errors/common", expect.objectContaining({ t: expect.objectContaining({ defaultHeading: "Gwall" }) }));
+  });
+
+  it("should carry the legacy English copy verbatim", () => {
+    expect(en).toEqual({
+      pageTitle: "Session expired - You have been signed out due to inactivity",
+      header: "You have been signed out due to inactivity",
+      detail: "This has been for your security and for the security of the individuals included within our service.",
+      signInMessage: "Please click here to sign in or close this session.",
+      signIn: "Sign in"
     });
   });
 
-  it("should render session expired page with Welsh content when lng=cy", async () => {
-    const req = {
-      query: { lng: "cy" }
-    } as unknown as Request;
-
-    const res = {
-      render: vi.fn()
-    } as unknown as Response;
-
-    await GET(req, res);
-
-    expect(res.render).toHaveBeenCalledWith("session-expired/index", {
-      pageTitle: cy.pageTitle,
-      heading: cy.heading,
-      bodyText: cy.bodyText,
-      signInAgainLink: cy.signInAgainLink
-    });
-  });
-
-  it("should use English content for any non-Welsh language query", async () => {
-    const req = {
-      query: { lng: "fr" }
-    } as unknown as Request;
-
-    const res = {
-      render: vi.fn()
-    } as unknown as Response;
-
-    await GET(req, res);
-
-    expect(res.render).toHaveBeenCalledWith("session-expired/index", {
-      pageTitle: en.pageTitle,
-      heading: en.heading,
-      bodyText: en.bodyText,
-      signInAgainLink: en.signInAgainLink
-    });
-  });
-
-  it("should contain correct English content", () => {
-    expect(en.pageTitle).toBe("You have been signed out");
-    expect(en.heading).toBe("You have been signed out, due to inactivity");
-    expect(en.bodyText).toBe("Your session has expired because you have been inactive for too long.");
-    expect(en.signInAgainLink).toBe("Sign in again");
-  });
-
-  it("should contain correct Welsh content", () => {
-    expect(cy.pageTitle).toBe("Rydych wedi cael eich allgofnodi");
-    expect(cy.heading).toBe("Rydych wedi cael eich allgofnodi oherwydd anweithgarwch");
-    expect(cy.bodyText).toBe("Mae eich sesiwn wedi dod i ben oherwydd eich bod wedi bod yn anweithgar am ormod o amser.");
-    expect(cy.signInAgainLink).toBe("Mewngofnodi eto");
+  it("should carry the legacy Welsh copy verbatim", () => {
+    expect(cy.header).toBe("Rydych wedi cael eich allgofnodi o ganlyniad i wneud dim");
+    expect(cy.signIn).toBe("Mewngofnodi");
   });
 });

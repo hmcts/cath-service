@@ -1,0 +1,12 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block page_content %}
+  <h1 class="govuk-heading-l">{{ t.header }}</h1>
+  <p class="govuk-body">{{ t.continueMessage }}</p>
+  {{ govukButton({
+    text: t.continue,
+    href: continueHref
+  }) }}
+  <div id="session-expiring" hidden data-warning-lead-ms="{{ warningLeadMs }}" data-redirect-type="{{ redirectType }}"></div>
+{% endblock %}
