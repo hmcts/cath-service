@@ -61,6 +61,7 @@
     "@hmcts/sjp-press-list": "workspace:*",
     "@hmcts/sjp-public-list": "workspace:*",
     "@hmcts/sscs-daily-hearing-list": "workspace:*",
+    "@hmcts/third-party-subscription-fulfilment": "workspace:*",
     "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list": "workspace:*",
     "@hmcts/upper-tribunal-tax-and-chancery-chamber-daily-hearing-list": "workspace:*",

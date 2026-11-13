@@ -16,6 +16,8 @@
 nodejs:
   applicationPort: 3001
   aadIdentityName: cath
+  environment:
+    THIRD_PARTY_KEY_VAULT: 'cath-tp-aat'
   keyVaults:
     cath:
       secrets:

@@ -55,11 +55,11 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 
   await Promise.all([
-    setSecret(createKeyVaultSecretName(id, "destination-url"), config.destinationUrl),
-    setSecret(createKeyVaultSecretName(id, "token-url"), config.tokenUrl),
-    setSecret(createKeyVaultSecretName(id, "scope"), config.scope),
-    setSecret(createKeyVaultSecretName(id, "client-id"), config.clientId),
-    setSecret(createKeyVaultSecretName(id, "client-secret"), config.clientSecret)
+    setSecret(createKeyVaultSecretName(user.name, id, "destination-url"), config.destinationUrl),
+    setSecret(createKeyVaultSecretName(user.name, id, "token-url"), config.tokenUrl),
+    setSecret(createKeyVaultSecretName(user.name, id, "scope"), config.scope),
+    setSecret(createKeyVaultSecretName(user.name, id, "client-id"), config.clientId),
+    setSecret(createKeyVaultSecretName(user.name, id, "client-secret"), config.clientSecret)
   ]);
 
   delete (req.session as ThirdPartyOauthConfigSession).thirdPartyOauthConfig;
