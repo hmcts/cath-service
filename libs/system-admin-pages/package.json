@@ -41,6 +41,7 @@
     "papaparse": "5.5.4"
   },
   "devDependencies": {
+    "@hmcts/test-support": "workspace:*",
     "@types/express": "5.0.6",
     "@types/express-session": "1.19.0",
     "@types/multer": "^2.1.0",
