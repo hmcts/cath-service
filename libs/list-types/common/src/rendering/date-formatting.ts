@@ -1,5 +1,7 @@
 import { DateTime } from "luxon";
 
+const DAY_MONTH_YEAR_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+
 /**
  * Formats a Date object to a localized long date string (e.g., "15 January 2026")
  */
@@ -56,17 +58,17 @@ export function normalizeTime(time: string): string {
 }
 
 /**
- * Formats a dd/MM/yyyy date string to a localized long date string
+ * Formats a d/M/yyyy date string to a localized long date string
  * Example: "15/01/2026" -> "15 January 2026"
+ * Input that is not a whole, valid d/M/yyyy date is returned unchanged so a bad value never breaks a download.
  */
 export function formatDdMmYyyyDate(ddMMyyyyDate: string, locale: string): string {
-  const [day, month, year] = ddMMyyyyDate.split("/");
-  const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1, Number.parseInt(day, 10));
+  const match = DAY_MONTH_YEAR_PATTERN.exec(ddMMyyyyDate.trim());
+  if (!match) return ddMMyyyyDate;
 
-  const localeCode = locale === "cy" ? "cy-GB" : "en-GB";
-  return date.toLocaleDateString(localeCode, {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
+  const [, day, month, year] = match;
+  const date = DateTime.fromObject({ year: Number(year), month: Number(month), day: Number(day) }, { zone: "utc" });
+  if (!date.isValid) return ddMMyyyyDate;
+
+  return date.setLocale(locale === "cy" ? "cy" : "en-GB").toFormat("d MMMM yyyy");
 }

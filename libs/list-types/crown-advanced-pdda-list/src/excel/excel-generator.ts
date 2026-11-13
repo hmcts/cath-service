@@ -1,4 +1,4 @@
-import { createSingleSheetExcelBuffer, saveExcelToStorage } from "@hmcts/list-types-common";
+import { createSingleSheetExcelBuffer, formatDdMmYyyyDate, saveExcelToStorage } from "@hmcts/list-types-common";
 import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
 import type { CrownAdvanceListData } from "../models/types.js";
@@ -36,7 +36,7 @@ export async function generateCrownAdvanceListExcel(options: ExcelGenerationOpti
       const categoryLabel = group.category === TO_BE_ALLOCATED_KEY ? t.toBeAllocated : group.category;
       return group.cases.map((row) => [
         categoryLabel ?? "",
-        row.fixedFor ?? "",
+        formatDdMmYyyyDate(row.fixedFor ?? "", locale),
         row.caseNumber ?? "",
         row.defendants ?? "",
         row.prosecutingAuthority ?? "",

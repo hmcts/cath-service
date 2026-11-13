@@ -1,4 +1,4 @@
-import { autoFitColumns, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
+import { autoFitColumns, formatDdMmYyyyDate, sanitiseCellValue, saveExcelToStorage } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
 import { cy as cyLocale } from "../locales/cy.js";
 import { en as enLocale } from "../locales/en.js";
@@ -25,6 +25,7 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
   try {
     const t = locale === "cy" ? cyLocale : enLocale;
     const cols = t.excelColumns;
+    const formatDate = (date: string) => formatDdMmYyyyDate(date, locale);
 
     const { listData } = await renderMagistratesStandardListData(jsonData, { locale, locationId, contentDate });
 
@@ -74,7 +75,7 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
               sanitiseCellValue(sitting.sittingHeading),
               sanitiseCellValue(hearing.partyInfo.name),
               sanitiseCellValue(hearing.applicationParticulars),
-              sanitiseCellValue(hearing.partyInfo.dob),
+              sanitiseCellValue(formatDate(hearing.partyInfo.dob)),
               sanitiseCellValue(hearing.partyInfo.age),
               sanitiseCellValue(hearing.partyInfo.address),
               sanitiseCellValue(hearing.prosecutingAuthority),
@@ -104,7 +105,7 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
                 sanitiseCellValue(sitting.sittingHeading),
                 sanitiseCellValue(hearing.partyInfo.name),
                 sanitiseCellValue(hearing.applicationParticulars),
-                sanitiseCellValue(hearing.partyInfo.dob),
+                sanitiseCellValue(formatDate(hearing.partyInfo.dob)),
                 sanitiseCellValue(hearing.partyInfo.age),
                 sanitiseCellValue(hearing.partyInfo.address),
                 sanitiseCellValue(hearing.prosecutingAuthority),
@@ -121,9 +122,9 @@ export async function generateMagistratesStandardListExcel(options: ExcelGenerat
                 sanitiseCellValue(offence.offenceLegislation),
                 sanitiseCellValue(offence.offenceMaxPenalty),
                 sanitiseCellValue(offence.plea),
-                sanitiseCellValue(offence.pleaDate),
-                sanitiseCellValue(offence.convictionDate),
-                sanitiseCellValue(offence.adjournedDate ? `${offence.adjournedDate} - ${t.adjournedText}` : "")
+                sanitiseCellValue(formatDate(offence.pleaDate)),
+                sanitiseCellValue(formatDate(offence.convictionDate)),
+                sanitiseCellValue(offence.adjournedDate ? `${formatDate(offence.adjournedDate)} - ${t.adjournedText}` : "")
               ]);
             }
           }

@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMagistratesAdultCourtListExcel } from "./excel-generator.js";
 
-vi.mock("@hmcts/list-types-common", () => ({
-  autoFitColumns: vi.fn(),
-  sanitiseCellValue: vi.fn((v: string) => v),
-  saveExcelToStorage: vi.fn().mockResolvedValue({ excelPath: "test-id.xlsx" })
-}));
+vi.mock("@hmcts/list-types-common", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/list-types-common")>();
+  return {
+    formatDdMmYyyyDate: actual.formatDdMmYyyyDate,
+    autoFitColumns: vi.fn(),
+    sanitiseCellValue: vi.fn((v: string) => v),
+    saveExcelToStorage: vi.fn().mockResolvedValue({ excelPath: "test-id.xlsx" })
+  };
+});
 
 vi.mock("../rendering/renderer.js", () => ({
   renderMagistratesAdultCourtList: vi.fn()
@@ -109,6 +113,45 @@ describe("generateMagistratesAdultCourtListExcel", () => {
 
     // Assert
     expect(sanitiseCellValue).toHaveBeenCalledWith("Courtroom 5");
+  });
+
+  it("should write the date of birth in long format", async () => {
+    // Arrange
+    vi.mocked(renderMagistratesAdultCourtList).mockResolvedValue(makeRenderedData() as never);
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    // Act
+    await generateMagistratesAdultCourtListExcel(baseOptions);
+
+    // Assert
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1 January 1990");
+  });
+
+  it("should write the date of birth with a Welsh month name when locale is cy", async () => {
+    // Arrange
+    vi.mocked(renderMagistratesAdultCourtList).mockResolvedValue(makeRenderedData() as never);
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    // Act
+    await generateMagistratesAdultCourtListExcel({ ...baseOptions, locale: "cy" });
+
+    // Assert
+    expect(sanitiseCellValue).toHaveBeenCalledWith("1 Ionawr 1990");
+  });
+
+  it("should write a date of birth that cannot be parsed unchanged", async () => {
+    // Arrange
+    const data = makeRenderedData();
+    data.listData.sessions[0].cases[0].dateOfBirth = "unknown";
+    vi.mocked(renderMagistratesAdultCourtList).mockResolvedValue(data as never);
+    const { sanitiseCellValue } = await import("@hmcts/list-types-common");
+
+    // Act
+    const result = await generateMagistratesAdultCourtListExcel(baseOptions);
+
+    // Assert
+    expect(result.success).toBe(true);
+    expect(sanitiseCellValue).toHaveBeenCalledWith("unknown");
   });
 
   it("should write the comma-joined offence code, title and summary for a case", async () => {
