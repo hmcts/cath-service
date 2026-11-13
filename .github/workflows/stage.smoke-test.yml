@@ -21,6 +21,11 @@ on:
         type: string
         description: "GitHub Actions runner group"
         default: "azure-nonprod"
+      run-publication-smoke:
+        required: false
+        type: boolean
+        default: false
+        description: "Run the publication upload smoke spec"
 
 jobs:
   pr-comment:
@@ -37,3 +42,5 @@ jobs:
     with:
       urls: ${{ inputs.urls }}
       runner-group: ${{ inputs.runner-group }}
+      run-publication-smoke: ${{ inputs.run-publication-smoke }}
+    secrets: inherit

@@ -12,12 +12,24 @@ on:
         type: string
         description: "GitHub Actions runner group"
         default: "azure-nonprod"
+      run-publication-smoke:
+        required: false
+        type: boolean
+        description: "Run the publication upload smoke spec (needs test-support enabled on the API)"
+        default: false
+
+# The publication smoke step needs repo secrets AZURE_CLIENT_ID and AZURE_TENANT_ID (CI OIDC identity),
+# passed via secrets: inherit, plus Key Vault cath-bootstrap-aat secrets app-tenant,
+# cath-service-api-client-id and cath-service-api-client-secret (API client with api.publisher.user).
 
 jobs:
   smoke-test:
     name: Smoke Test
     runs-on:
       group: ${{ inputs.runner-group }}
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Decode deployment URLs
@@ -104,9 +116,72 @@ jobs:
             echo "No API URL found, skipping API health check"
           fi
 
+      - name: Checkout code
+        if: inputs.run-publication-smoke
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        if: inputs.run-publication-smoke
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Enable Corepack
+        if: inputs.run-publication-smoke
+        run: corepack enable
+
+      # Install before Azure login so dependency install scripts never see the az session or API credentials
+      - name: Install dependencies
+        if: inputs.run-publication-smoke
+        run: yarn install --immutable
+
+      - name: Azure login (OIDC)
+        if: inputs.run-publication-smoke
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # Credentials are fetched into this step's shell only, not $GITHUB_ENV, so no other step can read them
+      - name: Publication upload smoke test
+        id: publication-smoke
+        if: inputs.run-publication-smoke
+        run: |
+          set -euo pipefail
+
+          URLS_JSON='${{ steps.urls.outputs.urls }}'
+          CATH_SERVICE_API_URL=$(echo "${URLS_JSON}" | jq -r '.api // empty')
+          if [ -z "${CATH_SERVICE_API_URL}" ]; then
+            echo "::error::No API URL found in deployment"
+            exit 1
+          fi
+
+          KV="cath-bootstrap-aat"
+          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+
+          CATH_SERVICE_API_CLIENT_SECRET=$(fetch cath-service-api-client-secret)
+          echo "::add-mask::${CATH_SERVICE_API_CLIENT_SECRET}"
+          AZURE_TENANT_ID=$(fetch app-tenant)
+          CATH_SERVICE_API_CLIENT_ID=$(fetch cath-service-api-client-id)
+
+          export CATH_SERVICE_API_URL AZURE_TENANT_ID CATH_SERVICE_API_CLIENT_ID CATH_SERVICE_API_CLIENT_SECRET
+          yarn workspace e2e-tests run test:smoke
+
+      - name: Upload smoke test results
+        uses: actions/upload-artifact@v6
+        if: always() && steps.publication-smoke.outcome == 'failure'
+        with:
+          name: smoke-test-results
+          path: e2e-tests/test-results/
+          retention-days: 7
+
       - name: Smoke test summary
         run: |
           echo "=========================================="
           echo "Smoke Test Summary"
           echo "=========================================="
           echo "All health checks passed successfully!"
+          if [ "${{ inputs.run-publication-smoke }}" = "true" ]; then
+            echo "Publication upload smoke test passed"
+          fi
