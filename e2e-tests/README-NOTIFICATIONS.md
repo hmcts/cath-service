@@ -146,4 +146,3 @@ All tests use proper cleanup in `afterEach` hooks:
 3. Delete test users
 
 This ensures no test data pollution between test runs.
-
