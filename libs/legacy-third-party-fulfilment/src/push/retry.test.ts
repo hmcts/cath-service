@@ -113,24 +113,18 @@ describe("pushWithRetry", () => {
     const result = await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null);
 
     expect(result).toEqual({ statusCode: 204, success: true });
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, undefined);
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, {});
   });
 
-  it("forwards pdfPath to executePush", async () => {
-    mockExecutePush.mockResolvedValue({ statusCode: 200, success: true });
-    const pdfPath = "/tmp/publication.pdf";
+  it("forwards the files to executePush on every attempt", async () => {
+    mockExecutePush.mockResolvedValueOnce({ statusCode: 503, success: false }).mockResolvedValueOnce({ statusCode: 200, success: true });
+    const files = { pdf: Buffer.from("%PDF-1.4"), flatFile: { buffer: Buffer.from("xlsx"), fileName: "artefact-1.xlsx" } };
 
-    await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", pdfPath);
+    const promise = pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", files);
+    await vi.runAllTimersAsync();
+    await promise;
 
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, pdfPath, undefined);
-  });
-
-  it("forwards flatFilePath to executePush", async () => {
-    mockExecutePush.mockResolvedValue({ statusCode: 200, success: true });
-    const flatFilePath = "/tmp/artefact-1.xlsx";
-
-    await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null, "[ThirdParty]", undefined, flatFilePath);
-
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, flatFilePath);
+    expect(mockExecutePush).toHaveBeenNthCalledWith(1, TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, files);
+    expect(mockExecutePush).toHaveBeenNthCalledWith(2, TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, files);
   });
 });

@@ -32,6 +32,11 @@ nodejs:
           alias: AWS_SECRET_ACCESS_KEY
         - name: govuk-notify-api-key
           alias: GOVUK_NOTIFY_API_KEY
+        # Third-party push secrets (Courtel)
+        - name: auto-pip-<ENV>-courtel-api
+          alias: COURTEL_API_URL
+        - name: courtel-certificate
+          alias: COURTEL_CERTIFICATE
         # Azure Blob Storage
         - name: storageaccount-connection-string
           alias: AZURE_STORAGE_CONNECTION_STRING

@@ -1,4 +1,4 @@
-import { executePush } from "./http-client.js";
+import { executePush, type PushFiles } from "./http-client.js";
 
 const MAX_ATTEMPTS = 3;
 const BACKOFF_DELAYS_MS = [1000, 2000];
@@ -22,8 +22,7 @@ export async function pushWithRetry(
   headers: Record<string, string>,
   body: string | null,
   logPrefix = "[ThirdParty]",
-  pdfPath?: string,
-  flatFilePath?: string
+  files: PushFiles = {}
 ): Promise<{ statusCode: number; success: boolean }> {
   let lastResult = { statusCode: 0, success: false };
 
@@ -35,7 +34,7 @@ export async function pushWithRetry(
     }
 
     try {
-      lastResult = await executePush(url, certPem, headers, body, pdfPath, flatFilePath);
+      lastResult = await executePush(url, certPem, headers, body, files);
     } catch {
       // Network-level error — treat as statusCode 0 and retry
       lastResult = { statusCode: 0, success: false };

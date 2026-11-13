@@ -1,6 +1,7 @@
 import { getLocationWithDetails } from "@hmcts/location";
 import { prisma } from "@hmcts/postgres-prisma";
 import { buildPushHeaders } from "./push/headers.js";
+import type { PushFiles } from "./push/http-client.js";
 import { pushWithRetry } from "./push/retry.js";
 import { findSubscribersByListType } from "./queries.js";
 
@@ -19,12 +20,15 @@ export interface ThirdPartyPushParams {
   provenance: string;
   isUpdate: boolean;
   jsonData?: unknown;
-  pdfPath?: string;
-  flatFilePath?: string;
+  // Called only once a push will happen, so uploads with no Courtel subscribers download nothing.
+  // Resolves null when a file the publication needs is missing, which fails the push rather than sending it empty.
+  loadFiles?: () => Promise<PushFiles | null>;
   logPrefix?: string;
 }
 
-export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "pdfPath" | "flatFilePath" | "isUpdate">;
+export type ThirdPartyDeletionParams = Omit<ThirdPartyPushParams, "jsonData" | "loadFiles" | "isUpdate">;
+
+export type ThirdPartyPushOutcome = "sent" | "failed" | "skipped";
 
 function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: string } | null {
   const url = process.env[COURTEL_API_URL_ENV];
@@ -44,7 +48,7 @@ function resolveCourtelSecrets(logPrefix: string): { url: string; certPem: strin
   return { url, certPem };
 }
 
-export async function sendThirdPartyPublications(params: ThirdPartyPushParams): Promise<void> {
+export async function sendThirdPartyPublications(params: ThirdPartyPushParams): Promise<ThirdPartyPushOutcome> {
   const {
     artefactId,
     locationId,
@@ -57,29 +61,35 @@ export async function sendThirdPartyPublications(params: ThirdPartyPushParams): 
     provenance,
     isUpdate,
     jsonData,
-    pdfPath,
-    flatFilePath,
+    loadFiles,
     logPrefix = "[ThirdParty]"
   } = params;
 
   const secrets = resolveCourtelSecrets(logPrefix);
-  if (!secrets) return;
+  if (!secrets) return "skipped";
 
   const subscribers = await findSubscribersByListType(listTypeId);
   if (subscribers.length === 0) {
     console.info(`${logPrefix} Third-party push skipped: no subscribers for listTypeId ${listTypeId}`);
-    return;
+    return "skipped";
   }
 
   const location = await getLocationWithDetails(Number.parseInt(locationId, 10));
   const headers = await buildPushHeaders({ artefactId, listTypeId, contentDate, sensitivity, language, displayFrom, displayTo, provenance, location });
   const body = jsonData != null ? JSON.stringify(jsonData) : null;
+  const files = loadFiles ? await loadFiles() : {};
+  if (!files) {
+    console.error(`${logPrefix} Third-party push failed: publication file not found for artefactId ${artefactId}`);
+    return "failed";
+  }
 
   console.info(`${logPrefix} Sending third-party push for artefactId ${artefactId} to ${secrets.url}`);
-  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix, pdfPath, flatFilePath);
+  const result = await pushWithRetry(secrets.url, secrets.certPem, headers, body, logPrefix, files);
   writePushLog(artefactId, listTypeId, isUpdate ? "UPDATE" : "CREATE", result).catch((err) => {
     console.warn(`${logPrefix} Failed to write push log:`, err instanceof Error ? err.message : String(err));
   });
+
+  return result.success ? "sent" : "failed";
 }
 
 export async function sendThirdPartyDeletion(params: ThirdPartyDeletionParams): Promise<void> {

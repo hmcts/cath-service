@@ -113,7 +113,8 @@ vi.mock("@hmcts/rcj-standard-daily-cause-list", () => ({
 
 vi.mock("@hmcts/azure-blob", () => ({
   CONTAINER: { ARTEFACT: "artefact", FILES: "files", PUBLICATIONS: "publications" },
-  deleteBlob: vi.fn()
+  deleteBlob: vi.fn(),
+  downloadBlob: vi.fn()
 }));
 
 vi.mock("@hmcts/list-types-common", async (importOriginal) => ({
@@ -277,7 +278,7 @@ describe("publication-processor", async () => {
   );
   const { generateUtiacJrDailyHearingListExcel, generateUtiacJrLondonDailyHearingListExcel } = await import("@hmcts/utiac-jr-daily-hearing-list");
   const { generateRcjStandardDailyCauseListPdf, reformatRcjStandardDailyCauseListExcel } = await import("@hmcts/rcj-standard-daily-cause-list");
-  const { deleteBlob } = await import("@hmcts/azure-blob");
+  const { deleteBlob, downloadBlob } = await import("@hmcts/azure-blob");
   const { listTypeData, saveExcelToStorage } = await import("@hmcts/list-types-common");
   const { generateAdministrativeCourtDailyCauseListPdf, reformatAdministrativeCourtDailyCauseListExcel } = await import(
     "@hmcts/administrative-court-daily-cause-list"
@@ -1744,34 +1745,77 @@ describe("publication-processor", async () => {
       expect(mockSendThirdPartyPublications).not.toHaveBeenCalled();
     });
 
-    it("passes generated pdfPath to sendThirdPartyPublications", async () => {
-      vi.mocked(generateCauseListPdf).mockResolvedValue({
-        success: true,
-        pdfPath: "/generated/publication.pdf",
-        sizeBytes: 1024
+    describe("third-party file loading", () => {
+      async function loadFilesFromPush(overrides: Partial<typeof baseParams> = {}) {
+        await processPublication({ ...baseParams, skipNotifications: true, ...overrides });
+        const [{ loadFiles }] = mockSendThirdPartyPublications.mock.calls[0];
+        return loadFiles();
+      }
+
+      it("downloads the generated PDF from the publications container", async () => {
+        const pdfBuffer = Buffer.from("%PDF-1.4");
+        vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024 });
+        vi.mocked(downloadBlob).mockResolvedValue(pdfBuffer);
+
+        const files = await loadFilesFromPush();
+
+        expect(downloadBlob).toHaveBeenCalledWith("test-artefact-id.pdf", "publications");
+        expect(files).toEqual({ pdf: pdfBuffer });
       });
 
-      await processPublication({ ...baseParams, skipNotifications: true });
+      it("does not pass the PDF blob name through to the push", async () => {
+        vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024 });
 
-      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: "/generated/publication.pdf" }));
-    });
+        await processPublication({ ...baseParams, skipNotifications: true });
 
-    it("passes undefined pdfPath to sendThirdPartyPublications when PDF generation is skipped", async () => {
-      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true });
+        expect(mockSendThirdPartyPublications.mock.calls[0][0]).not.toHaveProperty("pdfBlobName");
+      });
 
-      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ pdfPath: undefined }));
-    });
+      it("loads no files when no PDF was generated", async () => {
+        const files = await loadFilesFromPush({ jsonData: undefined });
 
-    it("forwards flatFilePath to sendThirdPartyPublications when provided", async () => {
-      await processPublication({ ...baseParams, jsonData: undefined, skipNotifications: true, flatFilePath: "/tmp/artefact.xlsx" });
+        expect(downloadBlob).not.toHaveBeenCalled();
+        expect(files).toEqual({});
+      });
 
-      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: "/tmp/artefact.xlsx" }));
-    });
+      it("loads no files when the generated PDF is missing from blob storage", async () => {
+        vi.mocked(generateCauseListPdf).mockResolvedValue({ success: true, pdfPath: "test-artefact-id.pdf", sizeBytes: 1024 });
+        vi.mocked(downloadBlob).mockResolvedValue(null);
 
-    it("forwards undefined flatFilePath to sendThirdPartyPublications when not provided", async () => {
-      await processPublication({ ...baseParams, skipNotifications: true });
+        const files = await loadFilesFromPush();
 
-      expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(expect.objectContaining({ flatFilePath: undefined }));
+        expect(files).toEqual({});
+      });
+
+      it("loads a flat file with its uploaded file name", async () => {
+        const fileBuffer = Buffer.from("xlsx bytes");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.xlsx" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(fileBuffer);
+
+        const files = await loadFilesFromPush();
+
+        expect(files).toEqual({ flatFile: { buffer: fileBuffer, fileName: "hearing-list.xlsx" } });
+        expect(downloadBlob).not.toHaveBeenCalled();
+      });
+
+      it("names a flat file after the artefact when the uploaded name has no extension", async () => {
+        const fileBuffer = Buffer.from("file bytes");
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(fileBuffer);
+
+        const files = await loadFilesFromPush();
+
+        expect(files).toEqual({ flatFile: { buffer: fileBuffer, fileName: baseParams.artefactId } });
+      });
+
+      it("resolves null when a flat file is missing from blob storage", async () => {
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.xlsx" } as any);
+        vi.mocked(getFileBuffer).mockResolvedValue(null);
+
+        const files = await loadFilesFromPush();
+
+        expect(files).toBeNull();
+      });
     });
 
     it("logs error when sendThirdPartyPublications rejects", async () => {
