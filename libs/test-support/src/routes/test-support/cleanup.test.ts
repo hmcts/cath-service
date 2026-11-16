@@ -67,6 +67,7 @@ describe("cleanup routes", () => {
       status: vi.fn().mockReturnThis()
     };
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 0 } as any);
     vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
     vi.mocked(prisma.jurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
     vi.mocked(prisma.region.findMany).mockResolvedValue([]);
@@ -146,7 +147,8 @@ describe("cleanup routes", () => {
           subJurisdictions: 0,
           jurisdictions: 0,
           regions: 0
-        }
+        },
+        failures: []
       });
     });
 
@@ -167,7 +169,10 @@ describe("cleanup routes", () => {
       await DELETE(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.artefact.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { OR: [{ locationId: { in: [] } }, { listType: { name: { startsWith: "test_prefix" } } }] }
+      });
+      expect(mockResponse.status).not.toHaveBeenCalled();
       expect(mockResponse.json).toHaveBeenCalledWith({
         prefix: "test_prefix",
         deleted: 0,
@@ -182,7 +187,8 @@ describe("cleanup routes", () => {
           subJurisdictions: 0,
           jurisdictions: 0,
           regions: 0
-        }
+        },
+        failures: []
       });
     });
 
@@ -344,9 +350,53 @@ describe("cleanup routes", () => {
       }
     });
 
-    it("should return 500 on database error", async () => {
+    it("should delete artefacts at prefixed locations and artefacts using a prefixed list type before deleting list types", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.location.findMany).mockResolvedValue([{ locationId: 90001 }] as any);
+      vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 2 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({
+        where: { OR: [{ locationId: { in: ["90001"] } }, { listType: { name: { startsWith: "E2E_123_" } } }] }
+      });
+      expect(vi.mocked(prisma.artefact.deleteMany).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(prisma.listType.deleteMany).mock.invocationCallOrder[0]);
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ details: expect.objectContaining({ artefacts: 2 }) }));
+    });
+
+    it("should carry on with the remaining steps and return 500 with the failed steps when a step fails", async () => {
       // Arrange
       mockRequest.body = { prefix: "test_prefix" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.listType.deleteMany).mockRejectedValue(new Error("Foreign key constraint violated"));
+      vi.mocked(prisma.thirdPartyUser.deleteMany).mockResolvedValue({ count: 1 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.region.findMany).toHaveBeenCalled();
+      expect(prisma.mediaApplication.deleteMany).toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: "Failed to cleanup test data",
+          prefix: "test_prefix",
+          deleted: 1,
+          failures: [{ step: "listTypes", error: "Foreign key constraint violated" }]
+        })
+      );
+      expect(consoleSpy).toHaveBeenCalled();
+    });
+
+    it("should record every step that depends on a failed location lookup", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "test_prefix" };
+      mockEmptyCleanup();
       vi.mocked(prisma.location.findMany).mockRejectedValue(new Error("DB error"));
 
       // Act
@@ -354,8 +404,15 @@ describe("cleanup routes", () => {
 
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({ error: "Failed to cleanup test data" });
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          failures: [
+            { step: "artefacts", error: "DB error" },
+            { step: "subscriptions", error: "DB error" }
+          ]
+        })
+      );
+      expect(prisma.listType.deleteMany).toHaveBeenCalled();
     });
   });
 });
