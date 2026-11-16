@@ -80,7 +80,7 @@ async function findStaleRunPrefixes(olderThan: Date): Promise<string[]> {
     .map((value) => RUN_PREFIX_PATTERN.exec(value)?.[1])
     .filter((timestamp): timestamp is string => timestamp !== undefined && Number(timestamp) < olderThan.getTime());
 
-  return [...new Set(staleTimestamps)].sort().map((timestamp) => `E2E_${timestamp}_`);
+  return [...new Set(staleTimestamps)].sort((a, b) => Number(a) - Number(b)).map((timestamp) => `E2E_${timestamp}_`);
 }
 
 // Notification subscribers share the real CFT test account email, so they are only recognisable by their prefixed provenance id
@@ -185,7 +185,7 @@ async function deleteMediaApplications(prefix: string): Promise<number> {
 
 // UI-created third party users use a hyphenated prefix because underscores are not valid there
 async function deleteThirdPartyUsers(prefix: string): Promise<number> {
-  const hyphenatedPrefix = prefix.replace(/_/g, "-");
+  const hyphenatedPrefix = prefix.replaceAll("_", "-");
   const result = await prisma.thirdPartyUser.deleteMany({
     where: { OR: [{ name: { startsWith: prefix } }, { name: { startsWith: hyphenatedPrefix } }] }
   });

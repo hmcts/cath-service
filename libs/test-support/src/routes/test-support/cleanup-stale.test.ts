@@ -96,7 +96,7 @@ describe("cleanup-stale route", () => {
 
       // Assert
       const cleanedPrefixes = vi.mocked(prisma.listType.deleteMany).mock.calls.map(([args]) => (args as any).where.name.startsWith);
-      expect(cleanedPrefixes).toEqual([`E2E_${THREE_HOURS_AGO}_`, `E2E_${FOUR_HOURS_AGO}_`].sort());
+      expect(cleanedPrefixes).toEqual([`E2E_${FOUR_HOURS_AGO}_`, `E2E_${THREE_HOURS_AGO}_`]);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({ olderThan: "2026-11-16T10:00:00.000Z", runs: expect.arrayContaining([expect.objectContaining({ failures: [] })]) })
