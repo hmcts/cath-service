@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
+const SSO_REDIRECT_TIMEOUT = 30000;
+
 /**
  * Helper function to perform SSO login through Azure AD
  * @param page - Playwright Page object
@@ -28,21 +30,24 @@ export async function loginWithSSO(page: Page, email: string, password: string):
   await page.fill('input[type="password"]', password);
   await page.click('input[type="submit"]');
 
-  // Wait a moment for potential error messages or redirects
-  await page.waitForTimeout(2000);
+  // Azure AD may or may not show "Stay signed in?" and can take several seconds to render it
+  // when several logins run in parallel, so wait for whichever happens first rather than
+  // sampling once after a fixed delay (isVisible does not wait, so a late prompt was missed).
+  const staySignedInButton = page.locator('input[type="submit"][value="Yes"]');
+  const outcome = await Promise.any([
+    page.waitForURL(hasLeftMicrosoftLogin, { timeout: SSO_REDIRECT_TIMEOUT }).then(() => "redirected" as const),
+    staySignedInButton.waitFor({ state: "visible", timeout: SSO_REDIRECT_TIMEOUT }).then(() => "staySignedInPrompt" as const)
+  ]).catch(() => "timedOut" as const);
 
-  // Handle "Stay signed in?" prompt if it appears
-  try {
-    const staySignedInButton = page.locator('input[type="submit"][value="Yes"]');
-    if (await staySignedInButton.isVisible({ timeout: 3000 })) {
-      await staySignedInButton.click();
-    }
-  } catch {
-    // Prompt didn't appear, continue
+  if (outcome === "staySignedInPrompt") {
+    await staySignedInButton.click();
   }
 
-  // Wait for redirect back to application (away from Microsoft login)
-  await page.waitForURL((url) => !url.toString().includes("login.microsoftonline.com"), { timeout: 30000 });
+  await page.waitForURL(hasLeftMicrosoftLogin, { timeout: SSO_REDIRECT_TIMEOUT });
+}
+
+function hasLeftMicrosoftLogin(url: URL): boolean {
+  return !url.toString().includes("login.microsoftonline.com");
 }
 
 /**
