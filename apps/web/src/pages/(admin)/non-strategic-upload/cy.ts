@@ -47,7 +47,6 @@ export const cy = {
     courtRequired: "Rhowch a dewiswch lys dilys",
     courtTooShort: "Rhaid i enw'r llys fod yn dri chymeriad neu fwy",
     listTypeRequired: "Dewiswch fath o restr",
-    listTypeHidden: "[WELSH TRANSLATION REQUIRED: 'The selected list type is hidden. Select a different list type']",
     hearingStartDateRequired: "Rhowch ddyddiad dechrau gwrandawiad dilys",
     hearingStartDateInvalid: "Rhowch ddyddiad dechrau gwrandawiad dilys",
     sensitivityRequired: "Dewiswch lefel sensitifrwydd",

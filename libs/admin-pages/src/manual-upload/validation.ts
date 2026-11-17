@@ -17,7 +17,6 @@ interface ErrorMessages {
   displayToInvalid: string;
   displayToBeforeFrom: string;
   listTypeRequired: string;
-  listTypeHidden: string;
   languageRequired: string;
   sensitivityRequired: string;
   hearingStartDateRequired: string;
@@ -138,7 +137,7 @@ function validateDateRange(
 
 function validateListTypeIsVisible(body: UploadFormData, listTypes: ListTypeSummary[], errorMessages: ErrorMessages): ValidationError | null {
   const isHidden = listTypes.some((listType) => listType.id.toString() === body.listType && listType.isHidden);
-  return isHidden ? { text: errorMessages.listTypeHidden, href: "#listType" } : null;
+  return isHidden ? { text: errorMessages.listTypeRequired, href: "#listType" } : null;
 }
 
 async function validateUploadForm(

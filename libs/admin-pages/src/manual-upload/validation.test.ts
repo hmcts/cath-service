@@ -59,7 +59,6 @@ const mockTranslations = {
     courtRequired: "Court is required",
     courtTooShort: "Court name too short",
     listTypeRequired: "List type is required",
-    listTypeHidden: "The selected list type is hidden. Select a different list type",
     sensitivityRequired: "Sensitivity is required",
     languageRequired: "Language is required",
     hearingStartDateRequired: "Hearing start date is required",
@@ -203,7 +202,7 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
 
       // Assert
-      expect(errors).toEqual([{ text: mockTranslations.errorMessages.listTypeHidden, href: "#listType" }]);
+      expect(errors).toEqual([{ text: mockTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
     });
 
     it("should look up list types once per submission when validating a JSON file", async () => {
@@ -719,7 +718,6 @@ const mockNonStrategicTranslations = {
     courtRequired: "Please enter and select a valid court",
     courtTooShort: "Court name must be three characters or more",
     listTypeRequired: "Please select a list type",
-    listTypeHidden: "The selected list type is hidden. Select a different list type",
     sensitivityRequired: "Please select a sensitivity",
     languageRequired: "Select a language option",
     hearingStartDateRequired: "Please enter a valid hearing start date",
@@ -781,7 +779,7 @@ describe("validateNonStrategicUploadForm", () => {
       const errors = await validateNonStrategicUploadForm(body, createMockFile(), mockNonStrategicTranslations);
 
       // Assert
-      expect(errors).toEqual([{ text: mockNonStrategicTranslations.errorMessages.listTypeHidden, href: "#listType" }]);
+      expect(errors).toEqual([{ text: mockNonStrategicTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
     });
   });
 
