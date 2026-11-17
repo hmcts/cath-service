@@ -70,10 +70,25 @@ VALUES
   (gen_random_uuid()::text, 'c91eb02ac37e3f570592c4cef2911420c0504f2eeaa9f15e1684405c742d58b0', NOW(), '20260623000000_add_file_extension_to_artefact', NULL, NULL, NOW(), 1),
   (gen_random_uuid()::text, '5624e9b7d7f75e5aecfdbd59b7e2d0323df5c67ab925ccbbf2f3a1fa374352b9', NOW(), '20260702000000_remove_soft_delete_and_admin_audit_log', NULL, NULL, NOW(), 1);
 
--- Mark any other stuck migrations as rolled back so they get retried
+-- Undo damage from an earlier race between two runners: a finished migration
+-- marked rolled back is treated as unapplied, so the next deploy re-runs it and
+-- fails with "already exists". Prisma never produces this state itself.
+UPDATE _prisma_migrations
+SET rolled_back_at = NULL
+WHERE finished_at IS NOT NULL AND rolled_back_at IS NOT NULL;
+
+-- Mark any other stuck migrations as rolled back so they get retried, but only
+-- when no runner holds Prisma's migration lock (pg_advisory_lock(72707369)).
+-- The 00 and 01 clusters each run this pod against the same database, so an
+-- unfinished row can be the other runner's migration in progress.
 UPDATE _prisma_migrations
 SET rolled_back_at = NOW()
-WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL;
+WHERE finished_at IS NULL AND rolled_back_at IS NULL AND started_at IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_locks
+    WHERE locktype = 'advisory' AND granted
+      AND classid = 0 AND objid = 72707369 AND objsubid = 1
+  );
 SQL
 
 echo "Running database migrations..."

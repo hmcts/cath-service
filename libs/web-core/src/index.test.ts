@@ -51,10 +51,7 @@ describe("Web Core Module Exports", () => {
   });
 
   it("should export session store functions", () => {
-    expect(webCore.expressSessionPostgres).toBeDefined();
-    expect(webCore.PostgresStore).toBeDefined();
     expect(webCore.expressSessionRedis).toBeDefined();
-    expect(typeof webCore.expressSessionPostgres).toBe("function");
     expect(typeof webCore.expressSessionRedis).toBe("function");
   });
 

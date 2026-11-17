@@ -3,6 +3,7 @@ import "./conversion/wpafcc-config.js"; // Register converter on module load
 // Business logic exports
 export type { ValidationResult } from "@hmcts/list-types-common";
 export * from "./email-summary/summary-builder.js";
+export { reformatWpafccWeeklyHearingListExcel } from "./excel/excel-reformatter.js";
 export { cy as wpafccWeeklyHearingListCy } from "./locales/cy.js";
 // Locale exports
 export { en as wpafccWeeklyHearingListEn } from "./locales/en.js";

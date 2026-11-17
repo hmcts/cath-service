@@ -68,8 +68,7 @@ describe("generateEtDailyListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "et-daily-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,

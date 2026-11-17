@@ -74,20 +74,6 @@ describe("generateSscsDailyHearingListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
-  });
-
-  it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: Buffer.alloc(3 * 1024 * 1024),
-      sizeBytes: 3 * 1024 * 1024
-    });
-
-    const result = await generateSscsDailyHearingListPdf({ ...BASE_OPTIONS, artefactId: "large-pdf-123" });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 
   it("should return error when PDF generation fails with error message", async () => {

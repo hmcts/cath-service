@@ -76,7 +76,6 @@
     "nunjucks": "3.2.4",
     "passport": "0.7.0",
     "pg": "8.21.0",
-    "pg-format": "1.0.4",
     "redis": "5.12.1"
   },
   "devDependencies": {

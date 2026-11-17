@@ -72,11 +72,14 @@ import { createClient } from "redis";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const helmValues = process.env.LOCAL_DEV === "true" ? "values.dev.yaml" : "values.yaml";
+const isLocalDev = process.env.LOCAL_DEV === "true";
+const helmValues = isLocalDev ? "values.dev.yaml" : "values.yaml";
 const chartPath = path.join(__dirname, `../helm/${helmValues}`);
+// Under Azure Cache for Redis's 10-minute idle timeout.
+const REDIS_PING_INTERVAL_MS = 300_000;
 
 export async function createApp(): Promise<Express> {
-  await getPropertiesVolumeSecrets({ chartPath, vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
+  await getPropertiesVolumeSecrets({ chartPath, omit: localEnvOverrides(), vaultUriSuffix: process.env.VAULT_URI_SUFFIX });
   const { default: config } = await import("config");
 
   // Dynamic import to avoid eager initialization of @hmcts/auth (which loads `config` via b2c-config.ts)
@@ -221,9 +224,10 @@ export async function createApp(): Promise<Express> {
 
   // Enable test-support routes in non-production environments or when explicitly enabled
   if (process.env.NODE_ENV !== "production" || process.env.ENABLE_TEST_SUPPORT === "true") {
-    const { apiRoutes: testSupportRoutes } = await import("@hmcts/test-support/config");
+    const { apiRoutes: testSupportRoutes, webRoutes: testSupportWebRoutes } = await import("@hmcts/test-support/config");
     app.use(express.json());
     app.use(await createSimpleRouter(testSupportRoutes));
+    app.use(await createSimpleRouter(testSupportWebRoutes));
   }
 
   app.use(notFoundHandler());
@@ -232,9 +236,20 @@ export async function createApp(): Promise<Express> {
   return app;
 }
 
+// Locally, a non-empty value from .env or the shell takes precedence over Key Vault.
+function localEnvOverrides(): string[] {
+  if (!isLocalDev) return [];
+  return Object.entries(process.env)
+    .filter(([, value]) => value !== undefined && value.trim() !== "")
+    .map(([key]) => key);
+}
+
+// Session store client. Azure Cache for Redis closes connections that are idle
+// for 10 minutes, which node-redis logs as SocketClosedUnexpectedlyError, so it
+// pings to keep the connection open (#1033).
 const getRedisClient = async (config: { get: (key: string) => any }) => {
   const url = process.env.REDIS_URL ?? config.get("redis.url");
-  const redisClient = createClient({ url });
+  const redisClient = createClient({ url, pingInterval: REDIS_PING_INTERVAL_MS });
   redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
   await redisClient.connect();

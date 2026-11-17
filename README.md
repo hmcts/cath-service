@@ -212,6 +212,18 @@ psql -h localhost -p 5433 -U postgres -d postgres
 redis-cli -p 6380
 ```
 
+### Running without Docker
+
+For environments with no Docker (for example a virtual agent pod), run the same dependencies as host processes on the same ports (PostgreSQL 5433, Redis 6380, Azurite 10000):
+
+```bash
+yarn dev:up:nodocker     # start services, run migrations, seed
+yarn dev:down:nodocker   # stop services (data is kept in .nodocker/)
+scripts/dev-nodocker.sh status
+```
+
+The first run installs `embedded-postgres` and `azurite` into `.nodocker/` (gitignored) and builds Redis from source, so it needs `gcc`, `make` and network access; this takes a minute or two.
+
 ### Services
 
 | Service | URL | Description |

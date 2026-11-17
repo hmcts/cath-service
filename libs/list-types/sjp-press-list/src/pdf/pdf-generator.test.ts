@@ -33,8 +33,7 @@ describe("generateSjpPressListPdf", () => {
     vi.mocked(savePdfToStorage).mockResolvedValue({
       success: true,
       pdfPath: "test-press-artefact-123.pdf",
-      sizeBytes: 2048,
-      exceedsMaxSize: false
+      sizeBytes: 2048
     });
   });
 

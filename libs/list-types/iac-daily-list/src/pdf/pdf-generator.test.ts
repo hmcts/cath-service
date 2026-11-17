@@ -68,7 +68,7 @@ describe("generateIacDailyListPdf", () => {
 
   it("should generate the PDF successfully", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 1024 });
-    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "test-artefact-123.pdf", sizeBytes: 1024, exceedsMaxSize: false });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "test-artefact-123.pdf", sizeBytes: 1024 });
 
     const result = await generateIacDailyListPdf({
       artefactId: "test-artefact-123",
@@ -85,7 +85,7 @@ describe("generateIacDailyListPdf", () => {
 
   it("should use the additional cases title when the list type name is additional cases", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
-    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100, exceedsMaxSize: false });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100 });
 
     await generateIacDailyListPdf({
       artefactId: "x",
@@ -107,7 +107,7 @@ describe("generateIacDailyListPdf", () => {
 
   it("should resolve the provenance label for the data source", async () => {
     vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 100 });
-    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100, exceedsMaxSize: false });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "x.pdf", sizeBytes: 100 });
 
     await generateIacDailyListPdf({
       artefactId: "x",

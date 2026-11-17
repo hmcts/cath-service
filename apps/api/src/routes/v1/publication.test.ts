@@ -64,6 +64,17 @@ function multerFile(overrides: Partial<Express.Multer.File> = {}): Express.Multe
   };
 }
 
+describe("POST /publication middleware order", () => {
+  it("should parse request bodies only after authentication", () => {
+    // Arrange
+    const middlewareNames = POST.map((middleware) => middleware.name);
+
+    // Assert
+    expect(middlewareNames[0]).not.toMatch(/Parser$/);
+    expect(middlewareNames.slice(1, 4)).toEqual(["jsonParser", "urlencodedParser", "conditionalMulter"]);
+  });
+});
+
 describe("POST /publication", () => {
   let statusMock: ReturnType<typeof vi.fn>;
   let jsonMock: ReturnType<typeof vi.fn>;
@@ -485,7 +496,9 @@ describe("POST /publication", () => {
   });
 
   describe("multipart middleware", () => {
-    const multerMiddleware = () => (POST as unknown as ((req: Request, res: Response, next: (error?: unknown) => void) => void)[])[1];
+    const findMulterMiddleware = (chain: unknown) =>
+      (chain as ((req: Request, res: Response, next: (error?: unknown) => void) => void)[]).find((middleware) => middleware.name === "conditionalMulter")!;
+    const multerMiddleware = () => findMulterMiddleware(POST);
 
     it("should skip multer for non-multipart requests", () => {
       // Arrange
@@ -510,7 +523,7 @@ describe("POST /publication", () => {
         return { default: mockMulter };
       });
       const { POST: postWithFailingMulter } = await import("./publication.js");
-      const middleware = (postWithFailingMulter as unknown as ((req: Request, res: Response, next: (error?: unknown) => void) => void)[])[1];
+      const middleware = findMulterMiddleware(postWithFailingMulter);
       const next = vi.fn();
 
       // Act
