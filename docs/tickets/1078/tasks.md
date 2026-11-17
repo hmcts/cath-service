@@ -24,13 +24,13 @@ are not committed.
 ### Report
 - [x] Write `docs/tickets/1078/report.md` with the sections in plan §2.1, highlighting Option C as the single recommendation and giving a one-line rejection for each of A, B, D, E and F
 - [x] Scenario 3: review the report against the checklist in plan §5.2 and close any gaps (see report §8)
-- [ ] Raise the blocking questions Q1–Q5 with the tech lead and PO, and fold the answers into the report; revisit the recommendation if Q4 (frequency) or Q5 (draft state) changes it (drafted in report.md, needs a human)
-- [ ] Raise the build-blocking questions Q6–Q12 with the PO, design and content (drafted in report.md, needs a human)
+- [x] Raise the blocking questions Q1–Q5 with the tech lead and PO: posted on #1078 (2026-11-17); fold the answers into the report when they arrive
+- [x] Raise the build-blocking questions Q6–Q12: posted on #1078 (2026-11-17)
 
 ### Follow-on tickets
-- [ ] Raise build ticket 1: sequence migration in `apps/postgres/prisma/migrations/`, the `court-maintenance` service and transaction, `ADD_COURT`, and the seed regression tests; include scenarios 6 and 7 (plan §5.3) (drafted in report.md, needs a human)
-- [ ] Raise build ticket 2, the "Add a court or tribunal" journey (formerly tickets 2–5): all seven pages, the hub entry, the session keys in `apps/web/src/session.ts` and the E2E journeys; include scenarios 4, 5 and 8 (drafted in report.md, needs a human)
+- [x] Raise build ticket 1: raised as #1531
+- [x] Raise build ticket 2, the "Add a court or tribunal" journey: raised as #1532
 - [ ] Map every legacy `location_id` to one of the 27 seeded courts or to "new" (staging comparison in `legacy-court-mapping.md`; re-check against a legacy production export), and have it reviewed before the legacy courts are loaded (report Q1, needs a human)
 - [ ] Attach spec sections 4–13 by reference to every build ticket (drafted in report.md, needs a human)
-- [ ] Raise sibling tickets: amend-court journey; update-only CSV route; Option F discovery spike; the region, jurisdiction and sub-jurisdiction `MAX + 1` allocation hazard (drafted in report.md, needs a human)
+- [x] Raise sibling tickets: S1 #1534, S2 #1535, S3 #1537, S4 #1536; plus "Align seeded court IDs with legacy CaTH" #1533
 - [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human)

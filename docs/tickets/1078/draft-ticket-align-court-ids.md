@@ -1,6 +1,6 @@
 # Draft ticket: Align seeded court IDs with legacy CaTH
 
-Status: **draft, not raised.** Follows the technical-task template. It comes from the #1078 spike report, Q1 and §1.7.
+Status: **raised as #1533** (2026-11-17). Follows the technical-task template. It comes from the #1078 spike report, Q1 and §1.7.
 
 ---
 

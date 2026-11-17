@@ -430,8 +430,8 @@ Caveat: the case-insensitive checks are in the application, while the database u
 
 | # | Title | Size | Depends on |
 |---|---|---|---|
-| 1 | Court maintenance: location ID sequence, service and seed guards | 2 d | Q1, Q3 |
-| 2 | Add a court or tribunal journey: seven pages, hub entry and E2E | 4.5–6 d | 1, Q6, Q11 |
+| 1 (#1531) | Court maintenance: location ID sequence, service and seed guards | 2 d | Q1, Q3 |
+| 2 (#1532) | Add a court or tribunal journey: seven pages, hub entry and E2E | 4.5–6 d | 1, Q6, Q11 |
 | | **Total** | **6.5–8 d** | |
 
 "Spec §n" below means the `/spec` comment on #1078, attached by reference.
@@ -563,5 +563,7 @@ Revised after the third review: Q1 option B now requires a reviewed legacy-to-se
 Revised on 2026-11-17 with a legacy staging export: added Q1 options D (renumber the seeded courts to legacy IDs) and E (stop the seed writing courts); corrected the SJP claim (legacy data has SJP at 9, not 0); recorded the 27-court comparison in `legacy-court-mapping.md`.
 
 Revised on 2026-11-17 at the developer's request: removed every dependency on the `vibe-653` branch, which is a different piece of work. Q1's loading options (A–E), the migration-conflict paragraph and its risk row are gone. The legacy ID comparison and the renumbering draft stay, as a standalone pre-go-live question in Q1.
+
+Raised on 2026-11-17: Q1–Q12 posted on #1078; ticket 1 is #1531, ticket 2 is #1532, S1 #1534, S2 #1535, S3 #1537, S4 #1536, and "Align seeded court IDs with legacy CaTH" is #1533.
 
 Needs a person: sending Q1–Q12, raising and attaching the tickets, and tech lead and PO sign-off before #1078 is closed. If Q4 or Q5 changes the answer, revisit §2 and §4.
