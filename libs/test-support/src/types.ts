@@ -6,6 +6,13 @@ export interface CreateLocationInput {
   contactNo?: string;
   regionIds?: number[];
   subJurisdictionIds?: number[];
+  locationReferences?: LocationReferenceInput[];
+}
+
+export interface LocationReferenceInput {
+  provenance: string;
+  provenanceLocationId?: string;
+  provenanceLocationType?: string;
 }
 
 export interface CreateUserInput {

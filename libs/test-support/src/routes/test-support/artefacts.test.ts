@@ -8,6 +8,12 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       findMany: vi.fn(),
       create: vi.fn(),
       deleteMany: vi.fn()
+    },
+    artefactSearch: {
+      create: vi.fn()
+    },
+    listSearchConfig: {
+      upsert: vi.fn()
     }
   }
 }));
@@ -161,6 +167,40 @@ describe("artefacts routes", () => {
           provenance: "SYSTEM"
         })
       });
+    });
+
+    it("should store case search data without creating a list search config", async () => {
+      // Arrange
+      mockRequest.body = {
+        locationId: "loc1",
+        listTypeId: 1,
+        contentDate: "2024-01-01",
+        caseNumber: "E2E_123_CASE",
+        caseName: "E2E_123_Smith v Jones"
+      };
+      vi.mocked(prisma.artefact.create).mockResolvedValue({ artefactId: "art1", locationId: "loc1", listTypeId: 1 } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefactSearch.create).toHaveBeenCalledWith({
+        data: { artefactId: "art1", caseNumber: "E2E_123_CASE", caseName: "E2E_123_Smith v Jones" }
+      });
+      expect(prisma.listSearchConfig.upsert).not.toHaveBeenCalled();
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it("should not store case search data when no case is given", async () => {
+      // Arrange
+      mockRequest.body = { locationId: "loc1", listTypeId: 1, contentDate: "2024-01-01" };
+      vi.mocked(prisma.artefact.create).mockResolvedValue({ artefactId: "art1", locationId: "loc1", listTypeId: 1 } as any);
+
+      // Act
+      await POST(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefactSearch.create).not.toHaveBeenCalled();
     });
 
     it("should return 400 when locationId is missing", async () => {

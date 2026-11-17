@@ -1,8 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { deleteTestSubscriptions, getTestSubscriptions } from "../../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
 interface TestLocationData {
   locationId: number;
@@ -55,14 +55,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     testDataMap.set(testInfo.testId, { location1, location2, location3 });
 
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    const continueButton = page.getByRole("button", { name: /continue/i });
-    await continueButton.click();
-
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
-
+    await loginAsTestUser(page, await createVerifiedTestUser({ label: "bulk-unsubscribe" }));
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
   });
 
@@ -159,6 +153,8 @@ test.describe("Bulk Unsubscribe", () => {
     const errorSummary = page.locator(".govuk-error-summary");
     await expect(errorSummary).toBeVisible();
     await expect(page.getByText(/at least one subscription must be selected/i)).toBeVisible();
+    // The error page renders before select_all.js binds its handlers, so a click now would only tick the select-all box
+    await page.waitForLoadState("load");
 
     // STEP 9: Test select-all functionality for court subscriptions
     // Note: Use click() instead of check() to trigger JavaScript event handler
@@ -223,6 +219,8 @@ test.describe("Bulk Unsubscribe", () => {
     const errorSummaryConfirm = page.locator(".govuk-error-summary");
     await expect(errorSummaryConfirm).toBeVisible();
     await expect(page.getByText(/an option must be selected/i).first()).toBeVisible();
+    // GOV.UK Frontend focuses the error summary when it initialises, which would steal focus from the radios mid-test
+    await page.waitForLoadState("load");
 
     // STEP 16: Test keyboard navigation for radio buttons
     const yesRadio = page.getByRole("radio", { name: /yes/i });
