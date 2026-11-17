@@ -1,12 +1,12 @@
 import { createKeyVaultSecretName, getSecret } from "./key-vault-service.js";
 
-export async function getOauthConfig(userId: string): Promise<OauthConfig | undefined> {
+export async function getOauthConfig(name: string, userId: string): Promise<OauthConfig | undefined> {
   const [destinationUrl, tokenUrl, scope, clientId, clientSecret] = await Promise.all([
-    getSecret(createKeyVaultSecretName(userId, "destination-url")),
-    getSecret(createKeyVaultSecretName(userId, "token-url")),
-    getSecret(createKeyVaultSecretName(userId, "scope")),
-    getSecret(createKeyVaultSecretName(userId, "client-id")),
-    getSecret(createKeyVaultSecretName(userId, "client-secret"))
+    getSecret(createKeyVaultSecretName(name, userId, "destination-url")),
+    getSecret(createKeyVaultSecretName(name, userId, "token-url")),
+    getSecret(createKeyVaultSecretName(name, userId, "scope")),
+    getSecret(createKeyVaultSecretName(name, userId, "client-id")),
+    getSecret(createKeyVaultSecretName(name, userId, "client-secret"))
   ]);
 
   if (!destinationUrl?.trim() || !tokenUrl?.trim() || !scope?.trim() || !clientId?.trim() || !clientSecret?.trim()) {

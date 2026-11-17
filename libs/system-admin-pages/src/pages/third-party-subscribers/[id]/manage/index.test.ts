@@ -129,7 +129,7 @@ describe("third-party-subscribers manage user page", () => {
 
         await postHandler(req as Request, res as Response);
 
-        expect(testThirdPartyConnection).toHaveBeenCalledWith(SUBSCRIBER_ID);
+        expect(testThirdPartyConnection).toHaveBeenCalledWith("Test Corp", SUBSCRIBER_ID);
         expect(res.render).toHaveBeenCalledWith(
           VIEW,
           expect.objectContaining({

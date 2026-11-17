@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { testThirdPartyConnection } from "./connection-test-service.js";
 
 vi.mock("./key-vault-service.js", () => ({
-  createKeyVaultSecretName: (userId: string, type: string) => `third-party-${userId}-${type}`,
+  createKeyVaultSecretName: (name: string, userId: string, type: string) => `${name}-${userId}-${type}`,
   getSecret: vi.fn()
 }));
 
 import { getSecret } from "./key-vault-service.js";
 
+const USER_NAME = "test-corp";
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const CLIENT_SECRET = "s3cr3t-value";
 const ACCESS_TOKEN = "tok-abc-123";
@@ -27,7 +28,7 @@ let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
 function mockSecrets(overrides: Record<string, string | undefined> = {}) {
   const values = { ...SECRETS, ...overrides };
-  vi.mocked(getSecret).mockImplementation(async (name: string) => values[name.replace(`third-party-${USER_ID}-`, "")]);
+  vi.mocked(getSecret).mockImplementation(async (name: string) => values[name.replace(`${USER_NAME}-${USER_ID}-`, "")]);
 }
 
 function tokenResponse() {
@@ -60,7 +61,7 @@ describe("testThirdPartyConnection", () => {
     it("should get a token then call the destination with a bearer token and return success", async () => {
       mockFetch(tokenResponse);
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "success" });
       expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -83,7 +84,7 @@ describe("testThirdPartyConnection", () => {
     it("should not follow redirects and should pass a signal on both requests", async () => {
       mockFetch(tokenResponse);
 
-      await testThirdPartyConnection(USER_ID);
+      await testThirdPartyConnection(USER_NAME, USER_ID);
 
       for (const [, init] of fetchMock.mock.calls) {
         expect(init.redirect).toBe("manual");
@@ -94,14 +95,14 @@ describe("testThirdPartyConnection", () => {
     it.each([200, 204, 299])("should treat a %s destination response as success", async (status) => {
       mockFetch(tokenResponse, () => new Response(null, { status }));
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "success" });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "success" });
     });
 
     it("should request a fresh token on every call", async () => {
       mockFetch(tokenResponse);
 
-      await testThirdPartyConnection(USER_ID);
-      await testThirdPartyConnection(USER_ID);
+      await testThirdPartyConnection(USER_NAME, USER_ID);
+      await testThirdPartyConnection(USER_NAME, USER_ID);
 
       const tokenCalls = fetchMock.mock.calls.filter(([url]) => url.toString() === TOKEN_URL);
       expect(tokenCalls).toHaveLength(2);
@@ -112,7 +113,7 @@ describe("testThirdPartyConnection", () => {
     it.each(Object.keys(SECRETS))("should return missing-configuration without any request when %s is undefined", async (name) => {
       mockSecrets({ [name]: undefined });
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "missing-configuration" });
       expect(fetchMock).not.toHaveBeenCalled();
@@ -121,14 +122,14 @@ describe("testThirdPartyConnection", () => {
     it("should return missing-configuration when a value is blank", async () => {
       mockSecrets({ scope: "  " });
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "missing-configuration" });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "missing-configuration" });
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("should log the failure with the user id", async () => {
       mockSecrets({ scope: undefined });
 
-      await testThirdPartyConnection(USER_ID);
+      await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining(`userId=${USER_ID} stage=missing-configuration`));
     });
@@ -138,7 +139,7 @@ describe("testThirdPartyConnection", () => {
     it.each([401, 400, 500, 302])("should return token-failure with http-status %s and not call the destination", async (status) => {
       mockFetch(() => new Response("error", { status }));
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "token-failure", reason: { kind: "http-status", status } });
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -152,7 +153,7 @@ describe("testThirdPartyConnection", () => {
     ])("should return invalid-token-response for %s", async (_label, token) => {
       mockFetch(token);
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "token-failure", reason: { kind: "invalid-token-response" } });
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -161,21 +162,21 @@ describe("testThirdPartyConnection", () => {
     it("should return invalid-url for a bad token URL without calling fetch", async () => {
       mockSecrets({ "token-url": "not a url" });
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "token-failure", reason: { kind: "invalid-url" } });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "token-failure", reason: { kind: "invalid-url" } });
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("should return connection-failed when the token endpoint is unreachable", async () => {
       fetchMock.mockRejectedValue(new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } }));
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "token-failure", reason: { kind: "connection-failed" } });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "token-failure", reason: { kind: "connection-failed" } });
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("stage=token reason=connection-failed code=ECONNREFUSED"));
     });
 
     it("should log the stage, reason and user id", async () => {
       mockFetch(() => new Response("error", { status: 401 }));
 
-      await testThirdPartyConnection(USER_ID);
+      await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(`Third party connection test failed: userId=${USER_ID} stage=token reason=http-status-401`);
     });
@@ -185,7 +186,7 @@ describe("testThirdPartyConnection", () => {
     it.each([403, 500, 302, 404])("should return destination-failure with http-status %s", async (status) => {
       mockFetch(tokenResponse, () => new Response(null, { status }));
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "destination-failure", reason: { kind: "http-status", status } });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "destination-failure", reason: { kind: "http-status", status } });
     });
 
     it.each(["ftp://destination.example.com", "data:text/plain,ok", "not a url", "https://user:pass@destination.example.com"])(
@@ -194,7 +195,7 @@ describe("testThirdPartyConnection", () => {
         mockSecrets({ "destination-url": destinationUrl });
         mockFetch(tokenResponse);
 
-        const result = await testThirdPartyConnection(USER_ID);
+        const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
         expect(result).toEqual({ status: "destination-failure", reason: { kind: "invalid-url" } });
         expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -206,7 +207,7 @@ describe("testThirdPartyConnection", () => {
         throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } });
       });
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "destination-failure", reason: { kind: "connection-failed" } });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "destination-failure", reason: { kind: "connection-failed" } });
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("stage=destination reason=connection-failed"));
     });
   });
@@ -217,7 +218,7 @@ describe("testThirdPartyConnection", () => {
         throw new DOMException("timeout", "TimeoutError");
       });
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "error" });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "error" });
       expect(fetchMock).toHaveBeenCalledTimes(1);
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("stage=token reason=timeout"));
     });
@@ -227,7 +228,7 @@ describe("testThirdPartyConnection", () => {
         throw new DOMException("timeout", "TimeoutError");
       });
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "error" });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "error" });
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("stage=destination reason=timeout"));
     });
 
@@ -236,13 +237,13 @@ describe("testThirdPartyConnection", () => {
       vi.spyOn(response, "json").mockRejectedValue(new DOMException("timeout", "TimeoutError"));
       mockFetch(() => response);
 
-      expect(await testThirdPartyConnection(USER_ID)).toEqual({ status: "error" });
+      expect(await testThirdPartyConnection(USER_NAME, USER_ID)).toEqual({ status: "error" });
     });
 
     it("should return error without rethrowing when reading the config fails", async () => {
       vi.mocked(getSecret).mockRejectedValue(new Error(`database password=${CLIENT_SECRET}`));
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "error" });
       expect(fetchMock).not.toHaveBeenCalled();
@@ -262,7 +263,7 @@ describe("testThirdPartyConnection", () => {
     it("should not leak secrets from a failing token endpoint body", async () => {
       mockFetch(() => new Response(`invalid client ${CLIENT_SECRET} ${ACCESS_TOKEN}`, { status: 401 }));
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expectNoSecrets(JSON.stringify(result));
       expectNoSecrets(loggedText());
@@ -272,7 +273,7 @@ describe("testThirdPartyConnection", () => {
     it("should not leak secrets from a failing destination body", async () => {
       mockFetch(tokenResponse, () => new Response(`denied for ${ACCESS_TOKEN}`, { status: 403 }));
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expectNoSecrets(JSON.stringify(result));
       expectNoSecrets(loggedText());
@@ -290,7 +291,7 @@ describe("testThirdPartyConnection", () => {
         });
       }
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expectNoSecrets(JSON.stringify(result));
       expectNoSecrets(loggedText());
@@ -299,7 +300,7 @@ describe("testThirdPartyConnection", () => {
     it("should not leak secrets from a URL with embedded credentials", async () => {
       mockSecrets({ "token-url": LEAKY_URL_USERINFO });
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expect(result).toEqual({ status: "token-failure", reason: { kind: "invalid-url" } });
       expectNoSecrets(JSON.stringify(result));
@@ -309,7 +310,7 @@ describe("testThirdPartyConnection", () => {
     it("should not leak secrets from an unexpected error", async () => {
       vi.mocked(getSecret).mockRejectedValue(new Error(`vault error ${CLIENT_SECRET} ${LEAKY_URL_USERINFO}`));
 
-      const result = await testThirdPartyConnection(USER_ID);
+      const result = await testThirdPartyConnection(USER_NAME, USER_ID);
 
       expectNoSecrets(JSON.stringify(result));
       expectNoSecrets(loggedText());

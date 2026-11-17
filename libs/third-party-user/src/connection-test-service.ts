@@ -2,9 +2,9 @@ import { type AccessTokenResult, requestAccessToken } from "./access-token.js";
 import { getOauthConfig } from "./oauth-config.js";
 import { discardBody, type RequestFailure, sendOutboundRequest } from "./outbound-request.js";
 
-export async function testThirdPartyConnection(userId: string): Promise<ConnectionTestResult> {
+export async function testThirdPartyConnection(name: string, userId: string): Promise<ConnectionTestResult> {
   try {
-    const config = await getOauthConfig(userId);
+    const config = await getOauthConfig(name, userId);
     if (!config) {
       logFailure(userId, "missing-configuration", "no-oauth-configuration");
       return { status: "missing-configuration" };

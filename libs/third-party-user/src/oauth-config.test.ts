@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getOauthConfig } from "./oauth-config.js";
 
 vi.mock("./key-vault-service.js", () => ({
-  createKeyVaultSecretName: (userId: string, type: string) => `third-party-${userId}-${type}`,
+  createKeyVaultSecretName: (name: string, userId: string, type: string) => `${name}-${userId}-${type}`,
   getSecret: vi.fn()
 }));
 
 import { getSecret } from "./key-vault-service.js";
 
+const USER_NAME = "test-corp";
 const USER_ID = "user-1";
 
 const SECRETS: Record<string, string> = {
@@ -20,7 +21,7 @@ const SECRETS: Record<string, string> = {
 
 function mockSecrets(overrides: Record<string, string | undefined> = {}) {
   const values = { ...SECRETS, ...overrides };
-  vi.mocked(getSecret).mockImplementation(async (name: string) => values[name.replace(`third-party-${USER_ID}-`, "")]);
+  vi.mocked(getSecret).mockImplementation(async (name: string) => values[name.replace(`${USER_NAME}-${USER_ID}-`, "")]);
 }
 
 describe("getOauthConfig", () => {
@@ -31,7 +32,7 @@ describe("getOauthConfig", () => {
   it("should return the config when all five secrets are present", async () => {
     mockSecrets();
 
-    const result = await getOauthConfig(USER_ID);
+    const result = await getOauthConfig(USER_NAME, USER_ID);
 
     expect(result).toEqual({
       destinationUrl: "https://destination.example.com",
@@ -46,18 +47,18 @@ describe("getOauthConfig", () => {
   it.each(Object.keys(SECRETS))("should return undefined when %s is missing", async (name) => {
     mockSecrets({ [name]: undefined });
 
-    expect(await getOauthConfig(USER_ID)).toBeUndefined();
+    expect(await getOauthConfig(USER_NAME, USER_ID)).toBeUndefined();
   });
 
   it.each(Object.keys(SECRETS))("should return undefined when %s is blank", async (name) => {
     mockSecrets({ [name]: "   " });
 
-    expect(await getOauthConfig(USER_ID)).toBeUndefined();
+    expect(await getOauthConfig(USER_NAME, USER_ID)).toBeUndefined();
   });
 
   it("should propagate a failure reading a secret", async () => {
     vi.mocked(getSecret).mockRejectedValue(new Error("db down"));
 
-    await expect(getOauthConfig(USER_ID)).rejects.toThrow("db down");
+    await expect(getOauthConfig(USER_NAME, USER_ID)).rejects.toThrow("db down");
   });
 });

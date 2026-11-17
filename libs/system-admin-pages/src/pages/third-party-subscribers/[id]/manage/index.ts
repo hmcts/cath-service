@@ -31,7 +31,7 @@ export const postHandler = async (req: Request, res: Response) => {
     return res.redirect(`/third-party-subscribers${lngParam}`);
   }
 
-  const result = await testThirdPartyConnection(user.id);
+  const result = await testThirdPartyConnection(user.name, user.id);
 
   // Testing a connection is read-only and not audited; without this the audit middleware would log the render as a generic success
   req.auditMetadata = { shouldLog: false };
