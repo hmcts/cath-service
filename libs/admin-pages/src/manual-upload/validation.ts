@@ -136,6 +136,17 @@ function validateDateRange(
   return null;
 }
 
+async function validateListTypeIsVisible(body: UploadFormData, errorMessages: ErrorMessages): Promise<ValidationError | null> {
+  if (!body.listType) {
+    return null;
+  }
+
+  const listTypes = await findAllListTypes();
+  const isHidden = listTypes.some((listType) => listType.id.toString() === body.listType && listType.isHidden);
+
+  return isHidden ? { text: errorMessages.listTypeRequired, href: "#listType" } : null;
+}
+
 async function validateUploadForm(
   body: UploadFormData,
   file: Express.Multer.File | undefined,
@@ -161,6 +172,12 @@ async function validateUploadForm(
   }
 
   errors.push(...validateRequiredFields(body, errorMessages));
+
+  // Hidden list types are not offered in the dropdown; this rejects a tampered form submission.
+  const hiddenListTypeError = await validateListTypeIsVisible(body, errorMessages);
+  if (hiddenListTypeError) {
+    errors.push(hiddenListTypeError);
+  }
 
   const hearingStartDateError = validateDate(
     body.hearingStartDate,

@@ -13,7 +13,7 @@ const LANGUAGE_DISPLAY: Record<string, { en: string; cy: string }> = {
 
 async function resolveListTypeNames(listTypeIds: number[], locale: string) {
   const listTypeRecords = await prisma.listType.findMany({
-    where: { id: { in: listTypeIds } }
+    where: { id: { in: listTypeIds }, isHidden: false }
   });
   return listTypeRecords.map((lt) => ({
     listTypeId: lt.id,

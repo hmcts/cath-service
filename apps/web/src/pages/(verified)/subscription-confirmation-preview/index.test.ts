@@ -73,6 +73,20 @@ describe("subscription-confirmation-preview", () => {
   });
 
   describe("GET", () => {
+    it("should resolve names only for visible list types", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: { id: { in: expect.any(Array) }, isHidden: false }
+      });
+    });
+
     it("should render page with resolved location and list type names", async () => {
       const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([

@@ -92,6 +92,20 @@ describe("seedListTypes", () => {
     );
   });
 
+  it("should never set isHidden in the upsert so an admin's hide setting survives a reseed", async () => {
+    // Arrange
+    const { seedListTypes } = await import("./seed-list-types.js");
+
+    // Act
+    await seedListTypes();
+
+    // Assert
+    for (const [args] of mockPrisma.listType.upsert.mock.calls) {
+      expect(args.create).not.toHaveProperty("isHidden");
+      expect(args.update).not.toHaveProperty("isHidden");
+    }
+  });
+
   it("should soft-delete active list types no longer in listTypeData, excluding test types", async () => {
     // Arrange
     const { seedListTypes } = await import("./seed-list-types.js");

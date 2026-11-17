@@ -70,6 +70,20 @@ describe("subscription-configure-list-preview", () => {
       );
     });
 
+    it("should resolve names only for visible list types", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      vi.mocked(prisma.listType.findMany).mockResolvedValue([]);
+
+      // Act
+      await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
+
+      // Assert
+      expect(prisma.listType.findMany).toHaveBeenCalledWith({
+        where: { id: { in: expect.any(Array) }, isHidden: false }
+      });
+    });
+
     it("should show noLanguageSelected and empty listTypes when session has no pending list types or language", async () => {
       const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.listType.findMany).mockResolvedValue([]);

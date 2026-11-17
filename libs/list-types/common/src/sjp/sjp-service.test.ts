@@ -20,7 +20,7 @@ vi.mock("@hmcts/publication", () => ({
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
-      findUnique: vi.fn()
+      findFirst: vi.fn()
     }
   }
 }));
@@ -178,7 +178,7 @@ describe("getSjpListById", () => {
       locationId: "1"
     };
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(mockArtefact as never);
     vi.mocked(getPublicationJson).mockResolvedValue(mockSjpJson);
     vi.mocked(determineListType).mockReturnValue("public");
     vi.mocked(extractCaseCount).mockReturnValue(100);
@@ -191,13 +191,13 @@ describe("getSjpListById", () => {
     expect(result?.caseCount).toBe(100);
     expect(result?.locationId).toBe(1);
 
-    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
-      where: { artefactId: "list-1" }
+    expect(prisma.artefact.findFirst).toHaveBeenCalledWith({
+      where: { artefactId: "list-1", listType: { isHidden: false } }
     });
   });
 
   it("should return null if artefact not found", async () => {
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(null);
 
     const result = await getSjpListById("nonexistent");
 
@@ -212,7 +212,7 @@ describe("getSjpListById", () => {
       locationId: "1"
     };
 
-    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(mockArtefact as never);
+    vi.mocked(prisma.artefact.findFirst).mockResolvedValue(mockArtefact as never);
     vi.mocked(getPublicationJson).mockResolvedValue(null);
 
     const result = await getSjpListById("list-1");

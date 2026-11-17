@@ -201,6 +201,23 @@ describe("Summary of Publications - GET handler", () => {
       expect(publications[0].formattedDate).toMatch(/\d{1,2} \w+ \d{4}/);
     });
 
+    it("should only query artefacts whose list type is visible", async () => {
+      // Arrange
+      const { prisma } = await import("@hmcts/postgres-prisma");
+      mockRequest.query = { locationId: "9" };
+      mockResponse.locals = { locale: "en" };
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.artefact.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ locationId: "9", listType: { isHidden: false } })
+        })
+      );
+    });
+
     it("should render empty state when no publications found for location", async () => {
       const { prisma } = await import("@hmcts/postgres-prisma");
       vi.mocked(prisma.artefact.findMany).mockResolvedValueOnce([]);

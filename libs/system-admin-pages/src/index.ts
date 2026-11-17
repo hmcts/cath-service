@@ -19,8 +19,10 @@ export * from "./list-type/types.js";
 // Explicit exports to avoid naming conflicts
 export {
   type ListTypeDetailsInput,
+  type VisibilityConfirmation,
   validateListTypeDetails,
-  validateSubJurisdictions
+  validateSubJurisdictions,
+  validateVisibilityConfirmation
 } from "./list-type/validation.js";
 export { buildMiReport, type MiReport } from "./mi-report/service.js";
 export {

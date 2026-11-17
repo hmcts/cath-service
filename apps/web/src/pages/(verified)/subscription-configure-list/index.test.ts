@@ -12,15 +12,8 @@ vi.mock("@hmcts/location", () => ({
   getLocationById: vi.fn()
 }));
 
-vi.mock("@hmcts/postgres-prisma", () => ({
-  prisma: {
-    listType: {
-      findMany: vi.fn()
-    }
-  }
-}));
-
 vi.mock("@hmcts/subscriptions", () => ({
+  findSubscribableListTypesBySubJurisdictionIds: vi.fn(),
   getAllSubscriptionsByUserId: vi.fn(),
   getSubscriptionListTypesByUserId: vi.fn()
 }));
@@ -82,13 +75,14 @@ describe("subscription-configure-list", () => {
       locals: {}
     };
 
-    const { getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } = await import("@hmcts/subscriptions");
+    const { findSubscribableListTypesBySubJurisdictionIds, getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } = await import(
+      "@hmcts/subscriptions"
+    );
     const { getLocationById } = await import("@hmcts/location");
-    const { prisma } = await import("@hmcts/postgres-prisma");
 
     vi.mocked(getAllSubscriptionsByUserId).mockResolvedValue(mockLocationSubscriptions as any);
     vi.mocked(getLocationById).mockResolvedValue(mockLocation as any);
-    vi.mocked(prisma.listType.findMany).mockResolvedValue(mockListTypeRecords as any);
+    vi.mocked(findSubscribableListTypesBySubJurisdictionIds).mockResolvedValue(mockListTypeRecords as any);
     vi.mocked(getSubscriptionListTypesByUserId).mockResolvedValue(null as any);
   });
 
@@ -167,19 +161,13 @@ describe("subscription-configure-list", () => {
 
     it("should filter list types using sub-jurisdictions from the user's subscribed locations", async () => {
       const { getLocationById } = await import("@hmcts/location");
-      const { prisma } = await import("@hmcts/postgres-prisma");
+      const { findSubscribableListTypesBySubJurisdictionIds } = await import("@hmcts/subscriptions");
 
       vi.mocked(getLocationById).mockResolvedValue({ ...mockLocation, subJurisdictions: [1] } as any);
 
       await GET[GET.length - 1](mockReq as Request, mockRes as Response, vi.fn());
 
-      expect(prisma.listType.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            subJurisdictions: { some: { subJurisdictionId: { in: [1] } } }
-          })
-        })
-      );
+      expect(findSubscribableListTypesBySubJurisdictionIds).toHaveBeenCalledWith([1]);
     });
 
     it("should render empty list when location has no sub-jurisdictions", async () => {

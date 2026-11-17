@@ -11,7 +11,6 @@ export const en = {
   yesOption: "Yes",
   noOption: "No",
   confirmButton: "Confirm",
-  cancelLink: "Cancel",
   errorCannotDelete: "This list type cannot be deleted because it has existing artefacts.",
   removeArtefactsLinkText: "Click here to delete all the artefact(s) for this list type",
   errorListTypeNotFound: "List type not found",

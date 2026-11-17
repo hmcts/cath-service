@@ -1,6 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres-prisma";
+import { findSubscribableListTypesBySubJurisdictionIds } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -44,14 +44,7 @@ const getHandler = async (req: Request, res: Response) => {
     });
   }
 
-  const listTypeRecords = await prisma.listType.findMany({
-    where: {
-      deletedAt: null,
-      subJurisdictions: {
-        some: { subJurisdictionId: { in: subJurisdictionIds } }
-      }
-    }
-  });
+  const listTypeRecords = await findSubscribableListTypesBySubJurisdictionIds(subJurisdictionIds);
 
   const listTypes = listTypeRecords
     .map((lt) => ({
@@ -88,14 +81,7 @@ const postHandler = async (req: Request, res: Response) => {
     let listTypeGroups: ListTypeGroup[] = [];
 
     if (subJurisdictionIds.length > 0) {
-      const listTypeRecords = await prisma.listType.findMany({
-        where: {
-          deletedAt: null,
-          subJurisdictions: {
-            some: { subJurisdictionId: { in: subJurisdictionIds } }
-          }
-        }
-      });
+      const listTypeRecords = await findSubscribableListTypesBySubJurisdictionIds(subJurisdictionIds);
 
       const listTypes = listTypeRecords
         .map((lt) => ({

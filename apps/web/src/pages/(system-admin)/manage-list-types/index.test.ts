@@ -18,6 +18,7 @@ const mockDbListTypes = [
     defaultSensitivity: null,
     allowedProvenance: ["CFT_IDAM"],
     isNonStrategic: false,
+    isHidden: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -33,6 +34,7 @@ const mockDbListTypes = [
     defaultSensitivity: null,
     allowedProvenance: ["CFT_IDAM"],
     isNonStrategic: false,
+    isHidden: true,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -131,6 +133,16 @@ describe("manage-list-types page", () => {
       const listTypes = renderCall[1].listTypes;
 
       expect(listTypes[0].name).toBe("CIVIL_DAILY_CAUSE_LIST");
+    });
+
+    it("should map isHidden onto each list type so the status tag can be shown", async () => {
+      // Act
+      await getHandler(req as Request, res as Response);
+
+      // Assert
+      const listTypes = (res.render as any).mock.calls[0][1].listTypes;
+      expect(listTypes.find((lt: any) => lt.id === 1).isHidden).toBe(false);
+      expect(listTypes.find((lt: any) => lt.id === 8).isHidden).toBe(true);
     });
 
     it("should map all db list types from findAllListTypes", async () => {

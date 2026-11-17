@@ -48,7 +48,7 @@ vi.mock("@hmcts/azure-blob", () => ({
 import { getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
-import { canAccessPublicationData, getPublicationJson } from "@hmcts/publication";
+import { canAccessPublicationData, getArtefactById, getPublicationJson } from "@hmcts/publication";
 import { validateSjpPressList } from "@hmcts/sjp-press-list";
 
 describe("SJP Press List Controller", () => {
@@ -158,11 +158,26 @@ describe("SJP Press List Controller", () => {
       expect(res.render).toHaveBeenCalledWith("errors/400", expect.objectContaining({ locale: "en" }));
     });
 
+    it("should render 404 error when the artefact's list type is hidden", async () => {
+      // Arrange
+      const req = mockRequest({ query: { artefactId: "hidden-artefact" } });
+      const res = mockResponse();
+      vi.mocked(getArtefactById).mockResolvedValue(null);
+
+      // Act
+      await getHandler(req, res);
+
+      // Assert
+      expect(getArtefactById).toHaveBeenCalledWith("hidden-artefact");
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(getPublicationJson).not.toHaveBeenCalled();
+    });
+
     it("should render 404 error when list is not found", async () => {
       const req = mockRequest({ query: { artefactId: "nonexistent" } });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+      vi.mocked(getArtefactById).mockResolvedValue(null);
 
       await getHandler(req, res);
 
@@ -174,7 +189,7 @@ describe("SJP Press List Controller", () => {
       const req = mockRequest({ query: { artefactId: "test-123" } });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
@@ -196,7 +211,7 @@ describe("SJP Press List Controller", () => {
       const req = mockRequest({ query: { artefactId: "test-123" } });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
@@ -218,7 +233,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
@@ -263,7 +278,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
@@ -299,7 +314,7 @@ describe("SJP Press List Controller", () => {
       });
       const res = mockResponse();
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),
@@ -331,7 +346,7 @@ describe("SJP Press List Controller", () => {
       const res = mockResponse();
       res.locals.locale = "cy";
 
-      vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+      vi.mocked(getArtefactById).mockResolvedValue({
         artefactId: "test-123",
         locationId: "1",
         contentDate: new Date("2025-01-20"),

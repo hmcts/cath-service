@@ -181,6 +181,12 @@ describe("generateSeedSql", () => {
     expect(sql).toContain("deleted_at = NULL");
   });
 
+  it("should never write is_hidden so an admin's hide setting survives a redeploy", () => {
+    const sql = generate();
+
+    expect(sql).not.toContain("is_hidden");
+  });
+
   it("should soft-delete active list types absent from the source data, preserving TEST_/E2E_ fixtures", () => {
     const sql = generate();
 

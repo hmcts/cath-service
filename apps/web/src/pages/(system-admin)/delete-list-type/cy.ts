@@ -11,7 +11,6 @@ export const cy = {
   yesOption: "Ie",
   noOption: "Na",
   confirmButton: "Cadarnhau",
-  cancelLink: "Canslo",
   errorCannotDelete: "Ni ellir dileu'r math hwn o restr oherwydd bod ganddo arteffactau sy'n bodoli eisoes.",
   removeArtefactsLinkText: "[WELSH TRANSLATION REQUIRED: 'Click here to delete all the artefact(s) for this list type']",
   errorListTypeNotFound: "Ni chanfuwyd y math o restr",

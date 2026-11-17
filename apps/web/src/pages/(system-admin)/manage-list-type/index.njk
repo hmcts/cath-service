@@ -1,5 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
 
 {% block page_content %}
   <div class="govuk-grid-row">
@@ -53,12 +54,28 @@
             <th scope="row" class="govuk-table__header">{{ t.subJurisdictionsLabel }}</th>
             <td class="govuk-table__cell">{{ subJurisdictionsText }}</td>
           </tr>
+          <tr class="govuk-table__row">
+            <th scope="row" class="govuk-table__header">{{ t.statusLabel }}</th>
+            <td class="govuk-table__cell">
+              {% if listType.isHidden %}
+                {{ govukTag({ text: t.hiddenTag, classes: "govuk-tag--grey" }) }}
+              {% else %}
+                {{ govukTag({ text: t.visibleTag, classes: "govuk-tag--green" }) }}
+              {% endif %}
+            </td>
+          </tr>
         </tbody>
       </table>
 
       {{ govukButton({
         text: t.editButton,
         href: "/edit-list-type?id=" + listType.id
+      }) }}
+
+      {{ govukButton({
+        text: t.showButton if listType.isHidden else t.hideButton,
+        href: "/list-type-visibility?id=" + listType.id,
+        classes: "govuk-button--secondary"
       }) }}
 
       {{ govukButton({

@@ -8,7 +8,8 @@ import { validateDate, validateManualUploadForm, validateNonStrategicUploadForm 
 vi.mock("@hmcts/system-admin-pages", () => ({
   findAllListTypes: vi.fn().mockResolvedValue([
     { id: 8, name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", friendlyName: "Civil and Family Daily Cause List" },
-    { id: 999, name: "TRAFFIC_VIRTUAL_COURTS_LIST", friendlyName: "Traffic Virtual Courts List" }
+    { id: 999, name: "TRAFFIC_VIRTUAL_COURTS_LIST", friendlyName: "Traffic Virtual Courts List" },
+    { id: 777, name: "HIDDEN_LIST_TYPE", friendlyName: "Hidden List Type", isHidden: true }
   ])
 }));
 
@@ -180,6 +181,27 @@ describe("validateManualUploadForm", () => {
 
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe("Hidden list type", () => {
+    it("should return a list type error when the selected list type is hidden", async () => {
+      // Arrange
+      const body = {
+        locationId: "123",
+        listType: "777",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      // Act
+      const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
+
+      // Assert
+      expect(errors).toEqual([{ text: mockTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
     });
   });
 
@@ -715,6 +737,27 @@ describe("validateNonStrategicUploadForm", () => {
 
       const errors = await validateNonStrategicUploadForm(body, createMockFile(), mockNonStrategicTranslations);
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe("Hidden list type", () => {
+    it("should return a list type error when the selected list type is hidden", async () => {
+      // Arrange
+      const body = {
+        locationId: "123",
+        listType: "777",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+
+      // Act
+      const errors = await validateNonStrategicUploadForm(body, createMockFile(), mockNonStrategicTranslations);
+
+      // Assert
+      expect(errors).toEqual([{ text: mockNonStrategicTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
     });
   });
 

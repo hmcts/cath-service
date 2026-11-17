@@ -1,0 +1,59 @@
+{% extends "layouts/base-template.njk" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+{% block page_content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    {% if errors %}
+      {{ govukErrorSummary({
+        titleText: t.errorSummaryTitle,
+        errorList: errors
+      }) }}
+    {% endif %}
+
+    {% if isHidden %}
+      {% set statusHtml = govukTag({ text: t.hiddenTag, classes: "govuk-tag--grey" }) %}
+    {% else %}
+      {% set statusHtml = govukTag({ text: t.visibleTag, classes: "govuk-tag--green" }) %}
+    {% endif %}
+
+    <h1 class="govuk-heading-l">{{ title }}</h1>
+
+    {{ govukSummaryList({
+      rows: [
+        { key: { text: t.listTypeLabel }, value: { text: listTypeName } },
+        { key: { text: t.statusLabel }, value: { html: statusHtml } }
+      ]
+    }) }}
+
+    <form method="post" novalidate>
+      <input type="hidden" name="targetState" value="{{ targetState }}">
+
+      {{ govukRadios({
+        name: "confirmVisibility",
+        classes: "govuk-radios--inline",
+        fieldset: {
+          legend: {
+            text: title,
+            classes: "govuk-visually-hidden"
+          }
+        },
+        hint: { text: hint },
+        items: [
+          { value: "yes", text: t.yesOption, checked: data.confirmVisibility === "yes" },
+          { value: "no", text: t.noOption, checked: data.confirmVisibility === "no" }
+        ],
+        errorMessage: { text: fieldError } if fieldError else false
+      }) }}
+
+      {{ govukButton({ text: t.confirmButton }) }}
+    </form>
+
+  </div>
+</div>
+{% endblock %}
