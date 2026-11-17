@@ -4,8 +4,13 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 import { GET } from "./index.js";
 
+const { requireRoleCalls } = vi.hoisted(() => ({ requireRoleCalls: [] as unknown[] }));
+
 vi.mock("@hmcts/auth", () => ({
-  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  requireRole: (roles: unknown) => {
+    requireRoleCalls.push(roles);
+    return (_req: Request, _res: Response, next: () => void) => next();
+  },
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
@@ -16,7 +21,7 @@ describe("list-type-visibility-success page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    res = { render: vi.fn(), setHeader: vi.fn() };
+    res = { render: vi.fn(), setHeader: vi.fn(), locals: { locale: "en" } };
   });
 
   it("should render the hidden panel when state is hidden", async () => {
@@ -47,9 +52,10 @@ describe("list-type-visibility-success page", () => {
     );
   });
 
-  it("should render Welsh content when lng=cy", async () => {
+  it("should render Welsh content when the saved locale is cy", async () => {
     // Arrange
-    const req = { query: { state: "hidden", lng: "cy" } } as unknown as Request;
+    const req = { query: { state: "hidden" } } as unknown as Request;
+    res.locals = { locale: "cy" };
 
     // Act
     await getHandler(req, res as Response, vi.fn());
@@ -72,6 +78,7 @@ describe("list-type-visibility-success page", () => {
   });
 
   it("should require the SYSTEM_ADMIN role", () => {
+    expect(requireRoleCalls).toEqual([["SYSTEM_ADMIN"]]);
     expect(GET).toHaveLength(2);
   });
 });

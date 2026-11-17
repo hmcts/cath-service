@@ -1,3 +1,4 @@
+import { findAllListTypes } from "@hmcts/system-admin-pages";
 import { describe, expect, it, vi } from "vitest";
 import { validateDate, validateManualUploadForm, validateNonStrategicUploadForm } from "./validation.js";
 
@@ -58,6 +59,7 @@ const mockTranslations = {
     courtRequired: "Court is required",
     courtTooShort: "Court name too short",
     listTypeRequired: "List type is required",
+    listTypeHidden: "The selected list type is hidden. Select a different list type",
     sensitivityRequired: "Sensitivity is required",
     languageRequired: "Language is required",
     hearingStartDateRequired: "Hearing start date is required",
@@ -201,7 +203,28 @@ describe("validateManualUploadForm", () => {
       const errors = await validateManualUploadForm(body, createMockFile(), mockTranslations);
 
       // Assert
-      expect(errors).toEqual([{ text: mockTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
+      expect(errors).toEqual([{ text: mockTranslations.errorMessages.listTypeHidden, href: "#listType" }]);
+    });
+
+    it("should look up list types once per submission when validating a JSON file", async () => {
+      // Arrange
+      vi.mocked(findAllListTypes).mockClear();
+      const body = {
+        locationId: "123",
+        listType: "777",
+        hearingStartDate: { day: "15", month: "06", year: "2025" },
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        displayFrom: { day: "10", month: "06", year: "2025" },
+        displayTo: { day: "20", month: "06", year: "2025" }
+      };
+      const jsonFile = createMockFile({ originalname: "list.json", mimetype: "application/json", buffer: Buffer.from("[]") });
+
+      // Act
+      await validateManualUploadForm(body, jsonFile, mockTranslations);
+
+      // Assert
+      expect(findAllListTypes).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -696,6 +719,7 @@ const mockNonStrategicTranslations = {
     courtRequired: "Please enter and select a valid court",
     courtTooShort: "Court name must be three characters or more",
     listTypeRequired: "Please select a list type",
+    listTypeHidden: "The selected list type is hidden. Select a different list type",
     sensitivityRequired: "Please select a sensitivity",
     languageRequired: "Select a language option",
     hearingStartDateRequired: "Please enter a valid hearing start date",
@@ -757,7 +781,7 @@ describe("validateNonStrategicUploadForm", () => {
       const errors = await validateNonStrategicUploadForm(body, createMockFile(), mockNonStrategicTranslations);
 
       // Assert
-      expect(errors).toEqual([{ text: mockNonStrategicTranslations.errorMessages.listTypeRequired, href: "#listType" }]);
+      expect(errors).toEqual([{ text: mockNonStrategicTranslations.errorMessages.listTypeHidden, href: "#listType" }]);
     });
   });
 

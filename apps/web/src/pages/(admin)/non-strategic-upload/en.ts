@@ -47,6 +47,7 @@ export const en = {
     courtRequired: "Please enter and select a valid court",
     courtTooShort: "Court name must be three characters or more",
     listTypeRequired: "Please select a list type",
+    listTypeHidden: "The selected list type is hidden. Select a different list type",
     hearingStartDateRequired: "Please enter a valid hearing start date",
     hearingStartDateInvalid: "Please enter a valid hearing start date",
     sensitivityRequired: "Please select a sensitivity",

@@ -5,8 +5,13 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 import { GET, POST } from "./index.js";
 
+const { requireRoleCalls } = vi.hoisted(() => ({ requireRoleCalls: [] as unknown[] }));
+
 vi.mock("@hmcts/auth", () => ({
-  requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
+  requireRole: (roles: unknown) => {
+    requireRoleCalls.push(roles);
+    return (_req: Request, _res: Response, next: () => void) => next();
+  },
   USER_ROLES: { SYSTEM_ADMIN: "SYSTEM_ADMIN" }
 }));
 
@@ -45,12 +50,14 @@ describe("list-type-visibility page", () => {
     res = {
       render: vi.fn(),
       redirect: vi.fn(),
-      status: vi.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      locals: { locale: "en" }
     };
     vi.mocked(findListTypeById).mockResolvedValue(buildListType() as any);
   });
 
-  it("should guard GET and POST with a role check", () => {
+  it("should restrict GET and POST to the SYSTEM_ADMIN role", () => {
+    expect(requireRoleCalls).toEqual([["SYSTEM_ADMIN"], ["SYSTEM_ADMIN"]]);
     expect(GET).toHaveLength(2);
     expect(POST).toHaveLength(2);
   });
@@ -102,9 +109,9 @@ describe("list-type-visibility page", () => {
       expect(res.render).toHaveBeenCalledWith(TEMPLATE, expect.objectContaining({ listTypeName: "CIVIL_DAILY_CAUSE_LIST" }));
     });
 
-    it("should render Welsh content when lng=cy", async () => {
+    it("should render Welsh content when the saved locale is cy", async () => {
       // Arrange
-      req.query = { id: "7", lng: "cy" };
+      res.locals = { locale: "cy" };
 
       // Act
       await getHandler(req as Request, res as Response, vi.fn());
@@ -223,14 +230,13 @@ describe("list-type-visibility page", () => {
 
     it("should redirect back to the list type without changing it when No is selected", async () => {
       // Arrange
-      req.query = { id: "7", lng: "cy" };
       req.body = { targetState: "hidden", confirmVisibility: "no" };
 
       // Act
       await postHandler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(res.redirect).toHaveBeenCalledWith("/manage-list-type?id=7&lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/manage-list-type?id=7");
       expect(setListTypeVisibility).not.toHaveBeenCalled();
       expect(req.auditMetadata).toBeUndefined();
     });
@@ -253,11 +259,10 @@ describe("list-type-visibility page", () => {
       expect(res.redirect).toHaveBeenCalledWith("/list-type-visibility-success?state=hidden");
     });
 
-    it("should show the list type and keep lng=cy on the redirect", async () => {
+    it("should show the list type and redirect to the success page", async () => {
       // Arrange
       vi.mocked(findListTypeById).mockResolvedValue(buildListType({ isHidden: true }) as any);
       vi.mocked(setListTypeVisibility).mockResolvedValue("UPDATED");
-      req.query = { id: "7", lng: "cy" };
       req.body = { targetState: "visible", confirmVisibility: "yes" };
 
       // Act
@@ -266,7 +271,7 @@ describe("list-type-visibility page", () => {
       // Assert
       expect(setListTypeVisibility).toHaveBeenCalledWith(7, false);
       expect(req.auditMetadata?.action).toBe("Show list type");
-      expect(res.redirect).toHaveBeenCalledWith("/list-type-visibility-success?state=visible&lng=cy");
+      expect(res.redirect).toHaveBeenCalledWith("/list-type-visibility-success?state=visible");
     });
 
     it("should honour the posted target state rather than flipping the current state", async () => {
@@ -280,7 +285,17 @@ describe("list-type-visibility page", () => {
 
       // Assert
       expect(setListTypeVisibility).toHaveBeenCalledWith(7, true);
-      expect(res.render).toHaveBeenCalledWith(TEMPLATE, expect.objectContaining({ errors: [{ text: en.errorAlreadyHidden, href: "#confirmVisibility" }] }));
+      expect(res.render).toHaveBeenCalledWith(
+        TEMPLATE,
+        expect.objectContaining({
+          errors: [{ text: en.errorAlreadyHidden }],
+          fieldError: undefined,
+          isHidden: true,
+          targetState: "visible",
+          title: en.showTitle,
+          data: { confirmVisibility: undefined }
+        })
+      );
       expect(req.auditMetadata).toBeUndefined();
       expect(res.redirect).not.toHaveBeenCalled();
     });
@@ -294,7 +309,10 @@ describe("list-type-visibility page", () => {
       await postHandler(req as Request, res as Response, vi.fn());
 
       // Assert
-      expect(res.render).toHaveBeenCalledWith(TEMPLATE, expect.objectContaining({ fieldError: en.errorAlreadyVisible }));
+      expect(res.render).toHaveBeenCalledWith(
+        TEMPLATE,
+        expect.objectContaining({ errors: [{ text: en.errorAlreadyVisible }], fieldError: undefined, isHidden: false, targetState: "hidden" })
+      );
     });
 
     it("should return 404 when the list type disappears before the update", async () => {

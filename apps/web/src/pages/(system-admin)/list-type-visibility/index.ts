@@ -8,7 +8,7 @@ const TEMPLATE = "list-type-visibility/index";
 const TARGET_STATES = ["hidden", "visible"] as const;
 
 const getHandler = async (req: Request, res: Response) => {
-  const t = req.query.lng === "cy" ? cy : en;
+  const t = res.locals.locale === "cy" ? cy : en;
   const id = parseId(req.query.id);
 
   if (id === null) {
@@ -21,13 +21,11 @@ const getHandler = async (req: Request, res: Response) => {
     return res.status(404).render("errors/common", { status: 404 });
   }
 
-  const targetState: TargetState = listType.isHidden ? "visible" : "hidden";
-  res.render(TEMPLATE, buildViewModel(t, { id, listType, targetState, confirmVisibility: undefined }));
+  res.render(TEMPLATE, buildViewModel(t, { id, listType, targetState: oppositeState(listType.isHidden), confirmVisibility: undefined }));
 };
 
 const postHandler = async (req: Request, res: Response) => {
-  const isWelsh = req.query.lng === "cy";
-  const t = isWelsh ? cy : en;
+  const t = res.locals.locale === "cy" ? cy : en;
   const id = parseId(req.query.id);
   const targetState = req.body.targetState;
   const confirmVisibility = req.body.confirmVisibility;
@@ -46,13 +44,11 @@ const postHandler = async (req: Request, res: Response) => {
 
   if (!validateVisibilityConfirmation(confirmVisibility)) {
     const message = targetState === "hidden" ? t.errorHideConfirmationRequired : t.errorShowConfirmationRequired;
-    return res.render(TEMPLATE, buildViewModel(t, viewModelInput, message));
+    return res.render(TEMPLATE, buildViewModel(t, viewModelInput, { text: message, href: "#confirmVisibility" }));
   }
 
-  const lngQuery = isWelsh ? "lng=cy" : "";
-
   if (confirmVisibility === "no") {
-    return res.redirect(`/manage-list-type?id=${id}${lngQuery ? `&${lngQuery}` : ""}`);
+    return res.redirect(`/manage-list-type?id=${id}`);
   }
 
   const result = await setListTypeVisibility(id, targetState === "hidden");
@@ -61,9 +57,13 @@ const postHandler = async (req: Request, res: Response) => {
     return res.status(404).render("errors/common", { status: 404 });
   }
 
+  // Another admin (or another tab) changed the state first. Re-render from the current state so the
+  // page asks the question that still makes sense, and keep the error off the radios.
   if (result === "ALREADY_IN_STATE") {
     const message = targetState === "hidden" ? t.errorAlreadyHidden : t.errorAlreadyVisible;
-    return res.render(TEMPLATE, buildViewModel(t, viewModelInput, message));
+    const currentListType = { ...listType, isHidden: targetState === "hidden" };
+    const currentInput = { id, listType: currentListType, targetState: oppositeState(currentListType.isHidden), confirmVisibility: undefined };
+    return res.render(TEMPLATE, buildViewModel(t, currentInput, { text: message }, false));
   }
 
   req.auditMetadata = {
@@ -72,7 +72,7 @@ const postHandler = async (req: Request, res: Response) => {
     entityInfo: `Name: ${listType.name}, ID: ${id}`
   };
 
-  res.redirect(`/list-type-visibility-success?state=${targetState}${lngQuery ? `&${lngQuery}` : ""}`);
+  res.redirect(`/list-type-visibility-success?state=${targetState}`);
 };
 
 function parseId(rawId: unknown): number | null {
@@ -86,26 +86,35 @@ function isTargetState(value: unknown): value is TargetState {
   return TARGET_STATES.includes(value as never);
 }
 
-function buildViewModel(t: typeof en, input: ViewModelInput, errorMessage?: string) {
+function oppositeState(isHidden: boolean): TargetState {
+  return isHidden ? "visible" : "hidden";
+}
+
+function buildViewModel(t: typeof en, input: ViewModelInput, error?: PageError, isFieldError = true) {
   const { id, listType, targetState, confirmVisibility } = input;
   const title = targetState === "hidden" ? t.hideTitle : t.showTitle;
 
   return {
     t,
     id,
-    pageTitle: errorMessage ? `${t.errorPrefix} ${title}` : title,
+    pageTitle: error ? `${t.errorPrefix} ${title}` : title,
     title,
     hint: targetState === "hidden" ? t.hideHint : t.showHint,
     listTypeName: listType.friendlyName || listType.name,
     isHidden: listType.isHidden,
     targetState,
-    errors: errorMessage ? [{ text: errorMessage, href: "#confirmVisibility" }] : undefined,
-    fieldError: errorMessage,
+    errors: error ? [error] : undefined,
+    fieldError: error && isFieldError ? error.text : undefined,
     data: { confirmVisibility }
   };
 }
 
 type TargetState = (typeof TARGET_STATES)[number];
+
+interface PageError {
+  text: string;
+  href?: string;
+}
 
 interface ViewModelInput {
   id: number;

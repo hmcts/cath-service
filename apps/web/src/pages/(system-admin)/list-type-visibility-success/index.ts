@@ -4,7 +4,7 @@ import { cy } from "./cy.js";
 import { en } from "./en.js";
 
 const getHandler = async (req: Request, res: Response) => {
-  const t = req.query.lng === "cy" ? cy : en;
+  const t = res.locals.locale === "cy" ? cy : en;
   const isHidden = req.query.state === "hidden";
   const title = isHidden ? t.successHiddenTitle : t.successShownTitle;
 

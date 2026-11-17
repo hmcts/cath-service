@@ -63,6 +63,14 @@ describe("list-type-visibility template", () => {
     });
   });
 
+  it("should render the question once, as the fieldset legend page heading", () => {
+    const { $ } = render(env, TEMPLATE, buildData());
+
+    expect($("h1")).toHaveLength(1);
+    expect($("fieldset legend.govuk-fieldset__legend--l h1.govuk-fieldset__heading").text().trim()).toBe(en.hideTitle);
+    expect($(".govuk-visually-hidden").filter((_, el) => $(el).text().trim() === en.hideTitle)).toHaveLength(0);
+  });
+
   it("should render inline Yes and No radios inside a fieldset with a legend", () => {
     const { $ } = render(env, TEMPLATE, buildData());
 
@@ -103,6 +111,14 @@ describe("list-type-visibility template", () => {
     expect($('.govuk-error-summary a[href="#confirmVisibility"]')).toHaveLength(1);
     expect($(".govuk-error-message").text()).toContain(en.errorHideConfirmationRequired);
     expect($(".govuk-form-group--error")).toHaveLength(1);
+  });
+
+  it("should show a summary-only error without marking the radios as invalid", () => {
+    const { $ } = render(env, TEMPLATE, buildData({ errors: [{ text: en.errorAlreadyHidden }], fieldError: undefined }));
+
+    assertErrorSummary($, [en.errorAlreadyHidden]);
+    expect($(".govuk-error-message")).toHaveLength(0);
+    expect($(".govuk-form-group--error")).toHaveLength(0);
   });
 
   it("should render Welsh content when the cy locale is used", () => {

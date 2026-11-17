@@ -6,6 +6,12 @@ import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { prefixName } from "../../utils/test-prefix.js";
 import { createOrGetListType, createTestArtefact } from "../../utils/test-support-api.js";
 
+// Mirror apps/web/src/pages/(system-admin)/manage-list-type/cy.ts and list-type-visibility/cy.ts.
+// Update these when the Welsh Language Unit supplies the translations.
+const WELSH_HIDE_BUTTON = "[WELSH TRANSLATION REQUIRED: 'Hide list type']";
+const WELSH_HIDE_TITLE = "[WELSH TRANSLATION REQUIRED: 'Are you sure you want to hide this list type?']";
+const WELSH_HIDE_ERROR = "[WELSH TRANSLATION REQUIRED: 'Select yes if you want to hide this list type']";
+
 // Real list types are read-only: the edit and delete journeys act on a prefixed list type each test creates,
 // which global-teardown deletes (TEST_* names would be neither cleaned up nor reconciled by the deploy seed)
 async function createOwnListType(): Promise<{ id: number; friendlyName: string }> {
@@ -266,10 +272,16 @@ test.describe("Manage List Types", () => {
     const confirmPageResults = await axeCheck(page).analyze();
     expect(confirmPageResults.violations).toEqual([]);
 
-    // Welsh
+    // Welsh: switch on the list type page, then follow the Hide link without ?lng so the saved locale is used.
+    // Exact matches on the cy strings so the check fails if English is served instead.
+    await page.goto(`/manage-list-type?id=${listType.id}`);
     await switchLanguage(page, "cy");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Are you sure you want to hide this list type?");
+    await page.getByRole("button", { name: WELSH_HIDE_BUTTON, exact: true }).click();
+    await page.waitForURL(`**/list-type-visibility?id=${listType.id}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(WELSH_HIDE_TITLE);
     await expect(page.getByRole("button", { name: "Cadarnhau" })).toBeVisible();
+    await page.getByRole("button", { name: "Cadarnhau" }).click();
+    await expect(page.getByRole("alert")).toContainText(WELSH_HIDE_ERROR);
     await switchLanguage(page, "en");
 
     // Validation: no selection
