@@ -1,7 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generatePublicationExcel, generatePublicationPdf, listTypeHasExcel, processPublication, sendPublicationNotificationsForArtefact } from "./service.js";
+import {
+  generatePublicationExcel,
+  generatePublicationPdf,
+  listTypeHasExcel,
+  processPublication,
+  pushPublicationToThirdParties,
+  sendPublicationNotificationsForArtefact
+} from "./service.js";
 
 const mockSendThirdPartyPublications = vi.hoisted(() => vi.fn());
+const mockFindArtefactPushFields = vi.hoisted(() => vi.fn());
 
 vi.mock("@hmcts/care-standards-tribunal-weekly-hearing-list", () => ({
   generateCareStandardsTribunalWeeklyHearingListPdf: vi.fn(),
@@ -210,7 +218,9 @@ vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
   sendThirdPartyPublications: mockSendThirdPartyPublications
 }));
 
-vi.mock("../repository/queries.js", () => ({}));
+vi.mock("../repository/queries.js", () => ({
+  findArtefactPushFields: mockFindArtefactPushFields
+}));
 
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
@@ -301,7 +311,8 @@ describe("publication-processor", async () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSendThirdPartyPublications.mockResolvedValue(undefined);
+    mockSendThirdPartyPublications.mockResolvedValue("sent");
+    mockFindArtefactPushFields.mockResolvedValue({ type: "LIST", sourceArtefactId: "source-artefact-id" });
     vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: false } as any);
     vi.mocked(prisma.listType.findUnique).mockResolvedValue({
       name: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
@@ -1787,26 +1798,22 @@ describe("publication-processor", async () => {
         expect(files).toEqual({});
       });
 
-      it("loads a flat file with its uploaded file name", async () => {
-        const fileBuffer = Buffer.from("xlsx bytes");
-        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.xlsx" } as any);
-        vi.mocked(getFileBuffer).mockResolvedValue(fileBuffer);
+      it.each([{ sourceArtefactId: "hearing-list.xlsx" }, { sourceArtefactId: "hearing-list" }, { sourceArtefactId: null }])(
+        "loads the flat file buffer alone when sourceArtefactId is $sourceArtefactId",
+        async ({ sourceArtefactId }) => {
+          // Arrange
+          const fileBuffer = Buffer.from("xlsx bytes");
+          vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId } as any);
+          vi.mocked(getFileBuffer).mockResolvedValue(fileBuffer);
 
-        const files = await loadFilesFromPush();
+          // Act
+          const files = await loadFilesFromPush();
 
-        expect(files).toEqual({ flatFile: { buffer: fileBuffer, fileName: "hearing-list.xlsx" } });
-        expect(downloadBlob).not.toHaveBeenCalled();
-      });
-
-      it("names a flat file after the artefact when the uploaded name has no extension", async () => {
-        const fileBuffer = Buffer.from("file bytes");
-        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list" } as any);
-        vi.mocked(getFileBuffer).mockResolvedValue(fileBuffer);
-
-        const files = await loadFilesFromPush();
-
-        expect(files).toEqual({ flatFile: { buffer: fileBuffer, fileName: baseParams.artefactId } });
-      });
+          // Assert
+          expect(files).toEqual({ flatFile: fileBuffer });
+          expect(downloadBlob).not.toHaveBeenCalled();
+        }
+      );
 
       it("resolves null when a flat file is missing from blob storage", async () => {
         vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ isFlatFile: true, sourceArtefactId: "hearing-list.xlsx" } as any);
@@ -1815,6 +1822,60 @@ describe("publication-processor", async () => {
         const files = await loadFilesFromPush();
 
         expect(files).toBeNull();
+      });
+    });
+
+    describe("pushPublicationToThirdParties", () => {
+      const pushParams = {
+        artefactId: "test-artefact-id",
+        locationId: "123",
+        listTypeId: 8,
+        contentDate: new Date("2025-01-25"),
+        sensitivity: "PUBLIC",
+        language: "ENGLISH",
+        provenance: "MANUAL_UPLOAD",
+        isUpdate: false,
+        jsonData: { courtLists: [] },
+        pdfBlobName: "test-artefact-id.pdf"
+      };
+
+      it("does not read the artefact row itself, so a skipped push costs no query", async () => {
+        // Act
+        const outcome = await pushPublicationToThirdParties(pushParams);
+
+        // Assert
+        expect(outcome).toBe("sent");
+        expect(mockFindArtefactPushFields).not.toHaveBeenCalled();
+        expect(mockSendThirdPartyPublications).toHaveBeenCalledWith(
+          expect.objectContaining({ artefactId: "test-artefact-id", loadArtefactFields: expect.any(Function) })
+        );
+      });
+
+      it("gives the push a loader that reads the artefact's type and sourceArtefactId", async () => {
+        // Arrange
+        mockFindArtefactPushFields.mockResolvedValue({ type: "GENERAL_PUBLICATION", sourceArtefactId: "upload-1" });
+        await pushPublicationToThirdParties(pushParams);
+        const [{ loadArtefactFields }] = mockSendThirdPartyPublications.mock.calls[0];
+
+        // Act
+        const fields = await loadArtefactFields();
+
+        // Assert
+        expect(mockFindArtefactPushFields).toHaveBeenCalledWith("test-artefact-id");
+        expect(fields).toEqual({ type: "GENERAL_PUBLICATION", sourceArtefactId: "upload-1" });
+      });
+
+      it("gives the push a loader that resolves null when the artefact row is missing", async () => {
+        // Arrange
+        mockFindArtefactPushFields.mockResolvedValue(null);
+        await pushPublicationToThirdParties(pushParams);
+        const [{ loadArtefactFields }] = mockSendThirdPartyPublications.mock.calls[0];
+
+        // Act
+        const fields = await loadArtefactFields();
+
+        // Assert
+        expect(fields).toBeNull();
       });
     });
 

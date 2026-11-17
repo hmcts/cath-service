@@ -4,6 +4,8 @@ import * as listTypeConfigModule from "@hmcts/system-admin-pages";
 import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 
+const mockSendThirdPartyDeletion = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+
 vi.mock("@hmcts/auth", () => ({
   requireRole: () => (_req: Request, _res: Response, next: () => void) => next(),
   USER_ROLES: {
@@ -13,6 +15,9 @@ vi.mock("@hmcts/auth", () => ({
   }
 }));
 
+vi.mock("@hmcts/legacy-third-party-fulfilment", () => ({
+  sendThirdPartyDeletion: mockSendThirdPartyDeletion
+}));
 vi.mock("@hmcts/location");
 vi.mock("@hmcts/publication");
 vi.mock("@hmcts/system-admin-pages");
@@ -212,6 +217,57 @@ describe("remove-list-confirmation page", () => {
       expect(mockReq.session.removalData).toBeUndefined();
       expect(mockReq.session.removalSuccess).toBe(true);
       expect(mockRes.redirect).toHaveBeenCalledWith("/remove-list-success");
+    });
+
+    it("should send a third-party deletion with each artefact's type and sourceArtefactId", async () => {
+      // Arrange
+      const { POST } = await import("./index.js");
+      const handler = POST[1] as (req: Request, res: Response) => Promise<void>;
+      const artefact = {
+        artefactId: "art1",
+        sourceArtefactId: "hearing-list.xlsx",
+        type: "LIST",
+        locationId: "1",
+        listTypeId: 999,
+        contentDate: new Date("2025-01-15"),
+        displayFrom: new Date("2025-01-01"),
+        displayTo: null,
+        language: "WELSH",
+        sensitivity: "PUBLIC",
+        provenance: "MANUAL_UPLOAD"
+      };
+      mockGetArtefactsByIds.mockResolvedValue([artefact, { ...artefact, artefactId: "art2", sourceArtefactId: undefined }]);
+      mockDeleteArtefacts.mockResolvedValue(undefined);
+      mockSendThirdPartyDeletion.mockResolvedValue(undefined);
+      const mockReq = {
+        query: {},
+        body: { confirmation: "yes" },
+        session: {
+          removalData: { locationId: "1", selectedArtefacts: ["art1", "art2"] },
+          save: vi.fn((cb) => cb())
+        }
+      } as unknown as Request;
+      const mockRes = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await handler(mockReq, mockRes);
+
+      // Assert
+      expect(mockSendThirdPartyDeletion).toHaveBeenCalledTimes(2);
+      expect(mockSendThirdPartyDeletion).toHaveBeenNthCalledWith(1, {
+        artefactId: "art1",
+        sourceArtefactId: "hearing-list.xlsx",
+        type: "LIST",
+        locationId: "1",
+        listTypeId: 999,
+        contentDate: artefact.contentDate,
+        sensitivity: "PUBLIC",
+        language: "WELSH",
+        displayFrom: artefact.displayFrom,
+        displayTo: null,
+        provenance: "MANUAL_UPLOAD"
+      });
+      expect(mockSendThirdPartyDeletion).toHaveBeenNthCalledWith(2, expect.objectContaining({ artefactId: "art2", sourceArtefactId: null, type: "LIST" }));
     });
 
     it("should show error when deletion fails", async () => {

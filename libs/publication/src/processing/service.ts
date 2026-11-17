@@ -122,6 +122,7 @@ import {
 import { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 import { getFileBuffer } from "../file-storage/file-retrieval.js";
+import { findArtefactPushFields } from "../repository/queries.js";
 import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -785,7 +786,8 @@ interface ProcessPublicationParams {
   logPrefix?: string;
 }
 
-export interface ThirdPartyPublicationParams extends Omit<ThirdPartyPushParams, "loadFiles"> {
+// type and sourceArtefactId are read from the artefact row only when a push happens, so no caller has to pass them.
+export interface ThirdPartyPublicationParams extends Omit<ThirdPartyPushParams, "loadFiles" | "loadArtefactFields"> {
   /** Blob name of the generated PDF in the publications container, if one was generated. */
   pdfBlobName?: string;
 }
@@ -930,6 +932,7 @@ export function pushPublicationToThirdParties(params: ThirdPartyPublicationParam
 
   return sendThirdPartyPublications({
     ...pushParams,
+    loadArtefactFields: () => findArtefactPushFields(params.artefactId),
     loadFiles: () => loadThirdPartyFiles(params.artefactId, pdfBlobName, logPrefix)
   });
 }
@@ -940,8 +943,7 @@ async function loadThirdPartyFiles(artefactId: string, pdfBlobName: string | und
     return null;
   }
   if (flatFileResult.status === "found") {
-    const { buffer, fileName } = flatFileResult.flatFile;
-    return { flatFile: { buffer, fileName: fileName ?? artefactId } };
+    return { flatFile: flatFileResult.flatFile.buffer };
   }
 
   // A JSON publication with no PDF (generation skipped or failed) is still pushed as JSON.

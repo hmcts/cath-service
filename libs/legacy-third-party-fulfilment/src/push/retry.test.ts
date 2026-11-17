@@ -10,7 +10,7 @@ vi.mock("./http-client.js", () => ({
 const TEST_URL = "https://api.example.gov.uk/publications";
 const TEST_CERT = "-----BEGIN CERTIFICATE-----\ntest\n-----END CERTIFICATE-----";
 const TEST_HEADERS = { "x-provenance": "SNL" };
-const TEST_BODY = '{"data":"test"}';
+const TEST_BODY = { buffer: Buffer.from('{"data":"test"}'), contentType: "application/json" };
 
 describe("pushWithRetry", () => {
   beforeEach(() => {
@@ -113,18 +113,21 @@ describe("pushWithRetry", () => {
     const result = await pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, null);
 
     expect(result).toEqual({ statusCode: 204, success: true });
-    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null, {});
+    expect(mockExecutePush).toHaveBeenCalledWith(TEST_URL, TEST_CERT, TEST_HEADERS, null);
   });
 
-  it("forwards the files to executePush on every attempt", async () => {
+  it("forwards the same body to executePush on every attempt", async () => {
+    // Arrange
     mockExecutePush.mockResolvedValueOnce({ statusCode: 503, success: false }).mockResolvedValueOnce({ statusCode: 200, success: true });
-    const files = { pdf: Buffer.from("%PDF-1.4"), flatFile: { buffer: Buffer.from("xlsx"), fileName: "artefact-1.xlsx" } };
+    const body = { buffer: Buffer.from("--b\r\nfile\r\n--b--\r\n"), contentType: "multipart/form-data; boundary=b" };
 
-    const promise = pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, "[ThirdParty]", files);
+    // Act
+    const promise = pushWithRetry(TEST_URL, TEST_CERT, TEST_HEADERS, body, "[ThirdParty]");
     await vi.runAllTimersAsync();
     await promise;
 
-    expect(mockExecutePush).toHaveBeenNthCalledWith(1, TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, files);
-    expect(mockExecutePush).toHaveBeenNthCalledWith(2, TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, files);
+    // Assert
+    expect(mockExecutePush).toHaveBeenNthCalledWith(1, TEST_URL, TEST_CERT, TEST_HEADERS, body);
+    expect(mockExecutePush).toHaveBeenNthCalledWith(2, TEST_URL, TEST_CERT, TEST_HEADERS, body);
   });
 });
