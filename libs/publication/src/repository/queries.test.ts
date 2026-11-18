@@ -4,6 +4,7 @@ import {
   createArtefact,
   deleteArtefacts,
   deleteArtefactsByLocationId,
+  findArtefactPushFields,
   getArtefactById,
   getArtefactListTypeId,
   getArtefactMetadata,
@@ -673,7 +674,8 @@ describe("getArtefactsByIds", () => {
         displayTo: true,
         lastReceivedDate: true,
         isFlatFile: true,
-        provenance: true
+        provenance: true,
+        sourceArtefactId: true
       }
     });
     expect(result).toHaveLength(1);
@@ -1493,6 +1495,38 @@ describe("getArtefactListTypeId", () => {
     const result = await getArtefactListTypeId("another-artefact");
 
     expect(result).toBe(5);
+  });
+});
+
+describe("findArtefactPushFields", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return the type and sourceArtefactId for the artefact", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue({ type: "LIST", sourceArtefactId: "hearing-list.xlsx" } as any);
+
+    // Act
+    const result = await findArtefactPushFields("artefact-1");
+
+    // Assert
+    expect(result).toEqual({ type: "LIST", sourceArtefactId: "hearing-list.xlsx" });
+    expect(prisma.artefact.findUnique).toHaveBeenCalledWith({
+      where: { artefactId: "artefact-1" },
+      select: { type: true, sourceArtefactId: true }
+    });
+  });
+
+  it("should return null when the artefact does not exist", async () => {
+    // Arrange
+    vi.mocked(prisma.artefact.findUnique).mockResolvedValue(null);
+
+    // Act
+    const result = await findArtefactPushFields("missing");
+
+    // Assert
+    expect(result).toBeNull();
   });
 });
 

@@ -130,6 +130,8 @@ const postHandler = async (req: Request, res: Response) => {
     for (const artefact of artefactsToDelete) {
       sendThirdPartyDeletion({
         artefactId: artefact.artefactId,
+        sourceArtefactId: artefact.sourceArtefactId ?? null,
+        type: artefact.type,
         locationId: artefact.locationId,
         listTypeId: artefact.listTypeId,
         contentDate: artefact.contentDate,

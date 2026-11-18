@@ -1,0 +1,43 @@
+# #1380 Tasks
+
+## Implementation Tasks
+
+- [x] Clarifications 1-6 decided with the assignee on 2026-11-16 (see `plan.md`): bilingual sends the English PDF, with a follow-up ticket; a null `sourceArtefactId` falls back to `artefactId`; null display dates omit the header; the upload path keeps its content-date time; retries are out of scope; the end-to-end check uses the CaTH mock
+- [ ] Raise the follow-up ticket for Welsh PDFs on bilingual publications (decision 1)
+- [x] `push/multipart.ts`: add `buildFileMultipart(buffer, fileName)`, which writes one `file` part with `application/octet-stream`, a part `Content-Length`, and a `filename` attribute with `"`, CR and LF stripped. The caller passes `sourceArtefactId`, or `artefactId` when that is null or empty. Add `push/multipart.test.ts` (TS1, TS7)
+- [x] `push/http-client.ts`: make `executePush` take a `PushBody | null`, add the `jsonBody` helper, and remove the combined/flat-file builders and `CONTENT_TYPE_MAP`. Change `PushFiles` to `pdf?: Buffer`, `flatFile?: Buffer` and remove `PushFlatFile`. Update `http-client.test.ts` (JSON, multipart and empty-body requests)
+- [x] `push/retry.ts`: pass `PushBody | null` through, with the policy unchanged. Update `retry.test.ts`
+- [x] `push/headers.ts`:
+  - add `type` and `sourceArtefactId`, keeping `artefactId` for the fallback
+  - add the UTC `LocalDateTime.toString()` formatter for the content, display-from and display-to dates
+  - map `BILINGUAL` to `BI_LINGUAL`, and default an empty sensitivity to `PUBLIC`
+  - comma-join the distinct jurisdictions and all regions
+  - `x-source-artefact-id` is `sourceArtefactId`, or `artefactId` when that is null or empty
+  - omit the display dates when null
+  - add `buildPdfPushHeaders`, which sets `x-provenance: CATH`
+  - update `headers.test.ts` with table-driven cases run under a non-UTC `TZ` (TS9)
+- [x] `service.ts`:
+  - add `type` and `sourceArtefactId` to the push and deletion params
+  - flat file: one request
+  - JSON: the JSON request first, and stop if it failed. Then the PDF request, only when the PDF is non-empty and at most 2,000,000 bytes (`COURTEL_MAX_PDF_BYTES`). Log each skip
+  - a non-flat publication with no JSON fails without sending anything
+  - write one push-log row per request (`CREATE`/`UPDATE`, `CREATE_PDF`/`UPDATE_PDF`, `DELETION`)
+  - return `"sent"` only when every attempted request succeeded
+- [x] Update `service.test.ts` for TS1-TS8 and TS10 (lib side): English PDF, Welsh, bilingual, no or zero-length or oversized PDF, JSON failure, PDF failure, flat file, deletion, skipped and missing-JSON paths
+- [x] `index.ts`: update the type exports (`PushFiles`, the param, outcome and deletion types) and drop `PushFlatFile`
+- [x] `libs/publication/src/repository/queries.ts`: add `findArtefactPushFields` and add `sourceArtefactId` to the `getArtefactsByIds` select. Add the optional `sourceArtefactId` to `Artefact` in `repository/model.ts`. Update `queries.test.ts`
+- [x] `libs/publication/src/processing/service.ts`:
+  - `ThirdPartyPublicationParams` omits `type` and `sourceArtefactId`
+  - `pushPublicationToThirdParties` looks them up, and returns `"failed"` when the row is missing
+  - `loadThirdPartyFiles` returns `{ flatFile: buffer }`
+  - update `service.test.ts` (TS7 caller side, TS10), and confirm the 1272 cron tests in `subscription-schedule/service.test.ts` still pass
+- [x] `apps/web/src/pages/(admin)/remove-list-confirmation/index.ts`: pass `type` and `sourceArtefactId` to `sendThirdPartyDeletion`. Update `index.test.ts` (TS8)
+- [x] `libs/test-support/src/routes/test-support/mock-courtel.ts`:
+  - accept the JSON, single-`file` multipart and empty-body requests
+  - reject the combined `json`/`pdf` multipart, and a multipart with more than one part
+  - require a `.pdf` filename when `x-provenance` is `CATH`
+  - treat `x-display-from` and `x-display-to` as optional
+  - decide 201 or 200 on the artefact plus the request kind
+  - add `mock-courtel.test.ts` (TS11)
+- [x] Run `yarn lint:fix` and `yarn test` from the root. Check coverage is over 80% in `libs/legacy-third-party-fulfilment` and `libs/test-support`
+- [x] Local end-to-end check against the CaTH Courtel mock (decision 6): English JSON with a PDF, Welsh JSON, flat file, and removing the flat file. Compare what the mock received with the plan's comparison table, and check the `legacy_third_party_push_log` rows. Record the results in the PR description (TS12). Done 2026-11-16: every request matched the table (JSON then PDF with `x-provenance: CATH` and `<artefactId>.pdf`; single flat-file part; deletion with no body); push log had one row per request (`CREATE`, `CREATE_PDF`, `DELETION`). The deletion was sent through `sendThirdPartyDeletion` directly with the stored artefact, not through the remove-list page

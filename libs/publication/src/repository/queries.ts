@@ -159,7 +159,8 @@ export async function getArtefactsByIds(artefactIds: string[]): Promise<Artefact
       displayTo: true,
       lastReceivedDate: true,
       isFlatFile: true,
-      provenance: true
+      provenance: true,
+      sourceArtefactId: true
     }
   });
 }
@@ -333,6 +334,13 @@ export async function getArtefactListTypeId(artefactId: string): Promise<number 
   });
 
   return artefact?.listTypeId ?? null;
+}
+
+export async function findArtefactPushFields(artefactId: string): Promise<{ type: string; sourceArtefactId: string | null } | null> {
+  return prisma.artefact.findUnique({
+    where: { artefactId },
+    select: { type: true, sourceArtefactId: true }
+  });
 }
 
 export async function getLatestSjpArtefacts(): Promise<Artefact[]> {

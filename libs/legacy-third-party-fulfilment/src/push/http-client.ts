@@ -1,80 +1,29 @@
-import crypto from "node:crypto";
 import http from "node:http";
 import https from "node:https";
-import path from "node:path";
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
-const CONTENT_TYPE_MAP: Record<string, string> = {
-  ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  ".xls": "application/vnd.ms-excel",
-  ".csv": "text/csv",
-  ".pdf": "application/pdf"
-};
-
-function getContentType(fileName: string): string {
-  const ext = path.extname(fileName).toLowerCase();
-  return CONTENT_TYPE_MAP[ext] ?? "application/octet-stream";
-}
-
-function buildMultipartBody(boundary: string, jsonBody: string | null, pdfBuffer: Buffer): Buffer {
-  const parts: Buffer[] = [];
-
-  if (jsonBody !== null) {
-    parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="json"\r\nContent-Type: application/json\r\n\r\n${jsonBody}\r\n`));
-  }
-
-  parts.push(Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="pdf"; filename="publication.pdf"\r\nContent-Type: application/pdf\r\n\r\n`));
-  parts.push(pdfBuffer);
-  parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
-
-  return Buffer.concat(parts);
-}
-
-function buildFlatFileMultipartBody(boundary: string, flatFile: PushFlatFile): Buffer {
-  const contentType = getContentType(flatFile.fileName);
-  const parts: Buffer[] = [];
-
-  parts.push(
-    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${flatFile.fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`)
-  );
-  parts.push(flatFile.buffer);
-  parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
-
-  return Buffer.concat(parts);
+export function jsonBody(json: string): PushBody {
+  return { buffer: Buffer.from(json, "utf-8"), contentType: "application/json" };
 }
 
 export async function executePush(
   url: string,
   certPem: string,
   headers: Record<string, string>,
-  body: string | null,
-  files: PushFiles = {}
+  body: PushBody | null
 ): Promise<{ statusCode: number; success: boolean }> {
   const parsedUrl = new URL(url);
   const isHttps = parsedUrl.protocol === "https:";
 
   const agent = isHttps ? new https.Agent({ ca: certPem, rejectUnauthorized: true }) : undefined;
 
-  let bodyBuffer: Buffer;
-  const requestHeaders: Record<string, string | number> = { ...headers };
-
-  if (files.flatFile) {
-    const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
-    bodyBuffer = buildFlatFileMultipartBody(boundary, files.flatFile);
-    requestHeaders["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
-  } else if (files.pdf) {
-    const boundary = `----FormBoundary${crypto.randomBytes(8).toString("hex")}`;
-    bodyBuffer = buildMultipartBody(boundary, body, files.pdf);
-    requestHeaders["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
-  } else {
-    bodyBuffer = body !== null ? Buffer.from(body, "utf-8") : Buffer.alloc(0);
-    if (body !== null) {
-      requestHeaders["Content-Type"] = "application/json";
-    }
-  }
-
-  requestHeaders["Content-Length"] = bodyBuffer.byteLength;
+  const bodyBuffer = body?.buffer ?? Buffer.alloc(0);
+  const requestHeaders: Record<string, string | number> = {
+    ...headers,
+    ...(body ? { "Content-Type": body.contentType } : {}),
+    "Content-Length": bodyBuffer.byteLength
+  };
 
   const options: http.RequestOptions = {
     hostname: parsedUrl.hostname,
@@ -117,12 +66,12 @@ function isSuccessStatus(statusCode: number): boolean {
   return [200, 201, 202, 204].includes(statusCode);
 }
 
-export interface PushFiles {
-  pdf?: Buffer;
-  flatFile?: PushFlatFile;
+export interface PushBody {
+  buffer: Buffer;
+  contentType: string;
 }
 
-export interface PushFlatFile {
-  buffer: Buffer;
-  fileName: string;
+export interface PushFiles {
+  pdf?: Buffer;
+  flatFile?: Buffer;
 }
