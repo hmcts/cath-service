@@ -383,12 +383,13 @@ Caveat: the case-insensitive checks are in the application, while the database u
 - **Q4:** courts are added **one at a time**. The one-question-per-page journey stands.
 - **Q5:** a new court **starts as a draft**. This adds a draft flag, a publish step, and hiding drafts from the public A–Z and subscription search to ticket 2 (#1532), about 2 days.
 - **Q6:** **several** provenance references per new court. After the first, an "Add another reference?" step lets the admin add more (for example SNL and Common Platform), as the CSV route allows. This adds a page and the within-submission duplicate check (report §5, rule 15) to ticket 2 (#1532), about 1 day.
-- **Q7 (part):** the **System Admin** supplies the Welsh name. Still open: whether provenance references are known when the court is created.
+- **Q7:** the **System Admin** supplies the Welsh name. Provenance references are **usually not known** when a court is created, so the reference step is **optional**: the admin can skip it and add references later through amend a court (#1534). Until a court has a reference, lists from upstream systems cannot be matched to it, so check answers and the success page should say so, and the draft state (Q5) gives time to add one before publishing. Ticket 2 (#1532): the reference step becomes skippable, and the "at least one reference" rule (§5, rule 9) is dropped.
+- **Q11:** **radio buttons** (not a select) for provenance and type; **keep the tiles** on the `/reference-data` hub; the spec's hint texts **need checking by content design** before build.
 - **Q8:** amend a court is **in scope** (#1534).
 - **Q10:** the CSV route becomes **update-only** (#1535).
 - **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
 
-Still open: Q7 (provenance timing), Q9 and Q11 (three parts).
+Still open: Q9 (the developer asked why region and jurisdiction IDs clash; explanation pending agreement).
 
 **Tech lead (blocking the recommendation)**
 
