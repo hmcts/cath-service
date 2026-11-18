@@ -376,6 +376,18 @@ Caveat: the case-insensitive checks are in the application, while the database u
 
 ### 6.1 Questions, ready to send (none sent)
 
+**Answers so far (developer, 2026-11-17):**
+- **Q1:** freeze `location-data.ts` at the 27 courts: **yes**. Fail-loudly guard (b): **yes**. Renumber to legacy IDs first (#1533): **yes for now**, may change.
+- **Q2:** the deploy seed must **never overwrite an existing provenance reference**. A clash **fails the deploy** (same approach as Q1 guard b), and only a person changes or removes a reference, through amend a court (#1534) or the update-only CSV (#1535). Ticket 1 (#1531) changes `generate-seed-sql.ts:111` accordingly.
+- **Q4:** courts are added **one at a time**. The one-question-per-page journey stands.
+- **Q5:** a new court **starts as a draft**. This adds a draft flag, a publish step, and hiding drafts from the public A–Z and subscription search to ticket 2 (#1532), about 2 days.
+- **Q7 (part):** the **System Admin** supplies the Welsh name. Still open: whether provenance references are known when the court is created.
+- **Q8:** amend a court is **in scope** (#1534).
+- **Q10:** the CSV route becomes **update-only** (#1535).
+- **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
+
+Still open: Q3 (the start value: highest legacy production ID plus a margin, or 100000), Q6, Q7 (provenance timing), Q9 and Q11 (three parts).
+
 **Tech lead (blocking the recommendation)**
 
 > **Q1. Should `location-data.ts` be frozen for new courts once the UI ships?** CLAUDE.md calls it the single source of truth for locations, and a UI that creates courts makes a second source. The #1078 spike reproduced on a scratch database that a later `locationData` entry with a UI court's name renames the UI court to `__realign_<id>` on the next deploy, permanently, and can take its SNL reference (report §4.5). Proposal: keep the 27 seeded courts, add no new courts there, document the split in CLAUDE.md, and treat UI courts as environment-local. Agree, or another approach? To enforce it, a CI test would fail if `locationData` gains a 28th court. Optionally, the seed could also skip renaming rows at or above the sequence start, so that a collision fails the deploy loudly instead of quietly parking the UI court. Do you want that second guard? Related: the 27 seeded courts use different IDs from legacy CaTH for 26 of them (report §1.7). Should they be renumbered to their legacy IDs before go-live (draft ticket `draft-ticket-align-court-ids.md`), so that the freeze starts from IDs that match legacy?
@@ -431,8 +443,8 @@ Caveat: the case-insensitive checks are in the application, while the database u
 | # | Title | Size | Depends on |
 |---|---|---|---|
 | 1 (#1531) | Court maintenance: location ID sequence, service and seed guards | 2 d | Q1, Q3 |
-| 2 (#1532) | Add a court or tribunal journey: seven pages, hub entry and E2E | 4.5–6 d | 1, Q6, Q11 |
-| | **Total** | **6.5–8 d** | |
+| 2 (#1532) | Add a court or tribunal journey: seven pages, hub entry and E2E, plus a draft state (Q5) | 6.5–8 d | 1, Q6, Q11 |
+| | **Total** | **8.5–10 d** (including the Q5 draft state) | |
 
 "Spec §n" below means the `/spec` comment on #1078, attached by reference.
 
