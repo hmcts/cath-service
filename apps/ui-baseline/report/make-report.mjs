@@ -231,6 +231,35 @@ function sheetCard(label, colour, sheet, rows, columns, differing) {
   </div>`;
 }
 
+// Each page of pip's and CaTH's PDF side by side, as compareFileRuns drew them
+// (<kind>-source-<n>.png and <kind>-target-<n>.png), or "" when it drew none
+function pagePairs(filesDir, result) {
+  const dir = path.join(filesDir, result.id);
+  const drawn = (side) => (existsSync(dir) ? readdirSync(dir).filter((name) => new RegExp(`^${result.kind}-${side}-\\d+\\.png$`).test(name)).length : 0);
+  const count = Math.max(drawn("source"), drawn("target"));
+  if (!count) return "";
+  const pageCard = (label, colour, side, number, total) => {
+    const file = `${result.kind}-${side}-${number}.png`;
+    if (!existsSync(path.join(dir, file)))
+      return `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag(label, colour)}</h3><p class="govuk-body-s">No page ${number}</p></div>`;
+    const href = `data/files/${encodeURIComponent(result.id)}/${file}`;
+    return `<div class="parity-card">
+    <h3 class="govuk-heading-s">${tag(label, colour)} <span class="parity-url">page ${number} of ${total ?? "?"}</span></h3>
+    <a href="${href}" class="parity-shot"><img src="${href}" alt="${esc(label)} PDF, page ${number}" loading="lazy"></a>
+  </div>`;
+  };
+  const shownAll = (result.source?.pages ?? 0) <= count && (result.target?.pages ?? 0) <= count;
+  return (
+    Array.from(
+      { length: count },
+      (_, index) => `<div class="parity-pair">
+    ${pageCard("pip", "blue", "source", index + 1, result.source?.pages)}
+    ${pageCard("CaTH", "purple", "target", index + 1, result.target?.pages)}
+  </div>`
+    ).join("") + (shownAll ? "" : `<p class="govuk-body-s">Only the first ${count} pages are shown; the text of every page is compared.</p>`)
+  );
+}
+
 function cellPosition(address) {
   const [, letters, row] = address.match(/^([A-Z]+)(\d+)$/) ?? ["", "A", "0"];
   return { row: Number(row), column: [...letters].reduce((column, letter) => column * 26 + letter.charCodeAt(0) - 64, 0) };
@@ -678,8 +707,10 @@ if (filesComparison) {
         ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></div></details>`
         : "";
       const sheets = r.kind === "excel" ? readJson(path.join(filesDir, r.id, "excel-sheets.json")) : null;
-      const sideBySide = sheets
-        ? `<tr class="govuk-table__row"><td class="govuk-table__cell" colspan="3"><details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Show the sheets side by side</span></summary><div class="govuk-details__text">${sheets.map(sheetPair).join("")}</div></details></td></tr>`
+      const pdfPages = r.kind === "pdf" || r.kind === "pdf-welsh" ? pagePairs(filesDir, r) : "";
+      const shown = sheets ? ["Show the sheets side by side", sheets.map(sheetPair).join("")] : pdfPages ? ["Show the pages side by side", pdfPages] : null;
+      const sideBySide = shown
+        ? `<tr class="govuk-table__row"><td class="govuk-table__cell" colspan="3"><details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${shown[0]}</span></summary><div class="govuk-details__text">${shown[1]}</div></details></td></tr>`
         : "";
       return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>${sideBySide}`;
     })

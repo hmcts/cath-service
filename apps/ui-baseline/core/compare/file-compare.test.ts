@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -229,6 +230,9 @@ describe("compareFileRuns", () => {
     expect(summary.totals).toEqual({ files: 3, match: 1, differs: 1, missing: 1, extra: 0 });
     expect(summary.results.map((r) => `${r.id} ${r.kind} ${r.verdict}`)).toEqual(["civil pdf match", "civil pdf-welsh missing", "sjp pdf differs"]);
     expect(await readFile(path.join(root, "compare/sjp/pdf-target.txt"), "utf-8")).toContain("10:03 Court 9 AB1003 Smith v Jones");
+    // Each app's pages are drawn beside the comparison, for the report to show side by side
+    expect(existsSync(path.join(root, "compare/sjp/pdf-source-1.png"))).toBe(true);
+    expect(existsSync(path.join(root, "compare/sjp/pdf-target-1.png"))).toBe(true);
   });
 
   it("should write both workbooks' sheets beside an Excel comparison", async () => {

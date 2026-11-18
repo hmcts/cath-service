@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Finding } from "./compare.js";
 import { excelCells, type SheetContent } from "./excel-cells.js";
 import { type NormaliseContext, normalise } from "./normalise.js";
+import { pdfPagePngs } from "./pdf-pages.js";
 import { pdfText } from "./pdf-text.js";
 import { diffSequences } from "./sequence-diff.js";
 
@@ -14,6 +15,8 @@ import { diffSequences } from "./sequence-diff.js";
 // exactly, so every sheet, cell (type and value) and merged range is compared.
 const MAX_FINDINGS = 50;
 const CONTEXT_WORDS = 4;
+// How many pages of each PDF are drawn for the report; a longer one is still compared in full
+const MAX_PDF_PAGES = 10;
 // How each kind of file is compared; PDFs by text, spreadsheets by cell, CSV by line, the rest whole
 const COMPARERS: Record<
   FileKind,
@@ -50,6 +53,7 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
         findings: [{ category: kind, change: "unreadable", detail: `the files could not be compared: ${error.message.split("\n")[0]}` }]
       })
     );
+    if (kind === "pdf" || kind === "pdf-welsh") await writePdfPages(path.join(options.out, id), kind, sourceData, targetData);
     // Both workbooks' sheets, with the cells that differ, for the report to show side by side
     if (pair.sheets) {
       await mkdir(path.join(options.out, id), { recursive: true });
@@ -301,6 +305,23 @@ function capped(findings: Finding[]): Finding[] {
   if (findings.length <= MAX_FINDINGS) return findings;
   const [{ category }] = findings;
   return [...findings.slice(0, MAX_FINDINGS), { category, change: "more", detail: `${findings.length - MAX_FINDINGS} more differences` }];
+}
+
+// Each app's pages beside a PDF comparison, as <kind>-source-<n>.png and <kind>-target-<n>.png, for
+// the report to show side by side. A PDF that cannot be drawn still counts as compared: its
+// pictures are left out.
+async function writePdfPages(dir: string, kind: FileKind, source: Uint8Array, target: Uint8Array): Promise<void> {
+  const drawn = await Promise.all([pdfPagePngs(source, MAX_PDF_PAGES), pdfPagePngs(target, MAX_PDF_PAGES)]).catch((error: Error) => {
+    console.error(`  ${path.basename(dir)} ${kind}: pages not drawn: ${error.message.split("\n")[0]}`);
+    return null;
+  });
+  if (!drawn) return;
+  await mkdir(dir, { recursive: true });
+  for (const [side, { images }] of [
+    ["source", drawn[0]],
+    ["target", drawn[1]]
+  ] as const)
+    for (const [index, image] of images.entries()) await writeFile(path.join(dir, `${kind}-${side}-${index + 1}.png`), image);
 }
 
 async function readFileIndex(dir: string): Promise<Map<string, FileEntry>> {
