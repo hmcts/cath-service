@@ -6,15 +6,17 @@
 # Not to be confused with the SDS-era cath-bootstrap-aat-kv in
 # cath-bootstrap-aat-rg, which this replaces.
 #
-# product_group_object_id is used rather than product_group_name. The module always
-# creates its product_team_access_policy - the count is gated on
-# enable_rbac_authorization, not on whether a group was supplied - so leaving both
-# unset produces object_id = "" and the plan fails with:
+# A product group must be supplied. The module always creates its
+# product_team_access_policy - the count is gated on enable_rbac_authorization,
+# not on whether a group was supplied - so leaving it unset produces
+# object_id = "" and the plan fails with:
 #
 #   Error: expected "object_id" to be a valid UUID, got
 #
-# Supplying the id here means the module owns that single policy, which avoids the
-# one-policy-per-object-id collision that a separate explicit policy would cause.
+# Supplying the group here means the module owns that single policy, which avoids
+# the one-policy-per-object-id collision that a separate explicit policy would
+# cause. It is given by name, as for the other two vaults, so prod can use its own
+# group; the module resolves the same object id for non-prod.
 # It grants the group List/Set/Delete/Recover on secrets - enough to add and rotate
 # the test credentials.
 #
@@ -26,13 +28,13 @@
 module "bootstrap_key_vault" {
   source = "git::https://github.com/hmcts/cnp-module-key-vault?ref=DTSPO-31965/remove-jenkins-ptl-access"
 
-  name                    = "${var.product}-bootstrap-${var.env}"
-  product                 = var.product
-  env                     = var.env
-  object_id               = var.ci_service_principal_object_id
-  tenant_id               = var.tenant_id
-  resource_group_name     = azurerm_resource_group.shared.name
-  product_group_object_id = var.pip_nonprod_group_object_id
+  name                = "${var.product}-bootstrap-${var.env}"
+  product             = var.product
+  env                 = var.env
+  object_id           = var.ci_service_principal_object_id
+  tenant_id           = var.tenant_id
+  resource_group_name = azurerm_resource_group.shared.name
+  product_group_name  = local.key_vault_product_group_name
 
   common_tags             = local.common_tags
   create_managed_identity = false
@@ -45,11 +47,18 @@ data "azurerm_key_vault" "bootstrap_key_vault" {
 }
 
 # The GitHub Actions OIDC app registration, so job.e2e-test.yml can fetch the
-# test credentials with `az keyvault secret show`.
+# test credentials with `az keyvault secret show`. Not granted in prod.
 resource "azurerm_key_vault_access_policy" "bootstrap_kv_e2e_oidc_sp" {
+  count = local.grant_e2e_access ? 1 : 0
+
   key_vault_id = data.azurerm_key_vault.bootstrap_key_vault.id
   tenant_id    = var.tenant_id
   object_id    = var.e2e_oidc_object_id
 
   secret_permissions = ["Get", "List"]
+}
+
+moved {
+  from = azurerm_key_vault_access_policy.bootstrap_kv_e2e_oidc_sp
+  to   = azurerm_key_vault_access_policy.bootstrap_kv_e2e_oidc_sp[0]
 }

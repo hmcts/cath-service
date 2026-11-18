@@ -1,83 +1,58 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { axeCheck } from "../utils/axe-helper.js";
-import { assertAuthenticated, loginWithCftIdam, logout } from "../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
+import { loadListTypeFixture } from "../utils/publication-payloads.js";
+import { uploadTestPublication } from "../utils/publication-upload.js";
 import { loginWithSSO } from "../utils/sso-helpers.js";
-import { createTestArtefact, getListTypeByName, uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../utils/verified-user-helpers.js";
 
-const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+// Known list-page accessibility bugs (broken accordion aria-controls, unlabelled case search, unfocusable scroll region).
+// Remove these rules once https://github.com/hmcts/cath-service/issues/1395 (item 1) is fixed.
+const LIST_PAGE_KNOWN_A11Y_RULES = ["aria-valid-attr-value", "label", "scrollable-region-focusable"];
 
-// Sets up a real publication at the given location so keyboard nav can navigate to its detail page
-async function setupPublicationForNav(locationId: number): Promise<void> {
-  const listType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
-  const artefact = await createTestArtefact({
-    locationId: locationId.toString(),
-    listTypeId: listType.id,
-    contentDate: new Date().toISOString(),
-    sensitivity: "PUBLIC",
-    language: "ENGLISH",
-    displayFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    displayTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    isFlatFile: false,
-    provenance: "MANUAL_UPLOAD"
-  });
+// Each test publishes to its own court, one publication per sensitivity, so its assertions only see data it owns.
+// CLASSIFIED access depends on the list type's allowed provenance (CFT_IDAM for Civil and Family), not the artefact's.
+async function createCourtWithPublications(): Promise<CourtWithPublications> {
+  const court = await createUniqueTestLocation({ namePrefix: "Publication Authorisation Court" });
+  const publish = async (listTypeName: string, fixture: string, sensitivity: "PUBLIC" | "PRIVATE" | "CLASSIFIED") =>
+    (await uploadTestPublication({ locationId: court.locationId, listTypeName, sensitivity, payload: loadListTypeFixture(fixture), mirrorJsonToWeb: true }))
+      .artefactId;
 
-  // In deployed env the web pod filesystem is separate from the API pod — upload JSON to web pod
-  if (IS_DEPLOYED) {
-    const hearingList = {
-      document: { publicationDate: new Date().toISOString(), version: "1.0" },
-      venue: {
-        venueName: "Test Court",
-        venueAddress: { line: ["1 Test Street"], town: "Test City", county: "Test County", postCode: "TC1 1TC" },
-        venueContact: { venueTelephone: "01234 567890", venueEmail: "test@example.com" }
-      },
-      courtLists: [
-        {
-          courtHouse: {
-            courtHouseName: "Test Court",
-            courtHouseAddress: { line: ["1 Test Street"], town: "Test City", postCode: "TC1 1TC" },
-            courtRoom: [
-              {
-                courtRoomName: "Court Room 1",
-                session: [
-                  {
-                    judiciary: [{ johKnownAs: "Judge Test", isPresiding: true }],
-                    sittings: [
-                      {
-                        sittingStart: new Date().toISOString(),
-                        sittingEnd: new Date().toISOString(),
-                        channel: ["In Person"],
-                        hearing: [
-                          {
-                            hearingType: "Trial",
-                            case: [
-                              {
-                                caseNumber: "KB-NAV-001",
-                                caseName: "Navigation Test Case",
-                                caseType: "Civil",
-                                caseSequenceIndicator: "1 of 1",
-                                party: [
-                                  {
-                                    partyRole: "APPLICANT_PETITIONER",
-                                    individualDetails: { title: "Mr", individualForenames: "John", individualSurname: "Smith" }
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    };
-    await uploadTestFlatFileToWeb({ artefactId: artefact.artefactId, content: Buffer.from(JSON.stringify(hearingList)), extension: ".json" });
+  const [crownDaily, crownFirm, civilDailyPrivate, civilAndFamilyClassified] = await Promise.all([
+    publish("CROWN_DAILY_PDDA_LIST", "crown-daily-pdda-list", "PUBLIC"),
+    publish("CROWN_FIRM_PDDA_LIST", "crown-firm-pdda-list", "PUBLIC"),
+    publish("CIVIL_DAILY_CAUSE_LIST", "civil-daily-cause-list", "PRIVATE"),
+    publish("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST", "civil-and-family-daily-cause-list", "CLASSIFIED")
+  ]);
+
+  return {
+    summaryUrl: `/summary-of-publications?locationId=${court.locationId}`,
+    publicArtefactIds: [crownDaily, crownFirm],
+    privateArtefactId: civilDailyPrivate,
+    classifiedArtefactId: civilAndFamilyClassified
+  };
+}
+
+function publicationLink(page: Page, artefactId: string) {
+  return page.locator(`.govuk-list a[href*="artefactId=${artefactId}"]`);
+}
+
+async function expectVisiblePublications(page: Page, court: CourtWithPublications, visible: { private: boolean; classified: boolean }) {
+  for (const artefactId of court.publicArtefactIds) {
+    await expect(publicationLink(page, artefactId)).toHaveCount(1);
   }
+  await expect(publicationLink(page, court.privateArtefactId)).toHaveCount(visible.private ? 1 : 0);
+  await expect(publicationLink(page, court.classifiedArtefactId)).toHaveCount(visible.classified ? 1 : 0);
+}
+
+async function tabToLink(page: Page, matches: (href: string) => boolean, maxTabs: number): Promise<boolean> {
+  await page.locator("h1.govuk-heading-l").focus();
+  for (let tabCount = 0; tabCount < maxTabs; tabCount++) {
+    await page.keyboard.press("Tab");
+    const href = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
+    if (matches(href)) return true;
+  }
+  return false;
 }
 
 /**
@@ -88,55 +63,26 @@ async function setupPublicationForNav(locationId: number): Promise<void> {
 test.describe("Publication Authorisation - Summary of Publications", () => {
   test.describe("Unauthenticated users (PUBLIC access only)", () => {
     test("unauthenticated user can only see PUBLIC publications and is denied access to CLASSIFIED content", async ({ page }) => {
+      const court = await createCourtWithPublications();
+
       // 1. Navigate to summary of publications page without authentication
-      await page.goto("/summary-of-publications?locationId=9");
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
 
-      // 2. Verify PUBLIC publications are visible
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
+      // 2. Only the PUBLIC publications are listed; PRIVATE and CLASSIFIED are not
+      await expectVisiblePublications(page, court, { private: false, classified: false });
 
-      // Unauthenticated users should see at least some PUBLIC publications
-      expect(count).toBeGreaterThan(0);
-
-      // Verify publications are accessible
-      const firstLinkText = await publicationLinks.first().textContent();
-      expect(firstLinkText).toBeTruthy();
-
-      // 3. Verify CLASSIFIED Civil and Family publications are NOT visible
-      const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
-      const classifiedCount = await classifiedLinks.count();
-
-      // Unauthenticated users should NOT see any CLASSIFIED publications
-      expect(classifiedCount).toBe(0);
-
-      // 4. Test Welsh translation
-      await page.goto("/summary-of-publications?locationId=9&lng=cy");
+      // 3. Test Welsh translation
+      await page.goto(`${court.summaryUrl}&lng=cy`);
       await page.waitForSelector("h1.govuk-heading-l");
       const welshHeading = await page.locator("h1.govuk-heading-l").textContent();
       expect(welshHeading).toBeTruthy();
 
-      // 5. Attempt to directly access a CLASSIFIED publication by URL
-      // Create a CLASSIFIED artefact to test access denial
-      const civilAndFamilyListType = (await getListTypeByName("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST")) as { id: number };
-      const classifiedArtefact = await createTestArtefact({
-        locationId: "9",
-        listTypeId: civilAndFamilyListType.id,
-        contentDate: new Date().toISOString(),
-        sensitivity: "CLASSIFIED",
-        language: "ENGLISH",
-        displayFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        displayTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        provenance: "CFT"
-      });
-
-      await page.goto(`/civil-and-family-daily-cause-list?artefactId=${classifiedArtefact.artefactId}`);
+      // 4. Directly accessing the CLASSIFIED publication by URL is denied
+      await page.goto(`/civil-and-family-daily-cause-list?artefactId=${court.classifiedArtefactId}`);
       await page.waitForSelector("h1");
 
-      // Should show "Access Denied" error page (403)
       const heading = await page.locator("h1").textContent();
-
-      // Check for access denied heading (English or Welsh)
       const isAccessDenied = heading?.includes("Access Denied") || heading?.includes("Mynediad wedi'i Wrthod");
       expect(isAccessDenied).toBe(true);
     });
@@ -146,136 +92,60 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     test("CFT user can access PUBLIC, PRIVATE, and CLASSIFIED CFT publications with provenance filtering, maintains session, and loses access after logout", async ({
       page
     }) => {
-      // 1. Login as CFT user
-      await page.goto("/sign-in");
+      const court = await createCourtWithPublications();
 
-      const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-      await hmctsRadio.check();
-      const continueButton = page.getByRole("button", { name: /continue/i });
-      await continueButton.click();
+      // 1. Log in as this test's own verified user with CFT_IDAM provenance
+      await loginAsTestUser(page, await createVerifiedTestUser({ provenance: "CFT_IDAM", label: "cft-authorisation" }));
 
-      await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
-
-      await assertAuthenticated(page);
-
-      // 2. Navigate to summary of publications with CFT publications
-      await page.goto("/summary-of-publications?locationId=9");
+      // 2. Navigate to summary of publications
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on authenticated summary page
       const summaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(summaryAccessibility.violations).toEqual([]);
 
-      // 3. Verify CFT user sees PUBLIC, PRIVATE, and CLASSIFIED CFT publications
+      // 3. CFT user sees PUBLIC, PRIVATE and CLASSIFIED (CFT provenance matches the list type)
+      await expectVisiblePublications(page, court, { private: true, classified: true });
       const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
       const initialCount = await publicationLinks.count();
 
-      // CFT user should see more publications than unauthenticated user
-      // Including PUBLIC + PRIVATE + CLASSIFIED(CFT)
-      expect(initialCount).toBeGreaterThan(0);
-
-      // Verify publications are accessible
-      if (initialCount > 0) {
-        const firstLinkText = await publicationLinks.first().textContent();
-        expect(firstLinkText).toBeTruthy();
-        expect(firstLinkText?.length).toBeGreaterThan(0);
-
-        // Test keyboard navigation through publication links
-        const heading = page.locator("h1.govuk-heading-l");
-        await heading.focus();
-
-        // Tab through to reach the first publication link
-        let tabCount = 0;
-        const maxTabs = 50; // Increased safety limit to account for navigation links
-        let foundPublicationLink = false;
-
-        while (tabCount < maxTabs) {
-          await page.keyboard.press("Tab");
-          tabCount++;
-          const href = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-          if (href.includes("artefactId=")) {
-            foundPublicationLink = true;
-            break;
-          }
-        }
-
-        // Verify we found a publication link
-        expect(foundPublicationLink).toBe(true);
-        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-        expect(focusedHref).toContain("artefactId=");
-
-        // Verify focus indicator is visible
-        const focusedElement = page.locator(":focus");
-        await expect(focusedElement).toBeVisible();
-
-        // Test Enter key activates the link
-        // Use click() instead of keyboard Enter for more reliable navigation in CI
-        await focusedElement.click();
-        await page.waitForLoadState("networkidle");
-        const currentUrl = page.url();
-        expect(currentUrl).toContain("artefactId=");
-
-        // Navigate back for subsequent tests
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-      }
-
-      // 4. Verify provenance-based filtering: CFT user sees CFT CLASSIFIED publications
-      const cftPublicationLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
-      const cftCount = await cftPublicationLinks.count();
-
-      // CFT user should see CLASSIFIED CFT publications
-      expect(cftCount).toBeGreaterThan(0);
-
-      // Verify link text contains "Civil"
-      const linkText = await cftPublicationLinks.first().textContent();
-      expect(linkText).toContain("Civil");
-
-      // Click on the first CFT publication
-      await cftPublicationLinks.first().click();
-
-      // Should navigate to the publication page without 403 error
+      // Keyboard navigation reaches a publication link and activates it
+      const foundPublicationLink = await tabToLink(page, (href) => href.includes("artefactId="), 50);
+      expect(foundPublicationLink).toBe(true);
+      const focusedElement = page.locator(":focus");
+      await expect(focusedElement).toBeVisible();
+      // Use click() instead of keyboard Enter for more reliable navigation in CI
+      await focusedElement.click();
       await page.waitForLoadState("networkidle");
-      const currentUrl = page.url();
+      expect(page.url()).toContain("artefactId=");
 
-      // Should be on a list type page, not an error page
-      expect(currentUrl).toMatch(/\/civil-and-family-daily-cause-list\?artefactId=/);
-      expect(currentUrl).not.toContain("/403");
-      expect(currentUrl).not.toContain("/sign-in");
-
-      // Should not see access denied message (provenance matches)
-      const accessDeniedText = await page.locator("body").textContent();
-      expect(accessDeniedText).not.toContain("Access Denied");
-      expect(accessDeniedText).not.toContain("Mynediad wedi'i Wrthod");
-
-      // Navigate back to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // 4. Provenance-based filtering: the CLASSIFIED CFT publication opens without a 403
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
+      await publicationLink(page, court.classifiedArtefactId).click();
+      await page.waitForLoadState("networkidle");
 
-      // 5. Verify can access any publication (provenance-based access control)
-      if (initialCount > 0) {
-        const firstLink = publicationLinks.first();
-        await firstLink.click();
+      expect(page.url()).toMatch(/\/civil-and-family-daily-cause-list\?artefactId=/);
+      expect(page.url()).not.toContain("/403");
+      expect(page.url()).not.toContain("/sign-in");
+      const classifiedBody = await page.locator("body").textContent();
+      expect(classifiedBody).not.toContain("Access Denied");
+      expect(classifiedBody).not.toContain("Mynediad wedi'i Wrthod");
 
-        await page.waitForLoadState("networkidle");
-        const currentUrl = page.url();
+      // 5. The PRIVATE publication opens too
+      await page.goto(court.summaryUrl);
+      await page.waitForSelector("h1.govuk-heading-l");
+      await publicationLink(page, court.privateArtefactId).click();
+      await page.waitForLoadState("networkidle");
 
-        // Should successfully navigate to a publication page
-        expect(currentUrl).toMatch(/artefactId=/);
-        expect(currentUrl).not.toContain("/403");
-        expect(currentUrl).not.toContain("/sign-in");
-
-        // Should not see access denied message
-        const bodyText = await page.locator("body").textContent();
-        expect(bodyText).not.toContain("Access Denied");
-
-        // Navigate back
-        await page.goto("/summary-of-publications?locationId=9");
-        await page.waitForSelector("h1.govuk-heading-l");
-      }
+      expect(page.url()).toMatch(/artefactId=/);
+      expect(page.url()).not.toContain("/403");
+      expect(page.url()).not.toContain("/sign-in");
+      expect(await page.locator("body").textContent()).not.toContain("Access Denied");
 
       // 6. Test Welsh translation
-      await page.goto("/summary-of-publications?locationId=9&lng=cy");
+      await page.goto(`${court.summaryUrl}&lng=cy`);
       await page.waitForSelector("h1.govuk-heading-l");
       const welshHeading = await page.locator("h1.govuk-heading-l").textContent();
       expect(welshHeading).toBeTruthy();
@@ -284,101 +154,78 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
       const welshAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(welshAccessibility.violations).toEqual([]);
 
-      // Navigate back to English version
-      await page.goto("/summary-of-publications?locationId=9");
+      // 7. Session persists across reload and navigation
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
-
-      // 7. Test session persistence - reload the page
       await page.reload();
       await page.waitForSelector("h1.govuk-heading-l");
+      expect(await publicationLinks.count()).toBe(initialCount);
 
-      // Count should remain the same (session persists)
-      const reloadedCount = await publicationLinks.count();
-      expect(reloadedCount).toBe(initialCount);
-
-      // 8. Test session persistence - navigate away and back
       await page.goto("/");
-      await page.goto("/summary-of-publications?locationId=9");
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
+      expect(await publicationLinks.count()).toBe(initialCount);
 
-      // Count should still be the same
-      const afterNavigationCount = await publicationLinks.count();
-      expect(afterNavigationCount).toBe(initialCount);
+      // 8. Logout and verify loss of access to PRIVATE and CLASSIFIED publications
+      // The local session is destroyed before /logout hands a CFT_IDAM user to IDAM endSession, so the IDAM leg is not waited for
+      await page.goto("/logout");
 
-      // 9. Logout and verify loss of access to CLASSIFIED publications
-      await logout(page);
-
-      // Navigate back to summary page as unauthenticated user
-      await page.goto("/summary-of-publications?locationId=9");
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on unauthenticated summary page after logout
       const logoutAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(logoutAccessibility.violations).toEqual([]);
 
-      const publicationLinksUnauth = page.locator('.govuk-list a[href*="artefactId="]');
-      const unauthenticatedCount = await publicationLinksUnauth.count();
-
-      // Unauthenticated count should be less than or equal to authenticated count
-      // (Only PUBLIC publications visible)
-      expect(unauthenticatedCount).toBeLessThanOrEqual(initialCount);
+      await expectVisiblePublications(page, court, { private: false, classified: false });
     });
   });
 
   test.describe("System Admin users (SYSTEM_ADMIN role)", () => {
-    test.skip("System Admin has full access to all publications and can view actual publication data", async ({ page }) => {
+    test("System Admin has full access to all publications and can view actual publication data", async ({ page }) => {
+      const court = await createCourtWithPublications();
+
       // 1. Authenticate via system admin dashboard (protected page)
       await page.goto("/system-admin-dashboard");
       await loginWithSSO(page, process.env.SSO_TEST_SYSTEM_ADMIN_EMAIL!, process.env.SSO_TEST_SYSTEM_ADMIN_PASSWORD!);
       await page.waitForURL("/system-admin-dashboard");
 
       // 2. Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
 
       // Run accessibility check on summary page
       const summaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
       expect(summaryAccessibility.violations).toEqual([]);
 
-      // 3. Verify System admin sees all publications including CLASSIFIED
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
+      // 3. System admin sees all publications including PRIVATE and CLASSIFIED
+      await expectVisiblePublications(page, court, { private: true, classified: true });
 
-      // Should see all publications (PUBLIC + PRIVATE + CLASSIFIED)
-      expect(count).toBeGreaterThan(0);
-
-      // 4. Verify can access CLASSIFIED publication
-      const classifiedLink = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]').first();
-
-      // Assert that the classified link is visible (test should fail if not present)
-      await expect(classifiedLink).toBeVisible();
-
-      await classifiedLink.click();
+      // 4. Can access the CLASSIFIED publication
+      await publicationLink(page, court.classifiedArtefactId).click();
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on CLASSIFIED publication page
-      const classifiedAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
+      const classifiedAccessibility = await axeCheck(page)
+        .disableRules(["target-size", "link-name", "region", ...LIST_PAGE_KNOWN_A11Y_RULES])
+        .analyze();
       expect(classifiedAccessibility.violations).toEqual([]);
 
-      // Should successfully access the publication
       await expect(page).toHaveURL(/\/civil-and-family-daily-cause-list\?artefactId=/);
-      const classifiedBodyText = await page.locator("body").textContent();
-      expect(classifiedBodyText).not.toContain("Access Denied");
+      expect(await page.locator("body").textContent()).not.toContain("Access Denied");
 
-      // Navigate back to summary page
-      await page.goto("/summary-of-publications?locationId=9");
+      // 5. Can view actual publication data (not just metadata)
+      await page.goto(court.summaryUrl);
       await page.waitForSelector("h1.govuk-heading-l");
-
-      // 5. Verify can view actual publication data (not just metadata)
-      const firstLink = page.locator('.govuk-list a[href*="artefactId="]').first();
-      await firstLink.click();
+      await publicationLink(page, court.privateArtefactId).click();
       await page.waitForLoadState("networkidle");
 
       // Run accessibility check on publication data view page
-      const publicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
+      const publicationAccessibility = await axeCheck(page)
+        .disableRules(["target-size", "link-name", "region", ...LIST_PAGE_KNOWN_A11Y_RULES])
+        .analyze();
       expect(publicationAccessibility.violations).toEqual([]);
 
-      // Should not see metadata-only restriction message
       const publicationBodyText = await page.locator("body").textContent();
       expect(publicationBodyText).not.toContain("You do not have permission to view the data for this publication");
       expect(publicationBodyText).not.toContain("You can view metadata only");
@@ -386,144 +233,63 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
   });
 
   test.describe("Internal Admin users (INTERNAL_ADMIN_CTSC and INTERNAL_ADMIN_LOCAL)", () => {
-    test.skip("CTSC Admin can only see PUBLIC publications and view their data", async ({ page }) => {
-      // 1. Authenticate via admin dashboard (protected page)
-      await page.goto("/admin-dashboard");
-      await loginWithSSO(page, process.env.SSO_TEST_CTSC_ADMIN_EMAIL!, process.env.SSO_TEST_CTSC_ADMIN_PASSWORD!);
-      await page.waitForURL("/admin-dashboard");
+    const internalAdmins = [
+      { title: "CTSC Admin", email: "SSO_TEST_CTSC_ADMIN_EMAIL", password: "SSO_TEST_CTSC_ADMIN_PASSWORD" },
+      { title: "Local Admin", email: "SSO_TEST_LOCAL_ADMIN_EMAIL", password: "SSO_TEST_LOCAL_ADMIN_PASSWORD" }
+    ];
 
-      // 2. Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
-      await page.waitForSelector("h1.govuk-heading-l");
+    for (const admin of internalAdmins) {
+      test(`${admin.title} can only see PUBLIC publications and view their data`, async ({ page }) => {
+        const court = await createCourtWithPublications();
 
-      // Run accessibility check on CTSC admin summary page
-      const ctscSummaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
-      expect(ctscSummaryAccessibility.violations).toEqual([]);
+        // 1. Authenticate via admin dashboard (protected page)
+        await page.goto("/admin-dashboard");
+        await loginWithSSO(page, process.env[admin.email]!, process.env[admin.password]!);
+        await page.waitForURL("/admin-dashboard");
 
-      // 3. Verify CTSC admin only sees PUBLIC publications
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
+        // 2. Navigate to summary page
+        await page.goto(court.summaryUrl);
+        await page.waitForSelector("h1.govuk-heading-l");
 
-      // Should see at least PUBLIC publications
-      expect(count).toBeGreaterThan(0);
+        // Run accessibility check on admin summary page
+        const summaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
+        expect(summaryAccessibility.violations).toEqual([]);
 
-      // 4. Verify NO CLASSIFIED publications are visible
-      const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
-      const classifiedCount = await classifiedLinks.count();
-      expect(classifiedCount).toBe(0);
+        // 3. Internal admins see the PUBLIC publications only
+        await expectVisiblePublications(page, court, { private: false, classified: false });
 
-      // 5. Verify can view PUBLIC publication data
-      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
+        // 4. Keyboard navigation reaches a PUBLIC publication link
+        const isPublicLink = (href: string) => court.publicArtefactIds.some((artefactId) => href.includes(artefactId));
+        expect(await tabToLink(page, isPublicLink, 30)).toBe(true);
 
-      // Assert that the public link is visible (test should fail if not present)
-      await expect(publicLink).toBeVisible();
+        // Test activation of the link (use click for reliability)
+        await page.locator(":focus").click();
+        await page.waitForLoadState("networkidle");
 
-      // Test keyboard navigation to the public link
-      const heading = page.locator("h1.govuk-heading-l");
-      await heading.focus();
+        // Run accessibility check on PUBLIC publication page
+        const publicationAccessibility = await axeCheck(page)
+          .disableRules(["target-size", "link-name", "region", ...LIST_PAGE_KNOWN_A11Y_RULES])
+          .analyze();
+        expect(publicationAccessibility.violations).toEqual([]);
 
-      // Tab through to reach the public link
-      let tabCount = 0;
-      const maxTabs = 30; // Safety limit
-
-      while (tabCount < maxTabs) {
-        await page.keyboard.press("Tab");
-        tabCount++;
-        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-        if (focusedHref.includes("crown-daily-list") || focusedHref.includes("crown-firm-list")) break;
-      }
-
-      // Verify focus is on a public link
-      const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-      expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
-
-      // Test activation of the link (use click for reliability)
-      const focusedLink = page.locator(":focus");
-      await focusedLink.click();
-      await page.waitForLoadState("networkidle");
-
-      // Run accessibility check on PUBLIC publication page
-      const ctscPublicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
-      expect(ctscPublicationAccessibility.violations).toEqual([]);
-
-      // Should successfully access PUBLIC publication data
-      const ctscBodyText = await page.locator("body").textContent();
-      expect(ctscBodyText).not.toContain("Access Denied");
-      expect(ctscBodyText).not.toContain("You do not have permission to view the data");
-    });
-
-    test.skip("Local Admin can only see PUBLIC publications and view their data", async ({ page }) => {
-      // 1. Authenticate via admin dashboard (protected page)
-      await page.goto("/admin-dashboard");
-      await loginWithSSO(page, process.env.SSO_TEST_LOCAL_ADMIN_EMAIL!, process.env.SSO_TEST_LOCAL_ADMIN_PASSWORD!);
-      await page.waitForURL("/admin-dashboard");
-
-      // 2. Navigate to summary page
-      await page.goto("/summary-of-publications?locationId=9");
-      await page.waitForSelector("h1.govuk-heading-l");
-
-      // Run accessibility check on Local admin summary page
-      const localSummaryAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
-      expect(localSummaryAccessibility.violations).toEqual([]);
-
-      // 3. Verify Local admin only sees PUBLIC publications
-      const publicationLinks = page.locator('.govuk-list a[href*="artefactId="]');
-      const count = await publicationLinks.count();
-
-      // Should see at least PUBLIC publications
-      expect(count).toBeGreaterThan(0);
-
-      // 4. Verify NO CLASSIFIED publications are visible
-      const classifiedLinks = page.locator('.govuk-list a[href*="civil-and-family-daily-cause-list"]');
-      const classifiedCount = await classifiedLinks.count();
-      expect(classifiedCount).toBe(0);
-
-      // 5. Verify can view PUBLIC publication data
-      const publicLink = page.locator('.govuk-list a[href*="crown-daily-list"], .govuk-list a[href*="crown-firm-list"]').first();
-
-      // Assert that the public link is visible (test should fail if not present)
-      await expect(publicLink).toBeVisible();
-
-      // Test keyboard navigation to the public link
-      const heading = page.locator("h1.govuk-heading-l");
-      await heading.focus();
-
-      // Tab through to reach the public link
-      let tabCount = 0;
-      const maxTabs = 30; // Safety limit
-
-      while (tabCount < maxTabs) {
-        await page.keyboard.press("Tab");
-        tabCount++;
-        const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-        if (focusedHref.includes("crown-daily-list") || focusedHref.includes("crown-firm-list")) break;
-      }
-
-      // Verify focus is on a public link
-      const focusedHref = await page.evaluate(() => (document.activeElement as HTMLAnchorElement)?.href || "");
-      expect(focusedHref.match(/crown-daily-list|crown-firm-list/)).toBeTruthy();
-
-      // Test activation of the link (use click for reliability)
-      const focusedLink = page.locator(":focus");
-      await focusedLink.click();
-      await page.waitForLoadState("networkidle");
-
-      // Run accessibility check on PUBLIC publication page
-      const localPublicationAccessibility = await axeCheck(page).disableRules(["target-size", "link-name", "region"]).analyze();
-      expect(localPublicationAccessibility.violations).toEqual([]);
-
-      // Should successfully access PUBLIC publication data
-      const localBodyText = await page.locator("body").textContent();
-      expect(localBodyText).not.toContain("Access Denied");
-      expect(localBodyText).not.toContain("You do not have permission to view the data");
-    });
+        // Should successfully access PUBLIC publication data
+        const bodyText = await page.locator("body").textContent();
+        expect(bodyText).not.toContain("Access Denied");
+        expect(bodyText).not.toContain("You do not have permission to view the data");
+      });
+    }
   });
 
   test.describe("Keyboard Navigation Journey", () => {
     test("should support complete keyboard navigation through publication list and detail pages", async ({ page }) => {
       // 1. Create test data and navigate to summary page
       const testLocation = await createUniqueTestLocation({ namePrefix: "Keyboard Nav Court" });
-      await setupPublicationForNav(testLocation.locationId);
+      await uploadTestPublication({
+        locationId: testLocation.locationId,
+        listTypeName: "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
+        payload: loadListTypeFixture("civil-and-family-daily-cause-list"),
+        mirrorJsonToWeb: true
+      });
 
       await page.goto(`/summary-of-publications?locationId=${testLocation.locationId}`);
       await page.waitForSelector("h1.govuk-heading-l");
@@ -634,3 +400,10 @@ test.describe("Publication Authorisation - Summary of Publications", () => {
     });
   });
 });
+
+interface CourtWithPublications {
+  summaryUrl: string;
+  publicArtefactIds: string[];
+  privateArtefactId: string;
+  classifiedArtefactId: string;
+}

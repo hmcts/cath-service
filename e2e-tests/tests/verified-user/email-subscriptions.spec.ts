@@ -1,9 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
+import { expect, type Page, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { loadListTypeFixture } from "../../utils/publication-payloads.js";
+import { uploadTestPublication } from "../../utils/publication-upload.js";
 import { prefixName } from "../../utils/test-prefix.js";
-import { createTestArtefact, getListTypeByName } from "../../utils/test-support-api.js";
+import { getListSearchConfig } from "../../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser, type VerifiedTestUser } from "../../utils/verified-user-helpers.js";
+
+const CASE_LIST_TYPE = "CIVIL_DAILY_CAUSE_LIST";
 
 interface TestLocationData {
   locationId: number;
@@ -18,52 +22,47 @@ interface TestCaseData {
 }
 
 const testLocationMap = new Map<string, TestLocationData>();
+const testUserMap = new Map<string, VerifiedTestUser>();
 const testCaseDataMap = new Map<string, TestCaseData>();
 
+// The case is published through real ingestion, which only extracts case search data when the list type has a
+// list_search_config; that config is an environment prerequisite, so its absence fails here rather than being created
 async function createTestCaseData(): Promise<TestCaseData> {
   const uniqueSuffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   // Use prefixed names so global teardown can clean up automatically
   const caseNumber = prefixName(`E2E-${uniqueSuffix}`);
   const caseName = prefixName(`E2E Test Case ${uniqueSuffix}`);
 
-  const listType = (await getListTypeByName("CIVIL_DAILY_CAUSE_LIST")) as { id: number };
-  if (!listType?.id) throw new Error("CIVIL_DAILY_CAUSE_LIST list type not found");
+  const searchConfig = await getListSearchConfig(CASE_LIST_TYPE);
 
   // Create unique location for test isolation - cleanup handled by global teardown
   const location = await createUniqueTestLocation({ namePrefix: "Case Sub Court" });
 
-  const now = new Date();
-  const artefact = await createTestArtefact({
-    locationId: String(location.locationId),
-    listTypeId: listType.id,
-    contentDate: now.toISOString(),
-    sensitivity: "Public",
-    language: "ENGLISH",
-    displayFrom: now.toISOString(),
-    displayTo: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-    isFlatFile: false,
-    provenance: "CFT_IDAM",
-    caseNumber,
-    caseName
-  });
+  const payload = loadListTypeFixture("civil-daily-cause-list") as CivilDailyCauseListFixture;
+  const caseEntry = payload.courtLists[0].courtHouse.courtRoom[0].session[0].sittings[0].hearing[0].case[0];
+  caseEntry[searchConfig.caseNumberFieldName] = caseNumber;
+  caseEntry[searchConfig.caseNameFieldName] = caseName;
 
-  return { artefactId: artefact.artefactId, caseNumber, caseName };
+  const { artefactId } = await uploadTestPublication({ locationId: location.locationId, listTypeName: CASE_LIST_TYPE, payload });
+
+  return { artefactId, caseNumber, caseName };
+}
+
+async function loginAsOwnUser(page: Page, testId: string): Promise<void> {
+  const user = testUserMap.get(testId) ?? (await createVerifiedTestUser({ label: "email-subscriptions" }));
+  testUserMap.set(testId, user);
+  await loginAsTestUser(page, user);
+  await page.goto("/account-home");
 }
 
 // Note: Cleanup is handled by global teardown via prefix-based deletion
 
 test.describe("Email Subscriptions - Location", () => {
-  test.describe.configure({ mode: "serial" });
-
   test.beforeEach(async ({ page }, testInfo) => {
     const locationData = await createUniqueTestLocation({ namePrefix: "Email Sub Court" });
     testLocationMap.set(testInfo.testId, locationData);
 
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    await loginAsOwnUser(page, testInfo.testId);
     await expect(page).toHaveURL(/\/account-home/);
   });
 
@@ -82,10 +81,7 @@ test.describe("Email Subscriptions - Location", () => {
     }
 
     // Re-authenticate after testing protection
-    await page.goto("/sign-in");
-    await page.getByRole("radio", { name: /with a myhmcts account/i }).check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    await loginAsOwnUser(page, testInfo.testId);
 
     // STEP 2: Navigate to subscription management
     await page.goto("/account-home");
@@ -323,6 +319,7 @@ test.describe("Email Subscriptions - Location", () => {
     await page.locator(".list-item").first().check();
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/subscription-configure-list-language");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     // Check accessibility on language selection page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -355,6 +352,7 @@ test.describe("Email Subscriptions - Location", () => {
     }
 
     await expect(page).toHaveURL("/subscription-configure-list-preview");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     // Check accessibility on preview page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -413,13 +411,7 @@ test.describe("Email Subscriptions - Case", () => {
     const caseData = await createTestCaseData();
     testCaseDataMap.set(testInfo.testId, caseData);
 
-    await page.goto("/sign-in");
-
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    await loginAsOwnUser(page, testInfo.testId);
 
     await expect(page).toHaveURL(/\/account-home/);
   });
@@ -435,6 +427,7 @@ test.describe("Email Subscriptions - Case", () => {
     await page.getByRole("radio", { name: /by case name/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-name-search");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     // Check accessibility on case name search page
     let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -448,6 +441,8 @@ test.describe("Email Subscriptions - Case", () => {
     await page.getByLabel(/case name/i).fill("E2E Test");
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-search-results");
+    // toHaveURL resolves before the new document renders; scanning then reports no main landmark or h1
+    await expect(page.getByRole("heading", { level: 1, name: /case search results/i })).toBeVisible();
 
     // Check accessibility on case search results page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -505,6 +500,7 @@ test.describe("Email Subscriptions - Case", () => {
     await page.getByRole("radio", { name: /by case reference number/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-reference-search");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
     // Check accessibility on case reference search page
     let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -518,6 +514,8 @@ test.describe("Email Subscriptions - Case", () => {
     await page.getByLabel(/reference number/i).fill(caseData.caseNumber);
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/case-search-results");
+    // toHaveURL resolves before the new document renders; scanning then reports no main landmark or h1
+    await expect(page.getByRole("heading", { level: 1, name: /case search results/i })).toBeVisible();
 
     // Check accessibility on case search results page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -552,3 +550,7 @@ test.describe("Email Subscriptions - Case", () => {
     await expect(page).toHaveURL("/subscription-management");
   });
 });
+
+interface CivilDailyCauseListFixture {
+  courtLists: { courtHouse: { courtRoom: { session: { sittings: { hearing: { case: Record<string, string>[] }[] }[] }[] }[] } }[];
+}

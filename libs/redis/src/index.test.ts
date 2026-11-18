@@ -51,7 +51,8 @@ describe("Redis Client", () => {
       const client = await getRedisClient();
 
       expect(createClient).toHaveBeenCalledWith({
-        url: "redis://localhost:6379"
+        url: "redis://localhost:6379",
+        pingInterval: 300_000
       });
       expect(mockRedisClient.connect).toHaveBeenCalledOnce();
       expect(mockRedisClient.on).toHaveBeenCalledWith("error", expect.any(Function));
@@ -85,7 +86,8 @@ describe("Redis Client", () => {
       await getRedisClient();
 
       expect(createClient).toHaveBeenCalledWith({
-        url: "redis://custom-host:1234"
+        url: "redis://custom-host:1234",
+        pingInterval: 300_000
       });
     });
   });

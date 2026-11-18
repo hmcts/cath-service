@@ -6,7 +6,6 @@ import {
   generateFttSiacWeeklyHearingListPdf,
   generateListPdf,
   loadTranslations,
-  MAX_PDF_SIZE_BYTES,
   savePdfToStorage
 } from "./pdf-utilities.js";
 
@@ -60,31 +59,18 @@ describe("savePdfToStorage", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toBe(`${artefactId}.pdf`);
     expect(result.sizeBytes).toBe(sizeBytes);
-    expect(result.exceedsMaxSize).toBe(false);
     expect(mockUploadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, pdfBuffer, "application/pdf", "publications");
   });
 
-  it("should flag when PDF exceeds max size", async () => {
+  it("should still upload PDFs larger than 2MB because the size limit only applies to email links", async () => {
     const artefactId = "large-artefact";
     const pdfBuffer = Buffer.from("large pdf content");
-    const sizeBytes = MAX_PDF_SIZE_BYTES + 1;
+    const sizeBytes = 3 * 1024 * 1024;
 
     const result = await savePdfToStorage(artefactId, pdfBuffer, sizeBytes);
 
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
-    expect(result.sizeBytes).toBe(sizeBytes);
-  });
-
-  it("should not flag when PDF is exactly at max size", async () => {
-    const artefactId = "exact-size-artefact";
-    const pdfBuffer = Buffer.from("exact size pdf");
-    const sizeBytes = MAX_PDF_SIZE_BYTES;
-
-    const result = await savePdfToStorage(artefactId, pdfBuffer, sizeBytes);
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(false);
+    expect(result).toEqual({ success: true, pdfPath: `${artefactId}.pdf`, sizeBytes });
+    expect(mockUploadBlob).toHaveBeenCalledWith(`${artefactId}.pdf`, pdfBuffer, "application/pdf", "publications");
   });
 
   it("should propagate upload errors", async () => {
@@ -163,12 +149,6 @@ describe("loadTranslations", () => {
     expect(result).toEqual(mockEnTranslations);
     expect(importEn).toHaveBeenCalledTimes(1);
     expect(importCy).not.toHaveBeenCalled();
-  });
-});
-
-describe("constants", () => {
-  it("should have MAX_PDF_SIZE_BYTES set to 2MB", () => {
-    expect(MAX_PDF_SIZE_BYTES).toBe(2 * 1024 * 1024);
   });
 });
 
@@ -322,17 +302,6 @@ describe("generateFttSiacWeeklyHearingListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
-  });
-
-  it("should return exceedsMaxSize true when PDF exceeds 2MB", async () => {
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
-    mockGeneratePdf.mockResolvedValue({ success: true, pdfBuffer: largePdfBuffer, sizeBytes: 3 * 1024 * 1024 });
-
-    const result = await generateFttSiacWeeklyHearingListPdf({ ...baseOptions, contentDate: new Date("2025-01-01") });
-
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 
   it("should return error when PDF generation fails", async () => {

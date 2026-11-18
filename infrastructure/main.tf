@@ -10,18 +10,24 @@ provider "azurerm" {
   features {}
 }
 
-# The core-infra vnet that holds the Redis private endpoint is in a different
-# subscription for ithc and perftest than for aat and demo. Falls back to
-# var.subscription so the alias is always configured; it is only read where
-# local.redis_subnet_override is true.
+# The subscription holding each environment's core-infra vnet, which hosts the
+# Redis private endpoints. ithc and perftest are in a different subscription
+# (DCD-CNP-QA) from aat and demo (DCD-CNP-DEV) and prod (DCD-CNP-PROD), so they
+# set core_infra_subscription_id explicitly; the others leave it null and fall
+# back to var.subscription. Since #1065 ithc and perftest also apply from
+# DCD-CNP-QA, so the override now matches their var.subscription, but it is
+# kept so the lookup doesn't depend on where an environment applies from. The
+# Managed Redis subnet lookup reads this alias in every environment; the legacy
+# cache's lookup only where local.redis_subnet_override is true.
 provider "azurerm" {
   alias           = "core_infra"
   subscription_id = local.core_infra_subscription_id != null ? local.core_infra_subscription_id : var.subscription
   features {}
 }
 
-# The shared hmcts-nonprod Log Analytics workspace sits in one subscription for
-# every environment, which is not the application subscription for perftest.
+# The platform Log Analytics workspace sits in one subscription per tier
+# (hmcts-nonprod or hmcts-prod), which is not the application subscription for
+# perftest.
 provider "azurerm" {
   alias           = "log_analytics"
   subscription_id = local.log_analytics_subscription_id
@@ -59,4 +65,16 @@ resource "azurerm_resource_group" "rg" {
 moved {
   from = azurerm_resource_group.rg
   to   = azurerm_resource_group.rg[0]
+}
+
+# Expiry for Terraform-managed Key Vault secrets. Not timeadd(timestamp(), ...),
+# which changes on every plan. The base time is fixed in state and rotates every
+# 180 days; the first apply on or after day 180 pushes every expiry out to the
+# new base + 365 days, so any apply in months 6-12 renews it before it lapses.
+resource "time_rotating" "secret_expiry" {
+  rotation_days = 180
+}
+
+locals {
+  secret_expiry = timeadd(time_rotating.secret_expiry.rfc3339, "8760h")
 }

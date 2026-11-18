@@ -75,8 +75,7 @@ describe("generateCrownFirmListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/test.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,
@@ -94,8 +93,7 @@ describe("generateCrownFirmListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "/storage/temp/uploads/firm-artefact-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     const result = await generateCrownFirmListPdf({

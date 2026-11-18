@@ -1,0 +1,10 @@
+[
+  {
+    "date": "02/01/2025",
+    "caseName": "A Vs B",
+    "hearingLength": "1 hour",
+    "hearingType": "mda",
+    "venue": "This is the venue of the hearing",
+    "additionalInformation": "This is additional information"
+  }
+]
