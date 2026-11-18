@@ -1,52 +1,41 @@
 import type { NextFunction, Request, Response } from "express";
-import { buildCftIdamLogoutUrl } from "../cft-idam/logout-url.js";
-import { getCftIdamConfig } from "../config/cft-idam-config.js";
-import { getTimeUntilExpiry, isSessionExpired, updateLastActivity } from "../session/timeout-tracker.js";
+import { buildSignOutRedirectUrl } from "../session/sign-out-redirect.js";
+import { getSessionTimeoutMs, isSessionExpired, SESSION_WARNING_LEAD_MS, updateLastActivity } from "../session/timeout-tracker.js";
 
 /**
- * Middleware to track session inactivity and enforce timeout
- * Checks if session has expired and updates last activity timestamp
+ * Enforces the role-based inactivity timeout on every signed-in request, as legacy pip-frontend's
+ * globalAuthGiver does. An expired session is signed out the same way as /logout and lands on
+ * /session-logged-out. The browser warning page only covers the client-side path.
  */
 export function sessionTimeoutMiddleware(req: Request, res: Response, next: NextFunction) {
-  // Skip timeout tracking for public routes
-  const publicRoutes = ["/", "/sign-in", "/session-expired", "/logout", "/health"];
-  if (publicRoutes.includes(req.path)) {
-    next();
-    return;
-  }
-
-  // Skip if user is not authenticated
   if (!req.isAuthenticated()) {
     next();
     return;
   }
 
-  // Check if session has expired
-  if (isSessionExpired(req.session)) {
-    // Preserve the locale from cookie before destroying session
-    const locale = req.cookies?.locale;
-    const sessionExpiredUrl = locale === "cy" ? "/session-expired?lng=cy" : "/session-expired";
-    // CFT IDAM users must also end their IDAM session so they re-authenticate on next sign in
-    const redirectUrl = req.user?.provenance === "CFT_IDAM" ? buildCftIdamLogoutUrl(sessionExpiredUrl, getCftIdamConfig()) : sessionExpiredUrl;
+  const role = req.user?.role;
 
-    // Destroy session
-    req.session.destroy((err: Error | null) => {
-      if (err) {
-        console.error("Session destruction error:", err);
-      }
-      res.redirect(redirectUrl);
+  if (isSessionExpired(req.session, role)) {
+    const redirectUrl = buildSignOutRedirectUrl({
+      provenance: req.user?.provenance,
+      locale: res.locals.locale,
+      origin: `${req.protocol}://${req.get("host")}`
+    });
+
+    req.logout(() => {
+      req.session.destroy((err: Error | null) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+        }
+        res.clearCookie("connect.sid");
+        res.redirect(redirectUrl);
+      });
     });
     return;
   }
 
-  // Update last activity timestamp
   updateLastActivity(req.session);
-
-  // Inject timeout data into response locals for client-side tracking
-  const timeUntilExpiry = getTimeUntilExpiry(req.session);
-  if (timeUntilExpiry !== null) {
-    res.locals.sessionTimeoutMs = timeUntilExpiry;
-  }
+  res.locals.sessionIdleMs = getSessionTimeoutMs(role) - SESSION_WARNING_LEAD_MS;
 
   next();
 }

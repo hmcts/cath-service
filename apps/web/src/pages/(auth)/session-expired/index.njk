@@ -1,19 +1,14 @@
 {% extends "layouts/base-template.njk" %}
-{% from "govuk/components/panel/macro.njk" import govukPanel %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block backLink %}{% endblock %}
 
 {% block page_content %}
-{{ govukPanel({
-  titleText: heading,
-  classes: "govuk-panel--confirmation"
-}) }}
-
-<div class="govuk-grid-row">
-  <div class="govuk-grid-column-two-thirds">
-    <p class="govuk-body">{{ bodyText }}</p>
-
-    <p class="govuk-body">
-      <a href="/sign-in" class="govuk-link">{{ signInAgainLink }}</a>
-    </p>
-  </div>
-</div>
+  <h1 class="govuk-heading-l">{{ t.header }}</h1>
+  <p class="govuk-body">{{ t.detail }}</p>
+  <p class="govuk-body">{{ t.signInMessage }}</p>
+  {{ govukButton({
+    text: t.signIn,
+    href: signInUrl
+  }) }}
 {% endblock %}

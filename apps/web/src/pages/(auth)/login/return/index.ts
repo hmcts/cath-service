@@ -119,9 +119,6 @@ async function handleCallback(req: Request, res: Response, params: any) {
         return res.redirect("/sign-in?error=login_failed");
       }
 
-      // Initialize session activity tracking
-      req.session.lastActivity = Date.now();
-
       // Save session before redirecting
       req.session.save((saveErr: Error | null) => {
         if (saveErr) {
