@@ -16,7 +16,7 @@ are not committed.
 - [x] Scenario 2: on a scratch database, prove that a sequence starting at 100000 is disjoint from the seeded IDs, the `+100` references and the test-support allocation across two seed runs; then discard (run 2026-11-13 on a second throwaway database, then dropped)
 
 ### Decisions
-- [x] Decision 1: write the ID-allocation comparison (`MAX + 1`, autoincrement from 1, sequence at 100000) with the disjointness proof, including the E2E bands
+- [x] Decision 1: write the ID-allocation comparison (`MAX + 1`, autoincrement from 1, sequence at 100000, then after Q3 a sequence starting one above the highest legacy production ID) with the disjointness proof, including the E2E bands
 - [x] Decision 2: write up the deploy-seed protection: freeze `locationData` for new courts, add the regression guard in `generate-seed-sql.test.ts`, and present the reference re-point options
 - [x] Decision 3: write up the future of the CSV route: keep it for bulk work and propose an update-only follow-on
 - [x] Map all 21 CSV validation rules to a form equivalent, a case the UI makes impossible, or a deliberate drop, and reconcile the total to 21 (plan §3, item 10)
@@ -28,9 +28,8 @@ are not committed.
 - [x] Raise the build-blocking questions Q6–Q12: posted on #1078 (2026-11-17)
 
 ### Follow-on tickets
-- [x] Raise build ticket 1: raised as #1531
-- [x] Raise build ticket 2, the "Add a court or tribunal" journey: raised as #1532
-- [ ] Map every legacy `location_id` to one of the 27 seeded courts or to "new" (staging comparison in `legacy-court-mapping.md`; re-check against a legacy production export), and have it reviewed before the legacy courts are loaded (report Q1, needs a human)
-- [ ] Attach spec sections 4–13 by reference to every build ticket (drafted in report.md, needs a human)
-- [x] Raise sibling tickets: S1 #1534, S2 #1535, S3 #1537, S4 #1536 (closed after Q9); plus "Align seeded court IDs with legacy CaTH" #1533
-- [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human)
+- [x] Describe build ticket 1 (sequence, service and seed guards) in report §7.1
+- [x] Describe build ticket 2 (the "Add a court or tribunal" journey, with "add another"; no draft state, after the Q5 answer was changed) in report §7.1
+- [x] Describe sibling tickets S1 (amend a court), S2 (update-only CSV), S3 (upstream sync spike) and S4 (align seeded court IDs with legacy CaTH) in report §7.2. Tickets are described only, not raised from the spike, except S3, which stays open as #1537
+- [x] Fold the answers to Q1–Q12 into the report (§4.1, §4.2, §5, §6, §7), including Q3's start of highest legacy production ID + 1
+- [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human). Raising the §7 tickets, with spec §4–13 attached and the legacy production export for S4 and ticket 1's start value, is build planning after sign-off, not part of the spike

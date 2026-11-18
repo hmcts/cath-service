@@ -1,6 +1,6 @@
 # Draft ticket: Align seeded court IDs with legacy CaTH
 
-Status: **raised as #1533** (2026-11-17). Follows the technical-task template. It comes from the #1078 spike report, Q1 and §1.7.
+Status: **draft, not raised**. Described in the #1078 report as sibling S4 (§7.2). Follows the technical-task template. It comes from the #1078 spike report, Q1 and §1.7.
 
 ---
 
@@ -27,13 +27,13 @@ See the #1078 report: §1.7, Q1 and §6.2.
 * [ ] **Replace the hard-coded SJP link.** `locationId=9` in `apps/web/src/pages/(verified)/account-home/index.njk:22` and `apps/web/src/pages/(public)/view-option/index.ts:42` should use a named constant or a lookup by name. SJP keeps 9 in the current mapping, but nothing should rely on that.
 * [ ] **Check the synthetic SNL references.** The seed writes `SNL:(id + 100)` (`generate-seed-sql.ts:106`), so renumbering changes them. Decide whether real legacy provenance references should replace them in the same change.
 * [ ] **Update tests and fixtures** that rely on seeded IDs: E2E tests, `e2e-tests/fixtures`, `libs/test-support`, and unit tests that assert on a seeded court's ID.
-* [ ] **STG clean-up plan.** After the first deploy, existing STG rows on the old IDs are parked as `__realign_<id>`, and STG publications and subscriptions still point at them. Either reset STG reference and test data, or run a one-off remap. Local: `yarn db:drop` and re-seed.
+* [ ] **Move the existing rows in a one-off migration.** Once #1078's ticket 1 adds the fail-loudly guard (b), the seed no longer parks old rows, so editing `location-data.ts` alone would fail the deploy on `location_name_key` (for example, STG row 4 still holds "Royal Courts of Justice" when the seed inserts it at 109). A Prisma migration, which runs before the seed (`apps/postgres/start.sh`), wraps itself in `BEGIN`/`COMMIT` and (1) raises if any target ID is held by a row that is not one of the seeded courts being moved; (2) deletes the moving courts' `seedref_<old id>` references, because the foreign key would otherwise carry them along and the chained moves would leave them on the wrong court (seeded 7 → 147 and 24 → 7 would put (SNL, "107") on 147 while the seed inserts it for 7, which #1078 ticket 1's reference check rejects); the seed recreates them at the new IDs; (3) moves each court in two phases, first to `-<old id>`, then to `<new id>`, so no two rows hold one ID at once. `location_reference`, `location_region`, `location_sub_jurisdiction` and `location_metadata` follow through `ON UPDATE CASCADE`. `artefact.location_id` (`libs/postgres-prisma/prisma/schema/base.prisma:14`) and `subscription.search_value` for location subscriptions (`subscription.prisma:5`) are strings with no foreign key, so the migration moves them explicitly through the same two phases (the subscription unique key would otherwise merge or reject two courts' subscriptions mid-move). If it fails, mark it with `prisma migrate resolve --rolled-back` before retrying. This works whether or not ticket 1 has shipped. Local: `yarn db:drop` and re-seed also works.
 * [ ] **Update CLAUDE.md item 7** ("`location-data.ts` … single source of truth") to say that seeded court IDs must match legacy `P&I ID`s.
 
 ## 4. Implementation Details
 * **Service:** cath-service (`libs/location`, `apps/postgres`, `apps/web`).
 * **Dependency:** the Q1 decision in the #1078 report (tech lead).
-  - Should merge before #1078's ticket 1 adds the freeze test. Otherwise the freeze test has to be updated as well.
+  - Can merge before or after #1078's ticket 1, because the migration moves the rows itself. If it merges after, update ticket 1's freeze test to the new ID set in the same PR.
 * **Mapping (staging export; to be confirmed against production):**
 
 | Seeded ID | Court | Legacy ID |
@@ -71,7 +71,7 @@ See the #1078 report: §1.7, Q1 and §6.2.
 ## 5. Definition of Done (Technical)
 * [ ] Every seeded court's `locationId` equals its legacy production `P&I ID`, or is a recorded decision for the unmatched ones.
 * [ ] No code depends on a hard-coded seeded court ID.
-* [ ] The seed runs twice on a fresh database and on a copy of STG data with nothing unexpectedly parked (`__realign_` rows only where the STG plan expects them).
+* [ ] The migration and seed run twice on a fresh database and on a copy of STG data, with and without #1078 ticket 1's guard (b) and reference check, with no `__realign_` rows created and no reference clash raised. Each moved court has exactly one `seedref_<new id>` reference, and no court holds another court's old synthetic SNL reference.
 * [ ] Unit and E2E tests pass; unit coverage >80% on changed business logic.
 * [ ] CLAUDE.md item 7 and `legacy-court-mapping.md` updated.
 

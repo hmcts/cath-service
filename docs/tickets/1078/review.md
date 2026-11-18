@@ -1,192 +1,165 @@
-# Review: #1078 Spike, Court Maintenance (third pass)
+# Code Review: Issue #1078
 
-Reviewed: `docs/tickets/1078/report.md` (568 lines, edited 2026-11-17 08:41). I checked it against `ticket.md` (the description ACs and the `/spec` comment §3), `plan.md`, `tasks.md` and both earlier reviews (`review-previous.md`, `review-previous-2.md`). I also read the source on branch `vibe-1383` at `828aa742`, the legacy `hmcts/pip-frontend` and `hmcts/pip-data-management` repos on GitHub, and `origin/vibe-653`. `git diff` is empty, so this reviews the spike deliverable only.
+This is the seventh pass. The sixth review is kept as `docs/tickets/1078/review-previous-6.md`.
 
-`report.md` is untracked. To check the ticket merge exactly, I compared it with the 558-line version the second review read, which was recovered from the local editor history (`~/.claude/file-history/.../2bf51b4c80e38c4d@v1`, 2026-11-16 08:32). Every line reference to "the old ticket N" below comes from that diff.
+I reviewed the uncommitted edits to `report.md` (616 lines), `tasks.md` and `draft-ticket-align-court-ids.md`. I checked the new S4 migration text against the source in this worktree:
+
+- `apps/postgres/start.sh` and `apps/postgres/prisma/generate-seed-sql.ts`
+- `libs/postgres-prisma/prisma/schema/{location,base,subscription}.prisma`
+- the migrations in `apps/postgres/prisma/migrations`
+- `libs/system-admin-pages/src/reference-data-upload/repository/upload-repository.ts`
+- `libs/location/src/location-data.ts` and `libs/subscriptions/src/repository/queries.ts`
+- `e2e-tests/` and `libs/test-support/src/routes/test-support/locations.ts`
+
+Agreed scope:
+
+- Follow-on tickets are described in §7 only. They are not raised, except S3 (#1537).
+- "No draft state" (the changed Q5 answer) is settled. I have not raised its absence.
+- I judged the spec §3 follow-on criterion on whether §7 can be raised as written.
 
 ## Summary
 
-The three edits made since the second review are sound:
+Both highs from review 6 are resolved.
 
-- **CSV interim guard (the second review's High 1): resolved.** The guard now rejects only unused IDs at or above the sequence start. The rule reads the same in all five places: the box (report.md:26), §4.1 (:238), ticket 1's scope (:459), its scenarios (:471-472) and the §6.2 risk row (:423). A new scenario proves that a full download can be re-uploaded (:472). `validateLocationData()` is already `async` (`validation.ts:7`), so the extra `findMany` fits.
-- **The tickets 2–5 merge lost nothing.** Every scope bullet, scenario and spec reference from the old tickets 2–5 is in the new ticket 2 (report.md:478-515). The size adds up (1–1.5 + 1–1.5 + 1 + 1.5–2 = 4.5–6 d, total 6.5–8 d). S1 (:519), S2 (:525), tasks.md:32 and §8 (:546) are all updated. There are no stale "five tickets", "ticket 5" or "tickets 1–5" references. The merge also resolves old Suggestion 11 (conventions and a Welsh scenario).
-- **Decision 3 as a phased plan (report.md:281-289)** agrees with S1, S2, Q8 and Q10. There are two problems. It misquotes spec §3 (:289). Its last step depends on how often bulk *edits* happen, but Q4 only asks how often courts are *added* (:397).
+- **Previous High 1 (seed references left behind) is resolved.** S4's migration now deletes the moving courts' `seedref_<old id>` rows before it moves them (report.md:554; `draft-ticket-align-court-ids.md:30`). I traced it against the seed:
+  - The chains are exactly 24 to 7 to 147 and 2 to 16 to 98 (`draft-ticket-align-court-ids.md:42`, `:47`, `:56`, `:64`). No other target is a seeded ID.
+  - After the delete, the seed inserts `seedref_<new id>` with `(SNL, new + 100)` (`generate-seed-sql.ts:105-106`). No new pair equals a kept pair. The kept pairs belong to SJP (`"109"`) and to any unmatched court that keeps its ID (`"101"`, `"110"`, `"115"`). No target ID is 1, 9, 10 or 15. So ticket 1's `DO` block finds no clash, and today's clause at `:111` moves nothing.
+  - There is no clash on the `seedref_<id>` key either. Every seedref at a target ID belongs to a moving court, so it has been deleted.
+  - The DoD now checks for no clash and for exactly one seedref per moved court (`draft-ticket-align-court-ids.md:74`).
+- **Previous High 2 (follow-on criterion partly met) is resolved.** With High 1 fixed, §7 can be raised as written.
 
-The new §1.7 is useful and most of its citations are exact (table below). Two are wrong. "§4" should be §6 of the migration plan, and "bilingual" overstates the legacy pages. The bigger problem is Q1's recommendation of way B (report.md:386-389). The Q1 table and its load-order advice only consider legacy IDs at or above 100000. They do not consider legacy IDs and names that overlap the 27 seeded courts:
+I checked the rest of the migration end to end:
 
-- Legacy SJP is location **0**, named "Single Justice Procedure" (`pip-data-management` `V1.1__Sjp_court_load.sql`, `V1.2__Sjp_court_load.sql`). Here, seeded location **9** has the same name (`location-data.ts:67-68`).
-- The migration attaches legacy artefacts, subscriptions and metadata by numeric `location_id` (`pip-to-cath-migration.sql:196`, `:363`, `:417`).
+- **Pre-check with chained moves.** The pre-check allows a target held by another moving seeded court (report.md:553), and the moves go through negative IDs. So 24 can take 7 while 7 moves to 147. That is correct.
+- **Negative offset and the location key.** `location_id` is a plain `INTEGER` primary key with no check constraint (`location.prisma:70`), so negative values are allowed. Phase 1 cannot clash because no negative IDs exist. Phase 2 cannot clash because the pre-check has cleared every target, and every moving row is negative at that point. Postgres checks a non-deferrable primary key row by row, which is why the two phases are needed.
+- **Child tables.** All four child tables cascade (`location_region` and `location_sub_jurisdiction` in `20251117172706_…/migration.sql:84`, `:90`; `location_metadata` in `20260126174218_…/migration.sql:19`; `location_reference` in `20260520113517_…/migration.sql:19`). `location_metadata` is unique on `location_id`, and the seed's insert there is `ON CONFLICT (location_id) DO NOTHING` (`generate-seed-sql.ts:142`). Only SJP has seed metadata (`location-data.ts:72`), and SJP does not move.
+- **String columns.** The only columns outside `location.prisma` that hold a location ID are `artefact.location_id` (`base.prisma:14`) and `subscription.search_value` (`subscription.prisma:5`). The subscription unique key (`subscription.prisma:13`) is safe in phase 1, because no `'-<n>'` values exist. "NoMatch" artefacts hold a provenance ID with a prefix (`libs/publication/src/no-match-location.ts:1-4`), so an exact `IN (…)` match on the old IDs leaves them alone.
+- **Ordering.** `migrate deploy` runs before the seed (`start.sh:95`, then `:104-105`). With either ticket 1's guard (b) or today's realign (`generate-seed-sql.ts:72-76`), the seed then finds each court already at its new ID. Ticket 1's sequence start is unaffected: on a preview database the seed writes IDs of 345 or less, below a start of about 390.
+- **`BEGIN`/`COMMIT` in a Prisma migration.** Postgres accepts explicit transaction commands in a migration script. No migration in this repo uses them, though. The repo's pattern for a migration that must fail loudly is one `DO` block that raises (`20261007120000_rename_list_types_to_shared_model/migration.sql:11-17`). See Suggestion 3.
 
-So "keep legacy IDs" and "`location-data.ts` stays frozen at 27 with no exceptions" (:389) cannot both hold unless the seeded IDs 1–27 match legacy. The "load before ticket 1's migration" advice is also impractical for prod. That is new High 1.
+Nothing new would mislead the build or sign-off. I found one gap in the migration's delete step (Suggestion 1). It applies only to environments where someone has uploaded a seeded court through the CSV. The DoD's STG-copy run would catch it. So it is a suggestion, not a high.
 
-The three description ACs are met. Six of the seven spec §3 criteria are met. "Follow-on tickets are raised" is still partly met, because raising them needs a human (tasks.md:31-35).
-
-## Citations checked
-
-New or changed since the second review:
-
-| # | Report cite | Result |
-|---|---|---|
-| 1 | `pip-frontend` `src/main/routes/routes.ts:844-875`: four routes behind `isPermittedSystemAdmin` (report.md:139) | **Exact.** `:844` opens `GET /reference-data-upload` and `:875` closes `GET /manual-reference-data-download` |
-| 2 | Legacy summary and confirmation pages "were bilingual" (report.md:139) | **Overstated.** `locales/cy/reference-data-upload-summary.json` and `-confirmation.json` exist and translate the titles and headers. `actionName` "Change", `fileKey` "File", `confirmButton` "Confirm", `panelTitle` "Success" and `panelBodyMessage` "Your file has been uploaded" are still English. Say "had Welsh locale files, only partly translated" |
-| 3 | `LocationController.java:105-113`, `POST /locations/upload` (report.md:140) | **Exact.** `@PostMapping("/upload")` at `:105`, method ends at `:113`. Class mapping `/locations` is at `:40` |
-| 4 | `LocationService.uploadLocations()` `:159-192`; "an existing ID was overwritten, including its references, and nothing was deleted" (report.md:140) | **Exact.** Method `:159-193` (the closing brace is at `:193`). The Javadoc at `:153-155` says exactly this |
-| 5 | `Location.java:37-39`, `@Id Integer locationId` with no generator (report.md:140) | **Exact.** No `@GeneratedValue` anywhere in the file |
-| 6 | `:317-350` duplicate names (DB and in-file); `:301-315` HTML tags (report.md:141) | **Exact.** `checkLocationNameDuplication()` runs `:317-353` and `validateLocationName()` runs `:301-315`. The duplicate check is case-sensitive (`equals`), which the report does not claim either way |
-| 7 | Regions and jurisdictions are free-text `text[]` (report.md:141, :386) | **Exact.** `Location.java:35`, `:45-62`, `:73-83`. Note that there are also `jurisdiction_type`, `welsh_region`, `welsh_jurisdiction` and `welsh_jurisdiction_type` arrays (Suggestion 5) |
-| 8 | "No create journey has ever existed" (report.md:144) | **Accurate for users.** `LocationService.createLocation()` (`:195-204`) exists, but only `TestingSupportController` calls it, which is the same as today's test-support route |
-| 9 | "No seed … that renamed rows on deploy" (report.md:142) | **Accurate.** Legacy loaded SJP once through Flyway (`V1.1`/`V1.2__Sjp_court_load.sql`, `ON CONFLICT DO NOTHING`). There was no deploy-time realign |
-| 10 | `legacy-data-migration.md` "last changed 2026-10-29" (report.md:146) | **Author date only.** `c7e2ceac` was authored on 2026-10-29 but committed on 2026-11-16 |
-| 11 | §3.4: "`location-data.ts` is maintained by hand here" (report.md:146) | **Exact quote**, at `legacy-data-migration.md:155` |
-| 12 | "Lists `location-data.ts` matching the legacy locations as a prerequisite with no ticket (§4)" (report.md:146) | **Wrong section.** §4 is "Schema and supporting changes" (`:167-171`). The row is in §6 "What's left", under "Before any run, dry runs included" (`:204`) |
-| 13 | `pip-to-cath-migration.sql:196`, `:363`, `:417`: unknown-location rejections for subscriptions, metadata and artefacts (report.md:146) | **Exact.** Also described in the plan at `legacy-data-migration.md:164` |
-| 14 | "The migration does not migrate `location`" (report.md:146) | **Accurate.** It is in §3.4's "Not migrated" list (`:155`), and `IMPORT FOREIGN SCHEMA … LIMIT TO (location_metadata, list_search_config, artefact, artefact_search)` (`pip-to-cath-migration.sql:89-91`) does not import `location` |
-| 15 | Way B: "the existing `postgres_fdw` link" (report.md:386) | **Accurate.** `CREATE EXTENSION postgres_fdw` and two foreign servers (`pip-to-cath-migration.sql:72-91`). Way B must add `location` and `location_reference` to the `LIMIT TO` list |
-| 16 | Way B "can be rehearsed with the migration's `test/run.sh`" (report.md:389) | **Accurate.** `legacy-data-migration.md:173-189`. The fixtures would need a legacy `location` with arrays (`test/legacy-publication.sql:4` has only `location_id, name` today) |
-| 17 | Way A "loses email and contact numbers (already an open item)" (report.md:385) | **Exact.** `legacy-data-migration.md:223` |
-| 18 | `download-service.ts:6-8`, `findMany` with no filter (report.md:238) | **Exact** |
-| 19 | Spec §3: "The spec allows any of the three outcomes: retained, deprecated or removed" (report.md:289) | **Misquoted.** ticket.md:207-208 says "retained alongside the new journey, deprecated, or restricted to update-only". "Removed" is not one of the spec's outcomes. See Suggestion 3 |
-
-Carried over and unchanged (rows 9-11 in the second review): `reference-data-upload/index.ts:41-81` (report.md:44, the handler is `:35-91`); `apps/api/src/routes/locations.ts:1-2` (report.md:91, the web autocomplete is `libs/location/src/routes/locations.ts`); "every one is an English template literal with `href: \"#file\"`" (report.md:337, rules 20 and 21 also set `html`).
+All ten acceptance criteria are met.
 
 ## 🚨 CRITICAL Issues
 
-None. No AC is unmet, and no wrong citation undermines a conclusion.
+None. No acceptance criterion is unmet. The spike changes no code, so it adds no security or accessibility defect.
 
 ## ⚠️ HIGH PRIORITY Issues
 
-1. **Way B's "keep legacy IDs" ignores overlap with the 27 seeded courts, and its load-order advice cannot be followed in prod** (report.md:146, :381-389, :430)
-   - **Problem:**
-     - **(a) IDs and names collide with the seed.** The seeded IDs 1–27 and the SNL references "101"–"127" were made up for this service. Legacy P&I IDs are also small integers. Legacy SJP is location 0 and is called "Single Justice Procedure" (`pip-data-management` `V1.1__Sjp_court_load.sql`, renamed in `V1.2`). Here that name belongs to seeded location 9 (`location-data.ts:67-68`). If way B copies legacy `location` with its IDs:
-       - a legacy court whose ID is between 1 and 27 either clashes on `location_pkey` or, after the next deploy, is renamed by `ON CONFLICT (location_id) DO UPDATE SET name` (c3);
-       - a legacy court whose name matches a seeded court clashes on `location_name_key` or is parked as `__realign_<id>` (c3);
-       - real legacy SNL references can clash with "101"–"127" and be re-pointed (c4; the migration plan already lists "Real location references in place of the synthetic seeded ones" at `legacy-data-migration.md:236`);
-       - because artefacts attach by numeric ID (`pip-to-cath-migration.sql:417`), a legacy court-1 publication would appear under "Oxford Combined Court Centre".
-
-       So "lets `location-data.ts` stay frozen at 27 with no exceptions" (:389) only holds if the 27 seeded courts already *are* the legacy courts at the same IDs. Nobody has checked that.
-     - **(b) "Replaced in full".** The migration replaces every table except users in full (`legacy-data-migration.md:82`; `DELETE FROM public.…` at `pip-to-cath-migration.sql:463-470`) and is designed to be re-run. If `location` were handled the same way, it would delete the seeded and UI-created courts and cascade to their mappings and references. Way B must merge `location`, not replace it.
-     - **(c) Load order.** The advice "load legacy courts before ticket 1's migration, so the `GREATEST(...)` starts the sequence above them" (:389) assumes the legacy load comes first. In practice ticket 1's migration runs at deploy in every environment. On prod, which does not exist yet, it runs when the environment is created, before any cutover migration. The `GREATEST` only runs once.
-   - **Impact:** Q1 asks the tech lead and the `vibe-653` owner to choose B on the strength of this table. The risk row (:430) carries the same gap. A wrong choice here misroutes legacy publications or breaks the deploy seed.
-   - **Fix:**
-     - Add a check to Q1, next to the "highest legacy P&I ID" check: do legacy IDs 0–27 and their names match `locationData` 1–27? If they do not, B has to either replace the 27 seeded courts with the legacy ones (so "frozen at 27" becomes "frozen, and the 27 removed or re-keyed") or remap IDs, which breaks the "keep legacy IDs" rule the migration depends on.
-     - State that B upserts `location` and does not delete it.
-     - Replace the load-order advice with: "after loading `location`, the migration script runs the same `SELECT setval('location_location_id_seq', GREATEST(100000, (SELECT COALESCE(MAX(location_id), 0) + 1 FROM location)), false)` as ticket 1's migration", so order no longer matters. Because `MAX` includes any UI-created courts, the next `nextval` cannot collide. A legacy ID that equals an existing UI court's ID must still be rejected by the load.
-     - Mirror this in the §6.2 row (:430).
-
-2. **[~] Spec AC "Follow-on tickets are raised" is only partly met** (ticket.md:210-214)
-   - **Problem:** Tickets 1 and 2 and S1–S4 are drafted in full (report.md:437-531), with spec sections listed per ticket. None has been raised and nothing is attached (tasks.md:31-35).
-   - **Impact:** None on the report's quality. The AC applies "when the spike is closed", and raising the tickets needs a human with Q1 and Q3 answered.
-   - **Action:** Human-owned. This is not a defect in the report.
+None.
 
 ## 💡 SUGGESTIONS
 
-New since the second review:
+New in this pass:
 
-1. **Fix the two §1.7 citations** (report.md:139, :146). Change "(§4)" to "(§6, 'Before any run')" (`legacy-data-migration.md:204`). Replace "were bilingual" with "had Welsh locale files, but buttons and panel text were still English" (row 2). Optionally say "authored 2026-10-29, committed 2026-11-16".
-2. **Mention legacy SJP location 0** in §1.7. It is the concrete case behind High 1(a), and it shows that legacy *did* load a court by migration once (Flyway `V1.1`), which is a precedent for way B.
-3. **Correct the spec quote in Decision 3** (report.md:289). Spec §3 offers "retained alongside the new journey, deprecated, or restricted to update-only". Say that the decision is "restricted to update-only (S2), with deprecation decided after S1". That is one of the spec's outcomes, and it is what the AC needs.
-4. **Make Decision 3's last step answerable, and keep the summaries in step with it:**
-   - Q4 (:397) asks how often courts are *added*. Step 4 (:287) needs to know how often *bulk amendments* happen. Add that to Q4 or Q8.
-   - Cite Q10 at step 2 (:285).
-   - The box (:25) and §8 (:544) still read "keep the CSV route for bulk edits". Add "removal decided after S1 (Q4)" so a reader who stops at the box sees the phased plan.
-5. **Spell out way B's mapping work** (:386). There are six legacy arrays (`region`, `jurisdiction`, `jurisdiction_type` and their `welsh_*` versions, `Location.java:45-83`). Sub-jurisdictions here correspond to `jurisdiction_type`, not `jurisdiction`. B also needs `location` and `location_reference` added to `LIMIT TO` (`pip-to-cath-migration.sql:90`), and fixtures with arrays in `test/legacy-publication.sql`.
-6. **Ticket 2 dependencies and PR plan** (:442, :480, :515):
-   - Add Q7 (Welsh name and provenance availability, which decides whether step 1 or step 5 blocks) and Q12 (role) to "Depends on".
-   - Pages are auto-discovered, so each page is reachable by URL as soon as its PR merges, before the hub entry exists. `requireRole` keeps that to System Admins, which is acceptable, but say so in the "several PRs behind the hub entry" sentence.
+1. **Delete the synthetic references by value, not only by ID.** Step 2 deletes rows where `location_reference_id = 'seedref_<old id>'` (report.md:554; `draft-ticket-align-court-ids.md:30`). That misses one case:
+   - A CSV upload of a seeded court deletes its references and re-creates them without an ID (`upload-repository.ts:104-118`). Prisma then gives each a `cuid()` ID (`location.prisma:85`).
+   - On the next deploy, the seed's `ON CONFLICT (provenance, provenance_location_id) DO UPDATE` (`generate-seed-sql.ts:111`) updates that row and keeps its cuid ID. `seedref_<id>` never comes back.
+   - If that court is 7 or 16, its `(SNL, "107")` or `(SNL, "116")` row survives step 2 and moves to 147 or 98. That is the review 6 problem again: ticket 1's `DO` block fails the deploy, or today's clause silently moves the reference.
+   - No E2E test re-uploads a seeded court (nothing in `e2e-tests/` uses the download), so this needs a person to have done it on STG. The DoD run on an STG copy (`:74`) would catch it.
+   - **Fix:** delete `WHERE provenance = 'SNL' AND provenance_location_id = (location_id + 100)::text AND location_id IN (<moving old ids>)`. You can keep the ID match as well. Add a line saying `seedmeta_<id>` needs the same care if a moving court ever gets seed metadata (today only SJP has it, and SJP keeps 9).
+2. **`start.sh` already rolls back a failed migration.** The text says "mark it with `prisma migrate resolve --rolled-back` before retrying" (report.md:557; `draft-ticket-align-court-ids.md:30`). On a deployed environment, `start.sh:80-91` sets `rolled_back_at` on any unfinished migration when no runner holds Prisma's lock. The next pod start then retries it. So:
+   - deployed: a failing pre-check fails every postgres pod start until someone fixes the data. Nobody needs to run `migrate resolve`.
+   - local: `migrate resolve` (or `yarn db:drop`) is still needed.
+   - Say this, and say what a person does when the pre-check fires on STG: delete or renumber the STG court that holds the target ID, then redeploy.
+3. **Follow the repo's pattern for a migration that fails loudly.** The pre-check needs procedural code, so it needs a `DO` block anyway. `20261007120000_rename_list_types_to_shared_model/migration.sql:11-17` is the precedent: one `DO $$ … RAISE …` block and a header comment that explains the failure. The explicit `BEGIN`/`COMMIT` should work, but nothing in the repo uses it. Either drop it or keep it, and let the DoD's fresh-database and STG-copy runs (`draft-ticket-align-court-ids.md:74`) confirm that a failure rolls back every step.
+4. **Widen the pre-check to the string columns.** The pre-check only looks at `location` (report.md:553). `artefact.location_id` and `subscription.search_value` have no foreign key, so rows for a deleted court can stay behind with a target ID.
+   - Phase 2 would attach orphan artefacts to the moved court.
+   - It would fail on the subscription unique key if one user had subscribed to both the orphan and the moving court.
+   - Raise if any non-moving `artefact` or `LOCATION_ID` subscription row already holds a target ID.
+   - Name the filter value `search_type = 'LOCATION_ID'` (`libs/subscriptions/src/repository/queries.ts:89`) rather than "location subscriptions".
+   - Optionally, also check that each moving row has its expected seeded name.
+5. **Say that the mapping is final before the migration merges.** This is still open from review 6, Suggestion 3. Prisma stores a checksum for each applied migration, so the mapping cannot be edited afterwards. A correction would need a second migration. Add "the mapping comes from the production export and is reviewed before the migration merges" to S4 (report.md:551) and the draft's Scope (`:24`, `:30`).
 
-Carried over from the second review, still open:
+Carried over from review 6, still open:
 
-7. (old 1) The freeze test location is still "`generate-seed-sql.test.ts` (or beside `libs/location/src/location-data.ts`)" (report.md:263, :460). Put it in `libs/location`.
-8. (old 2) Guard (b)'s blast radius (the seed rolls back as one transaction and the postgres pod fails on every deploy) is still not stated in Q1 (:381).
-9. (old 3) The `setval` variant has still not been run (:256).
-10. (old 4) "the same file-based apply as `start.sh:104-105`" (:303). Deploy uses `prisma db execute`, not `psql`.
-11. (old 5, partly resolved) Ticket 1 no longer says "bilingual" (:459). S2 still asks for "a bilingual message" (:521) on a summary page that hard-codes `locale = "en"` (:54). Scope the locale fix into S2, or say "English".
-12. (old 6) The three imprecise citations listed under the table above (report.md:44, :91, :337).
-13. (old 7) The self-XSS sink in rules 20 and 21 (`validation.ts:245`, `:276`, rendered `| safe`) is not in S2's scope (:521-525).
-14. (old 8) Ticket 1 still has no "update CLAUDE.md item 7" task (:452-463). CLAUDE.md item 7 still says adding to `location-data.ts` "is all you need", so the new freeze test will fail CI for a developer who follows it.
-15. (old 9) The ID-reuse argument for the sequence (hard delete plus FK-less artefacts and subscriptions) has not been added to Decision 1 (:218-222).
-16. (old 10) The seed also re-adds mappings (`generate-seed-sql.ts:114-128`). report.md:279 mentions only renames.
-17. (old 12) CSRF posture (no token, `sameSite: "lax"`) is still not stated for ticket 2.
-18. (old 13) Q11 (:413) still does not ask design to confirm the multi-field steps 1, 2 and 5.
-19. (old 14) `Number.parseInt` leniency (`csv-parser.ts:76`) and row logging (`reference-data-upload-summary/index.ts:71`) are still not in S2. The interim guard should compare against the parsed value.
+6. **Page count wording.** The recommendation box now includes "add another" (report.md:16), but :190 still says "the answers to Q6 and Q7 add the eighth". Only Q6 adds a page. Q7 makes step 5 optional.
+7. **Stale text in the S4 draft.** `draft-ticket-align-court-ids.md:19` ("a seed change plus a lower-environment clean-up") and `:80` ("STG data is disrupted … unless the clean-up is planned") predate the migration.
+8. **Stale line references in the draft.** `draft-ticket-align-court-ids.md:13` cites `:65-73` and `:94-96`. They are now `generate-seed-sql.ts:72-76` (realign) and `:93-97` (location upsert).
+9. **Q4's bulk-edit half is still unanswered.** Report.md:397 says all of Q1–Q12 are answered. The Q4 answer (:387) only covers how courts are added. Decision 3 step 4 (:289) depends on the bulk-edit answer. Record it as open.
+10. **The start value must cover S4's unmatched courts.** If S4 gives Oxford Combined, Newcastle Combined or East London Tribunal Service an ID above the legacy maximum (`draft-ticket-align-court-ids.md:82`), ticket 1's band test (report.md:476, :486) fails. Define the start as `max(legacy production max, max seeded ID) + 1`.
+11. **Pick one place for the freeze test** (report.md:265, "or beside `libs/location/src/location-data.ts`").
+12. **CLAUDE.md item 7 also covers `list-type-data.ts`** (`CLAUDE.md`, "7. `list-type-data.ts` and `location-data.ts` are the single sources of truth"). Ticket 1 (:479) and the draft (`:31`) should change only the location half.
+13. **S2's "bilingual message"** (report.md:544) would appear on pages that hard-code `locale = "en"` (:56). Either put the locale fix in S2's scope, or say "English".
+14. **Add two CSV defects to S2.** `reference-data-upload-summary/index.ts:71` logs the whole parsed file, including court emails and phone numbers. `validation.ts:245` and `:276` put user-supplied names into error `html` without escaping them.
+15. **"The same file-based apply as `start.sh:104-105`"** (report.md:305). Deploy uses `prisma db execute --file` (`start.sh:105`), not `psql`. Say "equivalent".
+16. **State the CSRF posture** for the new POSTs. The report does not mention CSRF.
+17. **Recovery note for a red seed** (report.md:269). S1 and S2 do not exist when ticket 1 ships. Say that the usual fix is to revert the `location-data.ts` change.
+18. **Ask design about the steps with several fields** (names, contact details, the three-field reference). Today the question to design only covers hint texts (:511).
+19. **`plan.md` still presents "sequence starting at 100000" as chosen** (plan.md:142, :148, :216). Add a one-line pointer to report §4.1 and §6.1.
 
 ## ✅ Positive Feedback
 
-- The interim guard fix does exactly what the second review asked, uses the same lookup S2 needs, and adds the scenario that proves it (report.md:472). The wording is identical in all five places.
-- The ticket merge is faithful. Every old scope item, scenario and spec reference is kept. The "Common to every page" bullet (:483) removes the repetition that caused old Suggestion 11. The reason for shipping as one ticket (:480) is stated, and the sums are right.
-- §1.7 is a valuable discovery. It finds a live conflict between this spike's Q1 freeze and the `vibe-653` migration plan before either ships, records it as a risk with "High" likelihood (:430), and adds a task to agree it with the owner (tasks.md:33). Most of its legacy citations are exact to the line.
-- The phased Decision 3 is more honest than "keep it forever": it ties removal to S1 and to evidence instead of deciding now.
-- §8 (:561-567) records what changed and why, so the change history can be audited even though the file is untracked.
+- The S4 migration is now sound in the cases that matter:
+  - the delete step removes the review 6 clash;
+  - the negative offset makes the chained moves safe on the location key and the subscription key;
+  - the pre-check stops the migration taking an ID from a court that is not part of the move.
+- The report and the draft describe the migration in the same way (report.md:552-557; `draft-ticket-align-court-ids.md:30`). Both name the chain that caused the review 6 high.
+- The DoD now tests the right things (`draft-ticket-align-court-ids.md:74`): with and without ticket 1's guards, on a fresh database and an STG copy, with exactly one seedref per moved court.
+- Ticket 1's `location-csv.ts` change now uses test-support's generated-ID path and gives the reason (report.md:474; `locations.ts:55`, `:103-113`). That removes the risk of parallel workers overwriting each other's courts.
+- The Q3 answer and §4.1 now give the same `setval` rule (report.md:258, :386).
+- The ordering claims are consistent. S4 can ship before or after ticket 1 on lower environments (:557), but must land before ticket 1 reaches production and before any legacy load (:551).
+- Security is unchanged and sound. Every page sits behind `requireRole([USER_ROLES.SYSTEM_ADMIN])` (:502). Writes are create-only (:470). Tampered POSTs are rejected on the server (:519). There is an unauthorised-user journey (:534) and an `ADD_COURT` audit action (:472, :508).
 
-## Changes since previous review
+## Test Coverage Assessment (statement coverage: N/A)
 
-| Prior issue (review-previous-2.md) | Status | Evidence |
-|---|---|---|
-| High 1: interim CSV guard blocks updates to existing UI courts | **Resolved** | "Unused IDs only" in the box (:26), §4.1 (:238), ticket 1 scope (:459), scenarios (:471-472) and risk row (:423) |
-| High 2: [~] follow-on tickets not raised | **Open (human-owned)** | tasks.md:31-35 |
-| Suggestion 1: freeze test location | Open | report.md:263, :460 |
-| Suggestion 2: guard (b) blast radius | Open | Q1 (:381) unchanged on this point |
-| Suggestion 3: run the `setval` variant | Open | report.md:256 |
-| Suggestion 4: "same file-based apply" wording | Open | report.md:303 |
-| Suggestion 5: interim guard message locale | Partly resolved | Ticket 1 (:459) no longer says "bilingual". S2 (:521) still does |
-| Suggestion 6: three imprecise citations | Open | report.md:44, :91, :337 |
-| Suggestion 7: XSS sink in S2 | Open | S2 (:521-525) |
-| Suggestion 8: CLAUDE.md item 7 task in ticket 1 | Open | Ticket 1 scope (:452-463) |
-| Suggestion 9: ID-reuse argument | Open | §4.1 (:218-222) |
-| Suggestion 10: seed re-adds mappings | Open | report.md:279 |
-| Suggestion 11: restate conventions; ticket 4 Welsh scenario | **Resolved by the merge** | "Common to every page" (:483); Welsh scenario covers every page (:500) |
-| Suggestion 12: CSRF posture | Open | Not mentioned |
-| Suggestion 13: design confirms multi-field steps | Open | Q11 (:413) |
-| Suggestion 14: parser and logging weaknesses in S2 | Open | S2 (:521-525) |
+**Statement coverage per changed workspace:** N/A. No code workspaces changed (docs-only spike), so `yarn test:coverage` was not run.
 
-## Test Coverage Assessment
+**Proposed strategy for the follow-on tickets:**
 
-N/A: this is a spike and there are no code changes. `git diff` is empty, and the only artefacts are the untracked docs in `docs/tickets/1078/`, so `yarn test:coverage` was not run.
-
-The test design is in the ticket scenarios. Ticket 1 (report.md:467-474) now covers both sides of the interim guard. Ticket 2 (:493-513) keeps all of plan §5.3 scenarios 4, 5 and 8, with one E2E journey per user journey, validation, Welsh, axe and keyboard checks inline, and AuthZ refusal as its own journey, as `.claude/rules/testing.md` and `e2e-testing.md` require. No scenario was lost in the merge. Two gaps remain:
-
-- the freeze test's home (Suggestion 7);
-- nothing would test a way-B legacy load against the seeded 1–27 (High 1).
+- **Ticket 1 (unit):** covers the risky paths:
+  - the seed run twice (report.md:485), the bands (:486) and the freeze (:487);
+  - name and reference clashes failing, plus a re-run with no clash (:488-489);
+  - the CSV guard both ways, plus the preview-database E2E (:490-491);
+  - P2002 mapping (:492) and atomicity (:493).
+  - Gap: the live-value read with `is_called` both false and true.
+- **S4:** the DoD runs the migration and seed twice, with and without ticket 1's guards, on a fresh database and an STG copy (`draft-ticket-align-court-ids.md:74`). Add:
+  - a seeded court whose SNL reference has a cuid ID (Suggestion 1);
+  - an orphan artefact or subscription at a target ID (Suggestion 4);
+  - a check that the chained artefacts and subscriptions for 7 and 24 end up on the right courts.
+- **Ticket 2 (unit and template):** each page has `index.test.ts` and `index.njk.test.ts` with en/cy key parity (:502, :522), as `.claude/rules/testing.md` requires. There are tests for the skipped reference (:521), "add another" duplicates (:520), tampered POSTs (:519), deep links and resubmission (:515, :535).
+- **E2E:** one main journey with validation, Welsh, axe and keyboard checks inline (:523-533), and the unauthorised user as its own journey (:534). This follows the `e2e-tests` conventions. The main journey never skips the reference step. A second run that skips it would cover the optional branch end to end.
+- **Accessibility:** axe on step 1's error state and on check answers, plus a keyboard confirm (:526, :531). Also run axe on the "add another" page (a summary list with Remove links) and the success panel.
 
 ## Acceptance Criteria Verification
 
 Description ACs (ticket.md:20-22):
 
 - [x] Various options for adding new court locations through the System Admin portal, without needing to use a csv file, are investigated
-  - Options A–F are in the matrix (report.md:154-161), each has its own subsection (:167-210), two database experiments back them up (:298-331), and the legacy system is now covered too (:136-146).
+  - Options A–F in the matrix (report.md:156-163), each in detail (:171-212), database experiments (:300-333), and legacy CaTH (:138-148).
 - [x] An investigative report with the pros and cons of the various options is provided
-  - Pros, cons and effort for every option (report.md:154-161), with detail at :169-210.
+  - Pros, cons, effort and c1–c5 for each option (report.md:156-163).
 - [x] The best solution is highlighted in the investigative report
-  - Option C is in the highlighted box (report.md:13-29), with its decisions at :214-289.
+  - Option C in the highlighted box (report.md:13-31) and in §4 (:216).
 
 Spec §3 "Spike deliverable criteria" (ticket.md:167-214):
 
 - [x] Options are investigated and documented: "a written report exists at `docs/tickets/1078/report.md` covering at minimum Options A–F below, each with pros, cons, effort estimate in dev-days, and the risks it carries against the five hard constraints in section 2"
-  - report.md:154-161 has columns for pros, cons, effort and c1–c5. F's effort is "Not estimable", and the reason is given at :208.
+  - report.md:156-163. F is "Not estimable", with the reason at :210.
 - [x] A single option is recommended: "exactly one option is named as the recommendation, with the reasoning stated, and the rejected options each carry a one-line reason for rejection"
-  - report.md:13-29 and :214. One-line rejections are at :291-296.
-- [x] The `location_id` allocation question is answered: "states which of the three allocation strategies … is chosen, and demonstrates that the chosen strategy cannot collide with `generateLocationsSql()` or the `provenance_location_id = locationId + 100` values emitted by `generateLocationReferencesSql()`"
-  - The sequence starting at 100000 is chosen (report.md:216-222). The proof is at :224-234 and was run in scenario 2 (:324-331), with the `GREATEST` safeguard at :246-256.
+  - report.md:13-31 and :216. The one-line rejections are at :293-298.
+- [x] The `location_id` allocation question is answered: "states which of the three allocation strategies (application-side `MAX(location_id) + 1`; a new Postgres sequence seeded above the `locationData` range; a reserved high-ID band such as `>= 100000` for UI-created courts) is chosen, and demonstrates that the chosen strategy cannot collide with `generateLocationsSql()` or the `provenance_location_id = locationId + 100` values emitted by `generateLocationReferencesSql()`"
+  - A sequence starting at the legacy start is chosen (report.md:220-225). The disjointness proof is at :231-244, and the `+100` values are shown to be in a different column (:237, :242). The migration SQL is at :250-255. It was proven on a database (:326-333), and :258 explains why the start value does not change that result.
 - [x] The deploy-seed interaction is resolved: "states how a UI-created court is protected from being renamed to `__realign_<id>` by a later addition to `location-data.ts`, and whether `location-data.ts` should be frozen as the source of truth for locations once the UI exists"
-  - Freeze plus CI test, with optional guard (b) (report.md:258-266, Q1 :381). The `vibe-653` conflict is raised for agreement (:146, :430). High 1 is about how way B works, not about this protection.
+  - The freeze, a CI test, and the fail-loudly realign (report.md:262-266). The reference `DO` block is at :269. The decisions are recorded as Q1 and Q9 (:384, :392).
 - [x] Validation parity with the CSV route is confirmed: "maps every existing CSV validation rule to either a form-level equivalent, a schema-level constraint, or an explicit decision to drop it"
-  - All 21 rules are mapped and reconciled (report.md:335-371).
+  - All 21 rules are mapped and reconciled (report.md:341-365).
 - [x] The CSV route's future is decided: "states whether the CSV route is retained alongside the new journey, deprecated, or restricted to update-only"
-  - Restricted to update-only (S2) and retained until S1, with deprecation decided afterwards on evidence (report.md:281-289, :521-525). The spec quote at :289 needs correcting (Suggestion 3), but the decision is stated.
-- [~] Follow-on tickets are raised: "implementation tickets exist for the recommended option, sized to be individually shippable, and this specification's sections 4–13 are attached to them"
-  - Drafted and sized, with spec sections cited per ticket (report.md:437-531): ticket 1 at :476, ticket 2 at :515. Not yet raised or attached, which needs a human (tasks.md:31-35). See High 2.
+  - Restricted to update-only (report.md:283-291), confirmed by Q10 (:393), with S2 (:544-547).
+- [x] Follow-on tickets are raised: "implementation tickets exist for the recommended option, sized to be individually shippable, and this specification's sections 4–13 are attached to them"
+  - Judged on the agreed scope: the tickets are described in §7 and raised after sign-off (report.md:450; tasks.md:35). Every ticket has a size and dependencies (report.md:454-557). Sizes and labels agree (:29, :160, :456-458, :538).
+  - The S4 and ticket 1 conflict from review 6 is fixed (:554; `draft-ticket-align-court-ids.md:30`, `:74`). The tickets can be raised as written. Suggestions 1–5 would tighten S4 but do not block it.
 
-Tally: 9 of 10 met, 1 partly met (follow-on tickets raised, human-owned), 0 unmet.
+Tally: 10 of 10 met, 0 partly met, 0 unmet.
 
 ## Next Steps
 
-- [ ] High 1: add the "legacy IDs 0–27 and names compared with `locationData`" check to Q1, state that way B upserts `location`, replace the load-order advice with a `setval` at the end of the legacy load, and mirror this in the §6.2 row (report.md:381-389, :430).
-- [ ] Suggestions 1–6: fix the §1.7 section reference and the "bilingual" claim, mention SJP location 0, correct the spec quote at :289, extend Q4 to bulk amendments, spell out way B's array mapping, and add Q7 and Q12 to ticket 2.
-- [ ] Suggestions 7–19 where cheap. Suggestion 14 (the CLAUDE.md item 7 task) matters most, because the freeze test will otherwise fail CI for developers who follow CLAUDE.md.
-- [ ] Human: send Q1–Q12 (tasks.md:27-28), and agree Q1 with the `vibe-653` owner (tasks.md:33).
-- [ ] Human: raise tickets 1 and 2 and S1–S4 with spec §4–13 attached (tasks.md:31-35).
-- [ ] Human: get tech lead and PO sign-off, then close #1078 (tasks.md:36).
+- [ ] Suggestions 1–4 (delete synthetic references by value, the `start.sh` rollback note, the `DO`-block pattern, a wider pre-check). Each is a sentence or two in report.md:553-557 and `draft-ticket-align-court-ids.md:30`.
+- [ ] Suggestions 5, 7, 8 and 10. These are cheap and keep the S4 draft accurate.
+- [ ] The remaining suggestions, where they are cheap.
+- [ ] Human: tech lead and PO sign-off, then raise the §7 tickets with spec §4–13, then close #1078 (tasks.md:35).
 
-## Overall Assessment
+## Overall Assessment: APPROVED
 
-**NEEDS CHANGES** (minor). The second review's high-priority issue is resolved cleanly. The ticket merge lost nothing, and Decision 3 is consistent with the rest of the report. The remaining change is to Q1's legacy-court advice. Way B is the right direction, but the table must say that keeping legacy IDs collides with the 27 seeded courts (legacy SJP 0 against seeded 9 is a concrete case), and that the sequence should be bumped by the load script rather than by load order. The partial AC is a human step and not a defect in the report.
+Both highs from review 6 are resolved. The moving courts' `seedref_<old id>` rows are deleted before the move. So ticket 1's `DO` block and today's seed clause both find a clean state, and S4 can ship before or after ticket 1. I traced the pre-check, the two-phase negative offset, the cascades, the string columns and the deploy order against the source. They are sound for the chained moves in the mapping. The one gap left (synthetic references with cuid IDs after a CSV upload) is narrow, and the DoD's STG-copy run would catch it. It is a suggestion. Every acceptance criterion is met.
