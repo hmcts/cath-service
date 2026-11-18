@@ -44,6 +44,31 @@ describe("comparePdf text findings", () => {
     expect(result.findings).toEqual([]);
   });
 
+  it("should not report words a table read out in another order because its cells wrap differently", async () => {
+    // Arrange
+    pdfsRead(
+      ["Time Case name Venue", "10am This is a This is a", "case name venue name"],
+      ["Time Case name Venue", "10am This is a case This is a venue", "name name"]
+    );
+
+    // Act
+    const result = await comparePdf(new Uint8Array(), new Uint8Array());
+
+    // Assert
+    expect(result.findings).toEqual([]);
+  });
+
+  it("should still report a changed word among words that only moved", async () => {
+    // Arrange
+    pdfsRead(["Case number Venue", "This is a This is a", "case name venue name"], ["Case Number Venue", "This is a case This is a venue", "name name"]);
+
+    // Act
+    const result = await comparePdf(new Uint8Array(), new Uint8Array());
+
+    // Assert
+    expect(result.findings).toEqual([{ category: "pdf", change: "reworded", detail: 'after "Case": "number" → "Number"' }]);
+  });
+
   it("should count the words in common when the text differs too much to diff", async () => {
     // Arrange
     const words = (prefix: string, count: number) => Array.from({ length: count }, (_, i) => `${prefix}${i}`).join(" ");

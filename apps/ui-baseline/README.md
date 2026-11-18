@@ -96,7 +96,17 @@ recording. `baseline push` refuses one, so the stored baseline is always all of 
 
 In the workspace devcontainer, Docker is Docker Desktop on the host, so `$UI_BASELINE_PIP_DIR`
 must be a path the host shares (inside the workspace folder), and outside cath-service: pip-frontend
-builds against CaTH's `node_modules` if it is anywhere under the monorepo.
+builds against CaTH's `node_modules` if it is anywhere under the monorepo. `apps/cath/.pip-src` in
+the workspace is both, and the workspace already ignores it:
+
+```bash
+UI_BASELINE_PIP_DIR="$(git rev-parse --show-toplevel)/../.pip-src" yarn ui-baseline:record-pip
+```
+
+pip-frontend's install uses a Playwright of its own, and Playwright removes the browsers no
+installed Playwright links to, which can include this repo's. If a recording's captures all fail
+with "Executable doesn't exist", run `node_modules/.bin/playwright install chromium` and record
+again.
 
 It uses ports 8180, 15432, 16379, 16969, 18090 and 20000, so it can run alongside CaTH. pip stays
 running afterwards so you can look at it; `yarn ui-baseline:stop-pip` stops it. The check itself

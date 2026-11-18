@@ -203,20 +203,45 @@ function textFindings(a: string[], b: string[]): Finding[] {
     return [{ category: "pdf", change: "rewritten", detail: `the text differs throughout: ${shared} of ${a.length} words in common` }];
   }
 
+  // A table whose cells wrap at other widths reads out the same words in another order, which the
+  // diff sees as words missing in one place and extra in another. Only a word one PDF has more of
+  // than the other is a difference in content, so each run keeps just those.
+  const surplus = { delete: surplusWords(a, b), insert: surplusWords(b, a) };
+  const differing = (kind: "delete" | "insert", items: string[]) =>
+    items.filter((word) => {
+      const count = surplus[kind].get(word) ?? 0;
+      if (count) surplus[kind].set(word, count - 1);
+      return count > 0;
+    });
+
   const findings: Finding[] = [];
   for (let index = 0; index < runs.length; index++) {
     const run = runs[index];
     if (run.kind === "equal") continue;
     const next = runs[index + 1];
-    const replaced = run.kind === "delete" && next?.kind === "insert" ? next.items : null;
-    const before = runs[index - 1]?.kind === "equal" ? runs[index - 1].items.slice(-CONTEXT_WORDS).join(" ") : "";
+    const pairsWithNext = run.kind === "delete" && next?.kind === "insert";
+    const removed = differing(run.kind === "delete" ? "delete" : "insert", run.items);
+    const replaced = pairsWithNext ? differing("insert", next.items) : [];
+    const previous = runs[index - 1];
+    if (pairsWithNext) index++;
+    if (!removed.length && !replaced.length) continue;
+    const before = previous?.kind === "equal" ? previous.items.slice(-CONTEXT_WORDS).join(" ") : "";
     const context = before ? `after "${before}": ` : "at the start: ";
-    if (replaced) {
-      findings.push({ category: "pdf", change: "reworded", detail: `${context}"${run.items.join(" ")}" → "${replaced.join(" ")}"` });
-      index++;
-    } else findings.push({ category: "pdf", change: run.kind === "delete" ? "missing" : "extra", detail: `${context}"${run.items.join(" ")}"` });
+    if (removed.length && replaced.length)
+      findings.push({ category: "pdf", change: "reworded", detail: `${context}"${removed.join(" ")}" → "${replaced.join(" ")}"` });
+    else if (removed.length)
+      findings.push({ category: "pdf", change: run.kind === "delete" ? "missing" : "extra", detail: `${context}"${removed.join(" ")}"` });
+    else findings.push({ category: "pdf", change: "extra", detail: `${context}"${replaced.join(" ")}"` });
   }
   return findings;
+}
+
+// How many more times each word is in a than in b
+function surplusWords(a: string[], b: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const word of a) counts.set(word, (counts.get(word) ?? 0) + 1);
+  for (const word of b) counts.set(word, (counts.get(word) ?? 0) - 1);
+  return new Map([...counts].filter(([, count]) => count > 0));
 }
 
 function sheetFindings(a: SheetContent, b: SheetContent, sourceContext: NormaliseContext, targetContext: NormaliseContext): Finding[] {
