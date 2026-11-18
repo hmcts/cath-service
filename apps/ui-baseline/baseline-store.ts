@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { confinedPath } from "./cli-input.js";
 import { type BlobContainer, openBlobContainer } from "./core/index.js";
-import { type Environment, filesStorage } from "./environments.js";
+import { type Environment, filesStorage, runsStorage } from "./environments.js";
 import { systemCommand } from "./system-command.js";
 
 // Keeps recorded pip baselines in the environment's storage, so a check run anywhere (the hosted
@@ -84,6 +84,13 @@ export async function latestBaseline(container: BlobContainer): Promise<StoredBa
 
 export function baselineContainer(environment: Environment): BlobContainer {
   return openBlobContainer(filesStorage("cath", environment.cath, BASELINE_CONTAINER));
+}
+
+// Where the hosted check keeps its runs: beside the baselines, unless the environment keeps them
+// apart (preview, where each pull request's runs are its own and the baseline is aat's)
+export function runsContainer(environment: Environment): BlobContainer {
+  const storage = runsStorage(environment, BASELINE_CONTAINER);
+  return storage ? openBlobContainer(storage) : baselineContainer(environment);
 }
 
 export const DEFAULT_BASELINE_DIR = path.join(PARITY_DIR, "output/baseline");

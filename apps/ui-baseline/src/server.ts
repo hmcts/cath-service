@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getPropertiesVolumeSecrets } from "@hmcts-cft/cloud-native-platform";
-import { baselineContainer, latestBaseline, pullBaseline } from "../baseline-store.js";
+import { baselineContainer, latestBaseline, pullBaseline, runsContainer } from "../baseline-store.js";
 import { loadEnvironment } from "../environments.js";
 import { createApp } from "./app.js";
 import { createBaselineCache } from "./baseline.js";
@@ -22,11 +22,10 @@ const environmentName = process.env.UI_BASELINE_ENV ?? "aat";
 const environment = await loadEnvironment(environmentName);
 const dataDir = process.env.UI_BASELINE_DATA_DIR ?? path.join(tmpdir(), "ui-baseline");
 await mkdir(dataDir, { recursive: true });
-const store = baselineContainer(environment);
 
 const baseline = createBaselineCache({
   root: path.join(dataDir, "baselines"),
-  store,
+  store: baselineContainer(environment),
   latest: latestBaseline,
   pull: (dir, id) => pullBaseline(environment, dir, id)
 });
@@ -35,7 +34,7 @@ const runner = createRunner({
   repoDir: REPO_DIR,
   environment: environmentName,
   commit: process.env.GIT_COMMIT ?? "unknown",
-  store,
+  store: runsContainer(environment),
   baseline: (id) => baseline.ensure(id)
 });
 

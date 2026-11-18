@@ -2,8 +2,8 @@ import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BASELINE_CONTAINER, baselineContainer, latestBaseline, pullBaseline, pushBaseline } from "./baseline-store.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { BASELINE_CONTAINER, baselineContainer, latestBaseline, pullBaseline, pushBaseline, runsContainer } from "./baseline-store.js";
 import { withVersions } from "./core/files/blob-versions.test-helper.js";
 import type { BlobContainer, StorageSpec } from "./core/index.js";
 import type { Environment } from "./environments.js";
@@ -156,6 +156,38 @@ describe("baseline-store", () => {
       // Assert
       expect(container).toBe(store);
       expect(openBlobContainer).toHaveBeenCalledWith({ connectionString: undefined, accountName: "cathsaperftest", container: "ui-baseline" });
+    });
+  });
+
+  describe("runsContainer", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("should keep runs beside the baselines when the environment does not keep them apart", () => {
+      // Act
+      runsContainer(environment({ accountName: "cathsaaat" }));
+
+      // Assert
+      expect(openBlobContainer).toHaveBeenCalledWith({ connectionString: undefined, accountName: "cathsaaat", container: "ui-baseline" });
+    });
+
+    it("should keep runs in the account the environment names for them", () => {
+      // Arrange
+      vi.stubEnv("RUNS_NAME", "cathpr1250");
+      vi.stubEnv("RUNS_KEY", "a2V5");
+      const apart = { ...environment({ accountName: "cathsaaat" }), runs: { accountNameEnv: "RUNS_NAME", accountKeyEnv: "RUNS_KEY" } };
+
+      // Act
+      runsContainer(apart);
+
+      // Assert
+      expect(openBlobContainer).toHaveBeenCalledTimes(1);
+      expect(openBlobContainer).toHaveBeenCalledWith({
+        connectionString: "DefaultEndpointsProtocol=https;AccountName=cathpr1250;AccountKey=a2V5;EndpointSuffix=core.windows.net",
+        accountName: "cathpr1250",
+        container: "ui-baseline"
+      });
     });
   });
 });

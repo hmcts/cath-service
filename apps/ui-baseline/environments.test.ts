@@ -1,6 +1,6 @@
 import { DefaultAzureCredential } from "@azure/identity";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type AppConfig, filesStorage, loadEnvironment } from "./environments.js";
+import { type AppConfig, type Environment, filesStorage, loadEnvironment, runsStorage } from "./environments.js";
 
 const { getSecret, secretClient } = vi.hoisted(() => ({ getSecret: vi.fn(), secretClient: vi.fn() }));
 
@@ -12,7 +12,15 @@ vi.mock("@azure/keyvault-secrets", () => ({
   })
 }));
 
-const STORAGE_OVERRIDES = ["CATH_STORAGE_CONNECTION_STRING", "PIP_STORAGE_CONNECTION_STRING", "FROM_ENV_CONNECTION", "SOME_SECRET", "UI_BASELINE_ENV"];
+const STORAGE_OVERRIDES = [
+  "CATH_STORAGE_CONNECTION_STRING",
+  "PIP_STORAGE_CONNECTION_STRING",
+  "FROM_ENV_CONNECTION",
+  "SOME_SECRET",
+  "UI_BASELINE_ENV",
+  "UI_BASELINE_CATH_URL",
+  "UI_BASELINE_CATH_API_URL"
+];
 
 describe("environments", () => {
   beforeEach(() => {
@@ -57,12 +65,60 @@ describe("environments", () => {
 
     it("should list the known environments, without $-keys, when the name is unknown", async () => {
       // Act and assert
-      await expect(loadEnvironment("staging")).rejects.toThrow('no environment "staging" in environments.json (one of: local, aat)');
+      await expect(loadEnvironment("staging")).rejects.toThrow('no environment "staging" in environments.json (one of: local, aat, preview)');
     });
 
     it("should refuse a $-key as an environment name", async () => {
       // Act and assert
       await expect(loadEnvironment("$comment")).rejects.toThrow('no environment "$comment"');
+    });
+
+    it("should take preview from aat, but for where CaTH is and where runs are kept", async () => {
+      // Arrange
+      vi.stubEnv("UI_BASELINE_CATH_URL", "https://cath-service-pr-1250-web.preview.platform.hmcts.net");
+      vi.stubEnv("UI_BASELINE_CATH_API_URL", "https://cath-service-pr-1250-api.preview.platform.hmcts.net");
+      const aat = await loadEnvironment("aat");
+
+      // Act
+      const preview = await loadEnvironment("preview");
+
+      // Assert
+      expect(preview.cath).toEqual({
+        ...aat.cath,
+        baseUrl: "https://cath-service-pr-1250-web.preview.platform.hmcts.net",
+        apiUrl: "https://cath-service-pr-1250-api.preview.platform.hmcts.net"
+      });
+      expect(preview.pip).toEqual(aat.pip);
+      expect(preview.runs).toEqual({ accountNameEnv: "UI_BASELINE_RUNS_ACCOUNT_NAME", accountKeyEnv: "UI_BASELINE_RUNS_ACCOUNT_KEY" });
+      expect(aat.runs).toBeUndefined();
+    });
+
+    it("should say which variable is missing when preview cannot tell where CaTH is", async () => {
+      // Arrange
+      vi.stubEnv("UI_BASELINE_CATH_URL", undefined);
+
+      // Act and assert
+      await expect(loadEnvironment("preview")).rejects.toThrow('environment "preview" reads where CaTH is from UI_BASELINE_CATH_URL, which is not set');
+    });
+  });
+
+  describe("runsStorage", () => {
+    const withRuns = (runs?: Environment["runs"]) => ({ runs }) as Environment;
+
+    it("should be null when the environment keeps runs beside its baselines", () => {
+      // Act and assert
+      expect(runsStorage(withRuns(), "ui-baseline")).toBeNull();
+    });
+
+    it("should say which variables to set when the account's name or key is missing", () => {
+      // Arrange
+      vi.stubEnv("RUNS_NAME", "cathpr1250");
+      vi.stubEnv("RUNS_KEY", undefined);
+
+      // Act and assert
+      expect(() => runsStorage(withRuns({ accountNameEnv: "RUNS_NAME", accountKeyEnv: "RUNS_KEY" }), "ui-baseline")).toThrow(
+        "no storage for runs: set RUNS_NAME and RUNS_KEY"
+      );
     });
   });
 

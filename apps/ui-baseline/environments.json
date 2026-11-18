@@ -75,5 +75,17 @@
         "accountName": "pipsssatest"
       }
     }
+  },
+  "preview": {
+    "$comment": "A pull request's preview CaTH (cath-service-pr-<n>), compared with the same pip as aat and with aat's recorded baseline, which it only reads. Preview CaTH keeps its generated files in aat's storage too: it mounts the aat vault, whose storageaccount-connection-string libs/azure-blob prefers to the pull request's own account. Its addresses differ for every pull request, so the hosted check's chart sets them (helm/values.preview.template.yaml). Its runs are kept in the pull request's own storage account, so they go with the pull request and are never seen by the aat hosted check.",
+    "extends": "aat",
+    "cath": {
+      "baseUrlEnv": "UI_BASELINE_CATH_URL",
+      "apiUrlEnv": "UI_BASELINE_CATH_API_URL"
+    },
+    "runs": {
+      "accountNameEnv": "UI_BASELINE_RUNS_ACCOUNT_NAME",
+      "accountKeyEnv": "UI_BASELINE_RUNS_ACCOUNT_KEY"
+    }
   }
 }

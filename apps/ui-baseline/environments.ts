@@ -12,14 +12,8 @@ const PUBLICATIONS_CONTAINER = "publications";
 
 export async function loadEnvironment(name = process.env.UI_BASELINE_ENV ?? "local"): Promise<Environment> {
   const environments = JSON.parse(await readFile(path.join(PARITY_DIR, "environments.json"), "utf-8")) as Record<string, EnvironmentConfig>;
-  const config = environments[name];
-  if (!config || name.startsWith("$"))
-    throw new Error(
-      `no environment "${name}" in environments.json (one of: ${Object.keys(environments)
-        .filter((key) => !key.startsWith("$"))
-        .join(", ")})`
-    );
-  return { name, cath: config.cath, pip: config.pip, secret: secretReader() };
+  const config = resolveExtends(environments, name);
+  return { name, cath: resolveCathUrls(name, config.cath), pip: config.pip, runs: config.runs, secret: secretReader() };
 }
 
 // Where an app's generated files are: an override in <APP>_STORAGE_CONNECTION_STRING (e.g. a key
@@ -31,6 +25,54 @@ export function filesStorage(app: "cath" | "pip", config: AppConfig, container =
   if (!connectionString && !config.storage.accountName)
     throw new Error(`no storage for ${app}: set ${config.storage.connectionStringEnv ?? `${app.toUpperCase()}_STORAGE_CONNECTION_STRING`}`);
   return { connectionString, accountName: config.storage.accountName, container };
+}
+
+// Where the hosted check keeps its runs, when that is not where the environment's baselines are:
+// an account given by name and key in environment variables (a pull request's own storage in
+// preview), so its runs are not seen by the hosted check of another environment
+export function runsStorage(environment: Environment, container: string): StorageSpec | null {
+  if (!environment.runs) return null;
+  const accountName = process.env[environment.runs.accountNameEnv];
+  const accountKey = process.env[environment.runs.accountKeyEnv];
+  if (!accountName || !accountKey) throw new Error(`no storage for runs: set ${environment.runs.accountNameEnv} and ${environment.runs.accountKeyEnv}`);
+  return {
+    connectionString: `DefaultEndpointsProtocol=https;AccountName=${accountName};AccountKey=${accountKey};EndpointSuffix=core.windows.net`,
+    accountName,
+    container
+  };
+}
+
+// An environment that "extends" another takes each of its apps' settings from that one, less what
+// it sets itself, so preview can be aat but for where CaTH is
+function resolveExtends(environments: Record<string, EnvironmentConfig>, name: string, seen: string[] = []): ResolvedConfig {
+  const config = environments[name];
+  if (!config || name.startsWith("$"))
+    throw new Error(
+      `no environment "${name}" in environments.json (one of: ${Object.keys(environments)
+        .filter((key) => !key.startsWith("$"))
+        .join(", ")})`
+    );
+  if (!config.extends) return config as ResolvedConfig;
+  if (seen.includes(config.extends)) throw new Error(`environments.json: "${name}" extends itself through ${[...seen, name].join(" -> ")}`);
+  const base = resolveExtends(environments, config.extends, [...seen, name]);
+  return {
+    cath: { ...base.cath, ...config.cath },
+    pip: { ...base.pip, ...config.pip },
+    runs: config.runs ?? base.runs
+  } as ResolvedConfig;
+}
+
+// CaTH's addresses from environment variables, where they differ from one deployment to the next
+// (a pull request's preview)
+function resolveCathUrls(name: string, cath: CathConfig): CathConfig {
+  const { baseUrlEnv, apiUrlEnv, ...rest } = cath;
+  const fromEnv = (variable: string | undefined) => {
+    if (!variable) return undefined;
+    const value = process.env[variable];
+    if (!value) throw new Error(`environment "${name}" reads where CaTH is from ${variable}, which is not set`);
+    return value;
+  };
+  return { ...rest, baseUrl: fromEnv(baseUrlEnv) ?? cath.baseUrl, apiUrl: fromEnv(apiUrlEnv) ?? cath.apiUrl };
 }
 
 function secretReader(): SecretReader {
@@ -56,15 +98,32 @@ export interface Environment {
   name: string;
   cath: CathConfig;
   pip: PipConfig;
+  // Where the hosted check keeps its runs (runsStorage), when not where the baselines are
+  runs?: RunsConfig;
   // A secret by its vault name, or null when the vault does not have it
   secret: SecretReader;
 }
 
+// The environment variables holding the name and key of the account runs are kept in
+export interface RunsConfig {
+  accountNameEnv: string;
+  accountKeyEnv: string;
+}
+
 type SecretReader = (config: AppConfig, name: string) => Promise<string | null>;
 
+// As written in environments.json: one that extends another may set only part of each app
 interface EnvironmentConfig {
+  extends?: string;
+  cath?: Partial<CathConfig>;
+  pip?: Partial<PipConfig>;
+  runs?: RunsConfig;
+}
+
+interface ResolvedConfig {
   cath: CathConfig;
   pip: PipConfig;
+  runs?: RunsConfig;
 }
 
 export interface AppConfig {
@@ -78,6 +137,9 @@ export interface AppConfig {
 export interface CathConfig extends AppConfig {
   baseUrl: string;
   apiUrl: string;
+  // Environment variables that, when named, give baseUrl and apiUrl instead (resolveCathUrls)
+  baseUrlEnv?: string;
+  apiUrlEnv?: string;
   signIn: "session" | "accounts";
   // CaTH role -> the vault secrets holding a test account with it, signed in through CFT IDAM
   accounts?: Record<string, TestAccount>;

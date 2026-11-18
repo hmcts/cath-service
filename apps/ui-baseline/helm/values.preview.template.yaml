@@ -1,0 +1,27 @@
+# The hosted parity check's release in a pull request's preview, rendered with envsubst by
+# job.helm-deploy.yml. Named <cath-service release>-ui-baseline, beside the pull request's CaTH,
+# which it checks (environments.json "preview"). Do not add shell-style ":-" defaults: envsubst
+# leaves them as they are.
+#
+# It reads the recorded pip baseline from aat's storage, as the aat release does, and never writes
+# it. Its runs go to the pull request's own storage account (helm/cath-service blobstorage), so they
+# are deleted with the pull request and never mix with the aat release's queue.
+#
+# Reached only over the VPN, as in aat: the app has no sign-in.
+nodejs:
+  # Pinned to the image's digest (job.helm-deploy.yml), so a deploy that did not rebuild it leaves
+  # the pod running
+  image: "hmctsprod.azurecr.io/cath/cath-ui-baseline${UI_BASELINE_IMAGE_REF}"
+  ingressHost: "{{ .Release.Name }}.preview.platform.hmcts.net"
+  environment:
+    UI_BASELINE_ENV: preview
+    MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+    UI_BASELINE_CATH_URL: "https://{{ trimSuffix `-ui-baseline` .Release.Name }}-web.preview.platform.hmcts.net"
+    UI_BASELINE_CATH_API_URL: "https://{{ trimSuffix `-ui-baseline` .Release.Name }}-api.preview.platform.hmcts.net"
+  secrets:
+    UI_BASELINE_RUNS_ACCOUNT_NAME:
+      secretRef: "storage-account-{{ trimSuffix `-ui-baseline` .Release.Name }}-blobstorage"
+      key: storage_account_name
+    UI_BASELINE_RUNS_ACCOUNT_KEY:
+      secretRef: "storage-secret-{{ trimSuffix `-ui-baseline` .Release.Name }}-blobstorage"
+      key: accessKey

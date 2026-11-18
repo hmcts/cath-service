@@ -52,8 +52,9 @@ flowchart LR
 
 - The **command line** (`yarn ui-baseline:check`, `compare-files`, `record-pip`) runs the scripts
   directly, against a local CaTH or CaTH AAT (`--env`, [`environments.json`](environments.json)).
-- The **hosted check** (`src/`) is an Express app in aat. It runs the same scripts as child
-  processes, one at a time, so a check started from the browser is the one a developer runs.
+- The **hosted check** (`src/`) is an Express app in aat, and in the preview of a pull request that
+  builds its image. It runs the same scripts as child processes, one at a time, so a check started
+  from the browser is the one a developer runs.
 - **pip** is only ever read from or recorded, never changed outside a recording's own data.
 
 ## Recording the baseline
@@ -255,26 +256,29 @@ sequenceDiagram
 flowchart LR
   subgraph pr["Pull request"]
     tests["ui-baseline's tests<br/>(job.test.yml)"]
-    verify["Build the ui-baseline stage, not pushed,<br/>only when apps/ui-baseline/, the Dockerfile,<br/>.dockerignore, yarn.lock, the root<br/>package.json or Yarn's config changed"]
+    prbuild["Build and push the image<br/>only when apps/ui-baseline/, the Dockerfile,<br/>.dockerignore, yarn.lock, the root<br/>package.json or Yarn's config changed"]
+    preview["Deploy to the pull request's preview,<br/>checking its CaTH"]
   end
   subgraph master["Merge to master"]
     build["Build and push the image<br/>when Turborepo says it is affected"]
-    deploy["Deploy to aat only,<br/>as a release of its own,<br/>pinned to the image's digest"]
+    deploy["Deploy to aat,<br/>as a release of its own,<br/>pinned to the image's digest"]
     promote["Promote web, api, crons, postgres<br/>to prod: never ui-baseline"]
   end
+  prbuild --> preview
   pr --> master
   build --> deploy --> promote
 ```
 
 ui-baseline is a Helm release of its own (`<release>-ui-baseline`, chart `helm/`, values
-`helm/values.aat.template.yaml`), deployed after cath-service's, not a subchart of it. helm-deploy
+`helm/values.aat.template.yaml` or `helm/values.preview.template.yaml`), deployed after cath-service's, not a subchart of it. helm-deploy
 is `--atomic`, so as a subchart a ui-baseline pod that failed to start would have rolled back web
 and api with it. On its own, only ui-baseline rolls back, and the deploy goes on with a warning.
 
-The apps deployed to aat only are listed once, in
-[`.github/workflows/jobs/aat-only-apps`](../../.github/workflows/jobs/aat-only-apps). That list
-keeps ui-baseline out of pull request image builds (preview never deploys it), out of promotion to
-prod, and out of the images demo, ithc and perftest look up. ui-baseline declares every workspace
+The apps deployed to preview and aat only are listed once, in
+[`.github/workflows/jobs/unpromoted-apps`](../../.github/workflows/jobs/unpromoted-apps). That list
+keeps ui-baseline out of the image builds of pull requests that could not have changed its image
+(it uses most of the workspace's libraries, so Turborepo calls it affected by nearly every one),
+out of promotion to prod, and out of the images demo, ithc and perftest look up. ui-baseline declares every workspace
 library it uses, including each list type it seeds with, so a change to any of them rebuilds its
 image on master (`package.test.ts` keeps the list complete).
 
@@ -300,8 +304,8 @@ change to any library it does use still rebuilds and replaces it, as above.
 
 | What | Where |
 |---|---|
-| Recorded baselines | `cathsaaat`, container `ui-baseline`, `baselines/`; locally `output/baseline` and Azurite |
-| Hosted runs and their reports | `cathsaaat`, container `ui-baseline`, `runs/`; the pod's disk while it runs |
+| Recorded baselines | `cathsaaat`, container `ui-baseline`, `baselines/`, read by aat and every preview alike; locally `output/baseline` and Azurite |
+| Hosted runs and their reports | `cathsaaat`, container `ui-baseline`, `runs/`; in preview, the pull request's own storage account, container `ui-baseline`; the pod's disk while it runs |
 | CaTH's generated PDF and Excel files | CaTH's `publications` container |
 | pip's generated files (hosted file comparisons) | Downloaded from pip-frontend as the test account |
 | The IDAM test account, publication API client | `cath-aat` key vault |

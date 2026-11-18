@@ -23,6 +23,8 @@ blobstorage:
       - artefact
       - files
       - publications
+      # Runs of the pull request's hosted parity check (apps/ui-baseline/helm/values.preview.template.yaml)
+      - ui-baseline
 
 # Web application configuration
 cath-web:

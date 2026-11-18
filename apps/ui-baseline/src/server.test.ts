@@ -12,7 +12,8 @@ const restore = vi.fn(async () => {});
 vi.mock("@hmcts-cft/cloud-native-platform", () => ({ getPropertiesVolumeSecrets: vi.fn(async () => {}) }));
 vi.mock("../environments.js", () => ({ loadEnvironment: vi.fn(async (name: string) => ({ name })) }));
 vi.mock("../baseline-store.js", () => ({
-  baselineContainer: vi.fn(() => ({ name: "store" })),
+  baselineContainer: vi.fn(() => ({ name: "baselines" })),
+  runsContainer: vi.fn(() => ({ name: "runs" })),
   latestBaseline: vi.fn(),
   pullBaseline: vi.fn()
 }));
@@ -56,13 +57,13 @@ describe("server", () => {
     expect(release).toHaveBeenCalledTimes(1);
   });
 
-  it("should check aat by default, and store runs where the baseline is", async () => {
+  it("should check aat by default, keeping runs in the runs store and reading baselines from the baseline store", async () => {
     // Act
     await startServer({ UI_BASELINE_ENV: undefined, GIT_COMMIT: "abc1234" });
 
     // Assert
-    expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ environment: "aat", commit: "abc1234", store: { name: "store" } }));
-    expect(createBaselineCache).toHaveBeenCalledWith(expect.objectContaining({ store: { name: "store" } }));
+    expect(createRunner).toHaveBeenCalledWith(expect.objectContaining({ environment: "aat", commit: "abc1234", store: { name: "runs" } }));
+    expect(createBaselineCache).toHaveBeenCalledWith(expect.objectContaining({ store: { name: "baselines" } }));
     expect(createApp).toHaveBeenCalledWith(expect.objectContaining({ environment: "aat" }));
   });
 

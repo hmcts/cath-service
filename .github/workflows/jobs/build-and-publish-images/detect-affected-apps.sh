@@ -6,12 +6,11 @@ set -euo pipefail
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
 # Environment:
-#   PULL_REQUEST: "true" for a pull request's build, which leaves out the aat-only apps
+#   PULL_REQUEST: "true" for a pull request's build, which builds the unpromoted apps only when
+#     their own files, the root Dockerfile or the install inputs changed
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
-#   - promotable_apps: affected_apps without the aat-only apps, which are never promoted to prod
-#   - verify_apps: on a pull request, the aat-only apps whose own files, the root Dockerfile or
-#     the install inputs changed, whose stage is built (not pushed) so a broken one shows up before master
+#   - promotable_apps: affected_apps without the unpromoted apps, which are never promoted to prod
 #   - helm_apps: JSON array of all apps with Helm charts
 #   - has_changes: boolean indicating if any apps were affected
 #   - needs_shared_build: boolean, true if any affected app uses the shared build stage
@@ -23,11 +22,11 @@ BASE_SHA="${1:-}"
 
 DOCKERFILE="Dockerfile"
 
-# Apps deployed to aat only (.github/workflows/jobs/aat-only-apps): built on master only, as preview
-# never enables them, so a pull request's image would never be used (ui-baseline depends on most of
-# the workspace's libs, so it would otherwise be built for nearly every pull request), and never
-# promoted, as nothing beyond aat deploys them.
-AAT_ONLY_APPS="$(grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../aat-only-apps" | jq -R -s -c 'split("\n") | map(select(. != ""))')"
+# Apps deployed to preview and aat only (.github/workflows/jobs/unpromoted-apps): never promoted, as
+# nothing beyond aat deploys them, and on a pull request built only when it could have changed their
+# image, not whenever Turborepo calls them affected (ui-baseline depends on most of the workspace's
+# libs, so it would otherwise be built for nearly every pull request).
+UNPROMOTED_APPS="$(grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../unpromoted-apps" | jq -R -s -c 'split("\n") | map(select(. != ""))')"
 
 # Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
 dockerfile_stages() {
@@ -157,20 +156,21 @@ main() {
     done | jq -R -s -c 'split("\n") | map(select(. != ""))')
   fi
 
-  local without_aat_only
-  without_aat_only=$(echo "$affected_apps" | jq -c --argjson skip "$AAT_ONLY_APPS" 'map(select(. as $app | $skip | index($app) | not))')
-  local verify_apps="[]"
+  local promotable_apps
+  promotable_apps=$(echo "$affected_apps" | jq -c --argjson skip "$UNPROMOTED_APPS" 'map(select(. as $app | $skip | index($app) | not))')
   if [ "${PULL_REQUEST:-false}" = "true" ]; then
-    affected_apps="$without_aat_only"
-    echo "Pull request: leaving out apps built on master only ($AAT_ONLY_APPS)"
-    # Their stage is still built when the pull request could have broken the image: its own files,
-    # the root Dockerfile or .dockerignore, or what the install resolves (yarn.lock, the root
-    # package.json, Yarn's config) changed, or there is no base to tell from. A change to a lib's
-    # source is left to the pull request's lint and tests, which run for the lib's dependents too.
+    # An unpromoted app is built and pushed, for preview to deploy, only when the pull request could
+    # have changed its image: its own files, the root Dockerfile or .dockerignore, or what the install
+    # resolves (yarn.lock, the root package.json, Yarn's config) changed, or there is no base to tell
+    # from. A change to a lib's source is left to the pull request's lint and tests, which run for the
+    # lib's dependents too.
     local app
-    for app in $(echo "$AAT_ONLY_APPS" | jq -r '.[]'); do
+    affected_apps="$promotable_apps"
+    for app in $(echo "$UNPROMOTED_APPS" | jq -r '.[]'); do
       if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
-        verify_apps=$(echo "$verify_apps" | jq -c --arg app "$app" '. + [$app]')
+        affected_apps=$(echo "$affected_apps" | jq -c --arg app "$app" '. + [$app]')
+      else
+        echo "Pull request: ${app} is not built, as nothing it is built from changed"
       fi
     done
   fi
@@ -193,8 +193,7 @@ main() {
   # Output results for GitHub Actions
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "affected-apps=$affected_apps" >> "$GITHUB_OUTPUT"
-    echo "promotable-apps=$without_aat_only" >> "$GITHUB_OUTPUT"
-    echo "verify-apps=$verify_apps" >> "$GITHUB_OUTPUT"
+    echo "promotable-apps=$promotable_apps" >> "$GITHUB_OUTPUT"
     echo "helm-apps=$helm_apps" >> "$GITHUB_OUTPUT"
     echo "has-changes=$has_changes" >> "$GITHUB_OUTPUT"
     echo "needs-shared-build=$needs_shared_build" >> "$GITHUB_OUTPUT"
@@ -202,8 +201,7 @@ main() {
 
   # Log results
   echo "Affected apps (buildable): $affected_apps"
-  echo "Promotable apps: $without_aat_only"
-  echo "Built without pushing: $verify_apps"
+  echo "Promotable apps: $promotable_apps"
   echo "Helm apps (all): $helm_apps"
   echo "Has changes: $has_changes"
   echo "Needs shared build: $needs_shared_build"

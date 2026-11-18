@@ -487,8 +487,9 @@ It is an internal tool for the CaTH team, so English only.
 
 ### Where it runs
 
-Only in aat, as a Helm release of its own (`<release>-ui-baseline`), which `job.helm-deploy.yml`
-deploys after cath-service's and in aat alone. A ui-baseline pod that cannot start rolls back only
+In aat, and in the preview of a pull request that builds its image. In each it is a Helm release
+of its own (`<release>-ui-baseline`), which `job.helm-deploy.yml` deploys after cath-service's. A
+ui-baseline pod that cannot start rolls back only
 that release, to its last good one, and the deploy carries on with a warning: it never rolls back
 web and api, or stops them being promoted. Its host,
 `cath-<release>-ui-baseline.aat.platform.hmcts.net`, is in the private DNS zone only, with no
@@ -497,6 +498,20 @@ no sign-in, and anyone on the VPN can start a run. What another site cannot do i
 a VPN user's browser (`src/request-forgery.ts`): each form carries a token matching a `SameSite=Strict`
 cookie only this app sets, and a post the browser marks as cross-site, or whose `Origin` is another
 host, is refused.
+
+#### In a pull request's preview
+
+A pull request builds the ui-baseline image when it changes `apps/ui-baseline/`, the root
+Dockerfile or `.dockerignore`, or what the install resolves (`yarn.lock`, the root `package.json`,
+Yarn's config). Its preview then has a hosted check too, at
+`cath-service-pr-<n>-ui-baseline.preview.platform.hmcts.net` (the deploy job's summary links it),
+over the VPN. A pull request that has never built the image has none, and its deploy says so.
+
+It checks that pull request's CaTH (`cath-service-pr-<n>-web` and `-api`) against pip test, as aat
+does (`--env preview`, which takes everything else from aat). It reads the same recorded pip
+baseline from aat's storage and never writes it, so every pull request is compared with the one
+baseline. Its runs are kept in the pull request's own storage account (container `ui-baseline`),
+so they go when the pull request's preview does, and the aat hosted check never sees them.
 
 Its pod is replaced only when a master merge rebuilds its image, not on every merge. The image is
 rebuilt when `apps/ui-baseline/` or a library it uses changes, or anything every image is built from:

@@ -71,7 +71,7 @@ jobs:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
     # Must exceed the helm timeouts below (15m0s for cath-service, 10m0s for
-    # ui-baseline in aat) plus the recovery-timeout that helm-deploy allows itself
+    # ui-baseline) plus the recovery-timeout that helm-deploy allows itself
     # for each, or the job is killed mid-install and leaves the release pending,
     # which is the state the recovery then has to clean up.
     timeout-minutes: 45
@@ -132,10 +132,16 @@ jobs:
               ;;
           esac
 
-          # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip,
-          # and nowhere else.
+          # The hosted parity check (apps/ui-baseline) runs where testers check CaTH against pip
+          # (aat), and in preview, to check a pull request's CaTH; nowhere else.
           UI_BASELINE_ENABLED="false"
-          if [ "$ENVIRONMENT" = "aat" ]; then UI_BASELINE_ENABLED="true"; fi
+          UI_BASELINE_VALUES=""
+          case "$ENVIRONMENT" in
+            aat|preview)
+              UI_BASELINE_ENABLED="true"
+              UI_BASELINE_VALUES="values.${ENVIRONMENT}.template.yaml"
+              ;;
+          esac
 
           # CNP cluster and resource group names are a pure function of the
           # environment, so no lookup table is needed.
@@ -148,6 +154,7 @@ jobs:
             echo "VALUES_TEMPLATE=${VALUES_TEMPLATE}"
             echo "ENABLE_TEST_SUPPORT=${ENABLE_TEST_SUPPORT}"
             echo "UI_BASELINE_ENABLED=${UI_BASELINE_ENABLED}"
+            echo "UI_BASELINE_VALUES=${UI_BASELINE_VALUES}"
             echo "DNS_ZONE=${ENVIRONMENT}.platform.hmcts.net"
           } >> "$GITHUB_ENV"
 
@@ -228,6 +235,13 @@ jobs:
         continue-on-error: true
         run: |
           IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
+          # A pull request builds ui-baseline only when it could have changed its image
+          # (detect-affected-apps.sh), so one that never has has no image of it to deploy
+          if [ "${{ inputs.environment }}" = "preview" ] && ! docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "::notice::ui-baseline is not deployed to preview: this pull request has not built its image (${IMAGE})"
+            echo "UI_BASELINE_ENABLED=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
           DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}')
           if [ -z "$DIGEST" ]; then
             echo "::error::Could not find the digest of ${IMAGE}"
@@ -250,10 +264,18 @@ jobs:
           release-name: ${{ env.RELEASE_NAME }}-ui-baseline
           namespace: ${{ env.TEAM_NAME }}
           chart: apps/ui-baseline/helm
-          values-template: apps/ui-baseline/helm/values.aat.template.yaml
+          values-template: apps/ui-baseline/helm/${{ env.UI_BASELINE_VALUES }}
           global-environment: ${{ env.GLOBAL_ENVIRONMENT }}
           business-area: Cross-Cutting
           timeout: 10m0s
+
+      # Not in the deployment URLs (below), which the smoke tests check
+      - name: Report where ui-baseline is
+        if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
+        run: |
+          HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[0].spec.rules[0].host}')
+          echo "ui-baseline (VPN only): https://${HOST}"
+          echo "**ui-baseline** (VPN only): https://${HOST}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Report a ui-baseline deploy that failed
         if: env.UI_BASELINE_ENABLED == 'true' && (steps.ui-baseline-image.outcome == 'failure' || steps.ui-baseline.outcome == 'failure')
@@ -277,8 +299,8 @@ jobs:
           SUBSCRIPTION="DTS-CFTPTL-INTSVC"
           TTL=300
 
-          # Get all ingress hostnames for this release, and for ui-baseline's where it
-          # has one (aat): a release of its own, deployed beside this one
+          # Get all ingress hostnames for this release, and for ui-baseline's, a release
+          # of its own deployed beside this one
           HOSTNAMES=$(kubectl get ingress -n ${{ env.TEAM_NAME }} \
             -l "app.kubernetes.io/instance in (${{ env.RELEASE_NAME }},${{ env.RELEASE_NAME }}-ui-baseline)" \
             -o jsonpath='{.items[*].spec.rules[*].host}')
