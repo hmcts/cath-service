@@ -54,7 +54,9 @@ installed="$FRONTEND/node_modules/.ui-baseline-installed"
 if [ "$(cat "$installed" 2>/dev/null)" = "$(git -C "$FRONTEND" rev-parse HEAD)" ] && [ -d "$FRONTEND/src/main/views/govuk" ]; then
   echo "already installed and built"
 else
-  (cd "$FRONTEND" && export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack yarn install --immutable && corepack yarn build)
+  # pip-frontend installs browsers for its own tests, which a recording does not use (it captures
+  # with this repo's Playwright). Their downloads can fail or hang, and one that fails fails the install.
+  (cd "$FRONTEND" && export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 && corepack yarn install --immutable && corepack yarn build)
   git -C "$FRONTEND" rev-parse HEAD > "$installed"
 fi
 
