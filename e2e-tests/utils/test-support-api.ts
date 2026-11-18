@@ -408,10 +408,21 @@ interface CleanupResponse {
     jurisdictions: number;
     regions: number;
   };
+  failures: { step: string; error: string }[];
+}
+
+interface StaleCleanupResponse {
+  olderThan: string;
+  deleted: number;
+  runs: CleanupResponse[];
 }
 
 export async function cleanupTestDataByPrefix(prefix: string): Promise<CleanupResponse> {
   return callTestSupportApi<CleanupResponse>("DELETE", "/test-support/cleanup", { prefix });
+}
+
+export async function cleanupStaleTestRuns(olderThanMinutes: number): Promise<StaleCleanupResponse> {
+  return callTestSupportApi<StaleCleanupResponse>("DELETE", "/test-support/cleanup-stale", { olderThanMinutes });
 }
 
 // Create list type and return the created record with ID
