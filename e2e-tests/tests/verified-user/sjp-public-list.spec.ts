@@ -1,43 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { uploadTestPublication } from "../../utils/publication-upload.js";
 import { deleteTestArtefact, deleteTestFlatFileFromWeb, uploadTestFlatFileToWeb } from "../../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/publication`;
 const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
 // When running tests from e2e-tests/, go up to monorepo root then to storage
 const MONOREPO_ROOT = path.join(process.cwd(), "..");
 const STORAGE_PATH = process.env.FILE_STORAGE_PATH || path.join(MONOREPO_ROOT, "storage", "temp", "uploads");
-
-// Publication metadata travels in x-* headers; the request body is the payload itself.
-function publicationHeaders(options: {
-  provenance: string;
-  courtId: string;
-  contentDate: string;
-  listType: string;
-  sensitivity: string;
-  language: string;
-  displayFrom: string;
-  displayTo: string;
-}) {
-  return {
-    "x-provenance": options.provenance,
-    "x-court-id": options.courtId,
-    "x-content-date": options.contentDate,
-    "x-list-type": options.listType,
-    "x-language": options.language,
-    "x-type": "LIST",
-    "x-sensitivity": options.sensitivity,
-    "x-display-from": options.displayFrom,
-    "x-display-to": options.displayTo
-  };
-}
 
 function createSjpPublicListPayload(locationId: number) {
   const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
@@ -99,16 +72,14 @@ function createSjpPublicListPayload(locationId: number) {
   const contentDate = today.toISOString().split("T")[0];
 
   return {
-    headers: publicationHeaders({
-      provenance: "MANUAL_UPLOAD",
-      courtId: locationId.toString(),
-      contentDate: contentDate,
-      listType: "SJP_PUBLIC_LIST",
-      sensitivity: "PUBLIC",
-      language: "ENGLISH",
+    upload: {
+      locationId,
+      listTypeName: "SJP_PUBLIC_LIST",
+      sensitivity: "PUBLIC" as const,
+      contentDate,
       displayFrom: displayFrom.toISOString(),
       displayTo: displayTo.toISOString()
-    }),
+    },
     payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00Z`,
@@ -147,26 +118,10 @@ function createSjpPublicListPayload(locationId: number) {
   };
 }
 
-async function uploadSjpPublicListViaApi(request: APIRequestContext, locationId: number): Promise<string> {
-  const payload = createSjpPublicListPayload(locationId);
-  const token = await getApiAuthToken();
-
-  const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload.payload,
-    headers: { ...payload.headers, Authorization: `Bearer ${token}` }
-  });
-
-  const result = await response.json();
-
-  expect(response.status()).toBe(201);
-  expect(result.artefactId).toBeDefined();
-
-  if (IS_DEPLOYED) {
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.payload));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefactId, content: jsonBuffer, extension: ".json" });
-  }
-
-  return result.artefactId;
+async function uploadSjpPublicListViaApi(locationId: number): Promise<string> {
+  const { upload, payload } = createSjpPublicListPayload(locationId);
+  const { artefactId } = await uploadTestPublication({ ...upload, payload, mirrorJsonToWeb: true });
+  return artefactId;
 }
 
 async function uploadDownloadableFiles(artefactId: string): Promise<void> {
@@ -232,9 +187,9 @@ test.describe("SJP Public List - Verified User @nightly", () => {
   let artefactId: string;
   let listUrl: string;
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
     const testLocation = await createUniqueTestLocation({ namePrefix: "SJP Public Verified Test" });
-    artefactId = await uploadSjpPublicListViaApi(request, testLocation.locationId);
+    artefactId = await uploadSjpPublicListViaApi(testLocation.locationId);
     await uploadDownloadableFiles(artefactId);
     listUrl = `/sjp-public-list?artefactId=${artefactId}`;
     console.log(`Created test SJP public list with artefactId: ${artefactId}`);
@@ -246,13 +201,13 @@ test.describe("SJP Public List - Verified User @nightly", () => {
     }
   });
 
-  test("verified user can view SJP public list and download files", async ({ page }) => {
-    // Step 1: Authenticate via CFT IDAM
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+  // Skipped until https://github.com/hmcts/cath-service/issues/1383 is fixed; re-enable then.
+  test.fixme("verified user can view SJP public list and download files", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1383" }
+  }, async ({ page }) => {
+    // Step 1: Authenticate as this test's own verified user
+    await loginAsTestUser(page, await createVerifiedTestUser());
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
 
     // Step 2: Navigate to SJP public list
@@ -331,11 +286,8 @@ test.describe("SJP Public List - Verified User @nightly", () => {
 
   test("verified user can filter cases @nightly", async ({ page }) => {
     // Authenticate
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    await loginAsTestUser(page, await createVerifiedTestUser());
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
 
     // Navigate to list

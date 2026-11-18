@@ -26,46 +26,45 @@ async function authenticateSystemAdmin(page: Page) {
 }
 
 // Skip tests due to using SSO system admin credentials
-test.describe
-  .skip("MI Report download", () => {
-    test.beforeEach(async ({ page }) => {
-      await authenticateSystemAdmin(page);
-    });
-
-    test("system admin selects a period and report type and downloads the xlsx", async ({ page }) => {
-      // Navigate from the dashboard tile
-      await page.click('a.admin-tile:has-text("Download MI Report")');
-      await page.waitForURL("**/mi-report");
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Download MI Report");
-
-      // Accessibility check on the selection page
-      const accessibilityScanResults = await axeCheck(page).analyze();
-      expect(accessibilityScanResults.violations).toEqual([]);
-
-      // Welsh: page content is available via ?lng=cy
-      await page.goto("/mi-report?lng=cy");
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Lawrlwytho Adroddiad MI");
-
-      // Complete the journey: select a period + report type and download
-      await page.goto("/mi-report");
-      await page.getByLabel("Reporting period").selectOption("30");
-      await page.getByLabel("Report type").selectOption("all-data");
-
-      const downloadPromise = page.waitForEvent("download");
-      await page.getByRole("button", { name: "Download report" }).click();
-      const download = await downloadPromise;
-
-      expect(download.suggestedFilename()).toMatch(/^mi-report-all-data-30days-\d{4}-\d{2}-\d{2}\.xlsx$/);
-
-      // Download the 'Deleted accounts' report (empty until #351 populates the table, but still a valid xlsx)
-      await page.goto("/mi-report");
-      await page.getByLabel("Reporting period").selectOption("all");
-      await page.getByLabel("Report type").selectOption("deleted-accounts");
-
-      const deletedAccountsDownloadPromise = page.waitForEvent("download");
-      await page.getByRole("button", { name: "Download report" }).click();
-      const deletedAccountsDownload = await deletedAccountsDownloadPromise;
-
-      expect(deletedAccountsDownload.suggestedFilename()).toMatch(/^mi-report-deleted-accounts-from-beginning-\d{4}-\d{2}-\d{2}\.xlsx$/);
-    });
+test.describe("MI Report download", () => {
+  test.beforeEach(async ({ page }) => {
+    await authenticateSystemAdmin(page);
   });
+
+  test("system admin selects a period and report type and downloads the xlsx", async ({ page }) => {
+    // Navigate from the dashboard tile
+    await page.click('a.admin-tile:has-text("Download MI Report")');
+    await page.waitForURL("**/mi-report");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Download MI Report");
+
+    // Accessibility check on the selection page
+    const accessibilityScanResults = await axeCheck(page).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Welsh: page content is available via ?lng=cy
+    await page.goto("/mi-report?lng=cy");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Lawrlwytho Adroddiad MI");
+
+    // The locale is kept in the session, so switch back to English before the English-label steps
+    await page.goto("/mi-report?lng=en");
+    await page.getByLabel("Reporting period").selectOption("30");
+    await page.getByLabel("Report type").selectOption("all-data");
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download report" }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toMatch(/^mi-report-all-data-30days-\d{4}-\d{2}-\d{2}\.xlsx$/);
+
+    // Download the 'Deleted accounts' report (empty until #351 populates the table, but still a valid xlsx)
+    await page.goto("/mi-report");
+    await page.getByLabel("Reporting period").selectOption("all");
+    await page.getByLabel("Report type").selectOption("deleted-accounts");
+
+    const deletedAccountsDownloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download report" }).click();
+    const deletedAccountsDownload = await deletedAccountsDownloadPromise;
+
+    expect(deletedAccountsDownload.suggestedFilename()).toMatch(/^mi-report-deleted-accounts-from-beginning-\d{4}-\d{2}-\d{2}\.xlsx$/);
+  });
+});

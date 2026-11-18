@@ -12,6 +12,7 @@ export const cy = {
     listFor: "Rhestr ar gyfer",
     published: "Cyhoeddwyd",
     at: "am",
+    subHeader: "Achosion Gweithdrefn Un Ynad sy'n barod ar gyfer gwrandawiad",
     importantInfoTitle: "Gwybodaeth Bwysig",
     importantInfoContent:
       "Yn unol â phrotocol y cyfryngau, mae dogfennau ychwanegol o'r achosion hyn ar gael i aelodau o'r cyfryngau ar gais. Bydd y ddolen isod yn mynd â chi at y protocol llawn a gwybodaeth bellach ynghylch pa ddogfennau y gallwch ofyn amdanynt",
@@ -47,9 +48,10 @@ export const cy = {
     factLinkUrl: "https://www.find-court-tribunal.service.gov.uk/",
     factAdditionalText: "a rhai tribiwnlysoedd heb eu datganoli yn yr Alban.",
     cautionNote:
-      "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y'i diffinnir gan Ddeddf Diogelu Data 2018, a elwid yn ffurfiol yn Ddata Personol Sensitif, a dylid ei drin yn briodol.",
+      "Noder bod y ddogfen hon yn cynnwys Data Categori Arbennig fel y’i diffinnir yn Neddf Gwarchod Data 2018, a elwid gynt yn Ddata Personol Sensitif, a dylid ei drin yn y ffordd briodol.",
     cautionReporting:
-      "Mae'r ddogfen hon yn cynnwys gwybodaeth sydd wedi'i bwriadu i gynorthwyo adrodd cywir ar achosion llys. Mae'n hanfodol eich bod yn sicrhau eich bod yn diogelu'r Data Categori Arbennig sydd wedi'i gynnwys ac yn cydymffurfio â chyfyngiadau adrodd (er enghraifft ar ddioddefwyr a phlant). Bydd GLlTEF yn rhoi'r gorau i anfon y data os oes pryder ynghylch sut y bydd yn cael ei ddefnyddio.",
+      "Mae’r ddogfen hon yn cynnwys gwybodaeth a fwriedir i gynorthwyo i roi adroddiad manwl-gywir am achosion llys. Mae’n hanfodol eich bod yn sicrhau eich bod yn gwarchod y Data Categori Arbennig sydd ynddi ac yn cadw at gyfyngiadau adrodd (er enghraifft yn achos dioddefwyr a phlant). Bydd GLlTEF yn rhoi’r gorau i anfon y data os cyfyd pryder ynghylch sut y’i defnyddir.",
+    thanks: "Diolch am ddarllen y ddogfen hon yn fanwl.",
     dataSourceLabel: "Ffynhonnell data",
     downloadCopy: "Lawrlwytho copi"
   },

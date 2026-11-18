@@ -1,3 +1,4 @@
+import { warnInCi } from "./utils/ci-warning.js";
 import { clearTestPrefix, getTestPrefix } from "./utils/test-prefix.js";
 import { cleanupTestDataByPrefix } from "./utils/test-support-api.js";
 
@@ -20,7 +21,8 @@ async function globalTeardown() {
       console.log(`Cleanup complete: deleted ${result.deleted} records`);
       console.log("Details:", result.details);
     } catch (error) {
-      console.error("Error during cleanup (non-fatal):", error);
+      // Not failing the run so a cleanup problem never blocks a deploy; the next run's stale cleanup retries it
+      warnInCi(`Cleanup of ${testPrefix} failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     // Clear the prefix file

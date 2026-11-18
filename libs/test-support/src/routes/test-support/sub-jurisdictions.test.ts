@@ -46,7 +46,7 @@ describe("sub-jurisdictions routes", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(mockSubJurisdictions);
     });
 
-    it("should return first sub-jurisdiction when first=true", async () => {
+    it("should return the lowest-id sub-jurisdiction with an active list type when first=true", async () => {
       // Arrange
       mockRequest.query = { first: "true" };
       const mockSubJurisdiction = { subJurisdictionId: 1, name: "Civil" };
@@ -56,7 +56,10 @@ describe("sub-jurisdictions routes", () => {
       await GET(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(prisma.subJurisdiction.findFirst).toHaveBeenCalled();
+      expect(prisma.subJurisdiction.findFirst).toHaveBeenCalledWith({
+        where: { listTypes: { some: { listType: { deletedAt: null } } } },
+        orderBy: { subJurisdictionId: "asc" }
+      });
       expect(mockResponse.json).toHaveBeenCalledWith(mockSubJurisdiction);
     });
 
