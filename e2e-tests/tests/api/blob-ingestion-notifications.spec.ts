@@ -9,10 +9,13 @@ import {
 } from "../../utils/notification-helpers.js";
 import { uploadTestPublication } from "../../utils/publication-upload.js";
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+// Upload only notifies publications that are displayable now and not expired, so the window must be current
 const PUBLICATION_DATES = {
-  contentDate: "2024-12-01",
-  displayFrom: "2024-12-01T00:00:00.000Z",
-  displayTo: "2024-12-02T00:00:00.000Z"
+  contentDate: new Date().toISOString().split("T")[0],
+  displayFrom: new Date().toISOString(),
+  displayTo: new Date(Date.now() + ONE_DAY_MS).toISOString()
 };
 
 function createValidPayload(locationName: string) {

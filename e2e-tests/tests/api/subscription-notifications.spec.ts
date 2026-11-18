@@ -23,15 +23,18 @@ const NOTIFY_STATUS_PATTERN = /delivered|sending|pending|created|permanent-failu
 const ALL_STORED_FILES: StoredFileExtension[] = [".pdf", ".xlsx"];
 const STRATEGIC_LIST_TYPE = "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST";
 const NON_STRATEGIC_LIST_TYPE = "CST_WEEKLY_HEARING_LIST";
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
+// displayFrom is now because upload only notifies publications that are already displayable; the content date
+// offset keeps each upload a distinct publication
 function generatePublicationDates(daysFromNow = 1) {
   const now = new Date();
-  const contentDate = new Date(now.getTime() + daysFromNow * 24 * 60 * 60 * 1000);
-  const displayTo = new Date(contentDate.getTime() + 24 * 60 * 60 * 1000);
+  const contentDate = new Date(now.getTime() + daysFromNow * ONE_DAY_MS);
+  const displayTo = new Date(contentDate.getTime() + ONE_DAY_MS);
 
   return {
     contentDate: contentDate.toISOString().split("T")[0],
-    displayFrom: contentDate.toISOString(),
+    displayFrom: now.toISOString(),
     displayTo: displayTo.toISOString(),
     formattedContentDate: contentDate.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
   };
@@ -262,6 +265,43 @@ test.describe("Subscription Notifications", () => {
 
     const email = await assertEmailDownloadLinks(notification.govNotifyId, 0);
     expectEmailContent(email, { friendlyName: friendlyNameOf(listTypeName), locationName: location.name, formattedContentDate: dates.formattedContentDate });
+  });
+
+  test("upload notifies a displayable publication but defers a future one and skips an expired one @nightly", async () => {
+    test.skip(!process.env.GOVUK_NOTIFY_API_KEY, NOTIFY_KEY_MISSING);
+    test.setTimeout(180_000);
+
+    const location = await createUniqueTestLocation({ namePrefix: "Upload Trigger Court" });
+    const subscription = await subscribeTestAccount(location.locationId);
+    const payload = loadListTypeFixture("civil-and-family-daily-cause-list");
+    const now = Date.now();
+
+    // The display-from cron, not the upload, notifies a publication whose display-from is tomorrow
+    const futureDates = generatePublicationDates(4);
+    const futureId = await publishJson(
+      STRATEGIC_LIST_TYPE,
+      payload,
+      { ...futureDates, displayFrom: new Date(now + ONE_DAY_MS).toISOString(), displayTo: new Date(now + 2 * ONE_DAY_MS).toISOString() },
+      location.locationId
+    );
+
+    const expiredDates = generatePublicationDates(5);
+    const expiredId = await publishJson(
+      STRATEGIC_LIST_TYPE,
+      payload,
+      { ...expiredDates, displayFrom: new Date(now - 3 * ONE_DAY_MS).toISOString(), displayTo: new Date(now - 2 * ONE_DAY_MS).toISOString() },
+      location.locationId
+    );
+
+    const displayableId = await publishJson(STRATEGIC_LIST_TYPE, payload, generatePublicationDates(6), location.locationId);
+    await waitForSentNotification(displayableId, subscription.subscriptionId);
+
+    // Files are generated before the notification step runs, so once they exist the skipped uploads have had their chance to notify
+    for (const artefactId of [futureId, expiredId]) {
+      await waitForStoredFiles(artefactId, ALL_STORED_FILES);
+      const notifications = await waitForNotifications(artefactId, 3, 1000);
+      expect(notifications, `notifications for ${artefactId}`).toHaveLength(0);
+    }
   });
 });
 
