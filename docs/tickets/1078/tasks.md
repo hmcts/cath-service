@@ -32,5 +32,5 @@ are not committed.
 - [x] Raise build ticket 2, the "Add a court or tribunal" journey: raised as #1532
 - [ ] Map every legacy `location_id` to one of the 27 seeded courts or to "new" (staging comparison in `legacy-court-mapping.md`; re-check against a legacy production export), and have it reviewed before the legacy courts are loaded (report Q1, needs a human)
 - [ ] Attach spec sections 4–13 by reference to every build ticket (drafted in report.md, needs a human)
-- [x] Raise sibling tickets: S1 #1534, S2 #1535, S3 #1537, S4 #1536; plus "Align seeded court IDs with legacy CaTH" #1533
+- [x] Raise sibling tickets: S1 #1534, S2 #1535, S3 #1537, S4 #1536 (closed after Q9); plus "Align seeded court IDs with legacy CaTH" #1533
 - [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human)

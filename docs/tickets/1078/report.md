@@ -386,7 +386,7 @@ Caveat: the case-insensitive checks are in the application, while the database u
 - **Q7:** the **System Admin** supplies the Welsh name. Provenance references are **usually not known** when a court is created, so the reference step is **optional**: the admin can skip it and add references later through amend a court (#1534). Until a court has a reference, lists from upstream systems cannot be matched to it, so check answers and the success page should say so, and the draft state (Q5) gives time to add one before publishing. Ticket 2 (#1532): the reference step becomes skippable, and the "at least one reference" rule (§5, rule 9) is dropped.
 - **Q11:** **radio buttons** (not a select) for provenance and type; **keep the tiles** on the `/reference-data` hub; the spec's hint texts **need checking by content design** before build.
 - **Q8:** amend a court is **in scope** (#1534).
-- **Q9:** extend the Q1 freeze to **regions, jurisdictions and sub-jurisdictions** in `location-data.ts`: a CI test fails if one is added there, so new ones only come from the admin pages. This removes the seed clash (`generate-seed-sql.ts:80`, `ON CONFLICT (region_id) DO UPDATE SET name`) without new sequences. It goes in ticket 1 (#1531). #1536 (sequences for these tables) is reduced to the concurrent-create race only, and can be closed if that race is accepted.
+- **Q9:** extend the Q1 freeze to **regions, jurisdictions and sub-jurisdictions** in `location-data.ts`: a CI test fails if one is added there, so new ones only come from the admin pages. This removes the seed clash (`generate-seed-sql.ts:80`, `ON CONFLICT (region_id) DO UPDATE SET name`) without new sequences. It goes in ticket 1 (#1531). #1536 (sequences for these tables) was closed as not planned on 2026-11-18; the remaining concurrent-create race is accepted.
 - **Q10:** the CSV route becomes **update-only** (#1535).
 - **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
 
@@ -580,6 +580,6 @@ Revised on 2026-11-17 with a legacy staging export: added Q1 options D (renumber
 
 Revised on 2026-11-17 at the developer's request: removed every dependency on the `vibe-653` branch, which is a different piece of work. Q1's loading options (A–E), the migration-conflict paragraph and its risk row are gone. The legacy ID comparison and the renumbering draft stay, as a standalone pre-go-live question in Q1.
 
-Raised on 2026-11-17: Q1–Q12 posted on #1078; ticket 1 is #1531, ticket 2 is #1532, S1 #1534, S2 #1535, S3 #1537, S4 #1536, and "Align seeded court IDs with legacy CaTH" is #1533.
+Raised on 2026-11-17: Q1–Q12 posted on #1078; ticket 1 is #1531, ticket 2 is #1532, S1 #1534, S2 #1535, S3 #1537, S4 #1536 (closed, not planned, after Q9), and "Align seeded court IDs with legacy CaTH" is #1533.
 
 Needs a person: sending Q1–Q12, raising and attaching the tickets, and tech lead and PO sign-off before #1078 is closed. If Q4 or Q5 changes the answer, revisit §2 and §4.
