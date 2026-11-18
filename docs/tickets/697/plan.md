@@ -221,10 +221,10 @@ No pages, API endpoints or Prisma schema changes are needed.
 | `infrastructure/redis.tf:5-12` | `data.azurerm_subnet.redis_private_endpoint` (ithc/perftest override only) | 3 (removed). The new module needs `subnet_id` everywhere |
 | `infrastructure/redis.tf:14-36` | `module "redis"` (cnp-module-redis, `redis_version = "6"`) | 3 (removed) |
 | `infrastructure/redis.tf:38-76` | Secrets `redis-host`, `redis-port`, `redis-access-key`, `redis-url` (`:70` = `rediss://:${access_key}@${host_name}:${redis_port}`, not urlencoded) | Untouched until 3 (deleted) |
-| `infrastructure/env-config.tf:141-153` | `default_sizing` / `sizing_overrides` (C0, prod P1) | 1 (Managed Redis keys), 3 (old keys removed) |
-| `infrastructure/env-config.tf:159-166`, `main.tf:216-224` | `core_infra_subscription_id`, `azurerm.core_infra` provider | 1 (reused for the new subnet lookup) |
+| `infrastructure/env-config.tf:74-90` | `default_sizing` / `sizing_overrides` (C0, prod P1) | 1 (Managed Redis keys), 3 (old keys removed) |
+| `infrastructure/env-config.tf:102-103`, `main.tf:22-26` | `core_infra_subscription_id`, `azurerm.core_infra` provider | 1 (reused for the new subnet lookup) |
 | `infrastructure/keyvault.tf:17` | `create_managed_identity = true` → `cath-<env>-mi` | 1 ("Data Owner" principal) |
-| `apps/web/src/app.ts:71,78-79,122-124,254-263` | Session client `createClient({ url: process.env.REDIS_URL ?? config.get("redis.url"), pingInterval })`, awaited at startup, shared via `app.locals.redisClient` | 4 (`createRedisClient`) |
+| `apps/web/src/app.ts:71,78-79,115-117,247-257` | Session client `createClient({ url: process.env.REDIS_URL ?? config.get("redis.url"), pingInterval })`, awaited at startup, shared via `app.locals.redisClient` | 4 (`createRedisClient`) |
 | `libs/redis/src/redis-client.ts:4-5,14` | `getRedisClient()` singleton, connected lazily (api, admin uploads, rate limit) | 4 |
 | `libs/redis/src/token-bucket.ts:6-45` | Single-key `EVAL` | None (safe under EnterpriseCluster) |
 | `libs/email-rate-limit/src/email-rate-limit.ts:15` (via `libs/govuk-notify/src/notify-client.ts:30,38`) | Token bucket per email address | None |

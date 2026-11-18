@@ -118,6 +118,11 @@ module "managed_redis" {
   clustering_policy = "EnterpriseCluster"
   client_protocol   = "Encrypted"
 
+  # Every key the apps write has a TTL (sessions, rate-limit buckets, pending
+  # subscriptions, manual uploads). This is the module default, set explicitly
+  # so a change to the default on ?ref=main can't alter it.
+  eviction_policy = "VolatileLRU"
+
   # Keys stay on until the apps authenticate as cath-<env>-mi; the Data Owner
   # assignment is in place now so that path can be proven before any app change.
   access_keys_authentication_enabled = true

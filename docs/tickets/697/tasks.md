@@ -5,7 +5,7 @@ This follows the HMCTS cutover pattern: a new secret, then a mapping switch, so 
 ## Implementation Tasks
 
 ### Before starting
-- [ ] Prerequisite (Clarification 1): raise a DTSPO request to grant `cath-service-prod` (`2e5a6bb5-9090-4710-ab3d-ff5cf383a2b6`) Private DNS Zone Contributor on `privatelink.redis.azure.net` (`core-infra-intsvc-rg`, `DTS-CFTPTL-INTSVC`). Once it's granted, confirm it with `az role assignment list --include-inherited --assignee 2e5a6bb5-9090-4710-ab3d-ff5cf383a2b6 --scope /subscriptions/1baf5470-1c3e-40d3-a6f7-74bfbce4b348/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net`. Don't merge stage 1 until it shows up. Non-prod (`cath-service`) already has it at resource-group level.
+- [x] Prerequisite (Clarification 1, granted 2026-11-17 15:35 UTC): raise a DTSPO request to grant `cath-service-prod` (`2e5a6bb5-9090-4710-ab3d-ff5cf383a2b6`) Private DNS Zone Contributor on `privatelink.redis.azure.net` (`core-infra-intsvc-rg`, `DTS-CFTPTL-INTSVC`). Once it's granted, confirm it with `az role assignment list --include-inherited --assignee 2e5a6bb5-9090-4710-ab3d-ff5cf383a2b6 --scope /subscriptions/1baf5470-1c3e-40d3-a6f7-74bfbce4b348/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net`. Don't merge stage 1 until it shows up. Non-prod (`cath-service`) already has it at resource-group level.
 - [x] Clarification 3: prod `usedmemory` measured on 2026-11-17 (peak about 97 MB on P1). Prod is set to `Balanced_B3` with HA and non-prod to `Balanced_B0` without HA, matching the current set-up (decided 2026-11-17). Details are in plan.md.
 
 ### Stage 1: deploy Managed Redis everywhere (PR 1, Terraform)
