@@ -297,3 +297,32 @@ body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Excel sheets side by side (files.html) */
+.parity-sheet {
+  overflow: auto;
+  max-height: 600px;
+  border: 1px solid #b1b4b6;
+}
+.parity-sheet table {
+  border-collapse: collapse;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.parity-sheet th,
+.parity-sheet td {
+  border: 1px solid #b1b4b6;
+  padding: 2px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+.parity-sheet th {
+  background: #f3f2f1;
+  font-weight: normal;
+  color: #505a5f;
+}
+.parity-sheet .parity-cell--differs {
+  background: #f6d7d2;
+  outline: 2px solid #d4351c;
+  outline-offset: -2px;
+}

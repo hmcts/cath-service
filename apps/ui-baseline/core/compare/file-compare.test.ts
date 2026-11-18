@@ -115,6 +115,28 @@ describe("compareExcel", () => {
     ]);
   });
 
+  it("should return both workbooks' sheets with the cells that differ, for showing side by side", async () => {
+    // Arrange
+    const a = await workbook((book) => listSheet(book, ROWS));
+    const b = await workbook((book) => {
+      listSheet(book, [
+        ["10:00", 1, "AB1000"],
+        ["11:00", 2, "AB9999"]
+      ]);
+      book.addWorksheet("Notes").getCell("A1").value = "Only CaTH";
+    });
+
+    // Act
+    const result = await compareExcel(a, b);
+
+    // Assert
+    expect(result.sheets).toHaveLength(2);
+    expect(result.sheets?.[0].source?.cells.C3.text).toBe("AB1001");
+    expect(result.sheets?.[0].target?.cells.C3.text).toBe("AB9999");
+    expect(result.sheets?.[0].differing).toEqual(["C3"]);
+    expect(result.sheets?.[1]).toMatchObject({ source: null, target: { name: "Notes" }, differing: [] });
+  });
+
   it("should report a sheet only one workbook has", async () => {
     // Arrange
     const a = await workbook((book) => listSheet(book, ROWS));
@@ -207,6 +229,38 @@ describe("compareFileRuns", () => {
     expect(summary.totals).toEqual({ files: 3, match: 1, differs: 1, missing: 1, extra: 0 });
     expect(summary.results.map((r) => `${r.id} ${r.kind} ${r.verdict}`)).toEqual(["civil pdf match", "civil pdf-welsh missing", "sjp pdf differs"]);
     expect(await readFile(path.join(root, "compare/sjp/pdf-target.txt"), "utf-8")).toContain("10:03 Court 9 AB1003 Smith v Jones");
+  });
+
+  it("should write both workbooks' sheets beside an Excel comparison", async () => {
+    // Arrange
+    const root = await mkdtemp(path.join(tmpdir(), "file-compare-"));
+    const run = async (name: string, data: Buffer) => {
+      const dir = path.join(root, name);
+      await mkdir(path.join(dir, "civil"), { recursive: true });
+      await writeFile(path.join(dir, "civil/excel.xlsx"), data);
+      const entry: FileEntry = { id: "civil", kind: "excel", file: "civil/excel.xlsx", blob: "x.xlsx", bytes: data.length };
+      await writeFile(path.join(dir, "index.jsonl"), `${JSON.stringify(entry)}\n`);
+      return dir;
+    };
+    const source = await run("pip", await workbook((book) => listSheet(book, ROWS)));
+    const target = await run(
+      "cath",
+      await workbook((book) =>
+        listSheet(book, [
+          ["10:00", 1, "AB1000"],
+          ["11:00", 2, "AB9999"]
+        ])
+      )
+    );
+
+    // Act
+    await compareFileRuns({ source, target, out: path.join(root, "compare") });
+
+    // Assert
+    const sheets = JSON.parse(await readFile(path.join(root, "compare/civil/excel-sheets.json"), "utf-8"));
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0].differing).toEqual(["C3"]);
+    expect(sheets[0].target.cells.C3.text).toBe("AB9999");
   });
 });
 

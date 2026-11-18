@@ -32,6 +32,8 @@ const { values: args } = parseArgs({
 });
 const OUT = path.resolve(args.out);
 const LOCALES = ["en", "cy"];
+// How many rows of an Excel sheet the report draws side by side
+const MAX_SHEET_ROWS = 300;
 const ONLY = args.only ? new Set(args.only.split(",").filter(Boolean)) : null;
 const fullManifest = JSON.parse(readFileSync(args.manifest, "utf-8"));
 const manifest = {
@@ -194,6 +196,50 @@ function captureCard({ label, colour, dirOnDisk, href, depth }) {
     <h4 class="govuk-heading-s parity-subheading">Accessibility (axe)</h4>${axe.html}
     ${fileLinks(`${up}${href}`, dirOnDisk)}
   </div>`;
+}
+
+// One sheet of each workbook side by side, drawn over the same rows and columns so they line up,
+// with the cells the comparison found different marked in both
+function sheetPair(pair) {
+  const sheets = [pair.source, pair.target].filter(Boolean);
+  const extent = sheets.flatMap((sheet) => Object.keys(sheet.cells).map(cellPosition));
+  const rows = Math.min(Math.max(0, ...extent.map((p) => p.row)), MAX_SHEET_ROWS);
+  const columns = Math.max(0, ...extent.map((p) => p.column));
+  const differing = new Set(pair.differing);
+  const truncated = extent.some((p) => p.row > MAX_SHEET_ROWS) ? `<p class="govuk-body-s">Only the first ${MAX_SHEET_ROWS} rows are shown.</p>` : "";
+  return `<div class="parity-pair">
+    ${sheetCard("pip", "blue", pair.source, rows, columns, differing)}
+    ${sheetCard("CaTH", "purple", pair.target, rows, columns, differing)}
+  </div>${truncated}`;
+}
+
+function sheetCard(label, colour, sheet, rows, columns, differing) {
+  if (!sheet)
+    return `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag(label, colour)}</h3><p class="govuk-body-s">No sheet here</p></div>`;
+  const header = `<tr><th></th>${Array.from({ length: columns }, (_, c) => `<th scope="col">${columnName(c + 1)}</th>`).join("")}</tr>`;
+  const body = Array.from({ length: rows }, (_, r) => {
+    const cells = Array.from({ length: columns }, (_, c) => {
+      const address = `${columnName(c + 1)}${r + 1}`;
+      const marked = differing.has(address) ? ' class="parity-cell--differs"' : "";
+      return `<td${marked}>${esc(sheet.cells[address]?.text ?? "")}</td>`;
+    }).join("");
+    return `<tr><th scope="row">${r + 1}</th>${cells}</tr>`;
+  }).join("");
+  return `<div class="parity-card">
+    <h3 class="govuk-heading-s">${tag(label, colour)} <span class="parity-url">${esc(sheet.name)}</span></h3>
+    <div class="parity-sheet"><table>${header}${body}</table></div>
+  </div>`;
+}
+
+function cellPosition(address) {
+  const [, letters, row] = address.match(/^([A-Z]+)(\d+)$/) ?? ["", "A", "0"];
+  return { row: Number(row), column: [...letters].reduce((column, letter) => column * 26 + letter.charCodeAt(0) - 64, 0) };
+}
+
+function columnName(column) {
+  let name = "";
+  for (let n = column; n > 0; n = Math.floor((n - 1) / 26)) name = String.fromCharCode(65 + ((n - 1) % 26)) + name;
+  return name;
 }
 
 const CATEGORY = {
@@ -609,6 +655,7 @@ layout({
 // ---------- generated files ----------
 if (filesComparison) {
   const t = filesComparison.totals;
+  const filesDir = path.dirname(args["files-compare"]);
   const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" };
   const FILE_VERDICT = {
     match: ["Matches", "green"],
@@ -630,7 +677,11 @@ if (filesComparison) {
       const findings = r.findings.length
         ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></div></details>`
         : "";
-      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>`;
+      const sheets = r.kind === "excel" ? readJson(path.join(filesDir, r.id, "excel-sheets.json")) : null;
+      const sideBySide = sheets
+        ? `<tr class="govuk-table__row"><td class="govuk-table__cell" colspan="3"><details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Show the sheets side by side</span></summary><div class="govuk-details__text">${sheets.map(sheetPair).join("")}</div></details></td></tr>`
+        : "";
+      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>${sideBySide}`;
     })
     .join("");
   layout({

@@ -50,6 +50,11 @@ export async function compareFileRuns(options: FileCompareOptions): Promise<File
         findings: [{ category: kind, change: "unreadable", detail: `the files could not be compared: ${error.message.split("\n")[0]}` }]
       })
     );
+    // Both workbooks' sheets, with the cells that differ, for the report to show side by side
+    if (pair.sheets) {
+      await mkdir(path.join(options.out, id), { recursive: true });
+      await writeFile(path.join(options.out, id, `${kind}-sheets.json`), `${JSON.stringify(pair.sheets)}\n`);
+    }
     if (pair.texts) {
       await mkdir(path.join(options.out, id), { recursive: true });
       await writeFile(path.join(options.out, id, `${kind}-source.txt`), `${pair.texts.source.join("\n")}\n`);
@@ -107,9 +112,18 @@ export async function compareExcel(
 ): Promise<PairComparison> {
   const [a, b] = await Promise.all([excelCells(source), excelCells(target)]);
   const findings: Finding[] = [];
+  const sheets: SheetPair[] = [];
   for (let index = 0; index < Math.max(a.sheets.length, b.sheets.length); index++) {
     const sourceSheet = a.sheets[index];
     const targetSheet = b.sheets[index];
+    sheets.push({
+      source: sourceSheet ?? null,
+      target: targetSheet ?? null,
+      differing:
+        sourceSheet && targetSheet
+          ? cellAddresses(sourceSheet, targetSheet).filter((address) => cellDifference(sourceSheet, targetSheet, address, sourceContext, targetContext))
+          : []
+    });
     if (!targetSheet) findings.push({ category: "excel", change: "sheet-missing", detail: `sheet ${index + 1} "${sourceSheet.name}"` });
     else if (!sourceSheet) findings.push({ category: "excel", change: "sheet-extra", detail: `sheet ${index + 1} "${targetSheet.name}"` });
     else {
@@ -118,7 +132,7 @@ export async function compareExcel(
       findings.push(...sheetFindings(sourceSheet, targetSheet, sourceContext, targetContext));
     }
   }
-  return { findings: capped(findings) };
+  return { findings: capped(findings), sheets };
 }
 
 // A CSV file line by line, in order, with seed-time dates masked
@@ -245,23 +259,31 @@ function surplusWords(a: string[], b: string[]): Map<string, number> {
 }
 
 function sheetFindings(a: SheetContent, b: SheetContent, sourceContext: NormaliseContext, targetContext: NormaliseContext): Finding[] {
-  const findings: Finding[] = [];
   const at = (address: string) => `${a.name}!${address}`;
-  const addresses = [...new Set([...Object.keys(a.cells), ...Object.keys(b.cells)])].sort(byCell);
-  for (const address of addresses) {
-    const sourceCell = a.cells[address];
-    const targetCell = b.cells[address];
-    const sourceText = sourceCell && normalise(sourceCell.text, sourceContext);
-    const targetText = targetCell && normalise(targetCell.text, targetContext);
-    if (!targetCell) findings.push({ category: "excel", change: "cell-missing", detail: `${at(address)} "${sourceText}"` });
-    else if (!sourceCell) findings.push({ category: "excel", change: "cell-extra", detail: `${at(address)} "${targetText}"` });
-    else if (sourceText !== targetText) findings.push({ category: "excel", change: "cell-value", detail: `${at(address)}: "${sourceText}" → "${targetText}"` });
-    else if (sourceCell.type !== targetCell.type)
-      findings.push({ category: "excel", change: "cell-type", detail: `${at(address)} "${sourceText}": ${sourceCell.type} → ${targetCell.type}` });
-  }
+  const findings = cellAddresses(a, b).flatMap((address) => cellDifference(a, b, address, sourceContext, targetContext) ?? []);
   for (const range of a.merges.filter((range) => !b.merges.includes(range))) findings.push({ category: "excel", change: "merge-missing", detail: at(range) });
   for (const range of b.merges.filter((range) => !a.merges.includes(range))) findings.push({ category: "excel", change: "merge-extra", detail: at(range) });
   return findings;
+}
+
+// Every cell either sheet has, in reading order
+function cellAddresses(a: SheetContent, b: SheetContent): string[] {
+  return [...new Set([...Object.keys(a.cells), ...Object.keys(b.cells)])].sort(byCell);
+}
+
+// How one cell differs between the sheets, or null when it does not
+function cellDifference(a: SheetContent, b: SheetContent, address: string, sourceContext: NormaliseContext, targetContext: NormaliseContext): Finding | null {
+  const at = `${a.name}!${address}`;
+  const sourceCell = a.cells[address];
+  const targetCell = b.cells[address];
+  const sourceText = sourceCell && normalise(sourceCell.text, sourceContext);
+  const targetText = targetCell && normalise(targetCell.text, targetContext);
+  if (!targetCell) return { category: "excel", change: "cell-missing", detail: `${at} "${sourceText}"` };
+  if (!sourceCell) return { category: "excel", change: "cell-extra", detail: `${at} "${targetText}"` };
+  if (sourceText !== targetText) return { category: "excel", change: "cell-value", detail: `${at}: "${sourceText}" → "${targetText}"` };
+  if (sourceCell.type !== targetCell.type)
+    return { category: "excel", change: "cell-type", detail: `${at} "${sourceText}": ${sourceCell.type} → ${targetCell.type}` };
+  return null;
 }
 
 // Row by row, then column by column, so findings read in the order of the sheet
@@ -321,6 +343,14 @@ export interface PairComparison {
   findings: Finding[];
   pages?: { source: number; target: number };
   texts?: { source: string[]; target: string[] };
+  sheets?: SheetPair[];
+}
+
+// One sheet of each workbook, by position, and the cells that differ between them
+export interface SheetPair {
+  source: SheetContent | null;
+  target: SheetContent | null;
+  differing: string[];
 }
 
 export interface FileCompareResult {
