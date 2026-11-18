@@ -379,6 +379,7 @@ Caveat: the case-insensitive checks are in the application, while the database u
 **Answers so far (developer, 2026-11-17):**
 - **Q1:** freeze `location-data.ts` at the 27 courts: **yes**. Fail-loudly guard (b): **yes**. Renumber to legacy IDs first (#1533): **yes for now**, may change.
 - **Q2:** the deploy seed must **never overwrite an existing provenance reference**. A clash **fails the deploy** (same approach as Q1 guard b), and only a person changes or removes a reference, through amend a court (#1534) or the update-only CSV (#1535). Ticket 1 (#1531) changes `generate-seed-sql.ts:111` accordingly.
+- **Q3:** start the sequence at the **highest legacy CaTH production P&I ID plus a margin**, not 100000. The exact value waits for the legacy production export (#1533); if production matches staging (highest 389), a margin of 1000 gives a start of 1389. The migration still ends with `setval(GREATEST(<start>, MAX(location_id) + 1))`. Consequences for ticket 1 (#1531): the start is now **below** the E2E bands on STG (9001–9010, 80000–89999, 90000–99999), so the band test changes from "bands are below the start" to "the start is above the highest legacy ID and below 9001"; the sequence would only reach 9001 after about 7,600 UI-created courts. Old CaTH may still add courts until cutover, which the margin is there to absorb.
 - **Q4:** courts are added **one at a time**. The one-question-per-page journey stands.
 - **Q5:** a new court **starts as a draft**. This adds a draft flag, a publish step, and hiding drafts from the public A–Z and subscription search to ticket 2 (#1532), about 2 days.
 - **Q7 (part):** the **System Admin** supplies the Welsh name. Still open: whether provenance references are known when the court is created.
@@ -386,7 +387,7 @@ Caveat: the case-insensitive checks are in the application, while the database u
 - **Q10:** the CSV route becomes **update-only** (#1535).
 - **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
 
-Still open: Q3 (the start value: highest legacy production ID plus a margin, or 100000), Q6, Q7 (provenance timing), Q9 and Q11 (three parts).
+Still open: Q6, Q7 (provenance timing), Q9 and Q11 (three parts).
 
 **Tech lead (blocking the recommendation)**
 
