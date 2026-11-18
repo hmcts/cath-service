@@ -21,10 +21,11 @@ const LOG_LINES = 80;
 const CAPTURED_CONTENT_POLICY = "sandbox";
 // Far more than 80 lines of a check's log, which are short
 const LOG_TAIL_BYTES = 64 * 1024;
-// Where make-report.mjs writes the report's own pages: at its top, and one per list, page and journey.
+// Where make-report.mjs writes the report's own pages: at its top, and one per list, page, journey,
+// PDF and Excel file.
 // The captured pip and CaTH pages are deeper, under lists/ and data/, so whatever markup they carry
 // they are never taken for one.
-const REPORT_PAGE_PATH = /^\/(?:(?:lists|pages|journeys)\/)?[^/]+\.html$/;
+const REPORT_PAGE_PATH = /^\/(?:(?:lists|pages|journeys|pdfs|excel)\/)?[^/]+\.html$/;
 const GOVUK_FRONTEND = path.dirname(fileURLToPath(import.meta.resolve("govuk-frontend/package.json")));
 // The report's own stylesheet and the navigation it shares with these pages, served as they are now
 // for every report, so one written before them still has them

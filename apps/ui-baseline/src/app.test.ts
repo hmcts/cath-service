@@ -39,6 +39,12 @@ async function appWith() {
         '<nav class="govuk-service-navigation__wrapper" aria-label="Menu"><ul class="govuk-service-navigation__list"><li>Overview</li></ul></nav><main>the other pages</main>'
       );
       await mkdir(path.join(out, "report/lists/cath"), { recursive: true });
+      // A file's page, as each PDF and Excel file has one of its own
+      await mkdir(path.join(out, "report/pdfs"), { recursive: true });
+      await writeFile(
+        path.join(out, "report/pdfs/civil-daily.html"),
+        '<nav class="govuk-service-navigation__wrapper app-navigation"><ul class="govuk-service-navigation__list"><!-- ui-baseline: app navigation --><li>Overview</li></ul></nav><main>the civil PDF</main>'
+      );
       // A report links into its baseline, in the data folder; a planted link could point anywhere
       const baselineLists = path.join(dataDir, "baselines/2026-11-03/lists");
       await mkdir(baselineLists, { recursive: true });
@@ -386,6 +392,22 @@ describe("createApp", () => {
     }
     expect(reportPage.text).not.toContain("<!-- ui-baseline: app navigation -->");
     expect(capturedPage.text).toBe('<div class="govuk-width-container"><main class="govuk-main-wrapper" id="main-content">a page CaTH showed</main></div>');
+  });
+
+  it("should serve a PDF or Excel file's page as a page of the report, with Home and Result", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const started = await postForm(app, { kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Act
+    const page = await request(app).get(`${started.headers.location}/report/pdfs/civil-daily.html`);
+
+    // Assert
+    expect(page.status).toBe(200);
+    expect(page.headers["content-security-policy"]).toBeUndefined();
+    expect(page.text).toContain(`href="${started.headers.location}">Result</a>`);
+    expect(page.text).toContain("the civil PDF");
   });
 
   it("should show its pages in the GOV.UK header, navigation and footer, marking where you are", async () => {

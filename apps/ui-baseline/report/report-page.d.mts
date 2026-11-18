@@ -6,7 +6,9 @@ export interface ReportPageOptions {
   body: string;
   depth: number;
   active: string | null;
-  has: { comparison: boolean; files: boolean; accessibility?: boolean };
+  // Which optional sections the report has. files is the one Files page of a report written before
+  // each kind of file had pages of its own
+  has: { comparison: boolean; files?: boolean; pdfs?: boolean; excel?: boolean; otherFiles?: boolean; accessibility?: boolean };
   footerMeta: string;
   filterScript: string;
 }

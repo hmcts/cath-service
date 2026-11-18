@@ -326,3 +326,7 @@ body {
   outline: 2px solid #d4351c;
   outline-offset: -2px;
 }
+/* A wide sheet or page scrolls inside its card rather than pushing the other card off the page */
+.parity-pair > .parity-card {
+  min-width: 0;
+}

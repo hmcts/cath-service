@@ -338,18 +338,20 @@ with an additional PDF: then `<artefactId>.pdf` is in English and the Welsh one 
 `<artefactId>_cy.pdf` (pip-data-management, `PublicationFileGenerationService.generatePdfs`), so
 for those lists pip has a Welsh PDF CaTH does not make, and CaTH's PDF is Welsh where pip's is
 English. The check compares them for every list it checks: the
-baseline holds pip's (`files/`), and the check collects CaTH's after seeding. The report's "PDF
-and Excel" page, the summary and the PR comment show the result.
+baseline holds pip's (`files/`), and the check collects CaTH's after seeding. The summary and
+the PR comment show the result, and the report's Files menu has a page for each kind: PDF files
+and Excel files list every file, each with a page of its own like a list page's (its differences,
+and the two apps' files side by side), and Other files lists the downloads that are neither.
 
 - **PDFs** are styled differently by design, so only their text is compared, word by word in
   reading order. Line breaks, page breaks and pip's page footer are ignored, and so are words a
   table only reads out in another order because its cells wrap at other widths; any other change
-  of wording is reported with the words before it. The report also shows each app's pages side by
-  side (up to 10 of each, drawn by pdf.js), to look at; what they show is not compared.
+  of wording is reported with the words before it. A PDF's page in the report shows each app's
+  pages side by side (up to 10 of each, drawn by pdf.js), to look at; what they show is not compared.
 - **Excel files** should be the same, so every sheet (name and order), cell (type and value) and
   merged range is compared. They can never be byte-identical (pip writes them with Apache POI and
-  CaTH with exceljs), and fonts and column widths are not compared. The report shows both apps'
-  sheets side by side, up to 300 rows, with the cells that differ marked.
+  CaTH with exceljs), and fonts and column widths are not compared. An Excel file's page in the
+  report shows both apps' sheets side by side, up to 300 rows, with the cells that differ marked.
 - Dates and times that come from when each app was seeded are masked, as on pages.
 
 For a list a tester uploaded to both apps by hand, compare the two without seeding anything:

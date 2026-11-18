@@ -99,13 +99,20 @@ const FOOTER_META = footerMeta(
   run ? { finished: esc(new Date(run.finishedAt).toLocaleString("en-GB", { timeZone: "Europe/London" })), pip: esc(run.pip) } : null
 );
 
+// Which kinds of file the run compared, each with a section of its own
+const FILE_SECTIONS = {
+  pdfs: Boolean(filesComparison?.results.some((r) => r.kind === "pdf" || r.kind === "pdf-welsh")),
+  excel: Boolean(filesComparison?.results.some((r) => r.kind === "excel")),
+  otherFiles: Boolean(filesComparison?.results.some((r) => r.kind === "csv" || r.kind === "binary"))
+};
+
 function layout({ file, title, active, body, depth = 0 }) {
   const context = reportPageContext({
     title,
     body,
     depth,
     active,
-    has: { comparison: Boolean(comparison), files: Boolean(filesComparison), accessibility: hasAccessibility },
+    has: { comparison: Boolean(comparison), ...FILE_SECTIONS, accessibility: hasAccessibility },
     footerMeta: FOOTER_META,
     filterScript: FILTER_SCRIPT
   });
@@ -232,8 +239,9 @@ function sheetCard(label, colour, sheet, rows, columns, differing) {
 }
 
 // Each page of pip's and CaTH's PDF side by side, as compareFileRuns drew them
-// (<kind>-source-<n>.png and <kind>-target-<n>.png), or "" when it drew none
-function pagePairs(filesDir, result) {
+// (<kind>-source-<n>.png and <kind>-target-<n>.png), or "" when it drew none. up leads from the page
+// it is on to the report's root
+function pagePairs(filesDir, result, up) {
   const dir = path.join(filesDir, result.id);
   const drawn = (side) => (existsSync(dir) ? readdirSync(dir).filter((name) => new RegExp(`^${result.kind}-${side}-\\d+\\.png$`).test(name)).length : 0);
   const count = Math.max(drawn("source"), drawn("target"));
@@ -242,7 +250,7 @@ function pagePairs(filesDir, result) {
     const file = `${result.kind}-${side}-${number}.png`;
     if (!existsSync(path.join(dir, file)))
       return `<div class="parity-card parity-card--empty"><h3 class="govuk-heading-s">${tag(label, colour)}</h3><p class="govuk-body-s">No page ${number}</p></div>`;
-    const href = `data/files/${encodeURIComponent(result.id)}/${file}`;
+    const href = `${up}data/files/${encodeURIComponent(result.id)}/${file}`;
     return `<div class="parity-card">
     <h3 class="govuk-heading-s">${tag(label, colour)} <span class="parity-url">page ${number} of ${total ?? "?"}</span></h3>
     <a href="${href}" class="parity-shot"><img src="${href}" alt="${esc(label)} PDF, page ${number}" loading="lazy"></a>
@@ -682,8 +690,10 @@ layout({
 });
 
 // ---------- generated files ----------
+// One index per kind of file, as the captured pages have, each linking to a page per file with its
+// differences and the two apps' files side by side. Downloads that are neither (CSV, other files)
+// are listed on one page of their own.
 if (filesComparison) {
-  const t = filesComparison.totals;
   const filesDir = path.dirname(args["files-compare"]);
   const KIND = { pdf: "PDF", "pdf-welsh": "Welsh PDF", excel: "Excel", csv: "CSV", binary: "File" };
   const FILE_VERDICT = {
@@ -692,39 +702,109 @@ if (filesComparison) {
     missing: ["CaTH has none", "orange"],
     extra: ["Only CaTH has one", "yellow"]
   };
-  const rows = filesComparison.results
-    .map((r) => {
-      const [label, colour] = FILE_VERDICT[r.verdict];
-      const texts =
-        (r.kind === "pdf" || r.kind === "pdf-welsh" || r.kind === "csv") && r.verdict !== "missing" && r.verdict !== "extra"
-          ? ` <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-source.txt">pip text</a> · <a class="govuk-link" href="data/files/${esc(r.id)}/${r.kind}-target.txt">CaTH text</a>`
-          : "";
-      const pages =
-        r.source?.pages !== undefined
-          ? `<span class="govuk-hint parity-inline-hint">pip ${r.source.pages} ${plural(r.source.pages, "page", "pages")}, CaTH ${r.target.pages}</span>`
-          : "";
-      const findings = r.findings.length
-        ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text"><ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul></div></details>`
-        : "";
-      const sheets = r.kind === "excel" ? readJson(path.join(filesDir, r.id, "excel-sheets.json")) : null;
-      const pdfPages = r.kind === "pdf" || r.kind === "pdf-welsh" ? pagePairs(filesDir, r) : "";
-      const shown = sheets ? ["Show the sheets side by side", sheets.map(sheetPair).join("")] : pdfPages ? ["Show the pages side by side", pdfPages] : null;
-      const sideBySide = shown
-        ? `<tr class="govuk-table__row"><td class="govuk-table__cell" colspan="3"><details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${shown[0]}</span></summary><div class="govuk-details__text">${shown[1]}</div></details></td></tr>`
-        : "";
-      return `<tr class="govuk-table__row"><td class="govuk-table__cell"><code>${esc(r.id)}</code></td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} ${pages}${texts}${findings}</td></tr>${sideBySide}`;
-    })
-    .join("");
-  layout({
-    file: "files.html",
-    active: "files.html",
-    title: "Files",
-    body: `<h1 class="govuk-heading-l">Files</h1>
-  <p class="govuk-body">The PDF and Excel files each app generated when the publication was accepted, and the files it answers with rather than a page (reference data, a proof of ID, list and flat-file downloads), fetched as the user each is for. CSV files are compared line by line, and other files byte for byte. PDFs are styled differently by design, so only their text is compared, in reading order; line breaks and page breaks are ignored. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths.</p>
-  <div class="parity-stats">${statCard(t.files, "files compared")}${statCard(t.match, "match")}${statCard(t.differs, "differ")}${statCard(t.missing, "CaTH did not make")}${statCard(t.extra, "only CaTH made")}</div>
-  <table class="govuk-table"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Publication</th><th class="govuk-table__header">File</th><th class="govuk-table__header">Result</th></tr></thead>
+  const GROUPS = [
+    {
+      file: "pdfs.html",
+      dir: "pdfs",
+      title: "PDF files",
+      back: "All PDF files",
+      kinds: ["pdf", "pdf-welsh"],
+      intro:
+        "The PDF each app generated when the publication was accepted. PDFs are styled differently by design, so only their text is compared, in reading order: line breaks, page breaks and words a table only reads out in another order are ignored. Each PDF's page shows the two apps' pages side by side, to look at; what they show is not compared."
+    },
+    {
+      file: "excel.html",
+      dir: "excel",
+      title: "Excel files",
+      back: "All Excel files",
+      kinds: ["excel"],
+      intro:
+        "The Excel file each app generated when the publication was accepted. Excel files should match, so every sheet, cell and merged range is compared, but not fonts or column widths. Each file's page shows the two apps' sheets side by side, with the cells that differ marked."
+    },
+    {
+      file: "other-files.html",
+      dir: null,
+      title: "Other files",
+      kinds: ["csv", "binary"],
+      intro:
+        "The files each app answers with rather than a page (reference data, a proof of ID, list and flat-file downloads), fetched as the user each is for. CSV files are compared line by line, and other files byte for byte."
+    }
+  ];
+  const pageOf = (group, r) => `${group.dir}/${r.kind === "pdf-welsh" ? `${r.id}-welsh` : r.id}.html`;
+  const pageCount = (r) => (r.source?.pages !== undefined ? `pip ${r.source.pages} ${plural(r.source.pages, "page", "pages")}, CaTH ${r.target.pages}` : "");
+  const findingList = (r) =>
+    r.findings.length
+      ? `<ul class="govuk-list govuk-list--bullet">${r.findings.map((f) => `<li><span class="parity-change">${esc(f.change.replace(/-/g, " "))}</span> ${esc(f.detail)}</li>`).join("")}</ul>`
+      : "";
+  const textLinks = (r, up) =>
+    (r.kind === "pdf" || r.kind === "pdf-welsh" || r.kind === "csv") && r.verdict !== "missing" && r.verdict !== "extra"
+      ? `<a class="govuk-link" href="${up}data/files/${esc(r.id)}/${r.kind}-source.txt">pip text</a> · <a class="govuk-link" href="${up}data/files/${esc(r.id)}/${r.kind}-target.txt">CaTH text</a>`
+      : "";
+
+  for (const group of GROUPS) {
+    const results = filesComparison.results.filter((r) => group.kinds.includes(r.kind));
+    if (!results.length) continue;
+    const count = (verdict) => results.filter((r) => r.verdict === verdict).length;
+    const tableId = `${group.dir ?? "other"}-files-table`;
+    const rows = results
+      .map((r) => {
+        const [label, colour] = FILE_VERDICT[r.verdict];
+        const name = group.dir ? `<a class="govuk-link parity-break" href="${pageOf(group, r)}">${esc(r.id)}</a>` : `<code>${esc(r.id)}</code>`;
+        // Without pages of their own, other files keep their differences and texts in the index
+        const detail = group.dir
+          ? r.findings.length
+            ? `${r.findings.length} ${plural(r.findings.length, "difference", "differences")}`
+            : ""
+          : `${textLinks(r, "")}${r.findings.length ? `<details class="govuk-details parity-pages"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</span></summary><div class="govuk-details__text">${findingList(r)}</div></details>` : ""}`;
+        return `<tr class="govuk-table__row"><td class="govuk-table__cell">${name}</td><td class="govuk-table__cell">${KIND[r.kind]}</td><td class="govuk-table__cell">${tag(label, colour)} <span class="govuk-hint parity-inline-hint">${pageCount(r)}</span></td><td class="govuk-table__cell">${detail}</td></tr>`;
+      })
+      .join("");
+    layout({
+      file: group.file,
+      active: group.file,
+      title: group.title,
+      body: `<h1 class="govuk-heading-l">${group.title}</h1>
+  <p class="govuk-body">${group.intro}</p>
+  <div class="parity-stats">${statCard(results.length, "files compared")}${statCard(count("match"), "match")}${statCard(count("differs"), "differ")}${statCard(count("missing"), "CaTH did not make")}${statCard(count("extra"), "only CaTH made")}</div>
+  ${filterBox(tableId, "publication or result")}
+  <table class="govuk-table" id="${tableId}"><thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Publication</th><th class="govuk-table__header">File</th><th class="govuk-table__header">Result</th><th class="govuk-table__header">Differences</th></tr></thead>
   <tbody class="govuk-table__body">${rows}</tbody></table>`
-  });
+    });
+
+    if (!group.dir) continue;
+    for (const r of results) {
+      const [label, colour] = FILE_VERDICT[r.verdict];
+      const onlyOne =
+        r.verdict === "missing"
+          ? '<p class="govuk-body">pip made this file and CaTH did not, so there is nothing to compare it with.</p>'
+          : r.verdict === "extra"
+            ? '<p class="govuk-body">CaTH made this file and pip did not, so there is nothing to compare it with.</p>'
+            : "";
+      const sheets = r.kind === "excel" ? readJson(path.join(filesDir, r.id, "excel-sheets.json")) : null;
+      const sideBySide = sheets
+        ? `<h2 class="govuk-heading-m">Sheets side by side</h2>${sheets.map(sheetPair).join("")}`
+        : r.kind === "pdf" || r.kind === "pdf-welsh"
+          ? (() => {
+              const pages = pagePairs(filesDir, r, "../");
+              return pages ? `<h2 class="govuk-heading-m">Pages side by side</h2>${pages}` : "";
+            })()
+          : "";
+      const texts = textLinks(r, "../");
+      layout({
+        file: pageOf(group, r),
+        depth: 1,
+        active: group.file,
+        title: `${r.id} (${KIND[r.kind]})`,
+        body: `<a href="../${group.file}" class="govuk-back-link">${group.back}</a>
+  <h1 class="govuk-heading-l">${esc(r.id)} <span class="govuk-caption-m">${KIND[r.kind]}</span></h1>
+  <p class="govuk-body">${tag(label, colour)} <span class="govuk-hint parity-inline-hint">${pageCount(r)}</span></p>
+  ${onlyOne}
+  ${texts ? `<p class="govuk-body-s">${texts}</p>` : ""}
+  ${r.findings.length ? `<h2 class="govuk-heading-m">${r.findings.length} ${plural(r.findings.length, "difference", "differences")}</h2>${findingList(r)}` : r.verdict === "match" ? '<p class="govuk-body">No differences.</p>' : ""}
+  ${sideBySide}`
+      });
+    }
+  }
 }
 
 // ---------- known defects ----------
