@@ -65,16 +65,26 @@ locals {
   # Redis only: Postgres sizing is left to terraform-module-postgresql-flexible's
   # defaults in every environment (#1096 task 5). Non-prod stays on Basic for
   # cost; prod needs Premium's replication and SLA.
+  #
+  # The managed_redis_* keys size the Azure Managed Redis that replaces Azure
+  # Cache for Redis (#697), matching today's set-up: B0 without HA for Basic C0,
+  # and B3 with HA for Premium P1 and its replica (the CNP guide's P1 mapping).
+  # Microsoft limits scaling a Managed Redis down, so prod starts at B3 and grows
+  # if needed. Changing high availability recreates the instance.
   default_sizing = {
-    redis_sku_name = "Basic"
-    redis_family   = "C"
-    redis_capacity = 0
+    redis_sku_name                  = "Basic"
+    redis_family                    = "C"
+    redis_capacity                  = 0
+    managed_redis_sku_name          = "Balanced_B0"
+    managed_redis_high_availability = false
   }
   sizing_overrides = {
     prod = {
-      redis_sku_name = "Premium"
-      redis_family   = "P"
-      redis_capacity = 1
+      redis_sku_name                  = "Premium"
+      redis_family                    = "P"
+      redis_capacity                  = 1
+      managed_redis_sku_name          = "Balanced_B3"
+      managed_redis_high_availability = true
     }
   }
   sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))
@@ -91,6 +101,15 @@ locals {
   # explicit id, which makes it skip its own lookup entirely.
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
   redis_subnet_override      = local.core_infra_subscription_id != null
+
+  # The platform's shared zone for Managed Redis private endpoints, in
+  # DTS-CFTPTL-INTSVC and linked to every core-infra vnet (platops
+  # azure-private-dns). Unlike cnp-module-redis, the Managed Redis module does
+  # not find a zone itself, so without this the endpoint gets no DNS record and
+  # the hostname resolves to the public IP, which is blocked. Joining the zone
+  # needs Private DNS Zone Contributor on it, granted to the prod principal by
+  # DTSPO for #697.
+  managed_redis_private_dns_zone_id = "/subscriptions/1baf5470-1c3e-40d3-a6f7-74bfbce4b348/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
 
   # The subscription holding the platform Log Analytics workspace for this
   # environment: hmcts-nonprod for every non-prod environment, hmcts-prod for
