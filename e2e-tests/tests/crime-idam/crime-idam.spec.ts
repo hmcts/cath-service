@@ -2,7 +2,10 @@ import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
 
 test.describe("Crime IDAM", () => {
-  test("valid user can sign in via Crime IDAM @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 4) is fixed; re-enable then.
+  test.fixme("valid user can sign in via Crime IDAM @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     await page.goto("/sign-in");
 
     // Select Common Platform option
@@ -63,7 +66,10 @@ test.describe("Crime IDAM", () => {
     await expect(page).toHaveURL(/\/sign-in\?error=invalid_state/);
   });
 
-  test("language parameter is preserved through Crime IDAM redirect @nightly", async ({ page }) => {
+  // Skipped until https://github.com/hmcts/cath-service/issues/1395 (item 4) is fixed; re-enable then.
+  test.fixme("language parameter is preserved through Crime IDAM redirect @nightly", {
+    annotation: { type: "issue", description: "https://github.com/hmcts/cath-service/issues/1395" }
+  }, async ({ page }) => {
     await page.goto("/sign-in?lng=cy");
 
     await expect(page.getByRole("heading", { name: /sut hoffech chi fewngofnodi/i })).toBeVisible();

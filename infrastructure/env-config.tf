@@ -31,14 +31,14 @@ locals {
     # The terraform-deploy library already tags prod "production", so prod needs
     # no override either.
     # apim_suffix uses CFT names (aat is stg, perftest is test); null means no APIM.
-    # Prod APIM waits for #1161.
+    # Prod publishes through cft-api-mgmt-prod (#1161).
     # crime_federation_enabled reads crime-oidc-config from the app vault - see
-    # tf-crime-connection-mi.tf. Off for prod until #1097 seeds it in cath-prod.
+    # tf-crime-connection-mi.tf. The secret must exist in the vault before this is true.
     aat      = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "stg", crime_federation_enabled = true }
     demo     = { subnet_suffix = null, core_infra_subscription_id = null, environment_tag = null, apim_suffix = "demo", crime_federation_enabled = true }
     ithc     = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = null, apim_suffix = null, crime_federation_enabled = true }
     perftest = { subnet_suffix = null, core_infra_subscription_id = "7a4e3bd5-ae3a-4d0c-b441-2188fee3ff1c", environment_tag = "testing", apim_suffix = "test", crime_federation_enabled = true }
-    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = null, crime_federation_enabled = false }
+    prod     = { subnet_suffix = "expanded", core_infra_subscription_id = null, environment_tag = null, apim_suffix = "prod", crime_federation_enabled = true }
   }
 
   # Prod-or-not facts, the same split the CNP modules make internally. Not keys
@@ -57,21 +57,34 @@ locals {
   # CNP prod hostnames carry no environment label.
   platform_domain = local.is_prod ? "platform.hmcts.net" : "${var.env}.platform.hmcts.net"
 
+  # Publication payloads contain personal data: never log bodies in prod.
+  apim_log_body_bytes = local.is_prod ? 0 : 8192
+
   crime_federation_enabled = try(local.env_config[var.env].crime_federation_enabled, false)
 
   # Redis only: Postgres sizing is left to terraform-module-postgresql-flexible's
   # defaults in every environment (#1096 task 5). Non-prod stays on Basic for
   # cost; prod needs Premium's replication and SLA.
+  #
+  # The managed_redis_* keys size the Azure Managed Redis that replaces Azure
+  # Cache for Redis (#697), matching today's set-up: B0 without HA for Basic C0,
+  # and B3 with HA for Premium P1 and its replica (the CNP guide's P1 mapping).
+  # Microsoft limits scaling a Managed Redis down, so prod starts at B3 and grows
+  # if needed. Changing high availability recreates the instance.
   default_sizing = {
-    redis_sku_name = "Basic"
-    redis_family   = "C"
-    redis_capacity = 0
+    redis_sku_name                  = "Basic"
+    redis_family                    = "C"
+    redis_capacity                  = 0
+    managed_redis_sku_name          = "Balanced_B0"
+    managed_redis_high_availability = false
   }
   sizing_overrides = {
     prod = {
-      redis_sku_name = "Premium"
-      redis_family   = "P"
-      redis_capacity = 1
+      redis_sku_name                  = "Premium"
+      redis_family                    = "P"
+      redis_capacity                  = 1
+      managed_redis_sku_name          = "Balanced_B3"
+      managed_redis_high_availability = true
     }
   }
   sizing = merge(local.default_sizing, try(local.sizing_overrides[var.env], {}))
@@ -88,6 +101,15 @@ locals {
   # explicit id, which makes it skip its own lookup entirely.
   core_infra_subscription_id = try(local.env_config[var.env].core_infra_subscription_id, null)
   redis_subnet_override      = local.core_infra_subscription_id != null
+
+  # The platform's shared zone for Managed Redis private endpoints, in
+  # DTS-CFTPTL-INTSVC and linked to every core-infra vnet (platops
+  # azure-private-dns). Unlike cnp-module-redis, the Managed Redis module does
+  # not find a zone itself, so without this the endpoint gets no DNS record and
+  # the hostname resolves to the public IP, which is blocked. Joining the zone
+  # needs Private DNS Zone Contributor on it, granted to the prod principal by
+  # DTSPO for #697.
+  managed_redis_private_dns_zone_id = "/subscriptions/1baf5470-1c3e-40d3-a6f7-74bfbce4b348/resourceGroups/core-infra-intsvc-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
 
   # The subscription holding the platform Log Analytics workspace for this
   # environment: hmcts-nonprod for every non-prod environment, hmcts-prod for

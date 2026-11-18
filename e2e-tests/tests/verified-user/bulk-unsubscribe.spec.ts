@@ -1,8 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { deleteTestSubscriptions, getTestSubscriptions } from "../../utils/test-support-api.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
 interface TestLocationData {
   locationId: number;
@@ -55,14 +55,8 @@ test.describe("Bulk Unsubscribe", () => {
 
     testDataMap.set(testInfo.testId, { location1, location2, location3 });
 
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    const continueButton = page.getByRole("button", { name: /continue/i });
-    await continueButton.click();
-
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
-
+    await loginAsTestUser(page, await createVerifiedTestUser({ label: "bulk-unsubscribe" }));
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
   });
 
