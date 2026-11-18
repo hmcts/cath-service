@@ -52,6 +52,7 @@
     "@hmcts/public-pages": "workspace:*",
     "@hmcts/publication": "workspace:*",
     "@hmcts/rcj-standard-daily-cause-list": "workspace:*",
+    "@hmcts/redis": "workspace:*",
     "@hmcts/send-daily-hearing-list": "workspace:*",
     "@hmcts/sjp-press-list": "workspace:*",
     "@hmcts/sjp-public-list": "workspace:*",

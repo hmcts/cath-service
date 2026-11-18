@@ -33,17 +33,20 @@ vi.mock("@hmcts/postgres-prisma", () => ({
   }
 }));
 
-vi.mock("redis", () => ({
-  createClient: vi.fn(() => ({
-    on: vi.fn(),
-    connect: vi.fn().mockResolvedValue(undefined)
-  }))
+const mockRedisClient = vi.hoisted(() => ({
+  on: vi.fn(),
+  connect: vi.fn().mockResolvedValue(undefined)
+}));
+
+vi.mock("@hmcts/redis", () => ({
+  createRedisClient: vi.fn(() => mockRedisClient)
 }));
 
 vi.mock("config", () => ({
   default: {
     get: vi.fn((key: string) => {
       if (key === "redis.url") return "redis://localhost:6379";
+      if (key === "redis.managedIdentity") return false;
       if (key === "gtm") return { id: "GTM-TEST" };
       if (key === "dynatrace") return { enabled: false };
       if (key === "applicationInsights") return { connectionString: "test" };
@@ -321,12 +324,14 @@ describe("Web Application", () => {
       expect(errorHandler).toHaveBeenCalled();
     });
 
-    it("should connect to Redis", async () => {
-      const { createClient } = await import("redis");
-      expect(createClient).toHaveBeenCalledWith({
-        url: "redis://localhost:6379",
-        pingInterval: 300_000
-      });
+    it("should create the session Redis client from config with the managed identity flag and connect it", async () => {
+      const { createRedisClient } = await import("@hmcts/redis");
+      const { expressSessionRedis } = await import("@hmcts/web-core");
+
+      expect(createRedisClient).toHaveBeenCalledWith("redis://localhost:6379", false);
+      expect(mockRedisClient.connect).toHaveBeenCalled();
+      expect(mockRedisClient.connect.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(expressSessionRedis).mock.invocationCallOrder[0]);
+      expect(expressSessionRedis).toHaveBeenCalledWith({ redisConnection: mockRedisClient });
     });
 
     it("should configure file upload middleware with error handling", async () => {

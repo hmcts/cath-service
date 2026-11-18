@@ -2,7 +2,11 @@
   "port": "PORT",
   "BASE_URL": "BASE_URL",
   "redis": {
-    "url": "REDIS_URL"
+    "url": "REDIS_URL",
+    "managedIdentity": {
+      "__name": "REDIS_MI",
+      "__format": "boolean"
+    }
   },
   "session": {
     "secret": "SESSION_SECRET"

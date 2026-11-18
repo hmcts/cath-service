@@ -144,3 +144,15 @@ resource "azurerm_key_vault_secret" "managed_redis_url" {
 
   depends_on = [module.managed_redis]
 }
+
+# No credentials: with REDIS_MI=true the apps authenticate as cath-<env>-mi
+# through the Data Owner assignment above, so this URL carries only the host.
+resource "azurerm_key_vault_secret" "managed_redis_entra_url" {
+  name            = "managed-redis-entra-url"
+  value           = "rediss://${module.managed_redis.hostname}:${module.managed_redis.port}"
+  key_vault_id    = module.key_vault.key_vault_id
+  expiration_date = local.secret_expiry
+  tags            = merge(local.common_tags, { source = "Redis" })
+
+  depends_on = [module.managed_redis]
+}
