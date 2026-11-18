@@ -59,7 +59,7 @@ nodejs:
           alias: APPLICATION_INSIGHTS_CONNECTION_STRING
         - name: session-secret
           alias: SESSION_SECRET
-        - name: redis-url
+        - name: managed-redis-url
           alias: REDIS_URL
         - name: postgres-url
           alias: DATABASE_URL
