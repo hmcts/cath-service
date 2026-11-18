@@ -2,9 +2,13 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./download.js";
 
-vi.mock("@hmcts/azure-blob", () => ({
-  downloadBlob: vi.fn()
-}));
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    downloadBlob: vi.fn()
+  };
+});
 vi.mock("@hmcts/postgres-prisma", () => ({
   prisma: {
     artefact: {
@@ -26,7 +30,7 @@ vi.mock("@hmcts/publication", () => ({
   canAccessPublicationData: vi.fn()
 }));
 
-import { downloadBlob } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob } from "@hmcts/azure-blob";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 
@@ -116,6 +120,7 @@ describe("Download Route", () => {
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "application/pdf");
     expect(res.setHeader).toHaveBeenCalledWith("Content-Disposition", 'attachment; filename="12345678-1234-1234-1234-123456789abc.pdf"');
     expect(res.send).toHaveBeenCalledWith(mockBuffer);
+    expect(downloadBlob).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.pdf", CONTAINER.PUBLICATIONS);
   });
 
   it("should return 404 when file does not exist", async () => {
