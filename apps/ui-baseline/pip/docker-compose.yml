@@ -65,6 +65,11 @@ services:
       # The dev profile hard-codes localhost/postgres for the datasource
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pip_data_management
       ACCOUNT_MANAGEMENT_URL: http://account-management:6969
+      # Keeps an uploaded spreadsheet in memory. POST /publication/non-strategic reads it again in
+      # an @Async step, after the request has ended, and with Spring's default threshold of 0 it is
+      # a temp file Tomcat deletes at that point, so pip made a list's Excel file only some of the
+      # time (KNOWN-DEFECTS.md). The uploads are under max-file-size (2MB), so all of them fit.
+      SPRING_SERVLET_MULTIPART_FILE_SIZE_THRESHOLD: 2MB
     volumes:
       - ${PIP_SRC:?set PIP_SRC to the directory holding the pip checkouts}/pip-data-management/build/libs/pip-data-management.jar:/opt/app/app.jar:ro
       - ${PIP_SRC}/pip-data-management/lib/openSans.ttf:/opt/app/openSans.ttf:ro

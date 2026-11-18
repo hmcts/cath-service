@@ -320,6 +320,7 @@ describe("check", () => {
       results: [],
       totals: { files: 0, match: 0, differs: 0, missing: 0, extra: 0 }
     });
+    mocks.collectFiles.mockResolvedValue([{ id: "civil-daily", kind: "pdf", file: "civil-daily/pdf.pdf", blob: "CATH-ART-1.pdf", bytes: 1, seededAt: null }]);
     mocks.loadDownloads.mockResolvedValue([]);
   });
 
@@ -659,6 +660,28 @@ describe("check", () => {
       const output = logs.join("\n");
       expect(output).toContain("1 of 1 PDF and Excel files differ from pip");
       expect(output).toContain("    civil-daily PDF (differs)");
+    });
+
+    it("should say CaTH could not render PDFs, not that each list's PDF is missing, when it made none", async () => {
+      // Arrange
+      mocks.collectFiles.mockResolvedValue([]);
+      mocks.compareFileRuns.mockResolvedValue({
+        source: "",
+        target: "",
+        comparedAt: "",
+        results: [{ id: "civil-daily", kind: "pdf", verdict: "missing", findings: [] }],
+        totals: { files: 1, match: 0, differs: 0, missing: 1, extra: 0 }
+      });
+      const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      expect(errors).toHaveBeenCalledWith(expect.stringContaining("CaTH made no PDF for any list: its API could not render them"));
+      const comment = readFileSync(path.join(out, "evidence/pr-comment.md"), "utf-8");
+      expect(comment).toContain("civil-daily: PDF not compared: CaTH made no PDF for any list, so its API could not render them");
+      expect(logs.join("\n")).not.toContain("civil-daily PDF (missing)");
     });
 
     it("should review each area against the ticket and carry on when a review cannot run", async () => {

@@ -157,6 +157,14 @@ as the run's, so they differ from CaTH for that reason.
 
 With CaTH running locally (`yarn dev`) and a recorded baseline:
 
+CaTH's API renders each list's PDF in Chromium, through Puppeteer. Without a browser it only logs
+each failure, so make sure it has one: `node_modules/.bin/puppeteer browsers install chrome` from
+the repo root, which installs the Chrome its Puppeteer version expects (or point
+`PUPPETEER_EXECUTABLE_PATH` at a Chrome). A check that finds no PDF for any list says so, rather
+than reporting every PDF as missing. In the devcontainer that install has been seen to stop
+part-way through unpacking and still print nothing; if renders still fail, unzip the archive it
+left in `~/.cache/puppeteer/chrome/` into the `linux-<version>` folder beside it.
+
 ```bash
 yarn ui-baseline:check --ticket 591                  # check, write the evidence
 yarn ui-baseline:check --ticket 591 --post-pr 1234   # also post (or update) the PR comment

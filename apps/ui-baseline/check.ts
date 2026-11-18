@@ -733,7 +733,7 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
   );
   const expectedKinds = (id: string) =>
     (pipKinds.get(id) ?? []).map((entry) => entry.kind).filter((kind) => kind && (kind !== "excel" || seed?.publications[id]?.excelUploaded !== false));
-  await collectFiles({
+  const collected = await collectFiles({
     container: openBlobContainer(filesStorage("cath", environment.cath)),
     out: cathFiles,
     waitSeconds: environment.cath.filesWaitSeconds,
@@ -751,10 +751,22 @@ async function compareListFiles(): Promise<FileCompareSummary | null> {
     out: path.join(out, "compare/files"),
     only: listed.map((p) => p.id)
   });
+  // CaTH renders every PDF in Chromium (libs/pdf-generation). With none to launch, each render fails
+  // and is only logged, so not one list has a PDF: that is CaTH's setup, not 70 missing PDFs.
+  const noPdfRendered = listed.some((p) => expectedKinds(p.id).includes("pdf")) && !collected.some((entry) => entry.kind === "pdf");
+  if (noPdfRendered)
+    console.error(
+      `\n  CaTH made no PDF for any list: its API could not render them. Install a browser for Puppeteer (npx puppeteer browsers install chrome) or set PUPPETEER_EXECUTABLE_PATH, restart CaTH's API, and check again.`
+    );
   const uncomparable = (r: FileCompareSummary["results"][number]) =>
-    r.kind === "excel" && r.verdict === "missing" && seed?.publications[r.id]?.excelUploaded === false;
+    (r.kind === "excel" && r.verdict === "missing" && seed?.publications[r.id]?.excelUploaded === false) ||
+    (noPdfRendered && r.kind === "pdf" && r.verdict === "missing");
   for (const r of summary.results.filter(uncomparable))
-    scope.skipped.push(`${r.id}: Excel file not compared: CaTH was seeded through its publication API, which takes the list as JSON, not the spreadsheet`);
+    scope.skipped.push(
+      r.kind === "pdf"
+        ? `${r.id}: PDF not compared: CaTH made no PDF for any list, so its API could not render them`
+        : `${r.id}: Excel file not compared: CaTH was seeded through its publication API, which takes the list as JSON, not the spreadsheet`
+    );
   progress.complete("files");
   return { ...summary, results: summary.results.filter((r) => !uncomparable(r)) };
 }

@@ -1,4 +1,4 @@
-# Known pip-frontend defects
+# Known pip defects
 
 Behaviour found while building the parity baseline that is pip getting it wrong. The baseline
 records pip as it behaves; where CaTH differs because it does not have the defect, that difference
@@ -15,3 +15,4 @@ pip-account-management 0c1016af.
 | Bulk unsubscribe confirmation | The question is an `<h2>`; the page has no `<h1>`. | `email-subscriptions` journey |
 | List pages (e.g. civil and family) | "Search Cases" and each court name are `<h1>`, so the page has several `<h1>`s. | List page captures |
 | Accordions on list pages | `aria-controls` points at IDs that do not exist (axe `aria-valid-attr-value`), on 11 list pages. | axe on list page captures |
+| Non-strategic spreadsheet uploads (pip-data-management `POST /publication/non-strategic`) | The Excel file is made from the uploaded spreadsheet in an `@Async` step (`PublicationCreationService.processCreatedPublication`) that reads the `MultipartFile` after the request has ended. With Spring's default `file-size-threshold` of 0 the upload is a temp file Tomcat deletes at the end of the request, so pip makes the list's Excel file only some of the time. The 2026-11-03 baseline has it for 19 of the 50 spreadsheet fixtures, though every one of their list types has `hasExcel`. The recording keeps uploads in memory (`SPRING_SERVLET_MULTIPART_FILE_SIZE_THRESHOLD` in `docker-compose.yml`), so the baseline has the Excel file pip means to make. | File comparison: CaTH's Excel files reported as extra, 2026-11-18 |
