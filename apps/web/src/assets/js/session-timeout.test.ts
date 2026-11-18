@@ -3,289 +3,317 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const MINUTE = 60 * 1000;
+const NOW = new Date("2026-11-02T12:00:00Z").getTime();
+const IDLE_MS = 40 * MINUTE;
+const LEAD_MS = 20 * MINUTE;
+
 describe("session-timeout client-side", () => {
   let originalLocation: Location;
-  let initSessionTimeout: () => void;
+  let assign: ReturnType<typeof vi.fn>;
+  let addedListeners: Array<{ target: EventTarget; type: string; listener: EventListenerOrEventListenerObject; options?: boolean | AddEventListenerOptions }>;
 
-  beforeEach(async () => {
-    vi.useFakeTimers();
+  async function loadModule() {
     vi.resetModules();
+    await import("./session-timeout.js");
+  }
 
-    // Reset DOM
+  function storedIdleExpiry(): number {
+    return Date.parse(window.localStorage.getItem("idleExpiry") ?? "");
+  }
+
+  function setIdleExpiry(timestamp: number) {
+    window.localStorage.setItem("idleExpiry", new Date(timestamp).toISOString());
+  }
+
+  function renderExpiringMarker(redirectType = "SSO", warningLeadMs = String(LEAD_MS)) {
+    document.body.innerHTML = `<div id="session-expiring" hidden data-warning-lead-ms="${warningLeadMs}" data-redirect-type="${redirectType}"></div>`;
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+
     document.body.innerHTML = "";
-    document.body.removeAttribute("data-authenticated");
+    document.body.removeAttribute("data-session-idle-ms");
+    window.localStorage.clear();
 
-    // Mock window.location
+    addedListeners = [];
+    for (const target of [document, window] as EventTarget[]) {
+      const original = target.addEventListener.bind(target);
+      vi.spyOn(target, "addEventListener").mockImplementation((type, listener, options) => {
+        if (listener) {
+          addedListeners.push({ target, type, listener, options });
+        }
+        original(type, listener, options);
+      });
+    }
+
     originalLocation = window.location;
+    assign = vi.fn();
     Object.defineProperty(window, "location", {
-      value: {
-        href: "",
-        search: "",
-        assign: vi.fn(),
-        replace: vi.fn()
-      },
+      value: { pathname: "/summary-of-publications", search: "?locationId=9&lng=cy", assign },
       writable: true
     });
-
-    // Clear cookies by setting them to expire in the past
-    document.cookie.split(";").forEach((cookie) => {
-      const name = cookie.split("=")[0].trim();
-      if (name) {
-        // biome-ignore lint/suspicious/noDocumentCookie: test teardown requires direct cookie expiry
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-      }
-    });
-
-    // Mock fetch
-    global.fetch = vi.fn().mockResolvedValue({ ok: true });
-
-    // Import fresh module for each test
-    const module = await import("./session-timeout.js");
-    initSessionTimeout = module.initSessionTimeout;
   });
 
   afterEach(() => {
+    for (const { target, type, listener, options } of addedListeners) {
+      target.removeEventListener(type, listener, options);
+    }
     vi.useRealTimers();
     vi.restoreAllMocks();
-    Object.defineProperty(window, "location", {
-      value: originalLocation,
-      writable: true
+    Object.defineProperty(window, "location", { value: originalLocation, writable: true });
+  });
+
+  describe("no-op guards", () => {
+    it("should do nothing without the idle attribute or the expiring marker", async () => {
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(300 * MINUTE);
+
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
+      expect(window.localStorage.getItem("idleExpiry")).toBeNull();
+    });
+
+    it.each(["", "abc", "0", "-5", "Infinity"])("should do nothing when the idle attribute is %j", async (value) => {
+      // Arrange
+      document.body.setAttribute("data-session-idle-ms", value);
+
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(300 * MINUTE);
+
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
+      expect(window.localStorage.getItem("idleExpiry")).toBeNull();
+    });
+
+    it("should do nothing on the expiring page when the marker has no redirect type", async () => {
+      // Arrange
+      renderExpiringMarker("");
+
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(300 * MINUTE);
+
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
+    });
+
+    it("should do nothing on the expiring page when the warning lead is invalid", async () => {
+      // Arrange
+      renderExpiringMarker("SSO", "abc");
+
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(300 * MINUTE);
+
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
     });
   });
 
-  describe("initSessionTimeout", () => {
-    it("should not initialize if page is not authenticated", () => {
-      initSessionTimeout();
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal).toBeNull();
+  describe("idle mode", () => {
+    beforeEach(() => {
+      document.body.setAttribute("data-session-idle-ms", String(IDLE_MS));
     });
 
-    it("should create warning modal on authenticated page", () => {
-      document.body.dataset.authenticated = "true";
+    it("should write idleExpiry on load", async () => {
+      // Act
+      await loadModule();
 
-      initSessionTimeout();
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal).not.toBeNull();
-      expect(modal?.style.display).toBe("none");
+      // Assert
+      expect(storedIdleExpiry()).toBe(NOW + IDLE_MS);
     });
 
-    it("should create modal with English content by default", () => {
-      document.body.dataset.authenticated = "true";
+    it("should not redirect before the idle duration", async () => {
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(IDLE_MS - 1);
 
-      initSessionTimeout();
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.innerHTML).toContain("You will soon be signed out");
-      expect(modal?.innerHTML).toContain("Continue");
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
     });
 
-    it("should create modal with Welsh content when locale cookie is cy", () => {
-      document.body.dataset.authenticated = "true";
-      // biome-ignore lint/suspicious/noDocumentCookie: test setup requires direct cookie assignment
-      document.cookie = "locale=cy";
+    it("should redirect to /session-expiring with the encoded current path at the idle duration", async () => {
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(IDLE_MS);
 
-      initSessionTimeout();
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.innerHTML).toContain("Byddwch yn cael eich allgofnodi yn fuan");
-      expect(modal?.innerHTML).toContain("Parhau");
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expiring?currentPath=%2Fsummary-of-publications%3FlocationId%3D9%26lng%3Dcy");
     });
 
-    it("should create modal with Welsh content when URL has lng=cy", () => {
-      document.body.dataset.authenticated = "true";
-      Object.defineProperty(window, "location", {
-        value: {
-          href: "",
-          search: "?lng=cy",
-          assign: vi.fn(),
-          replace: vi.fn()
-        },
-        writable: true
+    it("should reschedule instead of redirecting when another tab moved idleExpiry forward", async () => {
+      // Arrange
+      await loadModule();
+      vi.advanceTimersByTime(30 * MINUTE);
+      setIdleExpiry(Date.now() + IDLE_MS);
+
+      // Act
+      vi.advanceTimersByTime(10 * MINUTE);
+
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(30 * MINUTE);
+      expect(assign).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(["click", "mousedown", "mousemove", "keypress", "scroll", "touchstart"])(
+      "should reset the timer and rewrite idleExpiry on %s",
+      async (eventName) => {
+        // Arrange
+        await loadModule();
+        vi.advanceTimersByTime(30 * MINUTE);
+
+        // Act
+        document.dispatchEvent(new Event(eventName));
+
+        // Assert
+        expect(storedIdleExpiry()).toBe(NOW + 30 * MINUTE + IDLE_MS);
+        vi.advanceTimersByTime(IDLE_MS - 1);
+        expect(assign).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(1);
+        expect(assign).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it("should reset the timer on window load", async () => {
+      // Arrange
+      await loadModule();
+      vi.advanceTimersByTime(5 * MINUTE);
+
+      // Act
+      window.dispatchEvent(new Event("load"));
+
+      // Assert
+      expect(storedIdleExpiry()).toBe(NOW + 5 * MINUTE + IDLE_MS);
+    });
+
+    it("should still redirect at the idle duration when localStorage throws", async () => {
+      // Arrange
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("SecurityError");
+      });
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new Error("SecurityError");
       });
 
-      initSessionTimeout();
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(IDLE_MS - 1);
+      expect(assign).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
 
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.innerHTML).toContain("Byddwch yn cael eich allgofnodi yn fuan");
+      // Assert
+      expect(assign).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("warning modal display", () => {
-    it("should show warning modal after 25 minutes of inactivity", () => {
-      document.body.dataset.authenticated = "true";
+  describe("expiring mode", () => {
+    it("should redirect to /session-expired-logout at idleExpiry plus the warning lead", async () => {
+      // Arrange
+      setIdleExpiry(NOW);
+      renderExpiringMarker("SSO");
 
-      initSessionTimeout();
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(LEAD_MS - 1);
+      expect(assign).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
 
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.style.display).toBe("none");
-
-      // Advance time by 25 minutes
-      vi.advanceTimersByTime(1500000);
-
-      expect(modal?.style.display).toBe("block");
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=SSO");
     });
 
-    it("should display countdown in modal", () => {
-      document.body.dataset.authenticated = "true";
+    it("should not reset idleExpiry or the timer on input events", async () => {
+      // Arrange
+      setIdleExpiry(NOW);
+      renderExpiringMarker("CFT");
+      await loadModule();
 
-      initSessionTimeout();
+      // Act
+      vi.advanceTimersByTime(10 * MINUTE);
+      document.dispatchEvent(new Event("click"));
+      vi.advanceTimersByTime(10 * MINUTE);
 
-      // Advance time by 25 minutes to show modal
-      vi.advanceTimersByTime(1500000);
-
-      const countdown = document.getElementById("session-timeout-countdown");
-      expect(countdown?.textContent).toBe("5:00");
+      // Assert
+      expect(storedIdleExpiry()).toBe(NOW);
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=CFT");
     });
 
-    it("should update countdown every second", () => {
-      document.body.dataset.authenticated = "true";
+    it("should reschedule when another tab moved idleExpiry forward", async () => {
+      // Arrange
+      setIdleExpiry(NOW);
+      renderExpiringMarker("AAD");
+      await loadModule();
+      vi.advanceTimersByTime(10 * MINUTE);
+      setIdleExpiry(Date.now() + IDLE_MS);
 
-      initSessionTimeout();
+      // Act
+      vi.advanceTimersByTime(10 * MINUTE);
 
-      // Advance time by 25 minutes to show modal
-      vi.advanceTimersByTime(1500000);
-
-      const countdown = document.getElementById("session-timeout-countdown");
-      expect(countdown?.textContent).toBe("5:00");
-
-      // Advance by 1 second
-      vi.advanceTimersByTime(1000);
-      expect(countdown?.textContent).toBe("4:59");
-
-      // Advance by another second
-      vi.advanceTimersByTime(1000);
-      expect(countdown?.textContent).toBe("4:58");
-    });
-  });
-
-  describe("logout behavior", () => {
-    it("should redirect to session-expired after 30 minutes of inactivity", () => {
-      document.body.dataset.authenticated = "true";
-
-      initSessionTimeout();
-
-      // Advance time by 30 minutes
-      vi.advanceTimersByTime(1800000);
-
-      expect(window.location.href).toMatch(/\/session-expired/);
+      // Assert
+      expect(assign).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(IDLE_MS + LEAD_MS - 10 * MINUTE);
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=AAD");
     });
 
-    it("should redirect to Welsh session-expired when locale is cy", () => {
-      document.body.dataset.authenticated = "true";
-      // biome-ignore lint/suspicious/noDocumentCookie: test setup requires direct cookie assignment
-      document.cookie = "locale=cy";
+    it("should redirect immediately when the deadline has already passed", async () => {
+      // Arrange
+      setIdleExpiry(NOW - 30 * MINUTE);
+      renderExpiringMarker("CRIME");
 
-      initSessionTimeout();
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(0);
 
-      // Advance time by 30 minutes
-      vi.advanceTimersByTime(1800000);
-
-      expect(window.location.href).toBe("/session-expired?lng=cy");
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=CRIME");
     });
-  });
 
-  describe("continue button", () => {
-    it("should call extend-session API when continue button is clicked", async () => {
-      document.body.dataset.authenticated = "true";
+    it("should fall back to now plus the warning lead when idleExpiry is missing", async () => {
+      // Arrange
+      renderExpiringMarker("SSO");
 
-      initSessionTimeout();
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(LEAD_MS - 1);
+      expect(assign).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
 
-      // Show modal
-      vi.advanceTimersByTime(1500000);
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=SSO");
+    });
 
-      const continueButton = document.getElementById("session-timeout-continue");
-      continueButton?.click();
-
-      expect(fetch).toHaveBeenCalledWith("/api/extend-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
+    it("should fall back to now plus the warning lead when localStorage throws", async () => {
+      // Arrange
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("SecurityError");
       });
+      renderExpiringMarker("SSO");
+
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(LEAD_MS);
+
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=SSO");
     });
 
-    it("should hide modal after successful session extension", async () => {
-      document.body.dataset.authenticated = "true";
+    it("should encode the redirect type", async () => {
+      // Arrange
+      renderExpiringMarker("A&B");
 
-      initSessionTimeout();
+      // Act
+      await loadModule();
+      vi.advanceTimersByTime(LEAD_MS);
 
-      // Show modal
-      vi.advanceTimersByTime(1500000);
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.style.display).toBe("block");
-
-      const continueButton = document.getElementById("session-timeout-continue");
-      continueButton?.click();
-
-      // Wait for fetch promise to resolve
-      await Promise.resolve();
-      await Promise.resolve();
-
-      expect(modal?.style.display).toBe("none");
-    });
-
-    it("should redirect to session-expired if extend-session fails", async () => {
-      document.body.dataset.authenticated = "true";
-      vi.mocked(fetch).mockRejectedValueOnce(new Error("Network error"));
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-      initSessionTimeout();
-
-      // Show modal
-      vi.advanceTimersByTime(1500000);
-
-      const continueButton = document.getElementById("session-timeout-continue");
-      continueButton?.click();
-
-      // Wait for fetch promise to reject
-      await Promise.resolve();
-      await Promise.resolve();
-
-      expect(consoleSpy).toHaveBeenCalledWith("Failed to extend session:", expect.any(Error));
-      expect(window.location.href).toMatch(/\/session-expired/);
-
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe("user activity tracking", () => {
-    it("should reset timers on user activity when modal is hidden", () => {
-      document.body.dataset.authenticated = "true";
-
-      initSessionTimeout();
-
-      // Advance time by 20 minutes (not enough to show modal)
-      vi.advanceTimersByTime(1200000);
-
-      // Simulate user activity
-      document.dispatchEvent(new MouseEvent("mousedown"));
-
-      // Advance time by another 20 minutes (would have shown modal if timer wasn't reset)
-      vi.advanceTimersByTime(1200000);
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.style.display).toBe("none");
-    });
-
-    it("should not reset timers when modal is visible", () => {
-      document.body.dataset.authenticated = "true";
-
-      initSessionTimeout();
-
-      // Advance time by 25 minutes to show modal
-      vi.advanceTimersByTime(1500000);
-
-      const modal = document.getElementById("session-timeout-modal");
-      expect(modal?.style.display).toBe("block");
-
-      // Simulate user activity
-      document.dispatchEvent(new MouseEvent("mousedown"));
-
-      // Modal should still be visible
-      expect(modal?.style.display).toBe("block");
+      // Assert
+      expect(assign).toHaveBeenCalledWith("/session-expired-logout?redirectType=A%26B");
     });
   });
 });
