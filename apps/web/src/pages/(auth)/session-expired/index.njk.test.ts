@@ -6,75 +6,74 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TEMPLATE = "(auth)/session-expired/index.njk";
+
+function renderPage(t: typeof en | typeof cy = en, signInUrl = "/cft-login") {
+  return render(env, TEMPLATE, { en, cy, t, pageTitle: t.pageTitle, signInUrl });
+}
+
+let env: nunjucks.Environment;
+
+beforeEach(() => {
+  env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+});
 
 describe("session-expired template", () => {
-  let env: nunjucks.Environment;
+  it("should render a single heading with the header text", () => {
+    const { $ } = renderPage();
 
-  beforeEach(() => {
-    env = createTestEnvironment([path.join(__dirname, "../../"), path.join(__dirname, "../../../../../../libs/web-core/src/views")]);
+    expect($("h1")).toHaveLength(1);
+    expect($("h1.govuk-heading-l").text().trim()).toBe(en.header);
   });
 
-  describe("English content", () => {
-    it("should render the heading in the confirmation panel", () => {
-      const data = {
-        pageTitle: en.pageTitle,
-        heading: en.heading,
-        bodyText: en.bodyText,
-        signInAgainLink: en.signInAgainLink
-      };
+  it("should not render a confirmation panel", () => {
+    const { $ } = renderPage();
 
-      const { $ } = render(env, "(auth)/session-expired/index.njk", data);
-
-      const panel = $(".govuk-panel--confirmation");
-      expect(panel).toHaveLength(1);
-      expect(panel.find("h1").text()).toContain(en.heading);
-    });
-
-    it("should render the body text", () => {
-      const data = {
-        pageTitle: en.pageTitle,
-        heading: en.heading,
-        bodyText: en.bodyText,
-        signInAgainLink: en.signInAgainLink
-      };
-
-      const { $ } = render(env, "(auth)/session-expired/index.njk", data);
-
-      expect($("body").text()).toContain(en.bodyText);
-    });
-
-    it("should render the sign in again link pointing to /sign-in", () => {
-      const data = {
-        pageTitle: en.pageTitle,
-        heading: en.heading,
-        bodyText: en.bodyText,
-        signInAgainLink: en.signInAgainLink
-      };
-
-      const { $ } = render(env, "(auth)/session-expired/index.njk", data);
-
-      const link = $('.govuk-grid-row a[href="/sign-in"]');
-      expect(link).toHaveLength(1);
-      expect(link.text()).toContain(en.signInAgainLink);
-    });
+    expect($(".govuk-panel")).toHaveLength(0);
   });
 
-  describe("Welsh content", () => {
-    it("should render Welsh heading, body text and link", () => {
-      const data = {
-        pageTitle: cy.pageTitle,
-        heading: cy.heading,
-        bodyText: cy.bodyText,
-        signInAgainLink: cy.signInAgainLink
-      };
+  it("should not render a back link", () => {
+    const { $ } = renderPage();
 
-      const { $ } = render(env, "(auth)/session-expired/index.njk", data);
+    expect($(".govuk-back-link")).toHaveLength(0);
+  });
 
-      expect($(".govuk-panel--confirmation h1").text()).toContain(cy.heading);
-      expect($("body").text()).toContain(cy.bodyText);
-      expect($('.govuk-grid-row a[href="/sign-in"]').text()).toContain(cy.signInAgainLink);
-    });
+  it("should render the detail and sign in message as two body paragraphs", () => {
+    const { $ } = renderPage();
+
+    const paragraphs = $("main p.govuk-body");
+    expect(paragraphs).toHaveLength(2);
+    expect(paragraphs.eq(0).text().trim()).toBe(en.detail);
+    expect(paragraphs.eq(1).text().trim()).toBe(en.signInMessage);
+  });
+
+  it.each(["/cft-login", "/crime-login", "/b2c-login", "/login"])("should render Sign in as a button linking to %s", (signInUrl) => {
+    const { $ } = renderPage(en, signInUrl);
+
+    const button = $("main a.govuk-button");
+    expect(button).toHaveLength(1);
+    expect(button.text().trim()).toBe(en.signIn);
+    expect(button.attr("href")).toBe(signInUrl);
+  });
+
+  it("should set the page title", () => {
+    const { $ } = renderPage();
+
+    expect($("title").text()).toContain(en.pageTitle);
+  });
+
+  it("should render Welsh content when the cy locale is used", () => {
+    const { $ } = renderPage(cy);
+
+    expect($("h1").text().trim()).toBe(cy.header);
+    expect($("main p.govuk-body").eq(0).text().trim()).toBe(cy.detail);
+    expect($("main p.govuk-body").eq(1).text().trim()).toBe(cy.signInMessage);
+    expect($("main a.govuk-button").text().trim()).toBe(cy.signIn);
+    expect($("title").text()).toContain(cy.pageTitle);
+  });
+
+  it("should have matching English and Welsh keys", () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
   });
 });
