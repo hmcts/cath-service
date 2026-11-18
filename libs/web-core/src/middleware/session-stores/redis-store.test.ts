@@ -37,7 +37,7 @@ describe("expressSessionRedis", () => {
         cookie: expect.objectContaining({
           secure: false,
           httpOnly: true,
-          maxAge: 1000 * 60 * 60 * 4
+          maxAge: undefined
         }),
         store: expect.objectContaining({
           redisStoreOptions: expect.objectContaining({
@@ -145,6 +145,23 @@ describe("expressSessionRedis", () => {
         })
       })
     });
+  });
+
+  it("should default to a browser-session cookie with no maxAge", () => {
+    const middleware = expressSessionRedis({ redisConnection: { connect: vi.fn() } }) as unknown as {
+      sessionOptions: { cookie: { maxAge?: number; expires?: Date } };
+    };
+
+    expect(middleware.sessionOptions.cookie.maxAge).toBeUndefined();
+    expect(middleware.sessionOptions.cookie.expires).toBeUndefined();
+  });
+
+  it("should apply an explicit cookieMaxAge", () => {
+    const middleware = expressSessionRedis({ redisConnection: { connect: vi.fn() }, cookieMaxAge: 1000 * 60 * 15 }) as unknown as {
+      sessionOptions: { cookie: { maxAge?: number } };
+    };
+
+    expect(middleware.sessionOptions.cookie.maxAge).toBe(1000 * 60 * 15);
   });
 
   it("should allow custom session options to override defaults", () => {

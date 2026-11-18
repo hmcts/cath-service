@@ -2,16 +2,20 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "./list-download-files.js";
 
-vi.mock("@hmcts/azure-blob", () => ({
-  getBlobProperties: vi.fn()
-}));
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    getBlobProperties: vi.fn()
+  };
+});
 vi.mock("@hmcts/publication", () => ({
   getArtefactById: vi.fn(),
   resolveListType: vi.fn(),
   canAccessPublicationData: vi.fn()
 }));
 
-import { getBlobProperties } from "@hmcts/azure-blob";
+import { CONTAINER, getBlobProperties } from "@hmcts/azure-blob";
 import { canAccessPublicationData, getArtefactById } from "@hmcts/publication";
 
 const ARTEFACT_ID = "12345678-1234-1234-1234-123456789abc";
@@ -142,6 +146,8 @@ describe("List Download Files Controller", () => {
         ]
       })
     );
+    expect(getBlobProperties).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.pdf", CONTAINER.PUBLICATIONS);
+    expect(getBlobProperties).toHaveBeenCalledWith("12345678-1234-1234-1234-123456789abc.xlsx", CONTAINER.PUBLICATIONS);
   });
 
   it("should render files page with MB size label for large files", async () => {

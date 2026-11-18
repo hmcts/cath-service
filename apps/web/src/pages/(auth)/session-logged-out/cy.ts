@@ -1,3 +1,3 @@
 export const cy = {
-  title: "Rydych wedi allgofnodi"
+  title: "Rydych wedi cael eich allgofnodi"
 };

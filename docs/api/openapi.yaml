@@ -13,9 +13,10 @@ info:
     carries only the payload. All other operations are read-only.
 
     Upstream source systems should call `POST /publication` through the CFT API
-    Management gateway (`https://cft-api-mgmt.{environment}.platform.hmcts.net/cath`).
-    The gateway validates the caller's bearer token and the `api.publisher.user` app role,
-    then calls `cath-api` with its own token, so callers never reach `cath-api` directly.
+    Management gateway (`https://cft-api-mgmt.{environment}.platform.hmcts.net/cath`, or
+    `https://cft-api-mgmt.platform.hmcts.net/cath` in production). The gateway validates
+    the caller's bearer token and the `api.publisher.user` app role, then calls `cath-api`
+    with its own token, so callers never reach `cath-api` directly.
     Only `POST /publication` and `GET /` (a welcome check, which also needs a token) are
     exposed through the gateway.
 
@@ -60,6 +61,10 @@ servers:
           - aat
           - demo
           - perftest
+  - url: https://cft-api-mgmt.platform.hmcts.net/cath
+    description: >-
+      Production CFT API Management gateway. Prod hostnames carry no environment label.
+      Exposes `POST /publication` and `GET /` only.
   - url: https://cath-cath-service-{environment}-api.{environment}.platform.hmcts.net
     description: >-
       Release-scoped hostname, deployed by this repo's pipeline alongside the Flux
@@ -1051,6 +1056,11 @@ x-publisher:
             - aat
             - demo
             - perftest
+    - url: https://cft-api-mgmt.platform.hmcts.net/cath
+      description: >-
+        Production CFT API Management gateway. Validates the bearer token and app role, then calls
+        CaTH with its own token. This is the only entry point for publishing source systems in
+        production.
   securitySchemes:
     bearerAuth:
       type: http
