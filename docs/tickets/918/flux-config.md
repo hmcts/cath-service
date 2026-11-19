@@ -8,10 +8,11 @@ This follows the pattern used by `apps/fact/fact-cron-trigger*`: each cron gets 
 
 - `cath-crons-purge-user-archive.yaml` is the base HelmRelease:
   - uses the `cath-crons` chart and image
-  - shares the `flux-system:cath-crons` image policy with the existing cron
+  - uses its own `flux-system:cath-crons-purge-user-archive` image policy
   - sets `SCRIPT_NAME: purge-user-archive` and `schedule: "0 2 * * *"`
   - sets `releaseNameOverride`; without it the chart default names the job `<release>-crons`
 - `aat.yaml`, `demo.yaml`, `perftest.yaml`, `prod.yaml`: per-environment patches that set `schedule`.
+- `image-repo.yaml` (`hmctsprod.azurecr.io/cath/cath-crons`) and `image-policy.yaml`. Both are registered in `apps/cath/automation/kustomization.yaml`.
 
 ## Kustomizations
 
