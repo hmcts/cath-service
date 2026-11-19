@@ -10,6 +10,10 @@
     "./config": {
       "production": "./dist/config.js",
       "default": "./src/config.ts"
+    },
+    "./audit-log/repository": {
+      "production": "./dist/audit-log/repository.js",
+      "default": "./src/audit-log/repository.ts"
     }
   },
   "scripts": {

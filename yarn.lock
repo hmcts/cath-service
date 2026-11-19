@@ -1610,9 +1610,14 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/publication": "workspace:*"
+    "@hmcts/redis": "workspace:*"
+    "@hmcts/system-admin-pages": "workspace:*"
     "@types/config": "npm:4.4.0"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.2"
+    redis: "npm:5.12.1"
   languageName: unknown
   linkType: soft
 

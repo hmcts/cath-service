@@ -1,6 +1,9 @@
 import type { AuditLog } from "@hmcts/postgres-prisma";
 import { prisma } from "@hmcts/postgres-prisma";
 
+const AUDIT_LOG_RETENTION_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export interface AuditLogFilters {
   email?: string;
   userId?: string;
@@ -113,4 +116,10 @@ export async function findUniqueActions(): Promise<string[]> {
   });
 
   return result.map((r) => r.action);
+}
+
+export async function deleteExpiredAuditLogs(now: Date = new Date()): Promise<{ cutoff: Date; deleted: number }> {
+  const cutoff = new Date(now.getTime() - AUDIT_LOG_RETENTION_DAYS * DAY_MS);
+  const { count } = await prisma.auditLog.deleteMany({ where: { timestamp: { lt: cutoff } } });
+  return { cutoff, deleted: count };
 }
