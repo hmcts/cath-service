@@ -47,6 +47,12 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    # A storage account's blob service cannot be deleted on its own in Azure (it goes with the
+    # account), so Azure Service Operator holds this object on its finalizer for ever unless told to
+    # let it go: without this, every preview's uninstall waits on it until it times out, and the
+    # object is left behind blocking the next install of the same release
+    serviceoperator.azure.com/reconcile-policy: detach-on-delete
 spec:
   owner:
     name: storage-account-{{ $releaseName }}-blobstorage
