@@ -681,14 +681,20 @@ describe("createRunner when pods are replaced", () => {
     // Act
     const drained = old.drain();
     await vi.waitFor(() => expect(replacement.get(queued.id)?.owner).toBe("new"));
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Waits for heartbeats rather than a fixed time, which a slow CI runner may not fit two into
+    const beatTimes = () =>
+      new Set(
+        uploads
+          .filter((upload) => upload.name === `runs/${queued.id}.json` && upload.record.owner === "new" && upload.record.status === "queued")
+          .map((beat) => beat.record.heartbeatAt)
+      ).size;
+    await vi.waitFor(() => expect(beatTimes()).toBeGreaterThan(1), { timeout: 2000 });
     finish();
     await drained;
     await vi.waitFor(() => expect(execute).toHaveBeenCalledTimes(1));
 
     // Assert
-    const beats = uploads.filter((upload) => upload.name === `runs/${queued.id}.json` && upload.record.owner === "new" && upload.record.status === "queued");
-    expect(new Set(beats.map((beat) => beat.record.heartbeatAt)).size).toBeGreaterThan(1);
+    expect(beatTimes()).toBeGreaterThan(1);
     replacement.stopWatching();
   });
 
