@@ -19,11 +19,21 @@ export const REPO = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 export const ARTEFACT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // What a file comparison is named, which names the files it writes
 export const NAME = /^[a-z0-9][a-z0-9-]{0,59}$/;
+// The parts of a check that --skip can leave out: list pages, other pages, journeys, the PDF and
+// Excel files lists make, and the files CaTH answers with rather than a page
+export const CHECK_PARTS = ["lists", "pages", "journeys", "files", "downloads"] as const;
 
 // The value, if it has the expected shape; otherwise an error naming the option
 export function matching(value: string, pattern: RegExp, option: string): string {
   if (!pattern.test(value)) throw new Error(`${option} "${value}" is not valid (expected ${pattern.source})`);
   return value;
+}
+
+// The parts of a check to leave out, as --skip names them; an error naming any that is not one
+export function checkParts(values: string[]): Set<CheckPart> {
+  const unknown = values.filter((value) => !(CHECK_PARTS as readonly string[]).includes(value));
+  if (unknown.length) throw new Error(`--skip "${unknown.join(", ")}" is not a part of a check (one of: ${CHECK_PARTS.join(", ")})`);
+  return new Set(values as CheckPart[]);
 }
 
 // The path, resolved, if it is inside the output folder, the system temp folder or the hosted app's
@@ -41,3 +51,5 @@ export function httpUrl(value: string, option: string): string {
   if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error(`${option} must be an http or https address, not ${value}`);
   return value;
 }
+
+export type CheckPart = (typeof CHECK_PARTS)[number];

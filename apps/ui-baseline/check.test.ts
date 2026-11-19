@@ -1012,6 +1012,57 @@ describe("check", () => {
       expect(logs.join("\n")).toContain("skipped:    2 not run by --all outside a local CaTH, as journeys change its data");
     });
 
+    it("should leave out the journeys when told to, and check everything else", async () => {
+      // Act
+      const { code } = await runCheck(["--all", "--skip", "journeys"]);
+
+      // Assert
+      expect(code).toBe(0);
+      expect(mocks.runJourneys).not.toHaveBeenCalled();
+      expect(targetsIn("lists").length).toBeGreaterThan(0);
+      expect(mocks.captureDownloads).toHaveBeenCalled();
+      const { stages } = JSON.parse(readFileSync(path.join(out, "progress.json"), "utf-8")) as { stages: { id: string; status: string; reason?: string }[] };
+      expect(stages.find((stage) => stage.id === "journeys")).toMatchObject({ status: "skipped", reason: "left out of this check" });
+      expect(logs.join("\n")).toContain("left out:   journeys");
+    });
+
+    it("should still seed the lists to compare their files when their pages are left out", async () => {
+      // Act
+      const { code } = await runCheck(["--all", "--skip", "lists", "--skip", "pages", "--skip", "journeys", "--skip", "downloads"]);
+
+      // Assert
+      expect(code).toBe(0);
+      expect(mocks.spawnSync.mock.calls[0][1]).toContain("--only=civil-daily,flat-list");
+      expect(existsSync(path.join(out, "targets-lists.json"))).toBe(false);
+      expect(existsSync(path.join(out, "targets-pages.json"))).toBe(false);
+      expect(mocks.captureDownloads).not.toHaveBeenCalled();
+      const { stages } = JSON.parse(readFileSync(path.join(out, "progress.json"), "utf-8")) as { stages: { id: string; status: string; reason?: string }[] };
+      const reasons = Object.fromEntries(stages.map((stage) => [stage.id, stage.reason]));
+      expect(reasons).toMatchObject({
+        "capture-lists": "left out of this check",
+        "capture-pages": "left out of this check",
+        downloads: "left out of this check"
+      });
+    });
+
+    it("should refuse a part of the check it does not know", async () => {
+      // Act
+      const { error } = await runCheck(["--all", "--skip", "screenshots"]);
+
+      // Assert
+      expect(error?.message).toBe('--skip "screenshots" is not a part of a check (one of: lists, pages, journeys, files, downloads)');
+    });
+
+    it("should exit with 2, saying why, when every part of the check is left out", async () => {
+      // Act
+      const { code } = await runCheck(["--all", ...["lists", "pages", "journeys", "files", "downloads"].flatMap((part) => ["--skip", part])]);
+
+      // Assert
+      expect(code).toBe(2);
+      expect(logs.join("\n")).toContain("Nothing to check: everything in scope was left out (--skip lists, pages, journeys, files, downloads).");
+      expect(mocks.spawnSync).not.toHaveBeenCalled();
+    });
+
     it("should serve the report rather than exit when asked to", async () => {
       // Act
       void runCheck(["--all", "--serve"]);

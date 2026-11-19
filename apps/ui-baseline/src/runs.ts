@@ -4,7 +4,7 @@ import { createWriteStream, existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { ARTEFACT_ID, LIST_TYPE, NAME, ROUTE } from "../cli-input.js";
+import { ARTEFACT_ID, CHECK_PARTS, type CheckPart, LIST_TYPE, NAME, ROUTE } from "../cli-input.js";
 import type { BlobContainer } from "../core/index.js";
 import { EXIT_DIFFERENCES, EXIT_NOTHING_TO_CHECK, EXIT_TIMED_OUT } from "../exit-codes.js";
 import { systemCommand } from "../system-command.js";
@@ -545,7 +545,7 @@ function commandFor(record: RunRecord, dir: string, environment: string, baselin
     };
   const scope =
     record.scope === "all"
-      ? ["--all"]
+      ? ["--all", ...(record.skip ?? []).map((part) => `--skip=${part}`)]
       : record.scope === "list-types"
         ? record.listTypes.flatMap((name) => ["--list-type", name])
         : record.routes.flatMap((route) => ["--route", route]);
@@ -584,6 +584,10 @@ function validated(request: RunRequest): RunRequest {
       throw new RunRequestError("Enter both artefact ids, like 2a7b1d4e-0000-4000-8000-000000000000");
     if (request.name !== undefined && !NAME.test(request.name)) throw new RunRequestError("Name the publication with lower-case letters, numbers and hyphens");
     return request;
+  }
+  if (request.scope === "all" && request.skip) {
+    if (!request.skip.every((part) => (CHECK_PARTS as readonly string[]).includes(part))) throw new RunRequestError("Choose what to check from the list");
+    if (request.skip.length === CHECK_PARTS.length) throw new RunRequestError("Select at least one thing to check");
   }
   if (request.scope === "list-types" && (!request.listTypes.length || !request.listTypes.every((name) => LIST_TYPE.test(name))))
     throw new RunRequestError("Enter list type names like CIVIL_DAILY_CAUSE_LIST");
@@ -648,7 +652,8 @@ function executeScript(
 export class RunRequestError extends Error {}
 
 export type RunRequest =
-  | { kind: "check"; scope: "all" }
+  // skip: the parts of the check left out (--skip), none when absent, as in runs stored before it
+  | { kind: "check"; scope: "all"; skip?: CheckPart[] }
   | { kind: "check"; scope: "list-types"; listTypes: string[] }
   | { kind: "check"; scope: "routes"; routes: string[] }
   | { kind: "files"; pipArtefactId: string; cathArtefactId: string; name?: string };

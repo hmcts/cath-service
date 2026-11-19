@@ -76,7 +76,8 @@ async function appWith() {
 }
 
 // Posts a form to /runs as the start page's own form would: with the page's cookie and token
-async function postForm(app: Express, body: Record<string, string>, headers: Record<string, string> = {}) {
+// A field given as a list is sent once per value, as a form sends ticked checkboxes
+async function postForm(app: Express, body: Record<string, string | string[]>, headers: Record<string, string> = {}) {
   const startPage = await request(app).get("/");
   const cookie = (startPage.headers["set-cookie"] as unknown as string[])[0].split(";")[0];
   const token = startPage.text.match(/name="formToken" value="([0-9a-f]+)"/)?.[1] as string;
@@ -85,7 +86,7 @@ async function postForm(app: Express, body: Record<string, string>, headers: Rec
     .set("Cookie", cookie)
     .set(headers)
     .type("form")
-    .send({ ...body, formToken: token });
+    .send(new URLSearchParams([...Object.entries(body).flatMap(([name, value]) => [value].flat().map((one) => [name, one])), ["formToken", token]]).toString());
 }
 
 describe("createApp", () => {
@@ -151,6 +152,49 @@ describe("createApp", () => {
     expect(page.text).toContain("no journeys in scope");
     expect(page.text).toContain("Open the full report");
     expect(report.text).toBe("<p>the report</p>");
+  });
+
+  it("should offer every part of a check of everything, all ticked, and leave out those unticked", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+    const startPage = await request(app).get("/");
+
+    // Act
+    const started = await postForm(app, { kind: "check", scope: "all", partsShown: "yes", parts: ["lists", "pages", "files"] });
+    await runner.idle();
+    const runsPage = await request(app).get("/");
+
+    // Assert
+    for (const part of ["lists", "pages", "journeys", "files", "downloads"])
+      expect(startPage.text).toMatch(new RegExp(`name="parts" type="checkbox" value="${part}" checked`));
+    expect(started.status).toBe(302);
+    expect(runner.list()[0]).toMatchObject({ kind: "check", scope: "all", skip: ["journeys", "downloads"] });
+    expect(runsPage.text).toContain("All of CaTH, without journeys, downloads");
+  });
+
+  it("should ask for something to check when every part is unticked, keeping them unticked", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+
+    // Act
+    const page = await postForm(app, { kind: "check", scope: "all", partsShown: "yes" });
+
+    // Assert
+    expect(page.status).toBe(400);
+    expect(page.text).toContain("Select at least one thing to check");
+    expect(page.text).not.toMatch(/name="parts" type="checkbox" value="[a-z]+" checked/);
+    expect(runner.list()).toEqual([]);
+  });
+
+  it("should check everything when the form is posted without the parts to include", async () => {
+    // Arrange
+    const { app, runner } = await appWith();
+
+    // Act
+    await postForm(app, { kind: "check", scope: "all" });
+
+    // Assert
+    expect(runner.list()[0]).not.toHaveProperty("skip");
   });
 
   it("should link to the publication in both apps after comparing its files", async () => {

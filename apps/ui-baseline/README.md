@@ -236,6 +236,19 @@ confidently, skipping the same pages a ticket check would (unreviewed suggestion
 and runs every journey ported to CaTH. It writes the full report, with journeys and the Comparison
 page, to `output/checks/all/`, and no PR evidence.
 
+To leave out the parts you do not need, so it finishes sooner, name each with `--skip`: `lists`
+(list pages), `pages` (other pages), `journeys`, `files` (the PDF and Excel files lists make) or
+`downloads` (the files CaTH answers with rather than a page). For example, everything but the
+journeys:
+
+```bash
+yarn ui-baseline:check --all --skip journeys
+```
+
+Leaving out list pages still seeds the lists when their files are compared, and `--no-files` is
+`--skip files --skip downloads`. The hosted check's start page offers the same choice, as
+checkboxes under "All of CaTH".
+
 To check one of pip's journeys in CaTH:
 
 ```bash
@@ -251,7 +264,7 @@ journey not ported to CaTH yet is listed as not compared. The PR comment gets a 
 and the report shows CaTH's capture beneath each of pip's steps.
 
 Other options: `--list-type NAME`, `--route /path` and `--journey ID` to check without a ticket, `--locale en|cy`,
-`--env local|test`, `--no-seed`, `--keep-seed`, `--no-review`, `--no-files`, `--no-evidence` (no PR evidence; the hosted check passes it),
+`--env local|test`, `--skip PART` (above), `--no-seed`, `--keep-seed`, `--no-review`, `--no-files`, `--no-evidence` (no PR evidence; the hosted check passes it),
 `--reviewer "<command>"` (default:
 `claude -p` with no tools and a JSON schema for its answer; any command that reads the prompt on stdin
 and prints JSON will do; the review runs up to four of them at once), `--investigate N`,

@@ -122,6 +122,33 @@ describe("createRunner", () => {
     expect(order).toEqual(["start /a", "end /a", "start /b", "end /b"]);
   });
 
+  it("should leave out of a check of everything the parts it is asked to", async () => {
+    // Arrange
+    const { runner, execute } = await runnerWith();
+
+    // Act
+    runner.start({ kind: "check", scope: "all", skip: ["journeys", "downloads"] });
+    await runner.idle();
+
+    // Assert
+    const [, args] = execute.mock.calls[0];
+    expect(args.slice(-3)).toEqual(["--all", "--skip=journeys", "--skip=downloads"]);
+  });
+
+  it("should refuse to leave out every part of a check, or one that is not a part", async () => {
+    // Arrange
+    const { runner } = await runnerWith();
+
+    // Act and assert
+    expect(() => runner.start({ kind: "check", scope: "all", skip: ["lists", "pages", "journeys", "files", "downloads"] })).toThrow(
+      "Select at least one thing to check"
+    );
+    expect(() => runner.start({ kind: "check", scope: "all", skip: ["--target=https://example.com" as "lists"] })).toThrow(
+      "Choose what to check from the list"
+    );
+    expect(runner.list()).toEqual([]);
+  });
+
   it("should refuse artefact ids, list types and routes that are not well formed", async () => {
     // Arrange
     const { runner } = await runnerWith();

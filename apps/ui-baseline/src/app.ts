@@ -6,6 +6,7 @@ import { healthcheck } from "@hmcts-cft/cloud-native-platform";
 import type { Express, Request, RequestHandler, Response } from "express";
 import express from "express";
 import nunjucks from "nunjucks";
+import { CHECK_PARTS } from "../cli-input.js";
 import type { ProgressFile } from "../progress.js";
 import { isReportPage, withAppNavigation } from "./report-pages.js";
 import { formToken, sameSiteForm } from "./request-forgery.js";
@@ -62,11 +63,16 @@ export function createApp(options: AppOptions): Express {
 
   app.post("/runs", sameSiteForm(), async (req, res) => {
     try {
-      const run = options.runner.start(requestFrom(req.body as Record<string, string>));
+      const run = options.runner.start(requestFrom(req.body as Record<string, string | string[]>));
       res.redirect(`/runs/${run.id}`);
     } catch (error) {
       if (!(error instanceof RunRequestError)) throw error;
-      res.status(400).render("index", { runs: options.runner.list(), baseline: await options.baselineStatus(), errorMessage: error.message, data: req.body });
+      const body = req.body as Record<string, string | string[]>;
+      // The parts of a check of everything that were ticked, to tick them again
+      const chosenParts = body.partsShown ? [body.parts ?? []].flat() : null;
+      res
+        .status(400)
+        .render("index", { runs: options.runner.list(), baseline: await options.baselineStatus(), errorMessage: error.message, data: body, chosenParts });
     }
   });
 
@@ -175,18 +181,28 @@ function safeDecode(value: string): string | null {
   }
 }
 
-function requestFrom(body: Record<string, string>): RunRequest {
-  const list = (value: string | undefined) => (value ?? "").split(/[\s,]+/).filter(Boolean);
+function requestFrom(body: Record<string, string | string[]>): RunRequest {
+  const list = (value: string | string[] | undefined) =>
+    [value ?? ""]
+      .flat()
+      .join(" ")
+      .split(/[\s,]+/)
+      .filter(Boolean);
   if (body.kind === "files")
     return {
       kind: "files",
-      pipArtefactId: (body.pipArtefactId ?? "").trim(),
-      cathArtefactId: (body.cathArtefactId ?? "").trim(),
-      name: body.name?.trim() || undefined
+      pipArtefactId: String(body.pipArtefactId ?? "").trim(),
+      cathArtefactId: String(body.cathArtefactId ?? "").trim(),
+      name: String(body.name ?? "").trim() || undefined
     };
   if (body.scope === "list-types") return { kind: "check", scope: "list-types", listTypes: list(body.listTypes).map((name) => name.toUpperCase()) };
   if (body.scope === "routes") return { kind: "check", scope: "routes", routes: list(body.routes) };
-  return { kind: "check", scope: "all" };
+  // The start page lists the parts of a check of everything, all ticked; one posted without that list
+  // (partsShown) checks all of them
+  if (!body.partsShown) return { kind: "check", scope: "all" };
+  const chosen = new Set([body.parts ?? []].flat());
+  const skip = CHECK_PARTS.filter((part) => !chosen.has(part));
+  return { kind: "check", scope: "all", ...(skip.length ? { skip } : {}) };
 }
 
 // The end of a run's log, read from the end of the file: a check of all of CaTH writes a line per

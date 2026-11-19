@@ -8,7 +8,7 @@ import { parseArgs } from "node:util";
 import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
 import { cathApi, removeRuns } from "./cath/run.js";
 import type { SignInResult } from "./cath/sign-in.js";
-import { confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
+import { checkParts, confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
 import {
   type CaptureResult,
   type CompareSummary,
@@ -98,8 +98,12 @@ const { values: given } = parseArgs({
     // Skip the PR evidence (the zipped report, side-by-side screenshots and PR comment): the hosted
     // check serves the report itself, and never posts to a PR
     "no-evidence": { type: "boolean", default: false },
-    // Skip comparing the PDF and Excel files each list generates
+    // Skip comparing the PDF and Excel files each list generates, and the files CaTH answers with
+    // rather than a page: --skip files --skip downloads
     "no-files": { type: "boolean", default: false },
+    // Parts of the check to leave out (cli-input.ts CHECK_PARTS): lists, pages, journeys, files,
+    // downloads. Leaving out list pages still seeds the lists, to compare their files.
+    skip: { type: "string", multiple: true },
     reviewer: { type: "string" },
     // Look again, with read-only tools, at up to this many of each area's needs-human items
     investigate: { type: "string" },
@@ -151,31 +155,42 @@ if (!existsSync(path.join(baseline, "lists/index.jsonl")))
 // ---------- 1. What to check ----------
 const requirements = args.ticket ? await ticketText(args.ticket, args.repo) : null;
 const scope = selectScope(requirements, args["list-type"] ?? [], args.route ?? [], args.all);
+// The parts of the check left out (--skip, and --no-files for both kinds of file), and what is left
+const leftOut = checkParts([...(args.skip ?? []), ...(args["no-files"] ? ["files", "downloads"] : [])]);
+const LEFT_OUT = "left out of this check";
+const routes = leftOut.has("pages") ? [] : scope.routes;
+const capturesLists = !leftOut.has("lists");
+// Lists are seeded to capture their pages, or to compare the files they make
+const listsInScope = capturesLists || !leftOut.has("files") ? scope.publications : [];
 // pip's journeys to run in CaTH and compare: all of them for --all, otherwise those named
 const baselineJourneys = new Set(
   (await readdir(path.join(baseline, "journeys"), { withFileTypes: true }).catch(() => [])).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 );
 // Journeys create and delete courts, users and publications, so --all runs them only against a local
 // CaTH; in a shared environment they run only when named, by someone who means to change its data
-const allJourneys = args.all && environment.cath.signIn === "session";
-if (args.all && !allJourneys)
+const allJourneys = args.all && environment.cath.signIn === "session" && !leftOut.has("journeys");
+if (args.all && !allJourneys && !leftOut.has("journeys"))
   for (const id of baselineJourneys)
     scope.skipped.push(`journey ${id}: not run by --all outside a local CaTH, as journeys change its data (name it with --journey)`);
-const journeyIds = allJourneys ? [...baselineJourneys].sort((a, b) => a.localeCompare(b)) : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
+const journeyIds = leftOut.has("journeys")
+  ? []
+  : allJourneys
+    ? [...baselineJourneys].sort((a, b) => a.localeCompare(b))
+    : (args.journey ?? []).filter((id) => baselineJourneys.has(id));
 for (const id of (args.journey ?? []).filter((id) => !baselineJourneys.has(id))) scope.skipped.push(`journey ${id}: not in the pip baseline`);
 const name = args.ticket
   ? `ticket-${args.ticket}`
   : args.all
     ? "all"
-    : [...scope.publications.map((p) => p.id), ...scope.routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-")), ...journeyIds].slice(0, 3).join("+") ||
+    : [...scope.publications.map((p) => p.id), ...routes.map((r) => r.pip.replace(/^\//, "").replace(/\//g, "-")), ...journeyIds].slice(0, 3).join("+") ||
       "check";
 const out = confinedPath(args.out ?? path.join(PARITY_DIR, "output/checks", name), "--out");
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 if (requirements) await writeFile(path.join(out, "requirements.md"), requirements);
 const progress = createProgress(path.join(out, "progress.json"), STAGES);
-if (!scope.publications.length) progress.skip("capture-lists", "no list pages in scope");
-if (!journeyIds.length) progress.skip("journeys", "no journeys in scope");
+if (!capturesLists || !scope.publications.length) progress.skip("capture-lists", capturesLists ? "no list pages in scope" : LEFT_OUT);
+if (!journeyIds.length) progress.skip("journeys", leftOut.has("journeys") ? LEFT_OUT : "no journeys in scope");
 if (args["no-review"] || !requirements) progress.skip("review", args["no-review"] ? "not asked for" : "no ticket to review against");
 
 step(`Checking ${targetBase} (${environment.name}) against the pip baseline (${path.relative(REPO_DIR, baseline)})`);
@@ -187,22 +202,19 @@ if (recordedScope)
     `  a ticket recording: ${recordedScope.publications.length} list types, ${recordedScope.pages.length} pages, ${recordedScope.journeys.length} journeys; anything else is not in it`
   );
 console.log(`  list types: ${scope.publications.map((p) => p.listType).join(", ") || "none"}`);
-console.log(`  pages:      ${scope.routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
+console.log(`  pages:      ${routes.map((r) => `${r.pip} → ${r.cath}`).join(", ") || "none"}`);
 console.log(`  journeys:   ${journeyIds.join(", ") || "none"}`);
+if (leftOut.size) console.log(`  left out:   ${[...leftOut].join(", ")}`);
 // --all skips most of the route map (journey steps, sign-in pages), so count those by reason instead
 const skippedReasons = Object.entries(Object.groupBy(scope.skipped, (s) => s.slice(s.indexOf(": ") + 2).replace(/ \(.*\)/, "")));
 for (const line of args.all ? skippedReasons.map(([reason, items]) => `${items?.length} ${reason}`) : scope.skipped) console.log(`  skipped:    ${line}`);
-if (!scope.publications.length && !scope.routes.length && !journeyIds.length) {
-  console.log("\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --journey / --all.");
-  process.exit(EXIT_NOTHING_TO_CHECK);
-}
 
 // ---------- 2. Seed CaTH with the baseline's fixtures ----------
 // The ids pip gave its publications, records and users, which appear in the baseline's page URLs
 const pipSeed = existsSync(path.join(baseline, "seed.json")) ? (JSON.parse(await readFile(path.join(baseline, "seed.json"), "utf-8")) as SeedResult) : null;
 const pageUrls = new Map(
   await Promise.all(
-    scope.routes.map(
+    routes.map(
       async (route) =>
         [route.id, new URL(JSON.parse(await readFile(path.join(baseline, "pages", route.id, "en/default/provenance.json"), "utf-8")).url)] as const
     )
@@ -210,36 +222,43 @@ const pageUrls = new Map(
 );
 // Pages that show a publication need it seeded in CaTH too, even when the list itself is not in scope
 const pipArtefacts = new Map(Object.entries(pipSeed?.publications ?? {}).map(([id, p]) => [p.artefactId, id]));
-const pageFixtures = scope.routes.flatMap((route) => [
+const pageFixtures = routes.flatMap((route) => [
   ...[...(pageUrls.get(route.id)?.searchParams.values() ?? [])].flatMap((value) => pipArtefacts.get(value) ?? []),
   ...Object.values(route.cathParams ?? {}).flatMap((source) => (source.startsWith("publication:") ? [source.slice("publication:".length)] : []))
 ]);
 // The routes in scope: every one the ticket or --route names, and the CaTH routes of the pages chosen
-const routesInScope = new Set([...scope.mentionedRoutes, ...scope.routes.flatMap((route) => [route.pip, route.cath])]);
+const routesInScope = new Set([...scope.mentionedRoutes, ...routes.flatMap((route) => [route.pip, route.cath])]);
 // Files the baseline recorded that are fetched rather than shown (routes/downloads.json), with the
 // publications they come from: all of them for --all, otherwise those of the routes in scope
 const downloadSpecs =
-  existsSync(path.join(baseline, "downloads/index.jsonl")) && !args["no-files"]
+  existsSync(path.join(baseline, "downloads/index.jsonl")) && !leftOut.has("downloads")
     ? (await loadDownloads()).filter((spec) => args.all || routesInScope.has(spec.pip.path) || routesInScope.has(spec.cath.path))
     : [];
-if (!downloadSpecs.length) progress.skip("downloads", "no downloads in scope");
+if (!downloadSpecs.length) progress.skip("downloads", leftOut.has("downloads") ? LEFT_OUT : "no downloads in scope");
 const downloadFixtures = downloadSpecs.flatMap((spec) =>
   Object.values({ ...spec.cath.params, ...spec.cath.query }).flatMap((value) => (value.startsWith("publication:") ? [value.slice("publication:".length)] : []))
 );
-const seedIds = [
-  ...new Set([...scope.publications.map((p) => p.id), ...pageFixtures, ...downloadFixtures, ...(journeyIds.length ? JOURNEY_PUBLICATIONS : [])])
-];
+const seedIds = [...new Set([...listsInScope.map((p) => p.id), ...pageFixtures, ...downloadFixtures, ...(journeyIds.length ? JOURNEY_PUBLICATIONS : [])])];
 // The baseline's variants of each page in scope (variants.ts): the page as other roles, and signed in
 const baselineIds = { lists: await capturedIds(path.join(baseline, "lists")), pages: await capturedIds(path.join(baseline, "pages")) };
 const variantsOf = (area: keyof typeof baselineIds, id: string) => [...baselineIds[area]].filter((other) => other !== id && parseVariant(other).base === id);
-const includeNotFound = baselineIds.pages.has(NOT_FOUND_ID) && (args.all || routesInScope.has("/not-found") || routesInScope.has(NOT_FOUND_PATH));
-if (!scope.routes.length && !includeNotFound) progress.skip("capture-pages", "no other pages in scope");
+const includeNotFound =
+  !leftOut.has("pages") && baselineIds.pages.has(NOT_FOUND_ID) && (args.all || routesInScope.has("/not-found") || routesInScope.has(NOT_FOUND_PATH));
+if (!routes.length && !includeNotFound) progress.skip("capture-pages", leftOut.has("pages") ? LEFT_OUT : "no other pages in scope");
+if (!listsInScope.length && !routes.length && !includeNotFound && !journeyIds.length && !downloadSpecs.length) {
+  console.log(
+    leftOut.size && (scope.publications.length || scope.routes.length || args.all)
+      ? `\nNothing to check: everything in scope was left out (--skip ${[...leftOut].join(", ")}).`
+      : "\nNothing to check: name a ticket that mentions list types or pages, or pass --list-type / --route / --journey / --all."
+  );
+  process.exit(EXIT_NOTHING_TO_CHECK);
+}
 // Pages behind sign-in need CaTH users signed in, as do journeys and downloads made for a user
 const needsSignIn =
   journeyIds.length > 0 ||
   downloadSpecs.some((spec) => spec.cath.as) ||
-  scope.routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
-  scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length);
+  routes.some((r) => r.viewAs || variantsOf("pages", r.id).length) ||
+  (capturesLists && scope.publications.some((p) => p.viewAs || variantsOf("lists", p.id).length));
 if (!needsSignIn) progress.skip("sign-in", "no page in scope needs it");
 const isSeeding = seedIds.length > 0 && !args["no-seed"];
 // The environment's seed file may hold a run an earlier check kept (--keep-seed). A check uses it only
@@ -339,7 +358,7 @@ const withVariants = <T extends { id: string; locales: string[]; source: Record<
     { ...main, viewAs: viewAs ?? null },
     ...variantsOf(area, main.id).map((id) => ({ ...main, id, viewAs: parseVariant(id).viewAs, source: { ...main.source, viewAs: parseVariant(id).viewAs } }))
   ]).flatMap(({ viewAs: as, ...target }) => signedInTargets(target, as));
-const listTargets = scope.publications.flatMap((publication) => {
+const listTargets = (capturesLists ? scope.publications : []).flatMap((publication) => {
   const seeded = seed?.publications[publication.id];
   if (!seeded || !inCath(publication)) return [];
   return withVariants(
@@ -357,7 +376,7 @@ const listTargets = scope.publications.flatMap((publication) => {
   );
 });
 const cathIds = cathIdsFor(pipSeed, seed, signedIn);
-const pageTargets = scope.routes.flatMap((route) => {
+const pageTargets = routes.flatMap((route) => {
   const cathUrl = cathUrlFor(route, required(pageUrls.get(route.id), route.id), cathIds);
   if ("unmapped" in cathUrl) {
     console.log(`    not compared: ${route.id}: ${cathUrl.unmapped}`);
@@ -392,7 +411,7 @@ const captureAreas = (
     ["pages", pageTargets]
   ] as const
 ).filter(([area, targets]) => {
-  if (!targets.length) progress.skip(CAPTURE_STAGE[area], `no ${area === "lists" ? "list pages" : "other pages"} in scope`);
+  if (!targets.length) progress.skip(CAPTURE_STAGE[area], leftOut.has(area) ? LEFT_OUT : `no ${area === "lists" ? "list pages" : "other pages"} in scope`);
   return targets.length > 0;
 });
 const finishing: Promise<void>[] = [];
@@ -709,9 +728,9 @@ async function compareGeneratedFiles(): Promise<FileCompareSummary | null> {
 // fixture. A list seeded through the publication API (JSON only) has no Excel from a spreadsheet,
 // so for those a missing Excel is not counted.
 async function compareListFiles(): Promise<FileCompareSummary | null> {
-  const listed = scope.publications.filter((publication) => publication.format !== "flat-file" && seed?.publications[publication.id]);
-  if (args["no-files"] || !listed.length) {
-    progress.skip("files", args["no-files"] ? "not asked for" : "no list in scope makes files");
+  const listed = listsInScope.filter((publication) => publication.format !== "flat-file" && seed?.publications[publication.id]);
+  if (leftOut.has("files") || !listed.length) {
+    progress.skip("files", leftOut.has("files") ? LEFT_OUT : "no list in scope makes files");
     return null;
   }
   if (!existsSync(path.join(baseline, "files/index.jsonl"))) {
