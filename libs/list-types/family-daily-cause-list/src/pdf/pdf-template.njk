@@ -34,14 +34,20 @@
     <div class="court-section">
       {% if courtHouse.courtHouseAddress %}
         <h2>{{ courtHouse.courtHouseName }}</h2>
-        <div class="address">
-          {% for line in courtHouse.courtHouseAddress.line %}
-            {% if line | length %}{{ line }}<br>{% endif %}
-          {% endfor %}
-          {% if courtHouse.courtHouseAddress.town | length %}{{ courtHouse.courtHouseAddress.town }}<br>{% endif %}
-          {% if courtHouse.courtHouseAddress.county | length %}{{ courtHouse.courtHouseAddress.county }}<br>{% endif %}
-          {% if courtHouse.courtHouseAddress.postCode | length %}{{ courtHouse.courtHouseAddress.postCode }}{% endif %}
-        </div>
+        {% set address = courtHouse.courtHouseAddress %}
+        {% set addressParts = [] %}
+        {% for part in (address.line or []).concat([address.town, address.county, address.postCode]) %}
+          {% if part | length %}
+            {% set addressParts = (addressParts.push(part), addressParts) %}
+          {% endif %}
+        {% endfor %}
+        {% if addressParts | length %}
+          <div class="address">
+            {% for part in addressParts %}
+              {{ part }}{% if not loop.last %}<br>{% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
       {% endif %}
 
       {% for courtRoom in courtHouse.courtRoom %}
@@ -96,8 +102,16 @@
                         <td class="no-wrap">{{ hearing.hearingType }}</td>
                         <td class="no-wrap">{{ sitting.caseHearingChannel }}</td>
                         <td class="no-wrap">{{ durationText }}</td>
-                        <td>{{ case.applicant }}</td>
-                        <td>{{ case.respondent }}</td>
+                        <td>
+                          {% if case.applicant %}
+                            {{ case.applicant }}{% if case.applicantRepresentative %}, {{ t.legalAdvisor }}: {{ case.applicantRepresentative }}{% endif %}
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.respondent %}
+                            {{ case.respondent }}{% if case.respondentRepresentative %}, {{ t.legalAdvisor }}: {{ case.respondentRepresentative }}{% endif %}
+                          {% endif %}
+                        </td>
                       </tr>
                       {% if case.formattedReportingRestriction | length %}
                         <tr class="restriction-row">
