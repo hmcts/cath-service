@@ -79,6 +79,24 @@
         ]
       }) }}
 
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">{{ jsonFileGeneratedFilesHeading }}</h2>
+      <ul class="govuk-list" id="generated-files">
+        <li id="generated-file-pdf">
+          {% if pdfDownloadUrl %}
+            <a href="{{ pdfDownloadUrl }}" class="govuk-link">{{ jsonFileDownloadPdf | replace("SIZE", pdfFileSize) }}</a>
+          {% else %}
+            {{ jsonFileNoPdf }}
+          {% endif %}
+        </li>
+        <li id="generated-file-excel">
+          {% if excelDownloadUrl %}
+            <a href="{{ excelDownloadUrl }}" class="govuk-link">{{ jsonFileDownloadExcel | replace("SIZE", excelFileSize) }}</a>
+          {% else %}
+            {{ jsonFileNoExcel }}
+          {% endif %}
+        </li>
+      </ul>
+
       {% if renderedTemplateUrl %}
         <p class="govuk-body govuk-!-margin-top-4">
           <a href="{{ renderedTemplateUrl }}" class="govuk-link">{{ jsonFileLinkToTemplate }}</a>
