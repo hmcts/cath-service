@@ -1,92 +1,22 @@
-# #918 cnp-flux-config changes (draft, PR to hmcts/cnp-flux-config pending)
+# #918 cnp-flux-config changes
 
-Verified against `hmcts/cnp-flux-config` `master` on 2026-11-19 with `gh api repos/hmcts/cnp-flux-config/contents/...`.
+PR: https://github.com/hmcts/cnp-flux-config/pull/49220. Merge it after hmcts/cath-service#1578.
 
-- `apps/cath/cath-crons/` currently holds `cath-crons.yaml`, `image-policy.yaml`, `image-repo.yaml`. There are no per-env patches for `cath-crons`.
-- `cath-crons.yaml` is listed in `apps/cath/{aat,demo,perftest,prod}/base/kustomization.yaml`.
-- `apps/cath/stg/base/kustomization.yaml` does not exist. `apps/cath/preview/base/kustomization.yaml` does not list `cath-crons`.
+This follows the pattern used by `apps/fact/fact-cron-trigger*`: each cron gets its own folder with a base HelmRelease and one file per environment.
 
-## Merge order
+## `apps/cath/cath-crons-purge-user-archive/`
 
-Merge only after a `cath-crons` image built from a commit containing `apps/crons/src/purge-user-archive.ts` has been promoted. The tag currently pinned in `cath-crons.yaml` (`prod-dd1704f-20261118143110`) predates this change. Replace `<TAG>` below with the then-current tag that the `flux-system:cath-crons` image policy resolves to (image automation will keep it in step with `cath-crons.yaml` afterwards). Otherwise the job fails daily with `Cannot find module './purge-user-archive.js'`.
+- `cath-crons-purge-user-archive.yaml` is the base HelmRelease:
+  - uses the `cath-crons` chart and image
+  - shares the `flux-system:cath-crons` image policy with the existing cron
+  - sets `SCRIPT_NAME: purge-user-archive` and `schedule: "0 2 * * *"`
+  - sets `releaseNameOverride`; without it the chart default names the job `<release>-crons`
+- `aat.yaml`, `demo.yaml`, `perftest.yaml`, `prod.yaml`: per-environment patches that set `schedule`.
 
-## New file: `apps/cath/cath-crons/cath-crons-purge-user-archive.yaml`
+## Kustomizations
 
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
-metadata:
-  name: cath-crons-purge-user-archive
-spec:
-  releaseName: cath-crons-purge-user-archive
-  interval: 5m
-  install:
-    remediation:
-      retries: 3
-  upgrade:
-    remediation:
-      strategy: uninstall
-      retries: 3
-  values:
-    job:
-      releaseNameOverride: cath-crons-purge-user-archive
-      image: hmctsprod.azurecr.io/cath/cath-crons:<TAG> # {"$imagepolicy": "flux-system:cath-crons"}
-      schedule: "0 2 * * *"
-      environment:
-        SCRIPT_NAME: purge-user-archive
-  chart:
-    spec:
-      chart: cath-crons
-      version: ">=0.1.0-0"
-      sourceRef:
-        kind: HelmRepository
-        name: hmctsprod-oci
-        namespace: flux-system
-      interval: 1m
-```
+`apps/cath/{aat,demo,perftest,prod}/base/kustomization.yaml` each get:
+- a resource entry for `../../cath-crons-purge-user-archive/cath-crons-purge-user-archive.yaml`
+- a patch entry for `../../cath-crons-purge-user-archive/<env>.yaml`
 
-`job.environment` is merged with the chart defaults (`NODE_ENV: production`, `POSTGRES_DATABASE: cath`), so only `SCRIPT_NAME` changes. `keyVaults` (`postgres-url` -> `DATABASE_URL`), `aadIdentityName` and `concurrencyPolicy: Forbid` come from the chart. AKS evaluates CronJob schedules in UTC.
-
-## Kustomization diffs
-
-`apps/cath/aat/base/kustomization.yaml`
-
-```diff
-   - ../../cath-api/cath-api.yaml
-   - ../../cath-crons/cath-crons.yaml
-+  - ../../cath-crons/cath-crons-purge-user-archive.yaml
-   - ../../cath-postgres/cath-postgres.yaml
-   - ../../../base/slack-provider/aat
-```
-
-`apps/cath/demo/base/kustomization.yaml`
-
-```diff
-   - ../../cath-api/cath-api.yaml
-   - ../../cath-crons/cath-crons.yaml
-+  - ../../cath-crons/cath-crons-purge-user-archive.yaml
-   - ../../cath-postgres/cath-postgres.yaml
-   - ../../../base/slack-provider/demo
-```
-
-`apps/cath/perftest/base/kustomization.yaml`
-
-```diff
-   - ../../cath-api/cath-api.yaml
-   - ../../cath-crons/cath-crons.yaml
-+  - ../../cath-crons/cath-crons-purge-user-archive.yaml
-   - ../../cath-postgres/cath-postgres.yaml
-   - ../../../base/slack-provider/perftest
-```
-
-`apps/cath/prod/base/kustomization.yaml`
-
-```diff
-   - ../../cath-api/cath-api.yaml
-   - ../../cath-crons/cath-crons.yaml
-+  - ../../cath-crons/cath-crons-purge-user-archive.yaml
-   - ../../cath-postgres/cath-postgres.yaml
-   - ../../../base/slack-provider/prod
-```
-
-No change to `apps/cath/cath-crons/cath-crons.yaml`, the image policy/repository, stg or preview.
+Stg, preview and the existing `cath-crons` release are unchanged.
