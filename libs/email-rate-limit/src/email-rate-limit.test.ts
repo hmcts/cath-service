@@ -6,7 +6,7 @@ vi.mock("@hmcts/redis", () => ({
   tryConsumeToken: mockTryConsumeToken
 }));
 
-import { validateEmailRateLimit } from "./email-rate-limit.js";
+import { EMAIL_RATE_LIMITED, validateEmailRateLimit } from "./email-rate-limit.js";
 
 describe("validateEmailRateLimit", () => {
   beforeEach(() => {
@@ -30,6 +30,12 @@ describe("validateEmailRateLimit", () => {
     await expect(validateEmailRateLimit("john.smith@example.com", "STANDARD", "Media account rejection email")).rejects.toThrow(
       "Rate limit has been exceeded. Media account rejection email failed to be sent to j*********@example.com"
     );
+  });
+
+  it("should tag the error with the EMAIL_RATE_LIMITED code so callers can log it without the message", async () => {
+    mockTryConsumeToken.mockResolvedValue(false);
+
+    await expect(validateEmailRateLimit("john.smith@example.com", "STANDARD", "Test email")).rejects.toMatchObject({ code: EMAIL_RATE_LIMITED });
   });
 
   it("should use 10 emails per 30 minutes for the standard limit by default", async () => {

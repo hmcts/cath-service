@@ -1,5 +1,7 @@
 import { archiveAndDeleteUser } from "@hmcts/account/user-archive";
 import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth/graph-api";
+import { validateEmailRateLimit } from "@hmcts/email-rate-limit";
+import { tryConsumeToken } from "@hmcts/redis";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaVerificationEmail } from "./notifications.js";
 import {
@@ -14,6 +16,7 @@ import { getInactivitySettings } from "./settings.js";
 
 vi.mock("@hmcts/account/user-archive", () => ({ archiveAndDeleteUser: vi.fn() }));
 vi.mock("@hmcts/auth/graph-api", () => ({ deleteB2cUser: vi.fn(), getGraphApiAccessToken: vi.fn() }));
+vi.mock("@hmcts/redis", () => ({ tryConsumeToken: vi.fn() }));
 vi.mock("./settings.js", () => ({ getInactivitySettings: vi.fn() }));
 vi.mock("./notifications.js", () => ({
   getNotificationSettings: vi.fn(),
@@ -204,6 +207,27 @@ describe("processInactiveAccounts", () => {
       message: "Unique constraint failed on the fields: (`user_id`)"
     });
     expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("@example.com");
+  });
+
+  it("should log a fixed code, not the masked recipient, when the real email rate limiter rejects", async () => {
+    // Arrange
+    vi.mocked(tryConsumeToken).mockResolvedValue(false);
+    const rateLimitError = await validateEmailRateLimit("john.smith@example.com", "STANDARD", "Email").catch((error: unknown) => error);
+    mockBatches(findMediaUsersForVerification, [{ userId: "m-1", email: "john.smith@example.com", firstName: "John" }] as never);
+    vi.mocked(sendMediaVerificationEmail).mockRejectedValueOnce(rateLimitError);
+
+    // Act
+    const summary = await processInactiveAccounts();
+
+    // Assert
+    expect(summary.mediaVerificationEmails).toEqual({ succeeded: 0, skipped: 0, failed: 1 });
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Inactive accounts: failed to process user", {
+      step: "media-verification-email",
+      userId: "m-1",
+      code: "EMAIL_RATE_LIMITED",
+      message: "Email rate limit exceeded"
+    });
+    expect(JSON.stringify(consoleErrorSpy.mock.calls)).not.toContain("@");
   });
 
   it.each([

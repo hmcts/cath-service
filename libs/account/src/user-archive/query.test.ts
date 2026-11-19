@@ -50,7 +50,7 @@ describe("user-archive query", () => {
   });
 
   describe("archiveAndDeleteUserRecord", () => {
-    it("should archive with the ticket column mapping, then delete subscriptions, list type subscriptions and the user on the same transaction", async () => {
+    it("should delete subscriptions, list type subscriptions and the user, then archive with the ticket column mapping, on the same transaction", async () => {
       // Arrange
       const tx = createMockTx();
       vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(tx));
@@ -75,15 +75,15 @@ describe("user-archive query", () => {
       expect(tx.user.delete).toHaveBeenCalledWith({ where: { userId: USER.userId } });
 
       const order = [
-        tx.userArchive.create.mock.invocationCallOrder[0],
         tx.subscription.deleteMany.mock.invocationCallOrder[0],
         tx.subscriptionListType.deleteMany.mock.invocationCallOrder[0],
-        tx.user.delete.mock.invocationCallOrder[0]
+        tx.user.delete.mock.invocationCallOrder[0],
+        tx.userArchive.create.mock.invocationCallOrder[0]
       ];
       expect(order).toEqual([...order].sort((a, b) => a - b));
     });
 
-    it("should not delete anything when the archive insert fails", async () => {
+    it("should propagate an archive insert failure out of the transaction so the deletes roll back", async () => {
       // Arrange
       const tx = createMockTx();
       const insertError = new Error("insert failed");
@@ -92,9 +92,19 @@ describe("user-archive query", () => {
 
       // Act & Assert
       await expect(archiveAndDeleteUserRecord(USER)).rejects.toBe(insertError);
-      expect(tx.subscription.deleteMany).not.toHaveBeenCalled();
-      expect(tx.subscriptionListType.deleteMany).not.toHaveBeenCalled();
-      expect(tx.user.delete).not.toHaveBeenCalled();
+      expect(tx.user.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not write an archive row when the user has already been deleted by a concurrent delete", async () => {
+      // Arrange
+      const tx = createMockTx();
+      const notFoundError = Object.assign(new Error("Record to delete does not exist."), { code: "P2025" });
+      tx.user.delete.mockRejectedValue(notFoundError);
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(tx));
+
+      // Act & Assert
+      await expect(archiveAndDeleteUserRecord(USER)).rejects.toBe(notFoundError);
+      expect(tx.userArchive.create).not.toHaveBeenCalled();
     });
   });
 });

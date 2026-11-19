@@ -15,7 +15,13 @@ export async function findUserForArchive(userId: string): Promise<ArchivableUser
 }
 
 export async function archiveAndDeleteUserRecord(user: ArchivableUser): Promise<void> {
+  // Delete the user before writing the archive row: when two deletes of the same user race, the
+  // second blocks on the user row lock and then fails with P2025 (already deleted), instead of
+  // hitting a P2002 duplicate key on user_archive. Any failure still rolls back the whole transaction.
   await prisma.$transaction(async (tx) => {
+    await tx.subscription.deleteMany({ where: { userId: user.userId } });
+    await tx.subscriptionListType.deleteMany({ where: { userId: user.userId } });
+    await tx.user.delete({ where: { userId: user.userId } });
     await tx.userArchive.create({
       data: {
         userId: user.userId,
@@ -26,9 +32,6 @@ export async function archiveAndDeleteUserRecord(user: ArchivableUser): Promise<
         lastSignedInDate: user.lastSignedInDate
       }
     });
-    await tx.subscription.deleteMany({ where: { userId: user.userId } });
-    await tx.subscriptionListType.deleteMany({ where: { userId: user.userId } });
-    await tx.user.delete({ where: { userId: user.userId } });
   });
 }
 

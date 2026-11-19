@@ -1,5 +1,7 @@
 import { tryConsumeToken } from "@hmcts/redis";
 
+export const EMAIL_RATE_LIMITED = "EMAIL_RATE_LIMITED";
+
 const KEY_PREFIX = "email-rate-limit";
 const DEFAULT_STANDARD_CAPACITY = 10;
 const DEFAULT_HIGH_CAPACITY = 200;
@@ -18,7 +20,9 @@ export async function validateEmailRateLimit(email: string, emailLimit: EmailLim
   });
 
   if (!isWithinLimit) {
-    throw new Error(`Rate limit has been exceeded. ${description} failed to be sent to ${maskEmail(email)}`);
+    throw Object.assign(new Error(`Rate limit has been exceeded. ${description} failed to be sent to ${maskEmail(email)}`), {
+      code: EMAIL_RATE_LIMITED
+    });
   }
 }
 

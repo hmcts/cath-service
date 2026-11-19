@@ -20,6 +20,7 @@
   "dependencies": {
     "@hmcts/account": "workspace:*",
     "@hmcts/auth": "workspace:*",
+    "@hmcts/email-rate-limit": "workspace:*",
     "@hmcts/govuk-notify": "workspace:*",
     "@hmcts/postgres-prisma": "workspace:*"
   },

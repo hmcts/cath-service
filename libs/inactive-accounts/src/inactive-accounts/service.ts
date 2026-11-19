@@ -1,5 +1,6 @@
 import { archiveAndDeleteUser, type B2cUserDeleter } from "@hmcts/account/user-archive";
 import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth/graph-api";
+import { EMAIL_RATE_LIMITED } from "@hmcts/email-rate-limit";
 import { extractNotifyError } from "@hmcts/govuk-notify";
 import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaVerificationEmail } from "./notifications.js";
 import {
@@ -86,14 +87,19 @@ async function runStep<T extends UserId>(
   return result;
 }
 
-// Never log the raw error: Notify errors carry the API key in their request headers, and Prisma
-// messages can echo query arguments, so only the status, code and a short message are kept
+// Never log the raw error: Notify errors carry the API key in their request headers, Prisma
+// messages can echo query arguments and rate-limit messages contain a masked recipient email,
+// so only the status, code and a short message are kept
 function describeError(error: unknown): { status?: number; code?: string; message: string } {
   if (!error || typeof error !== "object") {
     return { message: "Unknown error" };
   }
 
   const code = (error as { code?: unknown }).code;
+  if (code === EMAIL_RATE_LIMITED) {
+    return { code, message: "Email rate limit exceeded" };
+  }
+
   if (typeof code === "string" && PRISMA_ERROR_CODE_PATTERN.test(code)) {
     const lines = (error as Error).message?.split("\n").filter((line) => line.trim() !== "") ?? [];
     return { code, message: lines.at(-1)?.trim() ?? "Unknown error" };

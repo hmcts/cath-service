@@ -1903,6 +1903,7 @@ __metadata:
   dependencies:
     "@hmcts/account": "workspace:*"
     "@hmcts/auth": "workspace:*"
+    "@hmcts/email-rate-limit": "workspace:*"
     "@hmcts/govuk-notify": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     typescript: "npm:6.0.3"
