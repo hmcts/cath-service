@@ -12,6 +12,8 @@ job:
     SCRIPT_NAME: 'example'
     POSTGRES_DATABASE: cath
     CATH_SERVICE_URL: https://cath.{{ .Values.global.environment }}.platform.hmcts.net
+    # B2C account deletion by the inactive accounts cron stays off until release day (#1587)
+    MOCK_AZURE_B2C: "true"
   keyVaults:
     cath:
       secrets:

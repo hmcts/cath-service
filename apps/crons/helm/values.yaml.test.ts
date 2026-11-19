@@ -25,6 +25,10 @@ describe("cath-crons chart values", () => {
     expect(secrets).toContainEqual({ name, alias });
   });
 
+  it("should keep B2C account deletion switched off until release day (#1587)", () => {
+    expect(values.job.environment.MOCK_AZURE_B2C).toBe("true");
+  });
+
   it("should set CATH_SERVICE_URL to the same value as the web chart", () => {
     const webValues = readYaml("apps/web/helm/values.yaml");
 
