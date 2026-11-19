@@ -23,7 +23,7 @@ export const getHandler = async (req: Request, res: Response) => {
   const t = locale === "cy" ? cy : en;
   const lngParam = locale === "cy" ? "?lng=cy" : "";
   const id = req.params.id as string;
-  const page = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
+  const requestedPage = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
 
   const user = await findThirdPartyUserById(id);
   if (!user) {
@@ -38,18 +38,12 @@ export const getHandler = async (req: Request, res: Response) => {
 
   const session = req.session as ThirdPartySubscriptionsSession;
   if (!session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
-    const existing: Record<string, string> = {};
-    for (const sub of user.subscriptions) {
-      const listType = listTypes.find((lt) => lt.id === sub.listTypeId);
-      if (listType) {
-        existing[listType.name] = sub.sensitivity;
-      }
-    }
-    session.thirdPartySubscriptions = { userId: id, pending: existing };
+    session.thirdPartySubscriptions = { userId: id, pending: buildExistingSubscriptions(user.subscriptions, listTypes) };
   }
 
   const useDropdown = !(await isFeatureEnabled(LD_FLAG_RADIO_BUTTONS, req.user?.id ?? "anonymous"));
-  const totalPages = Math.ceil(listTypes.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(listTypes.length / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
   const pageListTypes = listTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   res.render("third-party-subscribers/[id]/subscriptions/manage/index", {
@@ -73,7 +67,7 @@ export const postHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const lngParam = locale === "cy" ? "?lng=cy" : "";
   const id = req.params.id as string;
-  const page = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
+  const requestedPage = Math.max(1, Number.parseInt((req.query.page as string) ?? "1", 10) || 1);
 
   const user = await findThirdPartyUserById(id);
   if (!user) {
@@ -87,10 +81,13 @@ export const postHandler = async (req: Request, res: Response) => {
   });
 
   const session = req.session as ThirdPartySubscriptionsSession;
-  if (!session.thirdPartySubscriptions) {
-    session.thirdPartySubscriptions = { userId: id, pending: {} };
+  if (!session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
+    session.thirdPartySubscriptions = { userId: id, pending: buildExistingSubscriptions(user.subscriptions, listTypes) };
   }
 
+  const totalPages = Math.max(1, Math.ceil(listTypes.length / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  const isLastPage = page >= totalPages;
   const pageListTypes = listTypes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   for (const listType of pageListTypes) {
     const value = req.body[listType.name] as string | undefined;
@@ -101,12 +98,12 @@ export const postHandler = async (req: Request, res: Response) => {
     }
   }
 
-  const totalPages = Math.ceil(listTypes.length / PAGE_SIZE);
-  const isLastPage = page >= totalPages;
+  const action = req.body.action;
+  const isSave = action === "save" || (action !== "next" && isLastPage);
 
-  if (!isLastPage) {
-    const nextPage = page + 1;
-    return res.redirect(`/third-party-subscribers/${id}/subscriptions/manage?page=${nextPage}${locale === "cy" ? "&lng=cy" : ""}`);
+  if (!isSave) {
+    const targetPage = isLastPage ? page : page + 1;
+    return res.redirect(`/third-party-subscribers/${id}/subscriptions/manage?page=${targetPage}${locale === "cy" ? "&lng=cy" : ""}`);
   }
 
   const listTypeNameById = new Map(listTypes.map((lt) => [lt.id, lt.name]));
@@ -130,3 +127,14 @@ export const postHandler = async (req: Request, res: Response) => {
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN]), postHandler];
+
+function buildExistingSubscriptions(subscriptions: { listTypeId: number; sensitivity: string }[], listTypes: { id: number; name: string }[]) {
+  const existing: Record<string, string> = {};
+  for (const sub of subscriptions) {
+    const listType = listTypes.find((lt) => lt.id === sub.listTypeId);
+    if (listType) {
+      existing[listType.name] = sub.sensitivity;
+    }
+  }
+  return existing;
+}
