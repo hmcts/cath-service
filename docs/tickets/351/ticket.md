@@ -5,7 +5,7 @@
 **Author:** junaidiqbalmoj
 **Labels:** type:story
 **Created:** 2026-02-12T13:26:10Z
-**Updated:** 2026-11-19T13:42:10Z
+**Updated:** 2026-11-19T15:33:41Z
 
 ## Description
 
@@ -152,6 +152,7 @@ The implementation follows `hmcts/pip-account-management` (`InactiveAccountManag
 5. **Provenances:** only `PI_AAD`, `SSO`, `CFT_IDAM` and `CRIME_IDAM` are handled. There are no `B2C_IDAM` users.
 6. **Secrets:** the Notify, Redis and B2C Graph secrets are added to the crons chart and are available to every `cath-crons` release. **Secrets must never appear in logs.** Logs contain counts, user IDs and error codes or messages only.
 7. **Manual deletion by a System Admin also removes the B2C account** for `PI_AAD` users, as PIP's `deleteAccount` does. Both paths use the same archive-and-delete function.
+8. **B2C deletion by the cron is switched off until release day.** The crons chart sets `MOCK_AZURE_B2C: "true"`, so the cron archives and deletes inactive `PI_AAD` users in CaTH but leaves their Azure B2C accounts. System Admin deletes (item 7) are not affected. Turning it on is tracked in #1587.
 
 **PIP behaviour carried over:**
 - **Reminders** are sent only on the exact day the threshold is reached (`=`). **Deletions** cover everyone on or past it (`<=`). Date-only comparisons are in UTC.
@@ -174,6 +175,134 @@ The implementation follows `hmcts/pip-account-management` (`InactiveAccountManag
 
 **Delivery order:** this ticket is implemented **before #918**. It creates the `libs/account/src/user-archive/` module. #918 (PR #1578) will then be rebased onto this branch and add only the 3-month purge.
 
+
+
+
+---
+
+## How to test (developers)
+
+Most of this ticket can be tested locally. Only the B2C verification sign-in and the deployed CronJob need aat.
+
+### 1. Set up
+```bash
+git checkout feature/351-inactive-accounts-cron
+yarn install
+yarn dev:up              # Postgres (5433) + Redis (6380), migrations (incl. last_verified_date), seed data
+```
+You need a **GOV.UK Notify test API key** for the CaTH service: Notify → API integration → key type **Test**. Notify accepts emails sent with it and shows them in the dashboard, but never delivers them. Without one, the run still checks deletions, but the 3 emails are reported as `failed` and it exits 1.
+
+### 2. Seed users on each threshold
+Each threshold gets a user exactly on it and, where useful, one just inside it. All dates are relative to now:
+```bash
+docker exec -i cath-postgres psql -U hmcts -d postgres <<'SQL'
+INSERT INTO "user" (user_id, email, first_name, surname, user_provenance, user_provenance_id, role, created_date, last_signed_in_date, last_verified_date) VALUES
+  (gen_random_uuid(), 'qa351-media-350@test.local', 'Mia',  'Remind', 'PI_AAD',     'qa351-m350',  'VERIFIED',            now() - interval '400 days', now() - interval '1 day',   now() - interval '350 days'),
+  (gen_random_uuid(), 'qa351-media-349@test.local', 'Max',  'Keep',   'PI_AAD',     'qa351-m349',  'VERIFIED',            now() - interval '400 days', now() - interval '1 day',   now() - interval '349 days'),
+  (gen_random_uuid(), 'qa351-media-365@test.local', 'Mel',  'Delete', 'PI_AAD',     'qa351-m365',  'VERIFIED',            now() - interval '400 days', now() - interval '1 day',   now() - interval '365 days'),
+  (gen_random_uuid(), 'qa351-media-364@test.local', 'Moe',  'Keep',   'PI_AAD',     'qa351-m364',  'VERIFIED',            now() - interval '400 days', now() - interval '1 day',   now() - interval '364 days'),
+  (gen_random_uuid(), 'qa351-aad-90@test.local',    'Ada',  'Delete', 'PI_AAD',     'qa351-a90',   'SYSTEM_ADMIN',        now() - interval '400 days', now() - interval '90 days', now()),
+  (gen_random_uuid(), 'qa351-aad-89@test.local',    'Abe',  'Keep',   'PI_AAD',     'qa351-a89',   'SYSTEM_ADMIN',        now() - interval '400 days', now() - interval '89 days', now()),
+  (gen_random_uuid(), 'qa351-sso-90@test.local',    'Sam',  'Delete', 'SSO',        'qa351-s90',   'INTERNAL_ADMIN_CTSC', now() - interval '400 days', now() - interval '90 days', now()),
+  (gen_random_uuid(), 'qa351-sso-never@test.local', 'Sid',  'Keep',   'SSO',        'qa351-snull', 'INTERNAL_ADMIN_CTSC', now() - interval '400 days', NULL,                     now()),
+  (gen_random_uuid(), 'qa351-cft-118@test.local',   'Cara', 'Remind', 'CFT_IDAM',   'qa351-c118',  'VERIFIED',            now() - interval '400 days', now() - interval '118 days', now()),
+  (gen_random_uuid(), 'qa351-cft-132@test.local',   'Cal',  'Delete', 'CFT_IDAM',   'qa351-c132',  'VERIFIED',            now() - interval '400 days', now() - interval '132 days', now()),
+  (gen_random_uuid(), 'qa351-cft-131@test.local',   'Cy',   'Keep',   'CFT_IDAM',   'qa351-c131',  'VERIFIED',            now() - interval '400 days', now() - interval '131 days', now()),
+  (gen_random_uuid(), 'qa351-crime-180@test.local', 'Kim',  'Remind', 'CRIME_IDAM', 'qa351-k180',  'VERIFIED',            now() - interval '400 days', now() - interval '180 days', now()),
+  (gen_random_uuid(), 'qa351-crime-208@test.local', 'Kit',  'Delete', 'CRIME_IDAM', 'qa351-k208',  'VERIFIED',            now() - interval '400 days', now() - interval '208 days', now());
+INSERT INTO subscription (subscription_id, user_id, search_type, search_value)
+  SELECT gen_random_uuid(), user_id, 'LOCATION_ID', '1' FROM "user" WHERE email = 'qa351-cft-132@test.local';
+SQL
+```
+
+| User | Inactive for | Expected |
+|---|---|---|
+| `qa351-media-350` | 350 days unverified | media verification email |
+| `qa351-media-349` | 349 days unverified | nothing |
+| `qa351-media-365` | 365 days unverified | archived and deleted |
+| `qa351-media-364` | 364 days unverified | nothing |
+| `qa351-aad-90` (PI_AAD admin) | 90 days | archived and deleted |
+| `qa351-aad-89` | 89 days | nothing |
+| `qa351-sso-90` | 90 days | archived and deleted |
+| `qa351-sso-never` | never signed in | nothing |
+| `qa351-cft-118` | 118 days | CFT sign-in email |
+| `qa351-cft-132` (has a subscription) | 132 days | archived and deleted, subscription removed |
+| `qa351-cft-131` | 131 days | nothing |
+| `qa351-crime-180` | 180 days | Crime sign-in email |
+| `qa351-crime-208` | 208 days | archived and deleted |
+
+### 3. Run the cron
+```bash
+INACTIVE_ACCOUNTS_START_DATE=2020-01-01 \
+GOVUK_NOTIFY_API_KEY=<notify-test-key> \
+CATH_SERVICE_URL=https://localhost:8080 \
+MOCK_AZURE_B2C=true \
+SCRIPT_NAME=inactive-verification yarn workspace @hmcts/crons dev; echo "exit=$?"
+```
+- `INACTIVE_ACCOUNTS_START_DATE` is required. A date in the past means the normal rules apply.
+- `CATH_SERVICE_URL` is required. The email links are built from it.
+- `MOCK_AZURE_B2C=true` skips B2C deletion. The deployed cron sets it too, until #1587.
+- Two start-up warnings are expected locally and can be ignored: `Failed to retrieve secret b2c-<ENV>-…` (the `<ENV>` placeholder is only substituted when the chart is deployed) and `Mount point /mnt/secrets does not exist`.
+
+Expected output, counting only the `qa351` users:
+```
+Inactive accounts mediaVerificationEmails: succeeded=1 skipped=0 failed=0
+Inactive accounts idamSignInEmails: succeeded=2 skipped=0 failed=0
+Inactive accounts mediaDeletions: succeeded=1 skipped=0 failed=0
+Inactive accounts adminDeletions: succeeded=2 skipped=0 failed=0
+Inactive accounts idamDeletions: succeeded=2 skipped=0 failed=0
+exit=0
+```
+
+### 4. Check the results
+```bash
+docker exec cath-postgres psql -U hmcts -d postgres \
+  -c "SELECT email FROM \"user\" WHERE email LIKE 'qa351-%' ORDER BY 1;" \
+  -c "SELECT email, roles, user_provenance FROM user_archive WHERE email LIKE 'qa351-%' ORDER BY 1;" \
+  -c "SELECT count(*) AS orphan_subs FROM subscription s LEFT JOIN \"user\" u USING (user_id) WHERE u.user_id IS NULL;"
+```
+- **Users table:** 7 `qa351` users remain. These are the 3 who were emailed and the 4 marked "nothing".
+- **`user_archive`:** 6 rows, one for each deleted user.
+- **Subscriptions:** `orphan_subs = 0`.
+- **Notify dashboard:** 3 emails.
+  - **Media verification email:** `full_name` is "Mia" and `verification_page_link` is `https://localhost:8080/media-verification`.
+  - **CFT and Crime emails:** `full_name` is the first name and surname, `last_signed_in_date` is shown like "24 July 2026", and both `cft_sign_in_link` and `crime_sign_in_link` are present.
+- **Logs:** no email addresses, keys or connection strings. Pipe the output through `grep -E '@|key|secret|postgresql://'`; it should print nothing.
+
+### 5. Go-live floor
+Clean up (step 8), re-seed (step 2), then run step 3 with `INACTIVE_ACCOUNTS_START_DATE` set to the date 118 days ago (`date -u -v-118d +%F` on macOS, `date -u -d '118 days ago' +%F` on Linux).
+**Expected:** only `qa351-cft-118` is emailed and only `qa351-aad-90` is deleted. Accounts that were already overdue are treated as last active on the go-live date, so nobody is deleted without warning.
+
+### 6. Fail fast
+Run step 3 once without `INACTIVE_ACCOUNTS_START_DATE`, then again with `INACTIVE_ACCOUNTS_START_DATE=2026-13-45`. Keep the other variables.
+**Expected:** `Cron job failed: INACTIVE_ACCOUNTS_START_DATE …` and `exit=1`, with no changes to the database.
+
+### 7. Web changes
+- **System Admin delete:**
+  1. Run `yarn dev` and sign in as a System Admin.
+  2. Open **User management** and delete a test user.
+  3. Check there is a matching `user_archive` row.
+  4. Check the user appears in the **Deleted accounts** MI report.
+
+  E2E: `yarn test:e2e e2e-tests/tests/system-admin/user-management.spec.ts` (tagged `@nightly`).
+- **Media verification link:** `curl -sk -o /dev/null -w '%{redirect_url}\n' https://localhost:8080/media-verification` should redirect to B2C with `p=B2C_1_SignInMediaVerification`.
+- **Verified banner:** this needs a real B2C sign-in. Locally it is covered by the E2E specs `e2e-tests/tests/verified-user/account-home.spec.ts` and `e2e-tests/tests/sign-in.spec.ts`; test it end to end on aat.
+
+### 8. Clean up
+```bash
+docker exec cath-postgres psql -U hmcts -d postgres -c "DELETE FROM \"user\" WHERE email LIKE 'qa351-%';" -c "DELETE FROM user_archive WHERE email LIKE 'qa351-%';"
+```
+`yarn db:drop` resets the whole local database. Run it from the repo root, not from a `prisma` folder, and follow it with `yarn db:seed`. You don't need it for this ticket.
+
+### 9. On aat (after the cnp-flux-config PR is merged)
+1. `kubectl -n cath get cronjob cath-inactive-verification-cron` on cluster `00` shows `1 8 1-31/2 * *`, and on cluster `01` shows `1 8 2-30/2 * *`.
+2. Trigger a run manually with `kubectl -n cath create job --from=cronjob/cath-inactive-verification-cron qa-run`. The job should complete, and the logs should contain only the five summary lines.
+3. As a media test user, open `/media-verification` and sign in through B2C. Expected: you land on account home with the verified banner (check the Welsh version too), and the user's `last_verified_date` is today.
+4. Delete a `PI_AAD` test user as a System Admin. Expected: their B2C account is also removed. The cron itself does not remove B2C accounts until #1587.
+
+**Notes:**
+- Running the cron twice on the same day sends that day's reminders again. PIP behaves the same way. The Flux release sets `backoffLimit: 0` so that a failed run is never retried automatically.
+- `INACTIVE_ACCOUNTS_START_DATE` must be set to each environment's go-live date in the Flux release before it is deployed. The draft is in `docs/tickets/351/flux-config.md`.
 
 
 ## Comments
