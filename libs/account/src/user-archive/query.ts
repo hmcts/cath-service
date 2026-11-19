@@ -35,6 +35,11 @@ export async function archiveAndDeleteUserRecord(user: ArchivableUser): Promise<
   });
 }
 
+export async function deleteUserArchivesArchivedOnOrBefore(cutoff: Date): Promise<number> {
+  const { count } = await prisma.userArchive.deleteMany({ where: { archivedDate: { lte: cutoff } } });
+  return count;
+}
+
 export interface ArchivableUser {
   userId: string;
   userProvenance: string;
