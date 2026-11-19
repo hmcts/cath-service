@@ -551,13 +551,10 @@ baseline from aat's storage and never writes it, so every pull request is compar
 baseline. Its runs are kept in the pull request's own storage account (container `ui-baseline`),
 so they go when the pull request's preview does, and the aat hosted check never sees them.
 
-When the pull request closes, `workflow.preview-cleanup.yml` deletes both of its releases (the
-hosted check's, then CaTH's with its storage account and database), checks the storage account
-and database are gone, and untags its images' `pr-<n>` tags in ACR. The platform's own preview
-cleanup (hmcts/cnp-aks-pipelines) deletes the release a `rel:` label names, and the hosted check's
-release has a label of its own; a scheduled sweep also deletes any `-pr-` release not updated for
-3 days. Neither untags CaTH's images: the platform works the image out from the release name, as
-`cath/service`, which does not exist.
+When the pull request closes, `workflow.preview-cleanup.yml` deletes the hosted check's release
+and untags its image's `pr-<n>` tags in ACR. The release also carries a `rel:` label of its own,
+so the platform's preview cleanup (hmcts/cnp-aks-pipelines) can delete it too, and a scheduled sweep
+deletes any `-pr-` release not updated for 3 days.
 
 Its pod is replaced only when a master merge rebuilds its image, not on every merge. The image is
 rebuilt when `apps/ui-baseline/` or a library it uses changes, or anything every image is built from:

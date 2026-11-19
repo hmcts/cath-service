@@ -1,17 +1,13 @@
 name: Preview Cleanup
 
-# Removes what a pull request's preview made, when the pull request is closed (merged or not):
-# - its two Helm releases, cath-service-pr-<n> (web, api, crons, postgres, Redis, and through Azure
-#   Service Operator its storage account and its database on the cath-preview server) and
-#   cath-service-pr-<n>-ui-baseline, the hosted parity check, a release of its own
-#   (job.helm-deploy.yml)
-# - its images' pr-<n> tags in ACR
+# Removes the hosted parity check's part of a pull request's preview when the pull request is closed
+# (merged or not): its Helm release, cath-service-pr-<n>-ui-baseline (a release of its own,
+# job.helm-deploy.yml), and its image's pr-<n> tags in ACR. The rest of the preview is the
+# platform's to clean up (hmcts/cnp-aks-pipelines), as it always has been.
 #
-# The platform's AKS Cleanup Preview pipeline (hmcts/cnp-aks-pipelines) also deletes the releases the
-# pull request's rel: labels name (job.pr-comment.yml), and a scheduled sweep deletes any -pr-
-# release not updated for 3 days; both find nothing left to do after this. The platform's image
-# untagging works the repository out from the release name, which for cath-service-pr-<n> is
-# cath/service, a repository that does not exist, so it untags none of CaTH's images.
+# The platform also deletes the release a rel: label names, and the pull request carries one for
+# this release (job.pr-comment.yml); a scheduled sweep deletes any -pr- release not updated for 3
+# days. Either finds nothing left to do after this.
 on:
   pull_request:
     types: [closed]
@@ -31,10 +27,10 @@ env:
   REGISTRY_NAME: hmctsprod
 
 jobs:
-  releases:
-    name: Delete the preview's releases
+  release:
+    name: Delete the hosted check's release
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -46,10 +42,9 @@ jobs:
           CHART_PATH="helm/cath-service/Chart.yaml"
           TEAM_NAME=$(grep -A 1 'annotations:' "$CHART_PATH" | grep 'team:' | awk '{print $2}' | tr -d '"')
           APPLICATION_NAME=$(grep '^name:' "$CHART_PATH" | awk '{print $2}' | tr -d '"')
-          RELEASE_NAME="${APPLICATION_NAME}-pr-${CHANGE_ID}"
           {
             echo "NAMESPACE=${TEAM_NAME}"
-            echo "RELEASE_NAME=${RELEASE_NAME}"
+            echo "RELEASE_NAME=${APPLICATION_NAME}-pr-${CHANGE_ID}-ui-baseline"
           } >> "$GITHUB_ENV"
 
       - name: Azure login
@@ -69,48 +64,23 @@ jobs:
         with:
           version: 'v4.2.3'
 
-      # ui-baseline first: its pod reads the main release's storage account, which goes with it.
-      # --wait waits for what each release made to be deleted, the Azure Service Operator resources
-      # included, which are only gone once Azure has deleted the storage account and database.
-      - name: Delete the releases
+      - name: Delete the release
         run: |
-          for release in "${RELEASE_NAME}-ui-baseline" "${RELEASE_NAME}"; do
-            if helm status "${release}" --namespace "${NAMESPACE}" >/dev/null 2>&1; then
-              echo "Deleting ${release}"
-              helm uninstall "${release}" --namespace "${NAMESPACE}" --wait --timeout 15m0s
-              echo "- Deleted \`${release}\`" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "${release} is not installed"
-              echo "- \`${release}\` was not installed" >> "$GITHUB_STEP_SUMMARY"
-            fi
-          done
-
-      # What the main release made in Azure, by the names helm/cath-service gives it: its storage
-      # account (templates/blobstorage.yaml) and its database (the postgresql chart, named after the
-      # release). Anything still here was not deleted, and would be left costing money.
-      - name: Check its Azure resources are gone
-        run: |
-          left=""
-          kubectl get storageaccounts.storage.azure.com "storage-account-${RELEASE_NAME}-blobstorage" --namespace "${NAMESPACE}" >/dev/null 2>&1 \
-            && left="${left} storage account storage-account-${RELEASE_NAME}-blobstorage"
-          kubectl get flexibleserversdatabases.dbforpostgresql.azure.com "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>&1 \
-            && left="${left} database ${RELEASE_NAME}"
-          if [ -n "${left}" ]; then
-            echo "::error::Still in the cluster after the releases were deleted:${left}"
-            exit 1
+          if helm status "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>&1; then
+            helm uninstall "${RELEASE_NAME}" --namespace "${NAMESPACE}" --wait --timeout 10m0s
+            echo "- Deleted \`${RELEASE_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "${RELEASE_NAME} is not installed"
+            echo "- \`${RELEASE_NAME}\` was not installed" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "The storage account and database are gone"
 
-  images:
-    name: Untag the preview's images
+  image:
+    name: Untag the hosted check's image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
       - name: Azure login (OIDC)
         uses: azure/login@v3
         with:
@@ -118,26 +88,22 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
 
-      # Each app's image is cath/cath-<app> (job.build-and-publish-images.yml), tagged pr-<n> and
-      # pr-<n>-<sha> for a pull request. Untagging needs delete permission on the registry, which the
-      # identity that pushes may not have, so a failure is a warning: the images are then left to the
-      # registry's own retention.
-      - name: Untag pr-${{ env.CHANGE_ID }} images
+      # Tagged pr-<n> and pr-<n>-<sha> for a pull request (job.build-and-publish-images.yml).
+      # Untagging needs delete permission on the registry, which the identity that pushes may not
+      # have, so a failure is a warning: the tags are then left to the registry's own retention.
+      - name: Untag pr-${{ env.CHANGE_ID }}
         continue-on-error: true
         run: |
+          repository="cath/cath-ui-baseline"
+          tags=$(az acr repository show-tags --name "${REGISTRY_NAME}" --repository "${repository}" \
+            --query "[?@ == 'pr-${CHANGE_ID}' || starts_with(@, 'pr-${CHANGE_ID}-')]" --output tsv 2>/dev/null || true)
           failed=""
-          for chart in apps/*/helm/Chart.yaml; do
-            app=$(basename "$(dirname "$(dirname "$chart")")")
-            repository="cath/cath-${app}"
-            tags=$(az acr repository show-tags --name "${REGISTRY_NAME}" --repository "${repository}" \
-              --query "[?@ == 'pr-${CHANGE_ID}' || starts_with(@, 'pr-${CHANGE_ID}-')]" --output tsv 2>/dev/null || true)
-            for tag in ${tags}; do
-              if az acr repository untag --name "${REGISTRY_NAME}" --image "${repository}:${tag}" >/dev/null; then
-                echo "- Untagged \`${repository}:${tag}\`" >> "$GITHUB_STEP_SUMMARY"
-              else
-                failed="${failed} ${repository}:${tag}"
-              fi
-            done
+          for tag in ${tags}; do
+            if az acr repository untag --name "${REGISTRY_NAME}" --image "${repository}:${tag}" >/dev/null; then
+              echo "- Untagged \`${repository}:${tag}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              failed="${failed} ${repository}:${tag}"
+            fi
           done
           if [ -n "${failed}" ]; then
             echo "::warning::Could not untag:${failed}. The registry's retention will remove them."
