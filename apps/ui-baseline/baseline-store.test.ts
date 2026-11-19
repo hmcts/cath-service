@@ -69,6 +69,15 @@ describe("baseline-store", () => {
       await expect(pushBaseline(environment(), dir)).rejects.toThrow("is incomplete");
     });
 
+    it("should refuse a baseline whose PDF and Excel files or downloads were not all recorded", async () => {
+      // Arrange
+      const dir = await baselineDir({ ...RUN, failedSteps: ["files"] });
+
+      // Act and assert
+      await expect(pushBaseline(environment(), dir)).rejects.toThrow("is incomplete");
+      expect(store.blobs.size).toBe(0);
+    });
+
     it("should refuse a baseline with pages that were asked for and never captured", async () => {
       // Arrange
       const dir = await baselineDir({ ...RUN, missingCaptures: 3 });

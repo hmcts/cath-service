@@ -30,10 +30,12 @@ export async function pushBaseline(environment: Environment, dir: string): Promi
     failedJourneys: string[];
     // Absent from recordings made before baseline.sh counted them
     missingCaptures?: number;
+    // The file steps (PDF and Excel, flat files, downloads) that failed; absent before they were counted
+    failedSteps?: string[];
     environment?: string;
     scope?: { name: string };
   };
-  if (run.failedCaptures || run.missingCaptures || run.failedJourneys.length)
+  if (run.failedCaptures || run.missingCaptures || run.failedJourneys.length || run.failedSteps?.length)
     throw new Error(`the baseline in ${dir} is incomplete (see its run.json), so it is not stored`);
   // The stored baseline is the one every check falls back to, so it must be a full recording
   if (run.scope) throw new Error(`the baseline in ${dir} is a ticket recording (${run.scope.name}), not all of pip, so it is not stored`);

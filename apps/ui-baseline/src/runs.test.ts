@@ -642,6 +642,38 @@ describe("createRunner when pods are replaced", () => {
     replacement.stopWatching();
   });
 
+  it("should store a running run with a fresh heartbeat when fetching its baseline took longer than going stale", async () => {
+    // Arrange
+    const { store, uploads } = sharedStore();
+    let fetched = 0;
+    const slowBaseline = async () => {
+      // Five times the stale window (three 20ms heartbeats)
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      fetched = Date.now();
+      return { id: "b", dir: "/data/baseline", release: () => {} };
+    };
+    const runner = createRunner({
+      dataDir: await mkdtemp(path.join(tmpdir(), "runs-")),
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store,
+      baseline: slowBaseline,
+      execute: vi.fn(async () => 0),
+      heartbeatMs: 20,
+      pod: "only"
+    });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "routes", routes: ["/a"] });
+    await runner.idle();
+
+    // Assert
+    const firstRunning = uploads.find((upload) => upload.name === `runs/${run.id}.json` && upload.record.status === "running");
+    expect(firstRunning).toBeDefined();
+    expect(Date.parse(firstRunning?.record.heartbeatAt as string)).toBeGreaterThanOrEqual(fetched);
+  });
+
   it("should keep a run it took over stored as queued while it waits for the old pod's run to end", async () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));

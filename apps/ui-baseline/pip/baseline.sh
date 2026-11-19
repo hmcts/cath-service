@@ -148,11 +148,24 @@ else
   empty_index "$OUT/lists"
 fi
 
+# A step that records files (not captures) into <out>/<name>, its output kept in <name>.log. One that
+# fails is named in FAILED_STEPS, which the run summary counts, so a recording whose files step
+# crashed is not stored as a complete baseline (baseline push refuses it).
+FAILED_STEPS=""
+record_step() {
+  local name="$1"
+  shift
+  if ! "$TSX" "$@" > "$OUT/$name.log" 2>&1; then
+    FAILED_STEPS="${FAILED_STEPS:+$FAILED_STEPS,}$name"
+  fi
+  command grep -v "npm warn" "$OUT/$name.log" || true
+}
+
 step "Recording generated PDF and Excel files"
-"$TSX" apps/ui-baseline/pip/record-files.ts "$OUT/files" | command grep -v "npm warn" || true
+record_step files apps/ui-baseline/pip/record-files.ts "$OUT/files"
 
 step "Recording flat files"
-"$TSX" apps/ui-baseline/pip/record-flat-files.ts "$OUT/flat-files" | command grep -v "npm warn" || true
+record_step flat-files apps/ui-baseline/pip/record-flat-files.ts "$OUT/flat-files"
 
 step "Capturing other pages"
 "$TSX" apps/ui-baseline/routes/build-page-targets.ts
@@ -165,7 +178,7 @@ else
 fi
 
 step "Recording downloads"
-"$TSX" apps/ui-baseline/pip/record-downloads.ts "$OUT/downloads" | command grep -v "npm warn" || true
+record_step downloads apps/ui-baseline/pip/record-downloads.ts "$OUT/downloads"
 
 step "Running journeys"
 JOURNEYS=""
@@ -200,6 +213,11 @@ const missing = (targetsFile, index) => {
 };
 const lists = lines(path.join(out, "lists/index.jsonl")), pages = lines(path.join(out, "pages/index.jsonl")), journeys = lines(path.join(out, "journeys/index.jsonl")), files = lines(path.join(out, "files/index.jsonl")), downloads = lines(path.join(out, "downloads/index.jsonl"));
 const missingCaptures = [...missing(process.argv[4], lists), ...missing(process.argv[5], pages)];
+// File steps that failed, or that left no index of what they recorded (record_step)
+const failedSteps = [...new Set([
+  ...(process.argv[6] ? process.argv[6].split(",") : []),
+  ...["files", "downloads"].filter((step) => !fs.existsSync(path.join(out, step, "index.jsonl")))
+])];
 const summary = {
   finishedAt: new Date().toISOString(),
   pip: process.argv[2],
@@ -216,15 +234,17 @@ const summary = {
   // Pages asked for and not captured at all, counted on their own so a step that crashed cannot pass
   missingCaptures: missingCaptures.length,
   captures: { listPages: lists.length, otherPages: pages.length, journeyRuns: journeys.length, journeyCheckpoints: journeys.reduce((sum, j) => sum + j.steps, 0), generatedFiles: files.length, downloads: downloads.length },
-  failedJourneys: journeys.filter((j) => !j.ok).map((j) => `${j.journey} ${j.locale}: ${j.error?.split("\n")[0]}`)
+  failedJourneys: journeys.filter((j) => !j.ok).map((j) => `${j.journey} ${j.locale}: ${j.error?.split("\n")[0]}`),
+  failedSteps
 };
 fs.writeFileSync(path.join(out, "run.json"), JSON.stringify(summary, null, 2) + "\n");
 console.log(JSON.stringify(summary, null, 2));
 if (missingCaptures.length) console.error("not captured: " + missingCaptures.slice(0, 20).join(", ") + (missingCaptures.length > 20 ? ", ..." : ""));
-if (summary.failedCaptures || summary.missingCaptures || summary.failedJourneys.length) process.exit(1);
-' "$OUT" "$PIP_COMMITS" "$ENV_NAME" apps/ui-baseline/output/targets/pip.json apps/ui-baseline/output/targets/pip-pages.json || {
+if (failedSteps.length) console.error("steps that failed: " + failedSteps.join(", "));
+if (summary.failedCaptures || summary.missingCaptures || summary.failedJourneys.length || failedSteps.length) process.exit(1);
+' "$OUT" "$PIP_COMMITS" "$ENV_NAME" apps/ui-baseline/output/targets/pip.json apps/ui-baseline/output/targets/pip-pages.json "$FAILED_STEPS" || {
   echo >&2
-  echo "The baseline is incomplete: some captures or journeys failed (see above and the *.log files in $OUT)." >&2
+  echo "The baseline is incomplete: some captures, journeys or file steps failed (see above and the *.log files in $OUT)." >&2
   if [ "$ENV_NAME" = local ] && ! curl -sfk -o /dev/null "$PIP_FRONTEND_URL/"; then
     echo "pip-frontend is no longer running. It is usually killed for lack of memory: stop other things (e.g. CaTH) and re-run." >&2
   fi

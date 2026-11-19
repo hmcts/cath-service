@@ -119,7 +119,9 @@ export function createRunner(options: RunnerOptions): Runner {
       // A check keeps to the baseline it started with: its report links into that baseline's directory,
       // which is held until the check ends so it is not deleted from under it
       baseline = record.kind === "check" ? await options.baseline() : null;
-      if (baseline) await save({ ...(runs.get(record.id) as RunRecord), baselineId: baseline.id });
+      // Stored with a heartbeat of now, not of when it started: fetching a new baseline can take longer
+      // than a run takes to go stale, and another pod would then take it for interrupted
+      await save({ ...(runs.get(record.id) as RunRecord), ...(baseline ? { baselineId: baseline.id } : {}), heartbeatAt: new Date().toISOString() });
       await publish(runs.get(record.id) as RunRecord);
       const { script, args } = commandFor(record, dir, options.environment, baseline?.dir ?? null);
       const code = await execute(script, args, {
