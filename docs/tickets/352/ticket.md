@@ -1,11 +1,11 @@
 # #352: CaTH Cron Trigger - Manage Expired Artefacts and Audit Logs
 
 **State:** OPEN
-**Assignees:** 
+**Assignees:** junaidiqbalmoj
 **Author:** junaidiqbalmoj
 **Labels:** type:story, epic:public-journey
 **Created:** 2026-02-12T13:36:47Z
-**Updated:** 2026-11-19T14:22:42Z
+**Updated:** 2026-11-19T16:52:41Z
 
 ## Description
 
@@ -56,6 +56,108 @@ I want the system to automatically manage expired artefacts and audit logs, so t
 - **Third-party deletion push:** not sent for expired artefacts. Do not call `sendThirdPartyDeletion`, and the cron does not need the Courtel secrets for this job.
 - **Archive retention:** 3 months, measured on `archived_date`. The purge runs inside the `expired-artefacts` job, so no third cron is needed. Use calendar months in UTC, clamped to the last valid day of the month (e.g. 31 May minus 3 months = 28/29 Feb, not 3 March), and `lte` so that a row exactly 3 months old is purged. #918 takes the same approach.
 - **Audit logging:** the jobs do not write `audit_log` rows. Run history goes to stdout → Application Insights and the CronJob status.
+
+
+---
+
+## How to test (developers)
+
+Both crons can be tested locally against Postgres and the **Azurite** blob emulator. Nothing touches real Azure storage. The repo `.env` points `AZURE_STORAGE_CONNECTION_STRING` at Azurite (`devstoreaccount1` at `127.0.0.1:10000`).
+
+### 1. Set up
+```bash
+git checkout feature/352-expired-artefacts-audit-cron
+yarn install
+yarn dev:up        # Postgres, Redis and Azurite (cath-azurite, port 10000)
+yarn db:migrate    # applies the artefact_archive migration and regenerates the Prisma client
+```
+- Use `yarn db:migrate` (`migrate deploy`), not `db:migrate:dev`. If your local database has migrations from another branch, `migrate dev` treats that as drift and asks to reset.
+- If a run fails with `Cannot read properties of undefined (reading 'create')`, the Prisma client is stale: run `yarn db:migrate` again.
+
+The crons `dev` script does **not** load `.env`, so pass the Azurite connection string yourself. Every run below uses it:
+```bash
+AZ=$(grep '^AZURE_STORAGE_CONNECTION_STRING=' .env | cut -d= -f2- | sed 's/^"//;s/"$//')
+```
+
+Two start-up warnings are expected locally and can be ignored:
+- `Failed to retrieve secret auto-pip-<ENV>-courtel-api` (and other `<ENV>` names): the `<ENV>` placeholder is only replaced when the chart is deployed. This is secret loading only. The cron does **not** call Courtel or any other third party.
+- `Mount point /mnt/secrets does not exist`.
+
+### 2. Expired artefacts: a real upload with its blobs
+1. Run `yarn dev`, sign in as an admin and manually upload a publication. Use a list type that also generates a PDF and an Excel file.
+2. Find its ID:
+   ```bash
+   docker exec cath-postgres psql -U hmcts -d postgres -c \
+     "select artefact_id, display_from, display_to, last_received_date from artefact order by last_received_date desc limit 3;"
+   ```
+3. Check that its blobs exist in Azurite. Use Azure Storage Explorer: Local & Attached → Emulator. Look for `artefact/<id>`, `publications/<id>.pdf` and `publications/<id>.xlsx`.
+   - The `az` CLI does not work against this Azurite. Version 2.83 sends a newer API version and fails with `InvalidHeaderValue`.
+4. Make it expire. **The cron selects on `display_to`, not `last_received_date`:** changing the received date has no effect.
+   ```bash
+   ID=<artefact_id>
+   docker exec cath-postgres psql -U hmcts -d postgres -c \
+     "update artefact set display_to = now() - interval '1 hour' where artefact_id = '$ID';"
+   ```
+5. Run the cron:
+   ```bash
+   AZURE_STORAGE_CONNECTION_STRING="$AZ" SCRIPT_NAME=expired-artefacts yarn workspace @hmcts/crons dev; echo "exit=$?"
+   ```
+   It archives **every** expired artefact in your local database, not only this one. Expected output:
+   ```
+   [ExpiredArtefacts] Archived 1 artefacts with display_to before <now>
+   [ExpiredArtefacts] Deleted 0 artefact_archive rows archived on or before <now - 3 months>
+   exit=0
+   ```
+6. Check the results (AC 2, 3 and 4):
+   ```bash
+   docker exec cath-postgres psql -U hmcts -d postgres \
+     -c "select count(*) from artefact where artefact_id='$ID';" \
+     -c "select artefact_id, list_type_name, display_to, archived_date from artefact_archive where artefact_id='$ID';"
+   ```
+   - The artefact is gone from `artefact` (count `0`).
+   - It has one row in `artefact_archive` with its metadata and the list type **name**.
+   - In Storage Explorer, `artefact/<id>`, `publications/<id>.pdf` and `publications/<id>.xlsx` are gone.
+   - The publication no longer appears on the court's summary of publications page.
+
+### 3. Expired artefacts: edge cases
+- **Null `display_to` (AC 5):** `update artefact set display_to = null where artefact_id = '<id>';`, then run step 2.5. Expected: that artefact is not archived.
+- **Blob store unreachable (AC 6):**
+  1. Run `docker stop cath-azurite`.
+  2. Expire a second artefact, then run step 2.5.
+  3. Expected: the database step still succeeds, a line `Artefact <id> failed at the blob stage: …` is printed, the run carries on with the rest, and it ends with `exit=1`.
+  4. Run `docker start cath-azurite` afterwards.
+- **Run without the connection string:** if you leave `AZURE_STORAGE_CONNECTION_STRING` off step 2.5, the result is the same as the unreachable case. The artefact is archived, the blob stage fails, the blobs remain, and it exits 1.
+- **No third-party push (AC 7):** the run never logs a third-party or Courtel call. The only Courtel-related output is the secret-loading warning above.
+- **Archive retention (AC 8):**
+  1. `update artefact_archive set archived_date = now() - interval '4 months' where artefact_id = '<id>';`
+  2. Run step 2.5.
+  3. Expected: `Deleted 1 artefact_archive rows …`, and the row is gone.
+
+### 4. Audit log purge
+```bash
+docker exec cath-postgres psql -U hmcts -d postgres -c "INSERT INTO audit_log (id, timestamp, action, user_id, user_email, user_role, user_provenance) VALUES ('qa352-old', now() - interval '91 days', 'QA352_TEST', 'qa', 'qa352@test.local', 'SYSTEM_ADMIN', 'SSO'), ('qa352-new', now() - interval '89 days', 'QA352_TEST', 'qa', 'qa352@test.local', 'SYSTEM_ADMIN', 'SSO');"
+
+SCRIPT_NAME=clear-audit yarn workspace @hmcts/crons dev; echo "exit=$?"
+
+docker exec cath-postgres psql -U hmcts -d postgres -tAc "select id from audit_log where id like 'qa352-%';"
+```
+Expected (AC 1):
+- `[ClearAudit] Deleted 1 audit log rows with timestamp before <now - 90 days>` and `exit=0`. The count includes any other local audit rows older than 90 days.
+- Only `qa352-new` remains.
+
+### 5. Clean up
+```bash
+docker exec cath-postgres psql -U hmcts -d postgres -c "delete from audit_log where id like 'qa352-%';" -c "delete from artefact_archive where artefact_id = '<id>';"
+```
+
+### 6. On aat (after the cnp-flux-config HelmReleases are merged)
+- `kubectl -n cath get cronjob` lists the `clear-audit` and `expired-artefacts` jobs with schedule `0 1 * * *`.
+- Trigger each one manually, for example `kubectl -n cath create job --from=cronjob/<release> qa-run`. Check that the pod completes and its logs show the counts and the search or cutoff date.
+- For expired artefacts, check on aat that the deleted publication's blobs are gone from both containers in the aat storage account.
+
+**Note:** the two crons were run locally on 19 Nov 2026:
+- `expired-artefacts`: one uploaded publication was archived and all three of its blobs were removed from Azurite.
+- `clear-audit`: the 91-day-old row was deleted and the 89-day-old row was kept.
 
 
 ## Comments
