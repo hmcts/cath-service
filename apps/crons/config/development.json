@@ -1,5 +1,8 @@
 {
   "applicationInsights": {
     "enabled": false
+  },
+  "redis": {
+    "url": "redis://localhost:6380"
   }
 }

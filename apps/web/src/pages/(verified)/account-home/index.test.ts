@@ -145,7 +145,7 @@ describe("account-home", () => {
 
     beforeEach(() => {
       vi.clearAllMocks();
-      mockRequest = { path: "/account-home" };
+      mockRequest = { path: "/account-home", query: {} };
       mockResponse = {
         render: vi.fn(),
         locals: { locale: "en" }

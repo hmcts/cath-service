@@ -1,7 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { USER_ROLES } from "../roles.js";
 import type { User } from "./model.js";
-import { createOrUpdateUser, createUser, findSystemAdminEmails, findUserByEmail, findUserById, findUserByProvenanceId, updateUser } from "./query.js";
+import {
+  createOrUpdateUser,
+  createUser,
+  findSystemAdminEmails,
+  findUserByEmail,
+  findUserById,
+  findUserByProvenanceId,
+  updateLastVerifiedDate,
+  updateUser
+} from "./query.js";
 
 // Mock @hmcts/postgres
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -96,7 +105,7 @@ describe("User Repository", () => {
         })
       });
     });
-    it("should set createdDate and lastSignedInDate when signedInAt is provided", async () => {
+    it("should set createdDate, lastSignedInDate and lastVerifiedDate when signedInAt is provided", async () => {
       // Arrange
       const signedInAt = new Date("2026-10-19T09:30:00.000Z");
       const input: User = {
@@ -114,7 +123,8 @@ describe("User Repository", () => {
       expect(prisma.user.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           createdDate: signedInAt,
-          lastSignedInDate: signedInAt
+          lastSignedInDate: signedInAt,
+          lastVerifiedDate: signedInAt
         })
       });
     });
@@ -136,6 +146,31 @@ describe("User Repository", () => {
       const { data } = vi.mocked(prisma.user.create).mock.calls[0][0];
       expect(data).not.toHaveProperty("createdDate");
       expect(data).not.toHaveProperty("lastSignedInDate");
+      expect(data).not.toHaveProperty("lastVerifiedDate");
+    });
+  });
+
+  describe("updateLastVerifiedDate", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("should set lastVerifiedDate to now for the user with the given provenance ID", async () => {
+      // Arrange
+      vi.useFakeTimers();
+      const now = new Date("2026-11-19T08:01:00.000Z");
+      vi.setSystemTime(now);
+      vi.mocked(prisma.user.update).mockResolvedValue({ userId: "user-1" } as any);
+
+      // Act
+      const result = await updateLastVerifiedDate("b2c-oid-1");
+
+      // Assert
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { userProvenanceId: "b2c-oid-1" },
+        data: { lastVerifiedDate: now }
+      });
+      expect(result).toEqual({ userId: "user-1" });
     });
   });
 
@@ -356,39 +391,43 @@ describe("User Repository", () => {
         { userProvenance: "SSO", role: USER_ROLES.INTERNAL_ADMIN_CTSC },
         { userProvenance: "SSO", role: USER_ROLES.INTERNAL_ADMIN_LOCAL },
         { userProvenance: "CFT_IDAM", role: USER_ROLES.VERIFIED }
-      ] as const)("should set createdDate and lastSignedInDate to the same time for $userProvenance $role user", async ({ userProvenance, role }) => {
-        // Arrange
-        const input: User = {
-          email: "first-login@example.com",
-          firstName: "First",
-          surname: "Login",
-          userProvenance,
-          userProvenanceId: "123e4567-e89b-12d3-a456-426614174099",
-          role
-        };
-        vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-        vi.mocked(prisma.user.create).mockResolvedValue({} as any);
-
-        // Act
-        await createOrUpdateUser(input);
-
-        // Assert
-        expect(prisma.user.create).toHaveBeenCalledWith({
-          data: {
-            email: input.email,
-            firstName: input.firstName,
-            surname: input.surname,
+      ] as const)(
+        "should set createdDate, lastSignedInDate and lastVerifiedDate to the same time for $userProvenance $role user",
+        async ({ userProvenance, role }) => {
+          // Arrange
+          const input: User = {
+            email: "first-login@example.com",
+            firstName: "First",
+            surname: "Login",
             userProvenance,
-            userProvenanceId: input.userProvenanceId,
-            role,
-            createdDate: now,
-            lastSignedInDate: now
-          }
-        });
-        const { data } = vi.mocked(prisma.user.create).mock.calls[0][0];
-        expect(data.createdDate).toBe(data.lastSignedInDate);
-        expect(prisma.user.update).not.toHaveBeenCalled();
-      });
+            userProvenanceId: "123e4567-e89b-12d3-a456-426614174099",
+            role
+          };
+          vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+          vi.mocked(prisma.user.create).mockResolvedValue({} as any);
+
+          // Act
+          await createOrUpdateUser(input);
+
+          // Assert
+          expect(prisma.user.create).toHaveBeenCalledWith({
+            data: {
+              email: input.email,
+              firstName: input.firstName,
+              surname: input.surname,
+              userProvenance,
+              userProvenanceId: input.userProvenanceId,
+              role,
+              createdDate: now,
+              lastSignedInDate: now,
+              lastVerifiedDate: now
+            }
+          });
+          const { data } = vi.mocked(prisma.user.create).mock.calls[0][0];
+          expect(data.createdDate).toBe(data.lastSignedInDate);
+          expect(prisma.user.update).not.toHaveBeenCalled();
+        }
+      );
     });
 
     it("should update existing user if found", async () => {
