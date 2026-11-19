@@ -264,6 +264,21 @@ describe("validateCrownFirmList", () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
+  it.each(["CPP", "43SP0408025"])("should return valid when case numbers do not follow a fixed format (%s)", (caseNumber) => {
+    // Arrange
+    const data = JSON.parse(JSON.stringify(VALID_DATA));
+    const hearing = data.FirmList.CourtLists[0].Sittings[0].Hearings[0];
+    hearing.CaseNumber = caseNumber;
+    hearing.CaseNumberCaTH = caseNumber;
+
+    // Act
+    const result = validateCrownFirmList(data);
+
+    // Assert
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
   it("should return invalid when Hearings[0].CaseNumber is missing", () => {
     const data = JSON.parse(JSON.stringify(VALID_DATA));
     delete data.FirmList.CourtLists[0].Sittings[0].Hearings[0].CaseNumber;
