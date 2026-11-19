@@ -1,5 +1,7 @@
 # #351 cnp-flux-config changes
 
+PR: https://github.com/hmcts/cnp-flux-config/pull/49236. Merge it after hmcts/cath-service#1588 and after a cath-crons image containing `inactive-verification` has been promoted.
+
 Draft of the hmcts/cnp-flux-config PR that schedules `cath-inactive-verification-cron`. It follows the
 layout of hmcts/cnp-flux-config#49220 (#918 purge cron) and #48436 (media reporting cron).
 
