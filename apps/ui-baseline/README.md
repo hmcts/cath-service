@@ -541,8 +541,9 @@ A pull request builds the ui-baseline image when it changes `apps/ui-baseline/`,
 Dockerfile or `.dockerignore`, or what the install resolves (`yarn.lock`, the root `package.json`,
 Yarn's config). Its preview then has a hosted check too, at
 `cath-service-pr-<n>-ui-baseline.preview.platform.hmcts.net`, over the VPN, linked from the pull
-request's preview comment and the deploy job's summary. A pull request that has never built the
-image has none, and its deploy says so.
+request's preview comment and the deploy job's summary. The smoke tests check it answers on
+`/health`, with a warning rather than a failure if not, as its deploy never fails CaTH's. A pull
+request that has never built the image has none, and its deploy says so.
 
 It checks that pull request's CaTH (`cath-service-pr-<n>-web` and `-api`) against pip test, as aat
 does (`--env preview`, which takes everything else from aat). It reads the same recorded pip

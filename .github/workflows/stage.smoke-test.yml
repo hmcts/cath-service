@@ -11,7 +11,7 @@ on:
         required: true
         type: string
         description: "Base64-encoded JSON of deployment URLs"
-      # Only for the PR comment: the smoke tests do not check the hosted parity check
+      # The hosted parity check, a release of its own: linked from the PR comment, and health checked
       ui-baseline-url:
         required: false
         type: string
@@ -50,4 +50,5 @@ jobs:
       urls: ${{ inputs.urls }}
       runner-group: ${{ inputs.runner-group }}
       run-publication-smoke: ${{ inputs.run-publication-smoke }}
+      ui-baseline-url: ${{ inputs.ui-baseline-url }}
     secrets: inherit

@@ -273,7 +273,8 @@ jobs:
           business-area: Cross-Cutting
           timeout: 10m0s
 
-      # Not in the deployment URLs (below), which the smoke tests check
+      # Output on its own rather than in the deployment URLs (below), for the PR comment and its own
+      # health check (job.smoke-test.yml)
       - name: Report where ui-baseline is
         id: ui-baseline-url
         if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
