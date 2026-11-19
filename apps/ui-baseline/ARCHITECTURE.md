@@ -256,7 +256,7 @@ sequenceDiagram
 flowchart LR
   subgraph pr["Pull request"]
     tests["ui-baseline's tests<br/>(job.test.yml)"]
-    prbuild["Build and push the image<br/>only when apps/ui-baseline/, the Dockerfile,<br/>.dockerignore, yarn.lock, the root<br/>package.json or Yarn's config changed"]
+    prbuild["Build and push the image<br/>only when apps/ui-baseline/, libs/list-types/,<br/>tsconfig.json, the Dockerfile, .dockerignore,<br/>yarn.lock, the root package.json<br/>or Yarn's config changed"]
     preview["Deploy to the pull request's preview,<br/>checking its CaTH"]
   end
   subgraph master["Merge to master"]

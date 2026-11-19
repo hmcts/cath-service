@@ -537,9 +537,9 @@ host, is refused.
 
 #### In a pull request's preview
 
-A pull request builds the ui-baseline image when it changes `apps/ui-baseline/`, the root
-Dockerfile or `.dockerignore`, or what the install resolves (`yarn.lock`, the root `package.json`,
-Yarn's config). Its preview then has a hosted check too, at
+A pull request builds the ui-baseline image when it changes `apps/ui-baseline/`, the list types
+it seeds with (`libs/list-types/`), the root `tsconfig.json`, Dockerfile or `.dockerignore`, or
+what the install resolves (`yarn.lock`, the root `package.json`, Yarn's config). Its preview then has a hosted check too, at
 `cath-service-pr-<n>-ui-baseline.preview.platform.hmcts.net`, over the VPN, linked from the pull
 request's preview comment and the deploy job's summary. The smoke tests check it answers on
 `/health`, with a warning rather than a failure if not, as its deploy never fails CaTH's. A pull

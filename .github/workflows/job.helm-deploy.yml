@@ -278,8 +278,14 @@ jobs:
       - name: Report where ui-baseline is
         id: ui-baseline-url
         if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
+        # Only reports: like every ui-baseline step, it never fails CaTH's deploy
+        continue-on-error: true
         run: |
-          HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[0].spec.rules[0].host}')
+          HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[*].spec.rules[0].host}' | awk '{print $1}')
+          if [ -z "${HOST}" ]; then
+            echo "::warning::ui-baseline was deployed, but no ingress was found for it, so its address is not reported"
+            exit 0
+          fi
           echo "ui-baseline (VPN only): https://${HOST}"
           echo "**ui-baseline** (VPN only): https://${HOST}" >> "$GITHUB_STEP_SUMMARY"
           echo "url=https://${HOST}" >> "$GITHUB_OUTPUT"

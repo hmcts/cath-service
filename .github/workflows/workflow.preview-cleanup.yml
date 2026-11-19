@@ -64,10 +64,12 @@ jobs:
         with:
           version: 'v4.2.3'
 
+      # Not --wait: the pod finishes the run it has going first (its terminationGracePeriodSeconds is
+      # 9000), and the release is deleted either way
       - name: Delete the release
         run: |
           if helm status "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>&1; then
-            helm uninstall "${RELEASE_NAME}" --namespace "${NAMESPACE}" --wait --timeout 10m0s
+            helm uninstall "${RELEASE_NAME}" --namespace "${NAMESPACE}"
             echo "- Deleted \`${RELEASE_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "${RELEASE_NAME} is not installed"

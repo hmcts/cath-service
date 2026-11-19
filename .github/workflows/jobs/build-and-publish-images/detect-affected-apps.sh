@@ -26,7 +26,8 @@ DOCKERFILE="Dockerfile"
 # nothing beyond aat deploys them, and on a pull request built only when it could have changed their
 # image, not whenever Turborepo calls them affected (ui-baseline depends on most of the workspace's
 # libs, so it would otherwise be built for nearly every pull request).
-UNPROMOTED_APPS="$(grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../unpromoted-apps" | jq -R -s -c 'split("\n") | map(select(. != ""))')"
+# A list with no apps in it is a list of none, not an error (grep -v finds no lines and exits 1)
+UNPROMOTED_APPS="$({ grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../unpromoted-apps" || true; } | jq -R -s -c 'split("\n") | map(select(. != ""))')"
 
 # Stage aliases declared in the root Dockerfile, e.g. `web` from `FROM x AS web`.
 dockerfile_stages() {
@@ -162,12 +163,13 @@ main() {
     # An unpromoted app is built and pushed, for preview to deploy, only when the pull request could
     # have changed its image: its own files, the root Dockerfile or .dockerignore, or what the install
     # resolves (yarn.lock, the root package.json, Yarn's config) changed, or there is no base to tell
-    # from. A change to a lib's source is left to the pull request's lint and tests, which run for the
-    # lib's dependents too.
+    # from. So are the list types it seeds with (libs/list-types/) and the root tsconfig.json, which its
+    # image copies, so a preview never seeds with an old copy. Any other lib's change is left to the
+    # pull request's lint and tests, which run for the lib's dependents too.
     local app
     affected_apps="$promotable_apps"
     for app in $(echo "$UNPROMOTED_APPS" | jq -r '.[]'); do
-      if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
+      if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|libs/list-types/|tsconfig\.json$|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
         affected_apps=$(echo "$affected_apps" | jq -c --arg app "$app" '. + [$app]')
       else
         echo "Pull request: ${app} is not built, as nothing it is built from changed"
