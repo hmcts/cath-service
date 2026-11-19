@@ -11,6 +11,12 @@ on:
         required: true
         type: string
         description: "Base64-encoded JSON of deployment URLs"
+      # Only for the PR comment: the smoke tests do not check the hosted parity check
+      ui-baseline-url:
+        required: false
+        type: string
+        default: ""
+        description: "Where the hosted parity check is, when the deploy deployed it"
       is-pr:
         required: false
         type: boolean
@@ -35,6 +41,7 @@ jobs:
     with:
       change-id: ${{ inputs.change-id }}
       urls: ${{ inputs.urls }}
+      ui-baseline-url: ${{ inputs.ui-baseline-url }}
 
   smoke-test:
     name: Smoke Test

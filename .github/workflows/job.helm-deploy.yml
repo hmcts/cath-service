@@ -61,6 +61,9 @@ on:
       namespace:
         description: "Kubernetes namespace"
         value: ${{ jobs.helm-deploy.outputs.namespace }}
+      ui-baseline-url:
+        description: "Where the hosted parity check is, when this deploy deployed it (empty otherwise)"
+        value: ${{ jobs.helm-deploy.outputs.ui-baseline-url }}
 
 env:
   CHANGE_ID: ${{ inputs.change-id }}
@@ -79,6 +82,7 @@ jobs:
       urls: ${{ steps.urls.outputs.urls }}
       release-name: ${{ env.RELEASE_NAME }}
       namespace: ${{ env.TEAM_NAME }}
+      ui-baseline-url: ${{ steps.ui-baseline-url.outputs.url }}
     permissions:
       contents: read
       id-token: write
@@ -271,11 +275,13 @@ jobs:
 
       # Not in the deployment URLs (below), which the smoke tests check
       - name: Report where ui-baseline is
+        id: ui-baseline-url
         if: env.UI_BASELINE_ENABLED == 'true' && steps.ui-baseline.outcome == 'success'
         run: |
           HOST=$(kubectl get ingress -n "${TEAM_NAME}" -l "app.kubernetes.io/instance=${RELEASE_NAME}-ui-baseline" -o jsonpath='{.items[0].spec.rules[0].host}')
           echo "ui-baseline (VPN only): https://${HOST}"
           echo "**ui-baseline** (VPN only): https://${HOST}" >> "$GITHUB_STEP_SUMMARY"
+          echo "url=https://${HOST}" >> "$GITHUB_OUTPUT"
 
       - name: Report a ui-baseline deploy that failed
         if: env.UI_BASELINE_ENABLED == 'true' && (steps.ui-baseline-image.outcome == 'failure' || steps.ui-baseline.outcome == 'failure')

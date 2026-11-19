@@ -540,14 +540,23 @@ host, is refused.
 A pull request builds the ui-baseline image when it changes `apps/ui-baseline/`, the root
 Dockerfile or `.dockerignore`, or what the install resolves (`yarn.lock`, the root `package.json`,
 Yarn's config). Its preview then has a hosted check too, at
-`cath-service-pr-<n>-ui-baseline.preview.platform.hmcts.net` (the deploy job's summary links it),
-over the VPN. A pull request that has never built the image has none, and its deploy says so.
+`cath-service-pr-<n>-ui-baseline.preview.platform.hmcts.net`, over the VPN, linked from the pull
+request's preview comment and the deploy job's summary. A pull request that has never built the
+image has none, and its deploy says so.
 
 It checks that pull request's CaTH (`cath-service-pr-<n>-web` and `-api`) against pip test, as aat
 does (`--env preview`, which takes everything else from aat). It reads the same recorded pip
 baseline from aat's storage and never writes it, so every pull request is compared with the one
 baseline. Its runs are kept in the pull request's own storage account (container `ui-baseline`),
 so they go when the pull request's preview does, and the aat hosted check never sees them.
+
+When the pull request closes, `workflow.preview-cleanup.yml` deletes both of its releases (the
+hosted check's, then CaTH's with its storage account and database), checks the storage account
+and database are gone, and untags its images' `pr-<n>` tags in ACR. The platform's own preview
+cleanup (hmcts/cnp-aks-pipelines) deletes the release a `rel:` label names, and the hosted check's
+release has a label of its own; a scheduled sweep also deletes any `-pr-` release not updated for
+3 days. Neither untags CaTH's images: the platform works the image out from the release name, as
+`cath/service`, which does not exist.
 
 Its pod is replaced only when a master merge rebuilds its image, not on every merge. The image is
 rebuilt when `apps/ui-baseline/` or a library it uses changes, or anything every image is built from:
