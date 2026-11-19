@@ -10,6 +10,9 @@ const THRESHOLD_ENV_DEFAULTS = {
 } as const satisfies Record<string, readonly [string, number]>;
 
 const START_DATE_ENV = "INACTIVE_ACCOUNTS_START_DATE";
+// Fixed go-live date, not "today": a floor that moved with each run would make every user look
+// active on the day of the run, so nobody would ever be reminded or deleted
+const DEFAULT_START_DATE = "2026-11-19";
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/;
 
@@ -34,11 +37,7 @@ function readThreshold(envName: string, defaultDays: number): number {
 }
 
 function readStartDate(): Date {
-  const value = process.env[START_DATE_ENV];
-  if (!value) {
-    throw new Error(`${START_DATE_ENV} is required (YYYY-MM-DD)`);
-  }
-
+  const value = process.env[START_DATE_ENV] || DEFAULT_START_DATE;
   const match = ISO_DATE_PATTERN.exec(value);
   if (!match) {
     throw new Error(`${START_DATE_ENV} must be a date in the format YYYY-MM-DD`);

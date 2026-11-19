@@ -1,4 +1,4 @@
-# #351 cnp-flux-config changes (draft, PR not opened)
+# #351 cnp-flux-config changes
 
 Draft of the hmcts/cnp-flux-config PR that schedules `cath-inactive-verification-cron`. It follows the
 layout of hmcts/cnp-flux-config#49220 (#918 purge cron) and #48436 (media reporting cron).
@@ -32,16 +32,10 @@ run are not re-sent, which is PIP's behaviour.
 
 ## `INACTIVE_ACCOUNTS_START_DATE`
 
-Required. It is the go-live date of each environment (`YYYY-MM-DD`, UTC). Without it, or with an invalid value, the
-job exits 1 before any query or email. It is set in the per-cluster patches, with the same value for both clusters
-of an environment. Replace each placeholder before merging:
-
-| Environment | Placeholder |
-|---|---|
-| aat | `<AAT_GO_LIVE_YYYY-MM-DD>` |
-| demo | `<DEMO_GO_LIVE_YYYY-MM-DD>` |
-| perftest | `<PERFTEST_GO_LIVE_YYYY-MM-DD>` |
-| prod | `<PROD_GO_LIVE_YYYY-MM-DD>` |
+Not set in Flux. It defaults to `2026-11-19`, a fixed go-live date set in
+`libs/inactive-accounts/src/inactive-accounts/settings.ts`. To override it, for example on release day (#1587),
+add `job.environment.INACTIVE_ACCOUNTS_START_DATE` to the per-cluster patches, using the same value for both
+clusters of an environment.
 
 ## New files
 
@@ -101,8 +95,6 @@ spec:
 
 ### `apps/cath/cath-inactive-verification-cron/<env>/00.yaml` (aat, demo, perftest, prod)
 
-Shown for aat. For the other environments, use the matching placeholder.
-
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -112,8 +104,6 @@ spec:
   values:
     job:
       schedule: "1 8 1-31/2 * *"
-      environment:
-        INACTIVE_ACCOUNTS_START_DATE: "<AAT_GO_LIVE_YYYY-MM-DD>"
 ```
 
 ### `apps/cath/cath-inactive-verification-cron/<env>/01.yaml` (aat, demo, perftest, prod)
@@ -127,12 +117,7 @@ spec:
   values:
     job:
       schedule: "1 8 2-30/2 * *"
-      environment:
-        INACTIVE_ACCOUNTS_START_DATE: "<AAT_GO_LIVE_YYYY-MM-DD>"
 ```
-
-The patch is a strategic merge on the HelmRelease, so `job.environment.INACTIVE_ACCOUNTS_START_DATE` is merged
-alongside `SCRIPT_NAME` from the base file rather than replacing it.
 
 ## Changed files
 

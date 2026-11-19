@@ -101,7 +101,7 @@ describe("inactiveVerification", () => {
 
   it("should pass on an error from processInactiveAccounts and still disconnect", async () => {
     // Arrange
-    const runError = new Error("INACTIVE_ACCOUNTS_START_DATE is required (YYYY-MM-DD)");
+    const runError = new Error("INACTIVE_ACCOUNTS_START_DATE must be a date in the format YYYY-MM-DD");
     vi.mocked(processInactiveAccounts).mockRejectedValue(runError);
 
     // Act & Assert

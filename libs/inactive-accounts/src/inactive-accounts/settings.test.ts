@@ -87,12 +87,19 @@ describe("getInactivitySettings", () => {
     expect(() => getInactivitySettings()).toThrow("CFT_IDAM_ACCOUNT_DELETION_DAYS must be a positive integer");
   });
 
-  it("should throw when INACTIVE_ACCOUNTS_START_DATE is missing", () => {
+  it.each([undefined, ""])("should default the start date to the 2026-11-19 go-live date when INACTIVE_ACCOUNTS_START_DATE is %j", (value) => {
     // Arrange
-    delete process.env.INACTIVE_ACCOUNTS_START_DATE;
+    if (value === undefined) {
+      delete process.env.INACTIVE_ACCOUNTS_START_DATE;
+    } else {
+      process.env.INACTIVE_ACCOUNTS_START_DATE = value;
+    }
 
-    // Act & Assert
-    expect(() => getInactivitySettings()).toThrow("INACTIVE_ACCOUNTS_START_DATE is required (YYYY-MM-DD)");
+    // Act
+    const settings = getInactivitySettings();
+
+    // Assert
+    expect(settings.startDate).toEqual(new Date("2026-11-19T00:00:00.000Z"));
   });
 
   it.each(["19/11/2026", "2026-11-19T00:00", "2026-1-19", "20261119"])("should throw when INACTIVE_ACCOUNTS_START_DATE has the wrong format %j", (value) => {

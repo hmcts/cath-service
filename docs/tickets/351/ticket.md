@@ -5,7 +5,7 @@
 **Author:** junaidiqbalmoj
 **Labels:** type:story
 **Created:** 2026-02-12T13:26:10Z
-**Updated:** 2026-11-19T15:33:41Z
+**Updated:** 2026-11-19T15:47:19Z
 
 ## Description
 
@@ -144,11 +144,12 @@ The implementation follows `hmcts/pip-account-management` (`InactiveAccountManag
 1. **Media "last verified":** add a `user.last_verified_date` column. It is set when an account is created and backfilled for existing rows as `COALESCE(last_signed_in_date, created_date)`. Only a new **`/media-verification`** sign-in route updates it, as in PIP. That route uses B2C policy `B2C_1_SignInMediaVerification` and redirects to `/account-home?verified=true`. The route is **in scope for this ticket**.
 2. **B2C verification user flow:** `B2C_1_SignInMediaVerification` exists in every environment and works with the `/login/return` reply URL. Confirmed.
 3. **Graph permission:** the B2C Graph app registration has `User.ReadWrite.All`, which deleting B2C users needs. Confirmed.
-4. **No deletion without warning on the first run:** a required `INACTIVE_ACCOUNTS_START_DATE`, the go-live date for each environment, is used as a floor.
+4. **No deletion without warning on the first run:** a go-live date floor, `INACTIVE_ACCOUNTS_START_DATE`. **It is optional and defaults to `2026-11-19`**, a fixed date set in `settings.ts`.
    - A user's activity date is treated as no earlier than this date. This applies to `last_verified_date` for media users and `last_signed_in_date` for everyone else.
-   - Accounts that are already overdue therefore get the normal reminder and deletion periods counted from go-live.
-   - Once go-live is further back than the longest threshold, the floor has no effect and behaviour is exactly PIP's.
-   - The job will not run if the date is missing or invalid.
+   - Accounts that are already overdue therefore get the normal reminder and deletion periods counted from 2026-11-19.
+   - The default is a fixed date rather than "today": a floor that moved with each run would make every user look active on that day, so nobody would ever be reminded or deleted.
+   - Once that date is further back than the longest threshold (365 days), the floor has no effect and behaviour is exactly PIP's.
+   - Set the variable only to override the default, for example on release day (#1587). An invalid value stops the job before it does any work.
 5. **Provenances:** only `PI_AAD`, `SSO`, `CFT_IDAM` and `CRIME_IDAM` are handled. There are no `B2C_IDAM` users.
 6. **Secrets:** the Notify, Redis and B2C Graph secrets are added to the crons chart and are available to every `cath-crons` release. **Secrets must never appear in logs.** Logs contain counts, user IDs and error codes or messages only.
 7. **Manual deletion by a System Admin also removes the B2C account** for `PI_AAD` users, as PIP's `deleteAccount` does. Both paths use the same archive-and-delete function.
@@ -239,7 +240,7 @@ CATH_SERVICE_URL=https://localhost:8080 \
 MOCK_AZURE_B2C=true \
 SCRIPT_NAME=inactive-verification yarn workspace @hmcts/crons dev; echo "exit=$?"
 ```
-- `INACTIVE_ACCOUNTS_START_DATE` is required. A date in the past means the normal rules apply.
+- `INACTIVE_ACCOUNTS_START_DATE=2020-01-01` overrides the 2026-11-19 default with a date in the past, so the normal thresholds apply to the seeded users. Without it, the 2026-11-19 default protects them until their thresholds pass counting from that date.
 - `CATH_SERVICE_URL` is required. The email links are built from it.
 - `MOCK_AZURE_B2C=true` skips B2C deletion. The deployed cron sets it too, until #1587.
 - Two start-up warnings are expected locally and can be ignored: `Failed to retrieve secret b2c-<ENV>-…` (the `<ENV>` placeholder is only substituted when the chart is deployed) and `Mount point /mnt/secrets does not exist`.
@@ -273,9 +274,9 @@ docker exec cath-postgres psql -U hmcts -d postgres \
 Clean up (step 8), re-seed (step 2), then run step 3 with `INACTIVE_ACCOUNTS_START_DATE` set to the date 118 days ago (`date -u -v-118d +%F` on macOS, `date -u -d '118 days ago' +%F` on Linux).
 **Expected:** only `qa351-cft-118` is emailed and only `qa351-aad-90` is deleted. Accounts that were already overdue are treated as last active on the go-live date, so nobody is deleted without warning.
 
-### 6. Fail fast
-Run step 3 once without `INACTIVE_ACCOUNTS_START_DATE`, then again with `INACTIVE_ACCOUNTS_START_DATE=2026-13-45`. Keep the other variables.
-**Expected:** `Cron job failed: INACTIVE_ACCOUNTS_START_DATE …` and `exit=1`, with no changes to the database.
+### 6. Default and invalid start date
+- **No `INACTIVE_ACCOUNTS_START_DATE`:** run step 3 without it. **Expected:** the 2026-11-19 default applies, so none of the seeded users are emailed or deleted, and the run ends with `exit=0`.
+- **Invalid value:** run step 3 with `INACTIVE_ACCOUNTS_START_DATE=2026-13-45`. **Expected:** `Cron job failed: INACTIVE_ACCOUNTS_START_DATE must be a real calendar date` and `exit=1`, with no changes to the database.
 
 ### 7. Web changes
 - **System Admin delete:**
@@ -302,7 +303,8 @@ docker exec cath-postgres psql -U hmcts -d postgres -c "DELETE FROM \"user\" WHE
 
 **Notes:**
 - Running the cron twice on the same day sends that day's reminders again. PIP behaves the same way. The Flux release sets `backoffLimit: 0` so that a failed run is never retried automatically.
-- `INACTIVE_ACCOUNTS_START_DATE` must be set to each environment's go-live date in the Flux release before it is deployed. The draft is in `docs/tickets/351/flux-config.md`.
+- `INACTIVE_ACCOUNTS_START_DATE` does not need setting in Flux; the 2026-11-19 default applies. On release day, check that the date still gives overdue users their reminders (#1587).
+
 
 
 ## Comments

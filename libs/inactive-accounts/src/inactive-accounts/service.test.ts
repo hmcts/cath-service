@@ -69,11 +69,11 @@ describe("processInactiveAccounts", () => {
   it("should load and validate settings before doing any work", async () => {
     // Arrange
     vi.mocked(getInactivitySettings).mockImplementation(() => {
-      throw new Error("INACTIVE_ACCOUNTS_START_DATE is required (YYYY-MM-DD)");
+      throw new Error("INACTIVE_ACCOUNTS_START_DATE must be a date in the format YYYY-MM-DD");
     });
 
     // Act & Assert
-    await expect(processInactiveAccounts()).rejects.toThrow("INACTIVE_ACCOUNTS_START_DATE is required");
+    await expect(processInactiveAccounts()).rejects.toThrow("INACTIVE_ACCOUNTS_START_DATE must be a date");
     for (const finder of FINDERS) {
       expect(finder).not.toHaveBeenCalled();
     }
