@@ -187,7 +187,7 @@ All fields on one page, on top of C's service, sequence and audit action. It cos
 **Verdict:** fallback only. Q4 says courts are added one at a time, so it is not needed.
 
 ### 3.3 C: one question per page (recommended)
-The pages are `add-court-name`, `add-court-contact-details`, `add-court-regions`, `add-court-sub-jurisdictions`, `add-court-provenance-reference` (optional, Q7), `add-court-add-another-reference` (Q6), `add-court-check-answers` and `add-court-success`. The spec (§4.3, §5, §6) has seven; the answers to Q6 and Q7 add the eighth. A court is public as soon as it is confirmed (no draft state, §6.1 Q5).
+The pages are `add-court-name`, `add-court-contact-details`, `add-court-regions`, `add-court-sub-jurisdictions`, `add-court-provenance-reference` (optional, Q7), `add-court-add-another-reference` (Q6), `add-court-check-answers` and `add-court-success`. The spec (§4.3, §5, §6) has seven; the answer to Q6 adds the eighth, and Q7 makes the reference step optional. A court is public as soon as it is confirmed (no draft state, §6.1 Q5).
 - Each page validates its own fields, with errors linked to the field.
 - Check answers re-validates uniqueness and does one create-only transaction.
 - It is bilingual from the start, and each piece has a precedent in the same directory (§1.2).
@@ -262,11 +262,11 @@ Any later load of legacy courts ends with the same `setval`, with the sequence's
 1. **Freeze `locationData` (Q1, Q9).** Keep the 27 courts and the current regions, jurisdictions and sub-jurisdictions, and add no more. Update CLAUDE.md item 7, which today tells developers to add locations to `location-data.ts`, to say that courts and the reference data under them are now added through the admin pages and are environment-local. This is the only measure that removes c3.
 2. **Reject an existing `(SNL, id)` pair at step 5 and again at confirm.** The seeded "101"–"127" references exist in every environment, so an ordinary uniqueness lookup covers them.
 3. **Guards that can actually fail.** A test asserting that the realign list comes only from `locationData` would always pass, because `generateRealignSql()` and `generateLocationReferencesSql()` only ever read `locationData` (`generate-seed-sql.ts:46-51`, `:99-112`). The collision is between a new `locationData` entry and a row in some environment's database, and a unit test cannot see that row. So the guards are:
-   - (a) **Freeze test (required, Q1 and Q9).** A test in `apps/postgres/prisma/generate-seed-sql.test.ts` (or beside `libs/location/src/location-data.ts`) asserting the exact set of court IDs (1–27 today) and the exact sets of region, jurisdiction and sub-jurisdiction IDs. Its failure message tells the developer to add the entry through the admin pages instead. Assert the set as it stands, not a hard-coded 1–27, so the test is updated in the same PR if S4 renumbers the seeded courts. Keep the band assertion as well: every `location_id` in the generated SQL is below the sequence start.
+   - (a) **Freeze test (required, Q1 and Q9).** A test in `apps/postgres/prisma/generate-seed-sql.test.ts` asserting the exact set of court IDs (1–27 today) and the exact sets of region, jurisdiction and sub-jurisdiction IDs. Its failure message tells the developer to add the entry through the admin pages instead. Assert the set as it stands, not a hard-coded 1–27, so the test is updated in the same PR if S4 renumbers the seeded courts. Keep the band assertion as well: every `location_id` in the generated SQL is below the sequence start.
    - (b) **Fail loudly (required, Q1).** The location realign only renames rows whose `location_id` is one of `locationData`'s own IDs. Any other row with a colliding name (a UI or legacy court) is left alone, so the insert fails the deploy on `location_name_key` instead of quietly parking that court as `__realign_<id>`. This also stops the seed parking the old seeded rows when S4 renumbers them, so S4 moves its own rows (§7.2).
 
    The existing test at `:84-100` checks the shape of the realign but not where its values come from.
-4. **Stop the seed re-pointing references, and fail the deploy on a clash (Q2).** The seed re-inserts its own `seedref_<id>` rows on every deploy (`generate-seed-sql.ts:105`), so a plain `INSERT` with no `ON CONFLICT` would fail every deploy, not just a clash. Instead, before the reference insert, the generated SQL runs a `DO` block that raises an exception if any of the seed's `(provenance, provenance_location_id)` pairs already belongs to a different `location_id`. The insert then uses the guarded clause below, which is a no-op for the seed's own rows. The seed runs as one transaction (`BEGIN` at `generate-seed-sql.ts:20`, `COMMIT` at `:63`, applied by `start.sh:105`), so the exception rolls the whole seed back and the postgres deploy pod fails. That is the intended effect: the deploy stays red until a person moves or removes the reference through amend a court (S1) or the CSV (S2), and no data is changed silently. Both clauses the spike tested are below; on their own, each skips the clash silently, which is why the `DO` block is needed:
+4. **Stop the seed re-pointing references, and fail the deploy on a clash (Q2).** The seed re-inserts its own `seedref_<id>` rows on every deploy (`generate-seed-sql.ts:105`), so a plain `INSERT` with no `ON CONFLICT` would fail every deploy, not just a clash. Instead, before the reference insert, the generated SQL runs a `DO` block that raises an exception if any of the seed's `(provenance, provenance_location_id)` pairs already belongs to a different `location_id`. The insert then uses the guarded clause below, which is a no-op for the seed's own rows. The seed runs as one transaction (`BEGIN` at `generate-seed-sql.ts:20`, `COMMIT` at `:63`, applied by `start.sh:105`), so the exception rolls the whole seed back and the postgres deploy pod fails. That is the intended effect: the deploy stays red until a person moves or removes the reference through amend a court (S1) or the CSV (S2), and no data is changed silently. S1 and S2 will not exist when ticket 1 ships, so until then the usual fix is to revert the `location-data.ts` change that caused the clash. Both clauses the spike tested are below; on their own, each skips the clash silently, which is why the `DO` block is needed:
 
 | Reference clause | UI court's (SNL,"128") | Seeded court 28's SNL ref | UI court's name |
 |---|---|---|---|
@@ -302,7 +302,7 @@ Removing the route at step 1 would leave no way to amend a court or make bulk ed
 **Method.**
 - Two throwaway databases in the local docker `cath-postgres` (localhost:5433), migrated with `prisma migrate deploy` via `apps/postgres/prisma.config.ts`.
 - Seed SQL from the real `generateSeedSql()`, called by a harness in `/tmp/spike-1078/` that adds the throwaway entry in memory. `location-data.ts` was never edited.
-- Applied with `psql -v ON_ERROR_STOP=1`, the same file-based apply as `start.sh:104-105`.
+- Applied with `psql -v ON_ERROR_STOP=1`, a file-based apply equivalent to the deploy's `prisma db execute --file` (`start.sh:105`).
 - Both databases dropped afterwards. No code changes.
 
 **Scenario 1, reproduced.**
@@ -384,7 +384,7 @@ Q1–Q12 were posted on #1078 on 2026-11-17. The developer's answers are below a
 - **Q1:** freeze `location-data.ts` at the 27 courts: **yes**. Fail-loudly guard (b): **yes**. Renumber the seeded courts to their legacy IDs first (S4): **yes for now**, may change.
 - **Q2:** the deploy seed must **never overwrite an existing provenance reference**. A clash **fails the deploy**, and only a person changes or removes a reference, through amend a court (S1) or the update-only CSV (S2). Ticket 1 changes `generate-seed-sql.ts:111` as described in §4.2 item 4.
 - **Q3:** start the sequence at the **highest legacy CaTH production P&I ID + 1**, not 100000. The value comes from the legacy production export (S4); if production matches staging (highest 389), the start is 390. Every legacy load ends with the same `setval` as the migration, with the sequence's current next value added to the `GREATEST` (§4.1), so no margin is needed (§4.1). The E2E bands now sit above the start on STG and locally; §4.1 explains why that is safe, and why ticket 1's CSV guard uses the sequence's live value.
-- **Q4:** courts are added **one at a time**. The one-question-per-page journey stands.
+- **Q4:** courts are added **one at a time**. The one-question-per-page journey stands. How often existing courts are edited in bulk is **still open**, and Decision 3 step 4 (whether to remove the CSV upload completely) depends on it.
 - **Q5:** first answered as "starts as a draft". **Changed on 2026-11-18: no draft state.** A draft state would have to filter shared location readers that list pages, notifications and admin uploads also use, and needs a persistent publish route, for about 2 days. A new court is public as soon as it is confirmed.
 - **Q6:** **several** provenance references per new court. After the first, an "Add another reference?" step lets the admin add more (for example SNL and Common Platform), as the CSV route allows. This adds a page and the within-submission duplicate check (§5, rule 15) to ticket 2, about 1 day.
 - **Q7:** the **System Admin** supplies the Welsh name. Provenance references are **usually not known** when a court is created, so the reference step is **optional**: the admin can skip it and add references later through amend a court (S1). Until a court has a reference, lists from upstream systems cannot be matched to it, so check answers and the success page say so.
@@ -394,7 +394,7 @@ Q1–Q12 were posted on #1078 on 2026-11-17. The developer's answers are below a
 - **Q11:** **radio buttons** (not a select) for provenance and type; **keep the tiles** on the `/reference-data` hub; the spec's hint texts **need checking by content design** before build.
 - **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
 
-All of Q1–Q12 are answered. The questions as posted:
+Q1–Q12 are answered, except the bulk-edit half of Q4. The questions as posted:
 
 **Tech lead (blocking the recommendation)**
 
@@ -476,7 +476,7 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 - `generate-seed-sql.test.ts`: every `location_id` in the generated SQL is below the sequence start, and the start is above the highest legacy production ID.
 - Fail-loudly realign (§4.2 guard b, Q1): the location realign only renames rows whose `location_id` is one of `locationData`'s own IDs.
 - Reference clash (§4.2 item 4, Q2): change `generate-seed-sql.ts:111` to the guarded `DO UPDATE … WHERE location_reference.location_id = EXCLUDED.location_id`, preceded by a `DO` block that raises an exception naming the clashing `(provenance, provenance_location_id)` if it belongs to a different location.
-- Update CLAUDE.md item 7: courts, regions, jurisdictions and sub-jurisdictions are now added through the admin pages; `location-data.ts` is frozen.
+- Update CLAUDE.md item 7: courts, regions, jurisdictions and sub-jurisdictions are now added through the admin pages; `location-data.ts` is frozen. Change only the location half: item 7 also covers `list-type-data.ts`, which stays the source of truth for list types.
 - Existing explicit-ID writers (seed, test-support, `upsertLocations()`) still compile and pass.
 
 **Out of scope:** pages; renumbering the seeded courts (S4).
@@ -500,6 +500,7 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 
 **Scope**
 - **Common to every page:** `index.ts` (`GET`/`POST` `RequestHandler[]` behind `requireRole([USER_ROLES.SYSTEM_ADMIN])`), `index.njk`, `en.ts`, `cy.ts`, `index.test.ts` and `index.njk.test.ts`. Every step after the first redirects to step 1 when the `addCourt` session is missing. `?change=true` returns to check answers.
+- **CSRF:** the app registers no CSRF token middleware (pages call `req.csrfToken?.()`, which falls back to an empty string). POSTs are protected by the session cookie's `SameSite=Lax` (`libs/web-core/src/middleware/session-stores/redis-store.ts:21`), which keeps it off cross-site POSTs, as for the existing admin pages. The new pages follow the same posture; adding token middleware would be a separate, app-wide change.
 - **Session:** `addCourt` and `addCourtSuccess` in `apps/web/src/session.ts`.
 - **`add-court-name/` and `add-court-contact-details/`:** trim and collapse whitespace; `HTML_TAG_REGEX` on all four fields; empty email and contact number stored as null.
 - **`add-court-regions/` and `add-court-sub-jurisdictions/`:** from `listRegions()` and, grouped, `listJurisdictionsWithSubJurisdictions()`. A single tick posts a string and must be coerced to an array. Unknown IDs are rejected.
@@ -508,7 +509,7 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 - **`add-court-check-answers/`:** summary list with Change links. With no reference, an inset says lists from upstream systems cannot be matched to the court until one is added (Q7). The `POST` re-validates and calls `createCourt()`, then sets `req.auditMetadata = { shouldLog: true, action: AuditLogAction.ADD_COURT, entityInfo: "Name: …, Location ID: …" }`, as `add-region` does.
 - **`add-court-success/`:** panel with the court name and ID, and the no-reference warning if it applies. Clears `addCourt`.
 - **Hub entry (last):** a fifth "Add a court or tribunal" tile in `reference-data/en.ts` and `cy.ts` `options` (Q11 keeps the tiles).
-- **Content:** the spec's hint texts go to content design before build (Q11).
+- **Content:** the spec's hint texts go to content design before build (Q11). Also ask design about the steps with several fields (names, contact details, and the three-field reference), since they stretch one-thing-per-page.
 - **E2E:** two Playwright journeys in `e2e-tests/tests/`, with prefixed names and provenance IDs so teardown removes them.
 
 **Scenarios**
@@ -541,9 +542,10 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 
 **S1: Amend a court.** Change a court's names, contact details and references without a CSV, reusing C's pages in change mode and its service (Q8). Must handle the seeded courts, whose renames are reverted on every deploy: block renaming them. Also the route by which a person resolves a seed reference clash (Q2). Depends on tickets 1 and 2. Roughly 3–4 d.
 
-**S2: Make the reference-data CSV upload update-only (Q10).** Replaces ticket 1's interim guard. `validateLocationData()` rejects an unknown `LOCATION_ID` with a bilingual message pointing to "Add a court or tribunal". Why: an admin-chosen ID the sequence has not reached breaks a later UI create (§4.5).
+**S2: Make the reference-data CSV upload update-only (Q10).** Replaces ticket 1's interim guard. `validateLocationData()` rejects an unknown `LOCATION_ID` with an English message pointing to "Add a court or tribunal" (the summary and confirmation pages hard-code `locale = "en"`, §1, so a Welsh message would never show; making the CSV route bilingual is out of scope). Why: an admin-chosen ID the sequence has not reached breaks a later UI create (§4.5).
 - Scenarios: an unknown ID is rejected with a row-numbered error; updates to existing courts still work.
 - Also add a database check on (provenance, provenanceLocationId), so a clash is a validation error rather than a 500.
+- Fix two existing CSV defects: `reference-data-upload-summary/index.ts:71` logs the whole parsed file, including court emails and phone numbers; and `validation.ts:245` and `:276` put user-supplied region and sub-jurisdiction names into the error `html` without escaping them.
 - Depends on ticket 2. About 1 d.
 
 **S3: Discovery spike: syncing courts from an upstream source.** Already raised as #1537 and kept open, because it is research rather than build work. Can SNL, Common Platform or another source supply names, Welsh names, references and closures? Who owns the contract? What reconciliation policy is needed without soft delete? Output: a report like this one. Time-boxed to 3 d.

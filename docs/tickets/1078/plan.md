@@ -141,6 +141,8 @@ One file, `docs/tickets/1078/report.md`, with these sections:
 
 **Decision 1: allocate `location_id` from a Postgres sequence starting at 100000.**
 
+> Superseded: the report starts the sequence at the highest legacy production ID + 1, not 100000 (report §4.1 and Q3). The 100000 figures below are the plan as written.
+
 | Strategy | Analysis | Verdict |
 |---|---|---|
 | Application-side `MAX + 1`, as `createJurisdictionRecord()` and `createRegion()` already do | On STG, `MAX(location_id)` sits in the E2E band 90000–99999, so new IDs would land on top of IDs that `randomInt(90000, 100000)` hands out at random. Without a lock it races between pods. With a table lock, as sub-jurisdiction uses, it serialises writes but still lands next to test data. When run locally it produces 28, which is the next `locationData` ID | Rejected for location. The precedent holds for regions only because those bands are not shared with test fixtures, and it is already fragile there (§6, Q9) |
