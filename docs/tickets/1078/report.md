@@ -145,7 +145,7 @@ The old service (`hmcts/pip-frontend` and `hmcts/pip-data-management`, read on G
 
 So no create journey has ever existed. Option C is new in both systems, and the new service ported the old CSV design almost one-for-one.
 
-**Seeded and legacy court IDs differ.** A legacy staging reference-data export (2026-11-17; 367 courts, P&I IDs 1–389, none at or above 100000) was compared with the 27 seeded courts in `docs/tickets/1078/legacy-court-mapping.md`. Only Single Justice Procedure has the same ID in both (9). 22 exist in legacy under a different ID (for example Royal Courts of Justice is 109 in legacy and 4 here), 3 have no legacy match, Rolls Building is legacy 111, and 19 seeded IDs belong to a different court in legacy (legacy 7 is Liverpool Social Security and Child Support Tribunal; seeded 7 is Bristol Civil and Family Justice Centre). If legacy courts are ever brought into this service with their IDs, the deploy seed would rename most of them (c3). Renumbering the seeded courts to their legacy IDs before go-live avoids that; it is follow-on S4 (§7.2, Q1).
+**Seeded and legacy court IDs differ.** A legacy staging reference-data export (2026-11-17; 367 courts, P&I IDs 1–389, none at or above 100000) was compared with the 27 seeded courts in Appendix A. Only Single Justice Procedure has the same ID in both (9). 22 exist in legacy under a different ID (for example Royal Courts of Justice is 109 in legacy and 4 here), 3 have no legacy match, Rolls Building is legacy 111, and 19 seeded IDs belong to a different court in legacy (legacy 7 is Liverpool Social Security and Child Support Tribunal; seeded 7 is Bristol Civil and Family Justice Centre). If legacy courts are ever brought into this service with their IDs, the deploy seed would rename most of them (c3). Renumbering the seeded courts to their legacy IDs before go-live avoids that; it is follow-on S4 (§7.2, Q1).
 
 ---
 
@@ -226,7 +226,7 @@ There is no upstream contract, and the owning team sits outside CaTH. It needs a
 
 **Why + 1, and why no margin.** A Postgres sequence's start value is the first ID it hands out, so starting *at* the highest legacy ID would give the first UI court the same ID as that legacy court. Old CaTH may still add courts until cutover. Rather than guess a margin to absorb them, every load of legacy courts ends with the same `setval` as the migration (below), so the sequence always restarts above whatever was loaded. This holds as long as legacy courts are loaded before any court is created through the UI in that environment. There is no production deployment yet (CLAUDE.md, item 7), so in production the order is: load legacy courts, then open the journey.
 
-**The start value.** Legacy staging's highest P&I ID is 389 (`legacy-court-mapping.md`), which would give a start of **390**. Old CaTH admins chose IDs per environment, so ticket 1 takes the value from the legacy **production** export (S4) and records it in the migration.
+**The start value.** Legacy staging's highest P&I ID is 389 (Appendix A), which would give a start of **390**. Old CaTH admins chose IDs per environment, so ticket 1 takes the value from the legacy **production** export (S4) and records it in the migration.
 
 **Disjointness proof.** The sequence's live value is `GREATEST(start, MAX(location_id) + 1)` in every environment, so it only hands out IDs above every row that existed when the migration (or a legacy load) ran.
 
@@ -440,7 +440,7 @@ All of Q1–Q12 are answered. The questions as posted:
 | Two sources of truth diverge | Court on STG but not locally | Medium | Update CLAUDE.md item 7 (§4.2) | Tech lead |
 | Bulk volume higher than assumed | Feature unused | Low (Q4: one at a time) | B fallback | PO |
 | F later proves the strategic answer | C becomes interim | Low | C is a prerequisite for any sync | PO |
-| Seeded court IDs differ from legacy CaTH IDs | If legacy courts are later loaded with their IDs, the seed renames them and their lists show under the wrong court | Medium, only if legacy data is migrated | Renumber the seeded courts before go-live (S4; `legacy-court-mapping.md`, re-checked against legacy production) | Tech lead |
+| Seeded court IDs differ from legacy CaTH IDs | If legacy courts are later loaded with their IDs, the seed renames them and their lists show under the wrong court | Medium, only if legacy data is migrated | Renumber the seeded courts before go-live (S4; Appendix A, re-checked against legacy production) | Tech lead |
 | Concurrent case-variant names | Two courts differing only in case | Low | Accept, or add a `lower(name)` unique index in ticket 1 | Tech lead |
 
 ---
@@ -548,7 +548,7 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 
 **S3: Discovery spike: syncing courts from an upstream source.** Already raised as #1537 and kept open, because it is research rather than build work. Can SNL, Common Platform or another source supply names, Welsh names, references and closures? Who owns the contract? What reconciliation policy is needed without soft delete? Output: a report like this one. Time-boxed to 3 d.
 
-**S4: Align seeded court IDs with legacy CaTH (Q1).** Get the legacy CaTH **production** reference-data export, re-check `legacy-court-mapping.md` against it, and renumber the seeded courts in `location-data.ts` to their legacy IDs before go-live, with a reviewed mapping for the three courts with no exact match. The same export supplies ticket 1's sequence start (Q3). Must land before any legacy load, and before ticket 1's migration reaches production.
+**S4: Align seeded court IDs with legacy CaTH (Q1).** Get the legacy CaTH **production** reference-data export, re-check Appendix A against it, and renumber the seeded courts in `location-data.ts` to their legacy IDs before go-live, with a reviewed mapping for the three courts with no exact match. The same export supplies ticket 1's sequence start (Q3). Must land before any legacy load, and before ticket 1's migration reaches production.
 - **Also in scope.** Replace the hard-coded SJP `locationId=9` in `apps/web/src/pages/(verified)/account-home/index.njk:22` and `apps/web/src/pages/(public)/view-option/index.ts:42` with a constant or a lookup by name. Decide whether real legacy provenance references replace the synthetic `SNL:(id + 100)` ones (`generate-seed-sql.ts:106`). Update E2E fixtures, `libs/test-support` and unit tests that assert on a seeded court's ID. Update CLAUDE.md item 7 to say seeded court IDs must match legacy P&I IDs. If ticket 1 has merged, update its freeze test to the new ID set in the same PR.
 - **Done when** every seeded court's `locationId` equals its legacy production P&I ID, or there is a recorded decision for each of the three unmatched courts (which must not take an ID a legacy court uses). No code depends on a hard-coded seeded ID. The migration and seed run twice on a fresh database and on an STG copy, with and without ticket 1's guards, leaving no `__realign_` rows and exactly one `seedref_<new id>` per moved court. The mapping needs a second reviewer, and the raw legacy export holds court contact details, so it must not be committed.
 - **It moves its own rows.** Once ticket 1's guard (b) is in, the seed no longer parks old rows, so a deploy that only edits `location-data.ts` would fail on `location_name_key` (for example, STG row 4 still holds "Royal Courts of Justice" when the seed inserts it at 109). S4 therefore ships a one-off Prisma migration, which runs before the seed (`apps/postgres/start.sh:95`, then `:104-105`), wrapped in its own `BEGIN`/`COMMIT`:
@@ -598,7 +598,7 @@ Revised on 2026-11-17, after discussion with the developer:
 
 Revised after the third review: Q1 option B now requires a reviewed legacy-to-seeded court mapping, an upsert rather than a replace of `location`, and a `setval(GREATEST(...))` at the end of the load (22 of the 27 seeded courts have a different legacy ID). Q4 now also asks about bulk edits. Three citations were corrected: §6 not §4, the partly-translated legacy pages, and the spec §3 wording.
 
-Revised on 2026-11-17 with a legacy staging export: added Q1 options D (renumber the seeded courts to legacy IDs) and E (stop the seed writing courts); corrected the SJP claim (legacy data has SJP at 9, not 0); recorded the 27-court comparison in `legacy-court-mapping.md`.
+Revised on 2026-11-17 with a legacy staging export: added Q1 options D (renumber the seeded courts to legacy IDs) and E (stop the seed writing courts); corrected the SJP claim (legacy data has SJP at 9, not 0); recorded the 27-court comparison in Appendix A.
 
 Revised on 2026-11-17 at the developer's request: removed every dependency on the `vibe-653` branch, which is a different piece of work. Q1's loading options (A–E), the migration-conflict paragraph and its risk row are gone. The legacy ID comparison and the renumbering draft stay, as a standalone pre-go-live question in Q1.
 
@@ -616,3 +616,39 @@ Revised again on 2026-11-18 after the fifth review, at the developer's request:
 Revised after the sixth review: S4's migration now pre-checks the target IDs, deletes the moving courts' synthetic seed references so the chained moves cannot leave one on the wrong court, and moves courts, publications and subscriptions in two phases through a negative offset. Ticket 1's CSV E2E change uses test-support's generated-ID path. The Q3 answer and the recommendation box were brought in line with §4.1 and §7.
 
 Needs a person: tech lead and PO sign-off on this report, then raising the §7 tickets with spec §4–13 attached, then closing #1078. If Q4 changes, revisit §2 and §4.
+
+---
+
+## Appendix A: Seeded courts vs legacy CaTH court IDs
+
+Source: legacy CaTH reference data export (`referenceData (1).csv`, 367 courts, 686 rows, P&I IDs 1–389; none at or above 100000). Environment: **old CaTH staging** (confirmed by the developer, 2026-11-17). Old CaTH admins chose IDs per environment, so re-check against an old CaTH production export before renumbering anything. Matched on English name, then Welsh name, ignoring case and punctuation. Generated 2026-11-17 for the #1078 report (§1.7, Q1).
+
+| Seeded ID | Seeded name | Legacy P&I ID | Legacy court currently at the seeded ID |
+|---|---|---|---|
+| 1 | Oxford Combined Court Centre | **no exact match** — nearest: 99 Oxford Magistrates' Court (different court?) | Test Location |
+| 2 | Birmingham Civil and Family Justice Centre | 16 | Test Location Other |
+| 3 | Manchester Civil Justice Centre | 29 | Test Location Other 2 |
+| 4 | Royal Courts of Justice | 109 | Unknown Location |
+| 5 | Cardiff Civil and Family Justice Centre | 199 | — |
+| 6 | Leeds Combined Court Centre | 267 | — |
+| 7 | Bristol Civil and Family Justice Centre | 147 | Liverpool Social Security and Child Support Tribunal |
+| 8 | Liverpool Civil and Family Court | 175 | — |
+| 9 | Single Justice Procedure | 9 | Single Justice Procedure |
+| 10 | Newcastle Combined Court Centre | **no exact match** — nearest: 35 Newcastle Civil & Family Courts and Tribunal Centre, or 232 Newcastle upon Tyne Crown Court and Magistrates' Court | — |
+| 11 | Birmingham Crown Court | 316 | — |
+| 12 | Birmingham Magistrates' Court | 345 | — |
+| 13 | First-tier Tribunal (Special Educational Needs and Disability) | 157 | Slough County Court and Family Court |
+| 14 | Criminal Injuries Compensation Tribunal | 119 | High Wycombe Magistrates' Court and County Court |
+| 15 | East London Tribunal Service | **no exact match** — nearest: 247 East London Family Court (different court?) | Milton Keynes Magistrates' Court and Family Court |
+| 16 | Asylum Support Tribunal | 98 | Birmingham Civil and Family Justice Centre |
+| 17 | Midlands Social Security and Child Support Tribunal | 102 | Coventry Magistrates' Court |
+| 18 | South East Social Security and Child Support Tribunal | 103 | Nottingham Justice Centre |
+| 19 | Wales and South West Social Security and Child Support Tribunal | 104 | Bradford Tribunal Hearing Centre |
+| 20 | Scotland Social Security and Child Support Tribunal | 105 | — |
+| 21 | North East Social Security and Child Support Tribunal | 106 | Leeds Magistrates Court and Family Court |
+| 22 | North West Social Security and Child Support Tribunal | 107 | Glasgow Tribunals Centre |
+| 23 | London Social Security and Child Support Tribunal | 108 | Alloa Sheriff Court |
+| 24 | Liverpool Social Security and Child Support Tribunal | 7 | Belfast Laganside Court |
+| 25 | Primary Health Tribunal | 71 | Hatton Cross Tribunal Hearing Centre |
+| 26 | Business and Property Division Rolls Building | 111 — **same court, confirmed** by the developer against its GOV.UK court page (2026-11-17); English and Welsh names differ ("Division"/"Adran" here, "Courts"/"Llysoedd" in old CaTH). GOV.UK shows "Business and Property Courts Rolls Building", matching legacy; renaming the seed is not being pursued for now | Harmondsworth Tribunal Hearing Centre |
+| 27 | First-tier Tribunal (Property Chamber) - Residential Property Division | 84 | Manchester Tribunal Hearing Centre |
