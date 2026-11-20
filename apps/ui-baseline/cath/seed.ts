@@ -36,22 +36,22 @@ const manifest = { ...loaded, publications: loaded.publications.filter((publicat
 const api = cathApi(API_URL);
 const listTypes = (await api("GET", "/test-support/list-types")) as ListTypeRow[];
 
-const deployed = environment.cath.signIn !== "session";
+const isDeployed = environment.cath.signIn !== "session";
 const token = await apiToken(environment);
-if (!token && deployed) throw new Error(`no publication API credentials for ${environment.name}: a deployed CaTH is seeded through its publication API`);
+if (!token && isDeployed) throw new Error(`no publication API credentials for ${environment.name}: a deployed CaTH is seeded through its publication API`);
 const local = token ? null : await localPublishing();
 
 await removePreviousSeed();
 // Runs that ended without removing what they seeded (the pod restarted, say), however old the file
 // that recorded them; never one recent enough to still be going. One that cannot be removed now is
 // left for a later run: it must not stop this one.
-if (deployed)
+if (isDeployed)
   await removeRuns(api, { staleAt: Date.now() }, runFiles(environment)).catch((error: Error) =>
     console.log(`left for a later run: ${error.message.split("\n")[0]}`)
   );
 // A flat file has no page of its own: CaTH lists it on the court's summary of publications
 const seedable = manifest.publications.filter((publication) => publication.paths.cath || (publication.format === "flat-file" && publication.cathListType));
-const run = deployed ? newRunToken() : null;
+const run = isDeployed ? newRunToken() : null;
 // Until the record of the run is written, nothing else knows its token, so a run that fails partway
 // (a court that could not be created, say) removes what it seeded as this script ends
 let isRecorded = false;

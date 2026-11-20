@@ -36,13 +36,13 @@ export function createBaselineCache(options: BaselineCacheOptions) {
   const hold = (id: string): PinnedBaseline => {
     holds.set(id, (holds.get(id) ?? 0) + 1);
     lastUsed.set(id, ++uses);
-    let released = false;
+    let isReleased = false;
     return {
       id,
       dir: path.join(options.root, id),
       release: () => {
-        if (released) return;
-        released = true;
+        if (isReleased) return;
+        isReleased = true;
         const left = (holds.get(id) ?? 1) - 1;
         if (left > 0) holds.set(id, left);
         else holds.delete(id);
@@ -89,16 +89,16 @@ export function createBaselineCache(options: BaselineCacheOptions) {
   };
 
   // Whether storage was last found to have no baseline in it
-  let missing = false;
+  let isMissing = false;
   const lookUpLatest = () =>
     options.latest(options.store).then(
       (stored) => {
-        missing = false;
+        isMissing = false;
         latest = stored;
         return stored;
       },
       (error: Error) => {
-        if (error instanceof NoBaselineStored) missing = true;
+        if (error instanceof NoBaselineStored) isMissing = true;
         throw error;
       }
     );
@@ -118,8 +118,8 @@ export function createBaselineCache(options: BaselineCacheOptions) {
       if (latest && existsSync(path.join(options.root, latest.id, MARKER)))
         return { ready: true, description: `recorded ${new Date(latest.finishedAt).toUTCString()} from ${latest.pip}` };
       // Looked for again while none is stored, so one pushed since is seen without a restart
-      if (missing && !lookingUp) await lookUpLatest().catch(() => undefined);
-      if (missing) return { ready: false, missing: true, description: "not stored yet" };
+      if (isMissing && !lookingUp) await lookUpLatest().catch(() => undefined);
+      if (isMissing) return { ready: false, missing: true, description: "not stored yet" };
       return { ready: false, description: fetching.size || lookingUp ? "being fetched" : "not fetched yet" };
     }
   };

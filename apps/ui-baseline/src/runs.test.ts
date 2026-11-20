@@ -58,6 +58,28 @@ describe("createRunner", () => {
     });
   });
 
+  it("should record a check as finished, without the part it cannot read, when a comparison file is cut short", async () => {
+    // Arrange
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { runner } = await runnerWith(async (args) => {
+      await mkdir(path.join(outDir(args), "report"), { recursive: true });
+      await writeFile(path.join(outDir(args), "report/index.html"), "<html>");
+      await mkdir(path.join(outDir(args), "compare/lists"), { recursive: true });
+      await mkdir(path.join(outDir(args), "compare/pages"), { recursive: true });
+      await writeFile(path.join(outDir(args), "compare/lists/compare.json"), '{"totals": {"pairs": 4,');
+      await writeFile(path.join(outDir(args), "compare/pages/compare.json"), JSON.stringify({ totals: { pairs: 2, match: 2, differs: 0, notCaptured: 0 } }));
+    });
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    const record = runner.get(run.id);
+    expect(record).toMatchObject({ status: "finished", summary: { pages: { match: 2, differs: 0 } } });
+    expect(record?.summary?.lists).toBeUndefined();
+  });
+
   it("should pass each list type to the check", async () => {
     // Arrange
     const { runner, execute } = await runnerWith();
@@ -1095,6 +1117,38 @@ describe("createRunner when pods are replaced", () => {
     expect(runner.get("r6")).toMatchObject({ status: "queued", owner: "other" });
     runner.stopWatching();
     vi.useRealTimers();
+  });
+
+  it("should give up on marking a run interrupted when storage stops answering, rather than wait forever", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const lastBeat = new Date(Date.now() - 170 * 1000).toISOString();
+    const record = { id: "r7", kind: "check", scope: "all", status: "queued", createdAt: lastBeat, heartbeatAt: lastBeat };
+    blobs.set("runs/r7.json", Buffer.from(JSON.stringify(record)));
+    const hanging = {
+      ...store,
+      uploadIfUnchanged: (_name: string, _data: Buffer, _contentType: string, _etag: string, options?: { abortSignal?: AbortSignal }) =>
+        new Promise<boolean>((_, reject) => options?.abortSignal?.addEventListener("abort", () => reject(new Error("aborted"))))
+    };
+    const runner = createRunner({
+      dataDir,
+      repoDir: "/repo",
+      environment: "test",
+      commit: "x",
+      store: hanging,
+      baseline,
+      execute: async () => 0,
+      publishTimeoutMs: 20
+    });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(runner.get("r7")).toMatchObject({ status: "queued" });
+    runner.stopWatching();
   });
 
   it("should take over a run queued on the old pod after it had listed the stored runs", async () => {

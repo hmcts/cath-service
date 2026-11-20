@@ -44,9 +44,10 @@ const RESTORE_CONCURRENCY = 8;
 // How far back a starting pod loads stored runs. Older ones stay in storage, but are not listed: a
 // pod would otherwise load every run ever stored each time it starts.
 const RESTORE_DAYS = 30;
-// How long one write of a run record may take. Records are written one after another, so a write
-// that hangs would hold up every heartbeat after it, and other pods would take the run for
-// interrupted while it is still going.
+// How long one read or write of a run record may take. Records are written one after another, so a
+// write that hangs would hold up every heartbeat after it, and other pods would take the run for
+// interrupted while it is still going; and a pod being replaced waits for its reads and claims,
+// which would otherwise keep it terminating until its grace period ends.
 const PUBLISH_TIMEOUT_MS = 20 * 1000;
 // tar runs off the event loop, so a big run's archive does not stall the pages or the health check
 const execFileAsync = promisify(execFile);
@@ -238,7 +239,7 @@ export function createRunner(options: RunnerOptions): Runner {
       end();
     };
     const look = async () => {
-      const read = await store.downloadVersioned(name).catch(() => null);
+      const read = await store.downloadVersioned(name, { abortSignal: AbortSignal.timeout(publishTimeoutMs) }).catch(() => null);
       // One half written or empty is passed over: the next heartbeat stores it whole
       const stored = read ? parseRecord(read.data, id) : null;
       if (!read || !stored || !watching.has(timer)) return;
@@ -246,7 +247,9 @@ export function createRunner(options: RunnerOptions): Runner {
         const { handedOverAt, ...rest } = stored;
         const claimed: RunRecord = { ...rest, owner: pod, takenOverAt: handedOverAt, heartbeatAt: new Date().toISOString() };
         // Another pod took it, or storage failed: looked at again on the next tick
-        const won = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(claimed)), "application/json", read.etag).catch(() => false);
+        const won = await store
+          .uploadIfUnchanged(name, Buffer.from(JSON.stringify(claimed)), "application/json", read.etag, { abortSignal: AbortSignal.timeout(publishTimeoutMs) })
+          .catch(() => false);
         if (!won) return;
         // Storage now names this pod as the run's, so the run is this pod's to run or hand over,
         // even if the watching stopped while the claim was written
@@ -259,7 +262,13 @@ export function createRunner(options: RunnerOptions): Runner {
         const last: RunRecord = ended ? stored : { ...stored, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
         // Marked interrupted only if the record is still the one read. If a pod claimed the run
         // meanwhile, or the write failed, it is read again on the next tick.
-        if (!ended && !(await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(last)), "application/json", read.etag).catch(() => false))) return;
+        if (
+          !ended &&
+          !(await store
+            .uploadIfUnchanged(name, Buffer.from(JSON.stringify(last)), "application/json", read.etag, { abortSignal: AbortSignal.timeout(publishTimeoutMs) })
+            .catch(() => false))
+        )
+          return;
         if (!watching.has(timer)) return;
         stop();
         runs.set(id, last);
@@ -473,7 +482,7 @@ export function createRunner(options: RunnerOptions): Runner {
     if (loading.has(name)) return;
     loading.add(name);
     try {
-      const read = await store.downloadVersioned(name);
+      const read = await store.downloadVersioned(name, { abortSignal: AbortSignal.timeout(publishTimeoutMs) });
       if (!read) return;
       const record = parseRecord(read.data, name);
       if (!record) return;
@@ -493,10 +502,14 @@ export function createRunner(options: RunnerOptions): Runner {
       // still the one read: one a pod has claimed or stored a heartbeat for since is left to that pod,
       // and watched, as a run still going is.
       const interrupted: RunRecord = { ...record, status: "failed", finishedAt: new Date().toISOString(), error: INTERRUPTED };
-      const isMarked = await store.uploadIfUnchanged(name, Buffer.from(JSON.stringify(interrupted)), "application/json", read.etag).catch((error: Error) => {
-        console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`);
-        return false;
-      });
+      const isMarked = await store
+        .uploadIfUnchanged(name, Buffer.from(JSON.stringify(interrupted)), "application/json", read.etag, {
+          abortSignal: AbortSignal.timeout(publishTimeoutMs)
+        })
+        .catch((error: Error) => {
+          console.error(`[ui-baseline] could not store run ${record.id}: ${error.message}`);
+          return false;
+        });
       runs.set(record.id, isMarked ? interrupted : record);
       if (!isMarked) watch(store, record.id);
     } finally {
@@ -569,7 +582,16 @@ function stoppedBecause(code: number): string {
 
 // What a finished run found, read from the files the tool wrote; null when it wrote none
 async function summarise(record: RunRecord, dir: string): Promise<RunSummary | null> {
-  const read = async <T>(file: string): Promise<T | null> => (existsSync(file) ? (JSON.parse(await readFile(file, "utf-8")) as T) : null);
+  // One that cannot be read leaves its part out of the summary: the run still finished, and its report is served
+  const read = async <T>(file: string): Promise<T | null> => {
+    if (!existsSync(file)) return null;
+    try {
+      return JSON.parse(await readFile(file, "utf-8")) as T;
+    } catch (error) {
+      console.error(`[ui-baseline] could not read ${path.basename(file)} for run ${record.id}: ${(error as Error).message}`);
+      return null;
+    }
+  };
   type Totals = { totals: { pairs?: number; match: number; differs: number; notCaptured?: number; files?: number; missing?: number; extra?: number } };
   if (record.kind === "files") {
     const files = await read<Totals>(path.join(dir, "files/compare/files-compare.json"));
@@ -630,10 +652,10 @@ function executeScript(
     log.on("error", (error) => console.error(`[ui-baseline] could not write ${options.log}: ${error.message}`));
     child.stdout.pipe(log, { end: false });
     child.stderr.pipe(log, { end: false });
-    let timedOut = false;
+    let isTimedOut = false;
     let killing: NodeJS.Timeout | undefined;
     const limit = setTimeout(() => {
-      timedOut = true;
+      isTimedOut = true;
       log.write(`\n[ui-baseline] stopped after ${Math.round(options.timeLimitMs / 60000)} minutes, its time limit\n`);
       signal("SIGTERM");
       killing = setTimeout(() => signal("SIGKILL"), STOP_GRACE_MS);
@@ -648,7 +670,7 @@ function executeScript(
     child.on("close", (code) => {
       clearTimeout(limit);
       clearTimeout(killing);
-      log.end(() => resolve(timedOut ? EXIT_TIMED_OUT : (code ?? 1)));
+      log.end(() => resolve(isTimedOut ? EXIT_TIMED_OUT : (code ?? 1)));
     });
   });
 }
@@ -726,7 +748,7 @@ export interface RunnerOptions {
   watchMs?: number;
   // This pod's name in the run records it owns; HOSTNAME when not given
   pod?: string;
-  // How long one write of a run record may take; PUBLISH_TIMEOUT_MS when not given
+  // How long one read or write of a run record may take; PUBLISH_TIMEOUT_MS when not given
   publishTimeoutMs?: number;
 }
 

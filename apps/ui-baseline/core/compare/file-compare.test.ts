@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { compareBinary, compareCsv, compareExcel, compareFileRuns, comparePdf, type FileEntry } from "./file-compare.js";
+import { compareExcel, compareFileRuns, comparePdf, type FileEntry } from "./file-compare.js";
 
 const TEST_FILES = path.join(path.dirname(fileURLToPath(import.meta.url)), "test-files");
 const read = (name: string) => readFile(path.join(TEST_FILES, name));
@@ -21,6 +21,25 @@ function listSheet(book: ExcelJS.Workbook, rows: (string | number | Date)[][], n
   sheet.addRow(["Time", "Court", "Case"]).font = { bold: true };
   for (const row of rows) sheet.addRow(row);
   return sheet;
+}
+
+// Compares one file of a kind as pip and CaTH made it, through the run comparison, and gives its findings
+async function compareOneFile(kind: FileEntry["kind"], pip: Buffer, cath: Buffer, pipSeededAt?: string, cathSeededAt?: string) {
+  const root = await mkdtemp(path.join(tmpdir(), "file-compare-"));
+  const run = async (name: string, data: Buffer, seededAt?: string) => {
+    const dir = path.join(root, name);
+    await mkdir(path.join(dir, "list"), { recursive: true });
+    await writeFile(path.join(dir, "list", kind), data);
+    const entry = { id: "list", kind, file: `list/${kind}`, blob: "x", bytes: data.length, ...(seededAt ? { seededAt } : {}) };
+    await writeFile(path.join(dir, "index.jsonl"), `${JSON.stringify(entry)}\n`);
+    return dir;
+  };
+  const summary = await compareFileRuns({
+    source: await run("pip", pip, pipSeededAt),
+    target: await run("cath", cath, cathSeededAt),
+    out: path.join(root, "out")
+  });
+  return summary.results[0].findings;
 }
 
 const ROWS = [
@@ -361,85 +380,85 @@ describe("compareFileRuns with other kinds of file", () => {
   });
 });
 
-describe("compareCsv", () => {
-  it("should report changed, missing and extra lines, and mask dates from seeding", () => {
+describe("compareFileRuns with CSV files", () => {
+  it("should report changed, missing and extra lines, and mask dates from seeding", async () => {
     // Arrange
     const pip = Buffer.from("﻿Id,Name,Updated\n1,Oxford,30/10/2026 10:00:00\n2,Leeds,30/10/2026 10:00:00\n3,York,30/10/2026\n");
     const cath = Buffer.from("Id,Name,Updated\n1,Oxford,30/10/2026 11:30:00\n2,Leeds Combined,30/10/2026 11:30:00\n4,Bath,30/10/2026\n");
 
     // Act
-    const result = compareCsv(pip, cath, { seededAt: "2026-10-30T10:00:00Z" }, { seededAt: "2026-10-30T11:30:00Z" });
+    const findings = await compareOneFile("csv", pip, cath, "2026-10-30T10:00:00Z", "2026-10-30T11:30:00Z");
 
     // Assert
-    expect(result.findings).toEqual([
+    expect(findings).toEqual([
       { category: "csv", change: "line-changed", detail: 'line 3: "2,Leeds,<RUN_DATE> <RUN_TIME>" → "2,Leeds Combined,<RUN_DATE> <RUN_TIME>"' },
       { category: "csv", change: "line-changed", detail: 'line 4: "3,York,<RUN_DATE>" → "4,Bath,<RUN_DATE>"' }
     ]);
   });
 
-  it("should find no differences between the same lines with different line endings", () => {
+  it("should find no differences between the same lines with different line endings", async () => {
     // Act
-    const result = compareCsv(Buffer.from("a,b\r\n1,2\r\n"), Buffer.from("a,b\n1,2\n"));
+    const findings = await compareOneFile("csv", Buffer.from("a,b\r\n1,2\r\n"), Buffer.from("a,b\n1,2\n"));
 
     // Assert
-    expect(result.findings).toEqual([]);
+    expect(findings).toEqual([]);
   });
 });
 
-describe("compareCsv when lines are only added or removed", () => {
-  it("should report removed lines by number and added lines by content", () => {
+describe("compareFileRuns with CSV files whose lines are only added or removed", () => {
+  it("should report removed lines by number and added lines by content", async () => {
     // Arrange
     const pip = Buffer.from("h\n1\n2\n3\n4\n");
     const cath = Buffer.from("h\n1\n3\n4\n5\n6\n");
 
     // Act
-    const result = compareCsv(pip, cath);
+    const findings = await compareOneFile("csv", pip, cath);
 
     // Assert
-    expect(result.findings).toEqual([
+    expect(findings).toEqual([
       { category: "csv", change: "line-missing", detail: 'line 3: "2"' },
       { category: "csv", change: "line-extra", detail: '"5"' },
       { category: "csv", change: "line-extra", detail: '"6"' }
     ]);
   });
 
-  it("should report the leftover lines of an uneven replacement as missing or extra", () => {
+  it("should report the leftover lines of an uneven replacement as missing or extra", async () => {
     // Act
-    const fewer = compareCsv(Buffer.from("h\na\nb\nc\nz\n"), Buffer.from("h\nx\nz\n"));
-    const more = compareCsv(Buffer.from("h\na\nz\n"), Buffer.from("h\nx\ny\nz\n"));
+    const fewer = await compareOneFile("csv", Buffer.from("h\na\nb\nc\nz\n"), Buffer.from("h\nx\nz\n"));
+    const more = await compareOneFile("csv", Buffer.from("h\na\nz\n"), Buffer.from("h\nx\ny\nz\n"));
 
     // Assert
-    expect(fewer.findings).toEqual([
+    expect(fewer).toEqual([
       { category: "csv", change: "line-changed", detail: 'line 2: "a" → "x"' },
       { category: "csv", change: "line-missing", detail: 'line 3: "b"' },
       { category: "csv", change: "line-missing", detail: 'line 4: "c"' }
     ]);
-    expect(more.findings).toEqual([
+    expect(more).toEqual([
       { category: "csv", change: "line-changed", detail: 'line 2: "a" → "x"' },
       { category: "csv", change: "line-extra", detail: '"y"' }
     ]);
   });
 
-  it("should report the files as rewritten when they differ too much to diff", () => {
+  it("should report the files as rewritten when they differ too much to diff", async () => {
     // Arrange
     const lines = (prefix: string) => Buffer.from(Array.from({ length: 1001 }, (_, i) => `${prefix}${i}`).join("\n"));
 
     // Act
-    const result = compareCsv(lines("a"), lines("b"));
+    const findings = await compareOneFile("csv", lines("a"), lines("b"));
 
     // Assert
-    expect(result.findings).toEqual([{ category: "csv", change: "rewritten", detail: "the files differ throughout: 1001 lines against 1001" }]);
+    expect(findings).toEqual([{ category: "csv", change: "rewritten", detail: "the files differ throughout: 1001 lines against 1001" }]);
   });
 });
 
-describe("compareBinary", () => {
-  it("should match identical files and report different ones by size", () => {
+describe("compareFileRuns with binary files", () => {
+  it("should match identical files and report different ones by size", async () => {
     // Act
-    const same = compareBinary(Buffer.from([1, 2, 3]), Buffer.from([1, 2, 3]));
-    const different = compareBinary(Buffer.from([1, 2, 3]), Buffer.from([1, 2]));
+    const same = await compareOneFile("binary", Buffer.from([1, 2, 3]), Buffer.from([1, 2, 3]));
+    const different = await compareOneFile("binary", Buffer.from([1, 2, 3]), Buffer.from([1, 2]));
 
     // Assert
-    expect(same.findings).toEqual([]);
-    expect(different.findings).toEqual([{ category: "file", change: "content", detail: "the files differ: pip 3 bytes, CaTH 2 bytes" }]);
+    expect(same).toEqual([]);
+    expect(different).toEqual([{ category: "file", change: "content", detail: "the files differ: pip 3 bytes, CaTH 2 bytes" }]);
   });
 });

@@ -143,7 +143,7 @@ export async function compareExcel(
 }
 
 // A CSV file line by line, in order, with seed-time dates masked
-export function compareCsv(source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext = {}, targetContext: NormaliseContext = {}): PairComparison {
+function compareCsv(source: Uint8Array, target: Uint8Array, sourceContext: NormaliseContext = {}, targetContext: NormaliseContext = {}): PairComparison {
   const lines = (data: Uint8Array, context: NormaliseContext) =>
     normalise(
       Buffer.from(data)
@@ -189,7 +189,7 @@ export function compareCsv(source: Uint8Array, target: Uint8Array, sourceContext
 }
 
 // Anything else (an image) is the same only if it is byte for byte
-export function compareBinary(source: Uint8Array, target: Uint8Array): PairComparison {
+function compareBinary(source: Uint8Array, target: Uint8Array): PairComparison {
   const digest = (data: Uint8Array) => createHash("sha256").update(data).digest("hex");
   return digest(source) === digest(target)
     ? { findings: [] }
