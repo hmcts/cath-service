@@ -1,13 +1,15 @@
 import { expect, test } from "@playwright/test";
 import { getApiAuthToken } from "../../utils/api-auth-helpers.js";
+import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
+import { API_BASE_URL } from "../../utils/test-support-api.js";
 
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || "http://localhost:3001";
 const ENDPOINT = `${API_BASE_URL}/publication`;
 
 // All publication metadata travels in x-* headers; the multipart form carries only `file`.
-const REQUIRED_HEADERS = {
+// x-court-id is this run's own court, set in beforeAll, so publications never land on a real court
+const REQUIRED_HEADERS: Record<string, string> = {
   "x-provenance": "MANUAL_UPLOAD",
-  "x-court-id": "1",
+  "x-court-id": "",
   "x-content-date": "2024-01-15",
   "x-list-type": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST",
   "x-language": "ENGLISH",
@@ -30,6 +32,14 @@ function pdfPart(name = "test.pdf") {
 }
 
 test.describe("POST /publication - flat file publication", () => {
+  // The court also owns an SNL location reference (defaulting to its own id) so SNL resolution is checked against it
+  let court: { locationId: number };
+
+  test.beforeAll(async () => {
+    court = await createUniqueTestLocation({ namePrefix: "Flat File Ingestion Court", locationReferences: [{ provenance: "SNL" }] });
+    REQUIRED_HEADERS["x-court-id"] = String(court.locationId);
+  });
+
   test("authentication validation - missing, invalid format, and invalid token @nightly", async ({ request }) => {
     const file = pdfPart();
 
@@ -94,7 +104,7 @@ test.describe("POST /publication - flat file publication", () => {
     expect(body.artefactId).toBeTruthy();
     expect(body.isFlatFile).toBe(true);
     expect(body.type).toBe("LIST");
-    expect(body.locationId).toBe("1");
+    expect(body.locationId).toBe(String(court.locationId));
     expect(body.contentDate).toBe("2024-01-15T00:00:00.000Z");
     expect(body.listType).toBe("CIVIL_AND_FAMILY_DAILY_CAUSE_LIST");
     expect(body.sensitivity).toBe("PUBLIC");
@@ -120,16 +130,14 @@ test.describe("POST /publication - flat file publication", () => {
     // STEP 3: SNL provenance resolves the court from the provenance location id
     response = await request.post(ENDPOINT, {
       multipart: { file: pdfPart("snl-hearing-list.pdf") },
-      headers: { ...REQUIRED_HEADERS, ...auth, "x-provenance": "SNL", "x-court-id": "9001" }
+      headers: { ...REQUIRED_HEADERS, ...auth, "x-provenance": "SNL", "x-court-id": String(court.locationId) }
     });
 
     expect(response.status()).toBe(201);
     body = await response.json();
     expect(body.artefactId).toBeTruthy();
-    // locationId is the *resolved* id, so the exact value depends on the seeded SNL/9001
-    // location reference. A NoMatch prefix would mean missing reference data, not an API fault.
-    expect(body.locationId).toBeTruthy();
-    expect(body.locationId).not.toMatch(/^NoMatch/);
+    // The court's own SNL reference resolves to the court
+    expect(body.locationId).toBe(String(court.locationId));
   });
 
   test("rejects a flat file with a missing file part or invalid headers @nightly", async ({ request }) => {
