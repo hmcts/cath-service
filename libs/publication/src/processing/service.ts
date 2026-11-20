@@ -122,6 +122,7 @@ import {
 import { generateWpafccWeeklyHearingListPdf, reformatWpafccWeeklyHearingListExcel, type WpafccWeeklyHearingList } from "@hmcts/wpafcc-weekly-hearing-list";
 import { extractAndStoreArtefactSearch } from "../artefact-search-extractor.js";
 import { getFileBuffer } from "../file-storage/file-retrieval.js";
+import { isListTypeHidden } from "../repository/queries.js";
 import { MAX_EXCEL_PAYLOAD_BYTES, MAX_PDF_PAYLOAD_BYTES, payloadSizeBytes } from "./payload-limits.js";
 
 const LOCALE_TO_LANGUAGE: Record<string, string> = {
@@ -879,7 +880,14 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     }
   }
 
-  if (!skipNotifications) {
+  // Hidden list types must not leak by email or to third parties; the publication is still stored
+  // and its files generated so it is complete when the list type is shown again.
+  const isHidden = await isListTypeHidden(listTypeId);
+  if (isHidden) {
+    console.log(`${logPrefix} List type hidden; notifications and third-party push skipped`, { artefactId, listTypeId });
+  }
+
+  if (!skipNotifications && !isHidden) {
     const notificationResult = await sendPublicationNotificationsForArtefact({
       artefactId,
       locationId,
@@ -897,7 +905,7 @@ export async function processPublication(params: ProcessPublicationParams): Prom
     result.notificationsFailed = notificationResult.failed;
   }
 
-  if (!skipThirdPartyPush) {
+  if (!skipThirdPartyPush && !isHidden) {
     sendThirdPartyPublications({
       artefactId,
       locationId,

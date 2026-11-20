@@ -56,8 +56,8 @@ function handleAccessDenied(res: Response, locale: string, useCustomMessage: boo
 }
 
 async function fetchArtefact(publicationId: string): Promise<Artefact | null> {
-  return prisma.artefact.findUnique({
-    where: { artefactId: publicationId }
+  return prisma.artefact.findFirst({
+    where: { artefactId: publicationId, listType: { isHidden: false } }
   });
 }
 

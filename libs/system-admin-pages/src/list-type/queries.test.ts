@@ -10,7 +10,8 @@ import {
   findStrategicListTypes,
   hasArtefactsForListType,
   softDeleteListType,
-  updateListType
+  updateListType,
+  updateListTypeVisibility
 } from "./queries.js";
 
 vi.mock("@hmcts/postgres-prisma", () => ({
@@ -20,7 +21,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      updateMany: vi.fn()
     },
     subJurisdiction: {
       findMany: vi.fn()
@@ -64,6 +66,7 @@ describe("list-type-queries", () => {
           allowedProvenance: true,
           isNonStrategic: true,
           locationType: true,
+          isHidden: true,
           deletedAt: true,
           subJurisdictions: {
             select: {
@@ -108,6 +111,7 @@ describe("list-type-queries", () => {
           defaultSensitivity: true,
           allowedProvenance: true,
           isNonStrategic: true,
+          isHidden: true,
           deletedAt: true,
           subJurisdictions: {
             select: {
@@ -246,6 +250,7 @@ describe("list-type-queries", () => {
         where: { id: 5 },
         data: expect.objectContaining({
           deletedAt: null,
+          isHidden: false,
           allowedProvenance: ["CFT_IDAM", "PI_AAD"],
           subJurisdictions: {
             deleteMany: {},
@@ -325,7 +330,7 @@ describe("list-type-queries", () => {
   });
 
   describe("findNonStrategicListTypes", () => {
-    it("should return only non-strategic list types", async () => {
+    it("should return only visible non-strategic list types", async () => {
       const mockNonStrategicLists = [
         { id: 1, name: "NON_STRATEGIC_1", isNonStrategic: true, shortenedFriendlyName: "A" },
         { id: 2, name: "NON_STRATEGIC_2", isNonStrategic: true, shortenedFriendlyName: "B" }
@@ -335,7 +340,7 @@ describe("list-type-queries", () => {
       const result = await findNonStrategicListTypes();
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
-        where: { isNonStrategic: true, deletedAt: null },
+        where: { isNonStrategic: true, deletedAt: null, isHidden: false },
         orderBy: { shortenedFriendlyName: "asc" },
         select: {
           id: true,
@@ -350,7 +355,7 @@ describe("list-type-queries", () => {
   });
 
   describe("findStrategicListTypes", () => {
-    it("should return only strategic list types", async () => {
+    it("should return only visible strategic list types", async () => {
       const mockStrategicLists = [
         { id: 1, name: "STRATEGIC_1", isNonStrategic: false, shortenedFriendlyName: "A" },
         { id: 2, name: "STRATEGIC_2", isNonStrategic: false, shortenedFriendlyName: "B" }
@@ -360,7 +365,7 @@ describe("list-type-queries", () => {
       const result = await findStrategicListTypes();
 
       expect(prisma.listType.findMany).toHaveBeenCalledWith({
-        where: { isNonStrategic: false, deletedAt: null },
+        where: { isNonStrategic: false, deletedAt: null, isHidden: false },
         orderBy: { shortenedFriendlyName: "asc" },
         select: {
           id: true,
@@ -390,6 +395,38 @@ describe("list-type-queries", () => {
         data: { deletedAt: expect.any(Date) }
       });
       expect(result).toEqual(mockDeletedListType);
+    });
+  });
+
+  describe("updateListTypeVisibility", () => {
+    it("should only update active list types not already in the target state and write only isHidden", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.updateMany).mockResolvedValue({ count: 1 });
+
+      // Act
+      const result = await updateListTypeVisibility(3, true);
+
+      // Assert
+      expect(prisma.listType.updateMany).toHaveBeenCalledWith({
+        where: { id: 3, deletedAt: null, isHidden: false },
+        data: { isHidden: true }
+      });
+      expect(result).toBe(1);
+    });
+
+    it("should match hidden list types when showing", async () => {
+      // Arrange
+      vi.mocked(prisma.listType.updateMany).mockResolvedValue({ count: 0 });
+
+      // Act
+      const result = await updateListTypeVisibility(3, false);
+
+      // Assert
+      expect(prisma.listType.updateMany).toHaveBeenCalledWith({
+        where: { id: 3, deletedAt: null, isHidden: true },
+        data: { isHidden: false }
+      });
+      expect(result).toBe(0);
     });
   });
 

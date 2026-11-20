@@ -1,7 +1,6 @@
 import { blockUserAccess, buildVerifiedUserNavigation, requireAuth } from "@hmcts/auth";
 import { getLocationById } from "@hmcts/location";
-import { prisma } from "@hmcts/postgres-prisma";
-import { getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } from "@hmcts/subscriptions";
+import { findSubscribableListTypesBySubJurisdictionIds, getAllSubscriptionsByUserId, getSubscriptionListTypesByUserId } from "@hmcts/subscriptions";
 import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -31,15 +30,7 @@ async function fetchListTypeGroups(userId: string, locale: string): Promise<List
     return [];
   }
 
-  const listTypeRecords = await prisma.listType.findMany({
-    where: {
-      deletedAt: null,
-      subJurisdictions: {
-        some: { subJurisdictionId: { in: subJurisdictionIds } }
-      }
-    },
-    orderBy: { friendlyName: "asc" }
-  });
+  const listTypeRecords = await findSubscribableListTypesBySubJurisdictionIds(subJurisdictionIds);
 
   const subscribedListTypeIds = new Set(existingListTypeSubscription?.listTypeIds ?? []);
 

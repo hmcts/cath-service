@@ -84,20 +84,50 @@ describe("Subscription List Type Service", () => {
   });
 
   describe("replaceSubscriptionListTypes", () => {
-    it("should upsert with the provided IDs without merging existing ones", async () => {
+    beforeEach(() => {
       vi.mocked(queries.upsertSubscriptionListType).mockResolvedValue({} as any);
+      vi.mocked(queries.findSubscriptionListTypeByUserId).mockResolvedValue(null);
+      vi.mocked(queries.findHiddenListTypeIds).mockResolvedValue([]);
+    });
 
+    it("should upsert with the provided IDs without merging existing visible ones", async () => {
+      // Arrange
+      vi.mocked(queries.findSubscriptionListTypeByUserId).mockResolvedValue({ listTypeIds: [7, 8], listLanguage: ["ENGLISH"] } as any);
+
+      // Act
       await replaceSubscriptionListTypes("user-123", [2, 3], "ENGLISH");
 
+      // Assert
+      expect(queries.findHiddenListTypeIds).toHaveBeenCalledWith([7, 8]);
       expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [2, 3], ["ENGLISH"]);
-      expect(queries.findSubscriptionListTypeByUserId).not.toHaveBeenCalled();
+    });
+
+    it("should keep existing hidden list type IDs that are not offered on the form", async () => {
+      // Arrange
+      vi.mocked(queries.findSubscriptionListTypeByUserId).mockResolvedValue({ listTypeIds: [2, 9, 10], listLanguage: ["ENGLISH"] } as any);
+      vi.mocked(queries.findHiddenListTypeIds).mockResolvedValue([9]);
+
+      // Act
+      await replaceSubscriptionListTypes("user-123", [2, 3], "ENGLISH");
+
+      // Assert
+      expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [2, 3, 9], ["ENGLISH"]);
+    });
+
+    it("should check no IDs for hidden list types when the user has no existing record", async () => {
+      // Act
+      await replaceSubscriptionListTypes("user-123", [4], "WELSH");
+
+      // Assert
+      expect(queries.findHiddenListTypeIds).toHaveBeenCalledWith([]);
+      expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [4], ["WELSH"]);
     });
 
     it("should expand ENGLISH_AND_WELSH into both languages", async () => {
-      vi.mocked(queries.upsertSubscriptionListType).mockResolvedValue({} as any);
-
+      // Act
       await replaceSubscriptionListTypes("user-123", [1], "ENGLISH_AND_WELSH");
 
+      // Assert
       expect(queries.upsertSubscriptionListType).toHaveBeenCalledWith("user-123", [1], ["ENGLISH", "WELSH"]);
     });
   });

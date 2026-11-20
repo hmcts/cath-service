@@ -410,6 +410,7 @@ describe("Subscription Queries", () => {
           caseName: { contains: "Smith", mode: "insensitive" },
           artefact: {
             listTypeId: { in: [1, 2] },
+            listType: { isHidden: false },
             AND: [
               { OR: [{ displayFrom: null }, { displayFrom: { lte: expect.any(Date) } }] },
               { OR: [{ displayTo: null }, { displayTo: { gte: expect.any(Date) } }] }
@@ -451,7 +452,7 @@ describe("Subscription Queries", () => {
 
       expect(result).toEqual(mockResults);
       expect(prisma.artefactSearch.findMany).toHaveBeenCalledWith({
-        where: { caseNumber: "AB-123" },
+        where: { caseNumber: "AB-123", artefact: { listType: { isHidden: false } } },
         select: { caseNumber: true, caseName: true },
         distinct: ["caseNumber", "caseName"]
       });
