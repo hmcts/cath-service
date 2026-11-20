@@ -11,7 +11,8 @@ interface Capture {
   aria: string;
   pageAria?: string;
   meta?: Partial<{ title: string; lang: string; region: string; forms: { action?: string | null; fields: { name: string }[] }[] }>;
-  axe?: { id: string; impact: string | null; help: string }[];
+  // null for a capture whose accessibility results were never recorded
+  axe?: { id: string; impact: string | null; help: string; targets?: string[] }[] | null;
   provenance?: Record<string, unknown>;
 }
 
@@ -27,7 +28,7 @@ async function writeRun(dir: string, captures: Capture[], extraIndexLines: objec
     await writeFile(path.join(captureDir, "aria.yml"), capture.aria);
     if (capture.pageAria) await writeFile(path.join(captureDir, "page.aria.yml"), capture.pageAria);
     await writeFile(path.join(captureDir, "meta.json"), JSON.stringify({ ...META, ...capture.meta }));
-    if (capture.axe) await writeFile(path.join(captureDir, "axe.json"), JSON.stringify({ violations: capture.axe }));
+    if (capture.axe !== null) await writeFile(path.join(captureDir, "axe.json"), JSON.stringify({ violations: capture.axe ?? [] }));
     if (capture.provenance) await writeFile(path.join(captureDir, "provenance.json"), JSON.stringify(capture.provenance));
   }
 }
@@ -196,6 +197,54 @@ describe("compareRuns", () => {
         'heading missing: "Second title" (h1)',
         "heading h1-count: 2 → 1 level-1 headings"
       ]);
+    });
+
+    it("should count headings, so one of two headings with the same text going is a difference", async () => {
+      // Arrange
+      const source = ['- heading "Court" [level=2]', "- paragraph: First", '- heading "Court" [level=2]', "- paragraph: Second"].join("\n");
+      const target = ['- heading "Court" [level=2]', "- paragraph: First", "- paragraph: Second"].join("\n");
+
+      // Act
+      const findings = await compareOne({ aria: source }, { aria: target });
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['heading count: "Court": 2 → 1 headings']);
+    });
+
+    it("should count text, so a paragraph shown twice in the source and once in the target is a difference", async () => {
+      // Arrange
+      const source = ["- paragraph: Hearings may be held in private", "- paragraph: Next court", "- paragraph: Hearings may be held in private"].join("\n");
+      const target = ["- paragraph: Hearings may be held in private", "- paragraph: Next court"].join("\n");
+
+      // Act
+      const findings = await compareOne({ aria: source }, { aria: target });
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['text count: "Hearings may be held in private": 2 → 1']);
+    });
+
+    it("should still report text the target lost when a link with the same words was on both sides", async () => {
+      // Arrange
+      const source = ["- paragraph: Contact us", '- link "Contact us"'].join("\n");
+      const target = ['- link "Contact us"'].join("\n");
+
+      // Act
+      const findings = await compareOne({ aria: source }, { aria: target });
+
+      // Assert
+      expect(describeFindings(findings)).toEqual(['text missing: "Contact us"']);
+    });
+
+    it("should not report text that became a link in the target as missing text", async () => {
+      // Arrange
+      const source = ["- paragraph: Contact us"].join("\n");
+      const target = ['- link "Contact us"'].join("\n");
+
+      // Act
+      const findings = await compareOne({ aria: source }, { aria: target });
+
+      // Assert
+      expect(describeFindings(findings).filter((finding) => finding.startsWith("text "))).toEqual([]);
     });
 
     it("should report text that became a heading once when the target promotes it", async () => {
@@ -590,6 +639,37 @@ describe("compareRuns", () => {
       ]);
       expect(summary.results[1]).toMatchObject({ id: "same", verdict: "match", findings: [{ category: "axe-inherited" }] });
     });
+
+    it("should report a rule that fails on more elements in the target as new, and on fewer as fixed", async () => {
+      // Arrange
+      const aria = '- heading "Title" [level=1]';
+      const contrast = (targets: string[]) => ({ id: "color-contrast", impact: "serious", help: "Contrast", targets });
+      const label = (targets: string[]) => ({ id: "label", impact: "critical", help: "Labels", targets });
+
+      // Act
+      const findings = await compareOne({ aria, axe: [contrast(["#a"]), label(["#x", "#y"])] }, { aria, axe: [contrast(["#a", "#b", "#c"]), label(["#x"])] });
+
+      // Assert
+      expect(describeFindings(findings)).toEqual([
+        "axe-new serious: color-contrast: Contrast (1 → 3 elements)",
+        "axe-fixed critical: label: Labels (2 → 1 elements)"
+      ]);
+    });
+
+    it("should say accessibility was not compared, not that pip's violations were fixed, when the target has no results", async () => {
+      // Arrange
+      const dir = await mkdtemp(path.join(tmpdir(), "compare-"));
+      const aria = '- heading "Title" [level=1]';
+      await writeRun(path.join(dir, "source"), [{ id: "page", aria, axe: [{ id: "label", impact: "critical", help: "Labels" }] }]);
+      await writeRun(path.join(dir, "target"), [{ id: "page", aria, axe: null }]);
+
+      // Act
+      const summary = await compareRuns({ source: path.join(dir, "source"), target: path.join(dir, "target"), out: path.join(dir, "out") });
+
+      // Assert
+      expect(describeFindings(summary.results[0].findings)).toEqual(["axe-not-compared target: no accessibility results were recorded for this page"]);
+      expect(summary.results[0].verdict).toBe("match");
+    });
   });
 
   describe("patterns", () => {
@@ -726,6 +806,23 @@ describe("compareRuns, where links and forms lead", () => {
       'link target: "Alpha": /alpha → /beta',
       'link target: "Courts": https://courts.example/find → https://elsewhere.example/find'
     ]);
+  });
+
+  it("should report a link in a table row that leads somewhere else, without reporting its text twice", async () => {
+    // Arrange
+    const table = (href: string) =>
+      ["- table:", "  - row:", '    - columnheader "Case"', "  - row:", "    - cell:", '      - link "AB123":', `        - /url: ${href}`].join("\n");
+
+    // Act
+    const findings = await compareOne(
+      page("https://pip.test/list", table("a?artefactId=1")),
+      page("http://cath.test/list", table("/beta?artefactId=9")),
+      false,
+      expectedTarget
+    );
+
+    // Assert
+    expect(describeFindings(findings)).toEqual(['link target: "AB123": /alpha → /beta']);
   });
 
   it("should not count a link that leads to the right page with other ids, or one it cannot tell", async () => {

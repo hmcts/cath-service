@@ -22,6 +22,7 @@ import {
   type JourneyCompareSummary,
   type JourneySuite,
   launchChromium,
+  NOT_DECIDING,
   openBlobContainer,
   type PublicationFileKind,
   type ReviewResult,
@@ -437,7 +438,10 @@ if (captureAreas.length)
             finishing.push(
               (async () => {
                 console.log(`  ${area}: ${results.filter((r) => r.ok).length} captured, ${results.filter((r) => !r.ok).length} failed`);
-                for (const line of await dropUnservedCaptures(captured[area], targets)) console.log(`    not compared: ${line}`);
+                for (const line of await dropUnservedCaptures(captured[area], targets)) {
+                  console.log(`    not compared: ${line}`);
+                  scope.skipped.push(line);
+                }
                 progress.complete(CAPTURE_STAGE[area]);
               })()
             );
@@ -566,9 +570,18 @@ for (const summary of Object.values(comparisons)) {
   }
 }
 const differing = [...pageVerdicts.entries()].map(([id, where]) => `${id} (${where.join(", ")})`);
-// Counted as captures: a page as another role is checked as a page of its own
+// Counted as captures: a page as another role is checked as a page of its own. One CaTH did not
+// serve (an error, or a redirect) in any language or state was not compared, which is not a match.
 const checkedCount = capturedTargetIds.lists.size + capturedTargetIds.pages.size;
-const pagesDiffer = `${differing.length} of ${checkedCount} page${checkedCount === 1 ? "" : "s"} ${differing.length === 1 ? "differs" : "differ"} from pip`;
+const comparedIds = new Set(
+  Object.values(comparisons)
+    .flatMap((c) => c.results)
+    .filter((r) => r.verdict !== "not-captured")
+    .map((r) => r.id)
+);
+const notComparedCount = [...capturedTargetIds.lists, ...capturedTargetIds.pages].filter((id) => !comparedIds.has(id)).length;
+const comparedCount = checkedCount - notComparedCount;
+const pagesDiffer = `${differing.length} of ${comparedCount} page${comparedCount === 1 ? "" : "s"} ${differing.length === 1 ? "differs" : "differ"} from pip${notComparedCount ? ` · ${notComparedCount} not compared` : ""}`;
 progress.complete("report");
 step("Result");
 // A check of journeys alone has no pages of its own to report
@@ -616,9 +629,7 @@ const verdictLabel = (id: string, locale: string) => {
     .flatMap((c) => c.results)
     .filter((r) => r.id === id && r.locale === locale && r.verdict !== "not-captured");
   if (!results.length) return "not compared";
-  const findings = new Set(
-    results.flatMap((r) => r.findings.filter((f) => f.category !== "axe-inherited").map((f) => `${f.category} ${f.change} ${f.detail}`))
-  );
+  const findings = new Set(results.flatMap((r) => r.findings.filter((f) => !NOT_DECIDING.has(f.category)).map((f) => `${f.category} ${f.change} ${f.detail}`)));
   if (!findings.size) return "matches";
   const only = results.filter((r) => r.verdict === "differs").map((r) => r.state);
   const where = only.includes("default") ? "" : ` (${only.map((state) => STATE_LABEL[state]?.trim() ?? state).join(", ")})`;
@@ -631,7 +642,7 @@ const body = buildComment({
   commit: checkedCommit(),
   ranBy: process.env.GITHUB_USER ?? process.env.USER ?? "a developer",
   ranAt: new Date().toISOString(),
-  pagesChecked: checkedCount,
+  pagesChecked: comparedCount,
   pagesDiffer: differing,
   pages: [...capturedTargetIds.lists, ...capturedTargetIds.pages].map((id) => ({
     label: captureLabel(id),

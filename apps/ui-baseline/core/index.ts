@@ -4,7 +4,7 @@ export { type AxeSummary, type CaptureMeta, type CaptureOptions, capturePage, ex
 export { type CaptureServer, type CaptureServerOptions, startCaptureServer } from "./capture/capture-server.js";
 export { type CaptureResult, type CaptureSettings, type CaptureTarget, captureTarget } from "./capture/capture-target.js";
 export { gotoSettled, settle, trackRequests } from "./capture/settle.js";
-export { type CompareOptions, type CompareSummary, compareRuns, type Finding, type PairResult, type Pattern } from "./compare/compare.js";
+export { type CompareOptions, type CompareSummary, compareRuns, type Finding, NOT_DECIDING, type PairResult, type Pattern } from "./compare/compare.js";
 export {
   compareExcel,
   compareFileRuns,

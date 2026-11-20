@@ -23,7 +23,8 @@ const COMPARISON: CompareSummary = {
       state: "default",
       verdict: "differs",
       findings: [
-        { category: "page", change: "title", detail: 'title gains suffix " - GOV.UK"' },
+        { category: "page", change: "title", detail: '"Home" → "Home - GOV.UK"' },
+        { category: "frame", change: "extra", detail: '"Beta banner"' },
         { category: "heading", change: "missing", detail: '"Welcome" (h2)' },
         { category: "axe-inherited", change: "serious", detail: "color-contrast: Contrast" }
       ]

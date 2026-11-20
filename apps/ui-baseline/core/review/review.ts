@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { systemCommand } from "../../system-command.js";
-import type { CompareSummary, Finding } from "../compare/compare.js";
+import { type CompareSummary, type Finding, NOT_DECIDING, patternDetail } from "../compare/compare.js";
 import { forEachReviewer, runReviewer } from "./reviewer-command.js";
 
 // Classifies each difference `parity compare` found as intended, a defect, or needing a human,
@@ -156,9 +156,10 @@ function reviewItems(comparison: CompareSummary): ReviewItem[] {
     for (const page of pattern.pages) covered.add(`${page}|${pattern.category}|${pattern.change}|${pattern.detail}`);
   }
   for (const result of comparison.results) {
-    for (const finding of result.findings.filter((f: Finding) => f.category !== "axe-inherited")) {
+    for (const finding of result.findings.filter((f: Finding) => !NOT_DECIDING.has(f.category))) {
       const page = `${result.id} ${result.locale}${result.state === "default" ? "" : ` (${result.state})`}`;
-      if ([...covered].some((key) => key.startsWith(`${page}|${finding.category}|${finding.change}|`) && key.endsWith(`|${finding.detail}`))) continue;
+      // Patterns hold the detail as patternsOf groups it, which can differ from the page's own wording
+      if (covered.has(`${page}|${finding.category}|${finding.change}|${patternDetail(finding)}`)) continue;
       items.push({ id: `f${items.length + 1}`, category: finding.category, change: finding.change, detail: finding.detail, pages: [page] });
     }
   }

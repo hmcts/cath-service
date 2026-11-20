@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { NOT_DECIDING } from "./core/compare/compare.js";
 import type { CompareSummary, ReviewResult } from "./core/index.js";
 import { systemCommand } from "./system-command.js";
 
@@ -118,8 +119,7 @@ function categorySummary(comparisons: CompareSummary[]): string {
   const counts = new Map<string, number>();
   for (const summary of comparisons) {
     for (const result of summary.results)
-      for (const finding of result.findings.filter((f) => f.category !== "axe-inherited"))
-        counts.set(finding.category, (counts.get(finding.category) ?? 0) + 1);
+      for (const finding of result.findings.filter((f) => !NOT_DECIDING.has(f.category))) counts.set(finding.category, (counts.get(finding.category) ?? 0) + 1);
   }
   return [
     "| Category | Findings |",

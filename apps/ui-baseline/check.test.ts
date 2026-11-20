@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CompareSummary } from "./core/index.js";
 import { NOT_FOUND_ID, NOT_FOUND_PATH } from "./variants.js";
 
 // check.ts is a script that runs everything when it is imported, so each test sets its arguments
@@ -51,6 +52,7 @@ vi.mock("./core/index.js", () => ({
   compareFileRuns: mocks.compareFileRuns,
   compareJourneys: mocks.compareJourneys,
   compareRuns: mocks.compareRuns,
+  NOT_DECIDING: new Set(["axe-inherited", "axe-not-compared", "frame"]),
   launchChromium: mocks.launchChromium,
   openBlobContainer: mocks.openBlobContainer,
   reviewFindings: mocks.reviewFindings,
@@ -647,6 +649,23 @@ describe("check", () => {
       // Assert
       expect(error?.message).toContain("--concurrency");
       expect(mocks.captureBatches).not.toHaveBeenCalled();
+    });
+
+    it("should count a page CaTH served in no language as not compared, not as matching, and list why", async () => {
+      // Arrange
+      const compare = mocks.compareRuns.getMockImplementation() as (options: { only: string[] }) => Promise<CompareSummary>;
+      mocks.compareRuns.mockImplementation(async (options: { only: string[] }) => {
+        const summary = await compare(options);
+        const results = summary.results.map((r) => (r.id === "page--list-view" ? { ...r, verdict: "not-captured" as const, findings: [] } : r));
+        return { ...summary, results };
+      });
+
+      // Act
+      await runCheck(["--ticket", "42", "--no-review"]);
+
+      // Assert
+      expect(logs.join("\n")).toContain("1 of 3 pages differs from pip · 1 not compared");
+      expect(readFileSync(path.join(out, "evidence/pr-comment.md"), "utf-8")).toContain("page--summary-of-publications cy: CaTH redirected to /sign-in");
     });
 
     it("should leave captures CaTH redirected or failed out of the comparison", async () => {

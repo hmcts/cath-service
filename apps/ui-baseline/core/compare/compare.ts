@@ -16,9 +16,9 @@ const EXPANDED_STATE = "expanded";
 // capturePage's default region; the frame is the page around it
 const DEFAULT_REGION = "main";
 // Findings that do not by themselves make a page differ: accessibility issues CaTH inherits unchanged
-// from pip, and differences in the header, banners and footer, which every page shares, so one change
-// there would otherwise make every page differ
-const NOT_DECIDING = new Set(["axe-inherited", "frame"]);
+// from pip, a page whose accessibility results are missing, and differences in the header, banners
+// and footer, which every page shares, so one change there would otherwise make every page differ
+export const NOT_DECIDING = new Set(["axe-inherited", "axe-not-compared", "frame"]);
 const OPENED_ONLY_IN_SOURCE: Finding = {
   category: "page",
   change: "collapsed-content",
@@ -193,7 +193,7 @@ function accessibilityPatternsOf(results: (PairResult | TargetOnlyResult)[]): Ac
 }
 
 // Page-specific parts are reduced to their shape so the same change on different pages groups together
-function patternDetail(finding: Finding): string {
+export function patternDetail(finding: Finding): string {
   if (finding.category === "page" && finding.change === "title") {
     const [, before, after] = finding.detail.match(/^"(.*)" → "(.*)"$/) ?? [];
     if (before && after?.startsWith(before)) return `title gains suffix "${after.slice(before.length)}"`;
@@ -219,8 +219,8 @@ async function comparePair(options: CompareOptions, sourceEntry: IndexEntry, tar
     ...compareNamed("button", source.buttons, target.buttons),
     ...compareNamed(
       "link",
-      source.links.map((l) => l.text),
-      target.links.map((l) => l.text)
+      source.links.filter((l) => !l.inTable).map((l) => l.text),
+      target.links.filter((l) => !l.inTable).map((l) => l.text)
     ),
     ...compareTargets(sourceCapture, targetCapture, options.expectedTarget),
     ...compareText(source.text, target.text, source, target),
@@ -290,23 +290,30 @@ function normaliseNode(node: AriaNode, context: NormaliseContext): AriaNode {
 
 function compareHeadings(source: PageStructure, target: PageStructure): Finding[] {
   const findings: Finding[] = [];
-  const targetByText = new Map(target.headings.map((h) => [h.text, h]));
-  for (const heading of source.headings) {
-    const match = targetByText.get(heading.text);
-    if (!match) findings.push({ category: "heading", change: "missing", detail: `"${heading.text}" (h${heading.level})` });
-    else if (match.level !== heading.level)
-      findings.push({ category: "heading", change: "level", detail: `"${heading.text}" h${heading.level} → h${match.level}` });
-  }
-  const sourceTexts = new Set(source.headings.map((h) => h.text));
-  const sourcePlain = new Set(source.text);
-  for (const heading of target.headings) {
-    if (!sourceTexts.has(heading.text) && !sourcePlain.has(heading.text))
-      findings.push({ category: "heading", change: "extra", detail: `"${heading.text}" (h${heading.level})` });
-  }
+  // Each text's headings, in page order: two "Court" headings on one side and one on the other is a
+  // difference, so headings are counted, not looked up by text
+  const levelsByText = (structure: PageStructure) =>
+    structure.headings.reduce((byText, h) => byText.set(h.text, [...(byText.get(h.text) ?? []), h.level]), new Map<string, number[]>());
+  const sourceLevels = levelsByText(source);
+  const targetLevels = levelsByText(target);
   const targetPlain = new Set(target.text);
-  for (const finding of findings.filter((f) => f.change === "missing")) {
-    const text = finding.detail.match(/^"(.*)" \(h\d\)$/)?.[1];
-    if (text && targetPlain.has(text)) finding.change = "heading-to-text";
+  const sourcePlain = new Set(source.text);
+  for (const [text, levels] of sourceLevels) {
+    const matched = targetLevels.get(text) ?? [];
+    if (!matched.length) {
+      const change = targetPlain.has(text) ? "heading-to-text" : "missing";
+      for (const level of levels) findings.push({ category: "heading", change, detail: `"${text}" (h${level})` });
+      continue;
+    }
+    for (let index = 0; index < Math.min(levels.length, matched.length); index++)
+      if (levels[index] !== matched[index]) findings.push({ category: "heading", change: "level", detail: `"${text}" h${levels[index]} → h${matched[index]}` });
+    if (levels.length !== matched.length)
+      findings.push({ category: "heading", change: "count", detail: `"${text}": ${levels.length} → ${matched.length} headings` });
+  }
+  for (const [text, levels] of targetLevels) {
+    // Text that became a heading is reported once, by promotedText
+    if (sourceLevels.has(text) || sourcePlain.has(text)) continue;
+    for (const level of levels) findings.push({ category: "heading", change: "extra", detail: `"${text}" (h${level})` });
   }
   const sourceH1 = source.headings.filter((h) => h.level === 1).length;
   const targetH1 = target.headings.filter((h) => h.level === 1).length;
@@ -383,32 +390,46 @@ function promotedText(source: PageStructure, target: PageStructure): Finding[] {
 
 function compareText(a: string[], b: string[], source?: PageStructure, target?: PageStructure): Finding[] {
   const findings: Finding[] = [];
-  // Text that moved into or out of a heading, link, button or label is reported by those checks
+  const count = (items: string[]) => items.reduce((counts, item) => counts.set(item, (counts.get(item) ?? 0) + 1), new Map<string, number>());
+  // Text that moved into or out of a heading, link, button or label is reported by those checks. Only
+  // as many occurrences are excused as the other side gained there: a paragraph and a link with the
+  // same words in the source, and only the link in the target, still loses the paragraph.
   const elsewhere = (structure?: PageStructure) =>
-    new Set(
+    count(
       structure
         ? [...structure.headings.map((h) => h.text), ...structure.links.map((l) => l.text), ...structure.buttons, ...structure.controls.map((c) => c.label)]
         : []
     );
-  const labels = (structure?: PageStructure) => new Set(structure?.controls.map((c) => c.label) ?? []);
-  // Each set built once, so a long list page is compared in linear time
-  const inTarget = elsewhere(target);
-  const inSource = elsewhere(source);
-  const sourceLabels = labels(source);
-  const targetLabels = labels(target);
-  const textA = new Set(a);
-  const textB = new Set(b);
-  const missing = a.filter((x) => !textB.has(x) && !inTarget.has(x) && !sourceLabels.has(x));
-  const extra = b.filter((x) => !textA.has(x) && !inSource.has(x) && !targetLabels.has(x));
+  const labels = (structure?: PageStructure) => count(structure?.controls.map((c) => c.label) ?? []);
+  // Each count built once, so a long list page is compared in linear time
+  const [textA, textB] = [count(a), count(b)];
+  const [elsewhereA, elsewhereB] = [elsewhere(source), elsewhere(target)];
+  const [labelsA, labelsB] = [labels(source), labels(target)];
+  // How many more times a side has the text than the other, less those it moved elsewhere
+  const surplus = (text: string, side: "a" | "b") => {
+    const [mine, theirs] = side === "a" ? [textA, textB] : [textB, textA];
+    const [mineElsewhere, theirsElsewhere] = side === "a" ? [elsewhereA, elsewhereB] : [elsewhereB, elsewhereA];
+    const myLabels = side === "a" ? labelsA : labelsB;
+    const moved = Math.max(0, (theirsElsewhere.get(text) ?? 0) - (mineElsewhere.get(text) ?? 0));
+    return (mine.get(text) ?? 0) - (theirs.get(text) ?? 0) - moved - (myLabels.get(text) ?? 0);
+  };
+  const missing = [...textA.keys()].filter((text) => surplus(text, "a") > 0);
+  const extra = [...textB.keys()].filter((text) => surplus(text, "b") > 0);
   // A change of case only ("Data Source" → "Data source") is one finding, not a missing and an extra
-  const extraByLowerCase = new Map(extra.map((x) => [x.toLowerCase(), x]));
+  const extraByLowerCase = new Map(extra.filter((x) => !textA.has(x)).map((x) => [x.toLowerCase(), x]));
   for (const item of missing) {
+    if (textB.has(item)) {
+      findings.push({ category: "text", change: "count", detail: `"${item}": ${textA.get(item)} → ${textB.get(item)}` });
+      continue;
+    }
     const recased = extraByLowerCase.get(item.toLowerCase());
     if (recased !== undefined) {
       findings.push({ category: "text", change: "capitalisation", detail: `"${item}" → "${recased}"` });
       extraByLowerCase.delete(item.toLowerCase());
     } else findings.push({ category: "text", change: "missing", detail: `"${item}"` });
   }
+  for (const item of extra.filter((x) => textA.has(x)))
+    findings.push({ category: "text", change: "count", detail: `"${item}": ${textA.get(item)} → ${textB.get(item)}` });
   for (const item of extraByLowerCase.values()) findings.push({ category: "text", change: "extra", detail: `"${item}"` });
   return findings;
 }
@@ -490,17 +511,25 @@ function resolved(href: string | null, page: URL): URL | null {
 
 async function compareAxe(sourceDir: string, targetDir: string): Promise<Finding[]> {
   const read = async (dir: string) =>
-    existsSync(path.join(dir, "axe.json"))
-      ? (JSON.parse(await readFile(path.join(dir, "axe.json"), "utf-8")).violations as { id: string; impact: string | null; help: string }[])
-      : [];
+    existsSync(path.join(dir, "axe.json")) ? (JSON.parse(await readFile(path.join(dir, "axe.json"), "utf-8")).violations as AxeViolation[]) : null;
   const [a, b] = await Promise.all([read(sourceDir), read(targetDir)]);
-  const ids = (list: { id: string }[]) => new Set(list.map((v) => v.id));
-  const sourceIds = ids(a);
-  const targetIds = ids(b);
+  // Without both sides' results, pip's violations are not fixed and CaTH's are not new
+  if (!a || !b) return [{ category: "axe-not-compared", change: a ? "target" : "source", detail: "no accessibility results were recorded for this page" }];
+  const byId = (list: AxeViolation[]) => new Map(list.map((v) => [v.id, v]));
+  const sourceById = byId(a);
+  const targetById = byId(b);
+  const elements = (v: AxeViolation) => v.targets?.length ?? 0;
+  const finding = (category: string, v: AxeViolation, counted = "") => ({ category, change: v.impact ?? "unknown", detail: `${v.id}: ${v.help}${counted}` });
+  const inBoth = (v: AxeViolation) => {
+    const before = elements(sourceById.get(v.id) as AxeViolation);
+    const after = elements(v);
+    if (after === before) return finding("axe-inherited", v);
+    return finding(after > before ? "axe-new" : "axe-fixed", v, ` (${before} → ${after} elements)`);
+  };
   return [
-    ...b.filter((v) => !sourceIds.has(v.id)).map((v) => ({ category: "axe-new", change: v.impact ?? "unknown", detail: `${v.id}: ${v.help}` })),
-    ...b.filter((v) => sourceIds.has(v.id)).map((v) => ({ category: "axe-inherited", change: v.impact ?? "unknown", detail: `${v.id}: ${v.help}` })),
-    ...a.filter((v) => !targetIds.has(v.id)).map((v) => ({ category: "axe-fixed", change: v.impact ?? "unknown", detail: `${v.id}: ${v.help}` }))
+    ...b.filter((v) => !sourceById.has(v.id)).map((v) => finding("axe-new", v)),
+    ...b.filter((v) => sourceById.has(v.id)).map(inBoth),
+    ...a.filter((v) => !targetById.has(v.id)).map((v) => finding("axe-fixed", v))
   ];
 }
 
@@ -607,4 +636,11 @@ interface RawMeta {
   region?: string;
   lang: string;
   forms?: { action: string | null; fields: { name: string }[] }[];
+}
+
+interface AxeViolation {
+  id: string;
+  impact: string | null;
+  help: string;
+  targets?: string[];
 }

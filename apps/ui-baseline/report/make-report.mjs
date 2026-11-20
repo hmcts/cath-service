@@ -300,11 +300,12 @@ const CATEGORY = {
   "axe-new": ["Accessibility: new in CaTH", "red"],
   "axe-fixed": ["Accessibility: fixed in CaTH", "green"],
   "axe-inherited": ["Accessibility: inherited from pip", "yellow"],
+  "axe-not-compared": ["Accessibility: not compared", "grey"],
   frame: ["Header, banners and footer", "light-blue"]
 };
 const categoryTag = (category) => tag(CATEGORY[category]?.[0] ?? category, CATEGORY[category]?.[1] ?? "grey");
 // As compare.ts: findings that do not by themselves make a page differ from pip
-const NOT_DECIDING = new Set(["axe-inherited", "frame"]);
+const NOT_DECIDING = new Set(["axe-inherited", "axe-not-compared", "frame"]);
 const differenceCount = (result) => result.findings.filter((f) => !NOT_DECIDING.has(f.category)).length;
 
 function findingsBlock(result) {
@@ -332,7 +333,7 @@ function differencesBlock(result) {
   const differences = result.findings.filter((f) => !NOT_DECIDING.has(f.category));
   const inherited = result.findings.filter((f) => f.category === "axe-inherited");
   if (!differences.length)
-    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Matches pip after normalisation${inherited.length ? ` · ${inherited.length} accessibility issue(s) inherited from pip` : ""}</p></div>${frameBlock(result)}`;
+    return `<div class="govuk-panel parity-outcome parity-outcome--ok"><p class="govuk-panel__body">Matches pip after normalisation${inherited.length ? ` · ${inherited.length} accessibility issue(s) inherited from pip` : ""}</p></div>${axeNotComparedBlock(result)}${frameBlock(result)}`;
   const groups = Object.entries(Object.groupBy(differences, (f) => f.category));
   const rows = groups
     .map(
@@ -343,7 +344,14 @@ function differencesBlock(result) {
   return `<h3 class="govuk-heading-s">${differences.length} finding${differences.length === 1 ? "" : "s"} after normalisation</h3>
     <table class="govuk-table parity-findings-table"><tbody class="govuk-table__body">${rows}</tbody></table>
     ${inherited.length ? `<p class="govuk-body-s">${categoryTag("axe-inherited")} ${inherited.map((f) => esc(f.detail.split(":")[0])).join(", ")}</p>` : ""}
-    ${frameBlock(result)}`;
+    ${axeNotComparedBlock(result)}${frameBlock(result)}`;
+}
+
+function axeNotComparedBlock(result) {
+  const missing = result.findings.find((f) => f.category === "axe-not-compared");
+  return missing
+    ? `<p class="govuk-body-s">${categoryTag("axe-not-compared")} ${esc(`${missing.detail} in ${missing.change === "target" ? "CaTH" : "pip"}`)}</p>`
+    : "";
 }
 
 // The header, banners and footer: the same on every page, so listed but not counted as the page differing
@@ -850,7 +858,7 @@ if (comparison) {
   const pagesNotCompared = new Set(comparison.results.filter((r) => r.verdict === "not-captured" && !pagesCompared.has(r.id)).map((r) => r.id));
   const byCategory = Object.entries(
     Object.groupBy(
-      compared.flatMap((r) => r.findings.filter((f) => f.category !== "axe-inherited")),
+      compared.flatMap((r) => r.findings.filter((f) => !NOT_DECIDING.has(f.category))),
       (f) => f.category
     )
   ).sort((a, b) => b[1].length - a[1].length);

@@ -15,7 +15,8 @@ export interface PageStructure {
   tables: { columns: string[]; rows: string[][] }[];
   controls: { role: string; label: string }[];
   buttons: string[];
-  links: { text: string; url: string | null }[];
+  // inTable: in a table, whose cells already compare the link's text, so only where it leads is compared
+  links: { text: string; url: string | null; inTable?: boolean }[];
   text: string[];
 }
 
@@ -87,12 +88,15 @@ export function structureOf(nodes: AriaNode[]): PageStructure {
     }
     if (node.role === "table") {
       structure.tables.push(tableOf(node));
+      // A table's cells are compared as text, but a link in a row (a case or list leading to its page)
+      // is still a link, so where it leads is compared too
+      for (const link of linksIn(node)) structure.links.push({ ...linkOf(link), inTable: true });
       return;
     }
     if (CONTROL_ROLES.has(node.role)) structure.controls.push({ role: node.role, label: node.name });
     else if (node.role === "button") structure.buttons.push(node.name || node.text);
     else if (node.role === "link") {
-      structure.links.push({ text: node.name || node.text, url: node.children.find((c) => c.role === "/url")?.text ?? null });
+      structure.links.push(linkOf(node));
       return;
     } else if (TEXT_ROLES.has(node.role) && node.text) structure.text.push(node.text);
     for (const child of node.children) visit(child);
@@ -102,6 +106,10 @@ export function structureOf(nodes: AriaNode[]): PageStructure {
 }
 
 // The links among a node's descendants, outermost first
+function linkOf(node: AriaNode): { text: string; url: string | null } {
+  return { text: node.name || node.text, url: node.children.find((c) => c.role === "/url")?.text ?? null };
+}
+
 function linksIn(node: AriaNode): AriaNode[] {
   return node.children.flatMap((child) => (child.role === "link" ? [child] : linksIn(child)));
 }
