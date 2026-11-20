@@ -4,7 +4,8 @@ import { launchChromium } from "../../capture/browser.js";
 
 // Writes the PDFs pdf-text and file-compare tests read: the same list styled two ways, as pip and
 // CaTH do (fonts, sizes, borders, orientation, so different page breaks), one in a narrow column
-// with a footer on every page as pip has (so words wrap at hyphens), and one with a changed row.
+// with a footer on every page as pip has (so words wrap at hyphens), one with a changed row, and one
+// with the note moved above the list.
 // Committed so unit tests need no browser; re-run with `npx tsx` to regenerate.
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROWS = Array.from(
@@ -19,9 +20,14 @@ const FOOTER = `<div style="font-size:8px;width:100%;text-align:center">Court an
 
 const browser = await launchChromium();
 const page = await browser.newPage();
-const render = async (file: string, style: string, rows: string[], options: { landscape?: boolean; footer?: boolean; lineBreak?: string } = {}) => {
+const render = async (
+  file: string,
+  style: string,
+  rows: string[],
+  options: { landscape?: boolean; footer?: boolean; lineBreak?: string; noteFirst?: boolean } = {}
+) => {
   await page.setContent(
-    `<!doctype html><style>${style}</style><h1>Civil Daily Cause List</h1><p>List for 1 September 2023</p><table>${rows.join("")}</table>${NOTE(options.lineBreak)}`
+    `<!doctype html><style>${style}</style><h1>Civil Daily Cause List</h1><p>List for 1 September 2023</p>${options.noteFirst ? NOTE() : ""}<table>${rows.join("")}</table>${options.noteFirst ? "" : NOTE(options.lineBreak)}`
   );
   await page.pdf({
     path: path.join(DIR, file),
@@ -36,4 +42,5 @@ await render("wrapped.pdf", "body{font:12px arial;width:398px} td{padding:4px}",
 await render("changed.pdf", PLAIN, ROWS.toSpliced(3, 1, "<tr><td>10:03</td><td>Court 9</td><td>AB1003 Smith v Jones</td></tr>"));
 // A body line that ends in a page number, which is content, beside the footer, which is not
 await render("continued.pdf", PLAIN, [...ROWS.slice(0, 2), "<tr><td colspan=3>Continued on page 2</td></tr>", ...ROWS.slice(2)], { footer: true });
+await render("moved.pdf", PLAIN, ROWS, { noteFirst: true });
 await browser.close();

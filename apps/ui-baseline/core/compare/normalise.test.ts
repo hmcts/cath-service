@@ -45,7 +45,7 @@ describe("normalise", () => {
 
   it("should mask ISO timestamps near the seed date with their offset in days", () => {
     // Act
-    const result = normalise("2026-10-30T10:12:16.123Z 2026-11-02T08:00 2026-10-25T23:59:59 2020-01-01T00:00:00Z", SEEDED);
+    const result = normalise("2026-10-30T10:12:16.123Z 2026-11-02T08:00 2026-10-25T08:30:59 2020-01-01T00:00:00Z", SEEDED);
 
     // Assert
     expect(result).toBe("<RUN_DATE> <RUN_TIME> <RUN_DATE+3> <RUN_TIME> <RUN_DATE-5> <RUN_TIME> 2020-01-01T00:00:00Z");
@@ -64,7 +64,7 @@ describe("normalise", () => {
     const text = [
       "30 October 2026",
       "31st Oct 2026 at 10:30am",
-      "1 Nov 2026, at 9.15 pm",
+      "1 Nov 2026, at 9.15 am",
       "29 Sept 2026",
       "30 Hydref 2026 am 10:30yb",
       "2 Tachwedd 2026",
@@ -100,12 +100,29 @@ describe("normalise", () => {
 
   it("should mask a time after a written date when only a space or a comma comes between them", () => {
     // Arrange
-    const text = ["Published 30 October 2026 10:12am", "Published 30 October 2026, 14:03", "30 October 2026 2 lists"].join("\n");
+    const text = ["Published 30 October 2026 10:12am", "Published 30 October 2026, 12:03", "30 October 2026 2 lists"].join("\n");
 
     // Act
     const result = normalise(text, SEEDED);
 
     // Assert
     expect(result.split("\n")).toEqual(["Published <RUN_DATE> <RUN_TIME>", "Published <RUN_DATE> <RUN_TIME>", "<RUN_DATE> 2 lists"]);
+  });
+
+  it("should keep times far from the time the data was seeded at, such as hearing times, on a date near the seed date", () => {
+    // Arrange: seeded at 10:00; created three days later at 11:40 is still the run's time of day
+    const text = ["30 October 2026 at 2:30pm", "31/10/2026 16:00", "2026-10-30T00:00:00.000Z", "2026-11-02T11:40:00Z", "1 Nov 2026 am 3:00yh"].join("\n");
+
+    // Act
+    const result = normalise(text, SEEDED);
+
+    // Assert
+    expect(result.split("\n")).toEqual([
+      "<RUN_DATE> at 2:30pm",
+      "<RUN_DATE+1> 16:00",
+      "<RUN_DATE>T00:00:00.000Z",
+      "<RUN_DATE+3> <RUN_TIME>",
+      "<RUN_DATE+2> am 3:00yh"
+    ]);
   });
 });

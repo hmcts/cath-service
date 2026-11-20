@@ -7,7 +7,7 @@ import { excelCells, type SheetContent } from "./excel-cells.js";
 import { type NormaliseContext, normalise } from "./normalise.js";
 import { pdfPagePngs } from "./pdf-pages.js";
 import { pdfText } from "./pdf-text.js";
-import { diffSequences } from "./sequence-diff.js";
+import { type DiffRun, diffSequences } from "./sequence-diff.js";
 
 // Compares the files each app generated for a publication, recorded by collectFiles. PDFs are
 // styled differently by design, so only their text is compared, word by word in reading order:
@@ -15,6 +15,9 @@ import { diffSequences } from "./sequence-diff.js";
 // exactly, so every sheet, cell (type and value) and merged range is compared.
 const MAX_FINDINGS = 50;
 const CONTEXT_WORDS = 4;
+// How far apart, in words, a word missing in one place and extra in another may be and still be the
+// same word moved by wrapping: a table row that wraps differently, not a paragraph moved elsewhere
+const MOVE_WINDOW_WORDS = 120;
 // How many pages of each PDF are drawn for the report; a longer one is still compared in full
 const MAX_PDF_PAGES = 10;
 // How each kind of file is compared; PDFs by text, spreadsheets by cell, CSV by line, the rest whole
@@ -222,15 +225,10 @@ function textFindings(a: string[], b: string[]): Finding[] {
   }
 
   // A table whose cells wrap at other widths reads out the same words in another order, which the
-  // diff sees as words missing in one place and extra in another. Only a word one PDF has more of
-  // than the other is a difference in content, so each run keeps just those.
-  const surplus = { delete: surplusWords(a, b), insert: surplusWords(b, a) };
-  const differing = (kind: "delete" | "insert", items: string[]) =>
-    items.filter((word) => {
-      const count = surplus[kind].get(word) ?? 0;
-      if (count) surplus[kind].set(word, count - 1);
-      return count > 0;
-    });
+  // diff sees as words missing in one place and extra in another. A word missing near where the same
+  // word is extra has only moved, so each run keeps just the words that did not.
+  const moved = movedWords(runs);
+  const differing = (runIndex: number) => runs[runIndex].items.filter((_word, item) => !moved.has(`${runIndex}:${item}`));
 
   const findings: Finding[] = [];
   for (let index = 0; index < runs.length; index++) {
@@ -238,8 +236,8 @@ function textFindings(a: string[], b: string[]): Finding[] {
     if (run.kind === "equal") continue;
     const next = runs[index + 1];
     const pairsWithNext = run.kind === "delete" && next?.kind === "insert";
-    const removed = differing(run.kind === "delete" ? "delete" : "insert", run.items);
-    const replaced = pairsWithNext ? differing("insert", next.items) : [];
+    const removed = differing(index);
+    const replaced = pairsWithNext ? differing(index + 1) : [];
     const previous = runs[index - 1];
     if (pairsWithNext) index++;
     if (!removed.length && !replaced.length) continue;
@@ -254,12 +252,36 @@ function textFindings(a: string[], b: string[]): Finding[] {
   return findings;
 }
 
-// How many more times each word is in a than in b
-function surplusWords(a: string[], b: string[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const word of a) counts.set(word, (counts.get(word) ?? 0) + 1);
-  for (const word of b) counts.set(word, (counts.get(word) ?? 0) - 1);
-  return new Map([...counts].filter(([, count]) => count > 0));
+// The words, as "<run>:<item>", that a delete and an insert share within MOVE_WINDOW_WORDS of each
+// other, placed by where they fall in the source's words
+function movedWords(runs: DiffRun[]): Set<string> {
+  const places = new Map<string, { delete: Place[]; insert: Place[] }>();
+  let position = 0;
+  runs.forEach((run, runIndex) => {
+    if (run.kind === "equal") {
+      position += run.items.length;
+      return;
+    }
+    run.items.forEach((word, item) => {
+      const entry = places.get(word) ?? { delete: [], insert: [] };
+      entry[run.kind as "delete" | "insert"].push({ key: `${runIndex}:${item}`, at: run.kind === "delete" ? position + item : position });
+      places.set(word, entry);
+    });
+    if (run.kind === "delete") position += run.items.length;
+  });
+  const moved = new Set<string>();
+  for (const { delete: deleted, insert: inserted } of places.values()) {
+    let d = 0;
+    let i = 0;
+    while (d < deleted.length && i < inserted.length) {
+      if (Math.abs(deleted[d].at - inserted[i].at) <= MOVE_WINDOW_WORDS) {
+        moved.add(deleted[d++].key);
+        moved.add(inserted[i++].key);
+      } else if (deleted[d].at < inserted[i].at) d++;
+      else i++;
+    }
+  }
+  return moved;
 }
 
 function sheetFindings(a: SheetContent, b: SheetContent, sourceContext: NormaliseContext, targetContext: NormaliseContext): Finding[] {
@@ -390,4 +412,9 @@ export interface FileCompareSummary {
   comparedAt: string;
   totals: { files: number; match: number; differs: number; missing: number; extra: number };
   results: FileCompareResult[];
+}
+
+interface Place {
+  key: string;
+  at: number;
 }

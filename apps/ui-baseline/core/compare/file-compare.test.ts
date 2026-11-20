@@ -47,6 +47,15 @@ describe("comparePdf", () => {
     expect(result.texts?.target).toContain("England and Wales, and some non-");
   });
 
+  it("should report a paragraph moved to another part of the document, not take it for wrapping", async () => {
+    // Act
+    const result = await comparePdf(await read("plain.pdf"), await read("moved.pdf"));
+
+    // Assert
+    expect(result.findings.map((f) => f.change)).toEqual(["extra", "missing"]);
+    expect(result.findings[0].detail).toContain("Find contact details and other information");
+  });
+
   it("should report a changed word with the words before it", async () => {
     // Act
     const result = await comparePdf(await read("plain.pdf"), await read("changed.pdf"));

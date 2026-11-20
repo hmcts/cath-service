@@ -358,14 +358,17 @@ and the two apps' files side by side), and Other files lists the downloads that 
 
 - **PDFs** are styled differently by design, so only their text is compared, word by word in
   reading order. Line breaks, page breaks and pip's page footer are ignored, and so are words a
-  table only reads out in another order because its cells wrap at other widths; any other change
+  table only reads out in another order because its cells wrap at other widths (a word missing in
+  one place and extra within 120 words of it); a paragraph moved further than that, and any other change
   of wording is reported with the words before it. A PDF's page in the report shows each app's
   pages side by side (up to 10 of each, drawn by pdf.js), to look at; what they show is not compared.
 - **Excel files** should be the same, so every sheet (name and order), cell (type and value) and
   merged range is compared. They can never be byte-identical (pip writes them with Apache POI and
   CaTH with exceljs), and fonts and column widths are not compared. An Excel file's page in the
   report shows both apps' sheets side by side, up to 300 rows, with the cells that differ marked.
-- Dates and times that come from when each app was seeded are masked, as on pages.
+- Dates and times that come from when each app was seeded are masked, as on pages: a date within
+  45 days of the seed date, and a time on it only when it is within 3 hours of the time of day the
+  data was seeded, so the hearing times in a list are still compared.
 
 For a list a tester uploaded to both apps by hand, compare the two without seeding anything:
 
@@ -476,6 +479,9 @@ depends on one of these, check that part by hand and say so in the PR.
 - **13 journeys, not all 76 of pip's scenarios.** They cover every journey route, but not every
   path the scenarios take through them.
 - **Not captured at all:** emails and deprecated list types. File downloads are limited to the ones listed in `routes/downloads.json`.
+- **The order of a page's text is not compared.** Headings, text and links are compared by what
+  there is and how many times, so a paragraph CaTH shows in another place on the page, with the
+  same words, is not reported. Tables are compared row by row, in order.
 - **Accessibility checks see what a capture records, not how a page behaves.** See
   [Checking accessibility](#checking-accessibility) for what still needs testing by hand.
 - **Only verified users' pages are compared signed in, in aat.** Checks sign in through CFT IDAM

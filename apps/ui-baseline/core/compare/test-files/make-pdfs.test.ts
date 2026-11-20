@@ -9,7 +9,7 @@ vi.mock("../../capture/browser.js", () => ({ launchChromium: vi.fn() }));
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 
 describe("make-pdfs", () => {
-  it("should render the five test PDFs from one page and close the browser when run", async () => {
+  it("should render the six test PDFs from one page and close the browser when run", async () => {
     // Arrange
     const page = { setContent: vi.fn().mockResolvedValue(undefined), pdf: vi.fn().mockResolvedValue(Buffer.from("")) };
     const browser = { newPage: vi.fn().mockResolvedValue(page), close: vi.fn().mockResolvedValue(undefined) };
@@ -24,7 +24,8 @@ describe("make-pdfs", () => {
       "styled.pdf",
       "wrapped.pdf",
       "changed.pdf",
-      "continued.pdf"
+      "continued.pdf",
+      "moved.pdf"
     ]);
     expect(page.pdf.mock.calls[1][0]).toMatchObject({ format: "A4", landscape: true });
     expect(page.pdf.mock.calls[2][0]).toMatchObject({ displayHeaderFooter: true, footerTemplate: expect.stringContaining("pageNumber") });

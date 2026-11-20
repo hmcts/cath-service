@@ -10,8 +10,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Dates this close to the seed date come from "now" (display windows, created and audit dates);
 // fixture dates are years earlier and are compared as they are
 const RUN_DATE_WINDOW_DAYS = 45;
+// Times this close to the time of day the data was seeded at come from "now" too (created and audit
+// times during the run, display windows a whole number of days away); others, such as hearing times,
+// are the fixture's and are compared as they are
+const RUN_TIME_WINDOW_MINUTES = 3 * 60;
+const DAY_MINUTES = 24 * 60;
 // Both apps show dates in London time, whatever time zone the comparison runs in
 const LONDON_DAY = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "numeric", day: "numeric" });
+const LONDON_TIME = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "numeric", minute: "numeric", hourCycle: "h23" });
 
 export interface NormaliseContext {
   // When the data shown was seeded (provenance.source.seededAt), in ISO form
@@ -45,6 +51,14 @@ export function normalise(text: string, context: NormaliseContext = {}): string 
 function maskRunDates(text: string, seededAt: Date): string {
   // A date as written (year, month from 0, day), days from the London day the data was seeded on
   const seededDay = londonDay(seededAt);
+  const seededMinutes = londonMinutes(seededAt);
+  const isRunTime = (minutes: number | null) => {
+    if (minutes === null) return false;
+    const apart = Math.abs(minutes - seededMinutes) % DAY_MINUTES;
+    return Math.min(apart, DAY_MINUTES - apart) <= RUN_TIME_WINDOW_MINUTES;
+  };
+  // The written time, or the time as written, after a date already masked
+  const withTime = (token: string, time: string | undefined) => (time ? `${token}${isRunTime(writtenMinutes(time)) ? " <RUN_TIME>" : time}` : token);
   const offsetToken = (year: number, month: number, day: number) => {
     const days = Math.round((Date.UTC(year, month, day) - seededDay) / DAY_MS);
     return Math.abs(days) <= RUN_DATE_WINDOW_DAYS ? `<RUN_DATE${days === 0 ? "" : days > 0 ? `+${days}` : days}>` : null;
@@ -56,12 +70,14 @@ function maskRunDates(text: string, seededAt: Date): string {
       const day = m.endsWith("Z") ? londonDay(new Date(m)) : Date.UTC(Number(y), Number(mo) - 1, Number(d));
       const date = new Date(day);
       const token = offsetToken(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-      return token ? `${token} <RUN_TIME>` : m;
+      if (!token) return m;
+      const minutes = m.endsWith("Z") ? londonMinutes(new Date(m)) : writtenMinutes(m.slice(11));
+      return isRunTime(minutes) ? `${token} <RUN_TIME>` : `${token}${m.slice(10)}`;
     })
     // 23/10/2026 and 23/10/2026 10:12:16, also URL-encoded as 23%2F10%2F2026+10%3A12%3A16
     .replace(/\b(\d{2})(?:\/|%2F)(\d{2})(?:\/|%2F)(\d{4})((?:\s|\+)\d{2}(?::|%3A)\d{2}(?:(?::|%3A)\d{2})?)?/g, (m, d, mo, y, time) => {
       const token = offsetToken(Number(y), Number(mo) - 1, Number(d));
-      return token ? `${token}${time ? " <RUN_TIME>" : ""}` : m;
+      return token ? withTime(token, time) : m;
     });
 
   // 23 October 2026 / 23rd October 2026 / 23 Oct 2026 / 23 Hydref 2026, optionally followed by a time
@@ -73,7 +89,7 @@ function maskRunDates(text: string, seededAt: Date): string {
     (m, d, month, y, time) => {
       const index = monthIndex(month);
       const token = index === null ? null : offsetToken(Number(y), index, Number(d));
-      return token ? `${token}${time ? " <RUN_TIME>" : ""}` : m;
+      return token ? withTime(token, time) : m;
     }
   );
   return result;
@@ -85,6 +101,20 @@ function monthIndex(name: string): number | null {
   if (en >= 0) return en;
   const cy = MONTHS_CY.findIndex((m) => m.toLowerCase() === lower);
   return cy >= 0 ? cy : null;
+}
+
+// Minutes into the day of a time as written: "10:12:16", "10%3A12", "9.15 pm", "10:30yb"
+function writtenMinutes(time: string): number | null {
+  const match = time.match(/(\d{1,2})(?::|%3A|\.)(\d{2})(?:.*?(am|pm|yb|yh)\s*$)?/i);
+  if (!match) return null;
+  const hours = (Number(match[1]) % 12) + (/^(pm|yh)$/i.test(match[3] ?? "") ? 12 : 0);
+  return (match[3] ? hours : Number(match[1])) * 60 + Number(match[2]);
+}
+
+// Minutes into the London day of an instant
+function londonMinutes(instant: Date): number {
+  const part = (type: string) => Number(LONDON_TIME.formatToParts(instant).find((p) => p.type === type)?.value);
+  return part("hour") * 60 + part("minute");
 }
 
 // The London date an instant falls on, as a UTC midnight to count days from
