@@ -60,6 +60,9 @@ resource "azurerm_api_management_api_operation_policy" "apim_testing_support_ope
   xml_content         = each.value
 }
 
+# Same body and header logging as the cath-api diagnostic in apim-logger.tf, so the
+# third-party push to the mock can be inspected. Never add Authorization: it carries
+# the subscriber's OAuth bearer token.
 resource "azurerm_api_management_api_diagnostic" "testing_support" {
   count    = local.deploy_apim_testing_support ? 1 : 0
   provider = azurerm.cftapps
@@ -75,4 +78,40 @@ resource "azurerm_api_management_api_diagnostic" "testing_support" {
   log_client_ip             = true
   verbosity                 = "verbose"
   http_correlation_protocol = "W3C"
+
+  frontend_request {
+    body_bytes = local.apim_log_body_bytes
+    headers_to_log = [
+      "content-type",
+      "accept",
+      "origin",
+    ]
+  }
+
+  frontend_response {
+    body_bytes = local.apim_log_body_bytes
+    headers_to_log = [
+      "content-type",
+      "content-length",
+      "origin",
+    ]
+  }
+
+  backend_request {
+    body_bytes = local.apim_log_body_bytes
+    headers_to_log = [
+      "content-type",
+      "accept",
+      "origin",
+    ]
+  }
+
+  backend_response {
+    body_bytes = local.apim_log_body_bytes
+    headers_to_log = [
+      "content-type",
+      "content-length",
+      "origin",
+    ]
+  }
 }
