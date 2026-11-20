@@ -133,7 +133,6 @@ describe("cath seed script", () => {
     output = path.join(dir, "seed", "cath-local.json");
     process.argv = ["node", "seed.ts"];
     vi.stubEnv("PARITY_SEED_OUTPUT", output);
-    vi.stubEnv("CATH_SERVICE_API_URL", API);
     vi.stubEnv("CATH_SERVICE_API_CLIENT_ID", "");
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(console, "log").mockImplementation(() => {});

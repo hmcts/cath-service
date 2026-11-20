@@ -306,14 +306,16 @@ const removeSeedOnce = async (): Promise<void> => {
   if (!isSeeding || !seed?.runToken || args["keep-seed"]) return;
   step("Removing what the check seeded");
   try {
-    await removeRuns(cathApi(process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl), { token: seed.runToken });
+    await removeRuns(cathApi(environment.cath.apiUrl), { token: seed.runToken });
     await rm(seedFile, { force: true });
   } catch (error) {
     console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
   }
 };
 await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
-if (isSeeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.once(signal, onStop);
+// on, not once: a second signal (a double Ctrl+C, or the hosted check's time limit) then waits for the
+// removal already under way (removeSeed runs it once) instead of ending the process partway through it
+if (isSeeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.on(signal, onStop);
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);

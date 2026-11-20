@@ -171,28 +171,30 @@ describe("signInWithAccounts", () => {
     expect(browser.close).toHaveBeenCalled();
   });
 
-  it("should fail when signing in leaves no session cookie", async () => {
+  it("should report a role as not compared, and go on, when signing in leaves no session cookie", async () => {
     // Arrange
     fakeBrowser({ cookies: [] });
     const env = environment({ VERIFIED: { user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
 
     // Act
-    const result = signInWithAccounts(env, [user("media", "VERIFIED")]);
+    const result = await signInWithAccounts(env, [user("media", "VERIFIED")]);
 
     // Assert
-    await expect(result).rejects.toThrow("signing in through CFT IDAM left no CaTH session");
+    expect(result.users.media).toBeUndefined();
+    expect(result.unavailable.media).toContain("signing in as the VERIFIED test account failed: signing in through CFT IDAM left no CaTH session");
   });
 
-  it("should fail when CaTH has no user for the account after signing in", async () => {
+  it("should report a role as not compared when CaTH has no user for the account after signing in", async () => {
     // Arrange
     fakeBrowser();
     fetchMock.mockResolvedValue(new Response("", { status: 404 }));
     const env = environment({ VERIFIED: { user: "u", password: "p" } }, { u: "m@example.com", p: "pw" });
 
     // Act
-    const result = signInWithAccounts(env, [user("media", "VERIFIED")]);
+    const result = await signInWithAccounts(env, [user("media", "VERIFIED")]);
 
     // Assert
-    await expect(result).rejects.toThrow("CaTH has no user for the test account after it signed in: 404");
+    expect(result.users.media).toBeUndefined();
+    expect(result.unavailable.media).toBe("signing in as the VERIFIED test account failed: CaTH has no user for the test account after it signed in: 404");
   });
 });

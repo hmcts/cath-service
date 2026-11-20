@@ -2,7 +2,7 @@
 // overview, list pages (pip vs CaTH), other pip pages, journeys, and known pip defects.
 // Styled with GOV.UK Frontend so it reads like the services it compares.
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import nunjucks from "nunjucks";
@@ -71,9 +71,13 @@ const resultFor = (id, locale) => comparison?.results.find((r) => r.id === id &&
 // ---------- site scaffolding ----------
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(path.join(OUT, "assets"), { recursive: true });
-// node_modules is read-only here, so copy without carrying its permissions across
+// node_modules is read-only in the image, so the copies are made writable, or the next report could
+// not replace them. Node copies them rather than cp, as the image's (BusyBox) cp has no --no-preserve.
 for (const source of ["govuk-frontend.min.css", "govuk-frontend.min.js", "assets/images", "assets/fonts", "assets/manifest.json"]) {
-  if (existsSync(path.join(args.govuk, source))) execFileSync("cp", ["-r", "--no-preserve=mode", path.join(args.govuk, source), path.join(OUT, "assets/")]);
+  if (!existsSync(path.join(args.govuk, source))) continue;
+  const copy = path.join(OUT, "assets", path.basename(source));
+  cpSync(path.join(args.govuk, source), copy, { recursive: true });
+  makeWritable(copy);
 }
 cpSync(path.join(import.meta.dirname, "report.css"), path.join(OUT, "assets/report.css"));
 for (const shared of ["navigation.css", "navigation.js"]) cpSync(path.join(import.meta.dirname, "../src/assets", shared), path.join(OUT, "assets", shared));
@@ -130,6 +134,12 @@ const FILTER_SCRIPT = `document.querySelectorAll('[data-filter-for]').forEach(fu
 });`;
 
 // ---------- helpers ----------
+// A copied file or directory, and everything under it, made writable by its owner
+function makeWritable(target) {
+  const stats = statSync(target);
+  chmodSync(target, stats.mode | 0o200 | (stats.isDirectory() ? 0o100 : 0));
+  if (stats.isDirectory()) for (const entry of readdirSync(target)) makeWritable(path.join(target, entry));
+}
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")

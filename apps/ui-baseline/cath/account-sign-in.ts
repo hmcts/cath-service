@@ -30,21 +30,28 @@ export async function signInWithAccounts(environment: Environment, users: Parity
         continue;
       }
 
-      const cookies: SignIns["users"][string]["cookies"] = {};
-      for (const locale of LOCALES) {
-        const context = await browser.newContext({ ignoreHTTPSErrors: acceptsUnverifiedCertificate(cath.baseUrl) });
-        try {
-          cookies[locale] = await signIn(context, cath.baseUrl, email, password, locale);
-        } finally {
-          await context.close();
+      // One role that cannot sign in (IDAM slow, a password expired) is reported as not compared, as
+      // pip's sign-in does, and the rest of the check goes on
+      try {
+        const cookies: SignIns["users"][string]["cookies"] = {};
+        for (const locale of LOCALES) {
+          const context = await browser.newContext({ ignoreHTTPSErrors: acceptsUnverifiedCertificate(cath.baseUrl) });
+          try {
+            cookies[locale] = await signIn(context, cath.baseUrl, email, password, locale);
+          } finally {
+            await context.close();
+          }
         }
+        const user = await findUser(cath.apiUrl, email);
+        for (const holder of holders) {
+          result.users[holder.id] = { userId: user.userId, role, cookies };
+          result.cathUsers[holder.id] = { userId: user.userId, email: user.email, role: user.role, provenance: user.userProvenance };
+        }
+        console.log(`signed in as the ${role} test account for ${holders.map((holder) => holder.id).join(", ")}`);
+      } catch (error) {
+        const reason = `signing in as the ${role} test account failed: ${(error as Error).message.split("\n")[0]}`;
+        for (const holder of holders) result.unavailable[holder.id] = reason;
       }
-      const user = await findUser(cath.apiUrl, email);
-      for (const holder of holders) {
-        result.users[holder.id] = { userId: user.userId, role, cookies };
-        result.cathUsers[holder.id] = { userId: user.userId, email: user.email, role: user.role, provenance: user.userProvenance };
-      }
-      console.log(`signed in as the ${role} test account for ${holders.map((holder) => holder.id).join(", ")}`);
     }
   } finally {
     await browser.close();

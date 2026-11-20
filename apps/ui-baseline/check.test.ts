@@ -558,6 +558,32 @@ describe("check", () => {
         expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
       });
 
+      it("should still be listening after a first stop, so a second stop waits for the same removal", async () => {
+        // Arrange
+        scriptsSucceed(RUN_SEED);
+        let finishRemoving: () => void = () => {};
+        mocks.removeRuns.mockImplementationOnce(() => new Promise<void>((resolve) => (finishRemoving = resolve)));
+        const exits: (number | undefined)[] = [];
+        vi.mocked(process.exit).mockImplementation(((code?: number) => {
+          exits.push(code);
+        }) as never);
+
+        // Act
+        const checking = runCheck(["--ticket", "42"]);
+        await vi.waitFor(() => expect(mocks.removeRuns).toHaveBeenCalled());
+        process.emit("SIGTERM", "SIGTERM");
+        const listenersAfterFirstStop = process.listenerCount("SIGTERM");
+        process.emit("SIGTERM", "SIGTERM");
+        finishRemoving();
+        // Not awaited: with process.exit a no-op here, the check would carry on past the stop
+        void checking;
+        await vi.waitFor(() => expect(exits.filter((code) => code === 143)).toHaveLength(2));
+
+        // Assert
+        expect(listenersAfterFirstStop).toBe(listenersBefore + 1);
+        expect(mocks.removeRuns).toHaveBeenCalledTimes(1);
+      });
+
       it("should leave the run in place when --keep-seed is given", async () => {
         // Arrange
         scriptsSucceed(RUN_SEED);

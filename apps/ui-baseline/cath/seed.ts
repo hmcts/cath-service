@@ -21,7 +21,7 @@ import { cathApi, createRunLocations, newRunToken, removeRuns } from "./run.js";
 // same way pip reads them.
 const { values: args } = parseArgs({ options: { env: { type: "string" }, only: { type: "string" } } });
 const environment = await loadEnvironment(args.env);
-const API_URL = process.env.CATH_SERVICE_API_URL ?? environment.cath.apiUrl;
+const API_URL = environment.cath.apiUrl;
 // PARITY_SEED_OUTPUT lets a focused check keep its own record, so it only ever removes its own artefacts
 const OUTPUT = process.env.PARITY_SEED_OUTPUT ?? path.join(path.dirname(fileURLToPath(import.meta.url)), `../output/seed/cath-${environment.name}.json`);
 
