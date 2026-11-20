@@ -13,20 +13,28 @@
 # restored under a follow-up ticket, once the service principal has been granted
 # read access to the action group.
 #
-# Workspace: the module resolved this via terraform-module-log-analytics-workspace-id,
-# which maps every environment we run - aat, demo, ithc and perftest - to the
-# nonprod workspace hmcts-nonprod. That workspace lives in one subscription
+# Workspace: resolved via terraform-module-log-analytics-workspace-id, as the
+# application insights module did. It maps aat, demo, ithc and perftest to
+# hmcts-nonprod and prod to hmcts-prod. The workspace lives in one subscription
 # whatever subscription the application resources are in, so the lookup is pinned
 # to it rather than using the default provider. With the default provider it
 # resolves for aat, demo and ithc only because that happens to be their
 # subscription too, and fails for perftest in DCD-CNP-QA with
 # "log analytics workspaces hmcts-nonprod (Resource Group oms-automation) was not
 # found".
+#
+# A data source rather than the module's workspace_id output, so a wrong
+# workspace or missing read fails at plan, not apply.
+module "log_analytics_workspace" {
+  source      = "git::https://github.com/hmcts/terraform-module-log-analytics-workspace-id.git?ref=master"
+  environment = var.env
+}
+
 data "azurerm_log_analytics_workspace" "shared" {
   provider = azurerm.log_analytics
 
-  name                = "hmcts-nonprod"
-  resource_group_name = "oms-automation"
+  name                = module.log_analytics_workspace.name
+  resource_group_name = module.log_analytics_workspace.resource_group_name
 }
 
 # The resource already exists in state under the module address, and the Azure
@@ -59,9 +67,16 @@ resource "azurerm_key_vault_secret" "app_insights_connection_string" {
 }
 
 resource "azurerm_role_assignment" "app_insights_reader_e2e_oidc_sp" {
+  count = local.grant_e2e_access ? 1 : 0
+
   scope                = azurerm_application_insights.shared.id
   role_definition_name = "Monitoring Reader"
   principal_id         = var.e2e_oidc_object_id
+}
+
+moved {
+  from = azurerm_role_assignment.app_insights_reader_e2e_oidc_sp
+  to   = azurerm_role_assignment.app_insights_reader_e2e_oidc_sp[0]
 }
 
 resource "azurerm_application_insights_standard_web_test" "web_availability" {
@@ -79,7 +94,7 @@ resource "azurerm_application_insights_standard_web_test" "web_availability" {
   ]
 
   request {
-    url = "https://cath-web.${var.env}.platform.hmcts.net/health/liveness"
+    url = "https://cath-web.${local.platform_domain}/health/liveness"
   }
 
   tags = local.common_tags

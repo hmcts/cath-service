@@ -16,6 +16,10 @@ vi.mock("@hmcts/list-types-common", () => ({
   provenanceLabelsEn: {
     MANUAL_UPLOAD: "Manual Upload",
     SNL: "SNL"
+  },
+  provenanceLabelsCy: {
+    MANUAL_UPLOAD: "Lanlwytho â llaw",
+    SNL: "SNL"
   }
 }));
 
@@ -82,8 +86,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "test-artefact-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     // Act
@@ -99,36 +102,6 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
-  });
-
-  it("should return exceedsMaxSize true when PDF is over 2MB", async () => {
-    // Arrange
-    const largePdfBuffer = Buffer.alloc(3 * 1024 * 1024);
-    vi.mocked(generatePdfFromHtml).mockResolvedValue({
-      success: true,
-      pdfBuffer: largePdfBuffer,
-      sizeBytes: 3 * 1024 * 1024
-    });
-    mockSavePdfToStorage.mockResolvedValue({
-      success: true,
-      pdfPath: "large-pdf-123.pdf",
-      sizeBytes: 3 * 1024 * 1024,
-      exceedsMaxSize: true
-    });
-
-    // Act
-    const result = await generateUtiacStatutoryAppealDailyHearingListPdf({
-      artefactId: "large-pdf-123",
-      contentDate: new Date("2025-01-15"),
-      locale: "en",
-      locationId: "240",
-      jsonData: mockHearingList
-    });
-
-    // Assert
-    expect(result.success).toBe(true);
-    expect(result.exceedsMaxSize).toBe(true);
   });
 
   it("should return error when PDF generation fails", async () => {
@@ -162,8 +135,7 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "test-render-options.pdf",
-      sizeBytes: 100,
-      exceedsMaxSize: false
+      sizeBytes: 100
     });
 
     const contentDate = new Date("2025-06-15");
@@ -223,5 +195,28 @@ describe("generateUtiacStatutoryAppealDailyHearingListPdf", () => {
     // Assert
     expect(result.success).toBe(false);
     expect(result.error).toBe("Failed to generate PDF: Renderer failed");
+  });
+
+  it("should load English and Welsh translations from the package locale files when generating", async () => {
+    // Arrange
+    vi.mocked(generatePdfFromHtml).mockResolvedValue({ success: true, pdfBuffer: Buffer.from("PDF"), sizeBytes: 3 });
+    mockSavePdfToStorage.mockResolvedValue({ success: true, pdfPath: "locale-loaders.pdf", sizeBytes: 3 });
+    const { en } = await import("../locales/en.js");
+    const { cy } = await import("../locales/cy.js");
+
+    // Act
+    await generateUtiacStatutoryAppealDailyHearingListPdf({
+      artefactId: "locale-loaders",
+      contentDate: new Date("2025-01-01"),
+      locale: "cy",
+      locationId: "999",
+      jsonData: mockHearingList
+    });
+    const [locale, importEn, importCy] = mockLoadTranslations.mock.calls[0];
+
+    // Assert
+    expect(locale).toBe("cy");
+    await expect(importEn()).resolves.toEqual(expect.objectContaining({ en }));
+    await expect(importCy()).resolves.toEqual(expect.objectContaining({ cy }));
   });
 });

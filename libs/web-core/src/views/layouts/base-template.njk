@@ -2,6 +2,9 @@
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 
 {% set govukRebrand = true %}
+{% set bodyAttributes = {
+  "data-session-idle-ms": { value: sessionIdleMs if (isAuthenticated and not isSessionExpiringPage) else false, optional: true }
+} %}
 
 {% block head %}
   <link href="{{ web_css }}" rel="stylesheet">
