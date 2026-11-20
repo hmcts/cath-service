@@ -7,7 +7,7 @@ Options for adding a new court location through the System Admin portal without 
 | Issue | #1078 (spike) |
 | Plan | `docs/tickets/1078/plan.md` |
 | Spec | `/spec` comment on #1078, mirrored in `docs/tickets/1078/ticket.md` (sections 4 to 13) |
-| Code verified against | `828aa742` (branch `vibe-1383`, contains `origin/master` `5014f714`). `git diff 65eb3d72 HEAD` over every path cited below is empty, so the plan's baseline and the code read here are the same for this purpose |
+| Code verified against | `origin/master` `5014f714` (2026-11-13). Every path cited below is unchanged at `65eb3d72` (the plan's baseline) and at `682ec4b4` (master on 2026-11-20) |
 | Experiments | Run on 2026-11-13 against two throwaway databases (`spike_1078_s1`, `spike_1078_s2`) created inside the local docker `cath-postgres` container (localhost:5433), migrated with `prisma migrate deploy`, and dropped afterwards. The developer's own `postgres` database was not touched. No repository file was changed |
 
 > ## Recommendation: Option C
