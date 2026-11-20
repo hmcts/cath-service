@@ -587,6 +587,31 @@ describe("check", () => {
         expect(mocks.removeRuns).toHaveBeenCalledTimes(1);
       });
 
+      it("should be listening for a stop while seeding, removing the run once seed.ts has recorded it", async () => {
+        // Arrange
+        const exits: (number | undefined)[] = [];
+        vi.mocked(process.exit).mockImplementation(((code?: number) => {
+          exits.push(code);
+        }) as never);
+        mocks.spawnSync.mockImplementation((_command: string, args: string[], options: { env: Record<string, string> }) => {
+          if (args.includes("apps/ui-baseline/cath/seed.ts")) {
+            // Stopped as seeding ends, the run recorded
+            writeJson(options.env.PARITY_SEED_OUTPUT, RUN_SEED);
+            process.emit("SIGTERM", "SIGTERM");
+            return { status: null, signal: "SIGTERM", stdout: "", stderr: "" };
+          }
+          return { status: 0, stdout: "", stderr: "" };
+        });
+
+        // Act
+        void runCheck(["--ticket", "42"]);
+        await vi.waitFor(() => expect(exits).toContain(143));
+
+        // Assert
+        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" }, "run files");
+        expect(mocks.removeRuns).toHaveBeenCalledTimes(1);
+      });
+
       it("should leave the run in place when --keep-seed is given", async () => {
         // Arrange
         scriptsSucceed(RUN_SEED);

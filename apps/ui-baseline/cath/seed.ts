@@ -53,14 +53,28 @@ if (isDeployed)
 const seedable = manifest.publications.filter((publication) => publication.paths.cath || (publication.format === "flat-file" && publication.cathListType));
 const run = isDeployed ? newRunToken() : null;
 // Until the record of the run is written, nothing else knows its token, so a run that fails partway
-// (a court that could not be created, say) removes what it seeded as this script ends
+// (a court that could not be created, say) removes what it seeded as this script ends, and so does
+// one stopped partway (the check stopped, by Ctrl+C or the hosted check's time limit, which stop
+// this script with it). The listeners stay until the removal has ended, as in check.ts.
 let isRecorded = false;
-await using _removesUnrecordedRun = {
-  [Symbol.asyncDispose]: async () => {
-    if (run && !isRecorded)
-      await removeRuns(api, { token: run }, runFiles(environment)).catch((error: Error) => console.log(`could not remove run ${run}: ${error.message}`));
-  }
+const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
+const onStop = (signal: keyof typeof stopped) => void removeUnrecordedRun().finally(() => process.exit(stopped[signal]));
+let removal: Promise<void> | undefined;
+const removeUnrecordedRun = (): Promise<void> => {
+  removal ??= (
+    run && !isRecorded
+      ? removeRuns(api, { token: run }, runFiles(environment)).then(
+          () => undefined,
+          (error: Error) => console.log(`could not remove run ${run}: ${error.message}`)
+        )
+      : Promise.resolve()
+  ).finally(() => {
+    for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
+  });
+  return removal;
 };
+await using _removesUnrecordedRun = { [Symbol.asyncDispose]: removeUnrecordedRun };
+if (run) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.on(signal, onStop);
 const locations = run
   ? await createRunLocations(
       api,

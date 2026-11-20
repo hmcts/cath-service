@@ -395,6 +395,29 @@ describe("cath seed script", () => {
       expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [95] }]);
     });
 
+    it("should remove the courts it made when it is stopped before recording the run, then end", async () => {
+      // Arrange
+      const exit = vi.spyOn(process, "exit").mockImplementation((() => undefined) as never);
+      const listenersBefore = process.listenerCount("SIGTERM");
+      fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+        if (url === `${API}/test-support/locations` && init?.method === "POST") {
+          // The court is made, and the check is stopped while CaTH has yet to answer
+          existingLocations.push({ locationId: 96, name: body(init).name });
+          process.emit("SIGTERM", "SIGTERM");
+          return new Promise<Response>(() => {});
+        }
+        return route(url, init);
+      });
+
+      // Act
+      void import("./seed.js");
+
+      // Assert
+      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(143));
+      expect(calls(`${API}/test-support/locations`, "DELETE").map(body)).toEqual([{ locationIds: [96] }]);
+      expect(process.listenerCount("SIGTERM")).toBe(listenersBefore);
+    });
+
     it("should remove the run its previous seed recorded, however recent", async () => {
       // Arrange
       const previous = tokenAt(Date.now() - 60 * 1000);

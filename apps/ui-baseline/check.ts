@@ -267,6 +267,41 @@ const isSeeding = seedIds.length > 0 && !args["no-seed"];
 // sign-in and journeys it passes it to, get a file that is never written, so they neither make
 // records on that run nor remove it.
 const seedFile = path.join(PARITY_DIR, `output/seed/cath-check-${environment.name}${isSeeding || args["no-seed"] ? "" : "-unseeded"}.json`);
+// What the check seeded in a shared CaTH is removed however the check ends: once its files are
+// compared (step 4c), when a later step throws (the disposal below runs as this module's top level
+// ends, as a finally would), or when the check is stopped (the hosted runner's time limit, say).
+// --keep-seed leaves it, and a check of a kept run (--no-seed) leaves that run for the check that
+// next seeds. The run is read from the seed file when it is removed, so a stop while seed.ts is still
+// seeding (which removes a run it has not yet recorded, on the same stop) leaves nothing behind either. A removal that fails does not fail the check: a later check removes the
+// run once it is three hours old.
+// The listeners stay until the removal has ended: a stop that arrives while it is going waits for it,
+// where with no listener left the process would exit at once (tsx's own handler) and cut it short.
+const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
+const onStop = (signal: keyof typeof stopped) => void removeSeed().finally(() => process.exit(stopped[signal]));
+let removal: Promise<void> | undefined;
+const removeSeed = (): Promise<void> => {
+  removal ??= removeSeedOnce().finally(() => {
+    for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
+  });
+  return removal;
+};
+const removeSeedOnce = async (): Promise<void> => {
+  if (!isSeeding || args["keep-seed"]) return;
+  const recorded = await readSeed();
+  if (!recorded?.runToken) return;
+  step("Removing what the check seeded");
+  try {
+    await removeRuns(cathApi(environment.cath.apiUrl), { token: recorded.runToken }, runFiles(environment));
+    await rm(seedFile, { force: true });
+  } catch (error) {
+    console.log(`  could not remove run ${recorded.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
+  }
+};
+await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
+// on, not once: a second signal (a double Ctrl+C, or the hosted check's time limit) then waits for the
+// removal already under way (removeSeed runs it once) instead of ending the process partway through it
+if (isSeeding && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.on(signal, onStop);
+
 if (isSeeding) {
   step("Seeding CaTH");
   progress.start("seed");
@@ -284,39 +319,7 @@ if (isSeeding) {
   if (seedProcess.status !== 0) throw new Error("seeding CaTH failed");
   progress.complete("seed");
 } else progress.skip("seed", args["no-seed"] ? "not asked for" : "nothing to seed");
-const seed = existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
-
-// What the check seeded in a shared CaTH is removed however the check ends: once its files are
-// compared (step 4c), when a later step throws (the disposal below runs as this module's top level
-// ends, as a finally would), or when the check is stopped (the hosted runner's time limit, say).
-// --keep-seed leaves it, and a check of a kept run (--no-seed) leaves that run for the check that
-// next seeds. A removal that fails does not fail the check: a later check removes the
-// run once it is three hours old.
-// The listeners stay until the removal has ended: a stop that arrives while it is going waits for it,
-// where with no listener left the process would exit at once (tsx's own handler) and cut it short.
-const stopped = { SIGTERM: 143, SIGINT: 130 } as const;
-const onStop = (signal: keyof typeof stopped) => void removeSeed().finally(() => process.exit(stopped[signal]));
-let removal: Promise<void> | undefined;
-const removeSeed = (): Promise<void> => {
-  removal ??= removeSeedOnce().finally(() => {
-    for (const signal of Object.keys(stopped)) process.removeListener(signal, onStop);
-  });
-  return removal;
-};
-const removeSeedOnce = async (): Promise<void> => {
-  if (!isSeeding || !seed?.runToken || args["keep-seed"]) return;
-  step("Removing what the check seeded");
-  try {
-    await removeRuns(cathApi(environment.cath.apiUrl), { token: seed.runToken }, runFiles(environment));
-    await rm(seedFile, { force: true });
-  } catch (error) {
-    console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);
-  }
-};
-await using _removesSeed = { [Symbol.asyncDispose]: removeSeed };
-// on, not once: a second signal (a double Ctrl+C, or the hosted check's time limit) then waits for the
-// removal already under way (removeSeed runs it once) instead of ending the process partway through it
-if (isSeeding && seed?.runToken && !args["keep-seed"]) for (const signal of Object.keys(stopped) as (keyof typeof stopped)[]) process.on(signal, onStop);
+const seed = await readSeed();
 
 // ---------- 2b. Sign CaTH's users in, for pages behind sign-in ----------
 const signInFile = path.join(PARITY_DIR, `output/seed/cath-sign-in-${environment.name}.json`);
@@ -667,6 +670,10 @@ progress.complete("evidence");
 await finish();
 
 // ---------- helpers ----------
+async function readSeed(): Promise<SeedResult | null> {
+  return existsSync(seedFile) ? (JSON.parse(await readFile(seedFile, "utf-8")) as SeedResult) : null;
+}
+
 async function runAndCompareJourneys(): Promise<JourneyCompareSummary | null> {
   step("Running pip's journeys in CaTH");
   const moduleFile = path.join(PARITY_DIR, "cath/journeys/index.ts");
