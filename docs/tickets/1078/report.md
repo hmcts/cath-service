@@ -623,7 +623,7 @@ Needs a person: tech lead and PO sign-off on this report, then raising the §7 t
 
 ## Appendix A: Seeded courts vs legacy CaTH court IDs
 
-Source: legacy CaTH reference data export (`referenceData (1).csv`, 367 courts, 686 rows, P&I IDs 1–389; none at or above 100000). Environment: **old CaTH staging** (confirmed by the developer, 2026-11-17). Old CaTH admins chose IDs per environment, so re-check against an old CaTH production export before renumbering anything. Matched on English name, then Welsh name, ignoring case and punctuation. Generated 2026-11-17 for the #1078 report (§1.7, Q1).
+Source: legacy CaTH reference data export (`referenceData.csv`, 367 courts, 686 rows, P&I IDs 1–389; none at or above 100000). Environment: **old CaTH staging** (confirmed by the developer, 2026-11-17). Old CaTH admins chose IDs per environment, so re-check against an old CaTH production export before renumbering anything. Matched on English name, then Welsh name, ignoring case and punctuation. Generated 2026-11-17 for the #1078 report (§1.7, Q1).
 
 | Seeded ID | Seeded name | Legacy P&I ID | Legacy court currently at the seeded ID |
 |---|---|---|---|
