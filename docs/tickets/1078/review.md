@@ -1,6 +1,6 @@
 # Code Review: Issue #1078
 
-This is the seventh pass.
+This is the seventh pass. It cites `draft-ticket-align-court-ids.md`, which has since been folded into report.md §7.2 (S4) and deleted.
 
 I reviewed the uncommitted edits to `report.md` (616 lines), `tasks.md` and `draft-ticket-align-court-ids.md`. I checked the new S4 migration text against the source in this worktree:
 
