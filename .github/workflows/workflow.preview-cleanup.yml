@@ -68,12 +68,17 @@ jobs:
       # 9000), and the release is deleted either way
       - name: Delete the release
         run: |
-          if helm status "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>&1; then
+          # Only "release: not found" means there is nothing to delete; any other failure (expired
+          # credentials, the API not answering) fails the job, rather than leaving the pod running
+          if helm status "${RELEASE_NAME}" --namespace "${NAMESPACE}" >/dev/null 2>/tmp/status.err; then
             helm uninstall "${RELEASE_NAME}" --namespace "${NAMESPACE}"
             echo "- Deleted \`${RELEASE_NAME}\`" >> "$GITHUB_STEP_SUMMARY"
-          else
+          elif grep -q 'release: not found' /tmp/status.err; then
             echo "${RELEASE_NAME} is not installed"
             echo "- \`${RELEASE_NAME}\` was not installed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Could not tell whether ${RELEASE_NAME} is installed: $(tail -1 /tmp/status.err)"
+            exit 1
           fi
 
   image:

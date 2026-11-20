@@ -71,6 +71,9 @@ export function openBlobContainer(storage: StorageSpec): BlobContainer {
       const names: string[] = [];
       for await (const blob of container.listBlobsFlat({ prefix })) names.push(blob.name);
       return names;
+    },
+    async delete(blobName) {
+      await container.getBlobClient(blobName).deleteIfExists();
     }
   };
 }
@@ -91,4 +94,6 @@ export interface BlobContainer {
   uploadFile(blobName: string, file: string, contentType: string): Promise<void>;
   downloadToFile(blobName: string, file: string): Promise<void>;
   list(prefix: string): Promise<string[]>;
+  // Deletes the blob if there is one
+  delete(blobName: string): Promise<void>;
 }

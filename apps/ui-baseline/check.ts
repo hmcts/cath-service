@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { JOURNEY_PUBLICATIONS } from "./cath/journeys/fixtures.js";
-import { cathApi, removeRuns } from "./cath/run.js";
+import { cathApi, removeRuns, runFiles } from "./cath/run.js";
 import type { SignInResult } from "./cath/sign-in.js";
 import { checkParts, confinedPath, httpUrl, JOURNEY, LIST_TYPE, LOCALE, matching, REPO, ROUTE, TICKET } from "./cli-input.js";
 import {
@@ -306,7 +306,7 @@ const removeSeedOnce = async (): Promise<void> => {
   if (!isSeeding || !seed?.runToken || args["keep-seed"]) return;
   step("Removing what the check seeded");
   try {
-    await removeRuns(cathApi(environment.cath.apiUrl), { token: seed.runToken });
+    await removeRuns(cathApi(environment.cath.apiUrl), { token: seed.runToken }, runFiles(environment));
     await rm(seedFile, { force: true });
   } catch (error) {
     console.log(`  could not remove run ${seed.runToken}, so a later check will: ${(error as Error).message.split("\n")[0]}`);

@@ -226,6 +226,9 @@ function memoryStore(): BlobContainer & { blobs: Map<string, Buffer> } {
   const store: Omit<BlobContainer, "downloadVersioned" | "uploadIfUnchanged"> & { blobs: Map<string, Buffer> } = {
     name: "memory",
     blobs,
+    async delete(blobName) {
+      blobs.delete(blobName);
+    },
     async download(blobName) {
       return blobs.get(blobName) ?? null;
     },

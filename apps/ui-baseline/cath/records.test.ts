@@ -591,7 +591,7 @@ describe("testSupportRecordStore", () => {
   describe("ensureUser", () => {
     const user = { email: "u@example.com", firstName: "f", surname: "s", userProvenance: "SSO", userProvenanceId: "p", role: "VERIFIED" };
 
-    it("should return an existing user found by email", async () => {
+    it("should return an existing user found by provenance id, which unlike email is unique", async () => {
       // Arrange
       fetchMock.mockResolvedValueOnce(json({ userId: "u1" }));
 
@@ -600,7 +600,7 @@ describe("testSupportRecordStore", () => {
 
       // Assert
       expect(id).toBe("u1");
-      expect(call(0).url).toBe(`${API}/test-support/users?email=u%40example.com`);
+      expect(call(0).url).toBe(`${API}/test-support/users?userProvenanceId=p`);
     });
 
     it("should create the user when test-support answers 404", async () => {
@@ -623,7 +623,7 @@ describe("testSupportRecordStore", () => {
       const result = store.ensureUser(user);
 
       // Assert
-      await expect(result).rejects.toThrow("GET /test-support/users?email=u%40example.com failed: 500 err");
+      await expect(result).rejects.toThrow("GET /test-support/users?userProvenanceId=p failed: 500 err");
     });
   });
 

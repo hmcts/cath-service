@@ -222,8 +222,9 @@ export function testSupportRecordStore(apiUrl: string, files: BlobContainer): Re
       if (!response.ok) throw new Error(`DELETE /test-support/media-applications/${id} failed: ${response.status}`);
     },
     async ensureUser(user) {
-      // test-support answers 404 for an email with no user
-      const existing = await api<{ userId: string }>("GET", `/users${query({ email: user.email })}`).catch((error: Error) => {
+      // By provenance id, as the local store upserts on it: an email can belong to more than one user.
+      // test-support answers 404 when there is no such user.
+      const existing = await api<{ userId: string }>("GET", `/users${query({ userProvenanceId: user.userProvenanceId })}`).catch((error: Error) => {
         if (error.message.includes("failed: 404")) return null;
         throw error;
       });

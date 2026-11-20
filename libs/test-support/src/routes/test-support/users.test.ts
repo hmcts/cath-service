@@ -7,7 +7,8 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     user: {
       create: vi.fn(),
       deleteMany: vi.fn(),
-      findFirst: vi.fn()
+      findFirst: vi.fn(),
+      findUnique: vi.fn()
     }
   }
 }));
@@ -52,6 +53,37 @@ describe("users routes", () => {
         orderBy: [{ lastSignedInDate: { sort: "desc", nulls: "last" } }, { createdDate: "desc" }]
       });
       expect(mockResponse.json).toHaveBeenCalledWith({ userId: "user-1", email: "parity.admin@example.com", role: "SYSTEM_ADMIN", userProvenance: "SSO" });
+    });
+
+    it("should return the user with that provenance id, which is unique, without looking by email", async () => {
+      // Arrange
+      mockRequest.query = { userProvenanceId: "parity-admin", email: "shared@example.com" };
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        userId: "user-2",
+        email: "shared@example.com",
+        role: "SYSTEM_ADMIN",
+        userProvenance: "SSO"
+      } as any);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { userProvenanceId: "parity-admin" } });
+      expect(prisma.user.findFirst).not.toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith({ userId: "user-2", email: "shared@example.com", role: "SYSTEM_ADMIN", userProvenance: "SSO" });
+    });
+
+    it("should return 404 when no user has that provenance id", async () => {
+      // Arrange
+      mockRequest.query = { userProvenanceId: "nobody" };
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+
+      // Act
+      await GET(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
     });
 
     it("should return 400 when email is missing", async () => {

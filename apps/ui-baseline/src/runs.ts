@@ -35,6 +35,8 @@ const HEARTBEATS_BEFORE_STALE = 3;
 // How often a pod looks at the stored record of a run going on another pod
 const WATCH_MS = 30 * 1000;
 const RESTARTING = "The hosted check is restarting. Start the run again in a few minutes.";
+// A run whose tool said it finished but left nothing to show for it
+const WROTE_NOTHING = "The tool finished but wrote no report or results. The log shows how far it got.";
 // The tool ran to the end: it found nothing, or found differences
 const COMPLETED = new Set([0, EXIT_DIFFERENCES]);
 // Stored runs fetched at once when the pod starts
@@ -137,7 +139,7 @@ export function createRunner(options: RunnerOptions): Runner {
         status: summary ? "finished" : "failed",
         finishedAt: new Date().toISOString(),
         summary,
-        ...(COMPLETED.has(code) ? {} : { error: stoppedBecause(code) })
+        ...(COMPLETED.has(code) ? (summary ? {} : { error: WROTE_NOTHING }) : { error: stoppedBecause(code) })
       });
     } catch (error) {
       await save({ ...(runs.get(record.id) as RunRecord), status: "failed", finishedAt: new Date().toISOString(), error: (error as Error).message });

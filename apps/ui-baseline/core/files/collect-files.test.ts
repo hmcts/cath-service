@@ -13,6 +13,7 @@ function memoryContainer(blobs: Record<string, string>): BlobContainer {
     size: async (name) => (name in blobs ? Buffer.byteLength(blobs[name]) : null),
     upload: async () => {},
     uploadFile: async () => {},
+    delete: async () => {},
     downloadToFile: async () => {},
     list: async () => []
   };

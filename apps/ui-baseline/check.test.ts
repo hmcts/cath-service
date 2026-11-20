@@ -59,7 +59,7 @@ vi.mock("./core/index.js", () => ({
 }));
 vi.mock("./downloads.js", () => ({ captureDownloads: mocks.captureDownloads, loadDownloads: mocks.loadDownloads, seedResolver: mocks.seedResolver }));
 vi.mock("./environments.js", () => ({ filesStorage: mocks.filesStorage, loadEnvironment: mocks.loadEnvironment }));
-vi.mock("./cath/run.js", () => ({ cathApi: (apiUrl: string) => `api at ${apiUrl}`, removeRuns: mocks.removeRuns }));
+vi.mock("./cath/run.js", () => ({ cathApi: (apiUrl: string) => `api at ${apiUrl}`, removeRuns: mocks.removeRuns, runFiles: () => "run files" }));
 vi.mock("./fixtures/manifest.js", () => ({ loadManifest: mocks.loadManifest }));
 vi.mock("./pr-comment.js", async (importOriginal) => ({ ...(await importOriginal<typeof import("./pr-comment.js")>()), postComment: mocks.postComment }));
 vi.mock("./scope.js", async (importOriginal) => ({ ...(await importOriginal<typeof import("./scope.js")>()), ticketText: mocks.ticketText }));
@@ -505,7 +505,7 @@ describe("check", () => {
         await runCheck(["--ticket", "42"]);
 
         // Assert
-        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" });
+        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" }, "run files");
         expect(existsSync(seedFile())).toBe(false);
       });
 
@@ -524,7 +524,7 @@ describe("check", () => {
 
         // Assert
         expect(error?.message).toBe("signing in to CaTH failed");
-        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" });
+        expect(mocks.removeRuns).toHaveBeenCalledWith("api at http://cath-api.test", { token: "uicsm9x2kababcd" }, "run files");
         expect(existsSync(seedFile())).toBe(false);
       });
 

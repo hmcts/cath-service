@@ -2,13 +2,20 @@ import { prisma } from "@hmcts/postgres-prisma";
 import type { Request, Response } from "express";
 import type { CreateUserInput } from "../../types.js";
 
-// Looks a user up by email, e.g. to find the CaTH user a test account's sign-in created
+// Looks a user up by email, e.g. to find the CaTH user a test account's sign-in created, or by its
+// provenance id, which, unlike email, is unique
 export const GET = async (req: Request, res: Response) => {
   try {
-    const { email } = req.query;
+    const { email, userProvenanceId } = req.query;
+
+    if (typeof userProvenanceId === "string" && userProvenanceId) {
+      const user = await prisma.user.findUnique({ where: { userProvenanceId } });
+      if (!user) return res.status(404).json({ error: "User not found" });
+      return res.json({ userId: user.userId, email: user.email, role: user.role, userProvenance: user.userProvenance });
+    }
 
     if (typeof email !== "string" || !email) {
-      return res.status(400).json({ error: "email is required" });
+      return res.status(400).json({ error: "email or userProvenanceId is required" });
     }
 
     // Email is not unique (an account can have rows from more than one sign-in provider), so the

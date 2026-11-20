@@ -122,6 +122,21 @@ describe("createRunner", () => {
     expect(order).toEqual(["start /a", "end /a", "start /b", "end /b"]);
   });
 
+  it("should say why a run failed when its tool finished but wrote no report", async () => {
+    // Arrange
+    const { runner } = await runnerWith();
+
+    // Act
+    const run = runner.start({ kind: "check", scope: "all" });
+    await runner.idle();
+
+    // Assert
+    expect(runner.get(run.id)).toMatchObject({
+      status: "failed",
+      error: "The tool finished but wrote no report or results. The log shows how far it got."
+    });
+  });
+
   it("should leave out of a check of everything the parts it is asked to", async () => {
     // Arrange
     const { runner, execute } = await runnerWith();
@@ -190,6 +205,7 @@ describe("createRunner", () => {
       size: async () => null,
       upload: async () => {},
       uploadFile: async () => {},
+      delete: async () => {},
       downloadToFile: async () => {}
     });
     const runner = createRunner({
@@ -222,6 +238,7 @@ describe("createRunner", () => {
         uploads[name] = data.toString("utf-8");
       },
       uploadFile: async () => {},
+      delete: async () => {},
       downloadToFile: async () => {}
     });
     const runner = createRunner({
@@ -528,6 +545,7 @@ function memoryStore() {
     uploadFile: async (name: string, file: string) => {
       blobs.set(name, await readFile(file));
     },
+    delete: async () => {},
     downloadToFile: async (name: string, file: string) => {
       await writeFile(file, blobs.get(name) as Buffer);
     }
@@ -551,6 +569,7 @@ describe("createRunner when pods are replaced", () => {
           if (name.endsWith(".json")) uploads.push({ name, record: JSON.parse(data.toString("utf-8")) });
         },
         uploadFile: async () => {},
+        delete: async () => {},
         downloadToFile: async () => {}
       })
     };

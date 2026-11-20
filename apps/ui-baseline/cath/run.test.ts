@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { CATH_RUN_TOKEN, newRunToken, removeRuns } from "./run.js";
+import { CATH_RUN_TOKEN, newRunToken, type RunFiles, removeRuns } from "./run.js";
 
 describe("newRunToken", () => {
   it("should make a token the run's courts can be found by", () => {
@@ -36,6 +36,7 @@ describe("removeRuns", () => {
           { locationId: 92, name: `${OTHER} Oxford Combined Court Centre` },
           { locationId: 9, name: "Single Justice Procedure" }
         ];
+      if (endpoint === "/test-support/artefacts?locationId=91" && method === "GET") return [{ artefactId: "a1" }];
       if (endpoint.startsWith("/test-support/media-applications?"))
         return endpoint.includes(encodeURIComponent(`${RUN}.`)) ? { id: "m1" } : Promise.reject(new Error("GET failed: 404"));
       if (endpoint === "/test-support/legacy-third-party-users" && method === "GET")
@@ -70,6 +71,61 @@ describe("removeRuns", () => {
       '/test-support/subscriptions {"searchType":"LOCATION_ID","searchValues":["91"]}',
       '/test-support/locations {"locationIds":[91]}'
     ]);
+  });
+
+  // A run's files in CaTH's storage, beside files of other publications
+  function fakeFiles(fail = false) {
+    const removed: string[] = [];
+    const container = (names: string[]) => {
+      const blobs = new Set(names);
+      return {
+        blobs,
+        list: async (prefix: string) => [...blobs].filter((name) => name.startsWith(prefix)),
+        delete: async (name: string) => {
+          if (fail) throw new Error("storage is down");
+          removed.push(name);
+          blobs.delete(name);
+        }
+      };
+    };
+    const artefacts = container(["a1", "b9"]);
+    const publications = container(["a1.pdf", "a1_cy.pdf", "a1.xlsx", "b9.pdf"]);
+    return { files: { artefacts, publications } as unknown as RunFiles, artefacts, publications, removed };
+  }
+
+  it("should remove what was published to a run's courts from storage too, before its database rows", async () => {
+    // Arrange
+    const { api } = fakeApi();
+    const { files, artefacts, publications, removed } = fakeFiles();
+    const order: string[] = [];
+
+    // Act
+    await removeRuns(
+      async (method, endpoint, body) => {
+        if (method === "DELETE" && endpoint === "/test-support/artefacts") order.push(`rows after ${removed.length} files`);
+        return api(method, endpoint, body);
+      },
+      { token: RUN },
+      files
+    );
+
+    // Assert
+    expect([...artefacts.blobs]).toEqual(["b9"]);
+    expect([...publications.blobs]).toEqual(["b9.pdf"]);
+    expect(order).toEqual(["rows after 4 files"]);
+  });
+
+  it("should leave a run's rows for a later run when its files cannot be removed", async () => {
+    // Arrange
+    const { api, calls } = fakeApi();
+    const { files } = fakeFiles(true);
+
+    // Act
+    const removing = removeRuns(api, { token: RUN }, files);
+
+    // Assert
+    await expect(removing).rejects.toThrow("storage is down");
+    expect(calls.some((call) => call.method === "DELETE" && call.endpoint === "/test-support/artefacts")).toBe(false);
   });
 
   it("should try every run and then name the ones it could not remove", async () => {

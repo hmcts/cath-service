@@ -5,7 +5,7 @@ import { parseArgs } from "node:util";
 import { convertExcelForListTypeName, validateListTypeJson } from "@hmcts/list-types-common";
 import { type Environment, loadEnvironment } from "../environments.js";
 import { loadManifest, type PublicationFixture, publicationMetadata, readPayload, type SeedResult } from "../fixtures/manifest.js";
-import { cathApi, createRunLocations, newRunToken, removeRuns } from "./run.js";
+import { cathApi, createRunLocations, newRunToken, removeRuns, runFiles } from "./run.js";
 
 // Seeds CaTH with the same publications and metadata as apps/ui-baseline/pip/seed.ts.
 // A deployed CaTH (--env aat) is shared, so, as CaTH's own E2E tests do, each run publishes through
@@ -45,7 +45,10 @@ await removePreviousSeed();
 // Runs that ended without removing what they seeded (the pod restarted, say), however old the file
 // that recorded them; never one recent enough to still be going. One that cannot be removed now is
 // left for a later run: it must not stop this one.
-if (deployed) await removeRuns(api, { staleAt: Date.now() }).catch((error: Error) => console.log(`left for a later run: ${error.message.split("\n")[0]}`));
+if (deployed)
+  await removeRuns(api, { staleAt: Date.now() }, runFiles(environment)).catch((error: Error) =>
+    console.log(`left for a later run: ${error.message.split("\n")[0]}`)
+  );
 // A flat file has no page of its own: CaTH lists it on the court's summary of publications
 const seedable = manifest.publications.filter((publication) => publication.paths.cath || (publication.format === "flat-file" && publication.cathListType));
 const run = deployed ? newRunToken() : null;
@@ -54,7 +57,8 @@ const run = deployed ? newRunToken() : null;
 let isRecorded = false;
 await using _removesUnrecordedRun = {
   [Symbol.asyncDispose]: async () => {
-    if (run && !isRecorded) await removeRuns(api, { token: run }).catch((error: Error) => console.log(`could not remove run ${run}: ${error.message}`));
+    if (run && !isRecorded)
+      await removeRuns(api, { token: run }, runFiles(environment)).catch((error: Error) => console.log(`could not remove run ${run}: ${error.message}`));
   }
 };
 const locations = run
@@ -259,7 +263,9 @@ async function removePreviousSeed(): Promise<void> {
   // so the stale sweep below removes it once it is old enough: it must not stop this run, or every
   // run after it.
   if (previous.runToken) {
-    await removeRuns(api, { token: previous.runToken }).catch((error: Error) => console.log(`left for a later run: ${error.message.split("\n")[0]}`));
+    await removeRuns(api, { token: previous.runToken }, runFiles(environment)).catch((error: Error) =>
+      console.log(`left for a later run: ${error.message.split("\n")[0]}`)
+    );
   } else {
     const artefactIds = Object.values(previous.publications).map((publication) => publication.artefactId);
     if (artefactIds.length) await api("DELETE", "/test-support/artefacts", { artefactIds });

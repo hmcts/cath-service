@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { locationData } from "@hmcts/location/location-data";
+import { type BlobContainer, openBlobContainer } from "../core/index.js";
+import { type Environment, filesStorage } from "../environments.js";
 
 // A check of a deployed CaTH (aat) seeds courts of its own rather than publishing to the real ones:
 // each fixture court is copied under a name marked with the run's token ("uicsm9x2kab Oxford Combined
@@ -54,7 +56,7 @@ export async function createRunLocations(api: CathApi, token: string, fixtureLoc
 // Removes what runs seeded on their courts, then the courts: the run with this token, or every run
 // started more than STALE_AFTER_MS ago. A run that cannot be removed does not stop the others; it is
 // named in the error thrown once they have all been tried.
-export async function removeRuns(api: CathApi, which: { token: string } | { staleAt: number }): Promise<number> {
+export async function removeRuns(api: CathApi, which: { token: string } | { staleAt: number }, files?: RunFiles): Promise<number> {
   const locations = (await api("GET", "/test-support/locations")) as { locationId: number; name: string }[];
   const byRun = new Map<string, number[]>();
   for (const location of locations) {
@@ -71,7 +73,10 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
     try {
       await removeRunRecords(api, token, records);
       // The courts go last: while any are left, a later run can find the run and finish removing it
-      for (const locationId of locationIds) await api("DELETE", "/test-support/artefacts", { locationId: String(locationId) });
+      for (const locationId of locationIds) {
+        if (files) await removePublicationFiles(api, files, locationId);
+        await api("DELETE", "/test-support/artefacts", { locationId: String(locationId) });
+      }
       await api("DELETE", "/test-support/subscriptions", { searchType: SUBSCRIPTION_BY_LOCATION, searchValues: locationIds.map(String) });
       await api("DELETE", "/test-support/locations", { locationIds });
       console.log(`removed run ${token}: ${locationIds.length} courts and what was published to them`);
@@ -81,6 +86,30 @@ export async function removeRuns(api: CathApi, which: { token: string } | { stal
   }
   if (failed.length) throw new Error(`could not remove run${failed.length === 1 ? "" : "s"} ${failed.join(", ")}`);
   return byRun.size;
+}
+
+// CaTH's storage for the files of what a run publishes, or none when the environment names no storage,
+// when only the database rows are removed
+export function runFiles(environment: Environment): RunFiles | undefined {
+  try {
+    return {
+      artefacts: openBlobContainer(filesStorage("cath", environment.cath, "artefact")),
+      publications: openBlobContainer(filesStorage("cath", environment.cath))
+    };
+  } catch (error) {
+    console.log(`  the files of what runs publish are left in storage: ${(error as Error).message}`);
+    return undefined;
+  }
+}
+
+// The files CaTH stored for what was published to a court: each publication's payload (in the artefact
+// container) and the PDF and Excel files made from it (in publications), all named by its artefact
+// id. The test-support delete removes only the database rows. Removed before the rows, so a removal
+// that fails partway can be finished by a later run, which still finds the ids.
+async function removePublicationFiles(api: CathApi, files: RunFiles, locationId: number): Promise<void> {
+  const artefacts = (await api("GET", `/test-support/artefacts?locationId=${encodeURIComponent(String(locationId))}`)) as { artefactId: string }[];
+  for (const { artefactId } of artefacts)
+    for (const container of [files.artefacts, files.publications]) for (const name of await container.list(artefactId)) await container.delete(name);
 }
 
 // When the run with this token started, from the seconds it carries
@@ -119,6 +148,12 @@ async function removeRunRecords(api: CathApi, token: string, records: RunRecordL
 
 // A call to CaTH's API (test-support), giving back its JSON
 export type CathApi = (method: string, endpoint: string, body?: unknown) => Promise<unknown>;
+
+// Where CaTH keeps the files of what is published (environments.ts filesStorage)
+export interface RunFiles {
+  artefacts: BlobContainer;
+  publications: BlobContainer;
+}
 
 export function cathApi(apiUrl: string): CathApi {
   return async (method, endpoint, body) => {
