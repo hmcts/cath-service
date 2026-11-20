@@ -482,6 +482,9 @@ depends on one of these, check that part by hand and say so in the PR.
 - **The order of a page's text is not compared.** Headings, text and links are compared by what
   there is and how many times, so a paragraph CaTH shows in another place on the page, with the
   same words, is not reported. Tables are compared row by row, in order.
+- **Recording from pip test notifies its subscribers.** pip-data-management triggers subscriptions
+  on every upload, so the fixture lists a recording seeds go to pip test's existing email and
+  third-party subscribers. Agree a recording with the pip team first.
 - **Accessibility checks see what a capture records, not how a page behaves.** See
   [Checking accessibility](#checking-accessibility) for what still needs testing by hand.
 - **Only verified users' pages are compared signed in, in aat.** Checks sign in through CFT IDAM
