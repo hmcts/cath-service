@@ -7,14 +7,17 @@ export const GET = async (req: Request, res: Response) => {
     const artefactId = getParam(req.params, "artefactId");
 
     const artefact = await prisma.artefact.findUnique({
-      where: { artefactId }
+      where: { artefactId },
+      include: { listType: { select: { name: true } } }
     });
 
     if (!artefact) {
       return res.status(404).json({ error: "Artefact not found" });
     }
 
-    return res.json(artefact);
+    // listTypeName, as the list type's id differs between environments
+    const { listType, ...row } = artefact;
+    return res.json({ ...row, listTypeName: listType.name });
   } catch (error) {
     console.error("Error fetching artefact:", error);
     return res.status(500).json({ error: "Failed to fetch artefact" });

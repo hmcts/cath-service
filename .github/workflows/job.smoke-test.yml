@@ -17,6 +17,11 @@ on:
         type: boolean
         description: "Run the publication upload smoke spec (needs test-support enabled on the API)"
         default: false
+      ui-baseline-url:
+        required: false
+        type: string
+        default: ""
+        description: "Where the hosted parity check is, when the deploy deployed it (a release of its own)"
 
 # The publication smoke step needs repo secrets AZURE_CLIENT_ID and AZURE_TENANT_ID (CI OIDC identity),
 # passed via secrets: inherit, plus Key Vault cath-bootstrap-aat secrets app-tenant,
@@ -84,6 +89,26 @@ jobs:
           else
             echo "No web URL found, skipping web health check"
           fi
+
+      # The hosted parity check (apps/ui-baseline), when this deploy deployed it. A failure is a warning:
+      # ui-baseline is a test tool, and its deploy never fails CaTH's either (job.helm-deploy.yml).
+      - name: Health check - UI baseline
+        if: inputs.ui-baseline-url != ''
+        env:
+          UI_BASELINE_URL: ${{ inputs.ui-baseline-url }}
+        run: |
+          HEALTH_URL="${UI_BASELINE_URL}/health"
+          echo "Checking ui-baseline health: ${HEALTH_URL}"
+          for i in $(seq 1 10); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${HEALTH_URL}" || echo "000")
+            echo "Attempt ${i}/10: HTTP Status ${HTTP_STATUS}"
+            if [ "${HTTP_STATUS}" = "200" ]; then
+              echo "ui-baseline is healthy"
+              exit 0
+            fi
+            if [ "${i}" -lt 10 ]; then sleep 10; fi
+          done
+          echo "::warning::The hosted parity check (ui-baseline) did not answer at ${HEALTH_URL}. CaTH itself is unaffected."
 
       - name: Health check - API
         run: |

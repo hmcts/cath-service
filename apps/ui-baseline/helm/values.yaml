@@ -1,0 +1,44 @@
+nodejs:
+  # A release of its own (job.helm-deploy.yml), named <cath-service release>-ui-baseline, so its
+  # resources keep the names they had as part of that release
+  releaseNameOverride: "{{ .Release.Name }}"
+  applicationPort: 8090
+  aadIdentityName: cath
+  ingressHost: cath-ui-baseline.{{ .Values.global.environment }}.platform.hmcts.net
+  image: 'hmctsprod.azurecr.io/cath/cath-ui-baseline:latest'
+  # Checks run one at a time in this pod's queue, so one replica; Chromium needs the memory
+  replicas: 1
+  autoscaling:
+    enabled: false
+  # Idle between checks and CPU-bound during one (axe and rendering in Chromium), so a small
+  # request with a limit it can burst to, as other CFT pods with bursty load set them. A check
+  # captures UI_BASELINE_CONCURRENCY pages at once: about one and a half per CPU of the limit, as
+  # captures also wait on CaTH. Raise the two together. Deployed by GitHub Actions without
+  # global.devMode, so these keys apply, not the dev* ones.
+  # Long enough for a run going when the pod is replaced (a master merge that rebuilds its image) to finish: its
+  # time limit (src/runs.ts, 120 minutes), the 2 it has to stop after that, and 28 for what the limit
+  # does not count: fetching the baseline before the check, and archiving and storing the run after
+  terminationGracePeriodSeconds: 9000
+  memoryRequests: 1Gi
+  memoryLimits: 4Gi
+  cpuRequests: 500m
+  cpuLimits: 4000m
+  environment:
+    NODE_ENV: 'production'
+    UI_BASELINE_ENV: aat
+    UI_BASELINE_CONCURRENCY: '6'
+  # Only secrets every environment it runs in has: a missing one stops the pod starting. The IDAM
+  # test account for signed-in pages is read from the vault when a check needs it
+  # (environments.json names it), so it needs no change here. There is no sign-in to the app itself:
+  # its host is in the private DNS zone, so only people on the VPN can reach it.
+  keyVaults:
+    cath:
+      secrets:
+        - name: storageaccount-connection-string
+          alias: CATH_STORAGE_CONNECTION_STRING
+        - name: cath-service-api-client-id
+          alias: CATH_SERVICE_API_CLIENT_ID
+        - name: cath-service-api-client-secret
+          alias: CATH_SERVICE_API_CLIENT_SECRET
+        - name: app-tenant
+          alias: APP_TENANT
