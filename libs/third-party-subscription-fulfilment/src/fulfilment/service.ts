@@ -1,4 +1,5 @@
 import { getLocationWithDetails } from "@hmcts/location";
+import type { ThirdPartyUserStatus } from "@hmcts/third-party-user";
 import { loadFlatFile } from "../delivery/flat-file.js";
 import { type DeliveryRequest, sendRequest } from "../delivery/http-client.js";
 import { buildMultipartBody, type MultipartPart } from "../delivery/multipart.js";
@@ -8,6 +9,7 @@ import { getDestinationUrl } from "../oauth/oauth-config.js";
 import { type FulfilmentArtefact, findArtefactForFulfilment, findListTypeName, findMatchingSubscriptions, type Subscriber } from "./queries.js";
 
 const DEFAULT_LOG_PREFIX = "[ThirdPartySubscriptionFulfilment]";
+const ACTIVE_STATUS: ThirdPartyUserStatus = "ACTIVE";
 const TIME_ZONE = "Europe/London";
 const JSON_CONTENT_TYPE = "application/json";
 // Legacy sends the file as a ByteArrayResource with no filename, which Spring always types as octet-stream
@@ -101,11 +103,17 @@ async function findSubscribers(listTypeName: string, sensitivity: string, artefa
   const allowedSensitivities = ALLOWED_SUBSCRIPTION_SENSITIVITIES[sensitivity] ?? [];
   const subscribers = allowedSensitivities.length > 0 ? await findMatchingSubscriptions(listTypeName, allowedSensitivities) : [];
 
-  if (subscribers.length === 0) {
+  // Legacy ThirdPartySubscriptionNotificationService only pushes to ACTIVE subscribers
+  const activeSubscribers = subscribers.filter((subscriber) => subscriber.status === ACTIVE_STATUS);
+  for (const { id: userId, status } of subscribers.filter((subscriber) => subscriber.status !== ACTIVE_STATUS)) {
+    console.info(`${logPrefix} Third-party subscriber skipped: status is not ACTIVE`, { userId, status, artefactId });
+  }
+
+  if (activeSubscribers.length === 0) {
     console.info(`${logPrefix} Third-party fulfilment skipped: no matching subscribers`, { artefactId, listTypeName, sensitivity });
   }
 
-  return subscribers;
+  return activeSubscribers;
 }
 
 async function buildContentPart(artefact: FulfilmentArtefact, jsonData: unknown, logPrefix: string): Promise<MultipartPart | null> {
