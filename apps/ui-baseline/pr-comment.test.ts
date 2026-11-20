@@ -294,7 +294,8 @@ describe("pr-comment", () => {
     it("should create a comment when the PR has no parity comment", () => {
       // Arrange
       vi.mocked(execFileSync)
-        .mockReturnValueOnce(JSON.stringify([[{ id: 1, body: "Unrelated", html_url: "u1" }]]))
+        .mockReturnValueOnce("dev-a\n")
+        .mockReturnValueOnce(JSON.stringify([[{ id: 1, body: "Unrelated", html_url: "u1", user: { login: "dev-a" } }]]))
         .mockReturnValueOnce(JSON.stringify({ html_url: "https://github.com/c/new" }));
 
       // Act
@@ -302,10 +303,28 @@ describe("pr-comment", () => {
 
       // Assert
       expect(url).toBe("https://github.com/c/new");
-      expect(execFileSync).toHaveBeenNthCalledWith(1, "gh", ["api", "repos/hmcts/cath-service/issues/7/comments", "--paginate", "--slurp"], {
+      expect(execFileSync).toHaveBeenNthCalledWith(1, "gh", ["api", "user", "--jq", ".login"], { encoding: "utf-8" });
+      expect(execFileSync).toHaveBeenNthCalledWith(2, "gh", ["api", "repos/hmcts/cath-service/issues/7/comments", "--paginate", "--slurp"], {
         encoding: "utf-8"
       });
-      expect(execFileSync).toHaveBeenNthCalledWith(2, "gh", ["api", "--method", "POST", "repos/hmcts/cath-service/issues/7/comments", "-f", "body=body"], {
+      expect(execFileSync).toHaveBeenNthCalledWith(3, "gh", ["api", "--method", "POST", "repos/hmcts/cath-service/issues/7/comments", "-f", "body=body"], {
+        encoding: "utf-8"
+      });
+    });
+
+    it("should post a comment of its own rather than edit the parity comment another user posted", () => {
+      // Arrange
+      vi.mocked(execFileSync)
+        .mockReturnValueOnce("dev-a\n")
+        .mockReturnValueOnce(JSON.stringify([[{ id: 42, body: `${COMMENT_MARKER}\ntheirs`, html_url: "u42", user: { login: "dev-b" } }]]))
+        .mockReturnValueOnce(JSON.stringify({ html_url: "https://github.com/c/mine" }));
+
+      // Act
+      const url = postComment("hmcts/cath-service", 7, "body");
+
+      // Assert
+      expect(url).toBe("https://github.com/c/mine");
+      expect(execFileSync).toHaveBeenNthCalledWith(3, "gh", ["api", "--method", "POST", "repos/hmcts/cath-service/issues/7/comments", "-f", "body=body"], {
         encoding: "utf-8"
       });
     });
@@ -313,7 +332,13 @@ describe("pr-comment", () => {
     it("should update the marked comment when the PR already has one, on whichever page of comments it is", () => {
       // Arrange
       vi.mocked(execFileSync)
-        .mockReturnValueOnce(JSON.stringify([[{ id: 1, body: "Unrelated", html_url: "u1" }], [{ id: 99, body: `${COMMENT_MARKER}\nold`, html_url: "u99" }]]))
+        .mockReturnValueOnce("dev-a\n")
+        .mockReturnValueOnce(
+          JSON.stringify([
+            [{ id: 1, body: "Unrelated", html_url: "u1", user: { login: "dev-a" } }],
+            [{ id: 99, body: `${COMMENT_MARKER}\nold`, html_url: "u99", user: { login: "dev-a" } }]
+          ])
+        )
         .mockReturnValueOnce(JSON.stringify({ html_url: "https://github.com/c/99" }));
 
       // Act
@@ -322,7 +347,7 @@ describe("pr-comment", () => {
       // Assert
       expect(url).toBe("https://github.com/c/99");
       expect(execFileSync).toHaveBeenNthCalledWith(
-        2,
+        3,
         "gh",
         ["api", "--method", "PATCH", "repos/hmcts/cath-service/issues/comments/99", "-f", "body=new body"],
         {

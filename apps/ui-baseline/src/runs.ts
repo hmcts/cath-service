@@ -492,8 +492,10 @@ export function createRunner(options: RunnerOptions): Runner {
         runs.set(record.id, record);
         return;
       }
-      // Still going on another pod (the one this one is replacing): left to finish there, and watched
-      if (stillGoing(record, staleMs)) {
+      // Still going on another pod (the one this one is replacing): left to finish there, and watched.
+      // One this pod's name owns was this pod's before its container restarted (out of memory, say):
+      // nothing is running it now, however recent its heartbeat, so it is interrupted at once.
+      if (stillGoing(record, staleMs) && record.owner !== pod) {
         runs.set(record.id, record);
         watch(store, record.id);
         return;

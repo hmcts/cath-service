@@ -26,7 +26,7 @@ REPO_DIR="$(cd "$PARITY_DIR/../.." && pwd)"
 # The repo's own tsx, by its path: npx could install a package on demand and run its scripts
 TSX="$REPO_DIR/node_modules/.bin/tsx"
 # A field of a JSON file (a mktemp file has no .json extension, so it is read rather than required)
-json_field() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]])' "$1" "$2"; }
+json_field() { node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1], "utf-8"))[process.argv[2]])' "$1" "$2"; }
 SCOPE_ARGS=()
 POSITIONAL=()
 ENV_NAME=local
@@ -88,7 +88,7 @@ wait_for() {
 export UI_BASELINE_PIP_ENV="$ENV_NAME"
 if [ "$ENV_NAME" != local ]; then
   # Where the deployed pip is, from environments.json
-  PIP_FRONTEND_URL="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip.baseUrl)' "$PARITY_DIR/environments.json" "$ENV_NAME")"
+  PIP_FRONTEND_URL="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip.baseUrl)' "$PARITY_DIR/environments.json" "$ENV_NAME")"
   cd "$REPO_DIR"
   # However the recording ends, what it seeded goes (and so does anything an earlier run left)
   trap 'step "Cleaning up what the recording seeded in pip $ENV_NAME"; "$TSX" apps/ui-baseline/pip/cleanup.ts --env "$ENV_NAME" || echo "Cleanup failed: run tsx apps/ui-baseline/pip/cleanup.ts --env $ENV_NAME again." >&2' EXIT
@@ -98,8 +98,8 @@ if [ "$ENV_NAME" != local ]; then
   "$TSX" apps/ui-baseline/pip/seed.ts --env "$ENV_NAME"
   cp apps/ui-baseline/output/seed/pip.json "$OUT/seed.json"
   # What the environment runs: pip-frontend's /info has no commit, the APIs' do
-  api_commit() { curl -sf "$1/info" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build.commit.slice(0,8))}catch{console.log("unknown")}})'; }
-  env_url() { node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip[process.argv[3]])' "$PARITY_DIR/environments.json" "$ENV_NAME" "$1"; }
+  api_commit() { curl -sf "$1/info" | node --input-type=module -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).build.commit.slice(0,8))}catch{console.log("unknown")}})'; }
+  env_url() { node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1], "utf-8"))[process.argv[2]].pip[process.argv[3]])' "$PARITY_DIR/environments.json" "$ENV_NAME" "$1"; }
   PIP_COMMITS="pip-frontend@$ENV_NAME+pip-data-management@$(api_commit "$(env_url dataManagementUrl)")+pip-account-management@$(api_commit "$(env_url accountManagementUrl)")"
 else
   "$PARITY_DIR/pip/setup.sh" "$PIP_SRC"
@@ -182,7 +182,7 @@ record_step downloads apps/ui-baseline/pip/record-downloads.ts "$OUT/downloads"
 
 step "Running journeys"
 JOURNEYS=""
-[ -n "${UI_BASELINE_SCOPE:-}" ] && JOURNEYS="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf-8")).journeys.join(","))' "$UI_BASELINE_SCOPE")"
+[ -n "${UI_BASELINE_SCOPE:-}" ] && JOURNEYS="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1], "utf-8")).journeys.join(","))' "$UI_BASELINE_SCOPE")"
 if [ "$ENV_NAME" != local ]; then
   echo "not run against a deployed pip"
   empty_index "$OUT/journeys"
@@ -197,8 +197,9 @@ else
 fi
 
 step "Writing run summary"
-node -e '
-const fs = require("node:fs"), path = require("node:path");
+node --input-type=module -e '
+import fs from "node:fs";
+import path from "node:path";
 const out = process.argv[1];
 const lines = (file) => fs.existsSync(file) ? fs.readFileSync(file, "utf-8").trim().split("\n").filter(Boolean).map((line) => JSON.parse(line)) : [];
 // Every capture a step was asked for, as captureBatch expands the targets file: a page in each of its

@@ -79,7 +79,7 @@ describe("cath sign-in script", () => {
     expect(mocks.signInWithSessions).toHaveBeenCalledWith(USERS);
     expect(mocks.seedRecords).toHaveBeenCalledWith(store, SIGN_INS.cathUsers);
     expect(mocks.disconnect).toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledWith("http://api/test-support/list-types");
+    expect(fetchMock).toHaveBeenCalledWith("http://api/test-support/list-types", expect.objectContaining({ method: "GET" }));
     const written = JSON.parse(await readFile(output, "utf-8"));
     expect(written).toEqual({
       signedInAt: expect.any(String),
@@ -91,6 +91,21 @@ describe("cath sign-in script", () => {
     });
     expect(console.log).toHaveBeenCalledWith("not signed in: verified-media: no VERIFIED test account configured");
     expect(console.log).toHaveBeenCalledWith(`signed in 1 users and ensured 1 records → ${output}`);
+  });
+
+  it("should say what CaTH answered when it refuses the list types, rather than fail to read a page as JSON", async () => {
+    // Arrange
+    process.argv = ["node", "sign-in.ts"];
+    mocks.loadEnvironment.mockResolvedValue({ name: "local", cath: { signIn: "session", apiUrl: "http://api" } });
+    mocks.signInWithSessions.mockResolvedValue(SIGN_INS);
+    mocks.prismaRecordStore.mockResolvedValue({ kind: "prisma" });
+    fetchMock.mockResolvedValue(new Response("<html>Bad Gateway</html>", { status: 502 }));
+
+    // Act
+    const signingIn = import("./sign-in.js");
+
+    // Assert
+    await expect(signingIn).rejects.toThrow("GET /test-support/list-types failed: 502");
   });
 
   it("should sign in as test accounts and use test-support for a deployed CaTH", async () => {

@@ -1119,6 +1119,24 @@ describe("createRunner when pods are replaced", () => {
     vi.useRealTimers();
   });
 
+  it("should mark a run this pod owned before its container restarted as interrupted at once, however recent its heartbeat", async () => {
+    // Arrange
+    const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));
+    const { store, blobs } = sharedStore();
+    const justNow = new Date().toISOString();
+    const record = { id: "r8", kind: "check", scope: "all", status: "running", createdAt: justNow, heartbeatAt: justNow, owner: "same-pod" };
+    blobs.set("runs/r8.json", Buffer.from(JSON.stringify(record)));
+    const runner = createRunner({ dataDir, repoDir: "/repo", environment: "test", commit: "x", store, baseline, execute: async () => 0, pod: "same-pod" });
+
+    // Act
+    await runner.restore();
+
+    // Assert
+    expect(runner.get("r8")).toMatchObject({ status: "failed", error: "interrupted" });
+    expect(JSON.parse((blobs.get("runs/r8.json") as Buffer).toString("utf-8"))).toMatchObject({ status: "failed", error: "interrupted" });
+    runner.stopWatching();
+  });
+
   it("should give up on marking a run interrupted when storage stops answering, rather than wait forever", async () => {
     // Arrange
     const dataDir = await mkdtemp(path.join(tmpdir(), "runs-"));

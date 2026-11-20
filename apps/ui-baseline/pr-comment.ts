@@ -99,14 +99,16 @@ export function buildComment(input: CommentInput): string {
     .join("\n");
 }
 
-// Creates the parity comment on the PR, or updates it if one exists
+// Creates the parity comment on the PR, or updates the one the signed-in user posted before. Another
+// user's (a teammate's check) is left alone: GitHub refuses to let anyone else edit it.
 export function postComment(repo: string, pr: number, body: string): string {
+  const login = execFileSync(systemCommand("gh"), ["api", "user", "--jq", ".login"], { encoding: "utf-8" }).trim();
   // --slurp gives one array of pages; without it gh prints each page's array after the last, which is not JSON
   const pages = JSON.parse(
     execFileSync(systemCommand("gh"), ["api", `repos/${repo}/issues/${pr}/comments`, "--paginate", "--slurp"], { encoding: "utf-8" })
-  ) as { id: number; body: string; html_url: string }[][];
+  ) as { id: number; body: string; html_url: string; user?: { login: string } }[][];
   const comments = pages.flat();
-  const existing = comments.find((comment) => comment.body.includes(COMMENT_MARKER));
+  const existing = comments.find((comment) => comment.body.includes(COMMENT_MARKER) && comment.user?.login === login);
   const response = existing
     ? execFileSync(systemCommand("gh"), ["api", "--method", "PATCH", `repos/${repo}/issues/comments/${existing.id}`, "-f", `body=${body}`], {
         encoding: "utf-8"

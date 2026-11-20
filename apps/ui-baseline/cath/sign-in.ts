@@ -6,6 +6,7 @@ import { openBlobContainer } from "../core/index.js";
 import { filesStorage, loadEnvironment } from "../environments.js";
 import { loadUsers, type SeedResult } from "../fixtures/manifest.js";
 import { prismaRecordStore, type SeedRecords, seedRecords, testSupportRecordStore } from "./records.js";
+import { cathApi } from "./run.js";
 import type { SignedInUser } from "./sign-ins.js";
 
 // Signs CaTH's fixture users in, so pages behind sign-in are captured as the user pip's baseline
@@ -48,9 +49,10 @@ if (isDeployed && !run) console.log("no records created: nothing was seeded, so 
 const records = !isDeployed ? await seedRecords(store, signIns.cathUsers) : run ? await seedRecords(store, signIns.cathUsers, run) : {};
 if (environment.cath.signIn === "session") await (await import("@hmcts/postgres-prisma")).prisma.$disconnect();
 
-// Looked up by name, never assumed: list type ids differ between environments
+// Looked up by name, never assumed: list type ids differ between environments. Through cathApi, so a
+// refusal (a 502 page while CaTH deploys) is reported by its status, not as JSON that will not parse
 const listTypes = Object.fromEntries(
-  ((await (await fetch(`${environment.cath.apiUrl}/test-support/list-types`)).json()) as { id: number; name: string }[]).map((listType) => [
+  ((await cathApi(environment.cath.apiUrl)("GET", "/test-support/list-types")) as { id: number; name: string }[]).map((listType) => [
     listType.name,
     String(listType.id)
   ])
