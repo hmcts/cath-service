@@ -276,11 +276,13 @@ and api with it. On its own, only ui-baseline rolls back, and the deploy goes on
 
 The apps deployed to preview and aat only are listed once, in
 [`.github/workflows/jobs/unpromoted-apps`](../../.github/workflows/jobs/unpromoted-apps). That list
-keeps ui-baseline out of the image builds of pull requests that could not have changed its image
-(it uses most of the workspace's libraries, so Turborepo calls it affected by nearly every one),
-out of promotion to prod, and out of the images demo, ithc and perftest look up. ui-baseline declares every workspace
-library it uses, including each list type it seeds with, so a change to any of them rebuilds its
-image on master (`package.test.ts` keeps the list complete).
+keeps ui-baseline out of the image builds of pull requests and master merges that could not have
+changed its image (through the libraries it uses, it depends on most of the workspace, so Turborepo
+calls it affected by nearly every one), out of promotion to prod, and out of the images demo, ithc
+and perftest look up. ui-baseline declares every workspace library it uses, including each list
+type it seeds with (`package.test.ts` keeps the list complete), and a change to any of them
+rebuilds its image, on a pull request and on master. A change to a library only those use in turn
+does not: it is left to the lint and tests, which run for the library's dependents.
 
 The pod is replaced only when its image is rebuilt. Nothing in its pod spec changes from one deploy
 to the next otherwise:
@@ -297,8 +299,8 @@ to the next otherwise:
   change on every deploy. It is also the commit the image was built from, which the merge's commit
   is not when the image was not rebuilt.
 
-Merges that only change libraries ui-baseline does not use, or CaTH's apps, leave it running. A
-change to any library it does use still rebuilds and replaces it, as above.
+Merges that only change libraries ui-baseline does not name, or CaTH's apps, leave it running. A
+change to a library it names still rebuilds and replaces it, as above.
 
 ## Where things are kept
 

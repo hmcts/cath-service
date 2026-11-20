@@ -1,5 +1,5 @@
-# Apps that are never promoted to prod, and that demo, ithc and perftest never deploy: built on master,
-# and on a pull request only when it could have changed them (build-and-publish-images/detect-affected-apps.sh),
+# Apps that are never promoted to prod, and that demo, ithc and perftest never deploy: built, on master
+# and on a pull request, only when what they are built from changed (build-and-publish-images/detect-affected-apps.sh),
 # and deployed to preview and aat only (job.helm-deploy.yml).
 # Read by build-and-publish-images/detect-affected-apps.sh and job.resolve-promoted-images.yml.
 # One app per line; lines starting with # are ignored.

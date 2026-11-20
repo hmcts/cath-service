@@ -566,7 +566,7 @@ so the platform's preview cleanup (hmcts/cnp-aks-pipelines) can delete it too, a
 deletes any `-pr-` release not updated for 3 days.
 
 Its pod is replaced only when a master merge rebuilds its image, not on every merge. The image is
-rebuilt when `apps/ui-baseline/` or a library it uses changes, or anything every image is built from:
+rebuilt when `apps/ui-baseline/` or a library its `package.json` names changes, or anything every image is built from:
 the root `Dockerfile` or `.dockerignore`, `yarn.lock`, the root `package.json` or Yarn's config
 ([ARCHITECTURE.md](ARCHITECTURE.md#building-and-deploying-it)). A replacement does not cost a tester
 a run: the run going finishes on the old pod, and the runs queued behind it move to the new one.

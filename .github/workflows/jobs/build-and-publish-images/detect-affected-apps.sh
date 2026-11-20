@@ -6,8 +6,6 @@ set -euo pipefail
 # Usage: detect-affected-apps.sh [base-sha]
 #   base-sha: Optional. SHA to compare against (defaults to origin/master)
 # Environment:
-#   PULL_REQUEST: "true" for a pull request's build, which builds the unpromoted apps only when
-#     their own files, the root Dockerfile or the install inputs changed
 # Outputs:
 #   - affected_apps: JSON array of buildable apps that were affected
 #   - promotable_apps: affected_apps without the unpromoted apps, which are never promoted to prod
@@ -23,9 +21,9 @@ BASE_SHA="${1:-}"
 DOCKERFILE="Dockerfile"
 
 # Apps deployed to preview and aat only (.github/workflows/jobs/unpromoted-apps): never promoted, as
-# nothing beyond aat deploys them, and on a pull request built only when it could have changed their
-# image, not whenever Turborepo calls them affected (ui-baseline depends on most of the workspace's
-# libs, so it would otherwise be built for nearly every pull request).
+# nothing beyond aat deploys them, and built only when what they are built from changed, not
+# whenever Turborepo calls them affected (ui-baseline depends, through other libs, on most of the
+# workspace, so it would otherwise be rebuilt, and its pod replaced, for nearly every change).
 # A list with no apps in it is a list of none, not an error (grep -v finds no lines and exits 1)
 UNPROMOTED_APPS="$({ grep -v '^#' "$(dirname "${BASH_SOURCE[0]}")/../unpromoted-apps" || true; } | jq -R -s -c 'split("\n") | map(select(. != ""))')"
 
@@ -50,6 +48,13 @@ buildable_apps() {
       echo "$app"
     fi
   done
+}
+
+# The folders of the workspaces an app's package.json depends on, each ending in a slash
+direct_workspace_deps() {
+  local names
+  names="$(jq -c '[(.dependencies // {}), (.devDependencies // {})] | add | to_entries | map(select(.value | startswith("workspace:")) | .key)' "apps/$1/package.json")"
+  yarn workspaces list --json | jq -r --argjson names "$names" 'select(.name as $name | $names | index($name)) | "\(.location)/"'
 }
 
 # True if the app's stage copies anything out of the shared `build` stage.
@@ -159,23 +164,24 @@ main() {
 
   local promotable_apps
   promotable_apps=$(echo "$affected_apps" | jq -c --argjson skip "$UNPROMOTED_APPS" 'map(select(. as $app | $skip | index($app) | not))')
-  if [ "${PULL_REQUEST:-false}" = "true" ]; then
-    # An unpromoted app is built and pushed, for preview to deploy, only when the pull request could
-    # have changed its image: its own files, the root Dockerfile or .dockerignore, or what the install
-    # resolves (yarn.lock, the root package.json, Yarn's config) changed, or there is no base to tell
-    # from. So are the list types it seeds with (libs/list-types/) and the root tsconfig.json, which its
-    # image copies, so a preview never seeds with an old copy. Any other lib's change is left to the
-    # pull request's lint and tests, which run for the lib's dependents too.
-    local app
-    affected_apps="$promotable_apps"
-    for app in $(echo "$UNPROMOTED_APPS" | jq -r '.[]'); do
-      if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|libs/list-types/|tsconfig\.json$|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
-        affected_apps=$(echo "$affected_apps" | jq -c --arg app "$app" '. + [$app]')
-      else
-        echo "Pull request: ${app} is not built, as nothing it is built from changed"
-      fi
-    done
-  fi
+  # An unpromoted app is built and pushed, on a pull request for preview and on master for aat, only
+  # when what it is built from changed: its own files, the workspaces its package.json depends on
+  # (for ui-baseline, the list types, locations, publication and storage code it seeds and reads
+  # with), the root tsconfig.json, the root Dockerfile or .dockerignore, or what the install resolves
+  # (yarn.lock, the root package.json, Yarn's config), or there is no base to tell from. A lib it
+  # reaches only through those is left to the lint and tests, which run for the lib's dependents
+  # too; rebuilding for it would replace the hosted check's pod, and hand over its queued runs, on
+  # nearly every merge. Master's deploy then keeps the image it has (job.helm-deploy.yml pins it).
+  local app deps
+  affected_apps="$promotable_apps"
+  for app in $(echo "$UNPROMOTED_APPS" | jq -r '.[]'); do
+    deps="$(direct_workspace_deps "$app" | sed 's/[.]/\\./g' | paste -sd '|' -)"
+    if [ "$use_fallback" = "true" ] || grep -qE "^(apps/${app}/|${deps:+${deps}|}libs/list-types/|tsconfig\.json$|Dockerfile[^/]*$|\.dockerignore$|yarn\.lock$|package\.json$|\.yarnrc\.yml$|\.yarn/)" <<<"$changed_files"; then
+      affected_apps=$(echo "$affected_apps" | jq -c --arg app "$app" '. + [$app]')
+    else
+      echo "${app} is not built, as nothing it is built from changed"
+    fi
+  done
 
   # Determine if we have any changes
   local has_changes="false"
