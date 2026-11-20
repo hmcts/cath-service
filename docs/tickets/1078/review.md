@@ -1,6 +1,6 @@
 # Code Review: Issue #1078
 
-This is the seventh pass. The sixth review is kept as `docs/tickets/1078/review-previous-6.md`.
+This is the seventh pass.
 
 I reviewed the uncommitted edits to `report.md` (616 lines), `tasks.md` and `draft-ticket-align-court-ids.md`. I checked the new S4 migration text against the source in this worktree:
 
