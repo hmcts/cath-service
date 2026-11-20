@@ -207,14 +207,15 @@ function scriptsSucceed(seed: unknown = CATH_SEED, signIn: unknown = SIGN_IN): v
   });
 }
 
-// Captures every target as asked, except those a test says CaTH answered differently
+// Captures every target as asked, except those a test says CaTH answered differently, by
+// "<id> <locale>" or, for one state only, "<id> <locale> <state>"
 function captureAnswers(answers: Record<string, { status?: number; path?: string }> = {}): void {
   type Batch = { targetsFile: string; settings: { outDir: string }; onCaptured?: (done: number) => void; onFinished?: (results: unknown[]) => void };
   const captureOne = ({ targetsFile, settings, onCaptured, onFinished }: Batch) => {
     const targets = JSON.parse(readFileSync(targetsFile, "utf-8")) as { id: string; url: string; locales: string[]; viewport?: string }[];
     const entries = targets.flatMap((target) =>
       target.locales.map((locale) => {
-        const answer = answers[`${target.id} ${locale}`] ?? {};
+        const answer = answers[`${target.id} ${locale} ${target.viewport ?? "default"}`] ?? answers[`${target.id} ${locale}`] ?? {};
         const url = new URL(target.url);
         if (answer.path) url.pathname = answer.path;
         return { id: target.id, locale, state: target.viewport ?? "default", status: answer.status ?? 200, url: url.href };
@@ -677,8 +678,9 @@ describe("check", () => {
       expect(output).toContain("not compared: page--summary-of-publications cy: CaTH redirected to /sign-in");
       const index = readFileSync(path.join(out, "cath/pages/index.jsonl"), "utf-8");
       expect(index).not.toMatch(/"id":"page--summary-of-publications","locale":"cy"/);
-      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/cy"))).toBe(false);
-      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/en"))).toBe(true);
+      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/cy/default"))).toBe(false);
+      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/cy/mobile"))).toBe(false);
+      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/en/default"))).toBe(true);
       expect(mocks.compareRuns).toHaveBeenCalledWith({
         source: path.join(baseline, "pages"),
         target: path.join(out, "cath/pages"),
@@ -686,6 +688,22 @@ describe("check", () => {
         only: ["page--summary-of-publications", "page--list-view"],
         expectedTarget: expect.any(Function)
       });
+    });
+
+    it("should leave out only the state CaTH did not serve, keeping the page's others", async () => {
+      // Arrange
+      captureAnswers({ "page--summary-of-publications cy mobile": { path: "/sign-in" } });
+
+      // Act
+      await runCheck(["--ticket", "42"]);
+
+      // Assert
+      expect(logs.join("\n")).toContain("not compared: page--summary-of-publications cy (mobile): CaTH redirected to /sign-in");
+      const index = readFileSync(path.join(out, "cath/pages/index.jsonl"), "utf-8");
+      expect(index).toMatch(/"id":"page--summary-of-publications","locale":"cy","state":"default"/);
+      expect(index).not.toMatch(/"id":"page--summary-of-publications","locale":"cy","state":"mobile"/);
+      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/cy/default"))).toBe(true);
+      expect(existsSync(path.join(out, "cath/pages/page--summary-of-publications/cy/mobile"))).toBe(false);
     });
 
     it("should compare the list's files, leaving out an Excel CaTH could not make from JSON", async () => {

@@ -149,7 +149,7 @@ describe("captureTarget", () => {
   it("should record the failure and save the page's HTML when a state cannot be captured", async () => {
     // Arrange
     const outDir = await mkdtemp(path.join(tmpdir(), "capture-target-"));
-    const { browser } = fakeBrowser(500);
+    const { browser } = fakeBrowser(404);
     vi.mocked(capturePage).mockRejectedValue(new Error("main not found"));
 
     // Act
@@ -157,9 +157,24 @@ describe("captureTarget", () => {
 
     // Assert
     expect(results).toEqual([
-      { ok: false, id: "broken", locale: "en", state: "default", outDir: path.join(outDir, "broken/en/default"), status: 500, error: "main not found" }
+      { ok: false, id: "broken", locale: "en", state: "default", outDir: path.join(outDir, "broken/en/default"), status: 404, error: "main not found" }
     ]);
     expect(await readFile(path.join(outDir, "broken/en/default/error.html"), "utf-8")).toBe("<html>broken</html>");
+  });
+
+  it("should fail a page that answered with a server error, so it is retried, without capturing it", async () => {
+    // Arrange
+    const outDir = await mkdtemp(path.join(tmpdir(), "capture-target-"));
+    const { browser } = fakeBrowser(503);
+
+    // Act
+    const results = await captureTarget(browser as unknown as Browser, { id: "busy", url: "http://localhost/busy" }, { outDir });
+
+    // Assert
+    expect(results).toEqual([
+      { ok: false, id: "busy", locale: "en", state: "default", outDir: path.join(outDir, "busy/en/default"), status: 503, error: "the page answered 503" }
+    ]);
+    expect(capturePage).not.toHaveBeenCalled();
   });
 
   it("should close the context when navigation fails", async () => {

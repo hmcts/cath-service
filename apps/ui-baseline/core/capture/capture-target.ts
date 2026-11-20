@@ -10,6 +10,9 @@ const PLAYWRIGHT_VERSION = playwrightPackage.version;
 const DEFAULT_TIMEZONE = "Europe/London";
 // Desktop as the baseline was first recorded; mobile at the narrowest width GOV.UK pages are tested at
 const VIEWPORTS = { desktop: { width: 1280, height: 800 }, mobile: { width: 375, height: 812 } } as const;
+// A server error is usually passing (a pod restarting, a gateway timing out), so it fails the
+// capture, which is then retried, rather than being captured as the page
+const SERVER_ERROR = 500;
 
 // Captures one target into <outDir>/<id>/<locale>/<state>/ for each state the page has:
 // "default" as users first see it, and "expanded" when there is collapsed content to open. A mobile
@@ -50,6 +53,7 @@ async function captureState(
   const outDir = path.join(settings.outDir, target.id, locale, state);
   const capturedAt = new Date().toISOString();
   try {
+    if (status !== null && status >= SERVER_ERROR) throw new Error(`the page answered ${status}`);
     const meta = await capturePage(page, outDir, { region: settings.region, status });
     const provenance = {
       id: target.id,

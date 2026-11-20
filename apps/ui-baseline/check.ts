@@ -909,7 +909,8 @@ function cathUrlFor(route: Scope["routes"][number], pipUrl: URL, cathIds: CathId
 
 // A capture of an error page, or of the page CaTH redirected to (e.g. sign-in, because a pip id in
 // the URL means nothing to CaTH), is not the page that was asked for. Leaving it out of the index
-// makes the comparison report it as not captured, rather than as a difference from pip.
+// makes the comparison report it as not captured, rather than as a difference from pip. Each state
+// (as first seen, expanded, on mobile) is its own load of the page, so only that state is left out.
 async function dropUnservedCaptures(
   dir: string,
   targets: { id: string; url: string; locale?: string; locales?: string[]; source?: Record<string, unknown> }[]
@@ -925,19 +926,20 @@ async function dropUnservedCaptures(
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line) as CaptureEntry);
+  const stateKey = (entry: CaptureEntry) => `${entry.id} ${entry.locale} ${entry.state}`;
   for (const entry of entries) {
-    const key = `${entry.id} ${entry.locale}`;
+    const page = `${entry.id} ${entry.locale}`;
+    const label = `${page}${entry.state === "default" ? "" : ` (${entry.state})`}`;
     const servedPath = new URL(entry.url).pathname;
-    if (entry.status !== null && entry.status >= 400 && expected.get(entry.id) !== entry.status) unserved.set(key, `${key}: CaTH answered ${entry.status}`);
-    else if (requested.has(key) && servedPath !== requested.get(key)) unserved.set(key, `${key}: CaTH redirected to ${servedPath}`);
+    if (entry.status !== null && entry.status >= 400 && expected.get(entry.id) !== entry.status)
+      unserved.set(stateKey(entry), `${label}: CaTH answered ${entry.status}`);
+    else if (requested.has(page) && servedPath !== requested.get(page)) unserved.set(stateKey(entry), `${label}: CaTH redirected to ${servedPath}`);
   }
   if (!unserved.size) return [];
-  const kept = entries.filter((entry) => !unserved.has(`${entry.id} ${entry.locale}`));
+  const kept = entries.filter((entry) => !unserved.has(stateKey(entry)));
   await writeFile(indexFile, kept.map((entry) => `${JSON.stringify(entry)}\n`).join(""));
-  for (const key of unserved.keys()) {
-    const [id, locale] = key.split(" ");
-    await rm(path.join(dir, id, locale), { recursive: true, force: true });
-  }
+  for (const entry of entries.filter((entry) => unserved.has(stateKey(entry))))
+    await rm(path.join(dir, entry.id, entry.locale, entry.state), { recursive: true, force: true });
   return [...unserved.values()];
 }
 
