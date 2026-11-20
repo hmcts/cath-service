@@ -19,6 +19,16 @@ describe("pdfText", () => {
     expect(styled.pages).toBeGreaterThan(plain.pages);
   });
 
+  it("should keep a line of the text that ends in a page number, leaving out only the footer", async () => {
+    // Act
+    const continued = await pdfText(await read("continued.pdf"));
+
+    // Assert
+    expect(continued.pages).toBeGreaterThan(1);
+    expect(continued.lines).toContain("Continued on page 2");
+    expect(continued.lines.filter((line) => /page \d+ of \d+/.test(line))).toEqual([]);
+  });
+
   it("should leave out a running footer that numbers the pages", async () => {
     // Act
     const wrapped = await pdfText(await read("wrapped.pdf"));

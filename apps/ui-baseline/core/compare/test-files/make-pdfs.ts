@@ -34,4 +34,6 @@ await render("plain.pdf", PLAIN, ROWS);
 await render("styled.pdf", "body{font:16px georgia} h1{font-size:40px;color:red} td{padding:12px;border:1px solid}", ROWS, { landscape: true });
 await render("wrapped.pdf", "body{font:12px arial;width:398px} td{padding:4px}", ROWS, { footer: true, lineBreak: "<br>" });
 await render("changed.pdf", PLAIN, ROWS.toSpliced(3, 1, "<tr><td>10:03</td><td>Court 9</td><td>AB1003 Smith v Jones</td></tr>"));
+// A body line that ends in a page number, which is content, beside the footer, which is not
+await render("continued.pdf", PLAIN, [...ROWS.slice(0, 2), "<tr><td colspan=3>Continued on page 2</td></tr>", ...ROWS.slice(2)], { footer: true });
 await browser.close();

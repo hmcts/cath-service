@@ -31,6 +31,8 @@
   {% if baseline %}
     {% if baseline.ready %}
       <p class="govuk-body">Baseline: {{ baseline.description }}.</p>
+    {% elif baseline.missing %}
+      {{ govukWarningText({ text: "No pip baseline has been stored yet, so a check cannot run. Once one is recorded and stored (the UI baseline - record pip workflow, or yarn ui-baseline:baseline push), checks can start." }) }}
     {% else %}
       {{ govukWarningText({ text: "The pip baseline is " + baseline.description + ". Checks wait for it." }) }}
     {% endif %}

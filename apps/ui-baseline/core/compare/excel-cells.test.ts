@@ -42,6 +42,21 @@ describe("excelCells", () => {
     });
   });
 
+  it("should read a link whose text is rich text as the text it shows", async () => {
+    // Arrange
+    const data = await workbookOf((sheet) => {
+      sheet.getCell("A1").value = { text: { richText: [{ text: "Case " }, { text: "list", font: { bold: true } }] }, hyperlink: "https://www.gov.uk" } as never;
+      sheet.getCell("A2").value = { text: { richText: [{ text: "Another " }, { text: "list" }] }, hyperlink: "https://www.gov.uk" } as never;
+    });
+
+    // Act
+    const { sheets } = await excelCells(data);
+
+    // Assert
+    expect(sheets[0].cells.A1).toEqual({ type: "text", text: "Case list" });
+    expect(sheets[0].cells.A2).toEqual({ type: "text", text: "Another list" });
+  });
+
   it("should give a merged range's value to its first cell only and list the merges", async () => {
     // Arrange
     const data = await workbookOf((sheet) => {

@@ -30,7 +30,8 @@ function cellContent(value: ExcelJS.CellValue): CellContent {
   if (typeof value === "boolean") return { type: "boolean", text: String(value) };
   if (typeof value === "string") return { type: "text", text: value };
   if ("richText" in value) return { type: "text", text: value.richText.map((run) => run.text).join("") };
-  if ("hyperlink" in value) return { type: "text", text: String(value.text) };
+  // A link's text can be rich text itself, whose runs are what the reader sees
+  if ("hyperlink" in value) return { type: "text", text: cellContent(value.text as ExcelJS.CellValue).text };
   if ("error" in value) return { type: "error", text: String(value.error) };
   // A formula is compared by the value it last calculated, as a reader of the file sees it
   if ("formula" in value || "sharedFormula" in value) return cellContent((value as { result?: ExcelJS.CellValue }).result ?? null);

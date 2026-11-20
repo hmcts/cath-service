@@ -80,7 +80,7 @@ export async function pullBaseline(environment: Environment, dir: string, id?: s
 
 export async function latestBaseline(container: BlobContainer): Promise<StoredBaseline> {
   const latest = await container.download(LATEST);
-  if (!latest) throw new Error(`no baseline has been stored in ${container.name} yet: record one and push it (yarn ui-baseline:baseline push)`);
+  if (!latest) throw new NoBaselineStored(container.name);
   return JSON.parse(latest.toString("utf-8")) as StoredBaseline;
 }
 
@@ -96,6 +96,14 @@ export function runsContainer(environment: Environment): BlobContainer {
 }
 
 export const DEFAULT_BASELINE_DIR = path.join(PARITY_DIR, "output/baseline");
+
+// What latestBaseline throws when nothing has been stored yet, so the hosted check can say so rather
+// than that the baseline is on its way
+export class NoBaselineStored extends Error {
+  constructor(container: string) {
+    super(`no baseline has been stored in ${container} yet: record one and push it (yarn ui-baseline:baseline push)`);
+  }
+}
 
 export interface StoredBaseline {
   id: string;

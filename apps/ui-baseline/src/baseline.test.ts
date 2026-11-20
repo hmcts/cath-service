@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { NoBaselineStored } from "../baseline-store.js";
 import type { BlobContainer } from "../core/index.js";
 import { createBaselineCache } from "./baseline.js";
 
@@ -51,6 +52,27 @@ describe("createBaselineCache", () => {
     expect(pinned.map(({ id, dir }) => ({ id, dir }))).toEqual(Array(3).fill({ id: "one", dir: path.join(root, "one") }));
     expect(pull).toHaveBeenCalledTimes(1);
     expect(pull).toHaveBeenCalledWith(path.join(root, "one"), "one");
+  });
+
+  it("should say no baseline is stored, and see one stored later without a restart", async () => {
+    // Arrange
+    const dir = await mkdtemp(path.join(tmpdir(), "baseline-"));
+    let storedYet = false;
+    const latest = vi.fn(async () => {
+      if (!storedYet) throw new NoBaselineStored("cathsaaat/ui-baseline");
+      return stored("one");
+    });
+    const baselines = createBaselineCache({ root: dir, store: {} as BlobContainer, latest, pull: vi.fn() });
+    await baselines.ensure().catch(() => undefined);
+
+    // Act
+    const before = await baselines.status();
+    storedYet = true;
+    const after = await baselines.status();
+
+    // Assert
+    expect(before).toEqual({ ready: false, missing: true, description: "not stored yet" });
+    expect(after).toEqual({ ready: false, description: "not fetched yet" });
   });
 
   it("should fetch again only when a newer baseline has been stored, into a directory of its own", async () => {

@@ -239,14 +239,18 @@ jobs:
         continue-on-error: true
         run: |
           IMAGE="${REGISTRY}/cath/cath-ui-baseline:${UI_BASELINE_IMAGE}"
-          # A pull request builds ui-baseline only when it could have changed its image
-          # (detect-affected-apps.sh), so one that never has has no image of it to deploy
-          if [ "${{ inputs.environment }}" = "preview" ] && ! docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
-            echo "::notice::ui-baseline is not deployed to preview: this pull request has not built its image (${IMAGE})"
-            echo "UI_BASELINE_ENABLED=false" >> "$GITHUB_ENV"
-            exit 0
+          if ! DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}' 2>/tmp/inspect.err); then
+            # A pull request builds ui-baseline only when it could have changed its image
+            # (detect-affected-apps.sh), so one that never has has no image of it to deploy. Any other
+            # failure (an expired token, the registry down) is an error, not taken for that.
+            if [ "${{ inputs.environment }}" = "preview" ] && grep -q ': not found$' /tmp/inspect.err; then
+              echo "::notice::ui-baseline is not deployed to preview: this pull request has not built its image (${IMAGE})"
+              echo "UI_BASELINE_ENABLED=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::Could not look up ${IMAGE}: $(tail -1 /tmp/inspect.err)"
+            exit 1
           fi
-          DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}')
           if [ -z "$DIGEST" ]; then
             echo "::error::Could not find the digest of ${IMAGE}"
             exit 1

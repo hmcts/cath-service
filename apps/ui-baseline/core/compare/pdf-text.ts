@@ -24,7 +24,9 @@ export async function pdfText(data: Uint8Array): Promise<PdfText> {
           ? [{ text: item.str, x: item.transform[4], y: item.transform[5], width: item.width, size: Math.hypot(item.transform[2], item.transform[3]) }]
           : []
       );
-      lines.push(...linesOf(fragments).filter((line) => !PAGE_NUMBERING.test(line)));
+      // Only a page's last line is its running footer: "continued on page 2" in the text is content
+      const pageLines = linesOf(fragments);
+      lines.push(...(PAGE_NUMBERING.test(pageLines.at(-1) ?? "") ? pageLines.slice(0, -1) : pageLines));
       page.cleanup();
     }
     return { pages: document.numPages, lines };
