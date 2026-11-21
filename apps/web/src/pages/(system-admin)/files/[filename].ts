@@ -8,13 +8,15 @@ function isValidFilename(filename: string): boolean {
   return validPattern.test(filename);
 }
 
-const CONTENT_TYPES: Record<string, string> = {
+// Only types that cannot run script in the admin origin are previewed inline. PDFs may carry
+// JavaScript, but it runs inside the browser's sandboxed PDF viewer, not the page. Everything
+// else (HTML, XML that may carry an XHTML namespace, unknown types) is downloaded as an opaque
+// octet-stream, so it stays inert even if a proxy strips Content-Disposition.
+const INLINE_CONTENT_TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
   ".csv": "text/csv",
   ".txt": "text/plain",
-  ".json": "application/json",
-  ".xml": "application/xml",
-  ".html": "text/html"
+  ".json": "application/json"
 };
 
 const getHandler = async (req: Request, res: Response) => {
@@ -33,8 +35,9 @@ const getHandler = async (req: Request, res: Response) => {
       return res.status(404).send("File not found");
     }
 
-    const contentType = CONTENT_TYPES[ext] || "application/octet-stream";
-    const disposition = ext === ".html" ? "attachment" : "inline";
+    const inlineContentType = INLINE_CONTENT_TYPES[ext];
+    const contentType = inlineContentType ?? "application/octet-stream";
+    const disposition = inlineContentType ? "inline" : "attachment";
 
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");
