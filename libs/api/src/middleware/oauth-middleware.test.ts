@@ -31,13 +31,24 @@ describe("authenticateApi", () => {
 
   const mockNext = vi.fn() as NextFunction;
 
+  const mockVerifiedToken = async (claims: { appid: string; roles: string[] }) => {
+    const jwt = await import("jsonwebtoken");
+    const jwksClient = await import("jwks-rsa");
+    vi.mocked(jwt.default.decode).mockReturnValue({ header: { kid: "test-key-id" }, payload: claims } as any);
+    vi.mocked(jwksClient.default).mockReturnValue({
+      getSigningKey: vi.fn((_kid: string, callback: (err: Error | null, key?: any) => void) => callback(null, { getPublicKey: () => "test-public-key" }))
+    } as any);
+    vi.mocked(jwt.default.verify).mockImplementation((_token, _key, _options, callback: any) => callback(null, claims));
+  };
+
   // The middleware caches its JWKS client per tenant, so each test needs a fresh module.
   let authenticateApi: typeof import("./oauth-middleware.js").authenticateApi;
+  let API_ROLE: typeof import("./oauth-middleware.js").API_ROLE;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.resetModules();
-    ({ authenticateApi } = await import("./oauth-middleware.js"));
+    ({ authenticateApi, API_ROLE } = await import("./oauth-middleware.js"));
     process.env.AZURE_TENANT_ID = "test-tenant-id";
     process.env.CATH_SERVICE_API_CLIENT_ID = "test-client-id";
   });
@@ -207,6 +218,41 @@ describe("authenticateApi", () => {
       message: "Insufficient permissions. Required role: api.publisher.user"
     });
     expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it("should reject a publisher-only token when the B2C role is required", async () => {
+    // Arrange
+    await mockVerifiedToken({ appid: "test-app-id", roles: ["api.publisher.user"] });
+    const req = mockRequest("Bearer publisher-token");
+    const res = mockResponse();
+    const middleware = authenticateApi(API_ROLE.B2C);
+
+    // Act
+    await middleware(req, res, mockNext);
+
+    // Assert
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith({
+      statusCode: 403,
+      message: "Insufficient permissions. Required role: api.request.b2c"
+    });
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it("should authenticate a token holding the B2C role when the B2C role is required", async () => {
+    // Arrange
+    await mockVerifiedToken({ appid: "test-app-id", roles: ["api.request.b2c"] });
+    const req = mockRequest("Bearer b2c-token");
+    const res = mockResponse();
+    const middleware = authenticateApi(API_ROLE.B2C);
+
+    // Act
+    await middleware(req, res, mockNext);
+
+    // Assert
+    expect(mockNext).toHaveBeenCalledOnce();
+    expect(res.status).not.toHaveBeenCalled();
+    expect((req as any).apiUser).toEqual({ appId: "test-app-id", roles: ["api.request.b2c"] });
   });
 
   it("should fall back to the azp claim when appid is absent", async () => {

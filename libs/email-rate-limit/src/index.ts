@@ -1,1 +1,1 @@
-export { type EmailLimit, validateEmailRateLimit } from "./email-rate-limit.js";
+export { type EmailLimit, isEmailRateLimitError, validateEmailRateLimit } from "./email-rate-limit.js";
