@@ -13,6 +13,16 @@ export {
 export { isWithinDisplayWindow } from "./display-window.js";
 export { getContentTypeFromExtension } from "./file-storage/content-type.js";
 export { getContentType, getFileBuffer, getFileExtension, getFileName, getPublicationJson, getSourceArtefactId } from "./file-storage/file-retrieval.js";
+export {
+  formatFileSize,
+  GENERATED_FILE_TYPES,
+  type GeneratedFile,
+  type GeneratedFileAvailability,
+  type GeneratedFileType,
+  getGeneratedFile,
+  getGeneratedFileAvailability,
+  isGeneratedFileType
+} from "./file-storage/generated-files.js";
 export { Language } from "./language.js";
 export { mockPublications, type Publication } from "./mock-publications.js";
 export { buildNoMatchLocationId, getLocationIdForNoMatch, isNoMatchLocationId } from "./no-match-location.js";

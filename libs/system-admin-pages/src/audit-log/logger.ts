@@ -4,6 +4,7 @@ export enum AuditLogAction {
   ADD_JURISDICTION = "Add jurisdiction",
   ADD_REGION = "Add region",
   ADD_SUB_JURISDICTION = "Add sub-jurisdiction",
+  BLOB_EXPLORER_DOWNLOAD = "Blob explorer download",
   BLOB_EXPLORER_RESUBMISSION = "Blob explorer resubmission",
   CREATE_THIRD_PARTY_USER = "Create third party user",
   DELETE_COURT = "Delete court",
