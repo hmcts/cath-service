@@ -50,17 +50,34 @@ describe("index - cron job runner", () => {
   });
 
   it("should configure properties volume with correct chart path", async () => {
-    process.env.SCRIPT_NAME = "example";
+    // Arrange
+    process.env = { SCRIPT_NAME: "example", NODE_ENV: "production" };
 
+    // Act
     const { main } = await import("./index.js");
     await main();
 
+    // Assert
     expect(mockGetPropertiesVolumeSecrets).toHaveBeenCalledWith(
       expect.objectContaining({
         chartPath: expect.stringContaining("helm/values.yaml"),
         omit: ["DATABASE_URL"]
       })
     );
+  });
+
+  it("should not let Key Vault override non-empty local env vars outside production", async () => {
+    // Arrange
+    process.env = { SCRIPT_NAME: "example", NODE_ENV: "development", AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true", EMPTY_VAR: " " };
+
+    // Act
+    const { main } = await import("./index.js");
+    await main();
+
+    // Assert
+    const { omit } = mockGetPropertiesVolumeSecrets.mock.calls[0][0];
+    expect(omit).toEqual(expect.arrayContaining(["DATABASE_URL", "AZURE_STORAGE_CONNECTION_STRING", "SCRIPT_NAME"]));
+    expect(omit).not.toContain("EMPTY_VAR");
   });
 
   it("should throw error when SCRIPT_NAME is not set", async () => {

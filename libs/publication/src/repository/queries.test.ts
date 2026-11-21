@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createArtefactSearch, deleteArtefactSearchByArtefactId, findArtefactSearchByArtefactId } from "./artefact-search-queries.js";
 import {
   createArtefact,
+  deleteArtefactBlobs,
   deleteArtefacts,
   deleteArtefactsByLocationId,
   getArtefactById,
@@ -804,6 +805,100 @@ describe("deleteArtefacts", () => {
         }
       }
     });
+  });
+
+  it("should delete the database rows and log without throwing when blob deletion fails", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(prisma.artefact.findMany).mockResolvedValue([{ artefactId: "550e8400-e29b-41d4-a716-446655440000", sourceArtefactId: null }] as any);
+    vi.mocked(prisma.artefact.deleteMany).mockResolvedValue({ count: 1 });
+    vi.mocked(deleteBlob).mockRejectedValueOnce(new Error("Storage unavailable"));
+
+    // Act
+    await deleteArtefacts(["550e8400-e29b-41d4-a716-446655440000"]);
+    await vi.waitFor(() => expect(consoleErrorSpy).toHaveBeenCalled());
+
+    // Assert
+    expect(prisma.artefact.deleteMany).toHaveBeenCalledWith({ where: { artefactId: { in: ["550e8400-e29b-41d4-a716-446655440000"] } } });
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to delete blobs for artefact 550e8400-e29b-41d4-a716-446655440000: artefact/550e8400-e29b-41d4-a716-446655440000 (Storage unavailable)"
+    );
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+describe("deleteArtefactBlobs", () => {
+  const ARTEFACT_ID = "550e8400-e29b-41d4-a716-446655440000";
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(deleteBlob).mockResolvedValue(undefined);
+  });
+
+  it("should delete the payload, legacy payload, PDF and Excel blobs from their containers", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+
+    // Act
+    await deleteArtefactBlobs(ARTEFACT_ID, "upload.json");
+
+    // Assert
+    expect(deleteBlob).toHaveBeenCalledTimes(4);
+    expect(deleteBlob).toHaveBeenCalledWith(ARTEFACT_ID, "artefact");
+    expect(deleteBlob).toHaveBeenCalledWith(`${ARTEFACT_ID}.json`, "artefact");
+    expect(deleteBlob).toHaveBeenCalledWith(`${ARTEFACT_ID}.pdf`, "publications");
+    expect(deleteBlob).toHaveBeenCalledWith(`${ARTEFACT_ID}.xlsx`, "publications");
+  });
+
+  it("should use the .pdf legacy extension when sourceArtefactId is null", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+
+    // Act
+    await deleteArtefactBlobs(ARTEFACT_ID, null);
+
+    // Assert
+    expect(deleteBlob).toHaveBeenCalledWith(`${ARTEFACT_ID}.pdf`, "artefact");
+  });
+
+  it("should use the .pdf legacy extension when sourceArtefactId has no extension", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+
+    // Act
+    await deleteArtefactBlobs(ARTEFACT_ID, "upload");
+
+    // Assert
+    expect(deleteBlob).toHaveBeenCalledWith(`${ARTEFACT_ID}.pdf`, "artefact");
+  });
+
+  it("should resolve when every blob delete resolves", async () => {
+    // Act
+    const result = deleteArtefactBlobs(ARTEFACT_ID, null);
+
+    // Assert
+    await expect(result).resolves.toBeUndefined();
+  });
+
+  it("should attempt all four deletes and reject listing every failed blob", async () => {
+    // Arrange
+    const { deleteBlob } = await import("@hmcts/azure-blob");
+    vi.mocked(deleteBlob)
+      .mockRejectedValueOnce(new Error("Timeout"))
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce("Forbidden");
+
+    // Act
+    const result = deleteArtefactBlobs(ARTEFACT_ID, null);
+
+    // Assert
+    await expect(result).rejects.toThrow(
+      `Failed to delete blobs for artefact ${ARTEFACT_ID}: artefact/${ARTEFACT_ID} (Timeout), publications/${ARTEFACT_ID}.xlsx (Forbidden)`
+    );
+    expect(deleteBlob).toHaveBeenCalledTimes(4);
   });
 });
 
