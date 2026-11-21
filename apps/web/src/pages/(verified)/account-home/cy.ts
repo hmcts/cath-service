@@ -1,5 +1,7 @@
 export const cy = {
   pageTitle: "Dangosfwrdd - Eich cyfrif",
+  bannerTitle: "Pwysig",
+  bannerText: "Mae eich cyfrif wedi cael ei ddilysu.",
   title: "Eich cyfrif",
   sections: {
     courtHearings: {

@@ -1,3 +1,5 @@
+import { archiveAndDeleteUser } from "@hmcts/account/user-archive";
+import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth";
 import type { Prisma } from "@hmcts/postgres-prisma";
 import { prisma } from "@hmcts/postgres-prisma";
 
@@ -104,32 +106,8 @@ export async function getUserById(userId: string): Promise<User | null> {
 }
 
 export async function deleteUserById(userId: string): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    // First, get all subscription IDs for this user
-    const userSubscriptions = await tx.subscription.findMany({
-      where: { userId },
-      select: { subscriptionId: true }
-    });
-
-    const subscriptionIds = userSubscriptions.map((sub) => sub.subscriptionId);
-
-    // Delete notification audit logs for these subscriptions
-    if (subscriptionIds.length > 0) {
-      await tx.notificationAuditLog.deleteMany({
-        where: {
-          subscriptionId: { in: subscriptionIds }
-        }
-      });
-    }
-
-    // Delete user subscriptions
-    await tx.subscription.deleteMany({
-      where: { userId }
-    });
-
-    // Delete the user
-    await tx.user.delete({
-      where: { userId }
-    });
-  });
+  const isDeleted = await archiveAndDeleteUser(userId, async (b2cUserId) => deleteB2cUser(await getGraphApiAccessToken(), b2cUserId));
+  if (!isDeleted) {
+    throw new Error("User not found");
+  }
 }

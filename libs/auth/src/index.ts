@@ -18,7 +18,7 @@ export {
   exchangeCodeForToken as exchangeCrimeCodeForToken,
   extractUserInfoFromToken as extractCrimeUserInfoFromToken
 } from "./crime-idam/token-client.js";
-export { createMediaUser, findUserByEmail, getGraphApiAccessToken, updateMediaUser } from "./graph-api/client.js";
+export { createMediaUser, deleteB2cUser, findUserByEmail, getGraphApiAccessToken, updateMediaUser } from "./graph-api/client.js";
 export { requireAuth } from "./middleware/authenticate.js";
 export { blockUserAccess, requireRole } from "./middleware/authorise.js";
 export { authNavigationMiddleware } from "./middleware/navigation.js";

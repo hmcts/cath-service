@@ -2,10 +2,13 @@ import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import ExcelJSPkg from "exceljs";
 import { switchLanguage } from "../../utils/language-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { generateTestEmail } from "../../utils/test-prefix.js";
 import { createTestUser } from "../../utils/test-support-api.js";
+
+const { Workbook } = ExcelJSPkg;
 
 // Helper to validate required environment variables
 function validateEnvVars() {
@@ -175,6 +178,22 @@ test.describe("User Management", () => {
     await page.getByLabel("Email").fill(testEmail);
     await page.getByRole("button", { name: "Apply filters" }).click();
     await expect(page.getByText("No users could be found matching your search criteria")).toBeVisible();
+
+    // The deleted user is archived, so it appears in the 'Deleted accounts' MI report
+    await page.goto("/mi-report");
+    await page.getByLabel("Reporting period").selectOption("all");
+    await page.getByLabel("Report type").selectOption("deleted-accounts");
+    const deletedAccountsDownloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download report" }).click();
+    const deletedAccountsDownload = await deletedAccountsDownloadPromise;
+
+    const workbook = new Workbook();
+    await workbook.xlsx.readFile(await deletedAccountsDownload.path());
+    const deletedAccountsSheet = workbook.worksheets[0];
+    const archivedRow = deletedAccountsSheet.getSheetValues().find((row) => Array.isArray(row) && row[1] === testUserId) as unknown[] | undefined;
+    expect(archivedRow, `user_archive row for ${testUserId}`).toBeDefined();
+    expect(archivedRow?.[3]).toBe("CFT_IDAM");
+    expect(archivedRow?.[4]).toBe("VERIFIED");
   });
 
   test("system admin can cancel user deletion @nightly", async ({ page }) => {

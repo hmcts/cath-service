@@ -13,6 +13,7 @@ vi.mock("@hmcts/postgres-prisma", () => {
       subscription: model(),
       mediaApplication: model(),
       thirdPartyUser: model(),
+      userArchive: model(),
       subJurisdiction: model(),
       jurisdiction: model(),
       region: model(),

@@ -3,6 +3,7 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import type { UserProfile } from "../user-profile.js";
 
 const GRAPH_API_SCOPE = "https://graph.microsoft.com/.default";
+const HTTP_NOT_FOUND = 404;
 
 function isB2CMocked(): boolean {
   return process.env.MOCK_AZURE_B2C === "true";
@@ -103,12 +104,39 @@ export async function getGraphApiAccessToken(): Promise<string> {
   });
 
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Failed to obtain Graph API access token: ${response.status} ${errorBody}`);
+    const errorCode = await readTokenErrorCode(response);
+    throw new Error(`Failed to obtain Graph API access token: ${response.status} ${errorCode}`);
   }
 
   const data = (await response.json()) as { access_token: string };
   return data.access_token;
+}
+
+/**
+ * Deletes a user from Azure AD B2C. A 404 is treated as success because the account is already gone.
+ * When MOCK_AZURE_B2C=true, does nothing.
+ */
+export async function deleteB2cUser(accessToken: string, b2cUserId: string): Promise<void> {
+  if (isB2CMocked()) {
+    return;
+  }
+
+  const client = Client.init({
+    authProvider: (done) => {
+      done(null, accessToken);
+    }
+  });
+
+  try {
+    await client.api(`/users/${encodeURIComponent(b2cUserId)}`).delete();
+  } catch (error) {
+    const graphError = error as GraphError;
+    if (graphError.statusCode === HTTP_NOT_FOUND) {
+      return;
+    }
+    console.error("Graph API deleteB2cUser error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
+    throw new Error(`Failed to delete B2C user: ${graphError.statusCode ?? "unknown status"} ${graphError.code ?? "unknown code"}`);
+  }
 }
 
 /**
@@ -249,5 +277,15 @@ export async function createMediaUser(
     const graphError = error as GraphError;
     console.error("Graph API createMediaUser error:", { statusCode: graphError.statusCode, code: graphError.code, message: graphError.message });
     throw new Error(`Failed to create media user in Azure AD: ${graphError.message || "Unknown error"}`);
+  }
+}
+
+// Only the OAuth error code is surfaced; the response body is never included in the message
+async function readTokenErrorCode(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { error?: unknown };
+    return typeof body.error === "string" ? body.error : "unknown_error";
+  } catch {
+    return "unknown_error";
   }
 }

@@ -118,6 +118,15 @@ test.describe("Sign In Account Selection Page", () => {
       const response = await signInPostResponse;
       expect(response.status()).toBe(302);
       expect(response.headers()["location"]).toMatch(/\/b2c-login/);
+
+      // The media verification link in the inactive-account email starts the B2C verification policy.
+      // Only the first hop is checked so the assertion does not depend on the B2C round trip.
+      const mediaVerificationResponse = await page.request.get("/media-verification", { maxRedirects: 0 });
+      expect(mediaVerificationResponse.status()).toBe(302);
+      const mediaVerificationLocation = new URL(mediaVerificationResponse.headers().location);
+      expect(mediaVerificationLocation.pathname).toMatch(/\/oauth2\/v2\.0\/authorize$/);
+      expect(mediaVerificationLocation.searchParams.get("p")).toBe("B2C_1_SignInMediaVerification");
+      expect(mediaVerificationLocation.searchParams.get("redirect_uri")).toMatch(/\/login\/return$/);
     });
   });
 

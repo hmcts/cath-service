@@ -52,22 +52,38 @@ test.describe("Account Home", () => {
     await expect(sectionBoxes.nth(0).locator("p.verified-tile-description")).toHaveText("Gweld amser, lleoliad, math o wrandawiadau a mwy.");
     await expect(sectionBoxes.nth(2).locator("p.verified-tile-description")).toContainText("Cael e-byst am wrandawiadau");
 
-    // STEP 9: Test navigation to Court and Tribunal Hearings
+    // STEP 9: Verified banner shown after media verification redirects back with ?verified=true
+    await page.goto("/account-home?verified=true&lng=en");
+    const verifiedBanner = page.getByRole("region", { name: "Important" });
+    await expect(verifiedBanner).toBeVisible();
+    await expect(verifiedBanner).toContainText("Your account has been verified.");
+    const bannerAccessibilityResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(bannerAccessibilityResults.violations).toEqual([]);
+
+    await page.goto("/account-home?verified=true&lng=cy");
+    const welshVerifiedBanner = page.getByRole("region", { name: "Pwysig" });
+    await expect(welshVerifiedBanner).toContainText("Mae eich cyfrif wedi cael ei ddilysu.");
+
+    // The banner is only shown on the redirect from verification, not on a normal visit
+    await page.goto("/account-home?lng=en");
+    await expect(page.locator(".govuk-notification-banner")).toHaveCount(0);
+
+    // STEP 10: Test navigation to Court and Tribunal Hearings
     await page.goto("/account-home");
     await courtSection.click();
     await expect(page).toHaveURL("/search");
 
-    // STEP 10: Test navigation to SJP Cases
+    // STEP 11: Test navigation to SJP Cases
     await page.goto("/account-home");
     await sjpSection.click();
     await expect(page).toHaveURL("/summary-of-publications?locationId=9");
 
-    // STEP 11: Test navigation to Email Subscriptions
+    // STEP 12: Test navigation to Email Subscriptions
     await page.goto("/account-home");
     await emailSection.click();
     await expect(page).toHaveURL("/subscription-management");
 
-    // STEP 12: Test keyboard accessibility
+    // STEP 13: Test keyboard accessibility
     await page.goto("/account-home");
     const firstBox = page.locator(".verified-tile").first();
 

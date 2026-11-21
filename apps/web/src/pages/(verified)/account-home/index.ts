@@ -12,7 +12,7 @@ const getHandler = async (req: Request, res: Response) => {
   }
   res.locals.navigation.verifiedItems = buildVerifiedUserNavigation(req.path, locale);
 
-  res.render("account-home/index", { en, cy });
+  res.render("account-home/index", { en, cy, showVerifiedBanner: req.query.verified === "true" });
 };
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];

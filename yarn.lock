@@ -1610,9 +1610,14 @@ __metadata:
   resolution: "@hmcts/crons@workspace:apps/crons"
   dependencies:
     "@hmcts-cft/cloud-native-platform": "npm:2.3.0"
+    "@hmcts/account": "workspace:*"
+    "@hmcts/inactive-accounts": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    "@hmcts/redis": "workspace:*"
     "@types/config": "npm:4.4.0"
     "@types/node": "npm:24.10.4"
     config: "npm:4.4.2"
+    redis: "npm:5.12.1"
   languageName: unknown
   linkType: soft
 
@@ -1889,6 +1894,19 @@ __metadata:
     vitest: "npm:4.1.10"
   peerDependencies:
     express: ^5.1.0
+  languageName: unknown
+  linkType: soft
+
+"@hmcts/inactive-accounts@workspace:*, @hmcts/inactive-accounts@workspace:libs/inactive-accounts":
+  version: 0.0.0-use.local
+  resolution: "@hmcts/inactive-accounts@workspace:libs/inactive-accounts"
+  dependencies:
+    "@hmcts/account": "workspace:*"
+    "@hmcts/auth": "workspace:*"
+    "@hmcts/email-rate-limit": "workspace:*"
+    "@hmcts/govuk-notify": "workspace:*"
+    "@hmcts/postgres-prisma": "workspace:*"
+    typescript: "npm:6.0.3"
   languageName: unknown
   linkType: soft
 

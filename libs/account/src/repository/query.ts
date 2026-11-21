@@ -20,7 +20,7 @@ export async function createUser(input: User, signedInAt?: Date) {
       userProvenance: input.userProvenance,
       userProvenanceId: input.userProvenanceId,
       role: input.role,
-      ...(signedInAt && { createdDate: signedInAt, lastSignedInDate: signedInAt })
+      ...(signedInAt && { createdDate: signedInAt, lastSignedInDate: signedInAt, lastVerifiedDate: signedInAt })
     }
   });
 }
@@ -52,6 +52,13 @@ export async function updateUser(userProvenanceId: string, input: UpdateUserInpu
       ...(input.firstName && { firstName: input.firstName }),
       ...(input.surname && { surname: input.surname })
     }
+  });
+}
+
+export async function updateLastVerifiedDate(userProvenanceId: string) {
+  return await prisma.user.update({
+    where: { userProvenanceId },
+    data: { lastVerifiedDate: new Date() }
   });
 }
 

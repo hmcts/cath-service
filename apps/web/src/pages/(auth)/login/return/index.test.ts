@@ -1,4 +1,4 @@
-import { createOrUpdateUser } from "@hmcts/account/repository/query";
+import { createOrUpdateUser, updateLastVerifiedDate } from "@hmcts/account/repository/query";
 import { getB2cBaseUrl, getB2cConfig, isB2cConfigured } from "@hmcts/auth";
 import { trackException } from "@hmcts-cft/cloud-native-platform";
 import type { Request, Response } from "express";
@@ -56,6 +56,7 @@ describe("B2C Callback Handler", () => {
       clientSecret: "test-secret",
       policyCath: "B2C_1_CathSignIn",
       policyResetCredentials: "B2C_1A_PASSWORD_RESET",
+      policyMediaVerification: "B2C_1_SignInMediaVerification",
       redirectUri: "https://localhost:8080/login/return",
       responseType: "code",
       responseMode: "query",
@@ -74,7 +75,8 @@ describe("B2C Callback Handler", () => {
       userProvenanceId: "user-123",
       role: "VERIFIED",
       createdDate: new Date(),
-      lastSignedInDate: null
+      lastSignedInDate: null,
+      lastVerifiedDate: new Date()
     });
 
     vi.mocked(trackException).mockImplementation(() => {});
@@ -309,6 +311,76 @@ describe("B2C Callback Handler", () => {
 
       expect(mockSession.b2cProvider).toBeUndefined();
       expect(mockSession.b2cLocale).toBeUndefined();
+    });
+  });
+
+  describe("media verification", () => {
+    beforeEach(() => {
+      mockSession.b2cProvider = "media_verification";
+      mockSession.returnTo = "/account-home?verified=true";
+    });
+
+    it("should exchange the code using the media verification policy", async () => {
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("p=B2C_1_SignInMediaVerification"), expect.any(Object));
+    });
+
+    it("should update the last verified date for VERIFIED users and redirect to the verified account home", async () => {
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(updateLastVerifiedDate).toHaveBeenCalledWith("user-123");
+      expect(vi.mocked(updateLastVerifiedDate).mock.invocationCallOrder[0]).toBeGreaterThan(vi.mocked(createOrUpdateUser).mock.invocationCallOrder[0]);
+      expect(mockReq.login).toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?verified=true");
+    });
+
+    it("should append the Welsh locale with & when the return URL already has a query string", async () => {
+      mockSession.b2cLocale = "cy";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?verified=true&lng=cy");
+    });
+
+    it("should not update the last verified date for non-VERIFIED users but still sign them in", async () => {
+      vi.mocked(createOrUpdateUser).mockResolvedValueOnce({
+        userId: "user-123",
+        email: "test@example.com",
+        firstName: null,
+        surname: null,
+        userProvenance: "PI_AAD",
+        userProvenanceId: "user-123",
+        role: "SYSTEM_ADMIN",
+        createdDate: new Date(),
+        lastSignedInDate: null,
+        lastVerifiedDate: new Date()
+      });
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(updateLastVerifiedDate).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home?verified=true");
+    });
+
+    it("should redirect to sign-in when updating the last verified date fails", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.mocked(updateLastVerifiedDate).mockRejectedValueOnce(new Error("DB down"));
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith("/sign-in?error=auth_failed");
+      expect(mockReq.login).not.toHaveBeenCalled();
+    });
+
+    it("should not update the last verified date for the cath provider", async () => {
+      mockSession.b2cProvider = "cath";
+      mockSession.returnTo = "/account-home";
+
+      await GET(mockReq as Request, mockRes as Response);
+
+      expect(updateLastVerifiedDate).not.toHaveBeenCalled();
+      expect(mockRes.redirect).toHaveBeenCalledWith("/account-home");
     });
   });
 

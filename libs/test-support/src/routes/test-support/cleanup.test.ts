@@ -18,6 +18,9 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     subscription: {
       deleteMany: vi.fn()
     },
+    userArchive: {
+      deleteMany: vi.fn()
+    },
     listType: {
       deleteMany: vi.fn()
     },
@@ -71,6 +74,7 @@ describe("cleanup routes", () => {
     vi.mocked(prisma.subJurisdiction.findMany).mockResolvedValue([]);
     vi.mocked(prisma.jurisdiction.deleteMany).mockResolvedValue({ count: 0 } as any);
     vi.mocked(prisma.region.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.userArchive.deleteMany).mockResolvedValue({ count: 0 } as any);
   });
 
   describe("DELETE", () => {
@@ -140,6 +144,7 @@ describe("cleanup routes", () => {
           artefacts: 3,
           subscriptions: 4,
           users: 1,
+          userArchives: 0,
           locations: 2,
           listTypes: 1,
           mediaApplications: 1,
@@ -180,6 +185,7 @@ describe("cleanup routes", () => {
           artefacts: 0,
           subscriptions: 0,
           users: 0,
+          userArchives: 0,
           locations: 0,
           listTypes: 0,
           mediaApplications: 0,
@@ -259,6 +265,22 @@ describe("cleanup routes", () => {
       expect(prisma.user.findMany).toHaveBeenCalledWith({ where: prefixedUserWhere, select: { userId: true } });
       expect(prisma.subscription.deleteMany).toHaveBeenCalledWith({ where: { userId: { in: ["notify-user"] } } });
       expect(prisma.user.deleteMany).toHaveBeenCalledWith({ where: prefixedUserWhere });
+    });
+
+    it("should delete user_archive rows whose email or provenance user id starts with the prefix", async () => {
+      // Arrange
+      mockRequest.body = { prefix: "E2E_123_" };
+      mockEmptyCleanup();
+      vi.mocked(prisma.userArchive.deleteMany).mockResolvedValue({ count: 2 } as any);
+
+      // Act
+      await DELETE(mockRequest as Request, mockResponse as Response);
+
+      // Assert
+      expect(prisma.userArchive.deleteMany).toHaveBeenCalledWith({
+        where: { OR: [{ email: { startsWith: "E2E_123_" } }, { provenanceUserId: { startsWith: "E2E_123_" } }] }
+      });
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({ details: expect.objectContaining({ userArchives: 2 }) }));
     });
 
     it("should delete prefixed sub-jurisdictions after their link rows, then childless prefixed jurisdictions, then prefixed regions", async () => {

@@ -1,3 +1,5 @@
+import { archiveAndDeleteUser } from "@hmcts/account/user-archive";
+import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth";
 import { prisma } from "@hmcts/postgres-prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteUserById, getUserById, searchUsers } from "./queries.js";
@@ -7,18 +9,18 @@ vi.mock("@hmcts/postgres-prisma", () => ({
     user: {
       findMany: vi.fn(),
       count: vi.fn(),
-      findUnique: vi.fn(),
-      delete: vi.fn()
-    },
-    subscription: {
-      findMany: vi.fn(),
-      deleteMany: vi.fn()
-    },
-    notificationAuditLog: {
-      deleteMany: vi.fn()
-    },
-    $transaction: vi.fn()
+      findUnique: vi.fn()
+    }
   }
+}));
+
+vi.mock("@hmcts/account/user-archive", () => ({
+  archiveAndDeleteUser: vi.fn()
+}));
+
+vi.mock("@hmcts/auth", () => ({
+  deleteB2cUser: vi.fn(),
+  getGraphApiAccessToken: vi.fn()
 }));
 
 describe("User Management Queries", () => {
@@ -174,69 +176,40 @@ describe("User Management Queries", () => {
   });
 
   describe("deleteUserById", () => {
-    it("should delete user, subscriptions, and audit logs in transaction", async () => {
+    it("should delegate to archiveAndDeleteUser with a deleter that gets a Graph token and deletes the B2C user", async () => {
       // Arrange
-      const mockSubscriptions = [{ subscriptionId: "sub1" }, { subscriptionId: "sub2" }];
-      const mockTx = {
-        subscription: {
-          findMany: vi.fn().mockResolvedValue(mockSubscriptions),
-          deleteMany: vi.fn().mockResolvedValue({ count: 2 })
-        },
-        notificationAuditLog: {
-          deleteMany: vi.fn().mockResolvedValue({ count: 5 })
-        },
-        user: { delete: vi.fn().mockResolvedValue({ userId: "123" }) }
-      };
-
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
-        return await callback(mockTx);
-      });
+      vi.mocked(archiveAndDeleteUser).mockResolvedValue(true);
+      vi.mocked(getGraphApiAccessToken).mockResolvedValue("graph-token");
+      vi.mocked(deleteB2cUser).mockResolvedValue(undefined);
 
       // Act
       await deleteUserById("123");
 
       // Assert
-      expect(prisma.$transaction).toHaveBeenCalled();
-      expect(mockTx.subscription.findMany).toHaveBeenCalledWith({
-        where: { userId: "123" },
-        select: { subscriptionId: true }
-      });
-      expect(mockTx.notificationAuditLog.deleteMany).toHaveBeenCalledWith({
-        where: { subscriptionId: { in: ["sub1", "sub2"] } }
-      });
-      expect(mockTx.subscription.deleteMany).toHaveBeenCalledWith({
-        where: { userId: "123" }
-      });
-      expect(mockTx.user.delete).toHaveBeenCalledWith({
-        where: { userId: "123" }
-      });
+      expect(archiveAndDeleteUser).toHaveBeenCalledWith("123", expect.any(Function));
+      expect(getGraphApiAccessToken).not.toHaveBeenCalled();
+
+      const deleter = vi.mocked(archiveAndDeleteUser).mock.calls[0][1];
+      await deleter("b2c-oid-1");
+      expect(getGraphApiAccessToken).toHaveBeenCalledTimes(1);
+      expect(deleteB2cUser).toHaveBeenCalledWith("graph-token", "b2c-oid-1");
     });
 
-    it("should skip audit log deletion when user has no subscriptions", async () => {
+    it("should throw 'User not found' when archiveAndDeleteUser returns false", async () => {
       // Arrange
-      const mockTx = {
-        subscription: {
-          findMany: vi.fn().mockResolvedValue([]),
-          deleteMany: vi.fn().mockResolvedValue({ count: 0 })
-        },
-        notificationAuditLog: {
-          deleteMany: vi.fn()
-        },
-        user: { delete: vi.fn().mockResolvedValue({ userId: "123" }) }
-      };
+      vi.mocked(archiveAndDeleteUser).mockResolvedValue(false);
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
-        return await callback(mockTx);
-      });
+      // Act & Assert
+      await expect(deleteUserById("missing")).rejects.toThrow("User not found");
+    });
 
-      // Act
-      await deleteUserById("123");
+    it("should propagate errors from archiveAndDeleteUser", async () => {
+      // Arrange
+      const dbError = new Error("insert failed");
+      vi.mocked(archiveAndDeleteUser).mockRejectedValue(dbError);
 
-      // Assert
-      expect(mockTx.subscription.findMany).toHaveBeenCalled();
-      expect(mockTx.notificationAuditLog.deleteMany).not.toHaveBeenCalled();
-      expect(mockTx.subscription.deleteMany).toHaveBeenCalled();
-      expect(mockTx.user.delete).toHaveBeenCalled();
+      // Act & Assert
+      await expect(deleteUserById("123")).rejects.toBe(dbError);
     });
   });
 });

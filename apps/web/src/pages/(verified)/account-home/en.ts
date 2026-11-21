@@ -1,5 +1,7 @@
 export const en = {
   pageTitle: "Dashboard - Your account",
+  bannerTitle: "Important",
+  bannerText: "Your account has been verified.",
   title: "Your account",
   sections: {
     courtHearings: {
