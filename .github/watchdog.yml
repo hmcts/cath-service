@@ -212,9 +212,20 @@ checks:
   # everything else below 660ms. Ratio-based rather than absolute so it adapts as the
   # service changes; the row-count floors stop a handful of slow requests in a quiet
   # window from registering as a regression.
+  #
+  # p95_now floor of 250ms: a ratio only means something when the denominator is big
+  # enough that doubling it implies a real change. Static assets baseline at 7-13ms, so
+  # 40ms of ordinary jitter reads as a 4x regression, and with now_n in the teens the
+  # 95th percentile is the slowest single request. Every firing of this check so far has
+  # been an asset under 110ms (issue #1130, and again #1209: search-autocomplete.js
+  # 13ms -> 52ms, sjp-filter-search.js 11ms -> 101ms, light.woff2 8ms -> 110ms), while
+  # the real page routes in the same window were at or below baseline. 250ms is the
+  # Application Insights <250ms performance bucket boundary and sits below every
+  # operation in the calibration above, so a genuine regression on a page route still
+  # fires; latency-p99-absolute remains the backstop above 5s.
   - id: latency-p95-regression
     severity: medium
-    description: Operation p95 more than double its trailing baseline.
+    description: Operation p95 above 250ms and more than double its trailing baseline.
     fingerprint-by: [name]
     rule: { column: ratio, value: '> 2' }
     query: |
@@ -230,6 +241,7 @@ checks:
       | where name !startswith 'GET /health'
       | summarize p95_now = percentile(duration, 95), now_n = count() by name
       | where now_n >= 5
+      | where p95_now > 250
       | join kind=inner base on name
       | where p95_base > 0
       | extend ratio = p95_now / p95_base
