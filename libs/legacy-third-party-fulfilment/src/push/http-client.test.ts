@@ -3,7 +3,6 @@ import { executePush } from "./http-client.js";
 
 const mockHttpsRequest = vi.hoisted(() => vi.fn());
 const MockHttpsAgent = vi.hoisted(() => vi.fn());
-const mockReadFile = vi.hoisted(() => vi.fn());
 const mockRandomBytes = vi.hoisted(() => vi.fn(() => Buffer.from("deadbeef", "hex")));
 
 vi.mock("node:https", () => ({
@@ -11,10 +10,6 @@ vi.mock("node:https", () => ({
     Agent: MockHttpsAgent,
     request: mockHttpsRequest
   }
-}));
-
-vi.mock("node:fs/promises", () => ({
-  default: { readFile: mockReadFile }
 }));
 
 vi.mock("node:crypto", () => ({
@@ -25,7 +20,6 @@ const TEST_URL = "https://api.example.gov.uk/publications";
 const TEST_CERT = "-----BEGIN CERTIFICATE-----\nMIItest\n-----END CERTIFICATE-----";
 const TEST_HEADERS = { "x-provenance": "SNL", "x-type": "99" };
 const TEST_BODY = JSON.stringify({ data: "publication content" });
-const TEST_PDF_PATH = "/tmp/publication.pdf";
 const TEST_PDF_BYTES = Buffer.from("%PDF-1.4 fake pdf content");
 
 function makeRequestMock() {
@@ -57,7 +51,6 @@ function setupResponseMock(statusCode: number) {
 describe("executePush", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReadFile.mockResolvedValue(TEST_PDF_BYTES);
   });
 
   it("returns statusCode 200 and success true for a successful POST", async () => {
@@ -189,28 +182,20 @@ describe("executePush", () => {
     expect(reqMock.destroy).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("timed out") }));
   });
 
-  describe("multipart/form-data with pdfPath", () => {
-    it("sets Content-Type to multipart/form-data when pdfPath is provided", async () => {
+  describe("multipart/form-data with a PDF", () => {
+    it("sets Content-Type to multipart/form-data when a PDF is provided", async () => {
       setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, { pdf: TEST_PDF_BYTES });
 
       const options = mockHttpsRequest.mock.calls[0][0] as { headers: Record<string, string | number> };
       expect(options.headers["Content-Type"]).toMatch(/^multipart\/form-data; boundary=/);
     });
 
-    it("reads the PDF file from the given path", async () => {
-      setupResponseMock(200);
-
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH);
-
-      expect(mockReadFile).toHaveBeenCalledWith(TEST_PDF_PATH);
-    });
-
-    it("includes the JSON part and PDF part in the multipart body", async () => {
+    it("includes the JSON part and the PDF bytes in the multipart body", async () => {
       const reqMock = setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, { pdf: TEST_PDF_BYTES });
 
       expect(reqMock.write).toHaveBeenCalledOnce();
       const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
@@ -221,12 +206,13 @@ describe("executePush", () => {
       expect(bodyStr).toContain(TEST_BODY);
       expect(bodyStr).toContain('name="pdf"');
       expect(bodyStr).toContain("application/pdf");
+      expect(writtenBuffer.includes(TEST_PDF_BYTES)).toBe(true);
     });
 
     it("includes only the PDF part when body is null", async () => {
       const reqMock = setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, TEST_PDF_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, { pdf: TEST_PDF_BYTES });
 
       expect(reqMock.write).toHaveBeenCalledOnce();
       const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
@@ -237,45 +223,32 @@ describe("executePush", () => {
       expect(bodyStr).toContain("application/pdf");
     });
 
-    it("does not set Content-Type application/json when pdfPath is provided", async () => {
+    it("does not set Content-Type application/json when a PDF is provided", async () => {
       setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, { pdf: TEST_PDF_BYTES });
 
       const options = mockHttpsRequest.mock.calls[0][0] as { headers: Record<string, string | number> };
       expect(options.headers["Content-Type"]).not.toBe("application/json");
     });
   });
 
-  describe("multipart/form-data with flatFilePath", () => {
-    const TEST_FLAT_FILE_PATH = "/tmp/artefact-1.xlsx";
-    const TEST_FLAT_FILE_BYTES = Buffer.from("fake excel content");
+  describe("multipart/form-data with a flat file", () => {
+    const TEST_FLAT_FILE = { buffer: Buffer.from("fake excel content"), fileName: "artefact-1.xlsx" };
 
-    beforeEach(() => {
-      mockReadFile.mockResolvedValue(TEST_FLAT_FILE_BYTES);
-    });
-
-    it("sets Content-Type to multipart/form-data when flatFilePath is provided", async () => {
+    it("sets Content-Type to multipart/form-data when a flat file is provided", async () => {
       setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, { flatFile: TEST_FLAT_FILE });
 
       const options = mockHttpsRequest.mock.calls[0][0] as { headers: Record<string, string | number> };
       expect(options.headers["Content-Type"]).toMatch(/^multipart\/form-data; boundary=/);
     });
 
-    it("reads the flat file from the given path", async () => {
-      setupResponseMock(200);
-
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
-
-      expect(mockReadFile).toHaveBeenCalledWith(TEST_FLAT_FILE_PATH);
-    });
-
-    it("includes only the file part with correct content type for xlsx", async () => {
+    it("includes only the file part, with the file name, content type for xlsx and the file bytes", async () => {
       const reqMock = setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, TEST_FLAT_FILE_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, { flatFile: TEST_FLAT_FILE });
 
       expect(reqMock.write).toHaveBeenCalledOnce();
       const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
@@ -286,12 +259,13 @@ describe("executePush", () => {
       expect(bodyStr).toContain("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       expect(bodyStr).not.toContain('name="json"');
       expect(bodyStr).not.toContain('name="pdf"');
+      expect(writtenBuffer.includes(TEST_FLAT_FILE.buffer)).toBe(true);
     });
 
     it("uses application/octet-stream for unknown file extensions", async () => {
       const reqMock = setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, undefined, "/tmp/artefact-1.dat");
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, null, { flatFile: { ...TEST_FLAT_FILE, fileName: "artefact-1.dat" } });
 
       const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
       const bodyStr = writtenBuffer.toString("binary");
@@ -299,10 +273,10 @@ describe("executePush", () => {
       expect(bodyStr).toContain("application/octet-stream");
     });
 
-    it("takes priority over pdfPath when both are provided", async () => {
+    it("takes priority over a PDF when both are provided", async () => {
       const reqMock = setupResponseMock(200);
 
-      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, TEST_PDF_PATH, TEST_FLAT_FILE_PATH);
+      await executePush(TEST_URL, TEST_CERT, TEST_HEADERS, TEST_BODY, { pdf: TEST_PDF_BYTES, flatFile: TEST_FLAT_FILE });
 
       const writtenBuffer: Buffer = reqMock.write.mock.calls[0][0];
       const bodyStr = writtenBuffer.toString("binary");
