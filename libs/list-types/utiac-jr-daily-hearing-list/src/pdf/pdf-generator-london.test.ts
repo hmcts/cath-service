@@ -72,8 +72,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "default.pdf",
-      sizeBytes: 100,
-      exceedsMaxSize: false
+      sizeBytes: 100
     });
     mockCreatePdfErrorResult.mockImplementation((error: unknown) => ({
       success: false,
@@ -92,8 +91,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "test-artefact-123.pdf",
-      sizeBytes: 1024,
-      exceedsMaxSize: false
+      sizeBytes: 1024
     });
 
     // Act
@@ -109,7 +107,6 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     expect(result.success).toBe(true);
     expect(result.pdfPath).toContain("test-artefact-123.pdf");
     expect(result.sizeBytes).toBe(1024);
-    expect(result.exceedsMaxSize).toBe(false);
   });
 
   it("should return error when PDF generation fails", async () => {
@@ -210,8 +207,7 @@ describe("generateUtiacJrLondonDailyHearingListPdf", () => {
     mockSavePdfToStorage.mockResolvedValue({
       success: true,
       pdfPath: "provenance-test.pdf",
-      sizeBytes: 100,
-      exceedsMaxSize: false
+      sizeBytes: 100
     });
 
     // Act

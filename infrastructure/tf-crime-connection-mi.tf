@@ -1,20 +1,25 @@
 # Crime Portal's AKS workloads exchange their service account tokens for
 # cath-cp-<env>-mi tokens. Issuer/subject pairs come from Crime Portal via the
 # crime-oidc-config secret in the app vault, set by hand like the APIM secrets
-# in data.tf. It must exist in every planned environment before merge.
+# in data.tf. It must exist in every environment where crime_federation_enabled
+# is true (see env-config.tf) before merge. The switch is per environment because
+# on a new environment's first plan the vault does not exist yet, so an
+# unconditional read would leave count unknown and fail the plan.
 #
 # Deliberately no try() around jsondecode: a silent fallback to no connections
-# would destroy every credential. Keep "connections" append-only - with count,
-# removing an entry re-indexes and recreates every later credential.
+# would destroy every credential. The switch is explicit per environment instead.
+# Keep "connections" append-only - with count, removing an entry re-indexes and
+# recreates every later credential.
 locals {
   mi_resource_group_name = "managed-identities-${var.env}-rg"
-  crime_oidc_json_config = jsondecode(data.azurerm_key_vault_secret.crime_oidc_config.value)
+  crime_oidc_connections = local.crime_federation_enabled ? jsondecode(data.azurerm_key_vault_secret.crime_oidc_config[0].value).connections : []
 }
 
 # The module output, not data.azurerm_key_vault.key_vault: that data source's
 # depends_on would defer this read whenever the vault module has a pending
 # change, leaving count unknown and failing the plan.
 data "azurerm_key_vault_secret" "crime_oidc_config" {
+  count        = local.crime_federation_enabled ? 1 : 0
   name         = "crime-oidc-config"
   key_vault_id = module.key_vault.key_vault_id
 }
@@ -32,12 +37,12 @@ resource "azurerm_user_assigned_identity" "app_cp_mi" {
 # Federation needs an exact string match, and Crime Portal's config has had
 # trailing spaces, hence trimspace().
 resource "azurerm_federated_identity_credential" "cath_crime_federated_connection" {
-  count = length(local.crime_oidc_json_config.connections)
+  count = length(local.crime_oidc_connections)
 
-  name                = sensitive("cath-${var.env}-crime-federated-credential-${local.crime_oidc_json_config.connections[count.index].name}")
+  name                = sensitive("cath-${var.env}-crime-federated-credential-${local.crime_oidc_connections[count.index].name}")
   resource_group_name = local.mi_resource_group_name
   audience            = ["api://AzureADTokenExchange"]
-  issuer              = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].issuer))
+  issuer              = sensitive(trimspace(local.crime_oidc_connections[count.index].issuer))
   parent_id           = azurerm_user_assigned_identity.app_cp_mi.id
-  subject             = sensitive(trimspace(local.crime_oidc_json_config.connections[count.index].subject))
+  subject             = sensitive(trimspace(local.crime_oidc_connections[count.index].subject))
 }

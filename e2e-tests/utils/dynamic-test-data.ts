@@ -7,7 +7,7 @@
  */
 
 import { prefixName } from "./test-prefix.js";
-import { createTestLocation, getFirstSubJurisdiction } from "./test-support-api.js";
+import { createTestJurisdiction, createTestLocation, getFirstSubJurisdiction, type LocationReferenceInput } from "./test-support-api.js";
 
 /**
  * Generate a unique test identifier for this test instance.
@@ -23,6 +23,7 @@ export function generateTestId(): string {
 interface TestLocationOptions {
   namePrefix?: string;
   welshNamePrefix?: string;
+  locationReferences?: LocationReferenceInput[];
 }
 
 interface TestLocationResult {
@@ -38,7 +39,7 @@ interface TestLocationResult {
  */
 export async function createUniqueTestLocation(options: TestLocationOptions = {}): Promise<TestLocationResult> {
   const testId = generateTestId();
-  const { namePrefix = "Test Court", welshNamePrefix = "Llys Prawf" } = options;
+  const { namePrefix = "Test Court", welshNamePrefix = "Llys Prawf", locationReferences } = options;
 
   // Use prefixName to ensure cleanup works
   const name = prefixName(`${namePrefix} ${testId}`);
@@ -50,7 +51,8 @@ export async function createUniqueTestLocation(options: TestLocationOptions = {}
   const location = await createTestLocation({
     name,
     welshName,
-    subJurisdictionIds: [subJurisdiction.subJurisdictionId]
+    subJurisdictionIds: [subJurisdiction.subJurisdictionId],
+    locationReferences
   });
 
   return {
@@ -58,4 +60,22 @@ export async function createUniqueTestLocation(options: TestLocationOptions = {}
     name: location.name,
     welshName: location.welshName
   };
+}
+
+/**
+ * Create a prefixed jurisdiction that only this test edits or deletes.
+ * Cleanup happens automatically in global-teardown via prefix-based deletion.
+ */
+export async function createUniqueTestJurisdiction(namePrefix = "Test Jurisdiction"): Promise<TestJurisdictionResult> {
+  const testId = generateTestId();
+  return createTestJurisdiction({
+    name: prefixName(`${namePrefix} ${testId}`),
+    welshName: prefixName(`Awdurdodaeth Prawf ${testId}`)
+  });
+}
+
+interface TestJurisdictionResult {
+  jurisdictionId: number;
+  name: string;
+  welshName: string;
 }

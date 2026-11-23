@@ -86,23 +86,30 @@ jobs:
       - name: Load e2e test credentials from bootstrap Key Vault
         run: |
           KV="cath-bootstrap-aat"
-          fetch() { az keyvault secret show --vault-name "$KV" --name "$1" --query value -o tsv; }
+          # Register each value as a mask before exporting it. Values written to GITHUB_ENV are
+          # otherwise printed in plain text in every later step's env listing.
+          export_secret() {
+            local value
+            value=$(az keyvault secret show --vault-name "$KV" --name "$2" --query value -o tsv)
+            echo "::add-mask::$value"
+            echo "$1=$value" >> "$GITHUB_ENV"
+          }
 
-          echo "SSO_TEST_SYSTEM_ADMIN_EMAIL=$(fetch sso-test-system-admin-account-user)" >> $GITHUB_ENV
-          echo "SSO_TEST_SYSTEM_ADMIN_PASSWORD=$(fetch sso-test-system-admin-account-pwd)" >> $GITHUB_ENV
-          echo "SSO_TEST_LOCAL_ADMIN_EMAIL=$(fetch sso-test-admin-local-account-user)" >> $GITHUB_ENV
-          echo "SSO_TEST_LOCAL_ADMIN_PASSWORD=$(fetch sso-test-admin-local-account-pwd)" >> $GITHUB_ENV
-          echo "SSO_TEST_CTSC_ADMIN_EMAIL=$(fetch sso-test-admin-account-ctsc-user)" >> $GITHUB_ENV
-          echo "SSO_TEST_CTSC_ADMIN_PASSWORD=$(fetch sso-test-admin-account-ctsc-pwd)" >> $GITHUB_ENV
-          echo "SSO_TEST_NO_ROLES_EMAIL=$(fetch sso-test-no-roles-account-user)" >> $GITHUB_ENV
-          echo "SSO_TEST_NO_ROLES_PASSWORD=$(fetch sso-test-no-roles-account-pwd)" >> $GITHUB_ENV
-          echo "CFT_VALID_TEST_ACCOUNT=$(fetch cft-valid-test-account)" >> $GITHUB_ENV
-          echo "CFT_VALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-valid-test-account-password)" >> $GITHUB_ENV
-          echo "CFT_INVALID_TEST_ACCOUNT=$(fetch cft-invalid-test-account)" >> $GITHUB_ENV
-          echo "CFT_INVALID_TEST_ACCOUNT_PASSWORD=$(fetch cft-invalid-test-account-password)" >> $GITHUB_ENV
-          echo "CRIME_IDAM_VALID_TEST_ACCOUNT=$(fetch crime-valid-test-account)" >> $GITHUB_ENV
-          echo "CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD=$(fetch crime-valid-test-account-password)" >> $GITHUB_ENV
-          echo "GOVUK_NOTIFY_API_KEY=$(fetch gov-uk-notify-test-api-key)" >> $GITHUB_ENV
+          export_secret SSO_TEST_SYSTEM_ADMIN_EMAIL sso-test-system-admin-account-user
+          export_secret SSO_TEST_SYSTEM_ADMIN_PASSWORD sso-test-system-admin-account-pwd
+          export_secret SSO_TEST_LOCAL_ADMIN_EMAIL sso-test-admin-local-account-user
+          export_secret SSO_TEST_LOCAL_ADMIN_PASSWORD sso-test-admin-local-account-pwd
+          export_secret SSO_TEST_CTSC_ADMIN_EMAIL sso-test-admin-account-ctsc-user
+          export_secret SSO_TEST_CTSC_ADMIN_PASSWORD sso-test-admin-account-ctsc-pwd
+          export_secret SSO_TEST_NO_ROLES_EMAIL sso-test-no-roles-account-user
+          export_secret SSO_TEST_NO_ROLES_PASSWORD sso-test-no-roles-account-pwd
+          export_secret CFT_VALID_TEST_ACCOUNT cft-valid-test-account
+          export_secret CFT_VALID_TEST_ACCOUNT_PASSWORD cft-valid-test-account-password
+          export_secret CFT_INVALID_TEST_ACCOUNT cft-invalid-test-account
+          export_secret CFT_INVALID_TEST_ACCOUNT_PASSWORD cft-invalid-test-account-password
+          export_secret CRIME_IDAM_VALID_TEST_ACCOUNT crime-valid-test-account
+          export_secret CRIME_IDAM_VALID_TEST_ACCOUNT_PASSWORD crime-valid-test-account-password
+          export_secret GOVUK_NOTIFY_API_KEY gov-uk-notify-test-api-key
 
       - name: Enable Corepack
         run: corepack enable

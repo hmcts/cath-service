@@ -33,6 +33,8 @@
     "dev:web:nowatch": "yarn workspace @hmcts/web run dev:nowatch",
     "dev:up": "docker compose up -d && yarn db:migrate:dev && yarn db:seed",
     "dev:down": "docker compose down",
+    "dev:up:nodocker": "scripts/dev-nodocker.sh up && yarn db:migrate && yarn db:seed",
+    "dev:down:nodocker": "scripts/dev-nodocker.sh down",
     "db:migrate": "yarn workspace @hmcts/postgres run migrate",
     "db:seed": "tsx --env-file-if-exists=.env apps/postgres/prisma/seed.ts",
     "db:migrate:dev": "yarn workspace @hmcts/postgres run migrate:dev",

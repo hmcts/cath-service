@@ -59,8 +59,9 @@ jobs:
   #
   # Matrixed rather than one job looping the environments, because the state store
   # is per subscription: aat and demo use mgmtstatestorenonprod in DCD-CNP-DEV,
-  # perftest uses mgmtstatestoreqa in DCD-CNP-QA. One leg per environment keeps
-  # the az subscription context to one value per leg.
+  # perftest uses mgmtstatestoreqa in DCD-CNP-QA, prod uses mgmtstatestoreprod in
+  # DCD-CNP-PROD. One leg per environment keeps the az subscription context and
+  # the credential to one value per leg.
   state-store-init:
     name: State Store ${{ matrix.environment }}
     strategy:
@@ -72,10 +73,12 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # Prod uses its own principal, cath-service-prod (#1095). The preview
+      # principal has no access to the PROD subscriptions.
       - name: Azure login
         uses: azure/login@v3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+          creds: ${{ matrix.environment == 'prod' && secrets.AZURE_CREDENTIALS_CFT_PROD || secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
 
       - name: Create the terraform state container if it is missing
         env:
@@ -84,8 +87,8 @@ jobs:
           # inputs passed to job.terraform.yml below - the library derives the
           # state store from them, and it reads the key in the application
           # subscription's context, so a mismatch fails with ResourceGroupNotFound.
-          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
-          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
+          SUBSCRIPTION: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA","prod":"DCD-CNP-PROD"}')[matrix.environment] }}
+          STORAGE_ACCOUNT_POSTFIX: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa","prod":"prod"}')[matrix.environment] }}
         run: |
           set -euo pipefail
 
@@ -147,23 +150,26 @@ jobs:
       # both a cross-subscription private endpoint and a missing resource group.
       # It is currently parked - see workflow.main.yml - so this value is not
       # exercised, but it is the correct one for when it is re-enabled.
-      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA"}')[matrix.environment] }}
+      subscription: ${{ fromJson('{"aat":"DCD-CNP-DEV","demo":"DCD-CNP-DEV","ithc":"DCD-CNP-QA","perftest":"DCD-CNP-QA","prod":"DCD-CNP-PROD"}')[matrix.environment] }}
       # The environment name does NOT match the CFTAPPS subscription name for two
       # of these: aat's network lives in DCD-CFTAPPS-STG and perftest's in
-      # DCD-CFTAPPS-TEST. Only demo and ithc line up. DCD-CFTAPPS-PERFTEST does
+      # DCD-CFTAPPS-TEST. Only demo, ithc and prod line up. DCD-CFTAPPS-PERFTEST does
       # not exist - az fails with "Subscription not found" - so this is a real
       # mapping, not a typo to be tidied up.
-      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-TEST"}')[matrix.environment] }}
+      aks-subscription: ${{ fromJson('{"aat":"DCD-CFTAPPS-STG","demo":"DCD-CFTAPPS-DEMO","ithc":"DCD-CFTAPPS-ITHC","perftest":"DCD-CFTAPPS-TEST","prod":"DCD-CFTAPPS-PROD"}')[matrix.environment] }}
       # The state store lives in the same subscription as the application
       # resources, so this tracks the subscription above: DCD-CNP-DEV has
-      # mgmtstatestorenonprod, DCD-CNP-QA has mgmtstatestoreqa. The library reads
+      # mgmtstatestorenonprod, DCD-CNP-QA has mgmtstatestoreqa, DCD-CNP-PROD has
+      # mgmtstatestoreprod. The library reads
       # the key in the application subscription's context with no way to override
       # it, so pointing perftest at QA while leaving this on nonprod fails with
       # "ResourceGroupNotFound: mgmt-state-store-nonprod".
-      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa"}')[matrix.environment] }}
+      storage-account: ${{ fromJson('{"aat":"nonprod","demo":"nonprod","ithc":"qa","perftest":"qa","prod":"prod"}')[matrix.environment] }}
       plan-only: ${{ inputs.plan-only }}
-      # One comment per PR, not one per environment. Every plan is still in the
-      # Actions logs; a comment each would bury the review discussion.
-      post-plan-to-pr: ${{ matrix.environment == 'aat' }}
+      # aat for non-prod, plus prod, whose plan must be reviewed before master
+      # applies it. Not one per environment: every plan is still in the Actions
+      # logs, and a comment each would bury the review discussion.
+      post-plan-to-pr: ${{ matrix.environment == 'aat' || matrix.environment == 'prod' }}
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}
+      # Prod uses its own principal - see state-store-init.
+      AZURE_CREDENTIALS: ${{ matrix.environment == 'prod' && secrets.AZURE_CREDENTIALS_CFT_PROD || secrets.AZURE_CREDENTIALS_CFT_PREVIEW }}

@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
+import { switchLanguage } from "../../utils/language-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 import { getTestPrefix } from "../../utils/test-prefix.js";
 import { findTestThirdPartyUserByName, getTestThirdPartyUser } from "../../utils/test-support-api.js";
@@ -232,13 +233,6 @@ test.describe("Third party subscriber", () => {
     await expect(page.locator("body")).not.toContainText(subscriberName);
   });
 });
-
-// Admin pages have no language toggle, so switch with the lng query parameter
-async function switchLanguage(page: Page, language: "en" | "cy") {
-  const url = new URL(page.url());
-  url.searchParams.set("lng", language);
-  await page.goto(url.toString());
-}
 
 // The radio layout is behind a LaunchDarkly flag; without it each list type has a sensitivity dropdown
 async function subscribeFirstListTypeAsPublic(page: Page) {
