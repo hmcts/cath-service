@@ -13,7 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn build:nunjucks",
+    "build:nunjucks": "cd src && find pages -name '*.njk' | tar -cf - -T - | tar -xf - -C ../dist",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",

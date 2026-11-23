@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { listTypeData } from "@hmcts/list-types-common/list-type-data";
+import { Provenance } from "@hmcts/publication";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { buildPublisherDocument, type OpenApiDocument } from "./publisher-document.js";
@@ -44,6 +45,20 @@ describe("committed publisher document", () => {
     it("should be sorted", () => {
       // Assert
       expect(enumValues).toEqual([...enumValues].sort((a, b) => a.localeCompare(b, "en")));
+    });
+  });
+
+  describe("x-provenance APIM check", () => {
+    it("should allow exactly the external Provenance values", () => {
+      // Arrange
+      const policy = readFileSync(path.join(REPO_ROOT, OPERATION_POLICIES_PATH, "createPublication.xml"), "utf-8");
+      const checkHeader = policy.match(/<check-header name="x-provenance"[^>]*>([\s\S]*?)<\/check-header>/)?.[1] ?? "";
+
+      // Act
+      const allowedValues = [...checkHeader.matchAll(/<value>([^<]+)<\/value>/g)].map((match) => match[1]);
+
+      // Assert
+      expect(allowedValues).toEqual(Object.values(Provenance).filter((provenance) => provenance !== Provenance.MANUAL_UPLOAD));
     });
   });
 
@@ -125,13 +140,14 @@ describe("committed publisher document", () => {
       expect(committed.info.version).toBe(inputs.source.info.version);
     });
 
-    it("should list only the APIM gateway server", () => {
+    it("should list only the APIM gateway servers", () => {
       // Assert
       expect(committed.servers).toEqual([
         expect.objectContaining({
           url: "https://cft-api-mgmt.{environment}.platform.hmcts.net/cath",
           variables: { environment: { default: "aat", enum: ["aat", "demo", "perftest"] } }
-        })
+        }),
+        expect.objectContaining({ url: "https://cft-api-mgmt.platform.hmcts.net/cath" })
       ]);
     });
 

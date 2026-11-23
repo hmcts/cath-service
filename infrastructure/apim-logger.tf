@@ -31,9 +31,10 @@ resource "azurerm_api_management_logger" "apim" {
 
 # Kept until the diagnostic has moved to azurerm_api_management_logger.apim: APIM
 # refuses to delete a logger a diagnostic is attached to, and Terraform deletes
-# before it updates. Remove in a follow-up PR.
+# before it updates. Remove in a follow-up PR. Prod's diagnostic was never
+# attached to it, so it is not created there.
 resource "azurerm_api_management_logger" "cath" {
-  count    = local.deploy_apim ? 1 : 0
+  count    = local.deploy_apim && !local.is_prod ? 1 : 0
   provider = azurerm.cftapps
 
   name                = "cath-appinsights-logger"
@@ -63,9 +64,10 @@ resource "azurerm_api_management_api_diagnostic" "cath" {
   verbosity                 = "verbose"
   http_correlation_protocol = "W3C"
 
-  # Payloads contain personal data: set body_bytes to 0 for prod.
+  # Payloads contain personal data, so prod logs no bodies in any direction
+  # (local.apim_log_body_bytes). Non-prod logs 8192 bytes.
   frontend_request {
-    body_bytes = 8192
+    body_bytes = local.apim_log_body_bytes
     headers_to_log = [
       "content-type",
       "accept",
@@ -84,7 +86,7 @@ resource "azurerm_api_management_api_diagnostic" "cath" {
   }
 
   frontend_response {
-    body_bytes = 8192
+    body_bytes = local.apim_log_body_bytes
     headers_to_log = [
       "content-type",
       "content-length",
@@ -93,7 +95,7 @@ resource "azurerm_api_management_api_diagnostic" "cath" {
   }
 
   backend_request {
-    body_bytes = 8192
+    body_bytes = local.apim_log_body_bytes
     headers_to_log = [
       "content-type",
       "accept",
@@ -102,7 +104,7 @@ resource "azurerm_api_management_api_diagnostic" "cath" {
   }
 
   backend_response {
-    body_bytes = 8192
+    body_bytes = local.apim_log_body_bytes
     headers_to_log = [
       "content-type",
       "content-length",

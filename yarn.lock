@@ -1326,7 +1326,7 @@ __metadata:
     "@hmcts/sscs-daily-hearing-list": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/multer": "npm:2.1.0"
     "@types/node": "npm:24.10.4"
     typescript: "npm:6.0.3"
@@ -1343,7 +1343,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1387,7 +1387,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     supertest: "npm:^7.1.4"
     typescript: "npm:6.0.3"
@@ -1401,7 +1400,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1471,7 +1470,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1490,7 +1489,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1509,7 +1508,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1529,7 +1528,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1549,7 +1548,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1575,7 +1574,7 @@ __metadata:
     "@hmcts/daily-cause-list-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1594,7 +1593,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1624,7 +1623,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
@@ -1644,7 +1643,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
@@ -1664,7 +1663,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     exceljs: "npm:4.4.0"
@@ -1684,7 +1683,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1711,7 +1710,7 @@ __metadata:
     "@hmcts/location": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1731,7 +1730,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1749,7 +1748,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/location": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
@@ -1778,7 +1777,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/test-support": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     "@types/nunjucks": "npm:3.2.6"
     luxon: "npm:3.7.2"
@@ -1796,7 +1795,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1814,7 +1813,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1832,7 +1831,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1863,7 +1862,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1882,7 +1881,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -1900,7 +1899,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -1972,7 +1971,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -2145,7 +2144,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -2269,7 +2268,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -2298,7 +2297,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -2316,7 +2315,7 @@ __metadata:
   dependencies:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -2477,7 +2476,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
@@ -2509,7 +2508,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
@@ -2527,7 +2526,7 @@ __metadata:
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
     "@hmcts/upper-tribunal-common": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     typescript: "npm:6.0.3"
@@ -2544,7 +2543,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2562,7 +2561,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     luxon: "npm:3.7.2"
     nunjucks: "npm:3.2.4"
@@ -2582,13 +2581,9 @@ __metadata:
     "@types/multer": "npm:2.1.0"
     "@types/nunjucks": "npm:3.2.6"
     "@types/passport": "npm:^1.0.17"
-    "@types/pg": "npm:8.20.0"
-    "@types/pg-format": "npm:1.0.5"
     "@types/sanitize-html": "npm:2.16.1"
     connect-redis: "npm:9.0.0"
     express-session: "npm:1.19.0"
-    pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     sanitize-html: "npm:2.17.7"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.10"
@@ -2602,16 +2597,10 @@ __metadata:
     multer: ^2.0.2
     nunjucks: ^3.2.4
     passport: ^0.7.0
-    pg: ^8.13.1
-    pg-format: ^1.0.4
   peerDependenciesMeta:
     connect-redis:
       optional: true
     express-session:
-      optional: true
-    pg:
-      optional: true
-    pg-format:
       optional: true
   languageName: unknown
   linkType: soft
@@ -2685,7 +2674,6 @@ __metadata:
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
     pg: "npm:8.21.0"
-    pg-format: "npm:1.0.4"
     redis: "npm:5.12.1"
     sass: "npm:1.102.0"
     supertest: "npm:7.2.2"
@@ -2702,7 +2690,7 @@ __metadata:
     "@hmcts/list-types-common": "workspace:*"
     "@hmcts/pdf-generation": "workspace:*"
     "@hmcts/postgres-prisma": "workspace:*"
-    "@types/luxon": "npm:3.7.5"
+    "@types/luxon": "npm:3.7.6"
     "@types/node": "npm:24.10.4"
     exceljs: "npm:4.4.0"
     luxon: "npm:3.7.2"
@@ -4662,10 +4650,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:3.7.5":
-  version: 3.7.5
-  resolution: "@types/luxon@npm:3.7.5"
-  checksum: 10c0/7b851e94cd0d47784682dd3bc412960519d2c888bcca1408b6c8484742805637ed1a94797ce4e44fc925c8b20b52803035880d0122e3658c17f98838b387c46b
+"@types/luxon@npm:3.7.6":
+  version: 3.7.6
+  resolution: "@types/luxon@npm:3.7.6"
+  checksum: 10c0/135c55910d8f4fb615cbfaa93b173e57e3eed9731da683005acdb84dba5ece5dbbf56cc82330015ccf5247a6e84fefbb2e2ebe255c957636f604f79efacb4214
   languageName: node
   linkType: hard
 
@@ -4805,13 +4793,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg-format@npm:1.0.5":
-  version: 1.0.5
-  resolution: "@types/pg-format@npm:1.0.5"
-  checksum: 10c0/6581c884c1ed746ecfc9ffaaef9faf5c3eb8d50ae0109ae94fe69e34ec3acbe2575aa79044679e9c669beb32a4970020e4f2163bff3d53a854c517fe06cd7a51
-  languageName: node
-  linkType: hard
-
 "@types/pg-pool@npm:2.0.7":
   version: 2.0.7
   resolution: "@types/pg-pool@npm:2.0.7"
@@ -4821,7 +4802,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pg@npm:*, @types/pg@npm:8.20.0, @types/pg@npm:^8.16.0":
+"@types/pg@npm:*, @types/pg@npm:^8.16.0":
   version: 8.20.0
   resolution: "@types/pg@npm:8.20.0"
   dependencies:
@@ -5098,14 +5079,14 @@ __metadata:
   linkType: hard
 
 "accessible-autocomplete@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "accessible-autocomplete@npm:3.0.1"
+  version: 3.0.2
+  resolution: "accessible-autocomplete@npm:3.0.2"
   peerDependencies:
     preact: ^8.0.0
   peerDependenciesMeta:
     preact:
       optional: true
-  checksum: 10c0/a90d76f29940cd7c5cb0795f2062d32f8f4904bae3acfc89eab717c56f2b18ce3fd07a4035ec5e30643119cdfe56be3a4bc260eb80e39eeb4009ea5dc09b163c
+  checksum: 10c0/23be53e61c1fde637cc04a1e842ff01ad8a76e6137473fcce975f5350ab23b075003b3f0544745b822e01de3f919cca83859e68a84e8119ae2567aa3b3c2e6b6
   languageName: node
   linkType: hard
 
@@ -9113,13 +9094,6 @@ __metadata:
   version: 2.14.0
   resolution: "pg-connection-string@npm:2.14.0"
   checksum: 10c0/c26d85970f782de72b90aa45b4acfa34df90242fc08bc676e8827297164044dbfb40a2cf20b0646bd02662a6b14c5ed27f322db627e41e582f2b705bc41e8b47
-  languageName: node
-  linkType: hard
-
-"pg-format@npm:1.0.4":
-  version: 1.0.4
-  resolution: "pg-format@npm:1.0.4"
-  checksum: 10c0/e40718c181cbdf545c54bc9347e15e51bbf47b9e043029cb2dc0556112df41cc17ea699675b577c6c0e9889e28a56034b32633ded7c44b5dd30e8eca0bce97df
   languageName: node
   linkType: hard
 

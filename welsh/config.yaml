@@ -1,0 +1,28 @@
+# Welsh translation settings for CaTH. Read by the agent hub's welsh plugin (hmcts/dtsse-agent-hub).
+# Reference: the welsh plugin's README in hmcts/dtsse-agent-hub (packages/agent-hub/plugins/welsh/README.md)
+
+# Repos to scan, and the adapter for each: "." is this repo.
+repos:
+  - path: .
+    adapters: [ts-locale-pair]
+    include: ["apps/web/src/**", "libs/**/src/**"]
+    # Pages only HMCTS staff see. Welsh is for the public, so these need none and are never scanned.
+    # Each is behind requireRole for SYSTEM_ADMIN or INTERNAL_ADMIN_*, and the service hides its Welsh
+    # toggle for those roles (libs/web-core/src/middleware/i18n/locale-middleware.ts).
+    staff_only:
+      - "apps/web/src/pages/(admin)/**"
+      - "apps/web/src/pages/(system-admin)/**"
+      - "apps/web/src/pages/upload-reference-data/**"
+      - "libs/system-admin-pages/**"
+    test: yarn test
+
+# English strings that are correctly identical in Welsh (names, codes, URLs).
+# Only a BA adds to this — e.g. after the WLU confirms an address stays in English.
+identical_allowlist: []
+
+# Extra regexes that mark a Welsh value as a placeholder, on top of the built-in ones.
+placeholder_patterns: []
+
+# English the catalogue must never fill automatically because its Welsh depends
+# on the question (Yes/No are built in). A BA picks one with --choose REF=ROW-ID.
+context_sensitive: []

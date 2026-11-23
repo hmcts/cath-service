@@ -1,0 +1,128 @@
+name: Watchdog archive
+
+# Archives closed watchdog tracking issues on the CaTH Kanban project. The project's
+# auto-add workflow puts every tracking issue on the board, and closing an issue does
+# not take it off again, so closed ones pile up in Backlog.
+#
+# Every trigger runs the same sweep over all closed, un-archived watchdog items, so it
+# also clears whatever an earlier failed run left behind.
+
+on:
+  # Catches issues closed by people. The watchdog closes its own issues with
+  # GITHUB_TOKEN, and events caused by GITHUB_TOKEN do not start other workflows, so
+  # those are only picked up by the schedule below.
+  issues:
+    types: [closed]
+  # After the watchdog's last tick of the day.
+  schedule:
+    - cron: '0 19 * * 1-5'
+  workflow_dispatch:
+
+concurrency:
+  group: watchdog-archive
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  archive-closed:
+    name: Archive closed issues
+    if: github.event_name != 'issues' || contains(github.event.issue.labels.*.name, 'claude:watchdog')
+    runs-on: ubuntu-latest
+    # Everything goes through the App token: GITHUB_TOKEN cannot reach org projects.
+    permissions: {}
+    steps:
+      # Housekeeping must never turn a run red, and the action refuses a permission
+      # the App lacks.
+      - name: Generate GitHub App Token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.CLAUDE_CODE_APP_ID }}
+          private-key: ${{ secrets.CLAUDE_CODE_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          # Scoped down to the two things this job does: read issues through the
+          # project, and archive project items.
+          permission-organization-projects: write
+          permission-issues: read
+
+      - name: Explain the sweep that did not run
+        if: steps.app-token.outcome != 'success'
+        run: |
+          echo "::warning::could not mint an App token with organization-projects: write — closed watchdog issues were not archived on project 43"
+
+      - name: Archive closed issues on the project
+        if: steps.app-token.outcome == 'success'
+        uses: actions/github-script@v9
+        env:
+          PROJECT_NUMBER: '43'
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            // Mutations count against the secondary rate limit. Whatever is left is
+            // picked up by a later run.
+            const MAX_PER_RUN = 50;
+
+            // Filtered by the project rather than read off the repository's closed
+            // issues, so the cost tracks what is still to archive and not every
+            // tracking issue ever closed.
+            //
+            // Collected in full before archiving anything: an archived item leaves the
+            // filtered set, which would move the cursor under a page still being read.
+            let project;
+            const items = [];
+            try {
+              let cursor = null;
+              do {
+                const { organization } = await github.graphql(`
+                  query($org: String!, $number: Int!, $filter: String!, $cursor: String) {
+                    organization(login: $org) {
+                      projectV2(number: $number) {
+                        id
+                        items(first: 100, after: $cursor, query: $filter, archivedStates: [NOT_ARCHIVED]) {
+                          nodes { id content { ... on Issue { number } } }
+                          pageInfo { hasNextPage endCursor }
+                        }
+                      }
+                    }
+                  }`, {
+                  org: owner,
+                  number: Number(process.env.PROJECT_NUMBER),
+                  filter: `is:issue is:closed label:claude:watchdog repo:${owner}/${repo}`,
+                  cursor,
+                });
+                project = organization.projectV2;
+                items.push(...project.items.nodes);
+                cursor = project.items.pageInfo.hasNextPage ? project.items.pageInfo.endCursor : null;
+              } while (cursor);
+            } catch (error) {
+              core.warning(`could not read project ${process.env.PROJECT_NUMBER} — nothing archived: ${error.message}`);
+              return;
+            }
+
+            const batch = items.slice(0, MAX_PER_RUN);
+            const archived = [];
+            for (const item of batch) {
+              try {
+                await github.graphql(`
+                  mutation($projectId: ID!, $itemId: ID!) {
+                    archiveProjectV2Item(input: { projectId: $projectId, itemId: $itemId }) {
+                      item { id }
+                    }
+                  }`, { projectId: project.id, itemId: item.id });
+              } catch (error) {
+                // Every remaining call would fail the same way, permission or rate limit.
+                core.warning(`stopped after archiving ${archived.length}: #${item.content?.number} failed: ${error.message}`);
+                break;
+              }
+              archived.push(`#${item.content?.number}`);
+            }
+
+            core.info(archived.length
+              ? `archived on project ${process.env.PROJECT_NUMBER}: ${archived.join(', ')}`
+              : 'no closed watchdog issues left to archive');
+            if (items.length > batch.length) {
+              core.info(`${items.length - batch.length} more left for a later run`);
+            }

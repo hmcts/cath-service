@@ -145,26 +145,19 @@ async function buildMetadata(artefact: FulfilmentArtefact, logPrefix: string): P
     publicationId: artefact.artefactId,
     listType: artefact.listType.name,
     locationName: location?.name ?? "",
-    contentDate: toLocalDateTimeArray(artefact.contentDate),
+    contentDate: toLocalDateTimeString(artefact.contentDate),
     sensitivity: artefact.sensitivity,
     language: artefact.language,
-    displayFrom: artefact.displayFrom ? toLocalDateTimeArray(artefact.displayFrom) : null,
-    displayTo: artefact.displayTo ? toLocalDateTimeArray(artefact.displayTo) : null
+    displayFrom: artefact.displayFrom ? toLocalDateTimeString(artefact.displayFrom) : null,
+    displayTo: artefact.displayTo ? toLocalDateTimeString(artefact.displayTo) : null
   };
 }
 
-// Legacy's WebClient uses Spring's default Jackson mapper, which writes LocalDateTime as an array:
-// [year, month, day, hour, minute], then seconds and nanoseconds only when they are non-zero.
+// Legacy runs Jackson 3, where WRITE_DATES_AS_TIMESTAMPS is off by default, so LocalDateTime is written as
+// ISO_LOCAL_DATE_TIME: seconds always, the fraction only when non-zero without trailing zeros, and no offset.
 // The columns are stored without a time zone and read by Prisma as UTC, so the UTC fields are the stored value.
-function toLocalDateTimeArray(date: Date): number[] {
-  const dateTime = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes()];
-  const seconds = date.getUTCSeconds();
-  const nanoseconds = date.getUTCMilliseconds() * 1_000_000;
-
-  if (nanoseconds > 0) {
-    return [...dateTime, seconds, nanoseconds];
-  }
-  return seconds > 0 ? [...dateTime, seconds] : dateTime;
+function toLocalDateTimeString(date: Date): string {
+  return date.toISOString().replace(/\.?0*Z$/, "");
 }
 
 async function deliverToSubscriber(
@@ -216,9 +209,9 @@ interface PublicationMetadata {
   publicationId: string;
   listType: string;
   locationName: string;
-  contentDate: number[];
+  contentDate: string;
   sensitivity: string;
   language: string;
-  displayFrom: number[] | null;
-  displayTo: number[] | null;
+  displayFrom: string | null;
+  displayTo: string | null;
 }

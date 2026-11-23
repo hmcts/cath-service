@@ -52,26 +52,8 @@ export const POST = async (req: Request, res: Response) => {
       }
     });
 
+    // Search rows are written directly; the list type's list_search_config is environment data that tests must never create
     if (input.caseNumber || input.caseName) {
-      // Try to create ListSearchConfig if it doesn't exist
-      // Catch unique constraint error (P2002) since another request may have created it
-      try {
-        await prisma.listSearchConfig.upsert({
-          where: { listTypeId: input.listTypeId },
-          create: {
-            listTypeId: input.listTypeId,
-            caseNumberFieldName: "case_number",
-            caseNameFieldName: "case_name"
-          },
-          update: {}
-        });
-      } catch (error) {
-        // Ignore P2002 unique constraint error - record already exists
-        if (!(error instanceof Error) || !error.message.includes("Unique constraint")) {
-          throw error;
-        }
-      }
-
       await prisma.artefactSearch.create({
         data: {
           artefactId: artefact.artefactId,

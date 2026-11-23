@@ -1,15 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { loginWithCftIdam } from "../../utils/cft-idam-helpers.js";
+import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
 test.describe("Account Home", () => {
   test("verified user can view account home and navigate to all sections with Welsh and accessibility", async ({ page }) => {
-    // STEP 1: Authenticate via CFT IDAM
-    await page.goto("/sign-in");
-    const hmctsRadio = page.getByRole("radio", { name: /with a myhmcts account/i });
-    await hmctsRadio.check();
-    await page.getByRole("button", { name: /continue/i }).click();
-    await loginWithCftIdam(page, process.env.CFT_VALID_TEST_ACCOUNT!, process.env.CFT_VALID_TEST_ACCOUNT_PASSWORD!);
+    // STEP 1: Log in as this test's own verified user (location 9 below is only read through the SJP tile)
+    await loginAsTestUser(page, await createVerifiedTestUser({ label: "account-home" }));
+    await page.goto("/account-home");
     await expect(page).toHaveURL(/\/account-home/);
 
     // STEP 2: Verify page title and main heading

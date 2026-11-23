@@ -204,11 +204,11 @@ describe("third-party fulfilment service", () => {
         publicationId: ARTEFACT_ID,
         listType: "CIVIL_DAILY_CAUSE_LIST",
         locationName: "Test Court",
-        contentDate: [2026, 6, 15, 0, 0],
+        contentDate: "2026-06-15T00:00:00",
         sensitivity: "PUBLIC",
         language: "ENGLISH",
-        displayFrom: [2026, 6, 14, 23, 30],
-        displayTo: [2026, 6, 16, 22, 0]
+        displayFrom: "2026-06-14T23:30:00",
+        displayTo: "2026-06-16T22:00:00"
       });
       expect(parts[1].contentType).toBe("application/json");
       expect(JSON.parse(parts[1].content)).toEqual(JSON_DATA);
@@ -218,9 +218,11 @@ describe("third-party fulfilment service", () => {
     });
 
     it.each([
-      ["seconds when they are non-zero", "2026-06-15T09:30:15Z", [2026, 6, 15, 9, 30, 15]],
-      ["seconds and nanoseconds when there are milliseconds", "2026-06-15T09:30:00.123Z", [2026, 6, 15, 9, 30, 0, 123000000]]
-    ])("should include %s in metadata dates", async (_label, displayFrom, expected) => {
+      ["zero seconds", "2026-06-15T09:30:00Z", "2026-06-15T09:30:00"],
+      ["non-zero seconds", "2026-06-15T09:30:15Z", "2026-06-15T09:30:15"],
+      ["milliseconds", "2026-06-15T09:30:00.123Z", "2026-06-15T09:30:00.123"],
+      ["milliseconds with trailing zeros", "2026-06-15T09:30:00.120Z", "2026-06-15T09:30:00.12"]
+    ])("should send metadata dates as ISO local date-times without an offset for %s", async (_label, displayFrom, expected) => {
       // Arrange
       vi.mocked(findArtefactForFulfilment).mockResolvedValue(buildArtefact({ displayFrom: new Date(displayFrom) }));
 

@@ -26,6 +26,10 @@
           ]
         }
       }
+    },
+    {
+      "url": "https://cft-api-mgmt.platform.hmcts.net/cath",
+      "description": "Production CFT API Management gateway. Validates the bearer token and app role, then calls CaTH with its own token. This is the only entry point for publishing source systems in production."
     }
   ],
   "tags": [
@@ -253,7 +257,8 @@
             "SJP_DELTA_PRESS_LIST",
             "SJP_DELTA_PUBLIC_LIST",
             "SJP_PRESS_LIST",
-            "SJP_PUBLIC_LIST"
+            "SJP_PUBLIC_LIST",
+            "TRAFFIC_VIRTUAL_COURTS_LIST"
           ]
         },
         "example": "CIVIL_AND_FAMILY_DAILY_CAUSE_LIST"

@@ -1,132 +1,86 @@
 import type { Session } from "express-session";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getTimeoutConfig, getTimeUntilExpiry, isSessionApproachingExpiry, isSessionExpired, updateLastActivity } from "./timeout-tracker.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getSessionTimeoutMs, isSessionExpired, SESSION_WARNING_LEAD_MS, updateLastActivity } from "./timeout-tracker.js";
+
+const MINUTE = 60 * 1000;
+const NOW = new Date("2026-11-02T12:00:00Z").getTime();
+const ADMIN_ROLES = ["SYSTEM_ADMIN", "INTERNAL_ADMIN_CTSC", "INTERNAL_ADMIN_LOCAL"];
+
+function sessionIdleFor(minutes: number): Session {
+  return { lastActivity: NOW - minutes * MINUTE } as unknown as Session;
+}
 
 describe("Session Timeout Tracker", () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
-    process.env = { ...originalEnv };
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    vi.useRealTimers();
   });
 
-  describe("getTimeoutConfig", () => {
-    it("should return default timeout values", () => {
-      delete process.env.SESSION_TIMEOUT_WARNING_MS;
-      delete process.env.SESSION_TIMEOUT_LOGOUT_MS;
+  describe("SESSION_WARNING_LEAD_MS", () => {
+    it("should be 20 minutes", () => {
+      expect(SESSION_WARNING_LEAD_MS).toBe(20 * MINUTE);
+    });
+  });
 
-      const config = getTimeoutConfig();
-
-      expect(config.warningMs).toBe(1500000); // 25 minutes
-      expect(config.logoutMs).toBe(1800000); // 30 minutes
+  describe("getSessionTimeoutMs", () => {
+    it("should return 60 minutes for a verified user", () => {
+      expect(getSessionTimeoutMs("VERIFIED")).toBe(60 * MINUTE);
     });
 
-    it("should return custom timeout values from environment", () => {
-      process.env.SESSION_TIMEOUT_WARNING_MS = "60000"; // 1 minute
-      process.env.SESSION_TIMEOUT_LOGOUT_MS = "120000"; // 2 minutes
+    it("should return 60 minutes when the role is undefined", () => {
+      expect(getSessionTimeoutMs(undefined)).toBe(60 * MINUTE);
+    });
 
-      const config = getTimeoutConfig();
+    it("should return 60 minutes for an unknown role", () => {
+      expect(getSessionTimeoutMs("SOMETHING_ADMIN")).toBe(60 * MINUTE);
+    });
 
-      expect(config.warningMs).toBe(60000);
-      expect(config.logoutMs).toBe(120000);
+    it.each(ADMIN_ROLES)("should return 240 minutes for %s", (role) => {
+      expect(getSessionTimeoutMs(role)).toBe(240 * MINUTE);
     });
   });
 
   describe("isSessionExpired", () => {
-    it("should return false if session has no lastActivity", () => {
-      const session = {} as Session;
-
-      expect(isSessionExpired(session)).toBe(false);
+    it("should return false when the session has no lastActivity", () => {
+      expect(isSessionExpired({} as Session, "VERIFIED")).toBe(false);
     });
 
-    it("should return false if session is not expired", () => {
-      const session = {
-        lastActivity: Date.now() - 1000000 // 16 minutes ago
-      } as Session;
-
-      expect(isSessionExpired(session)).toBe(false);
+    it("should return false for a verified user just inside 60 minutes", () => {
+      expect(isSessionExpired(sessionIdleFor(59), "VERIFIED")).toBe(false);
     });
 
-    it("should return true if session has expired", () => {
-      const session = {
-        lastActivity: Date.now() - 2000000 // 33 minutes ago
-      } as Session;
-
-      expect(isSessionExpired(session)).toBe(true);
-    });
-  });
-
-  describe("isSessionApproachingExpiry", () => {
-    it("should return false if session has no lastActivity", () => {
-      const session = {} as Session;
-
-      expect(isSessionApproachingExpiry(session)).toBe(false);
+    it("should return true for a verified user at exactly 60 minutes", () => {
+      expect(isSessionExpired(sessionIdleFor(60), "VERIFIED")).toBe(true);
     });
 
-    it("should return false if session is not approaching expiry", () => {
-      const session = {
-        lastActivity: Date.now() - 1000000 // 16 minutes ago
-      } as Session;
-
-      expect(isSessionApproachingExpiry(session)).toBe(false);
+    it("should return true for a verified user past 60 minutes", () => {
+      expect(isSessionExpired(sessionIdleFor(90), "VERIFIED")).toBe(true);
     });
 
-    it("should return true if session is approaching expiry", () => {
-      const session = {
-        lastActivity: Date.now() - 1600000 // 26 minutes ago
-      } as Session;
-
-      expect(isSessionApproachingExpiry(session)).toBe(true);
+    it.each(ADMIN_ROLES)("should return false for %s at 239 minutes", (role) => {
+      expect(isSessionExpired(sessionIdleFor(239), role)).toBe(false);
     });
 
-    it("should return false if session has already expired", () => {
-      const session = {
-        lastActivity: Date.now() - 2000000 // 33 minutes ago
-      } as Session;
+    it.each(ADMIN_ROLES)("should return true for %s at exactly 240 minutes", (role) => {
+      expect(isSessionExpired(sessionIdleFor(240), role)).toBe(true);
+    });
 
-      expect(isSessionApproachingExpiry(session)).toBe(false);
+    it.each(ADMIN_ROLES)("should return true for %s past 240 minutes", (role) => {
+      expect(isSessionExpired(sessionIdleFor(300), role)).toBe(true);
     });
   });
 
   describe("updateLastActivity", () => {
-    it("should update lastActivity timestamp", () => {
+    it("should set lastActivity to the current time", () => {
       const session = {} as Session;
-      const beforeUpdate = Date.now();
 
       updateLastActivity(session);
 
-      expect(session.lastActivity).toBeGreaterThanOrEqual(beforeUpdate);
-      expect(session.lastActivity).toBeLessThanOrEqual(Date.now());
-    });
-  });
-
-  describe("getTimeUntilExpiry", () => {
-    it("should return null if session has no lastActivity", () => {
-      const session = {} as Session;
-
-      expect(getTimeUntilExpiry(session)).toBeNull();
-    });
-
-    it("should return time remaining until expiry", () => {
-      const session = {
-        lastActivity: Date.now() - 1000000 // 16 minutes ago
-      } as Session;
-
-      const timeRemaining = getTimeUntilExpiry(session);
-
-      expect(timeRemaining).toBeGreaterThan(0);
-      expect(timeRemaining).toBeLessThanOrEqual(800000); // ~13 minutes remaining
-    });
-
-    it("should return 0 if session has expired", () => {
-      const session = {
-        lastActivity: Date.now() - 2000000 // 33 minutes ago
-      } as Session;
-
-      expect(getTimeUntilExpiry(session)).toBe(0);
+      expect(session.lastActivity).toBe(NOW);
     });
   });
 });

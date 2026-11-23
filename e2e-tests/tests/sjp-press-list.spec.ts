@@ -1,39 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { APIRequestContext } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { getApiAuthToken } from "../utils/api-auth-helpers.js";
 import { createUniqueTestLocation } from "../utils/dynamic-test-data.js";
-import { uploadTestFlatFileToWeb } from "../utils/test-support-api.js";
-
-const API_BASE_URL = process.env.CATH_SERVICE_API_URL || process.env.API_URL || "http://localhost:3001";
-const PUBLICATION_ENDPOINT = `${API_BASE_URL}/publication`;
-const IS_DEPLOYED = !!process.env.CATH_SERVICE_WEB_URL;
+import { uploadTestPublication } from "../utils/publication-upload.js";
+import { createVerifiedTestUser, loginAsTestUser, type VerifiedTestUser } from "../utils/verified-user-helpers.js";
 
 // Helper function to create SJP press list payload
-// Publication metadata travels in x-* headers; the request body is the payload itself.
-function publicationHeaders(options: {
-  provenance: string;
-  courtId: string;
-  contentDate: string;
-  listType: string;
-  sensitivity: string;
-  language: string;
-  displayFrom: string;
-  displayTo: string;
-}) {
-  return {
-    "x-provenance": options.provenance,
-    "x-court-id": options.courtId,
-    "x-content-date": options.contentDate,
-    "x-list-type": options.listType,
-    "x-language": options.language,
-    "x-type": "LIST",
-    "x-sensitivity": options.sensitivity,
-    "x-display-from": options.displayFrom,
-    "x-display-to": options.displayTo
-  };
-}
-
 function createSjpPressListPayload(locationId: number) {
   // Postcodes must match pattern ^([A-Za-z]{2}|[A-Za-z][0-9])$ - short UK postcode areas only
   const postcodes = ["SW", "M1", "B1", "E1", "BS", "LS"];
@@ -105,16 +76,14 @@ function createSjpPressListPayload(locationId: number) {
   const contentDate = today.toISOString().split("T")[0];
 
   return {
-    headers: publicationHeaders({
-      provenance: "MANUAL_UPLOAD",
-      courtId: locationId.toString(),
-      contentDate: contentDate,
-      listType: "SJP_PRESS_LIST",
-      sensitivity: "CLASSIFIED",
-      language: "ENGLISH",
+    upload: {
+      locationId,
+      listTypeName: "SJP_PRESS_LIST",
+      sensitivity: "CLASSIFIED" as const,
+      contentDate,
       displayFrom: displayFrom.toISOString(),
       displayTo: displayTo.toISOString()
-    }),
+    },
     payload: {
       document: {
         publicationDate: `${contentDate}T09:00:00Z`,
@@ -154,41 +123,30 @@ function createSjpPressListPayload(locationId: number) {
 }
 
 // Helper function to upload publication via API
-async function uploadSjpPressListViaApi(request: APIRequestContext, locationId: number): Promise<string> {
-  const payload = createSjpPressListPayload(locationId);
-  const token = await getApiAuthToken();
-
-  const response = await request.post(PUBLICATION_ENDPOINT, {
-    data: payload.payload,
-    headers: { ...payload.headers, Authorization: `Bearer ${token}` }
-  });
-
-  const result = await response.json();
-
-  expect(response.status()).toBe(201);
-  expect(result.artefactId).toBeDefined();
-
-  // In deployed environments, API and web are separate pods with separate filesystems.
-  // Upload the JSON to the web pod so the list type page can render it.
-  if (IS_DEPLOYED) {
-    const jsonBuffer = Buffer.from(JSON.stringify(payload.payload));
-    await uploadTestFlatFileToWeb({ artefactId: result.artefactId, content: jsonBuffer, extension: ".json" });
-  }
-
-  return result.artefactId;
+async function uploadSjpPressListViaApi(locationId: number): Promise<string> {
+  const { upload, payload } = createSjpPressListPayload(locationId);
+  const { artefactId } = await uploadTestPublication({ ...upload, payload, mirrorJsonToWeb: true });
+  return artefactId;
 }
 
 test.describe("SJP Press List @nightly", () => {
   let artefactId: string;
   let listUrl: string;
+  let pressUser: VerifiedTestUser;
 
-  test.beforeAll(async ({ request }) => {
+  test.beforeAll(async () => {
+    // SJP_PRESS_LIST only allows the PI_AAD provenance, so a CFT_IDAM user would be redirected to sign-in
+    pressUser = await createVerifiedTestUser({ provenance: "PI_AAD", label: "sjp-press" });
     // Create unique test location for isolation
     const testLocation = await createUniqueTestLocation({ namePrefix: "SJP Press Test Court" });
 
     // Upload SJP press list via API with proper authentication
-    artefactId = await uploadSjpPressListViaApi(request, testLocation.locationId);
+    artefactId = await uploadSjpPressListViaApi(testLocation.locationId);
     listUrl = `/sjp-press-list?artefactId=${artefactId}`;
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsTestUser(page, pressUser);
   });
 
   test("should display press list page with required elements", async ({ page }) => {
