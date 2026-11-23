@@ -1,14 +1,15 @@
 import {
   GOVUK_NOTIFY_TEMPLATE_ID_INACTIVE_CFT_SIGN_IN,
   GOVUK_NOTIFY_TEMPLATE_ID_INACTIVE_CRIME_SIGN_IN,
+  GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_ACCOUNT_DELETION,
   GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_ACCOUNT_VERIFICATION,
   sendNotifyEmail
 } from "@hmcts/govuk-notify";
-import type { IdamUser, MediaUser } from "./queries.js";
+import type { IdamUser, MediaUser, MediaUserForDeletion } from "./queries.js";
 
 const GENERIC_USER_NAME = "user";
 const CRIME_IDAM_PROVENANCE = "CRIME_IDAM";
-const SIGN_IN_DATE_FORMAT = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
+const EMAIL_DATE_FORMAT = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" });
 
 export function getNotificationSettings(): NotificationSettings {
   const apiKey = process.env.GOVUK_NOTIFY_API_KEY;
@@ -20,7 +21,8 @@ export function getNotificationSettings(): NotificationSettings {
     apiKey,
     mediaVerificationPageLink: process.env.MEDIA_VERIFICATION_PAGE_LINK || `${serviceUrl()}/media-verification`,
     cftSignInLink: process.env.CFT_SIGN_IN_LINK || `${serviceUrl()}/cft-login`,
-    crimeSignInLink: process.env.CRIME_SIGN_IN_LINK || `${serviceUrl()}/crime-login`
+    crimeSignInLink: process.env.CRIME_SIGN_IN_LINK || `${serviceUrl()}/crime-login`,
+    createMediaAccountLink: process.env.CREATE_MEDIA_ACCOUNT_LINK || `${serviceUrl()}/create-media-account`
   };
 }
 
@@ -44,11 +46,26 @@ export async function sendIdamSignInNotificationEmail(settings: NotificationSett
     emailAddress: user.email,
     personalisation: {
       full_name: fullName(user),
-      last_signed_in_date: user.lastSignedInDate ? SIGN_IN_DATE_FORMAT.format(user.lastSignedInDate) : "",
+      last_signed_in_date: user.lastSignedInDate ? EMAIL_DATE_FORMAT.format(user.lastSignedInDate) : "",
       cft_sign_in_link: settings.cftSignInLink,
       crime_sign_in_link: settings.crimeSignInLink
     },
     reference: `inactive-idam-sign-in-${user.userId}`
+  });
+}
+
+// PIP's template uses kebab-case personalisation keys, unlike the other inactive account templates
+export async function sendMediaAccountDeletionEmail(settings: NotificationSettings, user: MediaUserForDeletion, reVerificationEmailDate: Date): Promise<void> {
+  await sendNotifyEmail({
+    apiKey: settings.apiKey,
+    templateId: GOVUK_NOTIFY_TEMPLATE_ID_MEDIA_ACCOUNT_DELETION,
+    emailAddress: user.email,
+    personalisation: {
+      "full-name": user.firstName || GENERIC_USER_NAME,
+      date: EMAIL_DATE_FORMAT.format(reVerificationEmailDate),
+      "link-to-service": settings.createMediaAccountLink
+    },
+    reference: `inactive-media-deletion-${user.userId}`
   });
 }
 
@@ -70,4 +87,5 @@ export interface NotificationSettings {
   mediaVerificationPageLink: string;
   cftSignInLink: string;
   crimeSignInLink: string;
+  createMediaAccountLink: string;
 }

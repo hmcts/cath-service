@@ -2,7 +2,8 @@ import { archiveAndDeleteUser, type B2cUserDeleter } from "@hmcts/account/user-a
 import { deleteB2cUser, getGraphApiAccessToken } from "@hmcts/auth/graph-api";
 import { EMAIL_RATE_LIMITED } from "@hmcts/email-rate-limit";
 import { extractNotifyError } from "@hmcts/govuk-notify";
-import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaVerificationEmail } from "./notifications.js";
+import { verificationEmailDate } from "./date-boundaries.js";
+import { getNotificationSettings, sendIdamSignInNotificationEmail, sendMediaAccountDeletionEmail, sendMediaVerificationEmail } from "./notifications.js";
 import {
   findAdminUsersForDeletion,
   findIdamUsersForDeletion,
@@ -43,8 +44,12 @@ export async function processInactiveAccounts(): Promise<InactiveAccountsSummary
   const mediaDeletions = await runStep(
     "media-deletion",
     (after) => findMediaUsersForDeletion(settings, runDate, after),
-    // #896: send the media account deletion email here, before archiveAndDelete
-    archiveAndDelete
+    // The email goes first because the address is gone once the account is deleted, so a failed send keeps the account for the next run
+    async (user) => {
+      const reVerificationEmailDate = verificationEmailDate(user.lastVerifiedDate, settings.mediaVerificationEmailDays, settings.startDate);
+      await sendMediaAccountDeletionEmail(notificationSettings, user, reVerificationEmailDate);
+      return archiveAndDelete(user);
+    }
   );
 
   const adminDeletions = await runStep("admin-deletion", (after) => findAdminUsersForDeletion(settings, runDate, after), archiveAndDelete);

@@ -23,6 +23,12 @@ export function buildFlooredDateFilter(column: DateColumn, condition: DateCondit
   return { OR: [ownDateBranch, { [column]: { lt: startDate } }] };
 }
 
+// Recalculates the day findMediaUsersForVerification matched the user, as the send date is not stored
+export function verificationEmailDate(lastVerifiedDate: Date, verificationEmailDays: number, startDate: Date): Date {
+  const flooredDate = lastVerifiedDate > startDate ? lastVerifiedDate : startDate;
+  return utcDayStart(-verificationEmailDays, flooredDate);
+}
+
 function utcDayStart(daysAgo: number, runDate: Date): Date {
   const todayStart = Date.UTC(runDate.getUTCFullYear(), runDate.getUTCMonth(), runDate.getUTCDate());
   return new Date(todayStart - daysAgo * MS_PER_DAY);
