@@ -78,7 +78,7 @@ cath-web:
             alias: APPLICATION_INSIGHTS_CONNECTION_STRING
           - name: session-secret
             alias: SESSION_SECRET
-          - name: managed-redis-url
+          - name: managed-redis-entra-url
             alias: REDIS_URL
           - name: postgres-url
             alias: DATABASE_URL
