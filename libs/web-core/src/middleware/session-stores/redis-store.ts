@@ -19,7 +19,8 @@ export function expressSessionRedis(options: ExpressSessionRedisOptions): Reques
       httpOnly: true,
       // Lax keeps the cookie off cross-site POSTs; every OAuth callback here returns via GET
       sameSite: "lax",
-      maxAge: options.cookieMaxAge || 1000 * 60 * 60 * 4 // 4 hours
+      // No default maxAge: a browser-session cookie, as legacy. The inactivity timeout is enforced server-side
+      maxAge: options.cookieMaxAge
     }
   };
 

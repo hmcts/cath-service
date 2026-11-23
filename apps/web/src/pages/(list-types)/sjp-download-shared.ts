@@ -1,4 +1,4 @@
-import { downloadBlob, getBlobProperties } from "@hmcts/azure-blob";
+import { CONTAINER, downloadBlob, getBlobProperties } from "@hmcts/azure-blob";
 import { getContentType } from "@hmcts/publication";
 import type { Request, RequestHandler, Response } from "express";
 import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound, sendAccessDenied, sendFileNotFound } from "./publication-access.js";
@@ -23,7 +23,7 @@ export async function handleBlobDownload(req: Request, res: Response): Promise<R
 
   const extension = `.${type}`;
   const fileName = `${artefactId}${extension}`;
-  const fileBuffer = await downloadBlob(fileName);
+  const fileBuffer = await downloadBlob(fileName, CONTAINER.PUBLICATIONS);
 
   if (!fileBuffer) {
     return res.status(404).json({ error: "File not found" });
@@ -39,7 +39,7 @@ export async function handleBlobDownload(req: Request, res: Response): Promise<R
 export async function getAvailableFiles(artefactId: string, prefix: string) {
   const files: { type: string; url: string; sizeLabel: string }[] = [];
 
-  const [pdfProps, excelProps] = await Promise.all([getBlobProperties(`${artefactId}.pdf`), getBlobProperties(`${artefactId}.xlsx`)]);
+  const { pdf: pdfProps, xlsx: excelProps } = await getGeneratedFileProperties(artefactId);
 
   if (pdfProps) {
     files.push({
@@ -58,6 +58,16 @@ export async function getAvailableFiles(artefactId: string, prefix: string) {
   }
 
   return files;
+}
+
+export async function hasDownloadableFiles(artefactId: string): Promise<boolean> {
+  try {
+    const { pdf, xlsx } = await getGeneratedFileProperties(artefactId);
+    return !!(pdf || xlsx);
+  } catch (error) {
+    console.error(`Failed to check downloadable files for artefact ${artefactId}`, error);
+    return false;
+  }
 }
 
 export function formatFileSize(bytes: number): string {
@@ -102,4 +112,12 @@ export function createListDownloadFilesHandler(en: object, cy: object, downloadF
       files
     });
   };
+}
+
+async function getGeneratedFileProperties(artefactId: string) {
+  const [pdf, xlsx] = await Promise.all([
+    getBlobProperties(`${artefactId}.pdf`, CONTAINER.PUBLICATIONS),
+    getBlobProperties(`${artefactId}.xlsx`, CONTAINER.PUBLICATIONS)
+  ]);
+  return { pdf, xlsx };
 }
