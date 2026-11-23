@@ -37,7 +37,9 @@ export const getHandler = async (req: Request, res: Response) => {
   });
 
   const session = req.session as ThirdPartySubscriptionsSession;
-  if (!session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
+  // Entering the journey (no page param) discards any unsaved draft; paging via Next always carries ?page=
+  const isJourneyStart = req.query.page === undefined;
+  if (isJourneyStart || !session.thirdPartySubscriptions || session.thirdPartySubscriptions.userId !== id) {
     session.thirdPartySubscriptions = { userId: id, pending: buildExistingSubscriptions(user.subscriptions, listTypes) };
   }
 
