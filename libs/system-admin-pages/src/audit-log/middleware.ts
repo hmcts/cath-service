@@ -47,6 +47,9 @@ export function auditLogMiddleware() {
       if (completionLogged) return;
       completionLogged = true;
 
+      // Handlers that write their own audit entry opt out, because res.render ends in res.send and would otherwise add a generic duplicate
+      if (req.auditMetadata?.shouldLog === false) return;
+
       try {
         const action = generateActionName(req);
         const details = generateDetails(req, outcome, context);
