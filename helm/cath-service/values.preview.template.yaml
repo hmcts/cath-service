@@ -32,7 +32,8 @@ cath-web:
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+      # TEMPORARY (#697): prove Redis managed identity on the preview. Remove before merge.
+      REDIS_MI: "true"
       CFT_IDAM_URL: "https://hmcts-access.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
@@ -128,7 +129,8 @@ cath-api:
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
+      # TEMPORARY (#697): prove Redis managed identity on the preview. Remove before merge.
+      REDIS_MI: "true"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
