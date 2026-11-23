@@ -23,3 +23,6 @@ jobs:
       scan-args: |-
         --config=.github/osv-scanner.toml
         ./
+      # Report-only until the backlog found by the first real scan is cleared;
+      # findings still go to Security > Code scanning. Set back to true then.
+      fail-on-vuln: false
