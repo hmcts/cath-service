@@ -70,7 +70,7 @@
       "automerge": false
     },
     {
-      "description": "Node.js version updates always need manual review - a single update moves .nvmrc and the root Dockerfile base image together. Workflows read .nvmrc via node-version-file, so they follow without being edited. Capped below 25 because the Dockerfile regex manager resolves tags against Docker Hub, which has node:26-alpine, while the hmctspublic.azurecr.io/base/node mirror the image actually pulls only publishes 22 and 24 (it needs auth to list tags, so Renovate cannot read it). Raise the cap to the next LTS once HMCTS publishes base/node:<major>-alpine.",
+      "description": "Node.js version updates always need manual review - a single update moves .nvmrc and the root Dockerfile base image together. Workflows read .nvmrc via node-version-file, so they follow without being edited. Capped below 25 to keep the service on the Node 24 LTS line; moving to a new major (26 is LTS and hmctspublic.azurecr.io/base/node:26-alpine exists) is a deliberate upgrade, not a Renovate bump. The cap is also needed because the Dockerfile regex manager resolves tags against Docker Hub, which publishes majors the HMCTS mirror may not (it needs auth to list tags, so Renovate cannot read it).",
       "matchPackageNames": ["node"],
       "allowedVersions": "<25",
       "automerge": false
