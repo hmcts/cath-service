@@ -55,6 +55,7 @@ export const cy = {
     displayFromInvalid: "Rhowch ddyddiad dangos y ffeil o dilys",
     displayToRequired: "Rhowch ddyddiad dangos y ffeil tan dilys",
     displayToInvalid: "Rhowch ddyddiad dangos y ffeil tan dilys",
-    displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o"
+    displayToBeforeFrom: "Rhaid i'r dyddiad dangos tan fod ar ôl y dyddiad dangos o",
+    fileUnreadable: "[WELSH TRANSLATION REQUIRED: 'The selected file could not be read. Check it is a valid Excel (.xlsx) file and upload it again.']"
   }
 };

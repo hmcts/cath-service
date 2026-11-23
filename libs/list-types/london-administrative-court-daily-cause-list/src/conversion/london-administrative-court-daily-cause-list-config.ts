@@ -12,5 +12,6 @@ const convertLondonAdminExcel = (buffer: Buffer) => createMultiSheetConverter(bu
 
 registerConverterByName("LONDON_ADMINISTRATIVE_COURT_DAILY_CAUSE_LIST", {
   config: STANDARD_CONFIG,
+  sheets: LONDON_ADMIN_SHEETS,
   convertExcelToJson: convertLondonAdminExcel as any
 });

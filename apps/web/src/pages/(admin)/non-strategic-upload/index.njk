@@ -45,7 +45,8 @@
 
     <form method="post" enctype="multipart/form-data" novalidate data-list-type-sensitivity="{{ listTypeSensitivityMap }}">
 
-      {% set fileErrorText = getError(errors, "#file") %}
+      {#- Errors located inside the Excel file are listed only in the error summary, not under the file input -#}
+      {% set fileErrorText = undefined if hasExcelContentErrors else getError(errors, "#file") %}
       <div class="govuk-inset-text">
         <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
           <label class="govuk-label" for="file">

@@ -162,5 +162,56 @@ describe("non-strategic-upload template", () => {
       expect($(".govuk-error-message").text()).toContain(en.errorMessages.fileRequired);
       expect($("input#file").hasClass("govuk-file-upload--error")).toBe(true);
     });
+
+    it("should list each located Excel error in the error summary", () => {
+      const locatedErrors = [
+        "Sheet 'Appeal List' - Row 1 of 'Venue' column: Missing required value",
+        "Sheet 'Insolvency & Companies Court' - Row 3 of 'Time' column: Invalid time format '25pm'"
+      ];
+      const data = buildData(en, {
+        errors: locatedErrors.map((text) => ({ text, href: "#file" })),
+        hasExcelContentErrors: true
+      });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, locatedErrors);
+      expect($(".govuk-error-summary__list li")).toHaveLength(2);
+      expect($(".govuk-error-summary__list a").first().attr("href")).toBe("#file");
+    });
+
+    it("should not show an inline error under the file field when the errors are inside the Excel file", () => {
+      const data = buildData(en, {
+        errors: [
+          { text: "Sheet 'Appeal List' - Row 1 of 'Time' column: Missing required value", href: "#file" },
+          { text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Missing required value", href: "#file" }
+        ],
+        hasExcelContentErrors: true
+      });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-error-summary__list li")).toHaveLength(2);
+      expect($("#file").parent().find(".govuk-error-message")).toHaveLength(0);
+      expect($("#file").parent().hasClass("govuk-form-group--error")).toBe(false);
+      expect($("input#file").hasClass("govuk-file-upload--error")).toBe(false);
+    });
+
+    it("should escape cell values in located errors", () => {
+      const data = buildData(en, { errors: [{ text: "Row 1 of 'Judge' column: Invalid content <b>bold</b>", href: "#file" }] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($(".govuk-error-summary__list b")).toHaveLength(0);
+      expect($(".govuk-error-summary__list").text()).toContain("<b>bold</b>");
+    });
+  });
+
+  describe("Content parity", () => {
+    it("should have the same keys in English and Welsh, including the Excel error messages", () => {
+      expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
+      expect(Object.keys(en.errorMessages).sort()).toEqual(Object.keys(cy.errorMessages).sort());
+      expect(Object.keys(cy.errorMessages)).toEqual(expect.arrayContaining(["fileUnreadable"]));
+    });
   });
 });

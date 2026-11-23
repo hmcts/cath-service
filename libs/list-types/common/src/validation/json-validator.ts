@@ -4,11 +4,6 @@ import Ajv from "ajv";
 const ajv = new (Ajv as any)({ allErrors: true });
 const compiledValidators = new Map<string, any>();
 
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
 export function createJsonValidator(schemaPath: string): (data: unknown) => ValidationResult {
   let validate = compiledValidators.get(schemaPath);
 
@@ -23,7 +18,7 @@ export function createJsonValidator(schemaPath: string): (data: unknown) => Vali
     const isValid = validate(data);
 
     if (isValid) {
-      return { isValid: true, errors: [] };
+      return { isValid: true, errors: [], issues: [] };
     }
 
     const errors = validate.errors?.map((error: any) => {
@@ -31,6 +26,27 @@ export function createJsonValidator(schemaPath: string): (data: unknown) => Vali
       return `${field}: ${error.message}`;
     }) || ["Unknown validation error"];
 
-    return { isValid: false, errors };
+    const issues: ValidationIssue[] = (validate.errors ?? []).map((error: any) => ({
+      instancePath: error.instancePath,
+      keyword: error.keyword,
+      params: error.params ?? {},
+      message: error.message ?? ""
+    }));
+
+    return { isValid: false, errors, issues };
   };
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  /** Structured AJV errors, used to locate schema errors in non-strategic Excel uploads */
+  issues?: ValidationIssue[];
+}
+
+export interface ValidationIssue {
+  instancePath: string;
+  keyword: string;
+  params: Record<string, unknown>;
+  message: string;
 }

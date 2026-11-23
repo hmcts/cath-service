@@ -8,7 +8,15 @@ import "@hmcts/upper-tribunal-lands-chamber-daily-hearing-list"; // Register UTL
 import "@hmcts/upper-tribunal-administrative-appeals-chamber-daily-hearing-list"; // Register UTAAC converter
 import "@hmcts/business-and-property-division-rolls-building-daily-cause-list"; // Register Business and Property Division Rolls Building converter
 import "@hmcts/interim-applications-daily-cause-list"; // Register Interim Applications converter
-import { LANGUAGE_LABELS, SENSITIVITY_LABELS, storeNonStrategicUpload, type UploadFormData, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
+import {
+  formatExcelValidationErrors,
+  LANGUAGE_LABELS,
+  SENSITIVITY_LABELS,
+  storeNonStrategicUpload,
+  type UploadFormData,
+  type ValidationError,
+  validateNonStrategicUploadForm
+} from "@hmcts/admin-pages";
 import { requireRole, USER_ROLES } from "@hmcts/auth";
 import { getAllLocations, getLocationById } from "@hmcts/location";
 import { Language } from "@hmcts/publication";
@@ -80,8 +88,10 @@ const getHandler = async (req: Request, res: Response) => {
   const wasSubmitted = req.session.nonStrategicUploadSubmitted || false;
   let formData = req.session.nonStrategicUploadForm || {};
   const errors = req.session.nonStrategicUploadErrors || [];
+  const hasExcelContentErrors = req.session.nonStrategicUploadHasExcelContentErrors ?? false;
 
   delete req.session.nonStrategicUploadErrors;
+  delete req.session.nonStrategicUploadHasExcelContentErrors;
 
   // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
@@ -103,6 +113,7 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
+    hasExcelContentErrors,
     data: { ...formData, locationName },
     locations,
     listTypes: selectOption(listTypeOptions, formData.listType),
@@ -142,20 +153,26 @@ const postHandler = async (req: Request, res: Response) => {
   const isExcelFile = req.file!.originalname?.endsWith(".xlsx") || req.file!.originalname?.endsWith(".xls");
 
   if (selectedListType?.isNonStrategic && isExcelFile) {
+    const { hasConverterForListTypeName, isExcelFileReadError, isExcelValidationError, validateNonStrategicExcel } = await import("@hmcts/list-types-common");
     try {
-      const { convertExcelForListTypeName, hasConverterForListTypeName } = await import("@hmcts/list-types-common");
       const listTypeName = selectedListType.name;
 
       if (listTypeName && hasConverterForListTypeName(listTypeName)) {
-        await convertExcelForListTypeName(listTypeName, req.file!.buffer);
+        await validateNonStrategicExcel(listTypeName, req.file!.buffer);
       }
     } catch (error) {
+      if (isExcelValidationError(error)) {
+        req.session.nonStrategicUploadHasExcelContentErrors = true;
+        return redirectWithErrors(req, res, formatExcelValidationErrors(error.issues), formData);
+      }
+      if (isExcelFileReadError(error)) {
+        console.warn("[Non-Strategic Upload] Excel file could not be read", {
+          error: error.cause instanceof Error ? error.cause.message : String(error.cause)
+        });
+        return redirectWithErrors(req, res, [{ text: t.errorMessages.fileUnreadable, href: "#file" }], formData);
+      }
       const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
-      errors = [{ text: errorMessage, href: "#file" }];
-      req.session.nonStrategicUploadErrors = errors;
-      req.session.nonStrategicUploadForm = formData;
-      await saveSession(req.session);
-      return res.redirect("/non-strategic-upload");
+      return redirectWithErrors(req, res, [{ text: errorMessage, href: "#file" }], formData);
     }
   }
 
@@ -178,6 +195,13 @@ const postHandler = async (req: Request, res: Response) => {
 
   res.redirect(`/non-strategic-upload-summary?uploadId=${uploadId}`);
 };
+
+async function redirectWithErrors(req: Request, res: Response, errors: ValidationError[], formData: UploadFormData) {
+  req.session.nonStrategicUploadErrors = errors;
+  req.session.nonStrategicUploadForm = formData;
+  await saveSession(req.session);
+  return res.redirect("/non-strategic-upload");
+}
 
 export const GET: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), getHandler];
 export const POST: RequestHandler[] = [requireRole([USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL]), postHandler];

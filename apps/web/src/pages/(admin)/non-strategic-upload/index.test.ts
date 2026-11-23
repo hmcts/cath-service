@@ -122,6 +122,56 @@ vi.mock("@hmcts/admin-pages", async () => {
 });
 
 import { storeNonStrategicUpload, validateNonStrategicUploadForm } from "@hmcts/admin-pages";
+import { ExcelFileReadError, ExcelValidationError, type ExcelValidationIssue } from "@hmcts/list-types-common";
+
+function mockExcelValidation(validateNonStrategicExcel: ReturnType<typeof vi.fn>) {
+  vi.doMock("@hmcts/list-types-common", async () => {
+    const actual = await vi.importActual<typeof import("@hmcts/list-types-common")>("@hmcts/list-types-common");
+    return {
+      ...actual,
+      hasConverterForListTypeName: vi.fn().mockReturnValue(true),
+      validateNonStrategicExcel
+    };
+  });
+}
+
+function buildExcelUploadRequest(session: Record<string, unknown>) {
+  return {
+    body: {
+      locationId: "123",
+      listType: "9",
+      "hearingStartDate-day": "15",
+      "hearingStartDate-month": "06",
+      "hearingStartDate-year": "2025",
+      sensitivity: "PUBLIC",
+      language: "ENGLISH",
+      "displayFrom-day": "10",
+      "displayFrom-month": "06",
+      "displayFrom-year": "2025",
+      "displayTo-day": "20",
+      "displayTo-month": "06",
+      "displayTo-year": "2025"
+    },
+    file: {
+      buffer: Buffer.from("excel content"),
+      originalname: "test.xlsx",
+      mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      size: 1024
+    } as Express.Multer.File,
+    session
+  } as unknown as Request;
+}
+
+function buildIssue(overrides: Partial<ExcelValidationIssue> = {}): ExcelValidationIssue {
+  return {
+    sheetName: "Appeal List",
+    rowNumber: 2,
+    columnHeader: "Time",
+    reason: "Invalid time format '25pm'",
+    message: "Error in row 3: Invalid time format '25pm' in row 3",
+    ...overrides
+  };
+}
 
 describe("non-strategic-upload page", () => {
   beforeEach(() => {
@@ -194,6 +244,35 @@ describe("non-strategic-upload page", () => {
 
       expect(res.render).toHaveBeenCalledWith("non-strategic-upload/index", expect.objectContaining({ errors }));
       expect(session.nonStrategicUploadErrors).toBeUndefined();
+    });
+
+    it("should pass the Excel content errors flag from session and clear it", async () => {
+      // Arrange
+      const session: Record<string, unknown> = {
+        nonStrategicUploadErrors: [{ text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Invalid time format", href: "#file" }],
+        nonStrategicUploadHasExcelContentErrors: true
+      };
+      const req = { session, query: {} } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("non-strategic-upload/index", expect.objectContaining({ hasExcelContentErrors: true }));
+      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
+    });
+
+    it("should pass the Excel content errors flag as false when none is in session", async () => {
+      // Arrange
+      const req = { session: {}, query: {} } as unknown as Request;
+      const res = { render: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(GET, req, res);
+
+      // Assert
+      expect(res.render).toHaveBeenCalledWith("non-strategic-upload/index", expect.objectContaining({ hasExcelContentErrors: false }));
     });
 
     it("should preserve form data from session when validation fails", async () => {
@@ -495,11 +574,7 @@ describe("non-strategic-upload page", () => {
     it("should validate Excel file for Care Standards Tribunal (listType 9) and reject invalid file", async () => {
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
 
-      // Mock the dynamic import
-      vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListTypeName: vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")),
-        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
-      }));
+      mockExcelValidation(vi.fn().mockRejectedValue(new Error("Missing required field 'hearing length' in row 3")));
 
       const mockFile = {
         buffer: Buffer.from("invalid excel content"),
@@ -547,9 +622,8 @@ describe("non-strategic-upload page", () => {
     it("should validate Excel file for Care Standards Tribunal (listType 9) and accept valid file", async () => {
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
 
-      // Mock successful Excel validation
-      vi.doMock("@hmcts/list-types-common", () => ({
-        convertExcelForListTypeName: vi.fn().mockResolvedValue([
+      mockExcelValidation(
+        vi.fn().mockResolvedValue([
           {
             date: "01/01/2025",
             caseName: "Test Case",
@@ -558,9 +632,8 @@ describe("non-strategic-upload page", () => {
             venue: "Test Venue",
             additionalInformation: "Test Info"
           }
-        ]),
-        hasConverterForListTypeName: vi.fn().mockReturnValue(true)
-      }));
+        ])
+      );
 
       const mockFile = {
         buffer: Buffer.from("valid excel content"),
@@ -600,6 +673,99 @@ describe("non-strategic-upload page", () => {
 
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload-summary?uploadId=test-upload-id-123");
       expect((session as any).nonStrategicUploadSubmitted).toBe(true);
+
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should store every located error and flag them as Excel content errors when the Excel file has several errors", async () => {
+      // Arrange
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+      const issues = [
+        buildIssue({ sheetName: "Insolvency & Companies Court", rowNumber: 1, columnHeader: "Venue", reason: "Missing required value" }),
+        buildIssue()
+      ];
+      mockExcelValidation(vi.fn().mockRejectedValue(new ExcelValidationError(issues)));
+      const session: Record<string, any> = { save: (callback: (err?: any) => void) => callback() };
+      const req = buildExcelUploadRequest(session);
+      const res = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(session.nonStrategicUploadErrors).toEqual([
+        { text: "Sheet 'Insolvency & Companies Court' - Row 1 of 'Venue' column: Missing required value", href: "#file" },
+        { text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Invalid time format '25pm'", href: "#file" }
+      ]);
+      expect(session.nonStrategicUploadHasExcelContentErrors).toBe(true);
+      expect(session.nonStrategicUploadForm).toBeDefined();
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+      expect(storeNonStrategicUpload).not.toHaveBeenCalled();
+
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should flag a single located error as an Excel content error", async () => {
+      // Arrange
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+      mockExcelValidation(vi.fn().mockRejectedValue(new ExcelValidationError([buildIssue()])));
+      const session: Record<string, any> = { save: (callback: (err?: any) => void) => callback() };
+      const req = buildExcelUploadRequest(session);
+      const res = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(session.nonStrategicUploadErrors).toHaveLength(1);
+      expect(session.nonStrategicUploadHasExcelContentErrors).toBe(true);
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should show the unreadable file error without the raw library message when the file cannot be read", async () => {
+      // Arrange
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mockExcelValidation(
+        vi.fn().mockRejectedValue(new ExcelFileReadError(new Error("End of data reached (data length = 13, asked index = 30). Corrupted zip ?")))
+      );
+      const session: Record<string, any> = { save: (callback: (err?: any) => void) => callback() };
+      const req = buildExcelUploadRequest(session);
+      const res = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(session.nonStrategicUploadErrors).toEqual([
+        { text: "The selected file could not be read. Check it is a valid Excel (.xlsx) file and upload it again.", href: "#file" }
+      ]);
+      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
+      expect(JSON.stringify(session.nonStrategicUploadErrors)).not.toContain("Corrupted zip");
+      expect(warnSpy).toHaveBeenCalledWith("[Non-Strategic Upload] Excel file could not be read", { error: expect.stringContaining("Corrupted zip") });
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
+
+      warnSpy.mockRestore();
+      vi.doUnmock("@hmcts/list-types-common");
+    });
+
+    it("should keep the single error message for any other Excel error", async () => {
+      // Arrange
+      vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
+      mockExcelValidation(vi.fn().mockRejectedValue(new Error("Excel file must contain at least 1 data row")));
+      const session: Record<string, any> = { save: (callback: (err?: any) => void) => callback() };
+      const req = buildExcelUploadRequest(session);
+      const res = { redirect: vi.fn() } as unknown as Response;
+
+      // Act
+      await callHandler(POST, req, res);
+
+      // Assert
+      expect(session.nonStrategicUploadErrors).toEqual([{ text: "Excel file must contain at least 1 data row", href: "#file" }]);
+      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
+      expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");
     });

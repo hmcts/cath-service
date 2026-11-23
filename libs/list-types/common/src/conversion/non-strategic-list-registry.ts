@@ -1,9 +1,12 @@
 import type { ExcelConverterConfig } from "./excel-to-json.js";
 import { convertExcelToJson } from "./excel-to-json.js";
+import type { SheetConfig } from "./multi-sheet-converter.js";
 
 export interface ListTypeConverter {
   config: ExcelConverterConfig;
   convertExcelToJson: (buffer: Buffer) => Promise<unknown[]>;
+  /** Tab configuration for multi-sheet lists, used to name the tab and column of a schema error */
+  sheets?: SheetConfig[];
   validateJson?: (data: unknown) => { isValid: boolean; errors: string[] };
 }
 

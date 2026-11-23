@@ -1,4 +1,11 @@
-import { convertExcelToJson, getConverterForListTypeName, hasConverterForListTypeName } from "@hmcts/list-types-common";
+import {
+  convertExcelToJson,
+  type ExcelValidationError,
+  getConverterForListTypeName,
+  hasConverterForListTypeName,
+  isExcelValidationError,
+  validateNonStrategicExcel
+} from "@hmcts/list-types-common";
 import * as ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { SECTIONS } from "../sections.js";
@@ -42,7 +49,7 @@ describe("Business and Property Division Rolls Building converter registration",
     }
   });
 
-  it("should yield an empty array for a missing section tab", async () => {
+  it("should leave out a missing section tab so the schema can report it", async () => {
     const buffer = await createWorkbook([
       { name: SECTIONS[0].worksheetName, rows: [HEADERS, ["Mr Justice Smith", "10am", "Court 1", "Trial", "CR-2026-1", "Acme v Widgets", "Listed for 1 day"]] }
     ]);
@@ -51,7 +58,7 @@ describe("Business and Property Division Rolls Building converter registration",
     const result = (await converter?.convertExcelToJson(buffer)) as unknown as Record<string, unknown[]>;
 
     expect(result[SECTIONS[0].key]).toHaveLength(1);
-    expect(result[SECTIONS[1].key]).toHaveLength(0);
+    expect(result).not.toHaveProperty(SECTIONS[1].key);
   });
 
   it("should reject a workbook whose only tab matches no section name instead of filing it into Appeal List", async () => {
@@ -71,22 +78,50 @@ describe("STANDARD_CONFIG", () => {
     expect(STANDARD_CONFIG.fields.map((f) => f.fieldName)).toEqual(["judge", "time", "venue", "type", "caseNumber", "caseName", "additionalInformation"]);
   });
 
-  it("should mark all fields as required", () => {
-    for (const field of STANDARD_CONFIG.fields) {
-      expect(field.required).toBe(true);
-    }
+  it("should require only the time field, matching PIP", () => {
+    const requiredFields = STANDARD_CONFIG.fields.filter((field) => field.required).map((field) => field.fieldName);
+
+    expect(requiredFields).toEqual(["time"]);
   });
 
   it("should allow empty section sheets with minRows of 0", () => {
     expect(STANDARD_CONFIG.minRows).toBe(0);
   });
 
-  it("should reject an empty additional information cell", async () => {
+  it("should accept an empty additional information cell", async () => {
     const buffer = await createWorkbook([
       { name: "Sheet1", rows: [HEADERS, ["Mr Justice Smith", "2pm", "Court 2", "Hearing", "CR-2026-000456", "Beta v Gamma", ""]] }
     ]);
 
-    await expect(convertExcelToJson(buffer, STANDARD_CONFIG)).rejects.toThrow(/Missing required field 'Additional Information'/);
+    const result = await convertExcelToJson(buffer, STANDARD_CONFIG);
+
+    expect(result).toEqual([
+      {
+        judge: "Mr Justice Smith",
+        time: "2pm",
+        venue: "Court 2",
+        type: "Hearing",
+        caseNumber: "CR-2026-000456",
+        caseName: "Beta v Gamma",
+        additionalInformation: ""
+      }
+    ]);
+  });
+
+  it("should accept a row where every column except time is empty", async () => {
+    const buffer = await createWorkbook([{ name: "Sheet1", rows: [HEADERS, ["", "2pm", "", "", "", "", ""]] }]);
+
+    const result = await convertExcelToJson(buffer, STANDARD_CONFIG);
+
+    expect(result).toEqual([{ judge: "", time: "2pm", venue: "", type: "", caseNumber: "", caseName: "", additionalInformation: "" }]);
+  });
+
+  it("should reject an empty time cell", async () => {
+    const buffer = await createWorkbook([
+      { name: "Sheet1", rows: [HEADERS, ["Mr Justice Smith", "", "Court 2", "Hearing", "CR-2026-000456", "Beta v Gamma", ""]] }
+    ]);
+
+    await expect(convertExcelToJson(buffer, STANDARD_CONFIG)).rejects.toThrow(/Missing required field 'Time'/);
   });
 
   it("should reject an invalid time format", async () => {
@@ -155,5 +190,97 @@ describe("real source workbook tab names", () => {
 
     expect(validation.isValid).toBe(true);
     expect(validation.errors).toHaveLength(0);
+  });
+});
+
+describe("Business and Property Division Rolls Building located errors", () => {
+  const VALID_ROW = ["Mr Justice Smith", "10am", "Court 1", "Trial", "CR-2026-1", "Acme v Widgets", "Listed for 1 day"];
+
+  function allTabs(overrides: Record<string, unknown[][]> = {}, omit: string[] = []) {
+    return SECTIONS.filter((section) => !omit.includes(section.worksheetName)).map((section) => ({
+      name: section.worksheetName,
+      rows: overrides[section.worksheetName] ?? [HEADERS, VALID_ROW]
+    }));
+  }
+
+  async function captureError(promise: Promise<unknown>): Promise<ExcelValidationError> {
+    try {
+      await promise;
+    } catch (error) {
+      if (isExcelValidationError(error)) {
+        return error;
+      }
+      throw error;
+    }
+    throw new Error("Expected the upload to fail validation");
+  }
+
+  it("should report errors in Appeal List and Insolvency & Companies Court by tab name", async () => {
+    // Arrange
+    const buffer = await createWorkbook(
+      allTabs({
+        "Appeal List": [HEADERS, VALID_ROW, ["Mr Justice Smith", "", "Court 2", "Trial", "CR-2026-2", "Case B", "None"]],
+        "Insolvency & Companies Court": [HEADERS, ["ICC Judge Green", "half ten", "Court 7", "Winding up", "CR-2026-3", "Re Example Ltd", "Hybrid"]]
+      })
+    );
+
+    // Act
+    const error = await captureError(getConverterForListTypeName(LIST_TYPE_NAME)!.convertExcelToJson(buffer));
+
+    // Assert
+    expect(error.issues.map(({ sheetName, rowNumber, columnHeader, reason }) => ({ sheetName, rowNumber, columnHeader, reason }))).toEqual([
+      { sheetName: "Appeal List", rowNumber: 2, columnHeader: "Time", reason: "Missing required value" },
+      {
+        sheetName: "Insolvency & Companies Court",
+        rowNumber: 1,
+        columnHeader: "Time",
+        reason: "Invalid time format 'half ten'. Expected format: h:mma (e.g., 9:30am) or ha (e.g., 2pm)"
+      }
+    ]);
+  });
+
+  it("should report each missing tab together with the cell errors", async () => {
+    // Arrange
+    const buffer = await createWorkbook(
+      allTabs({ "Appeal List": [HEADERS, ["Mr Justice Smith", "", "Court 1", "Trial", "CR-2026-1", "Case A", "None"]] }, ["Patents Court", "Revenue List"])
+    );
+
+    // Act
+    const error = await captureError(validateNonStrategicExcel(LIST_TYPE_NAME, buffer));
+
+    // Assert
+    expect(error.issues.map(({ sheetName, rowNumber, columnHeader, reason }) => ({ sheetName, rowNumber, columnHeader, reason }))).toEqual([
+      { sheetName: "Appeal List", rowNumber: 1, columnHeader: "Time", reason: "Missing required value" },
+      { sheetName: "Patents Court", rowNumber: undefined, columnHeader: undefined, reason: "Sheet is missing from the file" },
+      { sheetName: "Revenue List", rowNumber: undefined, columnHeader: undefined, reason: "Sheet is missing from the file" }
+    ]);
+  });
+
+  it("should accept tabs whose name differs from the template only in case or spacing, as PIP does", async () => {
+    // Arrange
+    const tabs = allTabs().map((tab) =>
+      tab.name === "Commercial Court" ? { ...tab, name: "commercial  court " } : tab.name === "Revenue List" ? { ...tab, name: "REVENUE LIST" } : tab
+    );
+    const buffer = await createWorkbook(tabs);
+
+    // Act
+    const result = (await validateNonStrategicExcel(LIST_TYPE_NAME, buffer)) as Record<string, unknown[]>;
+
+    // Assert
+    expect(result.commercialCourt).toHaveLength(1);
+    expect(result.revenueList).toHaveLength(1);
+  });
+
+  it("should accept a workbook with every tab present when some hold only the header row", async () => {
+    // Arrange
+    const buffer = await createWorkbook(allTabs({ "Business List": [HEADERS], "Pensions List": [HEADERS] }));
+
+    // Act
+    const result = (await validateNonStrategicExcel(LIST_TYPE_NAME, buffer)) as Record<string, unknown[]>;
+
+    // Assert
+    expect(result.businessList).toEqual([]);
+    expect(result.pensionsList).toEqual([]);
+    expect(result.appealList).toHaveLength(1);
   });
 });
