@@ -24,7 +24,8 @@ export const getHandler = async (req: Request, res: Response) => {
     userId: user.id,
     name: user.name,
     createdAt: user.createdAt.toLocaleDateString("en-GB"),
-    subscriptionCount: user.subscriptions.length
+    subscriptionCount: user.subscriptions.length,
+    statusLabel: t.statuses[user.status as keyof typeof t.statuses] ?? user.status
   });
 };
 
