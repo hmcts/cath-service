@@ -16,7 +16,10 @@ jobs:
     name: Dependency Scan
     uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.7.1
     with:
+      # osv-scanner has no severity threshold flag: it fails on any
+      # vulnerability not ignored in osv-scanner.toml. Before v2.7.1 the
+      # reusable workflow hid the scanner's rejection of --fail-on-severity
+      # and reported "No issues found" without scanning.
       scan-args: |-
         --config=.github/osv-scanner.toml
-        --fail-on-severity=HIGH
         ./
