@@ -1,6 +1,7 @@
 export const cy = {
-  pageTitle: "Rydych wedi cael eich allgofnodi",
-  heading: "Rydych wedi cael eich allgofnodi oherwydd anweithgarwch",
-  bodyText: "Mae eich sesiwn wedi dod i ben oherwydd eich bod wedi bod yn anweithgar am ormod o amser.",
-  signInAgainLink: "Mewngofnodi eto"
+  pageTitle: "Sesiwn wedi dod i ben - Rydych wedi cael eich allgofnodi o ganlyniad i wneud dim",
+  header: "Rydych wedi cael eich allgofnodi o ganlyniad i wneud dim",
+  detail: "Gwnaed hyn i’ch diogelu chi ac i ddiogelu eraill sy’n defnyddio ein gwasanaeth.",
+  signInMessage: "Cliciwch yma i fewngofnodi neu i ddod â’r sesiwn hon i ben.",
+  signIn: "Mewngofnodi"
 };

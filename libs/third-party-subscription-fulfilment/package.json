@@ -1,0 +1,30 @@
+{
+  "name": "@hmcts/third-party-subscription-fulfilment",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "production": "./dist/index.js",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hmcts/azure-blob": "workspace:*",
+    "@hmcts/location": "workspace:*",
+    "@hmcts/postgres-prisma": "workspace:*",
+    "@hmcts/redis": "workspace:*",
+    "@hmcts/third-party-user": "workspace:*"
+  },
+  "peerDependencies": {
+    "@prisma/client": "*"
+  }
+}

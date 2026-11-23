@@ -41,11 +41,15 @@ vi.mock("@hmcts/publication", () => ({
   resolveListType: vi.fn().mockResolvedValue({ id: 1, name: "SJP_PRESS_LIST", provenance: "PI_AAD", isNonStrategic: false }),
   getArtefactById: vi.fn()
 }));
-vi.mock("@hmcts/azure-blob", () => ({
-  getBlobProperties: vi.fn()
-}));
+vi.mock("@hmcts/azure-blob", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@hmcts/azure-blob")>();
+  return {
+    ...actual,
+    getBlobProperties: vi.fn()
+  };
+});
 
-import { getBlobProperties } from "@hmcts/azure-blob";
+import { CONTAINER, getBlobProperties } from "@hmcts/azure-blob";
 import { calculatePagination, determineListType, extractPressCases } from "@hmcts/list-types-common";
 import { prisma } from "@hmcts/postgres-prisma";
 import { canAccessPublicationData, getPublicationJson } from "@hmcts/publication";
@@ -322,6 +326,71 @@ describe("SJP Press List Controller", () => {
       await getHandler(req, res);
 
       expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ showFilter: true }));
+    });
+
+    describe("download a copy button", () => {
+      const ARTEFACT_ID = "12345678-1234-1234-1234-123456789abc";
+
+      beforeEach(() => {
+        vi.mocked(prisma.artefact.findUnique).mockResolvedValue({
+          artefactId: ARTEFACT_ID,
+          locationId: "1",
+          contentDate: new Date("2025-01-20"),
+          provenance: "MANUAL_UPLOAD"
+        } as never);
+        vi.mocked(getPublicationJson).mockResolvedValue(mockJsonData);
+        vi.mocked(validateSjpPressList).mockReturnValue({ isValid: true, errors: [], schemaVersion: "1.0" });
+        vi.mocked(determineListType).mockReturnValue("press");
+        vi.mocked(extractPressCases).mockReturnValue(mockCases);
+      });
+
+      it("should pass downloadDisclaimerUrl when the user is verified and a blob exists in the publications container", async () => {
+        // Arrange
+        vi.mocked(getBlobProperties).mockImplementation(async (blobName: string) => (blobName.endsWith(".pdf") ? { size: 1024 } : null));
+        const req = mockRequest({ query: { artefactId: ARTEFACT_ID }, user: { role: "VERIFIED", provenance: "PI_AAD" } as never });
+        const res = mockResponse();
+
+        // Act
+        await getHandler(req, res, vi.fn());
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith(
+          "sjp-press-list",
+          expect.objectContaining({ downloadDisclaimerUrl: `/sjp-press-list/list-download-disclaimer?artefactId=${ARTEFACT_ID}` })
+        );
+        expect(getBlobProperties).toHaveBeenCalledWith(`${ARTEFACT_ID}.pdf`, CONTAINER.PUBLICATIONS);
+        expect(getBlobProperties).toHaveBeenCalledWith(`${ARTEFACT_ID}.xlsx`, CONTAINER.PUBLICATIONS);
+      });
+
+      it("should pass null downloadDisclaimerUrl and not query Blob Storage when the user is not verified", async () => {
+        // Arrange
+        vi.mocked(getBlobProperties).mockResolvedValue({ size: 1024 });
+        const req = mockRequest({ query: { artefactId: ARTEFACT_ID }, user: { role: "SYSTEM_ADMIN" } as never });
+        const res = mockResponse();
+
+        // Act
+        await getHandler(req, res, vi.fn());
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+        expect(getBlobProperties).not.toHaveBeenCalled();
+      });
+
+      it("should still render the list with null downloadDisclaimerUrl when Blob Storage errors", async () => {
+        // Arrange
+        vi.mocked(getBlobProperties).mockRejectedValue(new Error("Blob Storage unavailable"));
+        const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const req = mockRequest({ query: { artefactId: ARTEFACT_ID }, user: { role: "VERIFIED", provenance: "PI_AAD" } as never });
+        const res = mockResponse();
+
+        // Act
+        await getHandler(req, res, vi.fn());
+
+        // Assert
+        expect(res.render).toHaveBeenCalledWith("sjp-press-list", expect.objectContaining({ downloadDisclaimerUrl: null }));
+        expect(res.status).not.toHaveBeenCalledWith(500);
+        consoleErrorSpy.mockRestore();
+      });
     });
 
     it("should use Welsh translations when locale is cy", async () => {
