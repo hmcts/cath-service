@@ -2347,7 +2347,7 @@ __metadata:
   resolution: "@hmcts/redis@workspace:libs/redis"
   dependencies:
     "@azure/identity": "npm:4.10.0"
-    "@redis/entraid": "npm:5.12.1"
+    "@redis/entraid": "npm:5.12.4"
     typescript: "npm:6.0.3"
   peerDependencies:
     redis: ^4.0.0 || ^5.0.0
@@ -4375,15 +4375,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redis/entraid@npm:5.12.1":
-  version: 5.12.1
-  resolution: "@redis/entraid@npm:5.12.1"
+"@redis/entraid@npm:5.12.4":
+  version: 5.12.4
+  resolution: "@redis/entraid@npm:5.12.4"
   dependencies:
     "@azure/identity": "npm:^4.7.0"
     "@azure/msal-node": "npm:^2.16.1"
   peerDependencies:
-    "@redis/client": ^5.12.1
-  checksum: 10c0/2aa96e0bc0f7bb7c57848f734b96b5e6f166f7c6b04f9e3e5f7ea05f4e847499c32fb9e16f368453fff018e69adb145030fa8af8a4c5883793bccebb6caddadd
+    "@redis/client": ^5.12.4
+  checksum: 10c0/17e42a2780f5b104e677e5548da970c6a1124fba0f232747f34ba66f1493e1ca3aad014d54ea3523618a164335629c2b39a304d0dc206272c57ca7cec4838718
   languageName: node
   linkType: hard
 
