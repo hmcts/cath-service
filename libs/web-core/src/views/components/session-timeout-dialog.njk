@@ -1,0 +1,29 @@
+{#
+  Timeout warning built to the MoJ Design System timeout warning guidance. Opened with showModal()
+  by apps/web/src/assets/js/session-timeout.ts, which reads every string from the data attributes
+  so no localised text lives in JavaScript.
+#}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+<dialog
+  id="session-timeout-dialog"
+  class="app-session-timeout"
+  aria-labelledby="session-timeout-heading"
+  aria-describedby="session-timeout-countdown"
+  data-warning-ms="{{ sessionWarningMs }}"
+  data-redirect-type="{{ sessionRedirectType }}"
+  data-countdown-text="{{ sessionTimeout.countdown }}"
+  data-minute-text="{{ sessionTimeout.minute }}"
+  data-minutes-text="{{ sessionTimeout.minutes }}"
+  data-second-text="{{ sessionTimeout.second }}"
+  data-seconds-text="{{ sessionTimeout.seconds }}"
+  data-error-text="{{ sessionTimeout.keepAliveError }}">
+  <h2 class="govuk-heading-m" id="session-timeout-heading" tabindex="-1">{{ sessionTimeout.heading }}</h2>
+  <p class="govuk-body" id="session-timeout-countdown"></p>
+  <p class="govuk-error-message app-session-timeout__error" id="session-timeout-error" hidden></p>
+  <div class="govuk-visually-hidden" id="session-timeout-announcement" aria-live="polite" aria-atomic="true"></div>
+  {{ govukButton({
+    text: sessionTimeout.continue,
+    classes: "govuk-!-margin-bottom-0 app-session-timeout__continue",
+    type: "button"
+  }) }}
+</dialog>

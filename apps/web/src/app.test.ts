@@ -220,11 +220,13 @@ async function fakeKeyVault(localEnv: Partial<Record<keyof typeof KEY_VAULT_SECR
 describe("Web Application", () => {
   let app: Express;
 
+  // The first import loads the whole app graph; under a full parallel `yarn test` that can
+  // exceed the 10s default hook timeout.
   beforeEach(async () => {
     vi.clearAllMocks();
     const { createApp } = await import("./app.js");
     app = await createApp();
-  });
+  }, 30000);
 
   afterEach(() => {
     vi.unstubAllEnvs();

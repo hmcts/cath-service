@@ -229,7 +229,7 @@ test.describe("Create Media Account", () => {
 
     const backToTopLink = page.getByRole("link", { name: /back to top/i });
     await expect(backToTopLink).toBeVisible();
-    await expect(backToTopLink).toHaveAttribute("href", "#top");
+    await expect(backToTopLink).toHaveAttribute("href", "#main-content");
   });
 
   test("should pass accessibility checks", async ({ page }) => {

@@ -142,7 +142,7 @@ describe("create-media-account template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("button").text()).toContain(en.continueButton);
-      const backToTop = $('a[href="#top"]');
+      const backToTop = $('a.app-back-to-top__link[href="#main-content"]');
       expect(backToTop.text()).toContain(en.backToTop);
     });
 
@@ -193,7 +193,7 @@ describe("create-media-account template", () => {
       expect($('label[for="fullName"]').text()).toContain(cy.fullNameLabel);
       expect($('label[for="email"]').text()).toContain(cy.emailLabel);
       expect($("button").text()).toContain(cy.continueButton);
-      expect($('a[href="#top"]').text()).toContain(cy.backToTop);
+      expect($('a.app-back-to-top__link[href="#main-content"]').text()).toContain(cy.backToTop);
     });
 
     it("should render the Welsh opening text, hints and terms content", () => {

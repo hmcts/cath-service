@@ -27,6 +27,12 @@ describe("session-expired template", () => {
     expect($("h1.govuk-heading-l").text().trim()).toBe(en.header);
   });
 
+  it("should show the agreed signed-out message", () => {
+    const { $ } = renderPage();
+
+    expect($("h1").text().trim()).toBe("You have been signed out, due to inactivity.");
+  });
+
   it("should not render a confirmation panel", () => {
     const { $ } = renderPage();
 

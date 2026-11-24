@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
+import { expectBackToTopMovesFocusToMain } from "../../utils/back-to-top-helpers.js";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { createNotificationSubscriber, createTestSubscription, getGovNotifyEmail, getNotificationsBySubscriptionId } from "../../utils/notification-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
@@ -75,6 +76,9 @@ test.describe("Manual Upload", () => {
     // STEP 3: Test accessibility with error state
     let accessibilityScanResults = await axeCheck(page).disableRules(["target-size", "link-name"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
+
+    // Back to top moves keyboard focus to the main content
+    await expectBackToTopMovesFocusToMain(page, "Back to top");
 
     // STEP 4: Test invalid file type validation
     await page.goto(`/manual-upload?locationId=${testLocationId}`);

@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import { cy as webCoreCy, en as webCoreEn } from "@hmcts/web-core";
 import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -513,7 +514,7 @@ describe("sjp-public-list template", () => {
     it("should render the back-to-top link", () => {
       const { $ } = renderList();
 
-      expect($(".back-to-top-link").text()).toContain(en.common.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(en.common.backToTop);
     });
   });
 
@@ -544,7 +545,7 @@ describe("sjp-public-list template", () => {
       expect(summary).toContain(cy.common.listContaining);
       expect(summary).toContain(cy.common.generatedOn);
       expect(summary).toContain(cy.common.at);
-      expect($(".back-to-top-link").text()).toContain(cy.common.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.common.backToTop);
     });
 
     it("should render the Welsh filter labels and no-cases message", () => {
@@ -615,6 +616,25 @@ describe("sjp-public-list template", () => {
 
       expect($(".govuk-pagination__prev")).toHaveLength(0);
       expect($(".govuk-pagination__next")).toHaveLength(1);
+    });
+  });
+
+  describe("Filter panel order", () => {
+    it("should render the filter hint first and the apply button last in the filter options", () => {
+      const { $ } = renderList({ filterPanel: webCoreEn.filterPanel });
+      const options = $(".moj-filter__options").children();
+
+      expect(options.first().attr("id")).toBe("filter-hint");
+      expect(options.first().text().trim()).toBe(webCoreEn.filterPanel.hint);
+      expect(options.last().is("button.govuk-button")).toBe(true);
+      expect(options.last().attr("aria-describedby")).toBe("filter-hint");
+      expect($(".moj-filter__options > button.govuk-button")).toHaveLength(1);
+    });
+
+    it("should render the Welsh filter hint", () => {
+      const { $ } = renderList({ filterPanel: webCoreCy.filterPanel }, cy);
+
+      expect($("#filter-hint").text().trim()).toBe(webCoreCy.filterPanel.hint);
     });
   });
 });

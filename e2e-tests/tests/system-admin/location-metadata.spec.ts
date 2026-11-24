@@ -11,9 +11,9 @@ test.describe("Location Metadata Management", () => {
 
   test("system admin can navigate to location metadata search and validate form", async ({ page }) => {
     // Navigate from dashboard through the Reference Data landing page
-    await page.locator('a.admin-tile[href="/reference-data"]').click();
+    await page.locator(".admin-tile").getByRole("link", { name: "Reference Data", exact: true }).click();
     await expect(page).toHaveURL("/reference-data");
-    const manageMetadataLink = page.locator('a.admin-tile:has-text("Manage Location Metadata")');
+    const manageMetadataLink = page.locator(".admin-tile").getByRole("link", { name: "Manage Location Metadata", exact: true });
     await expect(manageMetadataLink).toBeVisible();
     await manageMetadataLink.click();
 

@@ -85,7 +85,7 @@ test.describe("Email Subscriptions - Location", () => {
 
     // STEP 2: Navigate to subscription management
     await page.goto("/account-home");
-    const emailSubsTile = page.locator(".verified-tile").nth(2);
+    const emailSubsTile = page.locator(".verified-tile").getByRole("link", { name: "Email subscriptions", exact: true });
     await emailSubsTile.click();
     await expect(page).toHaveURL("/subscription-management");
     await expect(page).toHaveTitle(/Your email subscriptions/i);
@@ -185,7 +185,7 @@ test.describe("Email Subscriptions - Location", () => {
 
     // STEP 1: First create a subscription to unsubscribe from
     await page.goto("/account-home");
-    await page.locator(".verified-tile").nth(2).click();
+    await page.locator(".verified-tile").getByRole("link", { name: "Email subscriptions", exact: true }).click();
     await page.getByRole("button", { name: /add email subscription/i }).click();
     await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
@@ -261,7 +261,7 @@ test.describe("Email Subscriptions - Location", () => {
 
     // STEP 1: First create a location subscription (required to access edit list type)
     await page.goto("/account-home");
-    await page.locator(".verified-tile").nth(2).click();
+    await page.locator(".verified-tile").getByRole("link", { name: "Email subscriptions", exact: true }).click();
     await page.getByRole("button", { name: /add email subscription/i }).click();
     await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();

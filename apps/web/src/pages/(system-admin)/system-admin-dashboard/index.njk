@@ -10,10 +10,12 @@
 <div class="govuk-grid-row">
   {% for tile in tiles %}
     <div class="govuk-grid-column-one-half">
-      <a href="{{ tile.href }}" class="admin-tile">
-        <h2 class="admin-tile__heading">{{ tile.title }}</h2>
+      <div class="admin-tile">
+        <h2 class="admin-tile__heading">
+          <a href="{{ tile.href }}" class="govuk-link govuk-link--no-visited-state admin-tile__link">{{ tile.title }}</a>
+        </h2>
         <p class="admin-tile__description">{{ tile.description }}</p>
-      </a>
+      </div>
     </div>
   {% endfor %}
 </div>

@@ -40,12 +40,27 @@ describe("admin-dashboard template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("a.admin-tile")).toHaveLength(4);
-      expect($('a[href="/manual-upload"] .admin-tile__heading').text()).toBe(en.tiles[0].heading);
-      expect($('a[href="/non-strategic-upload"] .admin-tile__heading').text()).toBe(en.tiles[1].heading);
-      expect($('a[href="/remove-list-search"] .admin-tile__heading').text()).toBe(en.tiles[2].heading);
-      expect($('a[href="/media-applications"] .admin-tile__heading').text()).toBe(en.tiles[3].heading);
-      expect($('a[href="/manual-upload"] .admin-tile__description').text()).toBe(en.tiles[0].description);
+      expect($("div.admin-tile")).toHaveLength(4);
+      expect($('.admin-tile__heading a[href="/manual-upload"]').text()).toBe(en.tiles[0].heading);
+      expect($('.admin-tile__heading a[href="/non-strategic-upload"]').text()).toBe(en.tiles[1].heading);
+      expect($('.admin-tile__heading a[href="/remove-list-search"]').text()).toBe(en.tiles[2].heading);
+      expect($('.admin-tile__heading a[href="/media-applications"]').text()).toBe(en.tiles[3].heading);
+      expect($('a[href="/manual-upload"]').closest(".admin-tile").find(".admin-tile__description").text()).toBe(en.tiles[0].description);
+    });
+
+    it("should render one link per tile whose name is the heading, with the description outside the link", () => {
+      const data = { pageTitle: en.pageTitle, tiles: en.tiles, pendingCount: 0, notificationText: en.notificationText, notificationLink: en.notificationLink };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      $("div.admin-tile").each((_, tile) => {
+        const tileLinks = $(tile).find("a");
+        expect(tileLinks).toHaveLength(1);
+        expect(tileLinks.hasClass("admin-tile__link")).toBe(true);
+        expect(tileLinks.text().trim()).toBe($(tile).find(".admin-tile__heading").text().trim());
+        expect($(tile).find(".admin-tile__description").closest("a")).toHaveLength(0);
+      });
+      expect($("a.admin-tile")).toHaveLength(0);
     });
 
     it("should render only three tiles for a local admin with three tiles", () => {
@@ -59,7 +74,7 @@ describe("admin-dashboard template", () => {
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($("a.admin-tile")).toHaveLength(3);
+      expect($("div.admin-tile")).toHaveLength(3);
       expect($('a[href="/media-applications"]')).toHaveLength(0);
     });
 
@@ -88,7 +103,7 @@ describe("admin-dashboard template", () => {
       const { $ } = render(env, TEMPLATE, data);
 
       expect($("h1").text()).toContain(cy.pageTitle);
-      expect($('a[href="/media-applications"] .admin-tile__heading').text()).toBe(cy.tiles[3].heading);
+      expect($('.admin-tile__heading a[href="/media-applications"]').text()).toBe(cy.tiles[3].heading);
     });
 
     it("should not render an error summary", () => {

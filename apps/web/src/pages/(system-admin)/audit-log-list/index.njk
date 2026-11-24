@@ -4,7 +4,8 @@
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/date-input/macro.njk" import govukDateInput %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
-{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "components/filter-panel.njk" import appFilter %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 {% block backLink %}
   <a href="/system-admin-dashboard" class="govuk-back-link">Back</a>
@@ -138,8 +139,9 @@
 <div class="moj-filter-layout app-filter-layout--sidebar">
   <div class="moj-filter-layout__filter">
     <form method="get" action="/audit-log-list">
-      {{ mojFilter({
+      {{ appFilter({
         heading: { text: filters_heading },
+        hint: { text: filterPanel.hint },
         submit: { text: applyFiltersText },
         selectedFilters: {
           heading: { text: selectedFiltersText },
@@ -223,9 +225,7 @@
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
-    <p class="govuk-body-s govuk-!-margin-top-4">
-      <a href="#top" class="govuk-link">{{ backToTopText }}</a>
-    </p>
+    {{ appBackToTop({ text: backToTopText }) }}
   </div>
 </div>
 {% endblock page_content %}

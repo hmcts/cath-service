@@ -1,7 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
-{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "components/filter-panel.njk" import appFilter %}
 
 {% block backLink %}
   {{ govukBackLink({
@@ -45,8 +45,9 @@
 <div class="moj-filter-layout app-filter-layout--sidebar">
   <div class="moj-filter-layout__filter">
     <form method="get" novalidate>
-      {{ mojFilter({
+      {{ appFilter({
         heading: { text: t.filterHeading },
+        hint: { text: filterPanel.hint },
         submit: { text: t.applyFiltersButton },
         selectedFilters: {
           heading: { text: t.selectedFiltersHeading },

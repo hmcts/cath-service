@@ -1,16 +1,18 @@
-.back-to-top {
+.app-back-to-top {
   margin-top: 40px;
 }
 
-.back-to-top-link {
-  display: inline-block;
-  margin-top: 2em;
-  margin-bottom: 2em;
+.app-back-to-top__link {
   font-weight: bold;
 }
 
-.back-to-top-link span {
-  text-decoration: none !important;
+.app-back-to-top__link span {
   display: inline-block;
   margin-right: 0.35em;
+}
+
+// Applied while #main-content holds programmatic focus, matching the GOV.UK
+// skip link, so a non-interactive container does not show a focus ring.
+.app-back-to-top-focused {
+  outline: none;
 }

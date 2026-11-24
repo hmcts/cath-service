@@ -391,7 +391,7 @@ describe("London Administrative Court Daily Cause List template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -420,7 +420,7 @@ describe("London Administrative Court Daily Cause List template", () => {
       expect($(".hearings-section.section-divider h2").text()).toContain(cy.planningCourtTitle);
       expect($(".hearings-section p.govuk-body").text()).toContain(cy.noHearingsMessage);
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
 
     it("should render Welsh table headers", () => {

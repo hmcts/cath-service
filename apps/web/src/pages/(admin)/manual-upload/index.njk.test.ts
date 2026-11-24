@@ -99,7 +99,7 @@ describe("manual-upload template", () => {
       const aside = $("aside.app-related-items").text();
       expect(aside).toContain(en.pageHelpTitle);
       expect(aside).toContain(en.pageHelpSensitivityPublic);
-      expect($("a.back-to-top-link").text()).toContain(en.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(en.backToTop);
     });
 
     it("should populate the court field from data", () => {
@@ -202,7 +202,7 @@ describe("manual-upload template", () => {
       const bodyText = $("body").text();
       expect(html).toContain(cy.pageTitle);
       expect($(".manual-upload-warning__text").text()).toContain(cy.warningMessage);
-      expect($("a.back-to-top-link").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
       expect($("label[for='file']").text()).toContain(cy.fileUploadLabel);
       expect($("label[for='court']").text()).toContain(cy.courtLabel);
       expect($("label[for='listType']").text()).toContain(cy.listTypeLabel);

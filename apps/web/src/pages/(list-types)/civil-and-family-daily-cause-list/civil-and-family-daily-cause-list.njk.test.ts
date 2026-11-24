@@ -186,7 +186,9 @@ describe("civil-and-family-daily-cause-list template", () => {
     it("should render the data source", () => {
       const { $ } = renderList([], { dataSource: "Civil Data Platform" });
 
-      const footer = $("p.govuk-body").last().text();
+      const footer = $("p.govuk-body")
+        .filter((_, el) => $(el).text().includes(en.dataSource))
+        .text();
       expect(footer).toContain(en.dataSource);
       expect(footer).toContain("Civil Data Platform");
     });
@@ -222,6 +224,23 @@ describe("civil-and-family-daily-cause-list template", () => {
       const details = $("details.govuk-details");
       expect(details.find(".govuk-details__summary-text").text()).toContain(cy.importantInformation);
       expect(details.text()).toContain(cy.openJusticeContact("Llys Prawf", "cf@example.com", "0300 123 5577"));
+    });
+  });
+
+  describe("Back to top link", () => {
+    it("should link to the main content after the data source", () => {
+      const { $ } = renderList([]);
+      const link = $(".app-back-to-top a");
+
+      expect(link).toHaveLength(1);
+      expect(link.attr("href")).toBe("#main-content");
+      expect(link.text()).toContain(en.linkToTop);
+    });
+
+    it("should render the Welsh back to top text when the cy locale is used", () => {
+      const { $ } = renderList([], {}, cy);
+
+      expect($(".app-back-to-top a").text()).toContain(cy.linkToTop);
     });
   });
 

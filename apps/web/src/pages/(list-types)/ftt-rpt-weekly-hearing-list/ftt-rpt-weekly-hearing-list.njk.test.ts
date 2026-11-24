@@ -376,10 +376,10 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
       expect(footer.text()).toContain("RPT Data Platform");
     });
 
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([buildHearing()]);
 
-      const backToTop = $("a.govuk-link[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop.text()).toContain(en.backToTop);
       expect($("#top")).toHaveLength(1);
     });
@@ -398,7 +398,7 @@ describe("ftt-rpt-weekly-hearing-list template", () => {
       const headers = headerTexts($);
       expect(headers).toContain(cy.tableHeaders.date);
       expect(headers).toContain(cy.tableHeaders.caseReferenceNumber);
-      expect($("a.govuk-link[href='#top']").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link[href='#main-content']").text()).toContain(cy.backToTop);
     });
   });
 });

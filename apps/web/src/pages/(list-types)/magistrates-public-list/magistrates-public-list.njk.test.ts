@@ -151,6 +151,23 @@ describe("magistrates-public-list template", () => {
     });
   });
 
+  describe("Back to top link", () => {
+    it("should link to the main content", () => {
+      const { $ } = renderList([]);
+      const link = $(".app-back-to-top a");
+
+      expect(link).toHaveLength(1);
+      expect(link.attr("href")).toBe("#main-content");
+      expect(link.text()).toContain(en.linkToTop);
+    });
+
+    it("should render the Welsh back to top text when the cy locale is used", () => {
+      const { $ } = renderList([], {}, cy);
+
+      expect($(".app-back-to-top a").text()).toContain(cy.linkToTop);
+    });
+  });
+
   describe("Page header", () => {
     it("should render the heading with the page header text and location name", () => {
       const { $ } = renderList([]);

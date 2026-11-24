@@ -282,10 +282,10 @@ describe("send-daily-hearing-list template", () => {
       expect(footer.text()).toContain("Manual Upload");
     });
 
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderPage();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -347,7 +347,7 @@ describe("send-daily-hearing-list template", () => {
 
       expect(firstDataRowCells($)[COLUMN.respondent]).toBe("Awdurdod Lleol Enghreifftiol");
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
 
     it("should render each Welsh important information paragraph", () => {

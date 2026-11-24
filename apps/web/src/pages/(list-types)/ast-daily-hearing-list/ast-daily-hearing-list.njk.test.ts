@@ -290,10 +290,10 @@ describe("ast-daily-hearing-list template", () => {
       expect(footer.text()).toContain("Manual Upload");
     });
 
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -325,7 +325,7 @@ describe("ast-daily-hearing-list template", () => {
         .get();
       expect(headers).toContain(cy.tableHeaders.appellant);
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
 
     it("should render the Welsh venue address lines", () => {

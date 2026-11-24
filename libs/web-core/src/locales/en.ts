@@ -40,14 +40,26 @@ export const en = {
     }
   },
   language: {
-    switch: "Cymraeg",
-    switchAriaLabel: "Change language to Welsh"
+    switch: "Cymraeg"
   },
   feedback: {
     part1: "This is a new service – your ",
     part2: "feedback",
     part3: " will help us to improve it.",
-    ariaLabel: "Give feedback about this page",
+    newTab: "(opens in a new tab)",
     link: "https://www.smartsurvey.co.uk/s/FBSPI22/?pageurl="
+  },
+  filterPanel: {
+    hint: "Select one or more filters and then select the apply filters button"
+  },
+  sessionTimeout: {
+    heading: "You're about to be signed out due to inactivity.",
+    countdown: "For your security, you will be signed out in {time}.",
+    minute: "minute",
+    minutes: "minutes",
+    second: "second",
+    seconds: "seconds",
+    continue: "Continue",
+    keepAliveError: "We could not keep you signed in. Try again."
   }
 };

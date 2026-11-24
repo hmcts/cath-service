@@ -252,7 +252,7 @@ describe("utiac-jr-daily-hearing-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([buildHearing()]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -268,7 +268,7 @@ describe("utiac-jr-daily-hearing-list template", () => {
         .get();
       expect(headers).toContain(cy.tableHeaders.additionalInformation);
       expect($("details.govuk-details .govuk-details__summary-text").text()).toContain(cy.importantInformationTitle);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
     });
   });

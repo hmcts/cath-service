@@ -67,7 +67,7 @@ describe("audit-log-detail template", () => {
       expect(tableText).toContain(log.details);
 
       expect($('a[href="/audit-log-list"]').text()).toContain(en.backToList);
-      expect($('a[href="#top"]').text()).toContain(en.backToTop);
+      expect($('a.app-back-to-top__link[href="#main-content"]').text()).toContain(en.backToTop);
 
       assertNoErrors($);
     });
@@ -96,7 +96,7 @@ describe("audit-log-detail template", () => {
       expect(tableText).toContain(cy.detailLabels.role);
 
       expect($('a[href="/audit-log-list"]').text()).toContain(cy.backToList);
-      expect($('a[href="#top"]').text()).toContain(cy.backToTop);
+      expect($('a.app-back-to-top__link[href="#main-content"]').text()).toContain(cy.backToTop);
     });
   });
 });

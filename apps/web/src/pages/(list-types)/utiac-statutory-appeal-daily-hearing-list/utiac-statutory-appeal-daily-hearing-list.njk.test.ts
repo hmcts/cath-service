@@ -334,10 +334,10 @@ describe("utiac-statutory-appeal-daily-hearing-list template", () => {
       }
     });
 
-    it("should render a back-to-top link pointing to the heading anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -370,7 +370,7 @@ describe("utiac-statutory-appeal-daily-hearing-list template", () => {
 
       expect($("input#case-search-input").attr("aria-label")).toBe(cy.searchCasesLabel);
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 });

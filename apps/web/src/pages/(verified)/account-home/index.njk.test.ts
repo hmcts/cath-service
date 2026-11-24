@@ -43,14 +43,34 @@ describe("account-home template", () => {
       expect(body).toContain(en.sections.emailSubscriptions.description);
     });
 
-    it("should link each tile to the correct destination", () => {
+    it("should link each tile to the correct destination from its heading only", () => {
       const data = { title: en.title, sections: en.sections };
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($('a[href="/search"]')).toHaveLength(1);
-      expect($('a[href="/summary-of-publications?locationId=9"]')).toHaveLength(1);
-      expect($('a[href="/subscription-management"]')).toHaveLength(1);
+      const links = $(".verified-tile a");
+      expect(links).toHaveLength(3);
+      expect(links.map((_, el) => $(el).attr("href")).get()).toEqual(["/search", "/summary-of-publications?locationId=9", "/subscription-management"]);
+      links.each((_, el) => {
+        expect($(el).parent().is("h2.verified-tile-heading")).toBe(true);
+        expect($(el).hasClass("verified-tile__link")).toBe(true);
+      });
+    });
+
+    it("should render one link per tile whose name is the heading, with the description outside the link", () => {
+      const data = { title: en.title, sections: en.sections };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const tiles = $("div.verified-tile");
+      expect(tiles).toHaveLength(3);
+      tiles.each((_, tile) => {
+        const tileLinks = $(tile).find("a");
+        expect(tileLinks).toHaveLength(1);
+        expect(tileLinks.text().trim()).toBe($(tile).find(".verified-tile-heading").text().trim());
+        expect($(tile).find(".verified-tile-description").closest("a")).toHaveLength(0);
+      });
+      expect($("a.verified-tile")).toHaveLength(0);
     });
   });
 

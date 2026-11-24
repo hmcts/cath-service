@@ -1,0 +1,23 @@
+.app-session-timeout {
+  box-sizing: border-box;
+  width: calc(100% - 30px);
+  max-width: 500px;
+  padding: 30px;
+  border: 5px solid #0b0c0c;
+  background-color: #ffffff;
+  color: #0b0c0c;
+
+  &::backdrop {
+    background-color: rgba(11, 12, 12, 0.8);
+  }
+
+  @media (max-width: 40.0525em) {
+    padding: 15px;
+  }
+}
+
+// The heading is focused programmatically when the dialog opens; it is not interactive, so
+// no focus ring, matching the GOV.UK error summary and skip link targets.
+.app-session-timeout .govuk-heading-m:focus {
+  outline: none;
+}

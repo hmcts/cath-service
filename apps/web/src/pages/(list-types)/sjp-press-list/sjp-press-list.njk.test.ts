@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { sjpPressListCy as cy, sjpPressListEn as en } from "@hmcts/sjp-press-list";
 import { createTestEnvironment, render } from "@hmcts/test-support";
+import { cy as webCoreCy, en as webCoreEn } from "@hmcts/web-core";
 import type { CheerioAPI } from "cheerio";
 import type nunjucks from "nunjucks";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -600,9 +601,9 @@ describe("sjp-press-list template", () => {
     it("should render a back to top link", () => {
       const { $ } = renderList();
 
-      const backToTop = $("a.back-to-top-link");
+      const backToTop = $("a.app-back-to-top__link");
       expect(backToTop).toHaveLength(1);
-      expect(backToTop.attr("href")).toBe("#");
+      expect(backToTop.attr("href")).toBe("#main-content");
       expect(backToTop.text()).toContain(en.common.backToTop);
     });
   });
@@ -688,6 +689,25 @@ describe("sjp-press-list template", () => {
 
       expect($(".govuk-pagination__prev a").text()).toContain(cy.common.previous);
       expect($(".govuk-pagination__next a").text()).toContain(cy.common.next);
+    });
+  });
+
+  describe("Filter panel order", () => {
+    it("should render the filter hint first and the apply button last in the filter options", () => {
+      const { $ } = renderList({ filterPanel: webCoreEn.filterPanel });
+      const options = $(".moj-filter__options").children();
+
+      expect(options.first().attr("id")).toBe("filter-hint");
+      expect(options.first().text().trim()).toBe(webCoreEn.filterPanel.hint);
+      expect(options.last().is("button.govuk-button")).toBe(true);
+      expect(options.last().attr("aria-describedby")).toBe("filter-hint");
+      expect($(".moj-filter__options > button.govuk-button")).toHaveLength(1);
+    });
+
+    it("should render the Welsh filter hint", () => {
+      const { $ } = renderList({ filterPanel: webCoreCy.filterPanel }, cy);
+
+      expect($("#filter-hint").text().trim()).toBe(webCoreCy.filterPanel.hint);
     });
   });
 });

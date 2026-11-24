@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
+import { clickCardBelowHeading } from "../../utils/card-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe("System Admin Dashboard", () => {
@@ -31,16 +32,15 @@ test.describe("System Admin Dashboard", () => {
       { title: "Download MI Report", href: "/mi-report" }
     ];
 
-    const tiles = page.locator("a.admin-tile");
+    const tiles = page.locator(".admin-tile");
     await expect(tiles).toHaveCount(tileData.length);
 
-    // Match headings exactly by index: `:has-text()` matches case-insensitive substrings
-    // across the whole tile, so "Reference Data" would also match the Delete Court tile
-    // whose description reads "Delete court from reference data".
+    // Each tile has exactly one link, whose accessible name is the heading alone
     for (const [index, { title, href }] of tileData.entries()) {
-      const tile = tiles.nth(index);
-      await expect(tile.locator(".admin-tile__heading")).toHaveText(title);
-      await expect(tile).toHaveAttribute("href", href);
+      const tileLinks = tiles.nth(index).getByRole("link");
+      await expect(tileLinks).toHaveCount(1);
+      await expect(tileLinks).toHaveAccessibleName(title);
+      await expect(tileLinks).toHaveAttribute("href", href);
     }
 
     // Verify tile descriptions are displayed
@@ -55,9 +55,8 @@ test.describe("System Admin Dashboard", () => {
     const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // Navigate to Reference Data landing page, selected by href to avoid the
-    // substring clash with the Delete Court tile's description
-    await page.locator('a.admin-tile[href="/reference-data"]').click();
+    // The whole card is clickable: clicking the description follows the heading link
+    await clickCardBelowHeading(tiles.nth(0));
     await page.waitForURL("**/reference-data");
     const referenceDataHeading = page.locator("h1");
     await expect(referenceDataHeading).toBeVisible();
@@ -65,36 +64,19 @@ test.describe("System Admin Dashboard", () => {
   });
 
   test("dashboard is keyboard accessible @nightly", async ({ page }) => {
-    // Verify tiles are focusable
-    const tileLinks = page.locator("a.admin-tile");
+    const tileLinks = page.locator(".admin-tile").getByRole("link");
     await expect(tileLinks).toHaveCount(11);
 
-    // Verify first tile is visible and focusable
-    const firstTile = tileLinks.first();
-    await expect(firstTile).toBeVisible();
-
-    // Verify links are keyboard accessible (no tabindex=-1)
-    const tabindex = await firstTile.getAttribute("tabindex");
-    expect(tabindex === null || tabindex !== "-1").toBe(true);
-
-    // Verify they are anchor elements
-    const tagName = await firstTile.evaluate((el) => el.tagName.toLowerCase());
-    expect(tagName).toBe("a");
-
-    // Tab through and verify at least one tile gets focused
-    let foundFocusedTile = false;
-    for (let i = 0; i < 20 && !foundFocusedTile; i++) {
+    // Tab to the first tile, then each further Tab moves to the next tile: one stop per tile
+    let isFirstTileFocused = false;
+    for (let i = 0; i < 20 && !isFirstTileFocused; i++) {
       await page.keyboard.press("Tab");
-      for (let j = 0; j < 10; j++) {
-        try {
-          await expect(tileLinks.nth(j)).toBeFocused({ timeout: 100 });
-          foundFocusedTile = true;
-          break;
-        } catch {
-          // Continue checking
-        }
-      }
+      isFirstTileFocused = await tileLinks.first().evaluate((el) => el === document.activeElement);
     }
-    expect(foundFocusedTile).toBe(true);
+    expect(isFirstTileFocused).toBe(true);
+    for (let j = 1; j < 3; j++) {
+      await page.keyboard.press("Tab");
+      await expect(tileLinks.nth(j)).toBeFocused();
+    }
   });
 });

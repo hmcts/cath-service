@@ -280,7 +280,7 @@ describe("administrative-court-daily-cause-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.common.backToTop);
     });
@@ -323,7 +323,7 @@ describe("administrative-court-daily-cause-list template", () => {
       expect(headers).toContain(cy.common.tableHeaders.venue);
       expect(headers).toContain(cy.common.tableHeaders.judge);
       expect(headers).toContain(cy.common.tableHeaders.time);
-      expect($(".back-to-top a").text()).toContain(cy.common.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.common.backToTop);
     });
   });
 });

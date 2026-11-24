@@ -309,10 +309,10 @@ describe("grc-weekly-hearing-list template", () => {
       expect(footer.text()).toContain("GRC Data Platform");
     });
 
-    it("should render a back-to-top link to the page anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([buildHearing()]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop.text()).toContain(en.backToTop);
       expect($("#top")).toHaveLength(1);
     });
@@ -340,7 +340,7 @@ describe("grc-weekly-hearing-list template", () => {
       expect(headers).toContain(cy.tableHeaders.additionalInformation);
       expect(headers).toContain(cy.tableHeaders.date);
 
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 });

@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { clickCardBelowHeading } from "../../utils/card-helpers.js";
 import { createVerifiedTestUser, loginAsTestUser } from "../../utils/verified-user-helpers.js";
 
 test.describe("Account Home", () => {
@@ -23,19 +24,28 @@ test.describe("Account Home", () => {
     const courtSection = sectionBoxes.nth(0);
     await expect(courtSection.locator("h2")).toHaveText("Court and tribunal hearings");
     await expect(courtSection.locator("p.verified-tile-description")).toHaveText("View time, location, type of hearings and more.");
-    await expect(courtSection).toHaveAttribute("href", "/search");
+    const courtLink = courtSection.getByRole("link");
+    await expect(courtLink).toHaveCount(1);
+    await expect(courtLink).toHaveAccessibleName("Court and tribunal hearings");
+    await expect(courtLink).toHaveAttribute("href", "/search");
 
     // STEP 5: Verify Single Justice Procedure Cases section
     const sjpSection = sectionBoxes.nth(1);
     await expect(sjpSection.locator("h2")).toHaveText("Single Justice Procedure cases");
     await expect(sjpSection.locator("p.verified-tile-description")).toContainText("Cases ready to be decided by a magistrate");
-    await expect(sjpSection).toHaveAttribute("href", "/summary-of-publications?locationId=9");
+    const sjpLink = sjpSection.getByRole("link");
+    await expect(sjpLink).toHaveCount(1);
+    await expect(sjpLink).toHaveAccessibleName("Single Justice Procedure cases");
+    await expect(sjpLink).toHaveAttribute("href", "/summary-of-publications?locationId=9");
 
     // STEP 6: Verify Email Subscriptions section
     const emailSection = sectionBoxes.nth(2);
     await expect(emailSection.locator("h2")).toHaveText("Email subscriptions");
     await expect(emailSection.locator("p.verified-tile-description")).toContainText("Get emails about hearings");
-    await expect(emailSection).toHaveAttribute("href", "/subscription-management");
+    const emailLink = emailSection.getByRole("link");
+    await expect(emailLink).toHaveCount(1);
+    await expect(emailLink).toHaveAccessibleName("Email subscriptions");
+    await expect(emailLink).toHaveAttribute("href", "/subscription-management");
 
     // STEP 7: Test accessibility
     const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
@@ -52,34 +62,35 @@ test.describe("Account Home", () => {
     await expect(sectionBoxes.nth(0).locator("p.verified-tile-description")).toHaveText("Gweld amser, lleoliad, math o wrandawiadau a mwy.");
     await expect(sectionBoxes.nth(2).locator("p.verified-tile-description")).toContainText("Cael e-byst am wrandawiadau");
 
-    // STEP 9: Test navigation to Court and Tribunal Hearings
+    // STEP 9: Test navigation to Court and Tribunal Hearings by clicking the card description,
+    // which proves the whole card stays clickable
     await page.goto("/account-home");
-    await courtSection.click();
+    await clickCardBelowHeading(courtSection);
     await expect(page).toHaveURL("/search");
 
     // STEP 10: Test navigation to SJP Cases
     await page.goto("/account-home");
-    await sjpSection.click();
+    await sjpLink.click();
     await expect(page).toHaveURL("/summary-of-publications?locationId=9");
 
     // STEP 11: Test navigation to Email Subscriptions
     await page.goto("/account-home");
-    await emailSection.click();
+    await emailLink.click();
     await expect(page).toHaveURL("/subscription-management");
 
-    // STEP 12: Test keyboard accessibility
+    // STEP 12: Test keyboard accessibility: one tab stop per tile, on the heading link
     await page.goto("/account-home");
-    const firstBox = page.locator(".verified-tile").first();
-
-    // Tab to first box
     let attempts = 0;
     while (attempts < 20) {
       await page.keyboard.press("Tab");
-      const isFocused = await firstBox.evaluate((el) => document.activeElement === el);
+      const isFocused = await courtLink.evaluate((el) => document.activeElement === el);
       if (isFocused) break;
       attempts++;
     }
-    await expect(firstBox).toBeFocused();
+    await expect(courtLink).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(sjpLink).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
 
     // Navigate with Enter key
     await page.keyboard.press("Enter");

@@ -1,5 +1,6 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 {% block backLink %}
   <a href="/audit-log-list" class="govuk-back-link">{{ backToListText }}</a>
@@ -43,9 +44,7 @@
       ]
     }) }}
 
-    <p class="govuk-body govuk-!-margin-top-6">
-      <a href="#top" class="govuk-link">{{ backToTopText }}</a>
-    </p>
+    {{ appBackToTop({ text: backToTopText }) }}
   </div>
 </div>
 {% endblock %}

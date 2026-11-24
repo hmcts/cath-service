@@ -3,6 +3,7 @@
 {% from "govuk/components/input/macro.njk" import govukInput %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 {% macro getError(errors, fieldId) -%}
   {%- if errors -%}
@@ -136,9 +137,7 @@
 
     </form>
 
-    <p class="govuk-body">
-      <a href="#top" class="govuk-link">{{ backToTop }}</a>
-    </p>
+    {{ appBackToTop({ text: backToTop }) }}
 
   </div>
 </div>

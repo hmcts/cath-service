@@ -308,10 +308,10 @@ describe("family-division-high-court-daily-cause-list template", () => {
       }
     });
 
-    it("should render a back-to-top link to the page anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.common.backToTop);
     });
@@ -365,7 +365,7 @@ describe("family-division-high-court-daily-cause-list template", () => {
       const footer = $("p.govuk-body-s");
       expect(footer.text()).toContain(cy.common.dataSource);
       expect(footer.text()).toContain("Lanlwytho â Llaw");
-      expect($(".back-to-top a").text()).toContain(cy.common.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.common.backToTop);
     });
   });
 });

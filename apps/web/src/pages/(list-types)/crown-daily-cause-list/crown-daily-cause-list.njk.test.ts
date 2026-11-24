@@ -479,7 +479,7 @@ describe("crown-daily-cause-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop.text()).toContain(en.backToTop);
     });
   });
@@ -495,7 +495,7 @@ describe("crown-daily-cause-list template", () => {
         .get();
       expect(headers).toContain(cy.hearingTime);
       expect(headers).toContain(cy.defendant);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 

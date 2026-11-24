@@ -655,7 +655,7 @@ describe("family-daily-cause-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $("a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop.text()).toContain(en.linkToTop);
     });
   });
@@ -676,7 +676,7 @@ describe("family-daily-cause-list template", () => {
       expect(headers).toContain(cy.time);
       expect(headers).toContain(cy.caseName);
       expect(headers).toContain(cy.respondent);
-      expect($("a[href='#top']").text()).toContain(cy.linkToTop);
+      expect($("a.app-back-to-top__link[href='#main-content']").text()).toContain(cy.linkToTop);
     });
   });
 

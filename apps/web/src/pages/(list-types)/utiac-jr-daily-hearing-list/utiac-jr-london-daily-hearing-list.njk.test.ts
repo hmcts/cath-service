@@ -293,10 +293,10 @@ describe("utiac-jr-london-daily-hearing-list template", () => {
       expect(footer.text()).toContain("Manual Upload");
     });
 
-    it("should render a back-to-top link anchored to #top", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
     });
@@ -327,7 +327,7 @@ describe("utiac-jr-london-daily-hearing-list template", () => {
       const footer = $("p.govuk-body-s");
       expect(footer.text()).toContain(cy.dataSource);
       expect(footer.text()).toContain("Llwytho â llaw");
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
   });
 });

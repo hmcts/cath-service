@@ -1,6 +1,7 @@
 {% extends "layouts/base-template.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
@@ -65,9 +66,7 @@
 
     <p class="govuk-body-s govuk-!-margin-top-6">{{ common.dataSource }}: {{ dataSource }}</p>
 
-    <div class="back-to-top">
-      <a href="#top" class="govuk-link">{{ common.backToTop }}</a>
-    </div>
+    {{ appBackToTop({ text: common.backToTop }) }}
 
   </div>
 </div>

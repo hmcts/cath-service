@@ -350,10 +350,10 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       expect($("p.govuk-body-s").text()).toContain(`${common.dataSource}: P&I`);
     });
 
-    it("should render a back-to-top link targeting the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(common.backToTop);
     });
@@ -368,7 +368,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       expect(table.attr("aria-label")).toBe("Test List Title");
     });
 
-    it("should anchor the heading with id top for the back-to-top link", () => {
+    it("should anchor the heading with id top", () => {
       const { $ } = renderList();
 
       expect($("h1#top")).toHaveLength(1);
@@ -408,7 +408,7 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       const { $ } = renderList([], { dataSource: "Ffynhonnell Prawf" }, "cy");
 
       expect($("p.govuk-body-s").text()).toContain(`${commonCy.dataSource}: Ffynhonnell Prawf`);
-      expect($(".back-to-top a").text()).toContain(commonCy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(commonCy.backToTop);
       const bodyText = $(".govuk-body").text();
       expect(bodyText).toContain(`${commonCy.listFor} 10 July 2026`);
       expect(bodyText).toContain(`${commonCy.lastUpdated} 9 July 2026 ${commonCy.at} 4:30pm`);

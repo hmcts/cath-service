@@ -6,7 +6,8 @@
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
-{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "components/filter-panel.njk" import appFilter %}
+{% from "components/back-to-top.njk" import appBackToTop %}
 
 {% block page_content %}
 <div class="govuk-grid-row">
@@ -169,8 +170,9 @@
     <div class="moj-filter-layout app-filter-layout--reveal">
       <div class="moj-filter-layout__filter" id="filter-panel">
         <form method="post" autocomplete="off">
-          {{ mojFilter({
+          {{ appFilter({
             heading: { text: filterTitle },
+            hint: { text: filterPanel.hint },
             submit: { text: applyFilters },
             selectedFilters: {
               heading: { text: selectedFilters },
@@ -242,7 +244,7 @@
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-full">
-        <a href="#" class="govuk-link back-to-top-link"><span aria-hidden="true">▴ </span>{{ backToTop }}</a>
+        {{ appBackToTop({ text: backToTop }) }}
       </div>
     </div>
 

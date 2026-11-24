@@ -10,32 +10,32 @@
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
     <div class="verified-tiles-container">
-      <a href="/search" class="verified-tile">
+      <div class="verified-tile">
         <h2 class="govuk-heading-s verified-tile-heading">
-          {{ sections.courtHearings.title }}
+          <a href="/search" class="govuk-link govuk-link--no-visited-state verified-tile__link">{{ sections.courtHearings.title }}</a>
         </h2>
         <p class="govuk-body verified-tile-description">
           {{ sections.courtHearings.description }}
         </p>
-      </a>
+      </div>
 
-      <a href="/summary-of-publications?locationId=9" class="verified-tile">
+      <div class="verified-tile">
         <h2 class="govuk-heading-s verified-tile-heading">
-          {{ sections.sjpCases.title }}
+          <a href="/summary-of-publications?locationId=9" class="govuk-link govuk-link--no-visited-state verified-tile__link">{{ sections.sjpCases.title }}</a>
         </h2>
         <p class="govuk-body verified-tile-description">
           {{ sections.sjpCases.description }}
         </p>
-      </a>
+      </div>
 
-      <a href="/subscription-management" class="verified-tile">
+      <div class="verified-tile">
         <h2 class="govuk-heading-s verified-tile-heading">
-          {{ sections.emailSubscriptions.title }}
+          <a href="/subscription-management" class="govuk-link govuk-link--no-visited-state verified-tile__link">{{ sections.emailSubscriptions.title }}</a>
         </h2>
         <p class="govuk-body verified-tile-description">
           {{ sections.emailSubscriptions.description }}
         </p>
-      </a>
+      </div>
     </div>
   </div>
 </div>

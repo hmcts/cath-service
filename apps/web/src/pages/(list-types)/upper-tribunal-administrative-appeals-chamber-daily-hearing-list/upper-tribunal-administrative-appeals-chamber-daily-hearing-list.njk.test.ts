@@ -322,21 +322,13 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       }
     });
 
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(en.backToTop);
       expect($("#top")).toHaveLength(1);
-    });
-
-    it("should include the custom back-to-top styles", () => {
-      const { $ } = renderList([]);
-
-      const styles = $("style").text();
-      expect(styles).toContain(".back-to-top");
-      expect(styles).toContain("margin-top: 40px");
     });
   });
 
@@ -348,7 +340,7 @@ describe("upper-tribunal-administrative-appeals-chamber-daily-hearing-list templ
       expect($("details.govuk-details").text()).toContain(cy.openingStatementTitle);
       expect($("h2.govuk-heading-s").text()).toContain(cy.searchCasesTitle);
       expect($("p.govuk-body-s").text()).toContain(cy.dataSource);
-      expect($(".back-to-top a").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
 
       const headers = headerTexts($);
       expect(headers).toEqual([

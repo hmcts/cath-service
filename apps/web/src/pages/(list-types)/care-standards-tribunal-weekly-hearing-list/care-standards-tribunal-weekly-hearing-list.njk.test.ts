@@ -312,12 +312,12 @@ describe("Care Standards Tribunal Weekly Hearing List template", () => {
       }
     });
 
-    it("should render a back-to-top link to the page top", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
-      expect(backToTop.text().trim()).toBe(en.backToTop);
+      expect(backToTop.text()).toContain(en.backToTop);
     });
   });
 
@@ -351,16 +351,6 @@ describe("Care Standards Tribunal Weekly Hearing List template", () => {
     });
   });
 
-  describe("Custom styling", () => {
-    it("should include the back-to-top styles in the head block", () => {
-      const { $ } = renderList([]);
-
-      const styleText = $("style").text();
-      expect(styleText).toContain(".back-to-top");
-      expect(styleText).toContain("margin-top: 40px");
-    });
-  });
-
   describe("Welsh rendering", () => {
     const welshHeader = {
       listTitle: "Rhestr Gwrandawiadau Wythnosol y Tribiwnlys Safonau Gofal",
@@ -380,7 +370,7 @@ describe("Care Standards Tribunal Weekly Hearing List template", () => {
       expect($("h2").filter((_, el) => $(el).text().trim() === cy.searchCasesTitle)).toHaveLength(1);
       const footer = $("p.govuk-body-s").text();
       expect(footer).toContain(cy.dataSource);
-      expect($(".back-to-top a").text().trim()).toBe(cy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(cy.backToTop);
     });
 
     it("should render Welsh important information", () => {

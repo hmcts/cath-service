@@ -297,7 +297,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
     it("should render a back-to-top link", () => {
       const { $ } = renderList([]);
 
-      const backToTop = $("a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop.text()).toContain(en.backToTop);
     });
   });
@@ -316,7 +316,7 @@ describe("ftt-lands-registration-tribunal-weekly-hearing-list template", () => {
 
       const cells = rowCells($);
       expect(cells[COLUMN.date]).toBe("Dydd Llun 7 Gorffennaf 2026");
-      expect($("a[href='#top']").text()).toContain(cy.backToTop);
+      expect($("a.app-back-to-top__link[href='#main-content']").text()).toContain(cy.backToTop);
     });
   });
 });

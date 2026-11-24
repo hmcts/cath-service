@@ -32,7 +32,7 @@ test.describe("Blob Explorer", () => {
     await expect(page.getByRole("heading", { name: /System Admin Dashboard/i })).toBeVisible();
 
     // Find and click Blob Explorer tile
-    const blobExplorerTile = page.locator('a.admin-tile[href="/blob-explorer-locations"]');
+    const blobExplorerTile = page.locator(".admin-tile").getByRole("link", { name: "Blob Explorer", exact: true });
     await expect(blobExplorerTile).toBeVisible();
     await expect(blobExplorerTile).toContainText("Blob Explorer");
     await blobExplorerTile.click();

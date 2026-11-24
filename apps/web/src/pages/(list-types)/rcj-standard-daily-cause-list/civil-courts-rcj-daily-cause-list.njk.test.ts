@@ -302,10 +302,10 @@ describe("civil-courts-rcj-daily-cause-list template", () => {
   });
 
   describe("Back to top link", () => {
-    it("should render a back-to-top link pointing at the top anchor", () => {
+    it("should render a back-to-top link pointing at the main content", () => {
       const { $ } = renderList();
 
-      const backToTop = $(".back-to-top a[href='#top']");
+      const backToTop = $("a.app-back-to-top__link[href='#main-content']");
       expect(backToTop).toHaveLength(1);
       expect(backToTop.text()).toContain(commonEn.backToTop);
     });
@@ -324,7 +324,7 @@ describe("civil-courts-rcj-daily-cause-list template", () => {
       expect($("details.govuk-details .govuk-details__summary-text").text()).toContain(commonCy.importantInfoTitle);
       expect($(".search-container h2").text()).toContain(commonCy.searchCasesTitle);
       expect($("p.govuk-body-s").text()).toContain(commonCy.dataSource);
-      expect($(".back-to-top a").text()).toContain(commonCy.backToTop);
+      expect($("a.app-back-to-top__link").text()).toContain(commonCy.backToTop);
     });
 
     it("should render the Welsh important information text", () => {

@@ -25,7 +25,6 @@ export { authNavigationMiddleware } from "./middleware/navigation.js";
 export { buildNavigationItems, buildVerifiedUserNavigation } from "./middleware/navigation-helper.js";
 export { sessionTimeoutMiddleware } from "./middleware/session-timeout.js";
 export { isRejectedCFTRole, isRejectedCrimeRole } from "./role-service/index.js";
-export { resolveContinuePath } from "./session/continue-path.js";
 export {
   buildSessionExpiredPath,
   buildSessionExpiredRedirectUrl,
@@ -35,5 +34,5 @@ export {
   type RedirectType
 } from "./session/expiry-redirect.js";
 export { buildSignOutRedirectUrl } from "./session/sign-out-redirect.js";
-export { isSessionExpired, SESSION_WARNING_LEAD_MS, updateLastActivity } from "./session/timeout-tracker.js";
+export { isSessionExpired, updateLastActivity } from "./session/timeout-tracker.js";
 export type { UserProfile } from "./user-profile.js";

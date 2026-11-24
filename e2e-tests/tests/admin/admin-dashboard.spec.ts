@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { axeCheck } from "../../utils/axe-helper.js";
+import { clickCardBelowHeading } from "../../utils/card-helpers.js";
 import { loginWithSSO } from "../../utils/sso-helpers.js";
 
 test.describe("Admin Dashboard", () => {
@@ -22,15 +23,15 @@ test.describe("Admin Dashboard", () => {
     const tiles = page.locator(".admin-tile");
     await expect(tiles).toHaveCount(3);
 
-    // Verify tile titles and links
-    await expect(page.locator('a.admin-tile[href="/manual-upload"]')).toBeVisible();
-    await expect(page.locator('a.admin-tile[href="/manual-upload"]')).toContainText("Upload");
-
-    await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toBeVisible();
-    await expect(page.locator('a.admin-tile[href="/non-strategic-upload"]')).toContainText("Upload Excel File");
-
-    await expect(page.locator('a.admin-tile[href="/remove-list-search"]')).toBeVisible();
-    await expect(page.locator('a.admin-tile[href="/remove-list-search"]')).toContainText("Remove");
+    // Verify each tile exposes a single link named by its heading
+    const tileLink = (name: string) => tiles.getByRole("link", { name, exact: true });
+    await expect(tileLink("Upload")).toHaveAttribute("href", "/manual-upload");
+    await expect(tileLink("Upload Excel File")).toHaveAttribute("href", "/non-strategic-upload");
+    await expect(tileLink("Remove")).toHaveAttribute("href", "/remove-list-search");
+    await expect(tiles.getByRole("link")).toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
+      await expect(tiles.nth(i).getByRole("link")).toHaveCount(1);
+    }
 
     // Verify tile descriptions
     const descriptions = page.locator(".admin-tile__description");
@@ -52,39 +53,33 @@ test.describe("Admin Dashboard", () => {
     await expect(systemAdminLink).not.toBeVisible();
 
     // Verify Local Admin does NOT see media applications tile
-    const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
-    await expect(mediaApplicationsTile).not.toBeVisible();
+    await expect(page.locator('.admin-tile a[href="/media-applications"]')).toHaveCount(0);
+
+    // Admin phase banner: feedback link warns about the new tab; admins get no language toggle
+    const phaseBanner = page.locator(".govuk-phase-banner");
+    await expect(phaseBanner.getByRole("link", { name: "feedback", exact: true })).toHaveAttribute("target", "_blank");
+    await expect(phaseBanner).toContainText("feedback (opens in a new tab)");
+    await expect(phaseBanner.locator(".app-phase-banner__language")).toHaveCount(0);
 
     // Test accessibility
     const accessibilityScanResults = await axeCheck(page).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
-    // Test keyboard navigation - verify tiles are keyboard accessible
-    const tileLinks = page.locator("a.admin-tile");
-    const firstTile = tileLinks.first();
-
-    // Verify links are focusable by default (no tabindex=-1)
-    const tabindex = await firstTile.getAttribute("tabindex");
-    expect(tabindex === null || tabindex !== "-1").toBe(true);
-
-    // Tab through page to find tiles
-    let foundTiles = 0;
-    for (let i = 0; i < 30 && foundTiles < 3; i++) {
+    // Keyboard: one tab stop per tile, landing on the heading link
+    const firstTileLink = tileLink("Upload");
+    let isFirstTileFocused = false;
+    for (let i = 0; i < 30 && !isFirstTileFocused; i++) {
       await page.keyboard.press("Tab");
-      for (let j = 0; j < 3; j++) {
-        try {
-          await expect(tileLinks.nth(j)).toBeFocused({ timeout: 100 });
-          foundTiles++;
-          break;
-        } catch {
-          // Continue checking other tiles
-        }
-      }
+      isFirstTileFocused = await firstTileLink.evaluate((el) => el === document.activeElement);
     }
-    expect(foundTiles).toBeGreaterThan(0);
+    expect(isFirstTileFocused).toBe(true);
+    await page.keyboard.press("Tab");
+    await expect(tileLink("Upload Excel File")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(tileLink("Remove")).toBeFocused();
 
-    // Test tile navigation works
-    await page.click('a[href="/manual-upload"]');
+    // The whole card stays clickable: clicking the description follows the heading link
+    await clickCardBelowHeading(tiles.nth(0));
     await page.waitForURL("**/manual-upload");
     await expect(page.locator("h1")).toHaveText("Manual upload");
   });
@@ -112,9 +107,9 @@ test.describe("Admin Dashboard", () => {
     await expect(tiles).toHaveCount(4);
 
     // Verify the fourth tile is media applications
-    const mediaApplicationsTile = page.locator('a.admin-tile[href="/media-applications"]');
+    const mediaApplicationsTile = tiles.getByRole("link", { name: "Manage Media Account Requests", exact: true });
     await expect(mediaApplicationsTile).toBeVisible();
-    await expect(mediaApplicationsTile).toContainText("Manage Media Account Requests");
+    await expect(mediaApplicationsTile).toHaveAttribute("href", "/media-applications");
 
     // Test accessibility
     const accessibilityScanResults = await axeCheck(page).analyze();
