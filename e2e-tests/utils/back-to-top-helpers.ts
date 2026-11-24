@@ -6,6 +6,11 @@ export async function expectBackToTopMovesFocusToMain(page: Page, linkName: stri
   const backToTop = page.getByRole("link", { name: linkName, exact: true });
   await expect(backToTop).toHaveAttribute("href", "#main-content");
 
+  // Focusing <main> is done by web.js; without this wait a slow script load leaves only the plain
+  // fragment jump, which does not move focus. initAll() marks the skip link in the same task that
+  // wires up the back to top link.
+  await page.locator(".govuk-skip-link[data-govuk-skip-link-init]").waitFor({ state: "attached" });
+
   await backToTop.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();

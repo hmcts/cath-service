@@ -103,5 +103,21 @@ describe("Session Timeout Tracker", () => {
 
       expect(session.lastActivity).toBe(NOW);
     });
+
+    it("should refresh lastActivity once it is at least 5 seconds old", () => {
+      const session = { lastActivity: NOW - 5000 } as unknown as Session;
+
+      updateLastActivity(session);
+
+      expect(session.lastActivity).toBe(NOW);
+    });
+
+    it("should leave the session unchanged when lastActivity is under 5 seconds old", () => {
+      const session = { lastActivity: NOW - 4999 } as unknown as Session;
+
+      updateLastActivity(session);
+
+      expect(session.lastActivity).toBe(NOW - 4999);
+    });
   });
 });

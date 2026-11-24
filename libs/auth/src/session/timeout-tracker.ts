@@ -8,6 +8,10 @@ export const SESSION_WARNING_LEAD_MS = 20 * MINUTE_MS;
 // The browser starts its clock when the page arrives, after the server renewed the session. Firing
 // this much earlier lets the client sign out (and show the inactivity message) before the server does.
 export const CLIENT_CLOCK_MARGIN_MS = 10 * 1000;
+// A changed session is saved whole when its request ends, so rewriting lastActivity on every request
+// lets a background fetch (e.g. autocomplete) save a stale copy over data a concurrent form POST just
+// stored, such as validation errors. Kept below CLIENT_CLOCK_MARGIN_MS so the server never expires first.
+const ACTIVITY_REFRESH_INTERVAL_MS = 5 * 1000;
 const ADMIN_ROLES: readonly string[] = [USER_ROLES.SYSTEM_ADMIN, USER_ROLES.INTERNAL_ADMIN_CTSC, USER_ROLES.INTERNAL_ADMIN_LOCAL];
 
 export function getSessionTimeoutMs(role: string | undefined): number {
@@ -27,5 +31,9 @@ export function isSessionExpired(session: Session & Partial<SessionData>, role: 
 }
 
 export function updateLastActivity(session: Session & Partial<SessionData>): void {
-  session.lastActivity = Date.now();
+  const now = Date.now();
+  if (session.lastActivity && now - session.lastActivity < ACTIVITY_REFRESH_INTERVAL_MS) {
+    return;
+  }
+  session.lastActivity = now;
 }
