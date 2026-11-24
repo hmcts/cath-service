@@ -45,19 +45,23 @@
 
     <form method="post" enctype="multipart/form-data" novalidate data-list-type-sensitivity="{{ listTypeSensitivityMap }}">
 
-      {#- Errors located inside the Excel file are listed only in the error summary, not under the file input -#}
-      {% set fileErrorText = undefined if hasExcelContentErrors else getError(errors, "#file") %}
+      {% set fileErrors = [] %}
+      {% for error in errors or [] %}
+        {% if error.href == "#file" %}{% set _ = fileErrors.push(error.text) %}{% endif %}
+      {% endfor %}
+      {% set hasFileError = fileErrors | length > 0 %}
       <div class="govuk-inset-text">
-        <div class="govuk-form-group{% if (fileErrorText and fileErrorText | length > 0) %} govuk-form-group--error{% endif %}">
+        <div class="govuk-form-group{% if hasFileError %} govuk-form-group--error{% endif %}">
           <label class="govuk-label" for="file">
             {{ fileUploadLabel }}
           </label>
-          {% if (fileErrorText and fileErrorText | length > 0) %}
-            <p class="govuk-error-message">
-              <span class="govuk-visually-hidden">Error:</span> {{ fileErrorText }}
+          {% if hasFileError %}
+            <p class="govuk-error-message" id="file-error">
+              <span class="govuk-visually-hidden">Error:</span>
+              {% for fileError in fileErrors %}{{ fileError }}{% if not loop.last %}<br>{% endif %}{% endfor %}
             </p>
           {% endif %}
-          <input class="govuk-file-upload{% if (fileErrorText and fileErrorText | length > 0) %} govuk-file-upload--error{% endif %}" id="file" name="file" type="file" accept=".xlsx" />
+          <input class="govuk-file-upload{% if hasFileError %} govuk-file-upload--error{% endif %}" id="file" name="file" type="file" accept=".xlsx"{% if hasFileError %} aria-describedby="file-error"{% endif %} />
         </div>
       </div>
 

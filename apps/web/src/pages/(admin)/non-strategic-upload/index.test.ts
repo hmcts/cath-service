@@ -246,35 +246,6 @@ describe("non-strategic-upload page", () => {
       expect(session.nonStrategicUploadErrors).toBeUndefined();
     });
 
-    it("should pass the Excel content errors flag from session and clear it", async () => {
-      // Arrange
-      const session: Record<string, unknown> = {
-        nonStrategicUploadErrors: [{ text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Invalid time format", href: "#file" }],
-        nonStrategicUploadHasExcelContentErrors: true
-      };
-      const req = { session, query: {} } as unknown as Request;
-      const res = { render: vi.fn() } as unknown as Response;
-
-      // Act
-      await callHandler(GET, req, res);
-
-      // Assert
-      expect(res.render).toHaveBeenCalledWith("non-strategic-upload/index", expect.objectContaining({ hasExcelContentErrors: true }));
-      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
-    });
-
-    it("should pass the Excel content errors flag as false when none is in session", async () => {
-      // Arrange
-      const req = { session: {}, query: {} } as unknown as Request;
-      const res = { render: vi.fn() } as unknown as Response;
-
-      // Act
-      await callHandler(GET, req, res);
-
-      // Assert
-      expect(res.render).toHaveBeenCalledWith("non-strategic-upload/index", expect.objectContaining({ hasExcelContentErrors: false }));
-    });
-
     it("should preserve form data from session when validation fails", async () => {
       const formData = {
         locationId: "123",
@@ -677,7 +648,7 @@ describe("non-strategic-upload page", () => {
       vi.doUnmock("@hmcts/list-types-common");
     });
 
-    it("should store every located error and flag them as Excel content errors when the Excel file has several errors", async () => {
+    it("should store every located error when the Excel file has several errors", async () => {
       // Arrange
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
       const issues = [
@@ -697,7 +668,6 @@ describe("non-strategic-upload page", () => {
         { text: "Sheet 'Insolvency & Companies Court' - Row 1 of 'Venue' column: Missing required value", href: "#file" },
         { text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Invalid time format '25pm'", href: "#file" }
       ]);
-      expect(session.nonStrategicUploadHasExcelContentErrors).toBe(true);
       expect(session.nonStrategicUploadForm).toBeDefined();
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
       expect(storeNonStrategicUpload).not.toHaveBeenCalled();
@@ -705,7 +675,7 @@ describe("non-strategic-upload page", () => {
       vi.doUnmock("@hmcts/list-types-common");
     });
 
-    it("should flag a single located error as an Excel content error", async () => {
+    it("should store a single located error when the Excel file has one error", async () => {
       // Arrange
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
       mockExcelValidation(vi.fn().mockRejectedValue(new ExcelValidationError([buildIssue()])));
@@ -718,7 +688,6 @@ describe("non-strategic-upload page", () => {
 
       // Assert
       expect(session.nonStrategicUploadErrors).toHaveLength(1);
-      expect(session.nonStrategicUploadHasExcelContentErrors).toBe(true);
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");
@@ -742,7 +711,6 @@ describe("non-strategic-upload page", () => {
       expect(session.nonStrategicUploadErrors).toEqual([
         { text: "The selected file could not be read. Check it is a valid Excel (.xlsx) file and upload it again.", href: "#file" }
       ]);
-      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
       expect(JSON.stringify(session.nonStrategicUploadErrors)).not.toContain("Corrupted zip");
       expect(warnSpy).toHaveBeenCalledWith("[Non-Strategic Upload] Excel file could not be read", { error: expect.stringContaining("Corrupted zip") });
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
@@ -764,7 +732,6 @@ describe("non-strategic-upload page", () => {
 
       // Assert
       expect(session.nonStrategicUploadErrors).toEqual([{ text: "Excel file must contain at least 1 data row", href: "#file" }]);
-      expect(session.nonStrategicUploadHasExcelContentErrors).toBeUndefined();
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");

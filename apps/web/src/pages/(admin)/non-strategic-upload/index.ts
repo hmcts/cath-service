@@ -88,10 +88,8 @@ const getHandler = async (req: Request, res: Response) => {
   const wasSubmitted = req.session.nonStrategicUploadSubmitted || false;
   let formData = req.session.nonStrategicUploadForm || {};
   const errors = req.session.nonStrategicUploadErrors || [];
-  const hasExcelContentErrors = req.session.nonStrategicUploadHasExcelContentErrors ?? false;
 
   delete req.session.nonStrategicUploadErrors;
-  delete req.session.nonStrategicUploadHasExcelContentErrors;
 
   // Clear form data on refresh if not successfully submitted
   if (!wasSubmitted) {
@@ -113,7 +111,6 @@ const getHandler = async (req: Request, res: Response) => {
   res.render("non-strategic-upload/index", {
     ...t,
     errors: errors.length > 0 ? errors : undefined,
-    hasExcelContentErrors,
     data: { ...formData, locationName },
     locations,
     listTypes: selectOption(listTypeOptions, formData.listType),
@@ -162,7 +159,6 @@ const postHandler = async (req: Request, res: Response) => {
       }
     } catch (error) {
       if (isExcelValidationError(error)) {
-        req.session.nonStrategicUploadHasExcelContentErrors = true;
         return redirectWithErrors(req, res, formatExcelValidationErrors(error.issues), formData);
       }
       if (isExcelFileReadError(error)) {

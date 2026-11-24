@@ -168,10 +168,7 @@ describe("non-strategic-upload template", () => {
         "Sheet 'Appeal List' - Row 1 of 'Venue' column: Missing required value",
         "Sheet 'Insolvency & Companies Court' - Row 3 of 'Time' column: Invalid time format '25pm'"
       ];
-      const data = buildData(en, {
-        errors: locatedErrors.map((text) => ({ text, href: "#file" })),
-        hasExcelContentErrors: true
-      });
+      const data = buildData(en, { errors: locatedErrors.map((text) => ({ text, href: "#file" })) });
 
       const { $ } = render(env, TEMPLATE, data);
 
@@ -180,21 +177,49 @@ describe("non-strategic-upload template", () => {
       expect($(".govuk-error-summary__list a").first().attr("href")).toBe("#file");
     });
 
-    it("should not show an inline error under the file field when the errors are inside the Excel file", () => {
+    it("should show each located Excel error under the file upload field", () => {
+      const locatedErrors = [
+        "Sheet 'Appeal List' - Row 1 of 'Time' column: Missing required value",
+        "Sheet 'Appeal List' - Row 2 of 'Time' column: Missing required value"
+      ];
+      const data = buildData(en, { errors: locatedErrors.map((text) => ({ text, href: "#file" })) });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      assertErrorSummary($, locatedErrors);
+      const inlineError = $("#file-error");
+      expect(inlineError).toHaveLength(1);
+      expect(inlineError.find("br")).toHaveLength(1);
+      for (const text of locatedErrors) {
+        expect(inlineError.text()).toContain(text);
+      }
+      expect($("#file").parent().hasClass("govuk-form-group--error")).toBe(true);
+      expect($("input#file").hasClass("govuk-file-upload--error")).toBe(true);
+      expect($("input#file").attr("aria-describedby")).toBe("file-error");
+    });
+
+    it("should not mark the file upload field as errored when there are no file errors", () => {
+      const data = buildData(en, { errors: [{ text: en.errorMessages.courtRequired, href: "#court" }] });
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("#file-error")).toHaveLength(0);
+      expect($("input#file").hasClass("govuk-file-upload--error")).toBe(false);
+      expect($("input#file").attr("aria-describedby")).toBeUndefined();
+    });
+
+    it("should only show file errors under the file upload field", () => {
       const data = buildData(en, {
         errors: [
-          { text: "Sheet 'Appeal List' - Row 1 of 'Time' column: Missing required value", href: "#file" },
-          { text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Missing required value", href: "#file" }
-        ],
-        hasExcelContentErrors: true
+          { text: en.errorMessages.fileRequired, href: "#file" },
+          { text: en.errorMessages.courtRequired, href: "#court" }
+        ]
       });
 
       const { $ } = render(env, TEMPLATE, data);
 
-      expect($(".govuk-error-summary__list li")).toHaveLength(2);
-      expect($("#file").parent().find(".govuk-error-message")).toHaveLength(0);
-      expect($("#file").parent().hasClass("govuk-form-group--error")).toBe(false);
-      expect($("input#file").hasClass("govuk-file-upload--error")).toBe(false);
+      expect($("#file-error").text()).toContain(en.errorMessages.fileRequired);
+      expect($("#file-error").text()).not.toContain(en.errorMessages.courtRequired);
     });
 
     it("should escape cell values in located errors", () => {

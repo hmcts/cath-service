@@ -39,7 +39,6 @@ declare module "express-session" {
     viewedLanguage?: "en" | "cy";
     nonStrategicUploadForm?: UploadFormData;
     nonStrategicUploadErrors?: ValidationError[];
-    nonStrategicUploadHasExcelContentErrors?: boolean;
     nonStrategicUploadSubmitted?: boolean;
     nonStrategicUploadConfirmed?: boolean;
     nonStrategicSuccessPageViewed?: boolean;
