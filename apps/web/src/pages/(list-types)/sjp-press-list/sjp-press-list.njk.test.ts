@@ -23,6 +23,7 @@ interface OffenceOverrides {
 interface CaseOverrides {
   name?: string;
   dateOfBirth?: Date | null;
+  rawDateOfBirth?: string | null;
   age?: string | null;
   reference?: string | null;
   address?: string | null;
@@ -40,7 +41,8 @@ function buildOffence(overrides: OffenceOverrides = {}) {
 function buildCase(overrides: CaseOverrides = {}) {
   return {
     name: "John Doe",
-    dateOfBirth: new Date("1985-03-15"),
+    dateOfBirth: new Date(1985, 2, 15),
+    rawDateOfBirth: "15/03/1985",
     age: "39",
     reference: "REF123456",
     address: "123 Main Street, London, SW1A 1AA",
@@ -514,10 +516,30 @@ describe("sjp-press-list template", () => {
     });
 
     it("should render an empty date of birth when no date of birth is present", () => {
-      const { $ } = renderList({ cases: [buildCase({ name: "Bob Jones", dateOfBirth: null, age: null, offences: [] })] });
+      const { $ } = renderList({ cases: [buildCase({ name: "Bob Jones", dateOfBirth: null, rawDateOfBirth: null, age: null, offences: [] })] });
 
       expect(caseSummaryValues($)[ROW.name]).toBe("Bob Jones");
       expect(caseSummaryValues($)[ROW.dob]).toBe("");
+    });
+
+    it("should render the parsed date of birth with the age when the date can be read", () => {
+      const { $ } = renderList({ cases: [buildCase({ offences: [] })] });
+
+      expect(caseSummaryValues($)[ROW.dob]).toBe("15 March 1985 (39)");
+    });
+
+    it("should render the date of birth as sent with the age when it can't be parsed", () => {
+      const { $ } = renderList({ cases: [buildCase({ dateOfBirth: null, rawDateOfBirth: "unknown", age: "35", offences: [] })] });
+
+      expect(caseSummaryValues($)[ROW.dob]).toBe("unknown (35)");
+    });
+
+    it("should escape markup in a date of birth shown as sent", () => {
+      const { $ } = renderList({ cases: [buildCase({ dateOfBirth: null, rawDateOfBirth: "<b>x</b>", age: null, offences: [] })] });
+
+      const dobCell = $(".govuk-summary-list").eq(0).find(".govuk-summary-list__value").eq(ROW.dob);
+      expect(dobCell.find("b")).toHaveLength(0);
+      expect(dobCell.text().trim()).toBe("<b>x</b>");
     });
 
     it("should render empty values for missing optional fields", () => {

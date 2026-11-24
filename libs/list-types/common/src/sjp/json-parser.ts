@@ -1,5 +1,11 @@
 import type { SjpCasePress, SjpCasePublic } from "./sjp-service.js";
 
+const DOB_FORMATS: Array<{ pattern: RegExp; order: "dmy" | "ymd" }> = [
+  { pattern: /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, order: "dmy" },
+  { pattern: /^(\d{4})-(\d{2})-(\d{2})$/, order: "ymd" },
+  { pattern: /^(\d{1,2})-(\d{1,2})-(\d{4})$/, order: "dmy" }
+];
+
 export interface SjpJson {
   document: {
     publicationDate: string;
@@ -128,29 +134,34 @@ function extractPostcode(accused: SjpParty | undefined): string | null {
 }
 
 /**
- * Parses date of birth string to Date object
- * Handles DD/MM/YYYY format
+ * Trims the date of birth as sent, treating empty or whitespace-only values as missing
  */
-function parseDateOfBirth(dateString: string | undefined): Date | null {
+function normaliseRawDateOfBirth(dateString: string | undefined): string | null {
+  const trimmed = dateString?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/**
+ * Parses a date of birth string to a local-midnight Date.
+ * Accepts d/M/yyyy, yyyy-MM-dd and d-M-yyyy (read day first) only. Returns null for
+ * anything else, including dates that don't exist such as 31/02/1990, so it never
+ * returns a different date from the one sent.
+ */
+function parseDateOfBirth(dateString: string | null): Date | null {
   if (!dateString) return null;
-  try {
-    // Check if it's DD/MM/YYYY format
-    if (dateString.includes("/")) {
-      const parts = dateString.split("/");
-      if (parts.length === 3) {
-        const day = Number.parseInt(parts[0], 10);
-        const month = Number.parseInt(parts[1], 10) - 1; // Months are 0-indexed
-        const year = Number.parseInt(parts[2], 10);
-        const date = new Date(year, month, day);
-        return Number.isNaN(date.getTime()) ? null : date;
-      }
-    }
-    // Try parsing as ISO date
-    const date = new Date(dateString);
-    return Number.isNaN(date.getTime()) ? null : date;
-  } catch {
-    return null;
+
+  for (const { pattern, order } of DOB_FORMATS) {
+    const match = pattern.exec(dateString);
+    if (!match) continue;
+
+    const [first, second, third] = match.slice(1).map(Number);
+    const [year, month, day] = order === "ymd" ? [first, second, third] : [third, second, first];
+    const date = new Date(year, month - 1, day);
+    const isSameDate = date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+    return isSameDate ? date : null;
   }
+
+  return null;
 }
 
 /**
@@ -171,15 +182,15 @@ function transformHearingToCase(hearing: SjpHearing): SjpCasePress {
   const accused = findAccused(hearing.party);
   const prosecutor = findProsecutor(hearing.party);
   const caseUrn = hearing.case?.[0]?.caseUrn || null;
-  const dateOfBirth = parseDateOfBirth(accused?.individualDetails?.dateOfBirth);
+  const rawDateOfBirth = normaliseRawDateOfBirth(accused?.individualDetails?.dateOfBirth);
 
   return {
     caseId: crypto.randomUUID(), // Generate temporary ID for in-memory operations
     name: formatAccusedName(accused),
     postcode: extractPostcode(accused),
     prosecutor,
-    dateOfBirth,
-    rawDateOfBirth: accused?.individualDetails?.dateOfBirth || null,
+    dateOfBirth: parseDateOfBirth(rawDateOfBirth),
+    rawDateOfBirth,
     age: accused?.individualDetails?.age ?? null,
     reference: caseUrn,
     address: formatAddress(accused),

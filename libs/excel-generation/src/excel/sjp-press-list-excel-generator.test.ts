@@ -184,7 +184,7 @@ describe("generateSjpPressListExcel", () => {
     expect(worksheet!.getRow(2).getCell(3).value).toBe("'=1+1 (35)");
   });
 
-  it("should write only the age when DOB is missing", async () => {
+  it("should leave the DOB cell empty when DOB is missing, even with an age", async () => {
     const json = buildSingleAccusedJson({ individualForenames: "Test", individualSurname: "Person", age: 35 });
 
     const buffer = await generateSjpPressListExcel(json);
@@ -192,7 +192,7 @@ describe("generateSjpPressListExcel", () => {
     await workbook.xlsx.load(buffer);
 
     const worksheet = workbook.getWorksheet("SJP Press List");
-    expect(worksheet!.getRow(2).getCell(3).value).toBe("(35)");
+    expect(worksheet!.getRow(2).getCell(3).value).toBe("");
   });
 
   it("should map reporting restriction boolean to Active/None", async () => {

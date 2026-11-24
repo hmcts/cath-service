@@ -134,6 +134,7 @@ describe("SJP Press List Controller", () => {
       postcode: "SW1A",
       prosecutor: "CPS",
       dateOfBirth: new Date("1990-01-01"),
+      rawDateOfBirth: "1990-01-01",
       age: 35,
       reference: "REF123",
       address: "123 Test St, London",

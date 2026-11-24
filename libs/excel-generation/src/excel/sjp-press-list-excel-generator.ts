@@ -1,4 +1,4 @@
-import { extractPressCases, type SjpJson, sanitiseCellValue } from "@hmcts/list-types-common";
+import { extractPressCases, formatAccusedDateOfBirth, type SjpJson, sanitiseCellValue } from "@hmcts/list-types-common";
 import ExcelJS from "exceljs";
 import { getSjpPressListHeaders } from "./excel-headers.js";
 import { CELL_BORDER, DATA_ALIGNMENT, DATA_FONT, HEADER_ALIGNMENT, HEADER_FILL, HEADER_FONT } from "./excel-styles.js";
@@ -43,7 +43,7 @@ export async function generateSjpPressListExcel(json: SjpJson, locale: "en" | "c
     const rowData: Record<string, string> = {
       address: sjpCase.address ?? "",
       caseUrn: sjpCase.reference ?? "",
-      dateOfBirth: sanitiseCellValue(formatDateOfBirth(sjpCase.rawDateOfBirth, sjpCase.age)),
+      dateOfBirth: sanitiseCellValue(formatAccusedDateOfBirth(sjpCase.rawDateOfBirth, sjpCase.age)),
       defendantName: sjpCase.name,
       prosecutorName: sjpCase.prosecutor ?? ""
     };
@@ -66,12 +66,4 @@ export async function generateSjpPressListExcel(json: SjpJson, locale: "en" | "c
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
-}
-
-// Written as sent, as PIP's Excel does, so a value the parser can't read is never lost
-function formatDateOfBirth(rawDateOfBirth: string | null, age: number | null): string {
-  const ageSuffix = age !== null ? `(${age})` : "";
-  if (!rawDateOfBirth) return ageSuffix;
-
-  return ageSuffix ? `${rawDateOfBirth} ${ageSuffix}` : rawDateOfBirth;
 }

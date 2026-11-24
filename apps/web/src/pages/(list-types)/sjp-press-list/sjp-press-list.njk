@@ -193,6 +193,7 @@
 
     {% if cases.length > 0 %}
       {% for case in cases %}
+        {% set dobText = (case.dateOfBirth | date) if case.dateOfBirth else (case.rawDateOfBirth or '') %}
         <div>
           {{ govukSummaryList({
             rows: [
@@ -202,7 +203,7 @@
               },
               {
                 key: { text: dobHeader },
-                value: { html: (case.dateOfBirth | date) + (' (' + case.age + ')' if case.age else '') if case.dateOfBirth else '' }
+                value: { text: dobText + (' (' + case.age + ')' if case.age else '') if dobText else '' }
               },
               {
                 key: { text: referenceHeader },
