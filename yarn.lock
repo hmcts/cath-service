@@ -1389,7 +1389,7 @@ __metadata:
     "@hmcts/system-admin-pages": "workspace:*"
     "@hmcts/web-core": "workspace:*"
     "@types/luxon": "npm:3.7.6"
-    "@types/multer": "npm:2.1.0"
+    "@types/multer": "npm:2.3.0"
     "@types/node": "npm:24.19.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.12"
@@ -1444,7 +1444,7 @@ __metadata:
     govuk-frontend: "npm:6.2.0"
     helmet: "npm:8.2.0"
     jwks-rsa: "npm:4.1.0"
-    multer: "npm:2.1.1"
+    multer: "npm:2.5.0"
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
@@ -1516,8 +1516,6 @@ __metadata:
     "@hmcts/publication": "workspace:*"
     "@hmcts/system-admin-pages": "workspace:*"
     "@types/express": "npm:5.0.6"
-    "@types/multer": "npm:1.4.13"
-    multer: "npm:1.4.5-lts.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.12"
   peerDependencies:
@@ -2179,9 +2177,8 @@ __metadata:
     "@aws-sdk/client-s3": "npm:3.1085.0"
     "@aws-sdk/node-http-handler": "npm:3.374.0"
     "@types/express": "npm:5.0.6"
-    "@types/multer": "npm:2.0.0"
+    "@types/multer": "npm:2.3.0"
     "@types/node": "npm:24.19.2"
-    multer: "npm:2.0.2"
     typescript: "npm:6.0.3"
     vitest: "npm:4.1.12"
   peerDependencies:
@@ -2478,7 +2475,7 @@ __metadata:
     "@launchdarkly/node-server-sdk": "npm:^9.7.0"
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
-    "@types/multer": "npm:^2.1.0"
+    "@types/multer": "npm:2.3.0"
     "@types/papaparse": "npm:5.5.2"
     papaparse: "npm:5.5.4"
     typescript: "npm:6.0.3"
@@ -2716,7 +2713,7 @@ __metadata:
   dependencies:
     "@types/express": "npm:5.0.6"
     "@types/express-session": "npm:1.19.0"
-    "@types/multer": "npm:2.1.0"
+    "@types/multer": "npm:2.3.0"
     "@types/nunjucks": "npm:3.2.6"
     "@types/passport": "npm:^1.0.17"
     "@types/sanitize-html": "npm:2.16.1"
@@ -2732,7 +2729,7 @@ __metadata:
     express-session: ^1.18.2
     govuk-frontend: ^6.2.0
     helmet: ^8.0.0
-    multer: ^2.0.2
+    multer: ^2.5.0
     nunjucks: ^3.2.4
     passport: ^0.7.0
   peerDependenciesMeta:
@@ -2808,7 +2805,7 @@ __metadata:
     glob: "npm:13.0.6"
     govuk-frontend: "npm:6.2.0"
     helmet: "npm:8.2.0"
-    multer: "npm:2.1.1"
+    multer: "npm:2.5.0"
     nodemon: "npm:3.1.14"
     nunjucks: "npm:3.2.4"
     passport: "npm:0.7.0"
@@ -4943,39 +4940,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/multer@npm:1.4.13":
-  version: 1.4.13
-  resolution: "@types/multer@npm:1.4.13"
+"@types/multer@npm:2.3.0":
+  version: 2.3.0
+  resolution: "@types/multer@npm:2.3.0"
   dependencies:
     "@types/express": "npm:*"
-  checksum: 10c0/aed716fdc0bc8c5bfe6689bfe6569b6743b64be795140e80cab169bfe43f687027880b7fc401fca98f820dd464ad5986093ec322d865116eb31ce29a3361c469
-  languageName: node
-  linkType: hard
-
-"@types/multer@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@types/multer@npm:2.0.0"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/375b0e77c4675c2ff27d1170e469df48dced928cc9fcd077ead111a20d0f2c01921fd25e20e25426604d6d3e311b37da2bc03ce47523d06adafba5c4b8077b67
-  languageName: node
-  linkType: hard
-
-"@types/multer@npm:2.1.0":
-  version: 2.1.0
-  resolution: "@types/multer@npm:2.1.0"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/f1f512918f79c5dac007d8d30de74372ad24932b34b43d09f250178dcce6da426297e0ea9c939322545519f133cd525dca0552781967d05f43d782ff0b169333
-  languageName: node
-  linkType: hard
-
-"@types/multer@npm:^2.1.0":
-  version: 2.2.0
-  resolution: "@types/multer@npm:2.2.0"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/72472c2da0a9afe86e2d64cfec53f4564727affcb691f78fcbdef495978857903f03326e4ecf58f6d1c3c4c89bb39e5d94fb97d4722a1f448f777c4fa690754b
+  checksum: 10c0/a66cfeede9efc71b75054a4c550c76f2886c862595dc3492dd759d02598baf3f0f3541177a64388f3a78c36b3a954c917ded5e182bbc6d4f6d04f7f9c75e26da
   languageName: node
   linkType: hard
 
@@ -5849,13 +5819,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer-from@npm:^1.0.0":
-  version: 1.1.2
-  resolution: "buffer-from@npm:1.1.2"
-  checksum: 10c0/124fff9d66d691a86d3b062eff4663fe437a9d9ee4b47b1b9e97f5a5d14f6d5399345db80f796827be7c95e70a8e765dd404b7c3ff3b3324f98e9b0c8826cc34
-  languageName: node
-  linkType: hard
-
 "buffer-image-size@npm:^0.6.4":
   version: 0.6.4
   resolution: "buffer-image-size@npm:0.6.4"
@@ -5898,7 +5861,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"busboy@npm:^1.0.0, busboy@npm:^1.6.0":
+"busboy@npm:^1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
   dependencies:
@@ -6220,30 +6183,6 @@ __metadata:
     safe-buffer: "npm:5.2.1"
     vary: "npm:~1.1.2"
   checksum: 10c0/85114b0b91c16594dc8c671cd9b05ef5e465066a60e5a4ed8b4551661303559a896ed17bb72c4234c04064e078f6ca86a34b8690349499a43f6fc4b844475da4
-  languageName: node
-  linkType: hard
-
-"concat-stream@npm:^1.5.2":
-  version: 1.6.2
-  resolution: "concat-stream@npm:1.6.2"
-  dependencies:
-    buffer-from: "npm:^1.0.0"
-    inherits: "npm:^2.0.3"
-    readable-stream: "npm:^2.2.2"
-    typedarray: "npm:^0.0.6"
-  checksum: 10c0/2e9864e18282946dabbccb212c5c7cec0702745e3671679eb8291812ca7fd12023f7d8cb36493942a62f770ac96a7f90009dc5c82ad69893438371720fa92617
-  languageName: node
-  linkType: hard
-
-"concat-stream@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "concat-stream@npm:2.0.0"
-  dependencies:
-    buffer-from: "npm:^1.0.0"
-    inherits: "npm:^2.0.3"
-    readable-stream: "npm:^3.0.2"
-    typedarray: "npm:^0.0.6"
-  checksum: 10c0/29565dd9198fe1d8cf57f6cc71527dbc6ad67e12e4ac9401feb389c53042b2dceedf47034cbe702dfc4fd8df3ae7e6bfeeebe732cc4fa2674e484c13f04c219a
   languageName: node
   linkType: hard
 
@@ -8826,7 +8765,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:>=0.5 0, mkdirp@npm:^0.5.4, mkdirp@npm:^0.5.6":
+"mkdirp@npm:>=0.5 0":
   version: 0.5.6
   resolution: "mkdirp@npm:0.5.6"
   dependencies:
@@ -8865,45 +8804,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"multer@npm:1.4.5-lts.2":
-  version: 1.4.5-lts.2
-  resolution: "multer@npm:1.4.5-lts.2"
-  dependencies:
-    append-field: "npm:^1.0.0"
-    busboy: "npm:^1.0.0"
-    concat-stream: "npm:^1.5.2"
-    mkdirp: "npm:^0.5.4"
-    object-assign: "npm:^4.1.1"
-    type-is: "npm:^1.6.4"
-    xtend: "npm:^4.0.0"
-  checksum: 10c0/59c934621bde284e04e25aa35ef79f8a9ed0c2ac4c5bae4c2880670105ec1645480ae57a84ed92323b2a8d8f875ca3189ad8a18fa0ed0bdc6fd26553d9426883
-  languageName: node
-  linkType: hard
-
-"multer@npm:2.0.2":
-  version: 2.0.2
-  resolution: "multer@npm:2.0.2"
+"multer@npm:2.5.0":
+  version: 2.5.0
+  resolution: "multer@npm:2.5.0"
   dependencies:
     append-field: "npm:^1.0.0"
     busboy: "npm:^1.6.0"
-    concat-stream: "npm:^2.0.0"
-    mkdirp: "npm:^0.5.6"
-    object-assign: "npm:^4.1.1"
     type-is: "npm:^1.6.18"
-    xtend: "npm:^4.0.2"
-  checksum: 10c0/d3b99dd0512169bbabf15440e1bbb3ecdc000b761e5a3e4aaca40b5e5e213c6cdcc9b7dffebaa601b7691a84f6876aa87e0173ffcc47139253793cf5657819eb
-  languageName: node
-  linkType: hard
-
-"multer@npm:2.1.1":
-  version: 2.1.1
-  resolution: "multer@npm:2.1.1"
-  dependencies:
-    append-field: "npm:^1.0.0"
-    busboy: "npm:^1.6.0"
-    concat-stream: "npm:^2.0.0"
-    type-is: "npm:^1.6.18"
-  checksum: 10c0/2ec4e02833b20f403cfb879d4b64d2a9070d902b9deae7aef18a6faadb707d7665385456cf540aa8a6dadfe3d4c5fc8e0e7b0675b94e1077048b1125426deee6
+  checksum: 10c0/a89df3eae74ec2e9bfcbf272c8ce7e7f18597bd855ac193568103d83fbd8cb26d4539025a19df1bd52dc05aa0090745949f0ec90aecf479ca0fdc8a1d80121ee
   languageName: node
   linkType: hard
 
@@ -9083,7 +8991,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object-assign@npm:^4, object-assign@npm:^4.1.1":
+"object-assign@npm:^4":
   version: 4.1.1
   resolution: "object-assign@npm:4.1.1"
   checksum: 10c0/1f4df9945120325d041ccf7b86f31e8bcc14e73d29171e37a7903050e96b81323784ec59f93f102ec635bcf6fa8034ba3ea0a8c7e69fa202b87ae3b6cec5a414
@@ -9818,7 +9726,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^2.0.0, readable-stream@npm:^2.0.2, readable-stream@npm:^2.0.5, readable-stream@npm:^2.2.2, readable-stream@npm:~2.3.6":
+"readable-stream@npm:^2.0.0, readable-stream@npm:^2.0.2, readable-stream@npm:^2.0.5, readable-stream@npm:~2.3.6":
   version: 2.3.8
   resolution: "readable-stream@npm:2.3.8"
   dependencies:
@@ -9833,7 +9741,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^3.0.2, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
+"readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
   version: 3.6.2
   resolution: "readable-stream@npm:3.6.2"
   dependencies:
@@ -10756,7 +10664,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-is@npm:^1.6.18, type-is@npm:^1.6.4":
+"type-is@npm:^1.6.18":
   version: 1.6.18
   resolution: "type-is@npm:1.6.18"
   dependencies:
@@ -10781,13 +10689,6 @@ __metadata:
   version: 2.12.2
   resolution: "typed-query-selector@npm:2.12.2"
   checksum: 10c0/2710369ada5bde578606b043eefb8a6d7f9178630ae4950a4dfd4f70cceb8196d5bbc735a905cd3e06953127e4dd1825c3e0be06d64e5a6e5609965cffee701d
-  languageName: node
-  linkType: hard
-
-"typedarray@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "typedarray@npm:0.0.6"
-  checksum: 10c0/6005cb31df50eef8b1f3c780eb71a17925f3038a100d82f9406ac2ad1de5eb59f8e6decbdc145b3a1f8e5836e17b0c0002fb698b9fe2516b8f9f9ff602d36412
   languageName: node
   linkType: hard
 
@@ -11204,7 +11105,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"xtend@npm:^4.0.0, xtend@npm:^4.0.2":
+"xtend@npm:^4.0.0":
   version: 4.0.2
   resolution: "xtend@npm:4.0.2"
   checksum: 10c0/366ae4783eec6100f8a02dff02ac907bf29f9a00b82ac0264b4d8b832ead18306797e283cf19de776538babfdcb2101375ec5646b59f08c52128ac4ab812ed0e
