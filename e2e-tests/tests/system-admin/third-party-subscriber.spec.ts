@@ -44,7 +44,7 @@ test.describe("Third party subscriber", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create third party subscriber");
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
-    await expect(page.locator(".govuk-error-message")).toContainText("Enter a name");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Enter a name");
     await switchLanguage(page, "cy");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Creu tanysgrifwr trydydd parti");
     await switchLanguage(page, "en");

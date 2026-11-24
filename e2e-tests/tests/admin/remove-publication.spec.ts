@@ -73,11 +73,8 @@ test.describe("Remove Publication Flow", () => {
 
   test("complete remove publication journey with validation, Welsh, and accessibility", async ({ page }) => {
     // STEP 1: Verify remove tab on dashboard
-    const removeLink = page.locator('a[href="/remove-list-search"]');
-    await expect(removeLink).toBeVisible();
-
-    const removeHeading = removeLink.locator('h2:has-text("Remove")');
-    await expect(removeHeading).toBeVisible();
+    const removeLink = page.getByRole("heading", { level: 2, name: "Remove", exact: true }).getByRole("link");
+    await expect(removeLink).toHaveAttribute("href", "/remove-list-search");
 
     // STEP 2: Navigate to find content page
     await page.goto("/remove-list-search");

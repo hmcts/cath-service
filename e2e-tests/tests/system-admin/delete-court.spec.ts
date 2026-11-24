@@ -71,7 +71,7 @@ test.describe("Delete Court Journey", () => {
     // Step 2: Test validation - empty court name
     await page.click('button:has-text("Continue")');
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
-    await expect(page.locator(".govuk-error-message")).toContainText("Enter a court or tribunal name");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Enter a court or tribunal name");
 
     // Step 3: Search for a valid test court (refresh page to clear validation state)
     await page.reload();
@@ -102,7 +102,7 @@ test.describe("Delete Court Journey", () => {
     // Step 6: Test validation - no radio selected
     await page.click('button:has-text("Continue")');
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
-    await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Select yes or no to continue");
 
     // Step 7: Test "No" option redirects back to the delete-court page
     await page.click('input[value="no"]');

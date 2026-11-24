@@ -153,7 +153,7 @@ test.describe("User Management", () => {
 
     // Test validation - submit without selecting an option
     await page.getByRole("button", { name: "Continue" }).click();
-    await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
+    await expect(page.locator("#main-content .govuk-error-message")).toContainText("Select yes or no to continue");
 
     // Test Welsh translation on delete confirmation page
     await switchLanguage(page, "cy");
