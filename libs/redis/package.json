@@ -17,6 +17,10 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write --unsafe ."
   },
+  "dependencies": {
+    "@azure/identity": "4.10.0",
+    "@redis/entraid": "5.12.1"
+  },
   "peerDependencies": {
     "redis": "^4.0.0 || ^5.0.0"
   },
