@@ -26,12 +26,20 @@ describe("formatAccusedDateOfBirth", () => {
     expect(result).toBe("15/03/1985");
   });
 
-  it("should return an empty string when there is an age but no date of birth", () => {
+  it("should return the age alone when there is an age but no date of birth", () => {
     // Act
     const result = formatAccusedDateOfBirth(null, 40);
 
     // Assert
-    expect(result).toBe("");
+    expect(result).toBe("(40)");
+  });
+
+  it("should treat an empty date of birth as missing", () => {
+    // Act
+    const result = formatAccusedDateOfBirth("", 40);
+
+    // Assert
+    expect(result).toBe("(40)");
   });
 
   it("should keep an age of zero next to a date of birth", () => {

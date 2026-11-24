@@ -92,7 +92,7 @@ const DOB_FORMATS: Array<{ pattern: RegExp; order: "dmy" | "ymd" }> = [
 
 | Input | `dateOfBirth` | `rawDateOfBirth` | Web | PDF and Excel |
 |---|---|---|---|---|
-| Missing or `""` | `null` | `null` | Empty (as now) | `(age)` or empty |
+| Missing or `""` | `null` | `null` | `(age)` or empty | `(age)` or empty |
 | Whitespace only `"  "` | `null` | `null` after trim | Empty | Age only |
 | `" 13/01/1990 "` | 13 Jan 1990 | `13/01/1990` | `13 January 1990` | `13/01/1990` |
 | `31/02/1990`, `29/02/1991`, `00/01/1990`, `13/13/1990` | `null` | as sent | As sent | As sent |
@@ -138,7 +138,7 @@ E2E (Playwright, one journey): the existing `e2e-tests/tests/sjp-press-list.spec
 2. **Should the schema define a format for `dateOfBirth`?** This is open question 2 in the ticket. A `pattern` would reject bad values at upload, for both `SJP_PRESS_LIST` and `SJP_DELTA_PRESS_LIST`. It's left out of this plan because it changes what uploads succeed, which could reject live feeds. If the feed owner confirms `dd/MM/yyyy` (question 1), a `dd/MM/yyyy` pattern becomes a reasonable follow-up.
 3. **Should the Excel DOB keep `sanitiseCellValue`?** This comes from the ticket comment. With it, a value starting with `=`, `+`, `-` or `@` gets a visible `'` prefix. PIP writes the cell as plain text, and ExcelJS strings are already text cells. Keeping it is the safe default; removing it would match PIP exactly.
 4. **Should the web page show Welsh month names on Welsh lists?** Printing the value as sent in the PDF, as PIP did, removes the PDF format mismatch. The web page still shows `1 January 1990` in English on Welsh lists, as PIP's web page did.
-5. **Should the web page show `(age)` alone when there's no DOB?** The PDF and Excel now do, matching PIP's PDF and Excel. The web page shows nothing when the DOB is missing, even if an age is present. PIP's web page also left out the age in that case.
+5. **Should the web page show `(age)` alone when there's no DOB?** The PDF and Excel now do, matching PIP's PDF and Excel. The web page shows nothing when the DOB is missing, even if an age is present.
 6. **Should Luxon be used instead of the regex check?** If so, `luxon` needs adding to `@hmcts/list-types-common`'s `dependencies`. It's imported there today but not declared.
 
 ### Decisions on the clarifications (2026-11-23)
@@ -146,5 +146,5 @@ E2E (Playwright, one journey): the existing `e2e-tests/tests/sjp-press-list.spec
 2. Schema format: out of scope, raised as a separate ticket.
 3. Keep `sanitiseCellValue` on the Excel DOB, for consistency with every other CaTH Excel generator.
 4. Web page keeps English month names; Welsh month names raised as a separate ticket.
-5. No DOB means an empty DOB cell on every output. The age is only shown next to a date of birth, so `formatAccusedDateOfBirth(null, 35)` returns `""` (a deliberate departure from PIP's PDF and Excel, which showed `(35)`).
+5. Revised after PR review (2026-11-24): with no DOB but an age, every output shows `(age)` alone, matching PIP on the web page (`single-justice-procedure-press.njk`, `age > 0`), the PDF (`sjpPressList.html`) and the Excel (`SjpPressListFileConverter.getAccusedDob`). `formatAccusedDateOfBirth(null, 35)` returns `(35)`. With neither, the cell is empty.
 6. Regex check kept; no Luxon dependency.

@@ -104,6 +104,7 @@ describe("generateSjpPressListPdf", () => {
     it.each([
       { scenario: "a parsed date of birth", dateOfBirth: new Date(1985, 2, 15), rawDateOfBirth: "15/03/1985", age: 40 },
       { scenario: "an unreadable date of birth", dateOfBirth: null, rawDateOfBirth: "unknown", age: 35 },
+      { scenario: "no date of birth but an age", dateOfBirth: null, rawDateOfBirth: null, age: 40 },
       { scenario: "no date of birth", dateOfBirth: null, rawDateOfBirth: null, age: null }
     ])("should format the date of birth as sent for $scenario", async ({ dateOfBirth, rawDateOfBirth, age }) => {
       // Arrange

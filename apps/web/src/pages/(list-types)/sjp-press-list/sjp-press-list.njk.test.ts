@@ -522,6 +522,12 @@ describe("sjp-press-list template", () => {
       expect(caseSummaryValues($)[ROW.dob]).toBe("");
     });
 
+    it("should render the age alone when there is an age but no date of birth", () => {
+      const { $ } = renderList({ cases: [buildCase({ dateOfBirth: null, rawDateOfBirth: null, age: "40", offences: [] })] });
+
+      expect(caseSummaryValues($)[ROW.dob]).toBe("(40)");
+    });
+
     it("should render the parsed date of birth with the age when the date can be read", () => {
       const { $ } = renderList({ cases: [buildCase({ offences: [] })] });
 
