@@ -89,10 +89,10 @@ test.describe("Remove Publication Flow", () => {
     const autocompleteInput = page.getByRole("combobox", { name: /search by court or tribunal name/i });
     await autocompleteInput.waitFor({ state: "visible", timeout: 10000 });
     await expect(autocompleteInput).toBeVisible();
-    await expect(page.locator('button:has-text("Continue")')).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
 
     // STEP 3: Test validation - empty submission
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-summary")).toBeVisible();
     await expect(page.locator(".govuk-error-summary")).toContainText("Court or tribunal name must be 3 characters or more");
 
@@ -123,7 +123,7 @@ test.describe("Remove Publication Flow", () => {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
 
-    await page.click('button:has-text("Continue")');
+    await page.getByRole("button", { name: "Continue" }).click();
 
     // STEP 7: Should redirect to search results page
     await expect(page).toHaveURL(/\/remove-list-search-results/);
