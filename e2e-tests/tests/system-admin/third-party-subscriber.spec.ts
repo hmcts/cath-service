@@ -23,9 +23,12 @@ test.describe("Third party subscriber", () => {
     await page.waitForURL("/system-admin-dashboard");
   });
 
-  test("system admin can create, manage and delete a third party subscriber", async ({ page }) => {
-    // Validation only allows letters, numbers, spaces, hyphens and apostrophes
-    const subscriberName = `${getTestPrefix().replace(/_/g, "-")}Subscriber Corp`;
+  test("system admin can create, manage and delete a third party subscriber", async ({ page }, testInfo) => {
+    // The full create/manage/OAuth/delete journey runs close to the 60s default on CI
+    test.setTimeout(120_000);
+    // Validation only allows letters, numbers, spaces, hyphens and apostrophes.
+    // The retry suffix stops a retry colliding with the subscriber an earlier attempt created.
+    const subscriberName = `${getTestPrefix().replace(/_/g, "-")}Subscriber Corp ${testInfo.retry}`;
 
     // Subscriber list
     await page.goto("/third-party-subscribers");

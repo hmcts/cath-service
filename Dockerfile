@@ -6,7 +6,7 @@
 #   docker build --target postgres -t cath-postgres .
 #   docker build --target ui-baseline -t cath-ui-baseline .
 
-ARG NODE_IMAGE=hmctspublic.azurecr.io/base/node:22-alpine
+ARG NODE_IMAGE=hmctspublic.azurecr.io/base/node:24-alpine
 ARG COREPACK_VERSION=0.36.0
 
 # ---- Toolchain ----
