@@ -4,12 +4,14 @@ import type { ValidationError } from "../manual-upload/model.js";
 const FILE_INPUT_HREF = "#file";
 
 /**
- * Turns located Excel validation issues into GOV.UK error summary items, one per issue.
- * The location wording follows PIP (English only): Sheet 'X' - Row N of 'Y' column: reason.
- * Every issue is listed, ordered by tab (as received), then numeric row, then column (as received).
+ * Turns located Excel validation issues into GOV.UK error summary items.
+ * The wording follows PIP (English only): Sheet 'X' - Row N of 'Y' column.
+ * Issues are ordered by tab (as received), then numeric row, then column (as received),
+ * and identical lines are listed once, as PIP collects its errors in a set.
  */
 export function formatExcelValidationErrors(issues: ExcelValidationIssue[]): ValidationError[] {
-  return sortIssues(issues).map((issue) => ({ text: formatIssue(issue), href: FILE_INPUT_HREF }));
+  const texts = sortIssues(issues).map(formatIssue);
+  return [...new Set(texts)].map((text) => ({ text, href: FILE_INPUT_HREF }));
 }
 
 function sortIssues(issues: ExcelValidationIssue[]): ExcelValidationIssue[] {
@@ -31,8 +33,13 @@ function sortIssues(issues: ExcelValidationIssue[]): ExcelValidationIssue[] {
     .map(({ issue }) => issue);
 }
 
+// PIP shows only the location for a row- or cell-level error. A tab-level or unlocated issue has no
+// row to point at, so its reason is kept, as PIP shows the error detail when there is no location.
 function formatIssue(issue: ExcelValidationIssue): string {
   const location = formatLocation(issue);
+  if (issue.rowNumber !== undefined) {
+    return location;
+  }
   return location ? `${location}: ${issue.reason}` : issue.reason;
 }
 

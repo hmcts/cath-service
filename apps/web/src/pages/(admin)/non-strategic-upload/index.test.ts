@@ -584,7 +584,7 @@ describe("non-strategic-upload page", () => {
       await callHandler(POST, req, res);
 
       expect((session as any).nonStrategicUploadErrors).toBeDefined();
-      expect((session as any).nonStrategicUploadErrors[0].text).toContain("Missing required field");
+      expect((session as any).nonStrategicUploadErrors[0].text).toBe("Unable to upload publication, please verify that provided fields are correct");
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");
@@ -665,8 +665,8 @@ describe("non-strategic-upload page", () => {
 
       // Assert
       expect(session.nonStrategicUploadErrors).toEqual([
-        { text: "Sheet 'Insolvency & Companies Court' - Row 1 of 'Venue' column: Missing required value", href: "#file" },
-        { text: "Sheet 'Appeal List' - Row 2 of 'Time' column: Invalid time format '25pm'", href: "#file" }
+        { text: "Sheet 'Insolvency & Companies Court' - Row 1 of 'Venue' column", href: "#file" },
+        { text: "Sheet 'Appeal List' - Row 2 of 'Time' column", href: "#file" }
       ]);
       expect(session.nonStrategicUploadForm).toBeDefined();
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
@@ -693,7 +693,7 @@ describe("non-strategic-upload page", () => {
       vi.doUnmock("@hmcts/list-types-common");
     });
 
-    it("should show the unreadable file error without the raw library message when the file cannot be read", async () => {
+    it("should show the generic upload error without the raw library message when the file cannot be read", async () => {
       // Arrange
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -709,7 +709,7 @@ describe("non-strategic-upload page", () => {
 
       // Assert
       expect(session.nonStrategicUploadErrors).toEqual([
-        { text: "The selected file could not be read. Check it is a valid Excel (.xlsx) file and upload it again.", href: "#file" }
+        { text: "Unable to upload publication, please verify that provided fields are correct", href: "#file" }
       ]);
       expect(JSON.stringify(session.nonStrategicUploadErrors)).not.toContain("Corrupted zip");
       expect(warnSpy).toHaveBeenCalledWith("[Non-Strategic Upload] Excel file could not be read", { error: expect.stringContaining("Corrupted zip") });
@@ -719,10 +719,11 @@ describe("non-strategic-upload page", () => {
       vi.doUnmock("@hmcts/list-types-common");
     });
 
-    it("should keep the single error message for any other Excel error", async () => {
+    it("should show the generic upload error instead of the raw message for any other Excel error", async () => {
       // Arrange
       vi.mocked(validateNonStrategicUploadForm).mockResolvedValue([]);
       mockExcelValidation(vi.fn().mockRejectedValue(new Error("Excel file must contain at least 1 data row")));
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const session: Record<string, any> = { save: (callback: (err?: any) => void) => callback() };
       const req = buildExcelUploadRequest(session);
       const res = { redirect: vi.fn() } as unknown as Response;
@@ -731,7 +732,11 @@ describe("non-strategic-upload page", () => {
       await callHandler(POST, req, res);
 
       // Assert
-      expect(session.nonStrategicUploadErrors).toEqual([{ text: "Excel file must contain at least 1 data row", href: "#file" }]);
+      expect(session.nonStrategicUploadErrors).toEqual([
+        { text: "Unable to upload publication, please verify that provided fields are correct", href: "#file" }
+      ]);
+      expect(errorSpy).toHaveBeenCalledWith("[Non-Strategic Upload] Excel validation failed", { error: "Excel file must contain at least 1 data row" });
+      errorSpy.mockRestore();
       expect(res.redirect).toHaveBeenCalledWith("/non-strategic-upload");
 
       vi.doUnmock("@hmcts/list-types-common");

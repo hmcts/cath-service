@@ -142,12 +142,20 @@ describe("validateNonStrategicExcel", () => {
     expect(result).toEqual([{ judge: "Judge A" }]);
   });
 
-  it("should rethrow a non-validation conversion error unchanged", async () => {
+  it("should report a workbook with no recognised tabs as a single unlocated issue", async () => {
     // Arrange
     const buffer = await createWorkbook([{ name: "Sheet 1", rows: [HEADERS, VALID_ROW] }]);
 
-    // Act & Assert
-    await expect(validateNonStrategicExcel(BPD_LIST_TYPE_NAME, buffer)).rejects.toThrow("Excel file has no recognised worksheet tabs");
+    // Act
+    const error = await validateNonStrategicExcel(BPD_LIST_TYPE_NAME, buffer).catch((caught: unknown) => caught);
+
+    // Assert
+    expect(isExcelValidationError(error)).toBe(true);
+    const issues = (error as ExcelValidationError).issues;
+    expect(issues).toHaveLength(1);
+    expect(issues[0].sheetName).toBeUndefined();
+    expect(issues[0].rowNumber).toBeUndefined();
+    expect(issues[0].reason).toContain("Excel file has no recognised worksheet tabs");
   });
 
   it("should throw when no converter is registered for the list type", async () => {

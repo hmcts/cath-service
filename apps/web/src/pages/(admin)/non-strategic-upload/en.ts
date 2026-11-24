@@ -56,6 +56,6 @@ export const en = {
     displayToRequired: "Please enter a valid display file to date",
     displayToInvalid: "Please enter a valid display file to date",
     displayToBeforeFrom: "'Display to' date must be the same as or later than 'Display from' date",
-    fileUnreadable: "The selected file could not be read. Check it is a valid Excel (.xlsx) file and upload it again."
+    uploadFailed: "Unable to upload publication, please verify that provided fields are correct"
   }
 };

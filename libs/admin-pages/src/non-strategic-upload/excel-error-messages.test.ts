@@ -7,7 +7,7 @@ function buildIssue(overrides: Partial<ExcelValidationIssue> = {}): ExcelValidat
 }
 
 describe("formatExcelValidationErrors", () => {
-  it("should format a multi-tab cell issue with tab, row and column", () => {
+  it("should format a multi-tab cell issue with tab, row and column only, without the reason", () => {
     // Arrange
     const issues = [buildIssue({ sheetName: "Appeal List", rowNumber: 5, columnHeader: "Time", reason: "Invalid time format 'half ten'" })];
 
@@ -15,10 +15,10 @@ describe("formatExcelValidationErrors", () => {
     const result = formatExcelValidationErrors(issues);
 
     // Assert
-    expect(result).toEqual([{ text: "Sheet 'Appeal List' - Row 5 of 'Time' column: Invalid time format 'half ten'", href: "#file" }]);
+    expect(result).toEqual([{ text: "Sheet 'Appeal List' - Row 5 of 'Time' column", href: "#file" }]);
   });
 
-  it("should format a single-tab cell issue with row and column only", () => {
+  it("should format a single-tab cell issue with row and column only, without the reason", () => {
     // Arrange
     const issues = [buildIssue({ rowNumber: 5, columnHeader: "Judge" })];
 
@@ -26,10 +26,10 @@ describe("formatExcelValidationErrors", () => {
     const result = formatExcelValidationErrors(issues);
 
     // Assert
-    expect(result).toEqual([{ text: "Row 5 of 'Judge' column: Missing required value", href: "#file" }]);
+    expect(result).toEqual([{ text: "Row 5 of 'Judge' column", href: "#file" }]);
   });
 
-  it("should format a tab-level issue with the tab only", () => {
+  it("should keep the reason for a tab-level issue", () => {
     // Arrange
     const issues = [buildIssue({ sheetName: "Patents Court", reason: "Missing columns: Time, Venue" })];
 
@@ -51,7 +51,7 @@ describe("formatExcelValidationErrors", () => {
     expect(result[0].text).toBe("Sheet 'Patents Court': Sheet is missing from the file");
   });
 
-  it("should format row-level issues with and without a tab", () => {
+  it("should format row-level issues with and without a tab, without the reason", () => {
     // Arrange
     const issues = [
       buildIssue({ sheetName: "Appeal List", rowNumber: 7, reason: "must have required property 'judge'" }),
@@ -62,7 +62,7 @@ describe("formatExcelValidationErrors", () => {
     const result = formatExcelValidationErrors(issues);
 
     // Assert
-    expect(result.map((error) => error.text)).toEqual(["Sheet 'Appeal List' - Row 7: must have required property 'judge'", "Row 3: must be object"]);
+    expect(result.map((error) => error.text)).toEqual(["Sheet 'Appeal List' - Row 7", "Row 3"]);
   });
 
   it("should show the reason on its own when the issue has no location", () => {
@@ -102,10 +102,10 @@ describe("formatExcelValidationErrors", () => {
 
     // Assert
     expect(result.map((error) => error.text)).toEqual([
-      "Sheet 'Appeal List' - Row 2 of 'Venue' column: Missing required value",
-      "Sheet 'Appeal List' - Row 2 of 'Time' column: Missing required value",
-      "Sheet 'Appeal List' - Row 10 of 'Judge' column: Missing required value",
-      "Sheet 'Business List' - Row 1 of 'Judge' column: Missing required value"
+      "Sheet 'Appeal List' - Row 2 of 'Venue' column",
+      "Sheet 'Appeal List' - Row 2 of 'Time' column",
+      "Sheet 'Appeal List' - Row 10 of 'Judge' column",
+      "Sheet 'Business List' - Row 1 of 'Judge' column"
     ]);
   });
 
@@ -121,6 +121,20 @@ describe("formatExcelValidationErrors", () => {
 
     // Assert
     expect(result[0].text).toBe("Sheet 'Appeal List': Missing columns: Time");
+  });
+
+  it("should list identical locations once", () => {
+    // Arrange
+    const issues = [
+      buildIssue({ rowNumber: 2, columnHeader: "Time", reason: "must be string" }),
+      buildIssue({ rowNumber: 2, columnHeader: "Time", reason: "must match pattern" })
+    ];
+
+    // Act
+    const result = formatExcelValidationErrors(issues);
+
+    // Assert
+    expect(result).toEqual([{ text: "Row 2 of 'Time' column", href: "#file" }]);
   });
 
   it("should return an empty list when there are no issues", () => {

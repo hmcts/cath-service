@@ -10,5 +10,6 @@ export const cy = {
   language: "Iaith",
   displayFileDates: "Dangos dyddiadau ffeil",
   change: "Newid",
-  confirmButton: "Cadarnhau"
+  confirmButton: "Cadarnhau",
+  uploadFailed: "Unable to upload publication, please verify that provided fields are correct"
 };

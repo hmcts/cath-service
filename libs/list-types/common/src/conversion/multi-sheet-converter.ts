@@ -87,7 +87,8 @@ export async function createMultiSheetConverter(
   // otherwise produce a silently-empty (or, without this mode, mis-filed) list. Reject it so
   // the publisher gets a clear error naming the tabs the workbook must contain.
   if (options.matchByNameOnly && !sheets.some((sheet) => findWorksheetByName(workbook, sheet.worksheetName))) {
-    throw new Error(`Excel file has no recognised worksheet tabs. Expected tabs named: ${sheets.map((sheet) => sheet.worksheetName).join(", ")}`);
+    const message = `Excel file has no recognised worksheet tabs. Expected tabs named: ${sheets.map((sheet) => sheet.worksheetName).join(", ")}`;
+    throw new ExcelValidationError([{ reason: message, message }]);
   }
 
   const result: Record<string, any[]> = {};

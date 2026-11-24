@@ -236,7 +236,7 @@ describe("non-strategic-upload template", () => {
     it("should have the same keys in English and Welsh, including the Excel error messages", () => {
       expect(Object.keys(en).sort()).toEqual(Object.keys(cy).sort());
       expect(Object.keys(en.errorMessages).sort()).toEqual(Object.keys(cy.errorMessages).sort());
-      expect(Object.keys(cy.errorMessages)).toEqual(expect.arrayContaining(["fileUnreadable"]));
+      expect(Object.keys(cy.errorMessages)).toEqual(expect.arrayContaining(["uploadFailed"]));
     });
   });
 });

@@ -165,10 +165,10 @@ const postHandler = async (req: Request, res: Response) => {
         console.warn("[Non-Strategic Upload] Excel file could not be read", {
           error: error.cause instanceof Error ? error.cause.message : String(error.cause)
         });
-        return redirectWithErrors(req, res, [{ text: t.errorMessages.fileUnreadable, href: "#file" }], formData);
+        return redirectWithErrors(req, res, [{ text: t.errorMessages.uploadFailed, href: "#file" }], formData);
       }
-      const errorMessage = error instanceof Error ? error.message : "Invalid Excel file format";
-      return redirectWithErrors(req, res, [{ text: errorMessage, href: "#file" }], formData);
+      console.error("[Non-Strategic Upload] Excel validation failed", { error: error instanceof Error ? error.message : String(error) });
+      return redirectWithErrors(req, res, [{ text: t.errorMessages.uploadFailed, href: "#file" }], formData);
     }
   }
 
