@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
@@ -151,7 +149,8 @@ test.describe("Create Media Account", () => {
   });
 
   test("should verify database record created after successful submission @nightly", async ({ page }) => {
-    const { getTestMediaApplicationByEmail, deleteTestMediaApplication } = await import("../utils/test-support-api.js");
+    const { getTestMediaApplicationByEmail, deleteTestMediaApplication, checkTestMediaApplicationProofOfId, deleteTestMediaApplicationProofOfId } =
+      await import("../utils/test-support-api.js");
 
     await page.goto("/create-media-account");
 
@@ -188,17 +187,11 @@ test.describe("Create Media Account", () => {
     expect(application?.status).toBe("PENDING");
 
     if (application) {
-      const filePath = path.join(process.cwd(), "../apps/web/storage", "temp", "files", `${application.id}.pdf`);
-      const fileExists = await fs
-        .access(filePath)
-        .then(() => true)
-        .catch(() => false);
-      expect(fileExists).toBe(true);
+      const proofOfId = await checkTestMediaApplicationProofOfId(application.id);
+      expect(proofOfId.exists).toBe(true);
+      expect(proofOfId.sizeBytes).toBeGreaterThan(0);
 
-      if (fileExists) {
-        await fs.unlink(filePath);
-      }
-
+      await deleteTestMediaApplicationProofOfId(application.id);
       await deleteTestMediaApplication(application.id);
     }
   });

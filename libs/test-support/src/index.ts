@@ -10,4 +10,4 @@ export {
   createTestEnvironment,
   render
 } from "./nunjucks-test-helper.js";
-export type { CreateArtefactInput, CreateLocationInput, CreateSubscriptionInput, CreateUserInput } from "./types.js";
+export type { CreateArtefactInput, CreateLocationInput, CreateSubscriptionInput, CreateUserInput, LocationReferenceInput } from "./types.js";

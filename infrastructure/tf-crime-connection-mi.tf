@@ -2,9 +2,9 @@
 # cath-cp-<env>-mi tokens. Issuer/subject pairs come from Crime Portal via the
 # crime-oidc-config secret in the app vault, set by hand like the APIM secrets
 # in data.tf. It must exist in every environment where crime_federation_enabled
-# is true (see env-config.tf) before merge. Prod is off until #1097 seeds it: on a
-# first plan the vault does not exist yet, so an unconditional read would leave
-# count unknown and fail the plan.
+# is true (see env-config.tf) before merge. The switch is per environment because
+# on a new environment's first plan the vault does not exist yet, so an
+# unconditional read would leave count unknown and fail the plan.
 #
 # Deliberately no try() around jsondecode: a silent fallback to no connections
 # would destroy every credential. The switch is explicit per environment instead.
