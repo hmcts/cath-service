@@ -47,7 +47,11 @@ RUN yarn install
 # ---- Build ----
 FROM deps AS build
 COPY --chown=hmcts:hmcts . /opt/app
-RUN yarn build
+# Turbo cache mount, so unchanged packages skip recompiling. CI persists it in
+# job.build-and-publish-images.yml (same id/uid/gid). Week-old entries are pruned.
+RUN --mount=type=cache,id=cath-turbo,target=/opt/app/.turbo,uid=1000,gid=1000 \
+    yarn build \
+ && find .turbo/cache -type f -mtime +7 -delete
 # Dev trees; each runtime stage installs its own production tree.
 RUN find apps libs \( -name node_modules -o -name .turbo \) -type d -prune -exec rm -rf {} +
 

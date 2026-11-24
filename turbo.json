@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "build/**", "generated/**"],
-      "inputs": ["**/*.ts", "**/*.tsx", "**/*.prisma", "package.json"]
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.ts", "!**/*.spec.ts", "!**/*.md"]
     },
     "test": {
       "outputs": ["coverage/**"],
