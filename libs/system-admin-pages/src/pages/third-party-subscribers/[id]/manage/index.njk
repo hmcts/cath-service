@@ -12,6 +12,23 @@
   <div class="govuk-grid-column-full">
     <h1 class="govuk-heading-l">{{ pageTitle }}</h1>
 
+    <form method="post" novalidate>
+      {{ govukButton({
+        text: testConnectionButton,
+        preventDoubleClick: true
+      }) }}
+    </form>
+
+    {% if connectionResult %}
+      <div class="connection-result {{ 'connection-result--success' if connectionResult.isSuccess else 'connection-result--fail' }} govuk-!-margin-bottom-5" role="alert">
+        <p class="govuk-body connection-result__title">{{ connectionResult.title }}</p>
+        <p class="govuk-body">{{ connectionResult.message }}</p>
+        {% if connectionResult.reason %}
+          <p class="govuk-body">{{ connectionTest.reasonLabel }}: {{ connectionResult.reason }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+
     {{ govukSummaryList({
       rows: [
         {
