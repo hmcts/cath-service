@@ -48,7 +48,7 @@
 
 ### `apps/api`
 - [x] Add `"@hmcts/notifications": "workspace:*"` to `apps/api/package.json` and run `yarn install`
-- [x] Create `src/routes/notify/otp.ts`: `POST = [authenticateApi(API_ROLE.B2C), express.json({ limit: "10kb" }), handleBodyParseError, handler]`
+- [x] Create `src/routes/notify/otp.ts`: `POST = [authenticateApi(API_ROLE.B2C), express.json(), handleBodyParseError, handler]`
 - [x] Implement `handleBodyParseError`: `entity.parse.failed` gives 400, `entity.too.large` gives 413, both use `buildMessage` and log no `err.message` or `err.body`. Other errors go to `next(error)`
 - [x] Implement `respondToOtpResult`: `SENT` gives 200 `text/plain` with the reference UUID only. `VALIDATION_ERROR` and `NOTIFY_ERROR` give 400. `RATE_LIMITED` gives `RATE_LIMIT_STATUS` (429)
 - [x] Catch unexpected errors: 500 `buildMessage("Internal server error")`, logging `name` and `code` only

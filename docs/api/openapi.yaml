@@ -362,7 +362,7 @@ paths:
                 statusCode: 403
                 message: "Insufficient permissions. Required role: api.request.b2c"
         "413":
-          description: Body larger than 10 KB.
+          description: Body larger than 100 KB (the Express default).
           content:
             application/json:
               schema:

@@ -3,7 +3,6 @@ import { type OtpEmailResult, sendOtpEmail } from "@hmcts/notifications";
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
 
-const BODY_LIMIT = "10kb";
 // pip-publication-services maps its TooManyEmailsException to 429.
 const RATE_LIMIT_STATUS = 429;
 const MALFORMED_BODY_MESSAGE = "Malformed JSON request body";
@@ -12,7 +11,7 @@ const BODY_TOO_LARGE_MESSAGE = "Request body too large";
 // Authentication runs first, so a body is only parsed for an authenticated caller.
 export const POST = [
   authenticateApi(API_ROLE.B2C),
-  express.json({ limit: BODY_LIMIT }),
+  express.json(),
   handleBodyParseError,
   async (req: Request, res: Response) => {
     try {

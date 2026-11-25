@@ -129,12 +129,11 @@ Logging, through `console.info` and `console.error` as elsewhere:
 import { API_ROLE, authenticateApi, buildMessage } from "@hmcts/blob-ingestion";
 import { sendOtpEmail } from "@hmcts/notifications";
 
-const BODY_LIMIT = "10kb";
 const RATE_LIMIT_STATUS = 400; // see clarification 3
 
 export const POST = [
   authenticateApi(API_ROLE.B2C),
-  express.json({ limit: BODY_LIMIT }),
+  express.json(),
   handleBodyParseError,
   async (req: Request, res: Response) => {
     try {
@@ -169,7 +168,7 @@ Request:
 | 400 | Notify rejected the send | `{ "message": "<Notify error message>", "timestamp": "..." }` |
 | 401 | No/invalid/expired token | `{ "statusCode": 401, "message": "Access denied due to invalid OAuth information" }` |
 | 403 | Token lacks role | `{ "statusCode": 403, "message": "Insufficient permissions. Required role: api.request.b2c" }` |
-| 413 | Body over 10 KB | `{ "message": "Request body too large", "timestamp": "..." }` |
+| 413 | Body over 100 KB (Express default) | `{ "message": "Request body too large", "timestamp": "..." }` |
 | 500 | Unexpected (Redis down, missing API key) | `{ "message": "Internal server error", "timestamp": "..." }` |
 
 `buildMessage` returns `{ message, timestamp }`, the same shape as pip's `ExceptionResponse`, so 400 bodies match pip on the wire. #619's `infrastructure/resources/otp/swagger/api-swagger.json` should use `operationId: sendOtpEmail` and copy the request schema and these responses from the `docs/api/openapi.yaml` entry this ticket adds.

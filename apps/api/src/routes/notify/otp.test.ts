@@ -166,9 +166,9 @@ describe("POST /notify/otp", () => {
       expect(logged).not.toContain(EMAIL);
     });
 
-    it("should return 413 without logging the body when it exceeds 10kb", async () => {
+    it("should return 413 without logging the body when it exceeds the default 100kb limit", async () => {
       // Arrange
-      const body = { otp: OTP, email: EMAIL, padding: "x".repeat(11 * 1024) };
+      const body = { otp: OTP, email: EMAIL, padding: "x".repeat(101 * 1024) };
 
       // Act
       const response = await request(buildApp()).post("/notify/otp").send(body);
