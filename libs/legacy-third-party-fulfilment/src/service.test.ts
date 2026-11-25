@@ -53,22 +53,40 @@ beforeEach(() => {
 });
 
 describe("sendThirdPartyPublications", () => {
-  it("returns early if COURTEL_API_URL is not set", async () => {
+  it("returns skipped without loading files if COURTEL_API_URL is not set", async () => {
     delete process.env.COURTEL_API_URL;
-    await sendThirdPartyPublications(BASE_PARAMS);
+    const loadFiles = vi.fn();
+    const outcome = await sendThirdPartyPublications({ ...BASE_PARAMS, loadFiles });
+    expect(outcome).toBe("skipped");
+    expect(loadFiles).not.toHaveBeenCalled();
     expect(pushWithRetry).not.toHaveBeenCalled();
   });
 
-  it("returns early if COURTEL_CERTIFICATE is not set", async () => {
+  it("returns skipped if COURTEL_CERTIFICATE is not set", async () => {
     delete process.env.COURTEL_CERTIFICATE;
-    await sendThirdPartyPublications(BASE_PARAMS);
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("skipped");
     expect(pushWithRetry).not.toHaveBeenCalled();
   });
 
-  it("returns early if no subscribers for the list type", async () => {
+  it("returns skipped without loading files if no subscribers for the list type", async () => {
     vi.mocked(findSubscribersByListType).mockResolvedValue([]);
-    await sendThirdPartyPublications(BASE_PARAMS);
+    const loadFiles = vi.fn();
+    const outcome = await sendThirdPartyPublications({ ...BASE_PARAMS, loadFiles });
+    expect(outcome).toBe("skipped");
+    expect(loadFiles).not.toHaveBeenCalled();
     expect(pushWithRetry).not.toHaveBeenCalled();
+  });
+
+  it("returns sent when the push succeeds", async () => {
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("sent");
+  });
+
+  it("returns failed when the push fails", async () => {
+    vi.mocked(pushWithRetry).mockResolvedValue({ statusCode: 500, success: false });
+    const outcome = await sendThirdPartyPublications(BASE_PARAMS);
+    expect(outcome).toBe("failed");
   });
 
   it("pushes once to Courtel when subscribers exist", async () => {
@@ -101,30 +119,36 @@ describe("sendThirdPartyPublications", () => {
     expect(mockPushLogCreate).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ type: "UPDATE" }) }));
   });
 
-  it("forwards pdfPath to pushWithRetry when provided", async () => {
-    const pdfPath = "/tmp/publication.pdf";
-    await sendThirdPartyPublications({ ...BASE_PARAMS, pdfPath });
-    const [, , , , , forwardedPdfPath] = vi.mocked(pushWithRetry).mock.calls[0];
-    expect(forwardedPdfPath).toBe(pdfPath);
+  it("forwards the loaded files to pushWithRetry", async () => {
+    const files = { pdf: Buffer.from("%PDF-1.4") };
+    const loadFiles = vi.fn().mockResolvedValue(files);
+    await sendThirdPartyPublications({ ...BASE_PARAMS, loadFiles });
+    expect(loadFiles).toHaveBeenCalledTimes(1);
+    const [, , , , , forwardedFiles] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedFiles).toBe(files);
   });
 
-  it("forwards undefined pdfPath to pushWithRetry when not provided", async () => {
+  it("forwards no files to pushWithRetry when loadFiles is not provided", async () => {
     await sendThirdPartyPublications(BASE_PARAMS);
-    const [, , , , , forwardedPdfPath] = vi.mocked(pushWithRetry).mock.calls[0];
-    expect(forwardedPdfPath).toBeUndefined();
+    const [, , , , , forwardedFiles] = vi.mocked(pushWithRetry).mock.calls[0];
+    expect(forwardedFiles).toEqual({});
   });
 
-  it("forwards flatFilePath to pushWithRetry when provided", async () => {
-    const flatFilePath = "/tmp/artefact-1.xlsx";
-    await sendThirdPartyPublications({ ...BASE_PARAMS, flatFilePath });
-    const [, , , , , , forwardedFlatFilePath] = vi.mocked(pushWithRetry).mock.calls[0];
-    expect(forwardedFlatFilePath).toBe(flatFilePath);
+  it("returns failed without pushing or logging the push when loadFiles resolves null", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await sendThirdPartyPublications({ ...BASE_PARAMS, loadFiles: vi.fn().mockResolvedValue(null) });
+    expect(outcome).toBe("failed");
+    expect(pushWithRetry).not.toHaveBeenCalled();
+    expect(mockPushLogCreate).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining("publication file not found for artefactId artefact-1"));
+    consoleErrorSpy.mockRestore();
   });
 
-  it("forwards undefined flatFilePath to pushWithRetry when not provided", async () => {
-    await sendThirdPartyPublications(BASE_PARAMS);
-    const [, , , , , , forwardedFlatFilePath] = vi.mocked(pushWithRetry).mock.calls[0];
-    expect(forwardedFlatFilePath).toBeUndefined();
+  it("rejects when loadFiles rejects", async () => {
+    await expect(sendThirdPartyPublications({ ...BASE_PARAMS, loadFiles: vi.fn().mockRejectedValue(new Error("Blob unavailable")) })).rejects.toThrow(
+      "Blob unavailable"
+    );
+    expect(pushWithRetry).not.toHaveBeenCalled();
   });
 
   it("logs warning when writePushLog fails", async () => {

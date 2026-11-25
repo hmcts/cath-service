@@ -45,6 +45,13 @@ export {
 export { getFlatFileUrl, getJsonContent, getRenderedTemplateUrl } from "./repository/service.js";
 export { Sensitivity } from "./sensitivity.js";
 export {
+  type DisplayFromTriggerSummary,
+  type ThirdPartyTriggerSummary,
+  type TriggerSummary,
+  triggerDisplayFromSubscriptions,
+  triggerScheduledListTypeSubscriptions
+} from "./subscription-schedule/service.js";
+export {
   type ValidationResult,
   validateJson
 } from "./validation/json-validator.js";

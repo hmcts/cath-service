@@ -24,10 +24,17 @@ export async function getRedisClient(): Promise<RedisClientType> {
 }
 
 export async function closeRedisClient(): Promise<void> {
-  if (redisClient) {
-    await redisClient.quit();
-    redisClient = null;
+  if (!redisClient) {
+    return;
   }
+
+  // quit() waits for a reply, so on a dropped connection it would never settle.
+  if (redisClient.isReady) {
+    await redisClient.quit();
+  } else {
+    redisClient.destroy();
+  }
+  redisClient = null;
 }
 
 // With managedIdentity the client authenticates as the pod's managed identity
