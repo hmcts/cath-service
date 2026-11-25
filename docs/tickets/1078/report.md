@@ -10,25 +10,31 @@ Options for adding a new court location through the System Admin portal without 
 | Code verified against | `origin/master` `5014f714` (2026-11-13). Every path cited below is unchanged at `65eb3d72` (the plan's baseline) and at `682ec4b4` (master on 2026-11-20) |
 | Experiments | Run on 2026-11-13 against two throwaway databases (`spike_1078_s1`, `spike_1078_s2`) created inside the local docker `cath-postgres` container (localhost:5433), migrated with `prisma migrate deploy`, and dropped afterwards. The developer's own `postgres` database was not touched. No repository file was changed |
 
-> ## Recommendation: Option C
+> ## Recommendation: keep the CSV for bulk work, add single-page forms for one court
 >
-> Build a **one-question-per-page "Add a court or tribunal" journey** (names, contact details,
-> regions, sub-jurisdictions, provenance references with "add another", check answers, confirmation) in
-> `apps/web/src/pages/(system-admin)/`, backed by a new `court-maintenance` service in
-> `libs/system-admin-pages` that writes one court in one transaction. It depends on three decisions:
+> Decided by the developer on 2026-11-25. This replaces the earlier recommendation of Option C
+> (one question per page) and its `location_id` sequence. The earlier analysis is kept where it
+> still explains a decision.
 >
-> 1. **Allocate `location_id` from a Postgres sequence that starts one above the highest legacy
->    CaTH production court ID** (not `MAX + 1`, not autoincrement from 1). Any load of legacy courts
->    ends by moving the sequence above the highest loaded ID (Q3, §4.1).
-> 2. **Protect UI-created courts from the deploy seed** by freezing `location-data.ts` (courts,
->    regions, jurisdictions and sub-jurisdictions), enforcing that with a CI test, and making the
->    seed fail the deploy rather than park a court or re-point a provenance reference (Q1, Q2, Q9).
-> 3. **Keep the CSV route for bulk edits and make it update-only** in a follow-on ticket, so it can
->    no longer mint primary keys. Until then, ticket 1 rejects unused CSV IDs that the sequence could still hand out.
+> 1. **Keep the CSV upload for adding and updating courts in bulk** (Option A). It is sometimes used
+>    to add more than 100 courts at once, which no form can replace. Admins keep choosing the
+>    `LOCATION_ID`s, unique and incrementing by 1.
+> 2. **Add an "Add a court or tribunal" form** (Option B): one page where the admin enters the
+>    location ID, names, contact details, regions, sub-jurisdictions and an optional provenance
+>    reference. It only creates: an ID or name already in use is a field error, never an overwrite.
+> 3. **Add an "Update a court or tribunal" form**: find a court, then change its details on one
+>    page. The location ID cannot be changed.
+> 4. **No sequence.** Every writer supplies the ID, as today, so the CSV and the forms cannot clash
+>    with a sequence (§4.1).
+> 5. **Protect courts that are not in `location-data.ts` from the deploy seed** by freezing that file
+>    and making the seed fail the deploy rather than rename a court or move a provenance reference
+>    (Q1, Q2, Q9). This applies to courts added by CSV as much as to courts added by the forms.
+> 6. **Make the CSV summary say which rows add a court and which overwrite one.** Today a row that
+>    reuses an existing ID silently overwrites that court, names included (§4.3).
 >
-> Estimated at 8 to 9.5 dev-days across two build tickets, including "add another" references
-> (Q6) (§7). Options A, B, D, E and F are rejected, each with a one-line
-> reason in §4.4. The follow-on tickets are described in §7 only; none is raised from the spike.
+> Estimated at 7.5 to 10 dev-days across four build tickets (§7). Options C, D, E and F are
+> rejected, each with a one-line reason in §4.4. The tickets are described in §7 only; none is
+> raised from the spike.
 
 ---
 
@@ -68,7 +74,7 @@ All of these are in `apps/web/src/pages/(system-admin)/`, behind `requireRole([U
 | Delete a court | `delete-court`, `-confirm`, `-success`, `-publications*`, `-subscriptions*` | `deleteLocation()` (`libs/location/src/repository/queries.ts:264-270`, hard delete) |
 | **Location (the court itself)** | **None** | Only `upsertLocations()` (CSV) and the seeds |
 
-The core `location` row is the only reference-data entity a System Admin cannot create, rename or re-contact without a file. That is the main finding: Option C completes a pattern the portal already uses. It can reuse:
+The core `location` row is the only reference-data entity a System Admin cannot create, rename or re-contact without a file. That is the main finding: the add and update forms complete a pattern the portal already uses. It can reuse:
 - `listJurisdictionsWithSubJurisdictions()` and `listRegions()` (`jurisdiction-management/queries.ts:48`, `:59`) for the checkboxes;
 - the session guard in `location-jurisdiction-manage/index.ts:12` and `location-jurisdiction-update/index.ts:20`;
 - the audit pattern in `add-region/index.ts:52-56`.
@@ -128,7 +134,7 @@ E2E runs against STG and against a fresh per-PR preview database (`.github/workf
 | P1 | Local seed fails with P2002 on `locationReference.create` (§1.3 c4) | That create (`seed-data.ts:207-218`) runs only on a fully empty DB (`:19-33`). Otherwise the upsert branch (`:43-97`) runs, writes no references or junctions, and fails on `location.name` at `:79` (reproduced) | Same conclusion, different cause. Also, on an existing local DB new `locationData` entries get no mappings from `yarn db:seed`. That deserves a small separate fix |
 | P2 | "Fixture 9001" (§1.4) | Band 9001–9010 with SNL refs "9001"–"9010" | Proof widened; decision unchanged |
 | P3 | Hub is "a four-entry radio list" | Four entries rendered as **tiles** by default (`reference-data/index.ts:6`, `:11`); radios only on the POST error path (`:34`) | Ticket 2 adds a fifth `options` entry; design should confirm (Q11) |
-| P4 | Not mentioned | Test-support provenance IDs default to the location ID | Affects the step 5 uniqueness check; E2E should use prefixed provenance IDs, as `location-csv.ts:50` does |
+| P4 | Not mentioned | Test-support provenance IDs default to the location ID | Affects the forms' reference uniqueness check; E2E should use prefixed provenance IDs, as `location-csv.ts:50` does |
 | P5 | Precedent is `createJurisdictionRecord()` and `createRegion()` | Also `createJurisdiction()` and `createSubJurisdiction()`; two implementations | Strengthens Q9 |
 | P6 | "Blank column wipes mappings" | Only email and contact number are wiped | c5 corrected |
 | P7 | CSV error strings English-only | Whole summary and confirmation step is English-only | Widens C's bilingual gain |
@@ -143,7 +149,7 @@ The old service (`hmcts/pip-frontend` and `hmcts/pip-data-management`, read on G
 - **Validation.** Duplicate English or Welsh names, against the database and within the file (`:317-350`), and HTML tags in names (`:301-315`). Regions and jurisdictions were free-text `text[]` columns, so there was no "not found" check.
 - **No seed.** There was no `location-data.ts` equivalent that renamed rows on deploy, so constraints c3 and c4 are new in this service.
 
-So no create journey has ever existed. Option C is new in both systems, and the new service ported the old CSV design almost one-for-one.
+So no form for adding or updating one court has ever existed. It is new in both systems, and the new service ported the old CSV design almost one-for-one.
 
 **Seeded and legacy court IDs differ.** A legacy staging reference-data export (2026-11-17; 367 courts, P&I IDs 1–389, none at or above 100000) was compared with the 27 seeded courts in Appendix A. Only Single Justice Procedure has the same ID in both (9). 22 exist in legacy under a different ID (for example Royal Courts of Justice is 109 in legacy and 4 here), 3 have no legacy match, Rolls Building is legacy 111, and 19 seeded IDs belong to a different court in legacy (legacy 7 is Liverpool Social Security and Child Support Tribunal; seeded 7 is Bristol Civil and Family Justice Centre). If legacy courts are ever brought into this service with their IDs, the deploy seed would rename most of them (c3). Renumbering the seeded courts to their legacy IDs before go-live avoids that; it is follow-on S4 (§7.2, Q1).
 
@@ -151,153 +157,142 @@ So no create journey has ever existed. Option C is new in both systems, and the 
 
 ## 2. Options matrix
 
-Effort is in dev-days including tests. Constraint scoring: ✗ = unsolved or worse, ~ = partly handled, ✓ = handled.
+Effort is in dev-days including tests. Constraint scoring: ✗ = unsolved or worse, ~ = partly handled, ✓ = handled. Verdicts are as decided on 2026-11-25 (§6.1).
 
 | # | Option | Pros | Cons | Effort | c1 | c2 | c3 | c4 | c5 | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|
-| A | Keep CSV round-trip | No cost; live and tested; good for bulk | Admin invents the PK; stale file reverts others' work; all 21 errors point at `#file` (WCAG 3.3.1/3.3.3); audit records a file name; provenance clash is a 500 | 0 | ✗ | ~ | ✗ | ✗ | ✗ | Rejected |
-| B | Single page, about nine inputs | Cheapest real journey; same shape as `add-region` | Breaks one-thing-per-page with two multi-select fieldsets and two closed vocabularies; no check answers before a write to unique columns; hard error recovery | 2–3 + ticket 1 | ✓ | ✓ | ✓* | ✓* | ✓ | Fallback; shares C's service |
-| C | One question per page → check answers → confirmation | Standard GOV.UK pattern; field-linked errors; review gate; reuses building blocks; per-court create-only write; extends to amend | Eight pages to build, translate and test; session state and deep-link guard; slower for bulk | 8–9.5 (incl. "add another", Q6) | ✓ | ✓ | ✓* | ✓* | ✓ | **Recommended** |
-| D | Developer edits `location-data.ts` | One source of truth; reviewed; no new code | Developer, pull request and release per court; cannot set email, contact or real provenance IDs | 0 UI | ✓ | ✓ | ✓ | ~ | ✓ | Rejected as primary; documented current mechanism |
-| E | Paste CSV into a textarea | About half a day | Meets the wording, not the intent; keeps every CSV defect; harder and less accessible than upload | 0.5 | ✗ | ~ | ✗ | ✗ | ✗ | Rejected |
-| F | Upstream sync | Removes manual work | Another team's contract that doesn't exist; reconciliation policy without soft delete; no Welsh names upstream | Not estimable | ? | ✗ | ? | ? | ? | Separate discovery spike; C is a prerequisite |
+| A | Keep CSV round-trip | Live and tested; the only practical route for 100+ courts at once | A reused ID silently overwrites a court; stale file reverts others' work; all 21 errors point at `#file` (WCAG 3.3.1/3.3.3); audit records a file name; provenance clash is a 500 | 0 now; 1–1.5 for ticket 4 | ~† | ~ | ✓* | ✓* | ~‡ | **Kept for bulk add and update**, with ticket 4 |
+| B | Single page per task: add a court, update a court | Same shape as `add-region`; one page per court; field-linked errors; create-only add | Breaks one-thing-per-page (two checkbox fieldsets, an optional reference group); no check answers before a write to unique columns | 2–3 (add) + 2.5–3.5 (update) + ticket 1 | ✓† | ✓ | ✓* | ✓* | ✓ | **Recommended for one court** |
+| C | One question per page → check answers → confirmation | Standard GOV.UK pattern; review gate before writing | Eight pages for one court; session state and deep-link guards; needed a sequence that conflicts with admin-chosen CSV IDs | 8–9.5 | ✓ | ✓ | ✓* | ✓* | ✓ | Rejected on 2026-11-25 (previously recommended) |
+| D | Developer edits `location-data.ts` | One source of truth; reviewed; no new code | Developer, pull request and release per court; cannot set email, contact or real provenance IDs | 0 UI | ✓ | ✓ | ✓ | ~ | ✓ | Rejected; file frozen (Q1) |
+| E | Paste CSV into a textarea | About half a day | Keeps every CSV defect; harder and less accessible than upload | 0.5 | ✗ | ~ | ✗ | ✗ | ✗ | Rejected |
+| F | Upstream sync | Removes manual work | Another team's contract that doesn't exist; reconciliation policy without soft delete; no Welsh names upstream | Not estimable | ? | ✗ | ? | ? | ? | Separate discovery spike (S3) |
 
-\* With Decision 2. Without a `locationData` freeze, any writer outside `locationData` is exposed to c3 and c4 (§4.5).
+\* With Decision 2. Without a `locationData` freeze, any court outside `locationData`, whether it came from the CSV or a form, is exposed to c3 and c4 (§4.5).
+
+† The admin chooses the ID in both routes (Decision 1). The add form rejects an ID already in use. The CSV accepts it and overwrites that court. It scores ~ because ticket 4 shows each overwrite on the summary page before anything is written; without ticket 4 it would be ✗.
+
+‡ Uploading only the rows being changed avoids c5; re-uploading a stale full download still reverts other admins' edits (§4.3).
 
 ---
 
 ## 3. The options in detail
 
 ### 3.1 A: keep the CSV round-trip
-It works and has E2E coverage (`e2e-tests/utils/location-csv.ts`), and it is right for bulk change. As the way to add one court it fails every constraint:
-- The admin picks the primary key unaided (c1), possibly one `locationData` will claim later (c3, c4) or one inside an E2E band.
+It works, has E2E coverage (`e2e-tests/utils/location-csv.ts`), and is the only practical way to add more than 100 courts at once (2026-11-25). Its defects:
+- `upsertLocations()` upserts by `LOCATION_ID` (`upload-repository.ts:53-70`), and the duplicate-name checks skip the row's own ID (`validation.ts:186`, `:206`). So a row that reuses an existing ID is not an error: it overwrites that court, including its names, contact details, regions, sub-jurisdictions and references. Nothing tells the admin which rows are new.
 - A full-download workflow rewrites every court in the file (c5), so two admins working from different downloads revert each other.
 - All 21 errors link to `#file`.
 - A provenance clash with the database isn't validated and becomes a 500 (`reference-data-upload-summary/index.ts:125`).
 - The audit entry records `File: …, Records: n`, not which court changed (`:132-136`).
 
-**Verdict:** rejected for adding a court; kept for bulk updates (Decision 3).
+**Verdict:** kept for adding and updating courts in bulk. Ticket 4 fixes the silent overwrite, the 500 and two smaller defects (§4.3).
 
-### 3.2 B: single "Add a court" page
-All fields on one page, on top of C's service, sequence and audit action. It costs 2–3 d over ticket 1, but:
-- it breaks one-thing-per-page with two large checkbox fieldsets and two closed vocabularies;
-- with no check answers, the admin first sees the whole court after it has been written to two unique columns, and fixing a mistake needs an amend journey that doesn't exist (Q8);
-- error recovery on a nine-field page is harder for screen-reader and keyboard users.
+### 3.2 B: single-page forms (recommended for one court)
+Two forms, each on one page, on top of ticket 1's service:
+- **Add a court or tribunal:** location ID, English and Welsh names, email, contact number, regions, sub-jurisdictions and an optional provenance reference, then a success page.
+- **Update a court or tribunal:** find the court, then the same fields pre-filled, with the location ID shown but not editable, then a success page.
 
-**Verdict:** fallback only. Q4 says courts are added one at a time, so it is not needed.
+Costs and trade-offs:
+- About 2–3 d for add and 2.5–3.5 d for update, plus ticket 1.
+- It breaks one-thing-per-page: two checkbox fieldsets and an optional reference group on one page. `add-region` and `location-jurisdiction-manage` already do this in the same portal, so it is consistent with what admins use today.
+- There is no check-answers page. Because the add form only creates, a mistake is fixed with the update form rather than by overwriting another court.
+- Errors are shown in an error summary and next to each field, and the form keeps the admin's answers.
 
-### 3.3 C: one question per page (recommended)
-The pages are `add-court-name`, `add-court-contact-details`, `add-court-regions`, `add-court-sub-jurisdictions`, `add-court-provenance-reference` (optional, Q7), `add-court-add-another-reference` (Q6), `add-court-check-answers` and `add-court-success`. The spec (§4.3, §5, §6) has seven; the answer to Q6 adds the eighth, and Q7 makes the reference step optional. A court is public as soon as it is confirmed (no draft state, §6.1 Q5).
-- Each page validates its own fields, with errors linked to the field.
-- Check answers re-validates uniqueness and does one create-only transaction.
-- It is bilingual from the start, and each piece has a precedent in the same directory (§1.2).
+**Verdict:** recommended for adding or updating one court (2026-11-25).
 
-It costs more than B: eight pages, a session namespace and deep-link guards.
+### 3.3 C: one question per page
+Eight pages for one court (name, contact details, regions, sub-jurisdictions, reference, "add another", check answers, success). It is the GOV.UK default, but with bulk work going through the CSV, the forms only need to be quick for one court. It also relied on a `location_id` sequence, which cannot sit next to admin-chosen CSV IDs (§4.1).
 
-**Verdict:** recommended (§4).
+**Verdict:** rejected on 2026-11-25. It was the recommendation before then.
 
 ### 3.4 D: developer edits `location-data.ts`
 This is how the 27 seeded courts got there: one reviewed source of truth that reaches every environment. But every new court needs a developer, a pull request and a release. It can only set the names, regions, sub-jurisdictions, caution messages and one synthetic SNL `id + 100` reference. It cannot set email, contact number or real provenance IDs (`generate-seed-sql.ts:93-112`).
 
-**Verdict:** rejected as the primary route. Under Q1, `location-data.ts` is frozen at the 27 seeded courts.
+**Verdict:** rejected. Under Q1, `location-data.ts` is frozen at the 27 seeded courts.
 
 ### 3.5 E: paste CSV into a textarea
-It reuses `parseCsv()` and `validateLocationData()` and takes half a day. It keeps the invented PK, the whole-file rewrite, the `#file` anchors and the 500 on a provenance clash. Typing CSV by hand is harder and less accessible than uploading a file.
+It reuses `parseCsv()` and `validateLocationData()` and takes half a day. It keeps every CSV defect, and typing CSV by hand is harder and less accessible than uploading a file.
 
 **Verdict:** rejected.
 
 ### 3.6 F: upstream sync
-There is no upstream contract, and the owning team sits outside CaTH. It needs a reconciliation policy even though locations have no soft delete. Unique Welsh names (c2) are unlikely upstream. Any sync still needs a per-court create path and an ID strategy, which is what C builds.
+There is no upstream contract, and the owning team sits outside CaTH. It needs a reconciliation policy even though locations have no soft delete. Unique Welsh names (c2) are unlikely upstream. Any sync would reuse ticket 1's create and update service.
 
 **Verdict:** separate discovery spike (S3).
 
 ---
 
-## 4. The recommendation: Option C and three supporting decisions
+## 4. The recommendation: CSV for bulk work, single-page forms for one court
 
-### 4.1 Decision 1: allocate `location_id` from a sequence starting one above the highest legacy ID
+### 4.1 Decision 1: the admin chooses `location_id` in every route; no sequence
+
+The CSV keeps admin-chosen IDs (2026-11-25), so the forms do the same. The developer chose this over the form working out the next ID.
 
 | Strategy | Analysis | Verdict |
 |---|---|---|
-| `MAX + 1` (existing precedent) | Returns **28** on a fresh local DB, the next `locationData` ID, so the next deploy renames the UI court (c3). Returns **100000** on STG-like data, next to random test-support IDs. Races without a lock; `LOCK TABLE` serialises writes but gives the same IDs | Rejected for location. The precedent only works for regions and jurisdictions because they have no test bands, and it already carries the seed hazard there (Q9) |
-| `@default(autoincrement())` from 1 | Hands out `locationData` IDs; the first UI court is renamed on the next deploy | Rejected |
-| Sequence START 100000 | Disjoint from every E2E band, but leaves a gap of about 99,600 unused IDs above legacy CaTH's highest court, for no benefit in production (Q3) | Rejected after Q3 |
-| **Sequence START highest legacy production P&I ID + 1** | Never hands out an ID that a legacy court holds. `nextval` is atomic. Explicit-ID writers bypass the default and never advance it | **Chosen** (Q3), with a regression test |
+| Sequence (the earlier Decision 1) | Explicit-ID writers never advance a sequence, so a CSV-chosen ID breaks the next form-created court on `location_pkey` when the sequence reaches it (reproduced, §4.5 scenario 2 step 7). Keeping it would need the CSV to stop creating courts, which is the opposite of what is wanted | **Dropped** |
+| Form works out `MAX + 1` | Works with the CSV convention, but on STG returns about 100000 because the E2E ranges fill 80000–99999 (§1.5) | Not chosen |
+| **Admin enters the ID on the add form** | Same rule as the CSV. The form only creates, so an ID already in use is rejected rather than overwritten | **Chosen** |
 
-**Why + 1, and why no margin.** A Postgres sequence's start value is the first ID it hands out, so starting *at* the highest legacy ID would give the first UI court the same ID as that legacy court. Old CaTH may still add courts until cutover. Rather than guess a margin to absorb them, every load of legacy courts ends with the same `setval` as the migration (below), so the sequence always restarts above whatever was loaded. This holds as long as legacy courts are loaded before any court is created through the UI in that environment. There is no production deployment yet (CLAUDE.md, item 7), so in production the order is: load legacy courts, then open the journey.
+**Rules for the ID field on the add form:**
+- Required; a whole number from 1 to 2147483647 (the column is a Postgres `integer`, `location.prisma:70`).
+- Not already used by a court. Checked on submit and enforced again by the primary key: a P2002 on `location_pkey` inside the create transaction becomes a field error on `#locationId`, not a 500.
+- The hint shows the highest ID in use (`MAX(location_id)`), so the admin can follow the "+1" convention without downloading the CSV. On STG the E2E data puts this in the 9xxxx range, so it isn't a useful hint there (Q13).
 
-**The start value.** Legacy staging's highest P&I ID is 389 (Appendix A), which would give a start of **390**. Old CaTH admins chose IDs per environment, so ticket 1 takes the value from the legacy **production** export (S4) and records it in the migration.
+**No schema change.** `locationId` stays `Int @id` with no default. There is no migration, no interim CSV guard and no change to the CSV E2E tests.
 
-**Disjointness proof.** The sequence's live value is `GREATEST(start, MAX(location_id) + 1)` in every environment, so it only hands out IDs above every row that existed when the migration (or a legacy load) ran.
+**Where an admin-chosen ID can still go wrong:**
+- **CSV, existing ID:** the row overwrites that court. Ticket 4 shows this on the summary page before anything is written (§4.3).
+- **STG, IDs 9001–9010:** E2E global setup upserts its fixture courts by ID (`e2e-tests/utils/seed-location-data.ts` → `libs/test-support/src/routes/test-support/seed-locations.ts:32-41`), so a real court given one of those IDs is overwritten on the next E2E run. The 80000–99999 ranges only use unused IDs and are safe. Production has none of these. Accepted (Q13): real court IDs will not reach 9001.
+- **Legacy courts loaded later:** if admins add courts in an environment before legacy courts are loaded with their own IDs, the IDs can clash. Load legacy courts before the forms are used in production, and pick new IDs above the highest legacy ID.
 
-| Writer | IDs | Below the start? |
-|---|---|---|
-| `generateLocationsSql()` / `seedLocationData()` | 1–27 | Yes (frozen, §4.2) |
-| Legacy courts | 1 to the highest legacy ID | Yes, by definition of the start |
-| `generateLocationReferencesSql()` | provenance "101"–"127" (a different column) | Not applicable |
-| E2E fixtures | 9001–9010 | No, see below |
-| CSV E2E | 80000–89999 | No, see below |
-| test-support POST | `randomInt(90000, 100000)` (upper bound exclusive) | No, see below |
+### 4.2 Decision 2: protect courts that are not in `location-data.ts` from the deploy seed
 
-The `+100` values live in `location_reference.provenance_location_id`, not `location_id`, so they matter to Decision 2 rather than here.
+This applies to every court the seed doesn't own, whether it came from the CSV, the add form or a legacy load.
 
-**The E2E bands sit above the start.** They only exist where E2E runs: STG, per-PR preview databases and local databases. On STG they are already in the table when the migration runs, so `MAX + 1` puts the live value at about 100000 and the sequence starts there, as it would have under the old proposal. A preview database is new for each PR, so the migration runs before any E2E data exists and the sequence starts at the legacy value, below the bands. In production there are no test bands, so the sequence starts at the legacy value. Locally, a freshly seeded database starts the sequence at the legacy start, below the bands. It would only reach 9001 after about 8,600 UI-created courts, so in practice the bands cannot collide. Ticket 1's regression test asserts that `max(locationData id)` is below the start, and that the start is above the highest legacy production ID.
-
-**The CSV route** accepts any integer. An admin-chosen ID above the sequence's live value makes the next `nextval` fail on `location_pkey` when the sequence reaches it (reproduced). One retry only gets past a single occupied ID. So ticket 1 adds an interim guard: the CSV route rejects any `LOCATION_ID` **at or above the sequence's live value** (read with `SELECT last_value, is_called FROM location_location_id_seq`; the next ID is `last_value` if `is_called` is false, otherwise `last_value + 1`, and Prisma returns `last_value` as a `BigInt`) **that does not already exist in `location`**, from the same release that adds the sequence. The guard uses the live value, not the configured start: IDs below the live value are never handed out again, so they cannot collide. On STG the live value is about 100000, so the CSV E2E tests' 80000–89999 IDs would pass, but on a per-PR preview database it is about 390, so the guard would reject them on every PR. Ticket 1 therefore changes `e2e-tests/utils/location-csv.ts` to create its courts through test-support first and use the CSV only to update them, in the same PR as the guard. Existing IDs must still be accepted: the download exports every location (`download-service.ts:6-8`, `findMany` with no filter), and until S1 ships the CSV route is the only way to amend a UI-created court. The check is one `findMany({ where: { locationId: { in: idsAtOrAboveLiveValue } } })`, the same lookup S2 needs. Decision 3 (S2) then makes the CSV route fully update-only. Confirm still maps a `location_pkey` P2002 to one retry, then an error, as a last line of defence.
-
-**Migration for ticket 1.** Prisma 7.8 generated the first three lines from the modified schema on the scratch database. The last statement is added by hand. It starts the sequence at the legacy start, or one above the highest existing ID if an environment already holds a higher one (STG), so no environment needs measuring first:
-
-```sql
--- AlterTable
-CREATE SEQUENCE location_location_id_seq;
-ALTER TABLE "location" ALTER COLUMN "location_id" SET DEFAULT nextval('location_location_id_seq');
-ALTER SEQUENCE location_location_id_seq OWNED BY "location"."location_id";
-SELECT setval('location_location_id_seq', GREATEST(<legacy start>, (SELECT COALESCE(MAX(location_id), 0) + 1 FROM location)), false);
-```
-
-Any later load of legacy courts ends with the same `setval`, with the sequence's current next value added to the `GREATEST`. Courts are hard-deleted, so `MAX + 1` alone could move the sequence backwards and re-issue a deleted court's ID. The spike ran the migration with a bare `RESTART WITH 100000` as its last line. After it was applied, `prisma migrate diff --from-config-datasource --to-schema <modified schema>` was empty, so there was no drift. A `setval` changes only the sequence's value, not its definition, so it should not add drift either, but ticket 1 must re-run `migrate diff` to confirm. The start value does not change the experiments in §4.5: they show how a sequence behaves next to explicit-ID writers, which is the same at 390 or 100000. Do not `setval` from the deploy seed.
-
-### 4.2 Decision 2: protect UI-created courts from the deploy seed
-
-1. **Freeze `locationData` (Q1, Q9).** Keep the 27 courts and the current regions, jurisdictions and sub-jurisdictions, and add no more. Update CLAUDE.md item 7, which today tells developers to add locations to `location-data.ts`, to say that courts and the reference data under them are now added through the admin pages and are environment-local. This is the only measure that removes c3.
-2. **Reject an existing `(SNL, id)` pair at step 5 and again at confirm.** The seeded "101"–"127" references exist in every environment, so an ordinary uniqueness lookup covers them.
+1. **Freeze `locationData` (Q1, Q9).** Keep the 27 courts and the current regions, jurisdictions and sub-jurisdictions, and add no more. Update CLAUDE.md item 7, which today tells developers to add locations to `location-data.ts`, to say that courts and the reference data under them are now added through the admin pages or the reference data CSV, and are environment-local. This is the only measure that removes c3.
+2. **Reject an existing `(provenance, provenance location ID)` pair** on the add and update forms, on submit and again in the transaction. The seeded "101"–"127" references exist in every environment, so an ordinary uniqueness lookup covers them.
 3. **Guards that can actually fail.** A test asserting that the realign list comes only from `locationData` would always pass, because `generateRealignSql()` and `generateLocationReferencesSql()` only ever read `locationData` (`generate-seed-sql.ts:46-51`, `:99-112`). The collision is between a new `locationData` entry and a row in some environment's database, and a unit test cannot see that row. So the guards are:
-   - (a) **Freeze test (required, Q1 and Q9).** A test in `apps/postgres/prisma/generate-seed-sql.test.ts` asserting the exact set of court IDs (1–27 today) and the exact sets of region, jurisdiction and sub-jurisdiction IDs. Its failure message tells the developer to add the entry through the admin pages instead. Assert the set as it stands, not a hard-coded 1–27, so the test is updated in the same PR if S4 renumbers the seeded courts. Keep the band assertion as well: every `location_id` in the generated SQL is below the sequence start.
-   - (b) **Fail loudly (required, Q1).** The location realign only renames rows whose `location_id` is one of `locationData`'s own IDs. Any other row with a colliding name (a UI or legacy court) is left alone, so the insert fails the deploy on `location_name_key` instead of quietly parking that court as `__realign_<id>`. This also stops the seed parking the old seeded rows when S4 renumbers them, so S4 moves its own rows (§7.2).
+   - (a) **Freeze test (required, Q1 and Q9).** A test in `apps/postgres/prisma/generate-seed-sql.test.ts` asserting the exact set of court IDs (1–27 today) and the exact sets of region, jurisdiction and sub-jurisdiction IDs. Its failure message tells the developer to add the entry through the admin pages instead. Assert the set as it stands, not a hard-coded 1–27, so the test is updated in the same PR if S4 renumbers the seeded courts.
+   - (b) **Fail loudly (required, Q1).** The location realign only renames rows whose `location_id` is one of `locationData`'s own IDs. Any other row with a colliding name is left alone, so the insert fails the deploy on `location_name_key` instead of quietly parking that court as `__realign_<id>`. This also stops the seed parking the old seeded rows when S4 renumbers them, so S4 moves its own rows (§7.2).
 
    The existing test at `:84-100` checks the shape of the realign but not where its values come from.
-4. **Stop the seed re-pointing references, and fail the deploy on a clash (Q2).** The seed re-inserts its own `seedref_<id>` rows on every deploy (`generate-seed-sql.ts:105`), so a plain `INSERT` with no `ON CONFLICT` would fail every deploy, not just a clash. Instead, before the reference insert, the generated SQL runs a `DO` block that raises an exception if any of the seed's `(provenance, provenance_location_id)` pairs already belongs to a different `location_id`. The insert then uses the guarded clause below, which is a no-op for the seed's own rows. The seed runs as one transaction (`BEGIN` at `generate-seed-sql.ts:20`, `COMMIT` at `:63`, applied by `start.sh:105`), so the exception rolls the whole seed back and the postgres deploy pod fails. That is the intended effect: the deploy stays red until a person moves or removes the reference through amend a court (S1) or the CSV (S2), and no data is changed silently. S1 and S2 will not exist when ticket 1 ships, so until then the usual fix is to revert the `location-data.ts` change that caused the clash. Both clauses the spike tested are below; on their own, each skips the clash silently, which is why the `DO` block is needed:
+4. **Stop the seed re-pointing references, and fail the deploy on a clash (Q2).** The seed re-inserts its own `seedref_<id>` rows on every deploy (`generate-seed-sql.ts:105`), so a plain `INSERT` with no `ON CONFLICT` would fail every deploy, not just a clash. Instead, before the reference insert, the generated SQL runs a `DO` block that raises an exception if any of the seed's `(provenance, provenance_location_id)` pairs already belongs to a different `location_id`. The insert then uses the guarded clause below, which is a no-op for the seed's own rows. The seed runs as one transaction (`BEGIN` at `generate-seed-sql.ts:20`, `COMMIT` at `:63`, applied by `start.sh:105`), so the exception rolls the whole seed back and the postgres deploy pod fails. That is the intended effect: the deploy stays red until a person moves or removes the reference through the update form (ticket 3) or the CSV, and no data is changed silently. Until ticket 3 ships, the usual fix is to revert the `location-data.ts` change that caused the clash. Both clauses the spike tested are below; on their own, each skips the clash silently, which is why the `DO` block is needed:
 
-| Reference clause | UI court's (SNL,"128") | Seeded court 28's SNL ref | UI court's name |
+| Reference clause | Non-seed court's (SNL,"128") | Seeded court 28's SNL ref | Non-seed court's name |
 |---|---|---|---|
-| Current `DO UPDATE SET location_id = EXCLUDED.location_id` | **Moved to 28** | Takes over the UI row | Parked |
+| Current `DO UPDATE SET location_id = EXCLUDED.location_id` | **Moved to 28** | Takes over the other court's row | Parked |
 | Guarded `DO UPDATE … WHERE location_reference.location_id = EXCLUDED.location_id` | Stays on 100000 | **None, silently** | Parked |
 | `DO NOTHING` | Stays on 100000 | **None, silently** | Parked |
 
 Either clause stops the takeover, but neither stops the name parking or reports the clash. Guard (b) and the `DO` block make both hazards fail the deploy; the Q1 freeze stops them arising in the first place.
 
 Two side effects seen during the experiment:
-- After the takeover, the moved reference is a child of location 28, so deleting court 28 cascades and deletes the UI court's former reference (`location.prisma:91`).
-- Renaming one of the 27 seeded courts through any UI is reverted on every deploy (relevant to Q8).
+- After the takeover, the moved reference is a child of location 28, so deleting court 28 cascades and deletes the other court's former reference (`location.prisma:91`).
+- The seed sets `name` and `welsh_name` on every deploy (`ON CONFLICT (location_id) DO UPDATE SET name, welsh_name`, `generate-seed-sql.ts:93-97`), so renaming one of the 27 seeded courts through any route, CSV or form, is reverted on the next deploy. Their email and contact number are not touched. Accepted (Q14): the forms and the CSV do not stop it.
 
-### 4.3 Decision 3: phase the CSV route out of adding courts, then decide whether to remove it
-The aim is that no admin ever types a court ID again. The CSV route is reduced in steps, and removing it completely is decided at the end instead of now:
+### 4.3 Decision 3: keep the CSV for bulk add and update, and close its gaps
 
-1. **Ticket 1 and ticket 2 (the journey).** New courts come from the UI and the sequence. Ticket 1's interim guard stops the CSV creating IDs in the sequence range (§4.1).
-2. **S2: the CSV becomes update-only.** `validateLocationData()` rejects any `LOCATION_ID` that doesn't already exist, pointing the admin to "Add a court or tribunal". The CSV can no longer create courts.
-3. **S1: amend a court through the UI.** Until this ships, the CSV is the only way to change an existing court's names, contact details or references, so it cannot be removed before then.
-4. **Decide whether to remove the CSV upload completely.** Use the Q4 answer on bulk edits. If bulk edits are rare, remove `/reference-data-upload` and its download. If they are common, keep the update-only CSV for bulk edits.
+The CSV route keeps both creating and updating courts. Ticket 4 changes:
+1. **Show new and overwritten courts on the summary page.** For each row, show whether it adds a court or overwrites an existing one, with the existing court's current name for an overwrite, and the totals ("12 new courts, 3 existing courts will be overwritten"). This is the safety net for hand-chosen IDs: a mistyped ID that hits an existing court is visible before anything is written. The lookup is one `findMany({ where: { locationId: { in: ids } }, select: { locationId: true, name: true } })`.
+2. **Tell admins to upload only the rows they are adding or changing**, on the upload page. A stale full download re-uploaded reverts other admins' changes (c5).
+3. **Validate provenance references against the database**, so a clash is a row-numbered error rather than a 500 (`reference-data-upload-summary/index.ts:125`).
+4. **Fix two existing defects:** `reference-data-upload-summary/index.ts:71` logs the whole parsed file, including court emails and phone numbers; and `validation.ts:245` and `:276` put user-supplied region and sub-jurisdiction names into the error `html` without escaping them.
 
-Removing the route at step 1 would leave no way to amend a court or make bulk edits. The spec asks the report to say whether the CSV route is "retained alongside the new journey, deprecated, or restricted to update-only" (spec §3). This plan restricts it to update-only (step 2) and leaves deprecation to step 4.
+The CSV route stays English-only from the summary page onwards (§1.1). Making it bilingual is out of scope.
 
 ### 4.4 Why not the others, in one line each
-- **A:** the admin still invents the primary key, and a stale file silently reverts other courts.
-- **B:** a nine-field page with two checkbox fieldsets and no check answers before a write to unique columns; kept only as a fallback.
+- **A on its own:** there is still no way to add or fix one court without a file, which is what this issue asks for.
+- **B on its own:** a form cannot add more than 100 courts at once.
+- **C:** eight pages per court is more than one court needs once bulk work goes through the CSV, and its sequence clashes with admin-chosen CSV IDs.
 - **D:** every new court needs a developer, a pull request and a release, the burden this issue exists to remove.
 - **E:** removes the file but keeps every CSV defect, and is harder to use than uploading.
-- **F:** depends on an upstream contract and a Welsh-name source that don't exist; it is a separate spike and would need C anyway.
+- **F:** depends on an upstream contract and a Welsh-name source that don't exist; it is a separate spike.
 
 ### 4.5 Evidence: the experiments
+
+Scenario 1 is the evidence for Decision 2. Scenario 2 tested the sequence that was dropped on 2026-11-25; its step 7 is why it was dropped (§4.1). In both scenarios, the court at 100000 stands for any court the seed doesn't own, whichever route created it.
 
 **Method.**
 - Two throwaway databases in the local docker `cath-postgres` (localhost:5433), migrated with `prisma migrate deploy` via `apps/postgres/prisma.config.ts`.
@@ -336,38 +331,41 @@ Removing the route at step 1 would leave no way to amend a court or make bulk ed
 
 ## 5. Validation parity: the 21 CSV rules
 
-`validateLocationData()` (`libs/system-admin-pages/src/reference-data-upload/validation/validation.ts`) pushes 21 errors. Every one is an English template literal with `href: "#file"`. The parser's four extra checks (`csv-parser.ts:45-80`: parse error, missing headers, `LOCATION_ID` required, `LOCATION_ID` integer) are not among the 21, and all four disappear in C.
+`validateLocationData()` (`libs/system-admin-pages/src/reference-data-upload/validation/validation.ts`) pushes 21 errors. Every one is an English template literal with `href: "#file"`. The parser has four extra checks (`csv-parser.ts:45-80`: parse error, missing headers, `LOCATION_ID` required, `LOCATION_ID` integer). The add form keeps the two `LOCATION_ID` checks as `#locationId` errors and adds "not already used" (§4.1). The update form doesn't edit the ID.
 
-| # | CSV rule | Line | Group | Option C |
+The column below applies to both forms unless it says otherwise. The CSV keeps all 21 rules unchanged, plus ticket 4's database check on provenance references.
+
+| # | CSV rule | Line | Group | Add and update forms |
 |---|---|---|---|---|
-| 1 | `LOCATION_NAME` required | 17 | Required | Step 1, `#name` |
-| 2 | `LOCATION_NAME` HTML tags | 22 | HTML | Step 1, same regex, `#name` |
-| 3 | `WELSH_LOCATION_NAME` required | 29 | Required | Step 1, `#welshName` |
-| 4 | `WELSH_LOCATION_NAME` HTML tags | 34 | HTML | Step 1, `#welshName` |
-| 5 | `EMAIL` HTML tags | 41 | HTML | Step 2, `#email` (+ format check, spec §9.1) |
-| 6 | `CONTACT_NO` HTML tags | 48 | HTML | Step 2, `#contactNo` (+ character set, spec §9.1) |
-| 7 | `SUB_JURISDICTION_NAME` required | 55 | Required | Step 4, at least one checkbox, fieldset error |
-| 8 | `REGION_NAME` required | 62 | Required | Step 3, at least one checkbox, fieldset error |
-| 9 | Provenance triple required | 69 | Required | Step 5 is **optional** (Q7): the admin can skip it, but a reference that is started needs all three fields. Check answers and the success page say that upstream lists cannot be matched until a reference is added |
-| 10 | `PROVENANCE` required | 77 | Required | Step 5, `#provenance` |
-| 11 | `PROVENANCE` not in allowed set | 82 | Closed vocabulary | Impossible via the UI; still checked on the server |
-| 12 | `PROVENANCE_LOCATION_ID` required | 89 | Required | Step 5, `#provenanceLocationId` |
-| 13 | `PROVENANCE_LOCATION_TYPE` required | 96 | Required | Step 5, `#provenanceLocationType` |
-| 14 | `PROVENANCE_LOCATION_TYPE` not in allowed set | 101 | Closed vocabulary | Impossible via the UI; still checked on the server |
-| 15 | Duplicate (provenance, ID) within the file | 136 | In-file duplicate | Within-submission check across the references added on the "Add another reference?" loop (Q6), `#provenanceLocationId` |
+| 1 | `LOCATION_NAME` required | 17 | Required | `#name` |
+| 2 | `LOCATION_NAME` HTML tags | 22 | HTML | Same regex, `#name` |
+| 3 | `WELSH_LOCATION_NAME` required | 29 | Required | `#welshName` |
+| 4 | `WELSH_LOCATION_NAME` HTML tags | 34 | HTML | `#welshName` |
+| 5 | `EMAIL` HTML tags | 41 | HTML | `#email` (+ format check, spec §9.1) |
+| 6 | `CONTACT_NO` HTML tags | 48 | HTML | `#contactNo` (+ character set, spec §9.1) |
+| 7 | `SUB_JURISDICTION_NAME` required | 55 | Required | At least one checkbox, fieldset error |
+| 8 | `REGION_NAME` required | 62 | Required | At least one checkbox, fieldset error |
+| 9 | Provenance triple required | 69 | Required | The reference is **optional** (Q7), but one that is started needs all three fields. The add form's success page says that upstream lists cannot be matched until a reference is added |
+| 10 | `PROVENANCE` required | 77 | Required | `#provenance`, when a reference is started |
+| 11 | `PROVENANCE` not in allowed set | 82 | Closed vocabulary | Radios make it impossible; still checked on the server |
+| 12 | `PROVENANCE_LOCATION_ID` required | 89 | Required | `#provenanceLocationId`, when a reference is started |
+| 13 | `PROVENANCE_LOCATION_TYPE` required | 96 | Required | `#provenanceLocationType`, when a reference is started |
+| 14 | `PROVENANCE_LOCATION_TYPE` not in allowed set | 101 | Closed vocabulary | Radios make it impossible; still checked on the server |
+| 15 | Duplicate (provenance, ID) within the file | 136 | In-file duplicate | Update form: a new reference is checked against the court's existing references |
 | 16 | Name used by several IDs within the file | 151 | In-file duplicate | **Dropped deliberately** (one court per submission) |
 | 17 | Welsh name used by several IDs within the file | 163 | In-file duplicate | **Dropped deliberately** |
-| 18 | Name already in the DB at another ID (case-insensitive) | 192 | DB duplicate | Step 1 check, re-run at confirm, P2002 on `name` → `#name` |
-| 19 | Welsh name already in the DB at another ID | 212 | DB duplicate | Step 1 check, re-run at confirm, P2002 on `welsh_name` → `#welshName` |
-| 20 | Sub-jurisdiction not found | 244 | Not found | Impossible via the UI (checkboxes come from the table); server rejects unknown IDs |
-| 21 | Region not found | 275 | Not found | Impossible via the UI; server rejects unknown IDs |
+| 18 | Name already in the DB at another ID (case-insensitive) | 192 | DB duplicate | Checked on submit; P2002 on `name` in the transaction → `#name` |
+| 19 | Welsh name already in the DB at another ID | 212 | DB duplicate | Checked on submit; P2002 on `welsh_name` → `#welshName` |
+| 20 | Sub-jurisdiction not found | 244 | Not found | Checkboxes come from the table; the server rejects unknown IDs |
+| 21 | Region not found | 275 | Not found | Same |
 
 **Reconciliation:** required 8 (rules 1, 3, 7, 8, 9, 10, 12, 13) + HTML 4 (2, 4, 5, 6) + closed vocabulary 2 (11, 14) + in-file duplicates 3 (15, 16, 17) + DB duplicates 2 (18, 19) + not found 2 (20, 21) = **21**. 19 have an equivalent (rule 9 now applies only to a reference that is started, Q7); 2 are dropped on purpose (16, 17); none is dropped silently.
 
 Spec §9.5 has 19 rows because it folds rules 9, 10, 12 and 13 into one row and adds the parser's `LOCATION_ID` rule. It describes the same rules.
 
-What C adds:
-- A database check on (provenance, provenanceLocationId). In the CSV route a clash is a 500 (`reference-data-upload-summary/index.ts:125`).
+What the forms add:
+- A database check on (provenance, provenanceLocationId). In the CSV route a clash is a 500 until ticket 4.
+- "Location ID already used" on the add form.
 - Bilingual, field-anchored errors.
 
 Caveat: the case-insensitive checks are in the application, while the database unique index is case-sensitive. Two concurrent case-variant names could both pass. This is the same gap the existing journeys have, and the risk is low.
@@ -378,23 +376,41 @@ Caveat: the case-insensitive checks are in the application, while the database u
 
 ### 6.1 Questions and answers
 
-Q1–Q12 were posted on #1078 on 2026-11-17. The developer's answers are below and are folded into §4 and §7; the questions as posted follow for the record.
+Q1–Q12 were posted on #1078 on 2026-11-17. The developer's answers are below and are folded into §4 and §7; the questions as posted follow for the record. The change of direction on 2026-11-25 overrides some of them, as listed first.
+
+**Change of direction (developer, 2026-11-25):**
+- **The CSV upload stays for adding courts, not just editing them.** Sometimes more than 100 courts are added at once, which can't be done one at a time. Admins give each row a `LOCATION_ID`, making sure it is unique and increments by 1. This replaces the Q10 answer (update-only CSV) and answers the open bulk-edit half of Q4.
+- **A single-page "Add a court or tribunal" form** for when only one court is needed, so the admin doesn't have to upload a CSV. **The admin enters the location ID** on the form. This replaces Option C and the Q3 answer (a sequence starting above the highest legacy ID).
+- **A single-page "Update a court or tribunal" form** to change one court's details. This replaces S1 and makes it a build ticket (Q8).
+- **Still apply:** Q1 and Q9 (freeze `location-data.ts`), Q2 (the seed fails the deploy on a reference clash), Q5 (no draft state), Q7 (the admin supplies the Welsh name; the reference is optional), Q11 (radios for provenance and type; keep the hub tiles; content design checks the hints), Q12 (System Admin only). Q6 (several references) is met by adding one on the add form and more on the update form.
+
+**New questions (2026-11-25), both answered:**
+
+> **Q13 (tech lead).** Should the add form reject IDs from 9000 upwards? On STG, E2E global setup upserts its fixture courts at 9001–9010 by ID (§4.1), so a real court given one of those IDs would be overwritten on the next E2E run.
+>
+> **Answer (developer, 2026-11-25): no rule and no hint text.** Real court IDs will not reach 9001.
+
+> **Q14 (PO).** Should the update form allow renaming the 27 seeded courts? The deploy seed sets their English and Welsh names on every deploy (§4.2), so a rename lasts only until the next release. The CSV has the same problem today.
+>
+> **Answer (developer, 2026-11-25): do not make them read-only.** Every field stays editable for every court. A rename of a seeded court is reverted on the next deploy, and that is accepted.
+
+**Answers to Q1–Q12:**
 
 **Answers (developer, 2026-11-17 and 2026-11-18):**
 - **Q1:** freeze `location-data.ts` at the 27 courts: **yes**. Fail-loudly guard (b): **yes**. Renumber the seeded courts to their legacy IDs first (S4): **yes for now**, may change.
-- **Q2:** the deploy seed must **never overwrite an existing provenance reference**. A clash **fails the deploy**, and only a person changes or removes a reference, through amend a court (S1) or the update-only CSV (S2). Ticket 1 changes `generate-seed-sql.ts:111` as described in §4.2 item 4.
-- **Q3:** start the sequence at the **highest legacy CaTH production P&I ID + 1**, not 100000. The value comes from the legacy production export (S4); if production matches staging (highest 389), the start is 390. Every legacy load ends with the same `setval` as the migration, with the sequence's current next value added to the `GREATEST` (§4.1), so no margin is needed (§4.1). The E2E bands now sit above the start on STG and locally; §4.1 explains why that is safe, and why ticket 1's CSV guard uses the sequence's live value.
-- **Q4:** courts are added **one at a time**. The one-question-per-page journey stands. How often existing courts are edited in bulk is **still open**, and Decision 3 step 4 (whether to remove the CSV upload completely) depends on it.
+- **Q2:** the deploy seed must **never overwrite an existing provenance reference**. A clash **fails the deploy**, and only a person changes or removes a reference, through the update form (ticket 3) or the CSV. Ticket 1 changes `generate-seed-sql.ts:111` as described in §4.2 item 4.
+- **Q3 (superseded 2026-11-25: no sequence; the admin enters the ID, §4.1):** start the sequence at the **highest legacy CaTH production P&I ID + 1**, not 100000. The value comes from the legacy production export (S4); if production matches staging (highest 389), the start is 390. Every legacy load ends with the same `setval` as the migration, with the sequence's current next value added to the `GREATEST` (§4.1), so no margin is needed (§4.1). The E2E bands now sit above the start on STG and locally; §4.1 explains why that is safe, and why ticket 1's CSV guard uses the sequence's live value.
+- **Q4 (superseded 2026-11-25: the CSV is also used to add 100+ courts at once; single-page forms for one court):** courts are added **one at a time**. The one-question-per-page journey stands. How often existing courts are edited in bulk is **still open**, and Decision 3 step 4 (whether to remove the CSV upload completely) depends on it.
 - **Q5:** first answered as "starts as a draft". **Changed on 2026-11-18: no draft state.** A draft state would have to filter shared location readers that list pages, notifications and admin uploads also use, and needs a persistent publish route, for about 2 days. A new court is public as soon as it is confirmed.
-- **Q6:** **several** provenance references per new court. After the first, an "Add another reference?" step lets the admin add more (for example SNL and Common Platform), as the CSV route allows. This adds a page and the within-submission duplicate check (§5, rule 15) to ticket 2, about 1 day.
-- **Q7:** the **System Admin** supplies the Welsh name. Provenance references are **usually not known** when a court is created, so the reference step is **optional**: the admin can skip it and add references later through amend a court (S1). Until a court has a reference, lists from upstream systems cannot be matched to it, so check answers and the success page say so.
-- **Q8:** amend a court is **in scope** (S1).
+- **Q6 ("add another" page superseded 2026-11-25: one reference on the add form, more on the update form):** **several** provenance references per new court. After the first, an "Add another reference?" step lets the admin add more (for example SNL and Common Platform), as the CSV route allows. This adds a page and the within-submission duplicate check (§5, rule 15) to ticket 2, about 1 day.
+- **Q7:** the **System Admin** supplies the Welsh name. Provenance references are **usually not known** when a court is created, so the reference step is **optional**: the admin can skip it and add references later through the update form (ticket 3). Until a court has a reference, lists from upstream systems cannot be matched to it, so the add form's success page says so.
+- **Q8:** amend a court is **in scope**: now the update form, ticket 3 (2026-11-25).
 - **Q9:** extend the Q1 freeze to **regions, jurisdictions and sub-jurisdictions** in `location-data.ts`: a CI test fails if one is added there, so new ones only come from the admin pages. This removes the seed clash (`generate-seed-sql.ts:80`, `ON CONFLICT (region_id) DO UPDATE SET name`) without new sequences, and goes in ticket 1. A separate ticket for sequences on these tables is not needed; the remaining concurrent-create race is accepted.
-- **Q10:** the CSV route becomes **update-only** (S2).
+- **Q10 (superseded 2026-11-25):** the CSV route becomes **update-only** (S2). The CSV now keeps creating courts (§4.3).
 - **Q11:** **radio buttons** (not a select) for provenance and type; **keep the tiles** on the `/reference-data` hub; the spec's hint texts **need checking by content design** before build.
 - **Q12:** **System Admin only**, matching legacy (`isPermittedSystemAdmin`) and this service (`requireRole([USER_ROLES.SYSTEM_ADMIN])`).
 
-Q1–Q12 are answered, except the bulk-edit half of Q4. The questions as posted:
+Q1–Q12 are answered; the 2026-11-25 decision above overrides Q3, Q4, Q8 and Q10 and the Option C parts of Q6. Q13 and Q14 are answered above. The questions as posted:
 
 **Tech lead (blocking the recommendation)**
 
@@ -430,127 +446,156 @@ Q1–Q12 are answered, except the bulk-edit half of Q4. The questions as posted:
 
 | Risk | Impact | Likelihood | Mitigation | Owner |
 |---|---|---|---|---|
-| A `locationData` name collides with a UI court | Court permanently parked as `__realign_<id>` (reproduced) | Low once frozen | Q1 freeze, enforced by the freeze test; guard (b) makes any collision fail the deploy instead (§4.2) | Tech lead |
-| A `locationData` `id + 100` equals a UI court's SNL ID | Reference silently moved; publications go to the wrong court (reproduced) | Low once frozen | Q1; Q2 `DO` block fails the deploy instead (§4.2); step 5 check | Tech lead |
+| A CSV row reuses an existing `LOCATION_ID` by mistake | That court is silently overwritten: names, contact details, mappings and references | Medium: files of 100+ rows with hand-chosen IDs | Ticket 4: the summary page shows each overwrite with the current court name before anything is written | Tech lead |
+| A stale full download is re-uploaded | Other admins' changes are reverted (c5) | Medium | Ticket 4: upload page tells admins to upload only the rows they are adding or changing | PO |
+| An admin gives a real court an ID in 9001–9010 on STG | Overwritten by E2E global setup | Very low: real IDs will not reach 9001 (Q13) | Accepted | Tech lead |
+| A `locationData` name collides with a court the seed doesn't own | Court permanently parked as `__realign_<id>` (reproduced) | Low once frozen | Q1 freeze, enforced by the freeze test; guard (b) makes any collision fail the deploy instead (§4.2) | Tech lead |
+| A `locationData` `id + 100` equals another court's SNL ID | Reference silently moved; publications go to the wrong court (reproduced) | Low once frozen | Q1; the Q2 `DO` block fails the deploy instead (§4.2); the forms' reference check | Tech lead |
 | A seed clash fails the deploy | The postgres deploy pod stays red until a person fixes the reference or name | Low | Intended (Q1, Q2): loud failure instead of silent data change. The error names the clashing row | Tech lead |
-| CSV E2E tests rejected by the interim guard on per-PR preview databases | Every PR's E2E fails | High if not handled | Ticket 1 moves `location-csv.ts` to create courts through test-support (§4.1) | Tech lead |
-| CSV mints an ID the sequence has not reached | Next UI create fails on `location_pkey` when the sequence reaches it (reproduced) | Low | Interim CSV guard in ticket 1 (rejects unused IDs at or above the sequence's live value; existing courts still update); S2 makes CSV update-only; confirm retries once, then errors | Tech lead / PO |
-| Legacy courts loaded after UI courts exist | A legacy ID equals a UI court's ID; the load fails on `location_pkey` | Low; no production deployment yet | Load legacy courts before the journey is opened in that environment; every load ends with the `setval` (§4.1) | Tech lead |
-| Legacy production export differs from staging | Wrong start value | Medium | Ticket 1 takes the start from the production export (S4), not staging | Tech lead |
+| A seeded court is renamed through the CSV or the update form | The rename is reverted on the next deploy | Medium | Accepted (Q14); the names stay editable | PO |
+| Legacy courts loaded after admins have added courts | A legacy ID equals an admin-chosen ID; the load fails or overwrites | Low; no production deployment yet | Load legacy courts before the forms are used in production; admins choose IDs above the highest legacy ID | Tech lead |
 | Two sources of truth diverge | Court on STG but not locally | Medium | Update CLAUDE.md item 7 (§4.2) | Tech lead |
-| Bulk volume higher than assumed | Feature unused | Low (Q4: one at a time) | B fallback | PO |
-| F later proves the strategic answer | C becomes interim | Low | C is a prerequisite for any sync | PO |
 | Seeded court IDs differ from legacy CaTH IDs | If legacy courts are later loaded with their IDs, the seed renames them and their lists show under the wrong court | Medium, only if legacy data is migrated | Renumber the seeded courts before go-live (S4; Appendix A, re-checked against legacy production) | Tech lead |
 | Concurrent case-variant names | Two courts differing only in case | Low | Accept, or add a `lower(name)` unique index in ticket 1 | Tech lead |
+| F later proves the strategic answer | The forms become a fallback | Low | Any sync reuses ticket 1's service | PO |
 
 ---
 
 ## 7. Proposed follow-on tickets
 
-These tickets are **described here only**. Apart from S3 (#1537), none is raised from the spike: whoever plans the build raises them from this section after sign-off, and attaches spec §4–13 by reference at that point.
+These tickets are **described here only**. Apart from S3 (#1537), none is raised from the spike: whoever plans the build raises them from this section after sign-off, and attaches spec §4–13 by reference at that point. Where the spec and this report differ (single-page forms, an admin-entered ID, no sequence, radios not selects, an optional reference, no draft state), this report wins.
 
-### 7.1 Build tickets for Option C
+### 7.1 Build tickets
 
 | # | Title | Size | Depends on |
 |---|---|---|---|
-| 1 | Court maintenance: location ID sequence, service and seed guards | 2.5 d | S4's legacy production export (the start value) |
-| 2 | Add a court or tribunal journey: eight pages, hub entry and E2E, including "add another" references (Q6) | 5.5–7 d | 1 |
-| | **Total** | **8–9.5 d** | |
+| 1 | Court maintenance: service and seed guards | 2 d | — |
+| 2 | Add a court or tribunal form | 2–3 d | 1 |
+| 3 | Update a court or tribunal form | 2.5–3.5 d | 1 |
+| 4 | Reference data CSV: show new and overwritten courts, and fix its defects | 1–1.5 d | — |
+| | **Total** | **7.5–10 d** | |
 
-"Spec §n" below means the `/spec` comment on #1078. Where the spec and this report differ (radios not selects, an optional reference step, "add another", no draft state), this report's answers to Q1–Q12 win.
+Tickets 2 and 3 can be built in parallel once ticket 1 has merged. Ticket 4 is independent.
 
-#### Ticket 1: Court maintenance: location ID sequence, service and seed guards
+#### Ticket 1: Court maintenance: service and seed guards
 
-**Summary.** Give `location.location_id` a sequence starting one above the highest legacy CaTH production court ID, add the `court-maintenance` service that creates one court in one transaction, and make the deploy seed fail rather than change UI or legacy data. Spike: #1078, report §4.
+**Summary.** Add the `court-maintenance` service that creates or updates one court in one transaction, and make the deploy seed fail rather than change a court it doesn't own. No schema change. Spike: #1078, report §4.
 
 **Scope**
-- `location.prisma`: `locationId Int @id @default(autoincrement()) @map("location_id")`.
-- Migration `apps/postgres/prisma/migrations/<ts>_add_location_id_sequence/migration.sql` via `yarn db:migrate:dev`, ending with `SELECT setval('location_location_id_seq', GREATEST(<legacy start>, (SELECT COALESCE(MAX(location_id), 0) + 1 FROM location)), false);`, where `<legacy start>` is the highest P&I ID in the legacy production export + 1 (§4.1, Q3). Re-run `migrate diff` and confirm it is still empty. No `setval` in the seed.
-- `libs/system-admin-pages/src/court-maintenance/service.ts`: `validateCourtNames()`, `validateProvenanceReference()`, `createCourt()`, returning field error keys (for example `{ field: "name", key: "nameDuplicate" }`).
-- `queries.ts`: case-insensitive lookups; one `prisma.$transaction` that creates `location` (no ID), `location_region`, `location_sub_jurisdiction` and zero or more `location_reference` rows. Create only, no `deleteMany`.
-- P2002 mapping by `meta.target`: name, welsh_name and (provenance, provenance_location_id) become field errors; `location_pkey` gets one retry, then an error.
-- `AuditLogAction.ADD_COURT = "Add court"` in `logger.ts`. Export the service from `libs/system-admin-pages/src/index.ts`.
-- Interim CSV guard: `validateLocationData()` (`libs/system-admin-pages/src/reference-data-upload/validation/validation.ts:7`) rejects any `LOCATION_ID` at or above the sequence's **live** value (`SELECT last_value, is_called FROM location_location_id_seq`) that does not already exist in `location`, with a message pointing to "Add a court or tribunal". Existing courts, including UI-created ones, must still update, so a full download can be re-uploaded (§4.1). S2 later replaces this with the full update-only rule.
-- `e2e-tests/utils/location-csv.ts`: create each test court through test-support's generated-ID path, which retries on a clash (`libs/test-support/src/routes/test-support/locations.ts:103-113`), not its explicit-`locationId` path, which is an upsert (`:55`) and would let parallel workers overwrite each other's courts. Create each court first, then use the CSV only to update it, so the CSV E2E suite passes the guard on per-PR preview databases, where the live value is about 390 (§4.1).
+- `libs/system-admin-pages/src/court-maintenance/service.ts`: `validateCourt()`, `createCourt()`, `updateCourt()`, returning field error keys (for example `{ field: "locationId", key: "locationIdInUse" }`).
+- `queries.ts`:
+  - case-insensitive name lookups that exclude the court's own ID;
+  - an ID-in-use lookup and `findHighestLocationId()` for the add form's hint;
+  - a create transaction: `location` with the admin's ID, `location_region`, `location_sub_jurisdiction`, and zero or one `location_reference`;
+  - an update transaction: update `location`; replace its regions and sub-jurisdictions by reusing `updateLocationJurisdictions()` (`jurisdiction-management/queries.ts:179`); remove the references the admin ticked and add at most one new one. It does not delete and re-create every reference, as `upsertLocations()` does.
+- P2002 mapping by `meta.target`: `location_pkey` → `locationId`; `name`, `welsh_name` and (provenance, provenance_location_id) → field errors.
+- `AuditLogAction.ADD_COURT = "Add court"` and `UPDATE_COURT = "Update court"` in `logger.ts`. Export the service from `libs/system-admin-pages/src/index.ts`.
 - Freeze test (§4.2 guard a): the exact sets of court, region, jurisdiction and sub-jurisdiction IDs in `locationData` (Q1, Q9), failing with a message that points to the admin pages.
-- `generate-seed-sql.test.ts`: every `location_id` in the generated SQL is below the sequence start, and the start is above the highest legacy production ID.
 - Fail-loudly realign (§4.2 guard b, Q1): the location realign only renames rows whose `location_id` is one of `locationData`'s own IDs.
 - Reference clash (§4.2 item 4, Q2): change `generate-seed-sql.ts:111` to the guarded `DO UPDATE … WHERE location_reference.location_id = EXCLUDED.location_id`, preceded by a `DO` block that raises an exception naming the clashing `(provenance, provenance_location_id)` if it belongs to a different location.
-- Update CLAUDE.md item 7: courts, regions, jurisdictions and sub-jurisdictions are now added through the admin pages; `location-data.ts` is frozen. Change only the location half: item 7 also covers `list-type-data.ts`, which stays the source of truth for list types.
-- Existing explicit-ID writers (seed, test-support, `upsertLocations()`) still compile and pass.
+- Update CLAUDE.md item 7: courts, regions, jurisdictions and sub-jurisdictions are now added through the admin pages or the reference data CSV; `location-data.ts` is frozen. Change only the location half: item 7 also covers `list-type-data.ts`, which stays the source of truth for list types.
 
 **Out of scope:** pages; renumbering the seeded courts (S4).
 
 **Scenarios**
-- *UI court survives a deploy (build scenario 6).* Given a UI-created court with mappings and references, when the seed runs twice, then nothing about it changes.
-- *Bands.* Every seeded ID is below the start; the start is above the highest legacy ID.
+- *A non-seed court survives a deploy.* Given a court added by CSV or form, with mappings and references, when the seed runs twice, nothing about it changes.
 - *Seed file frozen.* Adding a court, region, jurisdiction or sub-jurisdiction to `locationData` fails CI.
-- *Name clash fails the deploy.* Given a UI court named like a new `locationData` entry, the generated seed fails on `location_name_key` and the UI court keeps its name.
-- *Reference clash fails the deploy.* Given a UI court holding (SNL, "128"), a seed that would insert (SNL, "128") for another court raises an exception, the transaction rolls back and the UI reference is unchanged. A seed with no clash runs twice without error.
-- *CSV cannot mint sequence IDs.* A CSV row with an unused `LOCATION_ID` at or above the live value is rejected at validation, and nothing is written. A row with an unused ID below the live value is accepted. The CSV E2E suite passes on a fresh preview database.
-- *CSV can still update UI courts.* Given a UI-created court, a CSV row with its `LOCATION_ID` is accepted and updates it. Re-uploading an unedited full download succeeds.
-- *Duplicate caught at confirm (build scenario 7).* A P2002 becomes a field error; nothing is written; no audit metadata is set; the session is kept.
+- *Name clash fails the deploy.* Given a non-seed court named like a new `locationData` entry, the generated seed fails on `location_name_key` and the court keeps its name.
+- *Reference clash fails the deploy.* Given a non-seed court holding (SNL, "128"), a seed that would insert (SNL, "128") for another court raises an exception, the transaction rolls back and the reference is unchanged. A seed with no clash runs twice without error.
+- *ID in use.* `createCourt()` with an existing ID returns a `locationId` field error and writes nothing, including when the clash only shows up as a P2002 in the transaction.
 - *Atomicity.* If a reference insert fails, no rows remain.
+- *Update keeps other data.* `updateCourt()` changes only the fields given, and leaves the court's metadata and unticked references alone.
 
-**Spec:** §2, §6.2, §6.5, §6.6, §9.3, §9.4, §13.2, §13.6. **Size:** 2.5 d.
+**Spec:** §2, §6.2, §6.5, §6.6, §9.3, §9.4, §13.2, §13.6. **Size:** 2 d.
 
-#### Ticket 2: Add a court or tribunal journey
+#### Ticket 2: Add a court or tribunal form
 
-**Summary.** The "Add a court or tribunal" journey in `apps/web/src/pages/(system-admin)/`, on top of ticket 1's service. A new court is public as soon as it is confirmed. It ships as one ticket because the pages are not usable apart. It can still be reviewed as several PRs behind the hub entry, which is added last.
+**Summary.** A single-page form in `apps/web/src/pages/(system-admin)/` to add one court without a CSV, on top of ticket 1's service. A new court is public as soon as it is saved.
 
 **Scope**
-- **Common to every page:** `index.ts` (`GET`/`POST` `RequestHandler[]` behind `requireRole([USER_ROLES.SYSTEM_ADMIN])`), `index.njk`, `en.ts`, `cy.ts`, `index.test.ts` and `index.njk.test.ts`. Every step after the first redirects to step 1 when the `addCourt` session is missing. `?change=true` returns to check answers.
-- **CSRF:** the app registers no CSRF token middleware (pages call `req.csrfToken?.()`, which falls back to an empty string). POSTs are protected by the session cookie's `SameSite=Lax` (`libs/web-core/src/middleware/session-stores/redis-store.ts:21`), which keeps it off cross-site POSTs, as for the existing admin pages. The new pages follow the same posture; adding token middleware would be a separate, app-wide change.
-- **Session:** `addCourt` and `addCourtSuccess` in `apps/web/src/session.ts`.
-- **`add-court-name/` and `add-court-contact-details/`:** trim and collapse whitespace; `HTML_TAG_REGEX` on all four fields; empty email and contact number stored as null.
-- **`add-court-regions/` and `add-court-sub-jurisdictions/`:** from `listRegions()` and, grouped, `listJurisdictionsWithSubJurisdictions()`. A single tick posts a string and must be coerced to an array. Unknown IDs are rejected.
-- **`add-court-provenance-reference/` (optional, Q7):** provenance and type as **radios** (Q11; values from `LOCATION_REFERENCE_PROVENANCES` and `LOCATION_REFERENCE_TYPES`), and the provenance ID. A "Skip this step" link goes straight to check answers. A started reference needs all three fields. Database uniqueness check on (provenance, provenanceLocationId).
-- **`add-court-add-another-reference/` (Q6):** "Add another reference?" yes/no radios, listing the references added so far with Remove links. Yes returns to the reference step. Within-submission duplicate check (§5, rule 15).
-- **`add-court-check-answers/`:** summary list with Change links. With no reference, an inset says lists from upstream systems cannot be matched to the court until one is added (Q7). The `POST` re-validates and calls `createCourt()`, then sets `req.auditMetadata = { shouldLog: true, action: AuditLogAction.ADD_COURT, entityInfo: "Name: …, Location ID: …" }`, as `add-region` does.
-- **`add-court-success/`:** panel with the court name and ID, and the no-reference warning if it applies. Clears `addCourt`.
-- **Hub entry (last):** a fifth "Add a court or tribunal" tile in `reference-data/en.ts` and `cy.ts` `options` (Q11 keeps the tiles).
-- **Content:** the spec's hint texts go to content design before build (Q11). Also ask design about the steps with several fields (names, contact details, and the three-field reference), since they stretch one-thing-per-page.
-- **E2E:** two Playwright journeys in `e2e-tests/tests/`, with prefixed names and provenance IDs so teardown removes them.
+- **Pages:** `add-court/` (the form) and `add-court-success/`. Each has `index.ts` (`GET`/`POST` `RequestHandler[]` behind `requireRole([USER_ROLES.SYSTEM_ADMIN])`), `index.njk`, `en.ts`, `cy.ts`, `index.test.ts` and `index.njk.test.ts`.
+- **Fields, in order:**
+  - location ID (`#locationId`, `inputmode="numeric"`), with a hint showing the highest ID in use;
+  - English and Welsh names;
+  - email and contact number, both optional;
+  - regions as checkboxes, from `listRegions()`;
+  - sub-jurisdictions as checkboxes grouped by jurisdiction, from `listJurisdictionsWithSubJurisdictions()`;
+  - an optional provenance reference in a fieldset marked "(optional)": provenance and type as **radios** (Q11; values from `LOCATION_REFERENCE_PROVENANCES` and `LOCATION_REFERENCE_TYPES`), and the provenance location ID.
+- **Validation:** §5 and §4.1. Trim and collapse whitespace; `HTML_TAG_REGEX` on the four text fields; empty email and contact number stored as null; a single ticked box posts a string and must be turned into an array; unknown region, sub-jurisdiction, provenance or type values are rejected. On error, re-render with the error summary and field errors, keeping every answer.
+- **On success:** call `createCourt()`, set `req.auditMetadata = { shouldLog: true, action: AuditLogAction.ADD_COURT, entityInfo: "Name: …, Location ID: …" }` as `add-region` does, store `addCourtSuccess` in the session and redirect to the success page (POST-redirect-GET).
+- **Success page:** a panel with the court name and ID, and inset text if no reference was added, saying lists from upstream systems cannot be matched to the court until one is added through the update form (Q7). With no `addCourtSuccess` in the session it redirects to `/reference-data`. Clears `addCourtSuccess`.
+- **Session:** `addCourtSuccess` in `apps/web/src/session.ts`. The form itself keeps no session state.
+- **CSRF:** the app registers no CSRF token middleware; POSTs rely on the session cookie's `SameSite=Lax` (`libs/web-core/src/middleware/session-stores/redis-store.ts:21`), as for the existing admin pages.
+- **Hub entry:** an "Add a court or tribunal" tile in `reference-data/en.ts` and `cy.ts` `options` (Q11 keeps the tiles).
+- **Content:** the field hints go to content design before build (Q11).
+- **E2E:** one Playwright journey in `e2e-tests/tests/`, with a prefixed name and an unused ID from the CSV E2E range (80000–89999), found the way `location-csv.ts` does, so teardown removes it.
 
 **Scenarios**
-- *Deep link (build scenario 8).* With no session, any step after step 1 redirects to step 1.
-- *Duplicate names.* A duplicate in any case links to `#name` / `#welshName`, and the other answers are kept.
-- *Markup.* `<script>` gives a field error.
-- *Empty selection.* Nothing ticked on regions or sub-jurisdictions gives a fieldset error, and the admin cannot proceed.
+- *ID in use.* An existing ID gives "Location ID … is already used by <court name>", linked to `#locationId`; the other answers are kept.
+- *Duplicate names.* A duplicate in any case links to `#name` / `#welshName`.
+- *Markup.* `<script>` in a text field gives a field error.
+- *Nothing ticked.* No region or sub-jurisdiction gives a fieldset error.
+- *Half a reference.* A provenance with no ID gives errors on the missing fields; a fully empty reference is accepted.
+- *Duplicate reference.* (SNL,"104") links to `#provenanceLocationId`; nothing is written.
 - *Tampered POST.* An unknown region ID, or a provenance or type outside the vocabulary, is rejected on the server.
-- *Duplicate reference.* (SNL,"104") links to `#provenanceLocationId`; nothing is written. The same reference twice in one submission is rejected on the "add another" page.
-- *Skipped reference.* Skipping the reference step reaches check answers with the no-reference inset, and the court is created with no `location_reference` rows.
 - *Welsh.* With `?lng=cy` everything is Welsh, and the `en`/`cy` keys match.
-- *A System Admin adds a court (build scenario 4, @nightly).* Dashboard → `/reference-data` → step 1. On the way:
-  - submit empty, then a duplicate name, and check the summary links;
-  - switch to Welsh on an error;
-  - run axe on step 1's error state and on check answers;
-  - skip contact details;
-  - submit regions with nothing ticked;
-  - add two references using "Add another";
-  - follow a Change link back;
-  - confirm with the keyboard.
+- *A System Admin adds a court (@nightly).* Dashboard → `/reference-data` → add form. On the way: submit empty and check the summary links; enter an ID in use; switch to Welsh on an error; run axe on the error state; fill the form with the keyboard; save. Then the panel shows the ID, the court is in the public A–Z in English and Welsh, and `ADD_COURT` is in `/audit-log-list`.
+- *Unauthorised user refused (@nightly).* Without `SYSTEM_ADMIN`, `GET` and `POST` are refused and nothing is written.
+- *Resubmission.* Refreshing the success page doesn't add the court again.
 
-  Then the panel shows the ID, the court is in the public A–Z in English and Welsh, and `ADD_COURT` is in `/audit-log-list`. Teardown removes the court.
-- *Unauthorised user refused (build scenario 5, @nightly).* Without `SYSTEM_ADMIN`, `GET` step 1 and `POST` check answers are refused, and nothing is written.
-- *Resubmission (build scenario 8).* After success, a re-POST of check answers redirects to step 1 and writes nothing. The success page with no data redirects to `/reference-data`.
-- *Concurrent duplicate.* A P2002 at confirm renders on check answers with a link to the step, not a 500.
+**Spec:** §5.1–5.4, §6.3, §9.1–9.4, §10, §11 (as single-page fields, not steps). **Size:** 2–3 d. **Depends on:** ticket 1.
 
-**Spec:** §3 (Option C criteria), §4.3, §4.4, §5.1–5.9, §6.3, §6.4, §6.6, §7.1–7.8, §9.1–9.4, §10.1–10.6, §11, §12, §13.3–13.5. **Size:** 5.5–7 d (4.5–6 d for the journey, about 1 d for "add another"). **Depends on:** ticket 1.
+#### Ticket 3: Update a court or tribunal form
+
+**Summary.** Find one court and change its details on a single page, without a CSV, using ticket 1's service.
+
+**Scope**
+- **Pages:** `update-court-search/`, `update-court/` and `update-court-success/`, with the same files per page as ticket 2.
+- **Search:** the location autocomplete, as `location-jurisdiction-search/index.ts` does (`getLocationWithDetails()`); stores `updateCourt = { locationId }` in the session. `update-court/` redirects to the search page without it.
+- **Form:** the add form's fields, pre-filled, except:
+  - the location ID is shown as text, not an input;
+  - clearing email or contact number removes it;
+  - existing references are listed with a "Remove" checkbox each, followed by one optional new reference (Q6: add more by saving again).
+- **On success:** call `updateCourt()`; audit `UPDATE_COURT` with `entityInfo: "Name: …, Location ID: …"`; redirect to the success page, which clears `updateCourt`.
+- **Overlap:** `location-jurisdiction-manage` already edits a court's regions and sub-jurisdictions. Leave it in place; the update form reuses its query. Removing it is a separate decision.
+- **Hub entry:** an "Update a court or tribunal" tile.
+- **E2E:** one Playwright journey, with a court created through test-support's generated-ID path.
+
+**Scenarios**
+- *Change details.* Changing the names and contact number updates the court and keeps its regions, sub-jurisdictions, references and metadata.
+- *Duplicate name.* Another court's name links to `#name`; the court's own name is allowed.
+- *Remove and add a reference.* Ticking "Remove" deletes only that reference. A new reference that belongs to another court links to `#provenanceLocationId`.
+- *Court deleted meanwhile.* The form shows "Court not found" and links back to the search.
+- *Deep link.* With no `updateCourt` session, `update-court/` redirects to the search page.
+- *Welsh.* With `?lng=cy` everything is Welsh, and the `en`/`cy` keys match.
+- *A System Admin updates a court (@nightly).* Search, change the contact number, remove a reference, add a reference, check validation and Welsh on the way, run axe, save; then the change shows on the court and `UPDATE_COURT` is in `/audit-log-list`.
+- *Unauthorised user refused (@nightly).*
+
+**Size:** 2.5–3.5 d. **Depends on:** ticket 1.
+
+#### Ticket 4: Reference data CSV: show new and overwritten courts, and fix its defects
+
+**Summary.** Keep the CSV for bulk add and update, and make an accidental overwrite visible before anything is written (§4.3).
+
+**Scope**
+- `reference-data-upload-summary`: for each row, show "New court" or "Overwrites <current name>", with totals above the table. One `findMany` for the file's IDs.
+- `reference-data-upload`: guidance to upload only the rows being added or changed.
+- `validateLocationData()`: reject a (provenance, provenance location ID) that belongs to a different court in the database, with a row-numbered error.
+- Stop `reference-data-upload-summary/index.ts:71` logging the parsed file; escape user-supplied names in the `html` errors at `validation.ts:245` and `:276`.
+
+**Scenarios**
+- A file with two new IDs and one existing ID shows "2 new courts, 1 existing court will be overwritten", naming the existing court.
+- A reference held by another court is a row-numbered validation error, not a 500.
+- A region name containing markup is shown as text in the error.
+- The summary's logs contain no court emails or phone numbers.
+
+**Size:** 1–1.5 d. **Depends on:** nothing.
 
 ### 7.2 Sibling tickets
 
-**S1: Amend a court.** Change a court's names, contact details and references without a CSV, reusing C's pages in change mode and its service (Q8). Must handle the seeded courts, whose renames are reverted on every deploy: block renaming them. Also the route by which a person resolves a seed reference clash (Q2). Depends on tickets 1 and 2. Roughly 3–4 d.
-
-**S2: Make the reference-data CSV upload update-only (Q10).** Replaces ticket 1's interim guard. `validateLocationData()` rejects an unknown `LOCATION_ID` with an English message pointing to "Add a court or tribunal" (the summary and confirmation pages hard-code `locale = "en"`, §1, so a Welsh message would never show; making the CSV route bilingual is out of scope). Why: an admin-chosen ID the sequence has not reached breaks a later UI create (§4.5).
-- Scenarios: an unknown ID is rejected with a row-numbered error; updates to existing courts still work.
-- Also add a database check on (provenance, provenanceLocationId), so a clash is a validation error rather than a 500.
-- Fix two existing CSV defects: `reference-data-upload-summary/index.ts:71` logs the whole parsed file, including court emails and phone numbers; and `validation.ts:245` and `:276` put user-supplied region and sub-jurisdiction names into the error `html` without escaping them.
-- Depends on ticket 2. About 1 d.
-
 **S3: Discovery spike: syncing courts from an upstream source.** Already raised as #1537 and kept open, because it is research rather than build work. Can SNL, Common Platform or another source supply names, Welsh names, references and closures? Who owns the contract? What reconciliation policy is needed without soft delete? Output: a report like this one. Time-boxed to 3 d.
 
-**S4: Align seeded court IDs with legacy CaTH (Q1).** Get the legacy CaTH **production** reference-data export, re-check Appendix A against it, and renumber the seeded courts in `location-data.ts` to their legacy IDs before go-live, with a reviewed mapping for the three courts with no exact match. The same export supplies ticket 1's sequence start (Q3), which must be `max(legacy production max, max seeded ID) + 1` so that an unmatched court given an ID above the legacy maximum does not break ticket 1's band test. Must land before any legacy load, and before ticket 1's migration reaches production. The mapping must be final and reviewed before the migration merges: Prisma checksums applied migrations, so a later correction needs a second migration.
+**S4: Align seeded court IDs with legacy CaTH (Q1).** Get the legacy CaTH **production** reference-data export, re-check Appendix A against it, and renumber the seeded courts in `location-data.ts` to their legacy IDs before go-live, with a reviewed mapping for the three courts with no exact match. The same export gives the highest legacy ID, above which admins choose new court IDs (§4.1). Must land before any legacy load. The mapping must be final and reviewed before the migration merges: Prisma checksums applied migrations, so a later correction needs a second migration.
 - **Also in scope.** Replace the hard-coded SJP `locationId=9` in `apps/web/src/pages/(verified)/account-home/index.njk:22` and `apps/web/src/pages/(public)/view-option/index.ts:42` with a constant or a lookup by name. Decide whether real legacy provenance references replace the synthetic `SNL:(id + 100)` ones (`generate-seed-sql.ts:106`). Update E2E fixtures, `libs/test-support` and unit tests that assert on a seeded court's ID. Update CLAUDE.md item 7 to say seeded court IDs must match legacy P&I IDs. If ticket 1 has merged, update its freeze test to the new ID set in the same PR.
 - **Done when** every seeded court's `locationId` equals its legacy production P&I ID, or there is a recorded decision for each of the three unmatched courts (which must not take an ID a legacy court uses). No code depends on a hard-coded seeded ID. The migration and seed run twice on a fresh database and on an STG copy, with and without ticket 1's guards, leaving no `__realign_` rows and exactly one `seedref_<new id>` per moved court. Those runs include a seeded court whose SNL reference has a cuid ID (step 2), an orphan artefact or subscription at a target ID (step 1), and a check that the chained artefacts and subscriptions for courts 7 and 24 end up on the right courts. The mapping needs a second reviewer, and the raw legacy export holds court contact details, so it must not be committed.
 - **It moves its own rows.** Once ticket 1's guard (b) is in, the seed no longer parks old rows, so a deploy that only edits `location-data.ts` would fail on `location_name_key` (for example, STG row 4 still holds "Royal Courts of Justice" when the seed inserts it at 109). S4 therefore ships a one-off Prisma migration, which runs before the seed (`apps/postgres/start.sh:95`, then `:104-105`), wrapped in its own `BEGIN`/`COMMIT`:
@@ -560,7 +605,10 @@ These tickets are **described here only**. Apart from S3 (#1537), none is raised
 
   If the migration fails, the transaction rolls back and the deploy stops. On a deployed environment `start.sh:80-91` marks the unfinished migration as rolled back and the next pod start retries it, so a failing pre-check fails every postgres pod start until the data is fixed: delete or renumber the STG court that holds the target ID, then redeploy. Locally, run `prisma migrate resolve --rolled-back` (or `yarn db:drop`) before retrying. After it runs, the seed finds every court at its new ID, parks nothing and raises nothing, with or without ticket 1, so S4 can ship before or after it. Guard (b) and the Q2 check stay as the safety net.
 
-A ticket to give regions, jurisdictions and sub-jurisdictions their own sequences was considered and dropped after Q9: the freeze removes the seed clash, and the concurrent-create race is accepted.
+Dropped on 2026-11-25:
+- **S1 (amend a court)** is now build ticket 3.
+- **S2 (update-only CSV)** is replaced by ticket 4: the CSV keeps creating courts.
+- **The `location_id` sequence and its interim CSV guard** (the earlier ticket 1) are no longer needed (§4.1).
 
 ---
 
@@ -569,14 +617,14 @@ A ticket to give regions, jurisdictions and sub-jurisdictions their own sequence
 | Check (plan §5.2) | Where | Result |
 |---|---|---|
 | Six options with pros, cons and effort | §2, §3 | Yes (F "not estimable") |
-| Exactly one recommendation | Top box, §4 | Option C |
+| Exactly one recommendation | Top box, §4 | CSV for bulk work plus single-page add and update forms (2026-11-25; Option C before then) |
 | Decisions 1–3 with evidence | §4.1–4.3, §4.5 | Yes; both experiments ran on a database |
-| Disjointness proof incl. E2E bands | §4.1 | Yes, incl. 9001–9010 |
+| ID strategy, incl. E2E bands | §4.1 | Admin-chosen in every route; sequence dropped; 9001–9010 risk accepted (Q13) |
 | 21 parity rules reconciled | §5 | 8+4+2+3+2+2 = 21, with line numbers |
-| CSV route's future stated | §4.3 | Retained for bulk; update-only (S2) |
-| Questions assigned to owners | §6 | Q1–Q12 each have an owner |
-| Follow-on tickets listed | §7 | 2 build + 4 sibling, described in full; none raised from the spike |
-| One-line rejection for A, B, D, E, F | §4.4 | Yes |
+| CSV route's future stated | §4.3 | Kept for bulk add and update; ticket 4 |
+| Questions assigned to owners | §6 | Q1–Q14 each have an owner |
+| Follow-on tickets listed | §7 | 4 build + 2 sibling, described in full; none raised from the spike |
+| One-line rejection for each option not chosen | §4.4 | Yes |
 | Every option scored against the five constraints | §2 | Columns c1–c5 |
 
 Gaps closed during review:
@@ -617,7 +665,15 @@ Revised again on 2026-11-18 after the fifth review, at the developer's request:
 
 Revised after the sixth review: S4's migration now pre-checks the target IDs, deletes the moving courts' synthetic seed references so the chained moves cannot leave one on the wrong court, and moves courts, publications and subscriptions in two phases through a negative offset. Ticket 1's CSV E2E change uses test-support's generated-ID path. The Q3 answer and the recommendation box were brought in line with §4.1 and §7.
 
-Needs a person: tech lead and PO sign-off on this report, then raising the §7 tickets with spec §4–13 attached, then closing #1078. If Q4 changes, revisit §2 and §4.
+Revised on 2026-11-25 at the developer's request:
+- **The CSV upload stays for adding and updating courts in bulk** (sometimes more than 100 at once), with admin-chosen IDs. Decision 3 and S2 (update-only CSV) are replaced by ticket 4, which shows new and overwritten courts on the summary page and fixes the CSV's defects.
+- **Option B replaces Option C:** single-page add and update forms. The admin enters the location ID on the add form.
+- **The `location_id` sequence is dropped** (Decision 1, the old ticket 1's migration and interim CSV guard), because a sequence cannot sit next to admin-chosen CSV IDs (§4.5 scenario 2 step 7).
+- **Decision 2 (freeze and seed guards) is kept**, and now covers courts from the CSV as well as the forms.
+- **S1 (amend a court) becomes build ticket 3.** Tickets are now 1 (service and seed guards), 2 (add form), 3 (update form) and 4 (CSV), at 7.5–10 d.
+- **Q13 and Q14 added and answered:** no rule for the E2E fixture IDs 9001–9010 on STG, because real court IDs will not reach them; seeded courts stay fully editable on the update form, and a rename being reverted on deploy is accepted.
+
+Needs a person: tech lead and PO sign-off on this report, then raising the §7 tickets with spec §4–13 attached, then closing #1078.
 
 ---
 

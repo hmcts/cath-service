@@ -32,4 +32,6 @@ are not committed.
 - [x] Describe build ticket 2 (the "Add a court or tribunal" journey, with "add another"; no draft state, after the Q5 answer was changed) in report §7.1
 - [x] Describe sibling tickets S1 (amend a court), S2 (update-only CSV), S3 (upstream sync spike) and S4 (align seeded court IDs with legacy CaTH) in report §7.2. Tickets are described only, not raised from the spike, except S3, which stays open as #1537
 - [x] Fold the answers to Q1–Q12 into the report (§4.1, §4.2, §5, §6, §7), including Q3's start of highest legacy production ID + 1
-- [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human). Raising the §7 tickets, with spec §4–13 attached and the legacy production export for S4 and ticket 1's start value, is build planning after sign-off, not part of the spike
+- [x] Rework the report after the developer's decision of 2026-11-25: keep the CSV for bulk add and update with admin-chosen IDs; single-page add and update forms (Option B) with an admin-entered ID; drop the sequence; tickets 1–4 in §7.1; Q13 and Q14 added
+- [x] Record answers to Q13 (no rule for E2E fixture IDs 9001–9010; real IDs will not reach them) and Q14 (seeded courts stay editable on the update form)
+- [ ] Get `report.md` signed off by the tech lead and PO, then close #1078 (needs a human). Raising the §7 tickets, with spec §4–13 attached and the legacy production export for S4, is build planning after sign-off, not part of the spike
