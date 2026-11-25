@@ -108,6 +108,14 @@ describe("select-account template", () => {
       expect($(".govuk-error-summary").text()).toContain(en.errorSummaryTitle);
     });
 
+    it("should replace the history entry inline so Back does not resubmit an error page", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, cspNonce: "test-nonce" });
+
+      const historyScript = $("script").filter((_, el) => $(el).html()?.includes("history.replaceState") ?? false);
+      expect(historyScript).toHaveLength(1);
+      expect(historyScript.attr("nonce")).toBe("test-nonce");
+    });
+
     it("should pre-select the previously chosen account when re-rendering with data", () => {
       const data = {
         ...en,

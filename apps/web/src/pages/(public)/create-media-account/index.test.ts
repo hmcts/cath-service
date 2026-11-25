@@ -36,6 +36,7 @@ describe("create-media-account controller", () => {
     mockResponse = {
       render: vi.fn(),
       redirect: vi.fn(),
+      setHeader: vi.fn(),
       status: vi.fn().mockReturnThis()
     };
   });
@@ -52,6 +53,14 @@ describe("create-media-account controller", () => {
           data: {}
         })
       );
+    });
+
+    it("should stop the browser caching the page so Back fetches a fresh copy without old errors", async () => {
+      mockSession.mediaApplicationErrors = [{ text: "Enter your full name", href: "#fullName" }];
+
+      await GET(mockRequest as any, mockResponse as Response);
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate");
     });
 
     it("should render the form with Welsh content when lng=cy", async () => {
@@ -205,7 +214,12 @@ describe("create-media-account controller", () => {
       await POST(mockRequest as MulterRequest, mockResponse as Response);
 
       expect(mockSession.mediaApplicationSubmitted).toBe(true);
-      expect(mockSession.mediaApplicationForm).toBeUndefined();
+      expect(mockSession.mediaApplicationForm).toEqual({
+        name: "John Smith",
+        email: "john@example.com",
+        employer: "BBC News",
+        termsAccepted: true
+      });
       expect(mockSession.mediaApplicationErrors).toBeUndefined();
       expect(mockSession.save).toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith("/account-request-submitted?lng=en");

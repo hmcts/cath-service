@@ -1,15 +1,13 @@
 import { getLocationById } from "@hmcts/location";
+import { NO_STORE_CACHE_CONTROL } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-// Matches pip-frontend: stops the browser restoring a stale copy (e.g. one showing an error) on Back.
-const NO_STORE = "private, max-age=0, no-cache, no-store, must-revalidate";
-
 export const GET = async (req: Request, res: Response) => {
   const locationId = req.query.locationId ? Number.parseInt(req.query.locationId as string, 10) : undefined;
   const locale = res.locals.locale || "en";
-  res.setHeader("Cache-Control", NO_STORE);
+  res.setHeader("Cache-Control", NO_STORE_CACHE_CONTROL);
 
   let preselectedLocation: { id: number; name: string; welshName: string } | undefined;
 
@@ -37,7 +35,7 @@ export const POST = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
   const locationIdNum = Number.parseInt(selectedLocationId, 10);
-  res.setHeader("Cache-Control", NO_STORE);
+  res.setHeader("Cache-Control", NO_STORE_CACHE_CONTROL);
 
   if (!selectedLocationId || Number.isNaN(locationIdNum) || !(await getLocationById(locationIdNum))) {
     return res.render("search/index", {

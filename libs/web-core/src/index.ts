@@ -26,6 +26,7 @@ export type { LocaleMiddlewareOptions } from "./middleware/i18n/locale-middlewar
 export { localeMiddleware, translationMiddleware } from "./middleware/i18n/locale-middleware.js";
 export type { Translations } from "./middleware/i18n/translation-loader.js";
 export { getTranslation, loadTranslations } from "./middleware/i18n/translation-loader.js";
+export { NO_STORE_CACHE_CONTROL, noStore } from "./middleware/no-store/no-store-middleware.js";
 // Session stores - these have optional peer dependencies
 export type { ExpressSessionRedisOptions } from "./middleware/session-stores/redis-store.js";
 export { expressSessionRedis } from "./middleware/session-stores/redis-store.js";

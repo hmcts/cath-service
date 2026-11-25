@@ -22,10 +22,6 @@ vi.mock("./filter-toggle.js", () => ({
   initFilterToggle: vi.fn()
 }));
 
-vi.mock("./replace-history-on-error.js", () => ({
-  initReplaceHistoryOnError: vi.fn()
-}));
-
 vi.mock("./search-autocomplete.js", () => ({
   initSearchAutocomplete: vi.fn(() => Promise.resolve())
 }));
@@ -67,11 +63,6 @@ describe("web.ts", () => {
     it("should initialize GOV.UK Frontend", async () => {
       const { initAll } = await import("govuk-frontend");
       expect(initAll).toHaveBeenCalled();
-    });
-
-    it("should initialize history replacement for error pages", async () => {
-      const { initReplaceHistoryOnError } = await import("./replace-history-on-error.js");
-      expect(initReplaceHistoryOnError).toHaveBeenCalled();
     });
 
     it("should initialize the MOJ filter toggle", async () => {

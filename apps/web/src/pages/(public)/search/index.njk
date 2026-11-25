@@ -1,4 +1,5 @@
 {% extends "layouts/base-template.njk" %}
+{% from "components/back-button-history.njk" import backButtonHistory %}
 {% from "govuk/components/label/macro.njk" import govukLabel %}
 {% from "govuk/components/hint/macro.njk" import govukHint %}
 {% from "govuk/components/error-message/macro.njk" import govukErrorMessage %}
@@ -18,7 +19,7 @@
 
     <h1 class="govuk-heading-l">{{ title }}</h1>
 
-    <form method="post" novalidate data-replace-history-on-error>
+    <form method="post" novalidate>
       {#- Built by hand rather than with govukInput: the agreed design puts the
           inline error above the hint, and govukInput always renders the hint first. -#}
       <div class="govuk-form-group{% if errors %} govuk-form-group--error{% endif %}">
@@ -57,4 +58,9 @@
 
   </div>
 </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  {{ backButtonHistory(cspNonce) }}
 {% endblock %}

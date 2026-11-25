@@ -63,7 +63,14 @@ describe("view-option template", () => {
       const form = $("form");
       expect(form).toHaveLength(1);
       expect(form.attr("method")).toBe("post");
-      expect(form.attr("data-replace-history-on-error")).toBeDefined();
+    });
+
+    it("should replace the history entry inline so Back does not resubmit an error page", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, cspNonce: "test-nonce" });
+
+      const historyScript = $("script").filter((_, el) => $(el).html()?.includes("history.replaceState") ?? false);
+      expect(historyScript).toHaveLength(1);
+      expect(historyScript.attr("nonce")).toBe("test-nonce");
     });
 
     it("should render the Welsh heading and button", () => {

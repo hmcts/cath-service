@@ -170,14 +170,27 @@ describe("senior-courts-costs-office-daily-cause-list.njk", () => {
       expect(paragraphs).toHaveLength(expectedParagraphs + 1);
     });
 
-    it("should render the more-info link with text and URL at the end of the details", () => {
-      const { $ } = renderList();
+    it("should render the more-info link with descriptive text followed by plain opens-in-new-tab text", () => {
+      const { $ } = renderList([], { opensInNewTab: "(opens in new tab)" });
 
       const details = $("details.govuk-details");
-      expect(details.text()).toContain(listContent.moreInfoLinkText);
+      expect(details.text()).toContain(listContent.moreInfoLinkPrefix);
       const moreInfoLink = details.find(`a[href="${listContent.moreInfoLinkUrl}"]`);
       expect(moreInfoLink).toHaveLength(1);
-      expect(moreInfoLink.text()).toContain(listContent.moreInfoLinkUrl);
+      expect(moreInfoLink.text().trim()).toBe(listContent.moreInfoLinkText);
+      expect(moreInfoLink.parent().text()).toContain(`${listContent.moreInfoLinkText} (opens in new tab).`);
+      expect(moreInfoLink.text()).not.toContain(listContent.moreInfoLinkUrl);
+      expect(moreInfoLink.attr("target")).toBe("_blank");
+      expect(moreInfoLink.attr("rel")).toBe("noopener noreferrer");
+    });
+
+    it("should render the Welsh more-info link text when the cy locale is used", () => {
+      const { $ } = renderList([], { opensInNewTab: "(yn agor mewn tab newydd)" }, "cy");
+
+      const moreInfoLink = $(`details.govuk-details a[href="${listContentCy.moreInfoLinkUrl}"]`);
+      expect($("details.govuk-details").text()).toContain(listContentCy.moreInfoLinkPrefix);
+      expect(moreInfoLink.text().trim()).toBe(listContentCy.moreInfoLinkText);
+      expect(moreInfoLink.parent().text()).toContain(`${listContentCy.moreInfoLinkText} (yn agor mewn tab newydd).`);
     });
   });
 

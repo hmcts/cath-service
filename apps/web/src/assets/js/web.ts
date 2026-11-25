@@ -4,7 +4,6 @@ import { initBackToTop } from "./back-to-top.js";
 import { initFilterPanel } from "./filter-panel.js";
 import { initFilterToggle } from "./filter-toggle.js";
 import { initListTypeSensitivity } from "./list-type-sensitivity.js";
-import { initReplaceHistoryOnError } from "./replace-history-on-error.js";
 import { initSearchAutocomplete } from "./search-autocomplete.js";
 import { initSortableTable } from "./sortable-table.js";
 import "./session-timeout.js";
@@ -16,7 +15,6 @@ initAll();
 // Initialize custom components
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", async () => {
-    initReplaceHistoryOnError();
     await initSearchAutocomplete().catch((error) => {
       console.error("Error initializing search autocomplete:", error);
     });
@@ -29,7 +27,6 @@ if (document.readyState === "loading") {
     initSjpFilterSearch();
   });
 } else {
-  initReplaceHistoryOnError();
   void initSearchAutocomplete().catch((error) => {
     console.error("Error initializing search autocomplete:", error);
   });

@@ -1,0 +1,48 @@
+{#
+  Based on pip-frontend's backButtonHistory macro. A page rendered straight from a POST (e.g. one
+  showing validation errors) would otherwise sit in history as that POST, so Back would resubmit
+  it and show the old errors again. Replacing the entry turns it into a GET. It is inline, not in
+  the JS bundle, so it runs as soon as the page is parsed rather than after the bundle loads.
+  Pair it with a Cache-Control: no-store response so Back fetches a fresh page.
+
+  Chrome can still restore a no-store page from the back/forward cache, bringing back the old
+  error page as it was. Reloading would lose what the user had entered, so the errors are removed
+  in place instead and the answers stay.
+#}
+{% macro backButtonHistory(cspNonce) %}
+  <script nonce="{{ cspNonce }}">
+    if (window.history.replaceState) {
+      window.history.replaceState(null, "", window.location.href);
+    }
+    window.addEventListener("pageshow", function (event) {
+      if (!event.persisted) {
+        return;
+      }
+      document.querySelectorAll(".govuk-error-summary").forEach(function (summary) {
+        summary.remove();
+      });
+      document.querySelectorAll(".govuk-error-message").forEach(function (message) {
+        if (message.id) {
+          document.querySelectorAll('[aria-describedby~="' + message.id + '"]').forEach(function (field) {
+            var describedBy = field.getAttribute("aria-describedby").split(" ").filter(function (id) {
+              return id && id !== message.id;
+            });
+            if (describedBy.length) {
+              field.setAttribute("aria-describedby", describedBy.join(" "));
+            } else {
+              field.removeAttribute("aria-describedby");
+            }
+          });
+        }
+        message.remove();
+      });
+      document.querySelectorAll('[class*="--error"]').forEach(function (element) {
+        Array.from(element.classList).forEach(function (className) {
+          if (/^govuk-[a-z-]+--error$/.test(className)) {
+            element.classList.remove(className);
+          }
+        });
+      });
+    });
+  </script>
+{% endmacro %}

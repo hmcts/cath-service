@@ -65,6 +65,14 @@ describe("create-media-account template", () => {
       expect($(".govuk-hint").text()).toContain(en.openingText3);
     });
 
+    it("should replace the history entry inline so Back does not resubmit an error page", () => {
+      const { $ } = render(env, TEMPLATE, { ...buildData(en), cspNonce: "test-nonce" });
+
+      const historyScript = $("script").filter((_, el) => $(el).html()?.includes("history.replaceState") ?? false);
+      expect(historyScript).toHaveLength(1);
+      expect(historyScript.attr("nonce")).toBe("test-nonce");
+    });
+
     it("should render the form fields with labels and hints", () => {
       const data = buildData(en);
 

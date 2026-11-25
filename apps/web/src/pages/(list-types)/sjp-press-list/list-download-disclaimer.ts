@@ -1,4 +1,5 @@
 import { sjpPressListCy as cy, sjpPressListEn as en } from "@hmcts/sjp-press-list";
+import { noStore } from "@hmcts/web-core";
 import type { Request, RequestHandler, Response } from "express";
 import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound } from "../publication-access.js";
 import { createRequireVerifiedWithProvenance } from "./require-verified-with-provenance.js";
@@ -67,5 +68,5 @@ const postHandler = async (req: Request, res: Response) => {
   res.redirect(`${prefix}/list-download-files?artefactId=${artefactId}`);
 };
 
-export const GET: RequestHandler[] = [requireVerifiedWithProvenance, getHandler];
-export const POST: RequestHandler[] = [requireVerifiedWithProvenance, postHandler];
+export const GET: RequestHandler[] = [requireVerifiedWithProvenance, noStore(), getHandler];
+export const POST: RequestHandler[] = [requireVerifiedWithProvenance, noStore(), postHandler];

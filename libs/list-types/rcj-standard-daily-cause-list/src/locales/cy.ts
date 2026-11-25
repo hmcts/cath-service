@@ -106,7 +106,8 @@ export const cy = {
     locationLine3: "WC2A 2LL",
     importantInfoText:
       "Bydd gwrandawiadau a gynhelir yn Swyddfa Costau’r Uwch Lysoedd yn cael eu cynnal yn wyneb yn wyneb oni bai bod yr hysbysiad o wrandawiad wedi cyfarwyddo fel arall.\n\nMae cyfiawnder agored yn egwyddor sylfaenol ein system gyfiawnder. Gallwch fynychu gwrandawiad cyhoeddus wyneb yn wyneb neu gallwch wneud cais am ganiatâd i arsylwi o bell.\n\nDylid gwneud ceisiadau i arsylwi gwrandawiad o bell sy'n cael ei gynnal yn Swyddfa Costau’r Uwch lysoedd mewn pryd yn uniongyrchol at: scco@justice.gov.uk gan roi dyddiad ac amser y gwrandawiad yn y blwch pwnc. Efallai y gofynnir i chi roi rhagor o fanylion a rhaid i chi ddarparu cyfeiriad e-bost i gael dolen briodol ar gyfer mynediad.\n\nBydd y barnwr sy'n gwrando ar yr achos yn penderfynu a yw'n briodol i chi arsylwi o bell. Byddant yn ystyried buddiannau cyfiawnder, y gallu technegol i arsylwi o bell a'r hyn sy'n angenrheidiol i sicrhau gweinyddiaeth briodol cyfiawnder.\n\nWeithiau mae'n angenrheidiol i wrandawiadau gael eu cynnal yn breifat ac ni fyddwch yn gallu arsylwi o bell nac wyneb yn wyneb. Mae aelodau'r wasg yn gallu mynychu rhai gwrandawiadau preifat.",
-    moreInfoLinkText: "Am ragor o wybodaeth, ewch i",
+    moreInfoLinkPrefix: "Am ragor o wybodaeth, ewch i",
+    moreInfoLinkText: "Arsylwi gwrandawiad llys neu dribiwnlys",
     moreInfoLinkUrl: "https://www.gov.uk/guidance/observe-a-court-or-tribunal-hearing"
   },
   common: {

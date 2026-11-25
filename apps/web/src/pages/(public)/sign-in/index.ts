@@ -1,3 +1,4 @@
+import { NO_STORE_CACHE_CONTROL } from "@hmcts/web-core";
 import type { Request, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
@@ -8,6 +9,7 @@ interface AccountSelectionError {
 }
 
 export const GET = async (_req: Request, res: Response) => {
+  res.setHeader("Cache-Control", NO_STORE_CACHE_CONTROL);
   res.render("sign-in/index", {
     en,
     cy
@@ -18,6 +20,7 @@ export const POST = async (req: Request, res: Response) => {
   const selectedAccount = req.body?.accountType;
   const locale = res.locals.locale || "en";
   const t = locale === "cy" ? cy : en;
+  res.setHeader("Cache-Control", NO_STORE_CACHE_CONTROL);
 
   if (!selectedAccount) {
     const errors: AccountSelectionError[] = [

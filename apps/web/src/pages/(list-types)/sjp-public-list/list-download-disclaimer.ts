@@ -1,4 +1,5 @@
 import { sjpPublicListCy as cy, sjpPublicListEn as en } from "@hmcts/sjp-public-list";
+import { noStore } from "@hmcts/web-core";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { AccessReason, checkArtefactDataAccess, renderAccessDenied, renderNotFound } from "../publication-access.js";
 
@@ -70,5 +71,5 @@ const postHandler = async (req: Request, res: Response) => {
   res.redirect(`${prefix}/list-download-files?artefactId=${artefactId}`);
 };
 
-export const GET: RequestHandler[] = [requireVerified, getHandler];
-export const POST: RequestHandler[] = [requireVerified, postHandler];
+export const GET: RequestHandler[] = [requireVerified, noStore(), getHandler];
+export const POST: RequestHandler[] = [requireVerified, noStore(), postHandler];

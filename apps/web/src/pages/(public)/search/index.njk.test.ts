@@ -127,6 +127,14 @@ describe("search template", () => {
       expect(formGroupChildIds.indexOf("location-error")).toBeLessThan(formGroupChildIds.indexOf("location-hint"));
     });
 
+    it("should replace the history entry inline so Back does not resubmit an error page", () => {
+      const { $ } = render(env, TEMPLATE, { ...en, locale: "en", cspNonce: "test-nonce" });
+
+      const historyScript = $("script").filter((_, el) => $(el).html()?.includes("history.replaceState") ?? false);
+      expect(historyScript).toHaveLength(1);
+      expect(historyScript.attr("nonce")).toBe("test-nonce");
+    });
+
     it("should not render an inline error message when there are no errors", () => {
       const { $ } = render(env, TEMPLATE, { ...en, locale: "en" });
 
