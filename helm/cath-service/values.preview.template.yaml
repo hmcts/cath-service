@@ -23,6 +23,8 @@ blobstorage:
       - artefact
       - files
       - publications
+      # Runs of the pull request's hosted parity check (apps/ui-baseline/helm/values.preview.template.yaml)
+      - ui-baseline
 
 # Web application configuration
 cath-web:
@@ -32,7 +34,6 @@ cath-web:
     environment:
       BASE_URL: "https://{{ .Release.Name }}-web.preview.platform.hmcts.net"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
       CFT_IDAM_URL: "https://hmcts-access.aat.platform.hmcts.net"
       SSO_ALLOW_HTTP_REDIRECT: 'true'
       REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379"
@@ -79,7 +80,7 @@ cath-web:
             alias: APPLICATION_INSIGHTS_CONNECTION_STRING
           - name: session-secret
             alias: SESSION_SECRET
-          - name: redis-url
+          - name: managed-redis-url
             alias: REDIS_URL
           - name: postgres-url
             alias: DATABASE_URL
@@ -128,7 +129,6 @@ cath-api:
     environment:
       POSTGRES_DATABASE: "{{ .Release.Name }}"
       ENABLE_TEST_SUPPORT: "true"
-      MANAGED_IDENTITY_CLIENT_ID: "${MANAGED_IDENTITY_CLIENT_ID}"
     secrets:
       POSTGRES_HOST:
         secretRef: postgres
