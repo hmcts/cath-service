@@ -105,4 +105,31 @@ describe("pending-subscriptions template", () => {
       expect($('button[type="submit"]').text()).toContain(cy.removeLink);
     });
   });
+
+  describe("Remove buttons", () => {
+    it("should use the link-button class with no inline style so the GOV.UK focus state applies", () => {
+      const data = {
+        ...en,
+        locations: [{ locationId: "42", name: "Birmingham Civil Court" }],
+        pendingCaseSubscriptions: [{ caseName: "Smith v Jones", caseNumber: "AB123" }]
+      };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      const removeButtons = $("button[type='submit']").filter((_, el) => $(el).text().trim() === en.removeLink);
+      expect(removeButtons).toHaveLength(2);
+      removeButtons.each((_, el) => {
+        expect($(el).hasClass("app-link-button")).toBe(true);
+        expect($(el).attr("style")).toBeUndefined();
+      });
+    });
+
+    it("should render the Welsh remove text on the link-button", () => {
+      const data = { ...cy, locations: [{ locationId: "42", name: "Llys Sifil Birmingham" }] };
+
+      const { $ } = render(env, TEMPLATE, data);
+
+      expect($("button.app-link-button").text().trim()).toBe(cy.removeLink);
+    });
+  });
 });

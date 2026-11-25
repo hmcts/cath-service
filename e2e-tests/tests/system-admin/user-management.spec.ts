@@ -151,9 +151,16 @@ test.describe("User Management", () => {
     const deleteConfirmAccessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(deleteConfirmAccessibility.violations).toEqual([]);
 
+    // The question h1 is the radio group's legend
+    const deleteConfirmGroup = page.getByRole("group", { name: `Are you sure you want to delete ${testEmail}?` });
+    await expect(deleteConfirmGroup.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator("h1")).toHaveCount(1);
+
     // Test validation - submit without selecting an option
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page.locator(".govuk-error-message")).toContainText("Select yes or no to continue");
+    await page.locator(".govuk-error-summary").getByRole("link", { name: "Select yes or no to continue" }).click();
+    await expect(deleteConfirmGroup.getByRole("radio").first()).toBeFocused();
 
     // Test Welsh translation on delete confirmation page
     await switchLanguage(page, "cy");

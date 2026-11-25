@@ -15,12 +15,6 @@ import type { Request, RequestHandler, Response } from "express";
 import { cy } from "./cy.js";
 import { en } from "./en.js";
 
-interface TableRow {
-  letter: string;
-  location: Location;
-  isFirst: boolean;
-}
-
 const getHandler = async (req: Request, res: Response) => {
   const locale = res.locals.locale || "en";
   const content = locale === "cy" ? cy : en;
@@ -162,17 +156,7 @@ const getHandler = async (req: Request, res: Response) => {
   // Get available letters
   const availableLetters = Object.keys(filteredGroupedLocations);
 
-  // Build table rows for location listings
-  const tableRows: TableRow[] = [];
-  Object.entries(filteredGroupedLocations).forEach(([letter, locations]: [string, Location[]]) => {
-    locations.forEach((location: Location, index: number) => {
-      tableRows.push({
-        letter: index === 0 ? letter : "",
-        location,
-        isFirst: index === 0
-      });
-    });
-  });
+  const locationGroups: LocationGroup[] = Object.entries(filteredGroupedLocations).map(([letter, locations]) => ({ letter, locations }));
 
   res.render("location-name-search/index", {
     ...content,
@@ -190,7 +174,7 @@ const getHandler = async (req: Request, res: Response) => {
     regionItems,
     subJurisdictionItemsByJurisdiction,
     availableLetters,
-    tableRows,
+    locationGroups,
     csrfToken: (req as any).csrfToken?.() || ""
   });
 };
@@ -229,3 +213,8 @@ const postHandler = async (req: Request, res: Response) => {
 
 export const GET: RequestHandler[] = [requireAuth(), blockUserAccess(), getHandler];
 export const POST: RequestHandler[] = [requireAuth(), blockUserAccess(), postHandler];
+
+interface LocationGroup {
+  letter: string;
+  locations: Location[];
+}

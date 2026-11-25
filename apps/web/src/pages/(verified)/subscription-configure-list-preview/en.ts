@@ -6,7 +6,6 @@ export const en = {
   actionsColumnHeader: "Actions",
   languageHeading: "Language version",
   versionColumnHeader: "Version",
-  versionTooltip: "This version change will affect the previously selected language for all existing subscriptions.",
   removeLink: "Remove",
   changeLanguageLink: "Change",
   confirmButton: "Confirm subscriptions",

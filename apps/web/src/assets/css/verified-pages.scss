@@ -1,21 +1,34 @@
+// Tiles stack vertically on small screens and at high zoom so the dashboard
+// reflows at 320px (WCAG 1.4.10), and sit side by side from tablet up.
 .verified-tiles-container {
   display: flex;
+  flex-direction: column;
   gap: 1.5em;
   margin-bottom: 1.5em;
   align-items: stretch;
+
+  @media (min-width: 40.0625em) {
+    flex-direction: row;
+  }
 }
 
 .verified-tile {
   background-color: #f3f2f1;
   border: solid 1px #b1b4b6;
   padding: 20px;
-  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
   transition: box-shadow 0.2s ease;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 40.0625em) {
+  .verified-tile {
+    flex: 1 1 0;
+  }
 }
 
 .verified-tile:hover {

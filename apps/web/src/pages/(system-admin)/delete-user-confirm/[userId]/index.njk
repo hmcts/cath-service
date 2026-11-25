@@ -14,16 +14,14 @@
       }) }}
     {% endif %}
 
-    <h1 class="govuk-heading-xl">{{ pageTitle(user.email) }}</h1>
-
     <form method="post" novalidate>
       {{ govukRadios({
         name: "confirmation",
         fieldset: {
           legend: {
             text: pageTitle(user.email),
-            isPageHeading: false,
-            classes: "govuk-visually-hidden"
+            isPageHeading: true,
+            classes: "govuk-fieldset__legend--xl"
           }
         },
         items: [

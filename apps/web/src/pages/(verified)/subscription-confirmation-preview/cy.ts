@@ -16,7 +16,6 @@ export const cy = {
   addSubscriptionsButton: "Ychwanegu tanysgrifiadau",
   back: "Yn ôl",
   noLanguageSelected: "Heb ei ddewis",
-  versionTooltip: "Bydd y newid fersiwn hwn yn effeithio ar yr iaith a ddewiswyd yn flaenorol ar gyfer yr holl danysgrifiadau presennol.",
   errorSummaryTitle: "Mae problem wedi codi",
   errorNoData: "Ni chanfuwyd data tanysgrifiad. Dechreuwch eto.",
   errorNoSubscription: "Mae angen o leiaf un tanysgrifiad.",

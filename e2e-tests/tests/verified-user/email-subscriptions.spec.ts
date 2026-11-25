@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { createUniqueTestLocation } from "../../utils/dynamic-test-data.js";
 import { loadListTypeFixture } from "../../utils/publication-payloads.js";
 import { uploadTestPublication } from "../../utils/publication-upload.js";
@@ -8,6 +8,9 @@ import { getListSearchConfig } from "../../utils/test-support-api.js";
 import { createVerifiedTestUser, loginAsTestUser, type VerifiedTestUser } from "../../utils/verified-user-helpers.js";
 
 const CASE_LIST_TYPE = "CIVIL_DAILY_CAUSE_LIST";
+const VERSION_HINT_EN = "This version change will affect the previously selected language for all existing subscriptions.";
+const VERSION_HINT_CY = "Bydd y newid fersiwn hwn yn effeithio ar yr iaith a ddewiswyd yn flaenorol ar gyfer yr holl danysgrifiadau presennol.";
+const MAX_TABS = 80;
 
 interface TestLocationData {
   locationId: number;
@@ -46,6 +49,13 @@ async function createTestCaseData(): Promise<TestCaseData> {
   const { artefactId } = await uploadTestPublication({ locationId: location.locationId, listTypeName: CASE_LIST_TYPE, payload });
 
   return { artefactId, caseNumber, caseName };
+}
+
+async function tabUntilFocused(page: Page, target: Locator): Promise<void> {
+  for (let i = 0; i < MAX_TABS; i++) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((el) => document.activeElement === el)) return;
+  }
 }
 
 async function loginAsOwnUser(page: Page, testId: string): Promise<void> {
@@ -99,6 +109,15 @@ test.describe("Email Subscriptions - Location", () => {
     // STEP 3: Navigate to location search via subscription choice page
     await page.getByRole("button", { name: /add email subscription/i }).click();
     await expect(page).toHaveURL("/add-email-subscription");
+
+    // The page h1 is the radio group's legend (no duplicate visually hidden legend)
+    await expect(page.locator("h1")).toHaveCount(1);
+    const subscriptionMethodGroup = page.getByRole("group", { name: /how do you want to add an email subscription/i });
+    await expect(subscriptionMethodGroup.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(subscriptionMethodGroup.getByText(/you can only search for information that is currently published/i)).toBeVisible();
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
     await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/location-name-search");
@@ -117,11 +136,19 @@ test.describe("Email Subscriptions - Location", () => {
     await page.getByRole("radio", { name: /by court or tribunal name/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
 
-    // STEP 5: Select test location and continue
+    // STEP 5: Courts are grouped under a heading per letter, not in a table
     await page.waitForLoadState("networkidle");
+    const resultsForm = page.locator("form[method='post']");
+    await expect(resultsForm.locator("table")).toHaveCount(0);
+    const letter = locationData.name.charAt(0).toUpperCase();
+    await expect(resultsForm.getByRole("heading", { level: 2, name: letter, exact: true })).toBeVisible();
+
+    // Select test location with the keyboard and continue
     const testLocationCheckbox = page.locator(`#location-${locationData.locationId}`);
     await testLocationCheckbox.waitFor({ state: "visible" });
-    await testLocationCheckbox.check();
+    await expect(page.getByRole("checkbox", { name: locationData.name, exact: true })).toBeVisible();
+    await testLocationCheckbox.focus();
+    await page.keyboard.press("Space");
     await expect(testLocationCheckbox).toBeChecked();
 
     await page
@@ -155,10 +182,26 @@ test.describe("Email Subscriptions - Location", () => {
       .click();
     await expect(page).toHaveURL("/subscription-add-list-language");
 
-    // STEP 9: Select language and continue
+    // STEP 9: The version-change information is hint text on the language question, before the choice
+    await expect(page.getByRole("group", { name: /what version of the list do you want to receive/i }).getByText(VERSION_HINT_EN)).toBeVisible();
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    await page.goto("/subscription-add-list-language?lng=cy");
+    await expect(page.getByText(VERSION_HINT_CY)).toBeVisible();
+    await page.goto("/subscription-add-list-language?lng=en");
+
+    // Select language and continue
     await page.getByRole("radio", { name: /^english$/i }).check();
     await page.getByRole("button", { name: /continue/i }).click();
     await expect(page).toHaveURL("/subscription-confirmation-preview");
+
+    // The tooltip has been removed from the check answers page
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText(VERSION_HINT_EN)).toHaveCount(0);
+    await expect(page.locator("table svg")).toHaveCount(0);
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
 
     // STEP 10: Confirm subscriptions
     await page.getByRole("button", { name: /confirm subscriptions/i }).click();
@@ -195,6 +238,13 @@ test.describe("Email Subscriptions - Location", () => {
       .locator("form[method='post']")
       .getByRole("button", { name: /continue/i })
       .click();
+    await expect(page).toHaveURL("/pending-subscriptions");
+
+    // Remove buttons on pending subscriptions are reachable by keyboard
+    const pendingRemoveButton = page.getByRole("button", { name: /^remove$/i }).first();
+    await tabUntilFocused(page, pendingRemoveButton);
+    await expect(pendingRemoveButton).toBeFocused();
+
     await page.getByRole("button", { name: /^continue$/i }).click();
     await expect(page).toHaveURL("/subscription-add-list");
     await page.waitForLoadState("networkidle");
@@ -214,18 +264,43 @@ test.describe("Email Subscriptions - Location", () => {
     const removeButtonForTestLocation = page.getByRole("button", {
       name: `Unsubscribe from ${locationData.name}`
     });
+    await tabUntilFocused(page, removeButtonForTestLocation);
+    await expect(removeButtonForTestLocation).toBeFocused();
     await removeButtonForTestLocation.click();
     await expect(page).toHaveURL(/\/delete-subscription/);
+    const deleteSubscriptionUrl = page.url();
 
-    // Verify delete subscription page elements
-    const yesRadio = page.getByRole("radio", { name: /yes/i });
-    const noRadio = page.getByRole("radio", { name: /no/i });
+    // The question h1 is the radio group's legend
+    const confirmGroup = page.getByRole("group", { name: /are you sure you want to remove this subscription/i });
+    await expect(confirmGroup.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator("h1")).toHaveCount(1);
+    let accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    const yesRadio = confirmGroup.getByRole("radio", { name: /^yes$/i });
+    const noRadio = confirmGroup.getByRole("radio", { name: /^no$/i });
     await expect(yesRadio).toBeVisible();
     await expect(noRadio).toBeVisible();
 
-    // STEP 3: Test validation - continue without selecting should show error
+    // STEP 3: Server-side validation - error summary is shown, focused, and links to the first option
     await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page.getByText(/select yes if you want to remove this subscription/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/delete-subscription/);
+    const errorSummary = page.locator(".govuk-error-summary");
+    await expect(errorSummary).toBeVisible();
+    await expect(errorSummary).toBeFocused();
+    await expect(confirmGroup.locator(".govuk-error-message")).toContainText(/select yes if you want to remove this subscription/i);
+    await expect(page).toHaveTitle(/^Error:/);
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    expect(accessibilityScanResults.violations).toEqual([]);
+
+    await errorSummary.getByRole("link", { name: /select yes if you want to remove this subscription/i }).click();
+    await expect(yesRadio).toBeFocused();
+
+    // Welsh error message
+    await page.goto(`${deleteSubscriptionUrl}&lng=cy`);
+    await page.getByRole("button", { name: /parhau/i }).click();
+    await expect(page.locator(".govuk-error-summary")).toContainText("Dewiswch 'ydw' os ydych chi eisiau dileu'r tanysgrifiad hwn");
+    await page.goto(`${deleteSubscriptionUrl}&lng=en`);
 
     // STEP 4: Test "No" option - should return to subscription management
     await noRadio.check();
@@ -247,7 +322,7 @@ test.describe("Email Subscriptions - Location", () => {
     await expect(manageLink).toBeVisible();
 
     // Check accessibility on confirmation page
-    const accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
+    accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
 
     // Navigate back to subscription management
@@ -321,6 +396,12 @@ test.describe("Email Subscriptions - Location", () => {
     await expect(page).toHaveURL("/subscription-configure-list-language");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
+    // The version-change information is hint text on the language question (en and cy)
+    await expect(page.getByRole("group", { name: /what version of the list do you want to receive/i }).getByText(VERSION_HINT_EN)).toBeVisible();
+    await page.goto("/subscription-configure-list-language?lng=cy");
+    await expect(page.getByText(VERSION_HINT_CY)).toBeVisible();
+    await page.goto("/subscription-configure-list-language?lng=en");
+
     // Check accessibility on language selection page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
@@ -353,6 +434,10 @@ test.describe("Email Subscriptions - Location", () => {
 
     await expect(page).toHaveURL("/subscription-configure-list-preview");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+    // The tooltip has been removed from the preview page
+    await expect(page.getByText(VERSION_HINT_EN)).toHaveCount(0);
+    await expect(page.locator("table svg")).toHaveCount(0);
 
     // Check accessibility on preview page
     accessibilityScanResults = await new AxeBuilder({ page }).disableRules(["region"]).analyze();
