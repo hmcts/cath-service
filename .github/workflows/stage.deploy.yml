@@ -55,6 +55,9 @@ on:
       namespace:
         description: "Kubernetes namespace"
         value: ${{ jobs.helm-deploy.outputs.namespace }}
+      ui-baseline-url:
+        description: "Where the hosted parity check is, when this deploy deployed it (empty otherwise)"
+        value: ${{ jobs.helm-deploy.outputs.ui-baseline-url }}
 
 jobs:
   helm-deploy:

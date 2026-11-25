@@ -49,7 +49,7 @@ async function renderPdf(html: string): Promise<PdfGenerationResult> {
     const page = await browser.newPage();
 
     await page.setContent(html, {
-      waitUntil: "networkidle0"
+      waitUntil: "load"
     });
 
     const pdfBuffer = await page.pdf(PDF_OPTIONS);
